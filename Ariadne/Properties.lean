@@ -36,6 +36,29 @@ def mapResult (result : Result (Value × State)) : Result (List (Value × Value)
     | throw (.typeError "expected a Map result")
   return values
 
+/-- A successful partial observation cannot hide a failed program execution. -/
+theorem array_reaches {program : Program} {name : String} {args : List Value}
+    {fuel : Nat} {values : List Value}
+    (observed : arrayResult (runState program name fuel args) = .ok values) :
+    Reaches program name args (fun value state => arrayResult (.ok (value, state)) = .ok values) := by
+  cases hr : runState program name fuel args with
+  | error err => rw [hr] at observed; cases observed
+  | ok pair =>
+    rcases pair with ⟨value, state⟩
+    rw [hr] at observed
+    exact ⟨fuel, value, state, hr, observed⟩
+
+theorem map_reaches {program : Program} {name : String} {args : List Value}
+    {fuel : Nat} {values : List (Value × Value)}
+    (observed : mapResult (runState program name fuel args) = .ok values) :
+    Reaches program name args (fun value state => mapResult (.ok (value, state)) = .ok values) := by
+  cases hr : runState program name fuel args with
+  | error err => rw [hr] at observed; cases observed
+  | ok pair =>
+    rcases pair with ⟨value, state⟩
+    rw [hr] at observed
+    exact ⟨fuel, value, state, hr, observed⟩
+
 /-- Local mutation writes the newly allocated cell and leaves older heap cells intact. -/
 theorem declare_lookup (state : State) (name : String) (value : Value) :
     (state.declare name value).lookup name = .ok value := by

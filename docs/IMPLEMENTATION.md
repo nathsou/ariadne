@@ -1,27 +1,45 @@
-# Implementation plan
+# Implementation stages
 
-Ariadne is a dependency-free Lean 4 implementation of a restricted TypeScript
-frontend and a certifying translation to Lean. The JavaScript engine and its
-native primitives are modeled, not reimplemented or verified at the machine-code
-level. The initial realm and incoming values must satisfy the runtime contract.
+The implemented vertical slice covers a handwritten Lean frontend, a conservative
+ownership/type checker, explicit scalar/heap/control semantics, source-bound kernel
+certificates, a CLI, diagnostics, native differential tests, CI, and proof examples.
+It uses no Lake dependencies or external runtime libraries.
 
-The development sequence is:
+The first release's acceptance gates are:
 
-1. Pin Lean; establish source spans, structured diagnostics, and certification.
-2. Implement a terminating handwritten lexer/parser and independent static checks.
-3. Define scalar, heap, collection, and control-flow semantics.
-4. Generate source-bound Lean artifacts and check their correspondence proofs.
-5. Add loops, calls, ownership checks, and native collection operations.
-6. Add substantial source examples and kernel-checked property proofs.
-7. Exercise positive/negative inputs, native differential execution, and CI.
+- Every supported source fixture passes parsing/checking and its generated replay
+  equations pass the kernel.
+- Negative syntax, type, ownership, realm, and callback-effect cases are rejected
+  with stable diagnostic codes.
+- Native observations agree with the executable model for repository examples and
+  deterministic generated programs, including bigint and number edge cases.
+- Arithmetic theorems quantify over arbitrary inputs; concrete algorithm executions
+  prove their stated results and collection contents without claiming universality.
+- General loop, Map, and list-correspondence lemmas state their premises explicitly.
+- Regeneration is deterministic and the transitive axiom audit rejects proof holes
+  and native-evaluation axioms.
 
-Every feature needs an explicit semantic contract, diagnostics, and tests.
-Proof coverage must be reported precisely: parsing an embedded source again is a
-per-artifact check, not a universal parser-correctness proof. A proof against the
-Lean operational model is not a proof of the JavaScript engine. Termination is
-separate from partial correctness, and exhausted evaluation fuel is not a source
-exception. No `sorry`, user axioms, or native decision procedures are permitted in
-the correctness chain.
+## Remaining research and larger-subset work
 
-The implementation has no Lake dependencies. Native execution in tests may use
-Bun, which is a CI tool and is not required by the translator or its proof library.
+This is a usable experimental foundation, not the completion of a universally
+verified Aeneas equivalent. The following are explicitly not implemented:
+
+1. An independent formal grammar and a universal proof that parsing implements it.
+2. Type/ownership preservation and progress for all accepted programs, plus a precise
+   relation to an independently specified ECMAScript subset.
+3. A shallow typed functional compiler with a universal simulation theorem. Current
+   output calls the proved-source-bound interpreter. The arbitrary-input arithmetic
+   proofs demonstrate how readable functional specifications can be connected today.
+4. Interprocedural effect summaries, region-based loans, nested mutable references,
+   object keys, ownership transfer, and validated external-heap entry points.
+5. Modules/import resolution, generic utilities, discriminated unions, richer callback
+   inference, and multi-error parser recovery.
+6. Automated verification-condition generation, loop invariants, termination
+   certificates, and universal correctness proofs for the larger example algorithms.
+7. A formal conformance bridge for native binary64/string/collection builtins and
+   a verified JavaScript engine or erasure pipeline.
+
+These should be separate reviewable steps with semantic contracts and regression
+fixtures, rather than silently broadening acceptance. The host realm and input
+contract remains necessary even with a stronger compiler proof: native prototypes,
+proxies, getters, and external aliases are properties of the execution environment.

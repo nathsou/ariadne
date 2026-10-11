@@ -90,67 +90,61 @@ def invokeString (units : JSString) (name : String) (args : List Value) : Result
 
 mutual
   /-- Executable source semantics. Fuel bounds recursive evaluation depth, not JS steps. -/
-  def evalExpr (program : Program) (fuel : Nat) (s : State) (expr : Expr) : Result (Value × State) := do
-    match fuel with
-    | 0 => throw .timeout
-    | n + 1 =>
-      match expr with
-      | .literal value _ => return (Value.ofLiteral value, s)
-      | .var name _ =>
-        if s.env.any (fun p => p.1 == name) then return (← s.lookup name, s)
-        if name == "NaN" then return (.number Float.Model.nan, s)
-        if name == "Infinity" then return (.number Float.Model.inf, s)
-        return (.function name, s)
-      | .unary op arg _ =>
-        let (v, s) ← evalExpr program n s arg
-        return (← unary op v, s)
-      | .binary op left right _ =>
-        let (a, s) ← evalExpr program n s left
-        if op == "&&" && !a.truthy then return (a, s)
-        if op == "||" && a.truthy then return (a, s)
-        if op == "??" && a != .undefined && a != .null then return (a, s)
-        let (b, s) ← evalExpr program n s right
-        if ["&&", "||", "??"].contains op then return (b, s)
-        return (← binary op a b, s)
-      | .conditional condition yes no _ =>
-        let (v, s) ← evalExpr program n s condition
-        evalExpr program n s (if v.truthy then yes else no)
-      | .call callee args _ =>
-        let (fn, s) ← evalExpr program n s callee
-        let (args, s) ← evalArgs program n s args
-        apply program n s fn args
-      | .member object field _ =>
-        let (v, s) ← evalExpr program n s object
-        return (← readMember s v field, s)
-      | .index object index _ =>
-        let (v, s) ← evalExpr program n s object
-        let (i, s) ← evalExpr program n s index
-        return (← readIndex s v i, s)
-      | .array elements _ =>
-        let (xs, s) ← evalArgs program n s elements
-        let (loc, s) := s.alloc (.array xs)
-        return (.ref loc, s)
-      | .record fields _ =>
-        let (xs, s) ← evalArgs program n s (fields.map Prod.snd)
-        let (loc, s) := s.alloc (.record ((fields.map Prod.fst).zip xs))
-        return (.ref loc, s)
-      | .newMap _ _ _ =>
-        let (loc, s) := s.alloc (.map [])
-        return (.ref loc, s)
-      | .lambda params body _ =>
-        let (loc, s) := s.alloc (.closure params body s.env)
-        return (.ref loc, s)
+  def evalExpr (program : Program) : Nat → State → Expr → Result (Value × State)
+    | 0, _, _ => .error .timeout
+    | _n + 1, s, .literal value _ => do return (Value.ofLiteral value, s)
+    | _n + 1, s, .var name _ => do
+      if s.env.any (fun p => p.1 == name) then return (← s.lookup name, s)
+      if name == "NaN" then return (.number Float.Model.nan, s)
+      if name == "Infinity" then return (.number Float.Model.inf, s)
+      return (.function name, s)
+    | n + 1, s, .unary op arg _ => do
+      let (v, s) ← evalExpr program n s arg
+      return (← unary op v, s)
+    | n + 1, s, .binary op left right _ => do
+      let (a, s) ← evalExpr program n s left
+      if op == "&&" && !a.truthy then return (a, s)
+      if op == "||" && a.truthy then return (a, s)
+      if op == "??" && a != .undefined && a != .null then return (a, s)
+      let (b, s) ← evalExpr program n s right
+      if ["&&", "||", "??"].contains op then return (b, s)
+      return (← binary op a b, s)
+    | n + 1, s, .conditional condition yes no _ => do
+      let (v, s) ← evalExpr program n s condition
+      evalExpr program n s (if v.truthy then yes else no)
+    | n + 1, s, .call callee args _ => do
+      let (fn, s) ← evalExpr program n s callee
+      let (args, s) ← evalArgs program n s args
+      apply program n s fn args
+    | n + 1, s, .member object field _ => do
+      let (v, s) ← evalExpr program n s object
+      return (← readMember s v field, s)
+    | n + 1, s, .index object index _ => do
+      let (v, s) ← evalExpr program n s object
+      let (i, s) ← evalExpr program n s index
+      return (← readIndex s v i, s)
+    | n + 1, s, .array elements _ => do
+      let (xs, s) ← evalArgs program n s elements
+      let (loc, s) := s.alloc (.array xs)
+      return (.ref loc, s)
+    | n + 1, s, .record fields _ => do
+      let (xs, s) ← evalArgs program n s (fields.map Prod.snd)
+      let (loc, s) := s.alloc (.record ((fields.map Prod.fst).zip xs))
+      return (.ref loc, s)
+    | _n + 1, s, .newMap _ _ _ => do
+      let (loc, s) := s.alloc (.map [])
+      return (.ref loc, s)
+    | _n + 1, s, .lambda params body _ => do
+      let (loc, s) := s.alloc (.closure params body s.env)
+      return (.ref loc, s)
 
-  def evalArgs (program : Program) (fuel : Nat) (s : State) (exprs : List Expr) : Result (List Value × State) := do
-    match fuel with
-    | 0 => throw .timeout
-    | n + 1 =>
-      match exprs with
-      | [] => return ([], s)
-      | e :: rest =>
-        let (v, s) ← evalExpr program n s e
-        let (vs, s) ← evalArgs program n s rest
-        return (v :: vs, s)
+  def evalArgs (program : Program) : Nat → State → List Expr → Result (List Value × State)
+    | 0, _, _ => .error .timeout
+    | _n + 1, s, [] => do return ([], s)
+    | n + 1, s, e :: rest => do
+      let (v, s) ← evalExpr program n s e
+      let (vs, s) ← evalArgs program n s rest
+      return (v :: vs, s)
 
   def apply (program : Program) (fuel : Nat) (s : State) (fn : Value) (args : List Value) : Result (Value × State) := do
     match fuel with
@@ -272,47 +266,41 @@ mutual
         s.write loc (.record (fields.map fun (k, v) => (k, if k == field then value else v)))
       | _ => throw (.invariant "invalid assignment target")
 
-  def exec (program : Program) (fuel : Nat) (s : State) (stmt : Stmt) : Result Completion := do
-    match fuel with
-    | 0 => throw .timeout
-    | n + 1 =>
-      match stmt with
-      | .block statements _ =>
-        let outer := s.env
-        let out ← execBlock program n s statements
-        return { out with state := { out.state with env := outer } }
-      | .let_ _ name _ value _ =>
-        let (v, s) ← evalExpr program n s value
-        return { state := s.declare name v }
-      | .assign target value _ => return { state := ← assignTarget program n s target value }
-      | .expr value _ =>
-        let (_, s) ← evalExpr program n s value
-        return { state := s }
-      | .if_ condition yes no _ =>
-        let (v, s) ← evalExpr program n s condition
-        exec program n s (if v.truthy then yes else no)
-      | .while_ condition body _ => loop program n s condition body none
-      | .for_ init condition update body _ =>
-        let outer := s.env
-        let initial ← exec program n s init
-        let out ← loop program n initial.state condition body (some update)
-        return { out with state := { out.state with env := outer } }
-      | .return_ value _ =>
-        let (v, s) ← evalExpr program n s value
-        return { control := .returned, value := v, state := s }
-      | .break_ _ => return { control := .broke, state := s }
-      | .continue_ _ => return { control := .continued, state := s }
+  def exec (program : Program) : Nat → State → Stmt → Result Completion
+    | 0, _, _ => .error .timeout
+    | n + 1, s, .block statements _ => do
+      let outer := s.env
+      let out ← execBlock program n s statements
+      return { out with state := { out.state with env := outer } }
+    | n + 1, s, .let_ _ name _ value _ => do
+      let (v, s) ← evalExpr program n s value
+      return { state := s.declare name v }
+    | n + 1, s, .assign target value _ => do return { state := ← assignTarget program n s target value }
+    | n + 1, s, .expr value _ => do
+      let (_, s) ← evalExpr program n s value
+      return { state := s }
+    | n + 1, s, .if_ condition yes no _ => do
+      let (v, s) ← evalExpr program n s condition
+      exec program n s (if v.truthy then yes else no)
+    | n + 1, s, .while_ condition body _ => do loop program n s condition body none
+    | n + 1, s, .for_ init condition update body _ => do
+      let outer := s.env
+      let initial ← exec program n s init
+      let out ← loop program n initial.state condition body (some update)
+      return { out with state := { out.state with env := outer } }
+    | n + 1, s, .return_ value _ => do
+      let (v, s) ← evalExpr program n s value
+      return { control := .returned, value := v, state := s }
+    | _n + 1, s, .break_ _ => do return { control := .broke, state := s }
+    | _n + 1, s, .continue_ _ => do return { control := .continued, state := s }
 
-  def execBlock (program : Program) (fuel : Nat) (s : State) (stmts : List Stmt) : Result Completion := do
-    match fuel with
-    | 0 => throw .timeout
-    | n + 1 =>
-      match stmts with
-      | [] => return { state := s }
-      | stmt :: rest =>
-        let out ← exec program n s stmt
-        if out.control != .normal then return out
-        execBlock program n out.state rest
+  def execBlock (program : Program) : Nat → State → List Stmt → Result Completion
+    | 0, _, _ => .error .timeout
+    | _n + 1, s, [] => do return { state := s }
+    | n + 1, s, stmt :: rest => do
+      let out ← exec program n s stmt
+      if out.control != .normal then return out
+      execBlock program n out.state rest
 
   def loop (program : Program) (fuel : Nat) (s : State) (condition : Expr)
       (body : Stmt) (update : Option Stmt) : Result Completion := do

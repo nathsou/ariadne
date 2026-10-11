@@ -12,3 +12,5 @@ import Examples.Generated.records
 import Examples.Generated.search
 import Examples.Generated.sorting
 import Examples.Generated.strings
+import Examples.Proofs.Arithmetic
+import Examples.Proofs.Executions

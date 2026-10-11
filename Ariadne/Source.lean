@@ -34,22 +34,44 @@ def Source.position (source : Source) (offset : Nat) : Nat × Nat := Id.run do
   let mut line := 1
   let mut column := 1
   let mut bytes := 0
+  let mut carriageReturn := false
   for c in source.text.toList do
     if bytes >= offset then break
     bytes := bytes + c.utf8Size
-    if c == '\n' then
+    if c == '\n' && carriageReturn then
+      carriageReturn := false
+    else if c == '\n' || c == '\r' || c.toNat == 0x2028 || c.toNat == 0x2029 then
       line := line + 1
       column := 1
+      carriageReturn := c == '\r'
     else
       column := column + 1
+      carriageReturn := false
   return (line, column)
+
+def Source.lines (source : Source) : List String := Id.run do
+  let mut lines : List String := []
+  let mut current : List Char := []
+  let mut carriageReturn := false
+  for c in source.text.toList do
+    if c == '\n' && carriageReturn then
+      carriageReturn := false
+    else if c == '\n' || c == '\r' || c.toNat == 0x2028 || c.toNat == 0x2029 then
+      lines := String.ofList current.reverse :: lines
+      current := []
+      carriageReturn := c == '\r'
+    else
+      current := c :: current
+      carriageReturn := false
+  return (String.ofList current.reverse :: lines).reverse
 
 def Diagnostic.render (d : Diagnostic) (source : Source) : String := Id.run do
   let (line, column) := source.position d.span.start
-  let sourceLine := (source.text.splitOn "\n")[line - 1]?.getD ""
+  let sourceLine := source.lines[line - 1]?.getD ""
   let (_, endColumn) := source.position d.span.stop
   let width := max 1 (min (sourceLine.length + 1 - column) (endColumn - column))
-  let padding := String.ofList (List.replicate (column - 1) ' ')
+  let padding := String.ofList ((sourceLine.toList.take (column - 1)).map fun c =>
+    if c == '\t' then '\t' else ' ')
   let marker := String.ofList (List.replicate width '^')
   let mut out := s!"error[{d.code}]: {d.message}\n  --> {source.path}:{line}:{column}\n   |\n{line} | {sourceLine}\n   | {padding}{marker}\n"
   for label in d.labels do

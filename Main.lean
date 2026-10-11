@@ -17,6 +17,14 @@ private def option (args : List String) (key : String) : Option String :=
   | a :: b :: rest => if a == key then some b else option (b :: rest) key
   | _ => none
 
+private def validOutputOptions (args : List String) (seen : List String := []) : Bool :=
+  match args with
+  | [] => true
+  | flag :: value :: rest =>
+    ["--out", "--namespace"].contains flag && !seen.contains flag &&
+      !value.startsWith "--" && validOutputOptions rest (flag :: seen)
+  | _ => false
+
 private def explain (code : String) : String :=
   match code with
   | "A1001" => "Recognized language construct or builtin outside the supported subset. See docs/LANGUAGE.md."
@@ -48,6 +56,9 @@ private def process (args : List String) : IO UInt32 := do
     return 2
   if command == "eval" && (args.length < 3 || args.length > 4) then
     IO.eprintln usage
+    return 2
+  if (command == "translate" || command == "certify") && !validOutputOptions (args.drop 2) then
+    IO.eprintln "Expected --out FILE.lean and optional --namespace NAME, without duplicate options"
     return 2
   let text ← IO.FS.readFile (System.FilePath.mk path)
   let source : Source := { path, text }

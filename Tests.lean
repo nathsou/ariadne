@@ -1,1 +1,2 @@
-import Ariadne
+import Tests.Frontend
+import Tests.Scalars

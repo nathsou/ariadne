@@ -54,6 +54,19 @@ def referenceType : Ty → Bool
   | .union a b => referenceType a || referenceType b
   | _ => false
 
+def supportedType : Ty → Bool
+  | .array t => !referenceType t
+  | .map k v => !referenceType k && !referenceType v
+  | .record fields => fields.all (fun p => !referenceType p.2)
+  | .tuple ts => ts.all (fun t => !referenceType t)
+  | .union a b => !referenceType a && !referenceType b
+  | .function .. => false
+  | _ => true
+
+def requireSupportedType (ty : Ty) (span : Span) : Checked Unit :=
+  if supportedType ty then .ok ()
+  else error "A3001" "nested or optional mutable references require ownership transfer support" span
+
 def compatible (actual expected : Ty) : Bool :=
   actual == expected || match expected with
     | .union a b => compatible actual a || compatible actual b
@@ -94,11 +107,6 @@ def reserved (name : String) : Bool :=
 
 def join (a b : Ty) : Ty := if a == b then a else .union a b
 
-def callbackResult : Nat → Stmt → Option Expr
-  | 0, _ => none
-  | _ + 1, .return_ e _ => some e
-  | n + 1, .block stmts _ => stmts.getLast?.bind (callbackResult n)
-  | _, _ => none
 
 mutual
   def infer (fuel : Nat) (ctx : Context) (expr : Expr) : Checked Ty := do
@@ -186,15 +194,16 @@ mutual
         | _ => error "A2002" "indexing requires an array, tuple, or string" span
       | .lambda params body span =>
         let params ← params.mapM fun p => return { p with ty := ← resolve 100 ctx.program p.ty }
+        if (params.map Param.name).eraseDups.length != params.length then
+          error "A2005" "duplicate callback parameter" span
+        for param in params do
+          if reserved param.name || ctx.program.functions.any (fun f => f.name == param.name) then
+            error "A3004" s!"cannot shadow reserved name '{param.name}'" param.span
+          if ctx.bindings.any (fun b => b.name == param.name) then
+            error "A2005" "callback parameter shadowing is not supported" param.span
         let bindings := params.map fun p => ({ name := p.name, ty := p.ty, mutable := true, borrowed := referenceType p.ty, span := p.span } : Binding)
         let inner := { ctx with bindings := bindings ++ ctx.bindings, result := .void, loopDepth := 0, inCallback := true }
-        let result ← match callbackResult n body with
-          | some e =>
-            -- Block-local return types are inferred by the checked statement traversal below.
-            match infer n inner e with
-            | .ok t => pure t
-            | .error _ => pure Ty.void
-          | none => pure Ty.void
+        let result ← inferCallback n inner body
         let _ ← checkStmt n { inner with result } body
         if referenceType result then error "A3001" "callbacks cannot return mutable references" span
         return .function (params.map Param.ty) result
@@ -221,6 +230,29 @@ mutual
           resolve 100 ctx.program f.result
         | .member object field _ => inferMethod n ctx object field args span
         | _ => error "A1001" "only named functions and supported collection methods may be called" span
+
+  /-- Infer a callback's final return after checking its local declarations.
+  Earlier value-returning exits require an explicit named function instead. -/
+  def inferCallback (fuel : Nat) (ctx : Context) (body : Stmt) : Checked Ty := do
+    match fuel with
+    | 0 => error "A2000" "callback inference resource bound exceeded" body.span
+    | n + 1 =>
+      match body with
+      | .return_ e _ => infer n ctx e
+      | .block stmts _ => inferCallbackBlock n ctx stmts
+      | .if_ condition yes no _ =>
+        checkExpr n ctx condition .boolean
+        return join (← inferCallback n ctx yes) (← inferCallback n ctx no)
+      | _ => let _ ← checkStmt n ctx body; return .void
+
+  def inferCallbackBlock (fuel : Nat) (ctx : Context) (stmts : List Stmt) : Checked Ty := do
+    match fuel with
+    | 0 => error "A2000" "callback inference resource bound exceeded" {}
+    | n + 1 =>
+      match stmts with
+      | [] => return .void
+      | [last] => inferCallback n ctx last
+      | first :: rest => inferCallbackBlock n (← checkStmt n ctx first) rest
 
   def checkExpr (fuel : Nat) (ctx : Context) (expr : Expr) (expected : Ty) : Checked Unit := do
     match fuel with
@@ -298,16 +330,18 @@ mutual
         let t ← match annotation with
           | some ty =>
             let ty ← resolve 100 ctx.program ty
+            requireSupportedType ty span
             checkExpr n ctx value ty
             pure ty
           | none => infer n ctx value
         if referenceType t then
           match value with
-          | .var _ _ | .member _ _ _ | .index _ _ _ =>
-            error "A3001" "binding would create an alias to a mutable reference" value.span
-          | .call (.member _ "set" _) _ _ => error "A3001" "Map.set returns its receiver; binding it would create an alias" value.span
-          | .lambda _ _ _ => error "A3001" "callbacks must appear directly at a supported traversal call" value.span
-          | _ => pure ()
+          | .array .. | .record .. | .newMap .. => pure ()
+          | .call (.var ..) _ _ => pure ()
+          | .call (.member _ method _) _ _ =>
+            if !["map", "filter", "slice"].contains method then
+              error "A3001" "binding this method result would create a mutable alias" value.span
+          | _ => error "A3001" "reference bindings require a fresh allocation or an owned function result" value.span
         return { ctx with bindings := { name, ty := t, mutable, span } :: ctx.bindings }
       | .assign target value span =>
         checkWrite ctx target
@@ -382,6 +416,10 @@ def program (p : Program) : Checked Unit := do
     error "A2005" "duplicate function declaration" {}
   if (p.aliases.map Prod.fst).eraseDups.length != p.aliases.length then
     error "A2005" "duplicate type alias" {}
+  for (name, ty) in p.aliases do
+    if reserved name || ["number", "bigint", "string", "boolean", "undefined", "null", "void"].contains name then
+      error "A3004" s!"cannot shadow builtin type '{name}'" {}
+    requireSupportedType (← resolve 100 p ty) {}
   for f in p.functions do
     if reserved f.name then error "A3004" s!"cannot shadow intrinsic '{f.name}'" f.span
     if (f.params.map Param.name).eraseDups.length != f.params.length then
@@ -389,8 +427,10 @@ def program (p : Program) : Checked Unit := do
     let bindings ← f.params.mapM fun param => do
       if reserved param.name || p.functions.any (fun f => f.name == param.name) then error "A3004" s!"cannot shadow intrinsic '{param.name}'" param.span
       let t ← resolve 100 p param.ty
+      requireSupportedType t param.span
       return { name := param.name, ty := t, mutable := true, borrowed := referenceType t, span := param.span : Binding }
     let result ← resolve 100 p f.result
+    requireSupportedType result f.span
     let _ ← checkStmt 10000 { program := p, bindings, result } f.body
     if result != .void && !returns 10000 f.body then
       error "A2010" s!"function '{f.name}' may fall through without returning a value" f.span

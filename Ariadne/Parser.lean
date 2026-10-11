@@ -194,6 +194,13 @@ mutual
       if prec < minPrec || prec == 0 then return left
       let _ ← pop
       let right ← expression n (prec + 1)
+      let mixes := fun e => match e with
+        | .binary op _ _ _ =>
+          (t.text == "??" && ["&&", "||"].contains op) ||
+            (["&&", "||"].contains t.text && op == "??")
+        | _ => false
+      if mixes left || mixes right then
+        fail "A1001" "mixing nullish and logical operators requires an intermediate variable in this subset" t
       binaryTail n minPrec (.binary t.text left right ⟨left.span.start, right.span.stop⟩)
 
   def parsePostfix (fuel : Nat) (left : Expr) : P Expr := do
@@ -303,6 +310,7 @@ mutual
             .binary (if op.text == "+=" then "+" else if op.text == "-=" then "-" else if op.text == "*=" then "*" else "/") target rhs op.span
           pure (.assign target value target.span)
         else if op.text == "++" || op.text == "--" then
+          if op.lineBreak then fail "A1005" "postfix increment cannot follow a line break" op
           match target with
           | .var .. => pure ()
           | _ => fail "A1001" "increment and decrement require a local variable" op
@@ -351,6 +359,8 @@ mutual
         let init ← simpleStatement n
         let condition ← expression n
         let _ ← expect ";"
+        if (← isNext "let") || (← isNext "const") then
+          fail "A1001" "a for-loop update cannot declare a variable" (← peek)
         let update ← simpleStatement n false
         let _ ← expect ")"
         if !(← isNext "{") then fail "A1001" "loop bodies require braces" (← peek)
