@@ -49,7 +49,7 @@ def invokeScalar (name : String) (args : List Value) : Result Value := do
   | "Math.abs", [.number x] => return .number x.abs
   | "Math.sqrt", [.number x] => return .number x.sqrt
   | "Math.trunc", [.number x] =>
-    if !x.isFinite then return .number x
+    if !x.isFinite || x == Float.Model.ofNat 0 then return .number x
     let i := x.unpack.toInt 0 0
     if i == 0 && x < Float.Model.ofNat 0 then
       return .number (Float.Model.ofNat 0).neg

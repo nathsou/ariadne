@@ -96,7 +96,7 @@ def join (a b : Ty) : Ty := if a == b then a else .union a b
 
 def callbackResult : Nat → Stmt → Option Expr
   | 0, _ => none
-  | n + 1, .return_ e _ => some e
+  | _ + 1, .return_ e _ => some e
   | n + 1, .block stmts _ => stmts.getLast?.bind (callbackResult n)
   | _, _ => none
 
@@ -293,7 +293,7 @@ mutual
         let _ ← checkBlock n ctx stmts
         return ctx
       | .let_ mutable name annotation value span =>
-        if reserved name then error "A3004" s!"cannot shadow reserved intrinsic '{name}'" span
+        if reserved name || ctx.program.functions.any (fun f => f.name == name) then error "A3004" s!"cannot shadow reserved intrinsic '{name}'" span
         if ctx.bindings.any (fun b => b.name == name) then error "A2005" s!"shadowing or duplicate declaration of '{name}' is not supported" span
         let t ← match annotation with
           | some ty =>
@@ -346,9 +346,16 @@ mutual
       | .return_ e span =>
         checkExpr n ctx e ctx.result
         if referenceType ctx.result then
-          if let some name := root e then
+          match e with
+          | .var name _ =>
             let b ← binding ctx name span
             if b.borrowed then error "A3001" "returning a borrowed reference would escape its lifetime" span
+          | .array .. | .record .. | .newMap .. => pure ()
+          | .call (.var ..) _ _ => pure ()
+          | .call (.member _ method _) _ _ =>
+            if !["map", "filter", "slice"].contains method then
+              error "A3001" "a returned reference must be owned; this method can return its receiver" span
+          | _ => error "A3001" "return an owned local variable or a fresh collection" span
         return ctx
       | .break_ span | .continue_ span =>
         if ctx.loopDepth == 0 then error "A2009" "loop control is only valid inside a loop" span
@@ -380,7 +387,7 @@ def program (p : Program) : Checked Unit := do
     if (f.params.map Param.name).eraseDups.length != f.params.length then
       error "A2005" "duplicate parameter" f.span
     let bindings ← f.params.mapM fun param => do
-      if reserved param.name then error "A3004" s!"cannot shadow intrinsic '{param.name}'" param.span
+      if reserved param.name || p.functions.any (fun f => f.name == param.name) then error "A3004" s!"cannot shadow intrinsic '{param.name}'" param.span
       let t ← resolve 100 p param.ty
       return { name := param.name, ty := t, mutable := true, borrowed := referenceType t, span := param.span : Binding }
     let result ← resolve 100 p f.result

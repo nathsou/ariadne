@@ -6,17 +6,17 @@ namespace Ariadne
 structure Span where
   start : Nat := 0
   stop : Nat := 0
-  deriving Repr, BEq, Inhabited
+  deriving Repr, BEq, ReflBEq, LawfulBEq, DecidableEq, Inhabited
 
 structure Source where
   path : String
   text : String
-  deriving Repr, Inhabited
+  deriving Repr, DecidableEq, Inhabited
 
 structure Label where
   span : Span
   message : String
-  deriving Repr, Inhabited
+  deriving Repr, DecidableEq, Inhabited
 
 /-- Diagnostics are data; terminal and editor renderers share the same payload. -/
 structure Diagnostic where
@@ -26,7 +26,7 @@ structure Diagnostic where
   notes : List String := []
   labels : List Label := []
   help : Option String := none
-  deriving Repr, Inhabited
+  deriving Repr, DecidableEq, Inhabited
 
 abbrev Checked := Except Diagnostic
 

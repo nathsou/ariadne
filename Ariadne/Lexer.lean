@@ -9,13 +9,21 @@ structure Token where
   lineBreak : Bool := false
   /-- Decoded UTF-16 code units, present only for string tokens. -/
   stringValue : Option (List UInt16) := none
-  deriving Repr, BEq, Inhabited
+  deriving Repr, BEq, DecidableEq, Inhabited
 
 def utf16 (c : Char) : List UInt16 :=
   let n := c.toNat
   if n < 65536 then [UInt16.ofNat n]
   else [UInt16.ofNat (55296 + (n - 65536) / 1024),
         UInt16.ofNat (56320 + (n - 65536) % 1024)]
+
+private def lineTerminator (c : Char) : Bool :=
+  c == '\n' || c == '\r' || c.toNat == 0x2028 || c.toNat == 0x2029
+
+private def whitespace (c : Char) : Bool :=
+  c.isWhitespace || lineTerminator c ||
+    [0xA0, 0x1680, 0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005,
+      0x2006, 0x2007, 0x2008, 0x2009, 0x200A, 0x202F, 0x205F, 0x3000, 0xFEFF].contains c.toNat
 
 private def identifierStart (c : Char) : Bool :=
   c.isAlpha && c.toNat < 128 || c == '_' || c == '$'
@@ -70,7 +78,7 @@ private def blockComment : Nat → List Char → Nat → Bool → Checked (List 
   | n + 1, cs, pos, newline =>
     match cs with
     | '*' :: '/' :: rest => .ok (rest, pos + 2, newline)
-    | c :: rest => blockComment n rest (pos + c.utf8Size) (newline || c == '\n' || c == '\r')
+    | c :: rest => blockComment n rest (pos + c.utf8Size) (newline || lineTerminator c)
     | [] => .error { code := "A0004", message := "unterminated block comment", span := ⟨pos, pos⟩ }
 
 private def byteLength (cs : List Char) : Nat :=
@@ -82,10 +90,10 @@ private def lexGo : Nat → List Char → Nat → Bool → List Token → Checke
     match cs with
     | [] => return (⟨"<eof>", ⟨pos, pos⟩, newline, none⟩ :: acc).reverse
     | c :: rest =>
-      if c.isWhitespace then
-        return ← lexGo n rest (pos + c.utf8Size) (newline || c == '\n' || c == '\r') acc
+      if whitespace c then
+        return ← lexGo n rest (pos + c.utf8Size) (newline || lineTerminator c) acc
       if cs.take 2 == ['/', '/'] then
-        let comment := cs.takeWhile (fun c => c != '\n' && c != '\r')
+        let comment := cs.takeWhile (fun c => !lineTerminator c)
         return ← lexGo n (cs.drop comment.length) (pos + byteLength comment) newline acc
       if cs.take 2 == ['/', '*'] then
         let (tail, stop, nl) ← blockComment (cs.length + 1) (cs.drop 2) (pos + 2) newline
@@ -123,7 +131,7 @@ private def lexGo : Nat → List Char → Nat → Bool → List Token → Checke
         lexGo n (cs.drop op.length) (pos + op.length) false
           (⟨op, ⟨pos, pos + op.length⟩, newline, none⟩ :: acc)
       | none =>
-        if "{}()[];:,.?+-*/%!=<>|&".contains c then
+        if "{}()[];:,.?+-*/%!=<>|&".toList.contains c then
           lexGo n rest (pos + 1) false (⟨String.singleton c, ⟨pos, pos + 1⟩, newline, none⟩ :: acc)
         else throw { code := "A0001", message := s!"unexpected character '{c}'", span := ⟨pos, pos + c.utf8Size⟩ }
 

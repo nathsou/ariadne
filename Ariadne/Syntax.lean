@@ -11,7 +11,42 @@ inductive Ty where
   | union (left right : Ty)
   | named (name : String)
   | function (params : List Ty) (result : Ty)
-  deriving Repr, BEq, Inhabited
+  deriving Repr, Inhabited
+
+/-- Total type equality. The default derived equality for nested inductives is
+opaque to kernel reduction, so the frontend uses this bounded structural walk. -/
+def Ty.equalFuel : Nat → Ty → Ty → Bool
+  | 0, _, _ => false
+  | n + 1, a, b =>
+    match a, b with
+    | .number, .number | .bigint, .bigint | .boolean, .boolean
+    | .string, .string | .undefined, .undefined | .null, .null | .void, .void => true
+    | .array a, .array b => equalFuel n a b
+    | .map a b, .map c d | .union a b, .union c d => equalFuel n a c && equalFuel n b d
+    | .named a, .named b => a == b
+    | .tuple a, .tuple b => a.length == b.length && (a.zip b).all (fun (x, y) => equalFuel n x y)
+    | .record a, .record b => a.length == b.length && (a.zip b).all
+        (fun ((k, x), (l, y)) => k == l && equalFuel n x y)
+    | .function a r, .function b s => equalFuel n r s && a.length == b.length &&
+        (a.zip b).all (fun (x, y) => equalFuel n x y)
+    | _, _ => false
+
+def Ty.depth : Ty → Nat
+  | .array a => a.depth + 1
+  | .map a b | .union a b => max a.depth b.depth + 1
+  | .tuple ts => (ts.map Ty.depth).foldl max 0 + 1
+  | .record fs => (fs.map (fun p => p.2.depth)).foldl max 0 + 1
+  | .function ps r => max ((ps.map Ty.depth).foldl max 0) r.depth + 1
+  | _ => 1
+termination_by t => sizeOf t
+decreasing_by
+  all_goals first | decreasing_tactic | skip
+  have h := List.sizeOf_lt_of_mem ‹p ∈ fs›
+  cases p
+  simp only [Prod.mk.sizeOf_spec, Ty.record.sizeOf_spec] at h ⊢
+  omega
+
+instance : BEq Ty := ⟨fun a b => Ty.equalFuel (a.depth + b.depth) a b⟩
 
 structure Param where
   name : String
