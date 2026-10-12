@@ -97,8 +97,7 @@ export function numericDelete(xs: readonly number[], remove: number): number[] {
 export function nestedValues(key: string): bigint[] {
   const values = new Map<string, bigint[]>();
   values.set('a', [1n, 2n]);
-  const found = values.get(key);
-  return (found ?? []).slice();
+  return (values.get(key) ?? []).slice();
 }
 
 export function entryValues(xs: readonly string[]): bigint[] {

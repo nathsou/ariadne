@@ -83,8 +83,7 @@ export function mapIteration(): bigint {
 export function nestedFresh(): number[] {
   const values = new Map<string, number[]>();
   values.set('a', [1, 2]);
-  const xs = values.get('a') ?? [];
-  return xs.slice();
+  return (values.get('a') ?? []).slice();
 }
 
 /** @decreases n */

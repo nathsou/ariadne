@@ -9,7 +9,7 @@ when their exit criteria pass; finite native tests are not universal proofs.
 | M1 | Complete | All reference programs check and certify; grammar, ownership checks, operational semantics and the builtin table have differential coverage. Conservative dialect limits are listed below. |
 | M2 | Complete | Typed Core, scalar/list/Map/Set extraction, owned local updates, structural loops, pure calls, structural denotation, three-way differential and tamper tests. Lawful named records/unions and direct borrowed-state calls are implemented; class states, Int53 guards and original reference extraction are implemented; the full integration regression gate passed. |
 | M3 | Complete | All three original reference acceptance proofs hold universally over emitted definitions. The native proof library includes loop, collection, string and stable-sort laws, and general Int53 arithmetic correspondence, including rounded nonintegral division. |
-| M4 | In progress | Heap framing, compositional data relations and external-heap source predicates are proved. Scalar expression correspondence and generated source transfer are proved; full stateful/data adequacy remains pending. |
+| M4 | In progress | Heap framing, compositional data relations and external-heap source predicates are proved. Scalar expression correspondence and generated source transfer are proved; the stateful ownership environment has declaration, reassignment and framing laws. Full stateful/data adequacy remains pending. |
 | M5 | Pending | Measures, larger ownership, polymorphism, exceptions and scalar backend integration |
 
 ## Reference specifications
@@ -49,6 +49,18 @@ operational and scalar comparisons, adversarial certificates and diagnostics, an
   the comparator. Callback element references are shared read-only borrows.
 - The type/ownership checker still has no general soundness theorem. M4 must
   establish adequacy before extracted definitions can support source claims.
+
+The second-class-reference checkpoint rejects parameter/receiver reference
+escapes through aliases, conditional returns and immutable storage annotations.
+It also rejects local bindings of mutable container observations and readonly
+views of mutable elements used as stored or returned values. Copies remain
+owners; deeply immutable element observations may be shared and returned.
+`OwnershipEnvironment` relates visible source cells to current native values,
+excludes binding cells from data footprints, and distinguishes owners, call
+borrows and observations. Declaration, reassignment, projection and framing
+laws are kernel checked. This relation is currently conservative about shared
+immutable descendants inside writable owners; its integration into general
+stateful source transfer and the checker soundness theorem is still pending.
 
 Frontend checkpoint: the complete `scripts/check.sh` suite passes with 1,217
 audited theorems, 42 native entry points, 64 generated programs, 51 scalar

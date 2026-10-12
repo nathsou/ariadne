@@ -179,12 +179,30 @@ def freshEntries (expr : Expr) (ty : Ty) : Bool :=
     | _ => false
   | _ => false
 
-/-- Container reads are shared loans, never additional owners. -/
+/-- Container reads are observations, never additional owners. Mutable
+observations cannot be bound to a local: their lifetime is one statement. -/
 def sharedRead : Expr → Bool
   | .index .. => true
   | .call (.member _ "get" _) _ _ | .call (.member _ "find" _) _ _ => true
   | .binary "??" a b _ => sharedRead a && (fresh b || sharedRead b)
   | _ => false
+
+/-- References supplied by a caller are second-class, including readonly
+references. A conditional or receiver-returning method does not erase that
+provenance. Allocating methods and container reads produce distinct values. -/
+def borrowedReference (ctx : Context) : Expr → Bool
+  | .var name _ => (ctx.bindings.find? (·.name == name)).any (·.borrowed)
+  | .member object _ _ => borrowedReference ctx object
+  | .conditional _ yes no _ => borrowedReference ctx yes || borrowedReference ctx no
+  | .binary "??" a b _ => borrowedReference ctx a || borrowedReference ctx b
+  | .call (.member object method _) _ _ =>
+      ["set", "add"].contains method && borrowedReference ctx object
+  | _ => false
+
+def checkNoBorrowEscape (ctx : Context) (ty : Ty) (value : Expr) : Checked Unit :=
+  if referenceType ty && borrowedReference ctx value then
+    error "A3001" "borrowed references exist only as parameters and this; they cannot be bound, stored, or returned" value.span
+  else .ok ()
 
 def scalarPrintable : Ty → Bool
   | .int53 | .number | .bigint | .string | .stringLiteral _ | .boolean | .null | .undefined => true
@@ -425,6 +443,7 @@ mutual
           let copied ← match x with
             | .spread e _ => pure (freshEntries e (← infer n ctx e))
             | _ => pure false
+          if let .spread .. := x then pure () else checkStored n ctx tx x
           if referenceType tx && !immutable tx && !fresh x && !copied then
             error "A3001" "stored mutable references must be freshly allocated" x.span
         return .array t
@@ -440,6 +459,7 @@ mutual
           else
             if reserved key then error "A3004" s!"reserved property '{key}'" value.span
             let t ← infer n ctx value
+            checkStored n ctx t value
             if referenceType t && !immutable t && !fresh value then
               error "A3001" "stored mutable references must be freshly allocated" value.span
             ts := (ts.filter (·.1 != key)) ++ [(key, t)]
@@ -602,14 +622,27 @@ mutual
               error "A3001" "spread would share mutable elements" e.span
           | _ =>
             checkExpr n ctx x t
+            checkStored n ctx t x
             if referenceType t && !immutable t && !fresh x then
               error "A3001" "stored mutable references must be freshly allocated" x.span
       | .array xs span, .tuple ts =>
         if xs.length != ts.length then error "A2002" "tuple length does not match its annotation" span
         for (x, t) in xs.zip ts do
           checkExpr n ctx x t
+          checkStored n ctx t x
           if referenceType t && !immutable t && !fresh x then error "A3001" "tuple members must be immutable or fresh" x.span
       | _, _ => requireType (← infer n ctx expr) expected expr.span
+
+  /-- Readonly annotations cannot turn a mutable observation into a stored
+  immutable value. Stored references are immutable already, or allocated here. -/
+  def checkStored (fuel : Nat) (ctx : Context) (expected : Ty) (value : Expr) : Checked Unit := do
+    match fuel with
+    | 0 => error "A2000" "type checking resource bound exceeded" value.span
+    | n + 1 =>
+      checkNoBorrowEscape ctx expected value
+      if referenceType expected && !fresh value then
+        if !immutable expected || !immutable (← infer n ctx value) then
+          error "A3001" "stored references must be deeply immutable values or fresh allocations" value.span
 
   def inferMethod (fuel : Nat) (ctx : Context) (object : Expr) (name : String)
       (args : List Expr) (span : Span) : Checked Ty := do
@@ -662,6 +695,7 @@ mutual
       match ty, name, args with
       | .array t, "push", [arg] =>
         checkExpr n ctx arg t
+        checkStored n ctx t arg
         if referenceType t && !immutable t && !fresh arg then error "A3001" "stored mutable references must be fresh" arg.span
         return .number
       | .array t, "pop", [] => return .union t .undefined
@@ -712,7 +746,7 @@ mutual
         for arg in args do
           match unreadonly (← infer n ctx arg) with
           | .array a => requireType a t arg.span
-          | a => requireType a t arg.span
+          | a => requireType a t arg.span; checkStored n ctx t arg
         return .array t
       | .array t, "join", [] | .array t, "join", [_] =>
         if !scalarPrintable t then error "A1001" "join requires scalar array elements" span
@@ -722,6 +756,7 @@ mutual
       | .map k _, "has", [key] | .map k _, "delete", [key] => checkExpr n ctx key k; return .boolean
       | .map k v, "set", [key, value] =>
         checkExpr n ctx key k; checkExpr n ctx value v
+        checkStored n ctx v value
         if referenceType v && !immutable v && !fresh value then error "A3001" "stored mutable references must be fresh" value.span
         return ty
       | .map _ _, "clear", [] => return .void
@@ -787,13 +822,15 @@ mutual
             let ty ← infer n ctx value
             pure (match ty with | .stringLiteral _ => Ty.string | t => t)
         if let .iterator _ := t then error "A3001" "consume an iterator immediately with spread or for-of" value.span
-        let borrowed := referenceType t && sharedRead value
-        if referenceType t && !immutable t && !fresh value && !borrowed then
+        checkNoBorrowEscape ctx t value
+        if referenceType t && !immutable t && sharedRead value then
+          error "A3001" "mutable container reads cannot be bound; consume the read within one statement or make a fresh copy" value.span
+        if referenceType t && !immutable t && !fresh value then
           error "A3001" "reference bindings require a fresh allocation or an owned function result" value.span
         if immutable t && referenceType t && !fresh value then
           if !immutable (← infer n ctx value) then
             error "A3001" "a readonly alias cannot share a mutable owner" value.span
-        return { ctx with bindings := { name, ty := t, mutable, borrowed, readOnly := borrowed, span } :: ctx.bindings }
+        return { ctx with bindings := { name, ty := t, mutable, span } :: ctx.bindings }
       | .assign target value span =>
         checkWrite ctx target (match target with | .var .. => true | _ => false)
         match target with
@@ -803,10 +840,12 @@ mutual
           let ty := b.declared.getD b.ty
           if referenceType ty && !immutable ty && !fresh value then error "A3001" "reassigning owned references requires a fresh value" span
           checkExpr n ctx value ty
+          checkStored n ctx ty value
         | .index object index _ =>
           checkExpr n ctx index .number
           let .array t ← infer n ctx object | error "A2002" "indexed assignment requires an array" span
           checkExpr n ctx value t
+          checkStored n ctx t value
           if referenceType t && !immutable t && !fresh value then error "A3001" "stored mutable elements must be fresh" span
         | .member object field _ =>
           match unreadonly (← infer n ctx object) with
@@ -814,6 +853,7 @@ mutual
             let some t := fields.lookup field | error "A2006" s!"unknown field '{field}'" span
             if let .fieldReadonly _ := t then error "A3001" "cannot assign a readonly field" span
             checkExpr n ctx value t
+            checkStored n ctx t value
             if referenceType t && !immutable t && !fresh value then error "A3001" "stored mutable fields must be fresh" span
           | .class_ name =>
             let some c := ctx.program.classes.find? (·.name == name) | error "A2001" "unknown class" span
@@ -822,6 +862,7 @@ mutual
             if f.readonly_ then error "A3001" "cannot assign a readonly field" span
             let ty ← infer n ctx target
             checkExpr n ctx value ty
+            checkStored n ctx ty value
             if referenceType ty && !immutable ty && !fresh value then error "A3001" "stored mutable fields must be fresh" span
           | _ => error "A3004" "only declared fields may be assigned" span
         | _ => error "A2002" "invalid assignment target" span
@@ -859,7 +900,7 @@ mutual
           | .map k v => pure (.tuple [k, v])
           | _ => error "A2002" "for-of requires an array, Map, or Set" span
         let ctx := invalidate ctx (writes n body)
-        let inner := { ctx with loopDepth := ctx.loopDepth + 1, protectedRoots := (root collection).toList ++ ctx.protectedRoots, bindings := { name, ty := t, mutable, borrowed := referenceType t, readOnly := referenceType t, span } :: ctx.bindings }
+        let inner := { ctx with loopDepth := ctx.loopDepth + 1, protectedRoots := (root collection).toList ++ ctx.protectedRoots, bindings := { name, ty := t, mutable, readOnly := referenceType t, span } :: ctx.bindings }
         let _ ← checkStmt n inner body
         return ctx
       | .switch_ value cases span =>
@@ -884,13 +925,17 @@ mutual
           let _ ← infer n ctx e
           return ctx
         checkExpr n ctx e ctx.result
+        checkNoBorrowEscape ctx ctx.result e
+        if referenceType ctx.result && immutable ctx.result && !fresh e then
+          if !immutable (← infer n ctx e) then
+            error "A3001" "a readonly return cannot expose a mutable owner or container element" span
         if referenceType ctx.result && root e == some "this" then
           error "A3001" "this and its mutable fields cannot escape a method" span
         if referenceType ctx.result && !immutable ctx.result then
           match e with
           | .var name _ =>
             let b ← binding ctx name span
-            if b.borrowed then error "A3001" "returning a borrowed reference would escape its lifetime" span
+            if b.borrowed || b.readOnly then error "A3001" "returning a borrowed or observed mutable reference would escape its lifetime" span
           | .array .. | .record .. | .newMap .. | .newSet .. | .newClass .. => pure ()
           | .call (.var ..) _ _ => pure ()
           | .call (.member _ method _) _ _ =>

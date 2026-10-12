@@ -79,4 +79,18 @@ theorem callback_local_return :
       let program ← frontend "function f(): bigint { const a = [3n]; const b = a.map((x: bigint) => { let y = x * x; y += 1n; return y; }); return b[0] ?? 0n; }"
       return run program "f" 60 []) = .ok (.ok (.bigint 10)) := by kernel_rfl
 
+/-- Copying a borrow allocates an owner; deeply immutable observations may be
+shared and returned without turning a parameter into a first-class reference. -/
+theorem copied_borrow_is_owned :
+    (frontend "function f(xs: readonly bigint[]): bigint[] { const copy = xs.slice(); copy.push(1n); return copy; }").isOk = true := by
+  kernel_rfl
+
+theorem immutable_container_read_is_a_value :
+    (frontend "type Point = { readonly x: bigint }; function f(m: Map<string, Point>): Point | undefined { const point = m.get('x'); return point; }").isOk = true := by
+  kernel_rfl
+
+theorem immutable_iteration_value_can_return :
+    (frontend "type Point = { readonly x: bigint }; function f(rows: Point[]): Point | undefined { for (const row of rows) { return row; } return undefined; }").isOk = true := by
+  kernel_rfl
+
 end Tests.Frontend

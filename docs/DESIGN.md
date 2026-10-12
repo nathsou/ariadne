@@ -305,6 +305,10 @@ through a second name. The checker's ownership rules state this precisely:
 2. Only the owner mutates. Binding a second name to a mutable value is rejected.
    A later milestone may accept it as a move when the first name is no longer
    used.
+   References borrowed from a caller are second-class: only parameters and
+   `this` bind them. They cannot be aliased, stored, returned, or captured by
+   an escaping closure, even through a readonly annotation. Allocating a copy
+   is permitted; copying a reference into a literal is an escape.
 3. A value stored into an array, Map, Set or field is one of the following:
    - **Of an immutable type.** This means scalars, strings, unions of
      immutable types, and `readonly` records and arrays whose elements are
@@ -312,7 +316,10 @@ through a second name. The checker's ownership rules state this precisely:
    - **Freshly built.** This means a literal, a spread, or the result of a
      built-in that allocates, such as `map`, `filter`, `slice` or `toSorted`.
 4. Values read out of a container (with `get`, indexing or iteration) are
-   read-only.
+   read-only. A mutable element read cannot be bound to a local; consume it
+   within its statement or allocate a fresh copy. Deeply immutable element
+   values may be stored and returned. Iteration observations are scoped to
+   their traversal, during which the container is protected from mutation.
 5. A function returns owned or immutable values. It never returns a borrowed
    parameter, or a mutable part of one.
 6. `this` and its fields do not escape a method. They are not returned, not

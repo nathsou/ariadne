@@ -32,17 +32,26 @@ export function choose(candidates: readonly Candidate[], floor: bigint): Candida
 }
 
 export function copyIfValid(candidate: Candidate): Candidate | undefined {
-  if (candidate.kind === 'valid') { return candidate; }
+  if (candidate.kind === 'valid') {
+    return { kind: 'valid', version: candidate.version, id: candidate.id };
+  }
   return undefined;
+}
+
+function copy(candidate: Candidate): Candidate {
+  if (candidate.kind === 'valid') {
+    return { kind: 'valid', version: candidate.version, id: candidate.id };
+  }
+  return { kind: 'rejected', reason: candidate.reason };
 }
 
 export function fallback(candidate: Candidate | undefined): Candidate {
   if (candidate === undefined) { return { kind: 'rejected', reason: 'missing' }; }
-  return candidate;
+  return copy(candidate);
 }
 
 export function replace(candidate: Candidate): Candidate {
-  let result: Candidate = candidate;
+  let result: Candidate = copy(candidate);
   if (result.kind === 'valid') { result = rejected('replaced'); }
   return result;
 }

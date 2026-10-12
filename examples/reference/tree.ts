@@ -17,8 +17,7 @@ export class Tree {
     if (parent !== undefined) { this.add(parent); }
     const old = this.parents.get(node);
     if (old !== undefined) {
-      const siblings = this.children.get(old) ?? [];
-      this.children.set(old, siblings.filter((child: string) => child !== node));
+      this.children.set(old, (this.children.get(old) ?? []).filter((child: string) => child !== node));
     }
     this.parents.delete(node);
     let cursor = parent;
@@ -29,8 +28,7 @@ export class Tree {
     }
     if (parent !== undefined) {
       this.parents.set(node, parent);
-      const siblings = this.children.get(parent) ?? [];
-      this.children.set(parent, [...siblings, node]);
+      this.children.set(parent, [...(this.children.get(parent) ?? []), node]);
     }
   }
 
