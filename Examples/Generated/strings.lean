@@ -9,6 +9,32 @@ open Ariadne
 
 def source : String := "export function reverseCodeUnits(text: string): string {\n  let result = \"\";\n  let i = text.length;\n  while (i > 0) {\n    i--;\n    result = result + (text[i] ?? \"\");\n  }\n  return result;\n}\n\nexport function palindrome(text: string): boolean {\n  return text === reverseCodeUnits(text);\n}\n\nexport function demo(): string {\n  return reverseCodeUnits(\"A😀\\ud800\");\n}\n\nexport function codeUnitLength(): number {\n  return \"😀\".length;\n}\n"
 
+def characters : List Char :=
+['e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'r', 'e', 'v', 'e', 'r', 's', 'e', 'C',
+ 'o', 'd', 'e', 'U', 'n', 'i', 't', 's', '(', 't', 'e', 'x', 't', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ')', ':', ' ',
+ 's', 't', 'r', 'i', 'n', 'g', ' ', '{', '\n', ' ', ' ', 'l', 'e', 't', ' ', 'r', 'e', 's', 'u', 'l', 't', ' ', '=',
+ ' ', '\"', '\"', ';', '\n', ' ', ' ', 'l', 'e', 't', ' ', 'i', ' ', '=', ' ', 't', 'e', 'x', 't', '.', 'l', 'e', 'n',
+ 'g', 't', 'h', ';', '\n', ' ', ' ', 'w', 'h', 'i', 'l', 'e', ' ', '(', 'i', ' ', '>', ' ', '0', ')', ' ', '{', '\n',
+ ' ', ' ', ' ', ' ', 'i', '-', '-', ';', '\n', ' ', ' ', ' ', ' ', 'r', 'e', 's', 'u', 'l', 't', ' ', '=', ' ', 'r',
+ 'e', 's', 'u', 'l', 't', ' ', '+', ' ', '(', 't', 'e', 'x', 't', '[', 'i', ']', ' ', '?', '?', ' ', '\"', '\"', ')',
+ ';', '\n', ' ', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'r', 'e', 's', 'u', 'l', 't', ';', '\n',
+ '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'p', 'a', 'l', 'i',
+ 'n', 'd', 'r', 'o', 'm', 'e', '(', 't', 'e', 'x', 't', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ')', ':', ' ', 'b', 'o',
+ 'o', 'l', 'e', 'a', 'n', ' ', '{', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 't', 'e', 'x', 't', ' ', '=',
+ '=', '=', ' ', 'r', 'e', 'v', 'e', 'r', 's', 'e', 'C', 'o', 'd', 'e', 'U', 'n', 'i', 't', 's', '(', 't', 'e', 'x', 't',
+ ')', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'd',
+ 'e', 'm', 'o', '(', ')', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ' ', '{', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r',
+ 'n', ' ', 'r', 'e', 'v', 'e', 'r', 's', 'e', 'C', 'o', 'd', 'e', 'U', 'n', 'i', 't', 's', '(', '\"', 'A', '😀', '\\',
+ 'u', 'd', '8', '0', '0', '\"', ')', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c',
+ 't', 'i', 'o', 'n', ' ', 'c', 'o', 'd', 'e', 'U', 'n', 'i', 't', 'L', 'e', 'n', 'g', 't', 'h', '(', ')', ':', ' ', 'n',
+ 'u', 'm', 'b', 'e', 'r', ' ', '{', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '\"', '😀', '\"', '.', 'l', 'e',
+ 'n', 'g', 't', 'h', ';', '\n', '}', '\n']
+
+theorem characters_encoded : String.ofList characters = source := by kernel_rfl
+
+theorem characters_checked : source.toList = characters :=
+  characters_of_encoding characters_encoded
+
 def tokens : Array Token :=
 #[{ text := "export", span := { start := 0, stop := 6 }, lineBreak := false, stringValue := none },
   { text := "function", span := { start := 7, stop := 15 }, lineBreak := false, stringValue := none },
@@ -115,7 +141,10 @@ def tokens : Array Token :=
   { text := "}", span := { start := 431, stop := 432 }, lineBreak := true, stringValue := none },
   { text := "<eof>", span := { start := 433, stop := 433 }, lineBreak := true, stringValue := none }]
 
-theorem lex_checked : lex source = .ok tokens := by kernel_rfl
+theorem lex_checked : lex source = .ok tokens := by
+  unfold lex
+  rw [characters_checked]
+  kernel_rfl
 
 def program : Program :=
 { functions := [{ name := "reverseCodeUnits",

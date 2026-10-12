@@ -43,7 +43,7 @@ No JavaScript engine is needed to build the translator or check Lean proofs.
 
 ## What is proved
 
-Each generated module embeds the exact source, tokens, and AST. Its kernel-checked
+Each generated module embeds the exact source, characters, tokens, and AST. Its kernel-checked
 lexer, parser, and checker equations establish that these artifacts belong together.
 Transfer theorems connect properties of its operational model to that source text.
 The printer and native translator executable are outside this correctness chain.

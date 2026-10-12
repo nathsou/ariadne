@@ -9,6 +9,34 @@ open Ariadne
 
 def source : String := "// A borrowed array is updated in place; it is not returned as an escaping alias.\nexport function insertionSort(values: number[]): void {\n  for (let i = 1; i < values.length; i++) {\n    const key = values[i] ?? 0;\n    let j = i;\n    while (j > 0 && (values[j - 1] ?? 0) > key) {\n      values[j] = values[j - 1] ?? 0;\n      j--;\n    }\n    values[j] = key;\n  }\n}\n\nexport function demo(): number[] {\n  const values = [9, -2, 7, 7, 0, 3];\n  insertionSort(values);\n  return values;\n}\n"
 
+def characters : List Char :=
+['/', '/', ' ', 'A', ' ', 'b', 'o', 'r', 'r', 'o', 'w', 'e', 'd', ' ', 'a', 'r', 'r', 'a', 'y', ' ', 'i', 's', ' ', 'u',
+ 'p', 'd', 'a', 't', 'e', 'd', ' ', 'i', 'n', ' ', 'p', 'l', 'a', 'c', 'e', ';', ' ', 'i', 't', ' ', 'i', 's', ' ', 'n',
+ 'o', 't', ' ', 'r', 'e', 't', 'u', 'r', 'n', 'e', 'd', ' ', 'a', 's', ' ', 'a', 'n', ' ', 'e', 's', 'c', 'a', 'p', 'i',
+ 'n', 'g', ' ', 'a', 'l', 'i', 'a', 's', '.', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i',
+ 'o', 'n', ' ', 'i', 'n', 's', 'e', 'r', 't', 'i', 'o', 'n', 'S', 'o', 'r', 't', '(', 'v', 'a', 'l', 'u', 'e', 's', ':',
+ ' ', 'n', 'u', 'm', 'b', 'e', 'r', '[', ']', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{', '\n', ' ', ' ', 'f', 'o',
+ 'r', ' ', '(', 'l', 'e', 't', ' ', 'i', ' ', '=', ' ', '1', ';', ' ', 'i', ' ', '<', ' ', 'v', 'a', 'l', 'u', 'e', 's',
+ '.', 'l', 'e', 'n', 'g', 't', 'h', ';', ' ', 'i', '+', '+', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', 'c', 'o', 'n',
+ 's', 't', ' ', 'k', 'e', 'y', ' ', '=', ' ', 'v', 'a', 'l', 'u', 'e', 's', '[', 'i', ']', ' ', '?', '?', ' ', '0', ';',
+ '\n', ' ', ' ', ' ', ' ', 'l', 'e', 't', ' ', 'j', ' ', '=', ' ', 'i', ';', '\n', ' ', ' ', ' ', ' ', 'w', 'h', 'i',
+ 'l', 'e', ' ', '(', 'j', ' ', '>', ' ', '0', ' ', '&', '&', ' ', '(', 'v', 'a', 'l', 'u', 'e', 's', '[', 'j', ' ', '-',
+ ' ', '1', ']', ' ', '?', '?', ' ', '0', ')', ' ', '>', ' ', 'k', 'e', 'y', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ',
+ ' ', ' ', 'v', 'a', 'l', 'u', 'e', 's', '[', 'j', ']', ' ', '=', ' ', 'v', 'a', 'l', 'u', 'e', 's', '[', 'j', ' ', '-',
+ ' ', '1', ']', ' ', '?', '?', ' ', '0', ';', '\n', ' ', ' ', ' ', ' ', ' ', ' ', 'j', '-', '-', ';', '\n', ' ', ' ',
+ ' ', ' ', '}', '\n', ' ', ' ', ' ', ' ', 'v', 'a', 'l', 'u', 'e', 's', '[', 'j', ']', ' ', '=', ' ', 'k', 'e', 'y',
+ ';', '\n', ' ', ' ', '}', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o',
+ 'n', ' ', 'd', 'e', 'm', 'o', '(', ')', ':', ' ', 'n', 'u', 'm', 'b', 'e', 'r', '[', ']', ' ', '{', '\n', ' ', ' ',
+ 'c', 'o', 'n', 's', 't', ' ', 'v', 'a', 'l', 'u', 'e', 's', ' ', '=', ' ', '[', '9', ',', ' ', '-', '2', ',', ' ', '7',
+ ',', ' ', '7', ',', ' ', '0', ',', ' ', '3', ']', ';', '\n', ' ', ' ', 'i', 'n', 's', 'e', 'r', 't', 'i', 'o', 'n',
+ 'S', 'o', 'r', 't', '(', 'v', 'a', 'l', 'u', 'e', 's', ')', ';', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ',
+ 'v', 'a', 'l', 'u', 'e', 's', ';', '\n', '}', '\n']
+
+theorem characters_encoded : String.ofList characters = source := by kernel_rfl
+
+theorem characters_checked : source.toList = characters :=
+  characters_of_encoding characters_encoded
+
 def tokens : Array Token :=
 #[{ text := "export", span := { start := 82, stop := 88 }, lineBreak := true, stringValue := none },
   { text := "function", span := { start := 89, stop := 97 }, lineBreak := false, stringValue := none },
@@ -141,7 +169,10 @@ def tokens : Array Token :=
   { text := "}", span := { start := 477, stop := 478 }, lineBreak := true, stringValue := none },
   { text := "<eof>", span := { start := 479, stop := 479 }, lineBreak := true, stringValue := none }]
 
-theorem lex_checked : lex source = .ok tokens := by kernel_rfl
+theorem lex_checked : lex source = .ok tokens := by
+  unfold lex
+  rw [characters_checked]
+  kernel_rfl
 
 def program : Program :=
 { functions := [{ name := "insertionSort",

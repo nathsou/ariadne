@@ -9,6 +9,27 @@ open Ariadne
 
 def source : String := "export function fibonacci(n: bigint): bigint {\n  let previous = 0n;\n  let current = 1n;\n  let index = 0n;\n  while (index < n) {\n    const next = previous + current;\n    previous = current;\n    current = next;\n    index += 1n;\n  }\n  return previous;\n}\n\nexport function demo(): bigint {\n  return fibonacci(20n);\n}\n"
 
+def characters : List Char :=
+['e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'f', 'i', 'b', 'o', 'n', 'a', 'c', 'c',
+ 'i', '(', 'n', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n',
+ ' ', ' ', 'l', 'e', 't', ' ', 'p', 'r', 'e', 'v', 'i', 'o', 'u', 's', ' ', '=', ' ', '0', 'n', ';', '\n', ' ', ' ',
+ 'l', 'e', 't', ' ', 'c', 'u', 'r', 'r', 'e', 'n', 't', ' ', '=', ' ', '1', 'n', ';', '\n', ' ', ' ', 'l', 'e', 't',
+ ' ', 'i', 'n', 'd', 'e', 'x', ' ', '=', ' ', '0', 'n', ';', '\n', ' ', ' ', 'w', 'h', 'i', 'l', 'e', ' ', '(', 'i',
+ 'n', 'd', 'e', 'x', ' ', '<', ' ', 'n', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', 'c', 'o', 'n', 's', 't', ' ', 'n',
+ 'e', 'x', 't', ' ', '=', ' ', 'p', 'r', 'e', 'v', 'i', 'o', 'u', 's', ' ', '+', ' ', 'c', 'u', 'r', 'r', 'e', 'n', 't',
+ ';', '\n', ' ', ' ', ' ', ' ', 'p', 'r', 'e', 'v', 'i', 'o', 'u', 's', ' ', '=', ' ', 'c', 'u', 'r', 'r', 'e', 'n',
+ 't', ';', '\n', ' ', ' ', ' ', ' ', 'c', 'u', 'r', 'r', 'e', 'n', 't', ' ', '=', ' ', 'n', 'e', 'x', 't', ';', '\n',
+ ' ', ' ', ' ', ' ', 'i', 'n', 'd', 'e', 'x', ' ', '+', '=', ' ', '1', 'n', ';', '\n', ' ', ' ', '}', '\n', ' ', ' ',
+ 'r', 'e', 't', 'u', 'r', 'n', ' ', 'p', 'r', 'e', 'v', 'i', 'o', 'u', 's', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p',
+ 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'd', 'e', 'm', 'o', '(', ')', ':', ' ', 'b', 'i', 'g',
+ 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'f', 'i', 'b', 'o', 'n', 'a', 'c', 'c',
+ 'i', '(', '2', '0', 'n', ')', ';', '\n', '}', '\n']
+
+theorem characters_encoded : String.ofList characters = source := by kernel_rfl
+
+theorem characters_checked : source.toList = characters :=
+  characters_of_encoding characters_encoded
+
 def tokens : Array Token :=
 #[{ text := "export", span := { start := 0, stop := 6 }, lineBreak := false, stringValue := none },
   { text := "function", span := { start := 7, stop := 15 }, lineBreak := false, stringValue := none },
@@ -84,7 +105,10 @@ def tokens : Array Token :=
   { text := "}", span := { start := 310, stop := 311 }, lineBreak := true, stringValue := none },
   { text := "<eof>", span := { start := 312, stop := 312 }, lineBreak := true, stringValue := none }]
 
-theorem lex_checked : lex source = .ok tokens := by kernel_rfl
+theorem lex_checked : lex source = .ok tokens := by
+  unfold lex
+  rw [characters_checked]
+  kernel_rfl
 
 def program : Program :=
 { functions := [{ name := "fibonacci",

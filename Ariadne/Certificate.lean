@@ -4,6 +4,13 @@ import Ariadne.Semantics
 
 namespace Ariadne
 
+/-- Checking UTF-8 encoding avoids expensive kernel reduction of decoding. The
+standard inverse theorem then identifies the decoded character stream exactly. -/
+theorem characters_of_encoding {source : String} {characters : List Char}
+    (encoded : String.ofList characters = source) : source.toList = characters := by
+  rw [← encoded]
+  exact String.toList_ofList
+
 theorem frontend_of_parse {source : String} {program : Program}
     (parsed : parse source = .ok program) (checked : Check.program program = .ok ()) :
     frontend source = .ok program := by

@@ -9,6 +9,35 @@ open Ariadne
 
 def source : String := "// Exact arithmetic and branching over arbitrary-size integers.\nexport function absolute(x: bigint): bigint {\n  if (x < 0n) { return -x; } else { return x; }\n}\n\nexport function maximum(x: bigint, y: bigint): bigint {\n  if (x < y) { return y; } else { return x; }\n}\n\nexport function clamp(x: bigint, low: bigint, high: bigint): bigint {\n  if (x < low) { return low; }\n  if (x > high) { return high; }\n  return x;\n}\n\nexport function demo(): bigint {\n  return absolute(-123456789012345678901234567890n);\n}\n"
 
+def characters : List Char :=
+['/', '/', ' ', 'E', 'x', 'a', 'c', 't', ' ', 'a', 'r', 'i', 't', 'h', 'm', 'e', 't', 'i', 'c', ' ', 'a', 'n', 'd', ' ',
+ 'b', 'r', 'a', 'n', 'c', 'h', 'i', 'n', 'g', ' ', 'o', 'v', 'e', 'r', ' ', 'a', 'r', 'b', 'i', 't', 'r', 'a', 'r', 'y',
+ '-', 's', 'i', 'z', 'e', ' ', 'i', 'n', 't', 'e', 'g', 'e', 'r', 's', '.', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ',
+ 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'a', 'b', 's', 'o', 'l', 'u', 't', 'e', '(', 'x', ':', ' ', 'b', 'i', 'g',
+ 'i', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'x', ' ',
+ '<', ' ', '0', 'n', ')', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '-', 'x', ';', ' ', '}', ' ', 'e', 'l', 's',
+ 'e', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'x', ';', ' ', '}', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o',
+ 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'm', 'a', 'x', 'i', 'm', 'u', 'm', '(', 'x', ':', ' ', 'b',
+ 'i', 'g', 'i', 'n', 't', ',', ' ', 'y', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n',
+ 't', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'x', ' ', '<', ' ', 'y', ')', ' ', '{', ' ', 'r', 'e', 't', 'u',
+ 'r', 'n', ' ', 'y', ';', ' ', '}', ' ', 'e', 'l', 's', 'e', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'x', ';',
+ ' ', '}', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'c',
+ 'l', 'a', 'm', 'p', '(', 'x', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ',', ' ', 'l', 'o', 'w', ':', ' ', 'b', 'i', 'g',
+ 'i', 'n', 't', ',', ' ', 'h', 'i', 'g', 'h', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i',
+ 'n', 't', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'x', ' ', '<', ' ', 'l', 'o', 'w', ')', ' ', '{', ' ', 'r',
+ 'e', 't', 'u', 'r', 'n', ' ', 'l', 'o', 'w', ';', ' ', '}', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'x', ' ', '>', ' ',
+ 'h', 'i', 'g', 'h', ')', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'h', 'i', 'g', 'h', ';', ' ', '}', '\n',
+ ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'x', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f',
+ 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'd', 'e', 'm', 'o', '(', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{',
+ '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'a', 'b', 's', 'o', 'l', 'u', 't', 'e', '(', '-', '1', '2', '3',
+ '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7',
+ '8', '9', '0', 'n', ')', ';', '\n', '}', '\n']
+
+theorem characters_encoded : String.ofList characters = source := by kernel_rfl
+
+theorem characters_checked : source.toList = characters :=
+  characters_of_encoding characters_encoded
+
 def tokens : Array Token :=
 #[{ text := "export", span := { start := 64, stop := 70 }, lineBreak := true, stringValue := none },
   { text := "function", span := { start := 71, stop := 79 }, lineBreak := false, stringValue := none },
@@ -139,7 +168,10 @@ def tokens : Array Token :=
   { text := "}", span := { start := 501, stop := 502 }, lineBreak := true, stringValue := none },
   { text := "<eof>", span := { start := 503, stop := 503 }, lineBreak := true, stringValue := none }]
 
-theorem lex_checked : lex source = .ok tokens := by kernel_rfl
+theorem lex_checked : lex source = .ok tokens := by
+  unfold lex
+  rw [characters_checked]
+  kernel_rfl
 
 def program : Program :=
 { functions := [{ name := "absolute",

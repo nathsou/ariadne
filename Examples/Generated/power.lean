@@ -9,6 +9,29 @@ open Ariadne
 
 def source : String := "// Exponentiation by squaring uses logarithmically many loop iterations.\nexport function power(base: bigint, exponent: bigint): bigint {\n  let result = 1n;\n  while (exponent > 0n) {\n    if (exponent % 2n === 1n) { result *= base; }\n    base *= base;\n    exponent /= 2n;\n  }\n  return result;\n}\n\nexport function demo(): bigint {\n  return power(3n, 25n);\n}\n"
 
+def characters : List Char :=
+['/', '/', ' ', 'E', 'x', 'p', 'o', 'n', 'e', 'n', 't', 'i', 'a', 't', 'i', 'o', 'n', ' ', 'b', 'y', ' ', 's', 'q', 'u',
+ 'a', 'r', 'i', 'n', 'g', ' ', 'u', 's', 'e', 's', ' ', 'l', 'o', 'g', 'a', 'r', 'i', 't', 'h', 'm', 'i', 'c', 'a', 'l',
+ 'l', 'y', ' ', 'm', 'a', 'n', 'y', ' ', 'l', 'o', 'o', 'p', ' ', 'i', 't', 'e', 'r', 'a', 't', 'i', 'o', 'n', 's', '.',
+ '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'p', 'o', 'w', 'e', 'r', '(',
+ 'b', 'a', 's', 'e', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ',', ' ', 'e', 'x', 'p', 'o', 'n', 'e', 'n', 't', ':', ' ',
+ 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'l', 'e', 't',
+ ' ', 'r', 'e', 's', 'u', 'l', 't', ' ', '=', ' ', '1', 'n', ';', '\n', ' ', ' ', 'w', 'h', 'i', 'l', 'e', ' ', '(',
+ 'e', 'x', 'p', 'o', 'n', 'e', 'n', 't', ' ', '>', ' ', '0', 'n', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', 'i', 'f',
+ ' ', '(', 'e', 'x', 'p', 'o', 'n', 'e', 'n', 't', ' ', '%', ' ', '2', 'n', ' ', '=', '=', '=', ' ', '1', 'n', ')', ' ',
+ '{', ' ', 'r', 'e', 's', 'u', 'l', 't', ' ', '*', '=', ' ', 'b', 'a', 's', 'e', ';', ' ', '}', '\n', ' ', ' ', ' ',
+ ' ', 'b', 'a', 's', 'e', ' ', '*', '=', ' ', 'b', 'a', 's', 'e', ';', '\n', ' ', ' ', ' ', ' ', 'e', 'x', 'p', 'o',
+ 'n', 'e', 'n', 't', ' ', '/', '=', ' ', '2', 'n', ';', '\n', ' ', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r',
+ 'n', ' ', 'r', 'e', 's', 'u', 'l', 't', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n',
+ 'c', 't', 'i', 'o', 'n', ' ', 'd', 'e', 'm', 'o', '(', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n',
+ ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'p', 'o', 'w', 'e', 'r', '(', '3', 'n', ',', ' ', '2', '5', 'n', ')', ';',
+ '\n', '}', '\n']
+
+theorem characters_encoded : String.ofList characters = source := by kernel_rfl
+
+theorem characters_checked : source.toList = characters :=
+  characters_of_encoding characters_encoded
+
 def tokens : Array Token :=
 #[{ text := "export", span := { start := 73, stop := 79 }, lineBreak := true, stringValue := none },
   { text := "function", span := { start := 80, stop := 88 }, lineBreak := false, stringValue := none },
@@ -83,7 +106,10 @@ def tokens : Array Token :=
   { text := "}", span := { start := 352, stop := 353 }, lineBreak := true, stringValue := none },
   { text := "<eof>", span := { start := 354, stop := 354 }, lineBreak := true, stringValue := none }]
 
-theorem lex_checked : lex source = .ok tokens := by kernel_rfl
+theorem lex_checked : lex source = .ok tokens := by
+  unfold lex
+  rw [characters_checked]
+  kernel_rfl
 
 def program : Program :=
 { functions := [{ name := "power",

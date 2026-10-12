@@ -134,6 +134,25 @@ theorem map_keys_source :
       mapResult (.ok (value, state)) = .ok keyEntries) :=
   Example_map_keys.certificate.transfer_reaches (map_reaches same_value_zero_and_insertion_order)
 
+theorem stored_undefined_is_distinct_from_absence :
+    arrayResult (runState Example_map_keys.program "presentUndefined" 50 []) =
+      .ok [.boolean true, .boolean false, .boolean true] := by kernel_rfl
+
+theorem underflow_preserves_sign :
+    SourceReturns Example_numbers.source "negativeUnderflow" [] (.number (-(Float.Model.ofNat 0))) := by
+  apply Example_numbers.ts_negativeUnderflow_source (fuel := 30)
+  kernel_rfl
+
+/-- Inspect every field of the mutated record returned by the source program. -/
+theorem record_aggregate :
+    (do
+      let (value, state) ← runState Example_records.program "demo" 100 []
+      let count ← readMember state value "count"
+      let total ← readMember state value "total"
+      let positive ← readMember state value "positive"
+      return (count, total, positive)) =
+        .ok (.number (Float.Model.ofNat 4), .bigint 11, .boolean false) := by kernel_rfl
+
 /-- Exhausted fuel is explicitly inconclusive; it does not prove divergence. -/
 theorem bounded_nontermination_observation :
     Example_control_flow.ts_diverges 30 [] = .error .timeout := by

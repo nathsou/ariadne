@@ -9,6 +9,31 @@ open Ariadne
 
 def source : String := "// Euclid's algorithm exercises remainder, loops, and sequential local mutation.\nexport function gcd(a: bigint, b: bigint): bigint {\n  while (b !== 0n) {\n    const remainder = a % b;\n    a = b;\n    b = remainder;\n  }\n  return a;\n}\n\nexport function lcm(a: bigint, b: bigint): bigint {\n  if (a === 0n || b === 0n) { return 0n; }\n  return (a / gcd(a, b)) * b;\n}\n\nexport function demo(): bigint {\n  return lcm(84n, 30n);\n}\n"
 
+def characters : List Char :=
+['/', '/', ' ', 'E', 'u', 'c', 'l', 'i', 'd', '\'', 's', ' ', 'a', 'l', 'g', 'o', 'r', 'i', 't', 'h', 'm', ' ', 'e',
+ 'x', 'e', 'r', 'c', 'i', 's', 'e', 's', ' ', 'r', 'e', 'm', 'a', 'i', 'n', 'd', 'e', 'r', ',', ' ', 'l', 'o', 'o', 'p',
+ 's', ',', ' ', 'a', 'n', 'd', ' ', 's', 'e', 'q', 'u', 'e', 'n', 't', 'i', 'a', 'l', ' ', 'l', 'o', 'c', 'a', 'l', ' ',
+ 'm', 'u', 't', 'a', 't', 'i', 'o', 'n', '.', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i',
+ 'o', 'n', ' ', 'g', 'c', 'd', '(', 'a', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ',', ' ', 'b', ':', ' ', 'b', 'i', 'g',
+ 'i', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'w', 'h', 'i', 'l', 'e', ' ',
+ '(', 'b', ' ', '!', '=', '=', ' ', '0', 'n', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', 'c', 'o', 'n', 's', 't', ' ',
+ 'r', 'e', 'm', 'a', 'i', 'n', 'd', 'e', 'r', ' ', '=', ' ', 'a', ' ', '%', ' ', 'b', ';', '\n', ' ', ' ', ' ', ' ',
+ 'a', ' ', '=', ' ', 'b', ';', '\n', ' ', ' ', ' ', ' ', 'b', ' ', '=', ' ', 'r', 'e', 'm', 'a', 'i', 'n', 'd', 'e',
+ 'r', ';', '\n', ' ', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'a', ';', '\n', '}', '\n', '\n', 'e',
+ 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'l', 'c', 'm', '(', 'a', ':', ' ', 'b', 'i',
+ 'g', 'i', 'n', 't', ',', ' ', 'b', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't',
+ ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'a', ' ', '=', '=', '=', ' ', '0', 'n', ' ', '|', '|', ' ', 'b', ' ',
+ '=', '=', '=', ' ', '0', 'n', ')', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '0', 'n', ';', ' ', '}', '\n',
+ ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '(', 'a', ' ', '/', ' ', 'g', 'c', 'd', '(', 'a', ',', ' ', 'b', ')', ')',
+ ' ', '*', ' ', 'b', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o',
+ 'n', ' ', 'd', 'e', 'm', 'o', '(', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'r', 'e',
+ 't', 'u', 'r', 'n', ' ', 'l', 'c', 'm', '(', '8', '4', 'n', ',', ' ', '3', '0', 'n', ')', ';', '\n', '}', '\n']
+
+theorem characters_encoded : String.ofList characters = source := by kernel_rfl
+
+theorem characters_checked : source.toList = characters :=
+  characters_of_encoding characters_encoded
+
 def tokens : Array Token :=
 #[{ text := "export", span := { start := 81, stop := 87 }, lineBreak := true, stringValue := none },
   { text := "function", span := { start := 88, stop := 96 }, lineBreak := false, stringValue := none },
@@ -116,7 +141,10 @@ def tokens : Array Token :=
   { text := "}", span := { start := 417, stop := 418 }, lineBreak := true, stringValue := none },
   { text := "<eof>", span := { start := 419, stop := 419 }, lineBreak := true, stringValue := none }]
 
-theorem lex_checked : lex source = .ok tokens := by kernel_rfl
+theorem lex_checked : lex source = .ok tokens := by
+  unfold lex
+  rw [characters_checked]
+  kernel_rfl
 
 def program : Program :=
 { functions := [{ name := "gcd",

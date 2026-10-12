@@ -9,6 +9,33 @@ open Ariadne
 
 def source : String := "type Summary = { count: number; total: bigint; positive: boolean; };\n\nexport function demo(): Summary {\n  const summary: Summary = { count: 0, total: 0n, positive: true };\n  const values = [3n, -1n, 7n, 2n];\n  for (let i = 0; i < values.length; i++) {\n    const value = values[i] ?? 0n;\n    summary.count = summary.count + 1;\n    summary.total = summary.total + value;\n    summary.positive = summary.positive && value > 0n;\n  }\n  return summary;\n}\n"
 
+def characters : List Char :=
+['t', 'y', 'p', 'e', ' ', 'S', 'u', 'm', 'm', 'a', 'r', 'y', ' ', '=', ' ', '{', ' ', 'c', 'o', 'u', 'n', 't', ':', ' ',
+ 'n', 'u', 'm', 'b', 'e', 'r', ';', ' ', 't', 'o', 't', 'a', 'l', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ';', ' ', 'p',
+ 'o', 's', 'i', 't', 'i', 'v', 'e', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ';', ' ', '}', ';', '\n', '\n', 'e',
+ 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'd', 'e', 'm', 'o', '(', ')', ':', ' ', 'S',
+ 'u', 'm', 'm', 'a', 'r', 'y', ' ', '{', '\n', ' ', ' ', 'c', 'o', 'n', 's', 't', ' ', 's', 'u', 'm', 'm', 'a', 'r',
+ 'y', ':', ' ', 'S', 'u', 'm', 'm', 'a', 'r', 'y', ' ', '=', ' ', '{', ' ', 'c', 'o', 'u', 'n', 't', ':', ' ', '0', ',',
+ ' ', 't', 'o', 't', 'a', 'l', ':', ' ', '0', 'n', ',', ' ', 'p', 'o', 's', 'i', 't', 'i', 'v', 'e', ':', ' ', 't', 'r',
+ 'u', 'e', ' ', '}', ';', '\n', ' ', ' ', 'c', 'o', 'n', 's', 't', ' ', 'v', 'a', 'l', 'u', 'e', 's', ' ', '=', ' ',
+ '[', '3', 'n', ',', ' ', '-', '1', 'n', ',', ' ', '7', 'n', ',', ' ', '2', 'n', ']', ';', '\n', ' ', ' ', 'f', 'o',
+ 'r', ' ', '(', 'l', 'e', 't', ' ', 'i', ' ', '=', ' ', '0', ';', ' ', 'i', ' ', '<', ' ', 'v', 'a', 'l', 'u', 'e', 's',
+ '.', 'l', 'e', 'n', 'g', 't', 'h', ';', ' ', 'i', '+', '+', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', 'c', 'o', 'n',
+ 's', 't', ' ', 'v', 'a', 'l', 'u', 'e', ' ', '=', ' ', 'v', 'a', 'l', 'u', 'e', 's', '[', 'i', ']', ' ', '?', '?', ' ',
+ '0', 'n', ';', '\n', ' ', ' ', ' ', ' ', 's', 'u', 'm', 'm', 'a', 'r', 'y', '.', 'c', 'o', 'u', 'n', 't', ' ', '=',
+ ' ', 's', 'u', 'm', 'm', 'a', 'r', 'y', '.', 'c', 'o', 'u', 'n', 't', ' ', '+', ' ', '1', ';', '\n', ' ', ' ', ' ',
+ ' ', 's', 'u', 'm', 'm', 'a', 'r', 'y', '.', 't', 'o', 't', 'a', 'l', ' ', '=', ' ', 's', 'u', 'm', 'm', 'a', 'r', 'y',
+ '.', 't', 'o', 't', 'a', 'l', ' ', '+', ' ', 'v', 'a', 'l', 'u', 'e', ';', '\n', ' ', ' ', ' ', ' ', 's', 'u', 'm',
+ 'm', 'a', 'r', 'y', '.', 'p', 'o', 's', 'i', 't', 'i', 'v', 'e', ' ', '=', ' ', 's', 'u', 'm', 'm', 'a', 'r', 'y', '.',
+ 'p', 'o', 's', 'i', 't', 'i', 'v', 'e', ' ', '&', '&', ' ', 'v', 'a', 'l', 'u', 'e', ' ', '>', ' ', '0', 'n', ';',
+ '\n', ' ', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 's', 'u', 'm', 'm', 'a', 'r', 'y', ';', '\n',
+ '}', '\n']
+
+theorem characters_encoded : String.ofList characters = source := by kernel_rfl
+
+theorem characters_checked : source.toList = characters :=
+  characters_of_encoding characters_encoded
+
 def tokens : Array Token :=
 #[{ text := "type", span := { start := 0, stop := 4 }, lineBreak := false, stringValue := none },
   { text := "Summary", span := { start := 5, stop := 12 }, lineBreak := false, stringValue := none },
@@ -135,7 +162,10 @@ def tokens : Array Token :=
   { text := "}", span := { start := 446, stop := 447 }, lineBreak := true, stringValue := none },
   { text := "<eof>", span := { start := 448, stop := 448 }, lineBreak := true, stringValue := none }]
 
-theorem lex_checked : lex source = .ok tokens := by kernel_rfl
+theorem lex_checked : lex source = .ok tokens := by
+  unfold lex
+  rw [characters_checked]
+  kernel_rfl
 
 def program : Program :=
 { functions := [{ name := "demo",

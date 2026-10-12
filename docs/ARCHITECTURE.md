@@ -31,8 +31,10 @@ appropriate for scalar inputs; reference-input examples allocate their inputs in
 TypeScript entry function. A public validated external-heap API is future work.
 
 `Certificate` links exact source to the checked AST. `Emit` prints source, tokens,
-ASTs, replay theorems, and fuel-indexed wrappers. Lexer, parser, and checker equations
-are separate declarations, reducing repeated work. `Kernel` supplies the small
+ASTs, replay theorems, and fuel-indexed wrappers. Character encoding, lexer, parser, and checker equations
+are separate declarations. The kernel checks `String.ofList characters = source`;
+Lean’s proved inverse then identifies `source.toList`. This avoids expensive kernel
+reduction of UTF-8 decoding without trusting a native decoder. `Kernel` supplies the small
 kernel-checked reflexivity tactic. `Properties`, `Hoare`, and `Collections` provide
 state/collection observations and reusable reasoning principles.
 

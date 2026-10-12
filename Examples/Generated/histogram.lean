@@ -9,6 +9,31 @@ open Ariadne
 
 def source : String := "// Keys are UTF-16 code units, matching TypeScript's indexed string access.\nexport function histogram(text: string): Map<string, number> {\n  const counts = new Map<string, number>();\n  for (let i = 0; i < text.length; i++) {\n    const key = text[i] ?? \"\";\n    counts.set(key, (counts.get(key) ?? 0) + 1);\n  }\n  return counts;\n}\n\nexport function demo(): Map<string, number> {\n  return histogram(\"abracadabra\");\n}\n"
 
+def characters : List Char :=
+['/', '/', ' ', 'K', 'e', 'y', 's', ' ', 'a', 'r', 'e', ' ', 'U', 'T', 'F', '-', '1', '6', ' ', 'c', 'o', 'd', 'e', ' ',
+ 'u', 'n', 'i', 't', 's', ',', ' ', 'm', 'a', 't', 'c', 'h', 'i', 'n', 'g', ' ', 'T', 'y', 'p', 'e', 'S', 'c', 'r', 'i',
+ 'p', 't', '\'', 's', ' ', 'i', 'n', 'd', 'e', 'x', 'e', 'd', ' ', 's', 't', 'r', 'i', 'n', 'g', ' ', 'a', 'c', 'c',
+ 'e', 's', 's', '.', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'h', 'i',
+ 's', 't', 'o', 'g', 'r', 'a', 'm', '(', 't', 'e', 'x', 't', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ')', ':', ' ', 'M',
+ 'a', 'p', '<', 's', 't', 'r', 'i', 'n', 'g', ',', ' ', 'n', 'u', 'm', 'b', 'e', 'r', '>', ' ', '{', '\n', ' ', ' ',
+ 'c', 'o', 'n', 's', 't', ' ', 'c', 'o', 'u', 'n', 't', 's', ' ', '=', ' ', 'n', 'e', 'w', ' ', 'M', 'a', 'p', '<', 's',
+ 't', 'r', 'i', 'n', 'g', ',', ' ', 'n', 'u', 'm', 'b', 'e', 'r', '>', '(', ')', ';', '\n', ' ', ' ', 'f', 'o', 'r',
+ ' ', '(', 'l', 'e', 't', ' ', 'i', ' ', '=', ' ', '0', ';', ' ', 'i', ' ', '<', ' ', 't', 'e', 'x', 't', '.', 'l', 'e',
+ 'n', 'g', 't', 'h', ';', ' ', 'i', '+', '+', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', 'c', 'o', 'n', 's', 't', ' ',
+ 'k', 'e', 'y', ' ', '=', ' ', 't', 'e', 'x', 't', '[', 'i', ']', ' ', '?', '?', ' ', '\"', '\"', ';', '\n', ' ', ' ',
+ ' ', ' ', 'c', 'o', 'u', 'n', 't', 's', '.', 's', 'e', 't', '(', 'k', 'e', 'y', ',', ' ', '(', 'c', 'o', 'u', 'n', 't',
+ 's', '.', 'g', 'e', 't', '(', 'k', 'e', 'y', ')', ' ', '?', '?', ' ', '0', ')', ' ', '+', ' ', '1', ')', ';', '\n',
+ ' ', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'c', 'o', 'u', 'n', 't', 's', ';', '\n', '}', '\n',
+ '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'd', 'e', 'm', 'o', '(', ')',
+ ':', ' ', 'M', 'a', 'p', '<', 's', 't', 'r', 'i', 'n', 'g', ',', ' ', 'n', 'u', 'm', 'b', 'e', 'r', '>', ' ', '{',
+ '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'h', 'i', 's', 't', 'o', 'g', 'r', 'a', 'm', '(', '\"', 'a', 'b',
+ 'r', 'a', 'c', 'a', 'd', 'a', 'b', 'r', 'a', '\"', ')', ';', '\n', '}', '\n']
+
+theorem characters_encoded : String.ofList characters = source := by kernel_rfl
+
+theorem characters_checked : source.toList = characters :=
+  characters_of_encoding characters_encoded
+
 def tokens : Array Token :=
 #[{ text := "export", span := { start := 76, stop := 82 }, lineBreak := true, stringValue := none },
   { text := "function", span := { start := 83, stop := 91 }, lineBreak := false, stringValue := none },
@@ -116,7 +141,10 @@ def tokens : Array Token :=
   { text := "}", span := { start := 410, stop := 411 }, lineBreak := true, stringValue := none },
   { text := "<eof>", span := { start := 412, stop := 412 }, lineBreak := true, stringValue := none }]
 
-theorem lex_checked : lex source = .ok tokens := by kernel_rfl
+theorem lex_checked : lex source = .ok tokens := by
+  unfold lex
+  rw [characters_checked]
+  kernel_rfl
 
 def program : Program :=
 { functions := [{ name := "histogram",

@@ -414,7 +414,7 @@ end Parser
 
 def parse (text : String) : Checked Program := do
   let tokens ← lex text
-  let (program, _) ← Parser.declarations (tokens.size * 4 + 32) [] [] |>.run { tokens }
+  let (program, _) ← Parser.declarations (min 256 (tokens.size * 4 + 32)) [] [] |>.run { tokens }
   return program
 
 end Ariadne

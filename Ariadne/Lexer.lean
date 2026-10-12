@@ -135,7 +135,9 @@ private def lexGo : Nat → List Char → Nat → Bool → List Token → Checke
           lexGo n rest (pos + 1) false (⟨String.singleton c, ⟨pos, pos + 1⟩, newline, none⟩ :: acc)
         else throw { code := "A0001", message := s!"unexpected character '{c}'", span := ⟨pos, pos + c.utf8Size⟩ }
 
-def lex (text : String) : Checked (Array Token) :=
-  (lexGo (text.length + 1) text.toList 0 false []).map List.toArray
+def lexCharacters (chars : List Char) : Checked (Array Token) :=
+  (lexGo (chars.length + 1) chars 0 false []).map List.toArray
+
+def lex (text : String) : Checked (Array Token) := lexCharacters text.toList
 
 end Ariadne

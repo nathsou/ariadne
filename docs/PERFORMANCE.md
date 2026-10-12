@@ -27,11 +27,13 @@ be linear; old local cells remain allocated. The handwritten lexer also prioriti
 simple kernel-reducible definitions over throughput. Neither is intended as a fast
 replacement for native JavaScript execution.
 
-Kernel computation is currently the largest practical cost: certificates for the
-small repository examples take seconds, sometimes tens of seconds, on the development
-machine, and parallel certificate builds can consume substantial memory. The check
-script compiles them serially. Those observations are not portable benchmarks or a
-promise about larger inputs. No broad speedup/slowdown percentage is claimed.
+Kernel computation is currently the largest practical cost. Encoding certificates
+avoid a costly decoder reduction: the expanded numeric fixture was checked locally
+in about 4.9 seconds with roughly 2.2 GiB peak memory after this change; direct
+reduction previously exhausted memory. This is one development-machine observation,
+not a portable benchmark or a promise about larger inputs. The check script compiles
+certificates serially, and the default `lake build` excludes the heavy example proof
+suite. No broad native-program speedup/slowdown percentage is claimed.
 
 Future work should profile parser sharing, use validated certificates with smaller
 replay steps, specialize the operational model into shallow functions, and prove

@@ -64,6 +64,10 @@ function that returns ownership. A function cannot receive the same collection i
 multiple mutable parameter positions. Incoming references must be mutually disjoint.
 See [the runtime contract](RUNTIME.md).
 
+Parser and checker recursion each have a 256-unit internal budget (not a promise
+of 256 syntactic nesting levels); exhaustion produces a diagnostic. Decimal
+exponents are limited to absolute magnitude 4096.
+
 The handwritten grammar is not independently proved equivalent to TypeScript's
 standard grammar. Native execution tests cover examples and generated programs;
 that is evidence, not a universal language-conformance theorem.

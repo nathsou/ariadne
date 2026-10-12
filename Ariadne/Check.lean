@@ -431,8 +431,8 @@ def program (p : Program) : Checked Unit := do
       return { name := param.name, ty := t, mutable := true, borrowed := referenceType t, span := param.span : Binding }
     let result ← resolve 100 p f.result
     requireSupportedType result f.span
-    let _ ← checkStmt 10000 { program := p, bindings, result } f.body
-    if result != .void && !returns 10000 f.body then
+    let _ ← checkStmt 256 { program := p, bindings, result } f.body
+    if result != .void && !returns 256 f.body then
       error "A2010" s!"function '{f.name}' may fall through without returning a value" f.span
 
 end Check

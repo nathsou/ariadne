@@ -9,6 +9,31 @@ open Ariadne
 
 def source : String := "export function lookupOrDefault(key: string, fallback: bigint): bigint {\n  const entries = new Map<string, bigint>();\n  entries.set(\"answer\", 42n);\n  return entries.get(key) ?? fallback;\n}\n\nexport function demo(): bigint {\n  return lookupOrDefault(\"missing\", 7n);\n}\n\nexport function negativeDivision(): bigint {\n  return -17n / 5n;\n}\n\nexport function negativeRemainder(): bigint {\n  return -17n % 5n;\n}\n"
 
+def characters : List Char :=
+['e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'l', 'o', 'o', 'k', 'u', 'p', 'O', 'r',
+ 'D', 'e', 'f', 'a', 'u', 'l', 't', '(', 'k', 'e', 'y', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ',', ' ', 'f', 'a', 'l',
+ 'l', 'b', 'a', 'c', 'k', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{',
+ '\n', ' ', ' ', 'c', 'o', 'n', 's', 't', ' ', 'e', 'n', 't', 'r', 'i', 'e', 's', ' ', '=', ' ', 'n', 'e', 'w', ' ',
+ 'M', 'a', 'p', '<', 's', 't', 'r', 'i', 'n', 'g', ',', ' ', 'b', 'i', 'g', 'i', 'n', 't', '>', '(', ')', ';', '\n',
+ ' ', ' ', 'e', 'n', 't', 'r', 'i', 'e', 's', '.', 's', 'e', 't', '(', '\"', 'a', 'n', 's', 'w', 'e', 'r', '\"', ',',
+ ' ', '4', '2', 'n', ')', ';', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'e', 'n', 't', 'r', 'i', 'e', 's',
+ '.', 'g', 'e', 't', '(', 'k', 'e', 'y', ')', ' ', '?', '?', ' ', 'f', 'a', 'l', 'l', 'b', 'a', 'c', 'k', ';', '\n',
+ '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'd', 'e', 'm', 'o',
+ '(', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'l',
+ 'o', 'o', 'k', 'u', 'p', 'O', 'r', 'D', 'e', 'f', 'a', 'u', 'l', 't', '(', '\"', 'm', 'i', 's', 's', 'i', 'n', 'g',
+ '\"', ',', ' ', '7', 'n', ')', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't',
+ 'i', 'o', 'n', ' ', 'n', 'e', 'g', 'a', 't', 'i', 'v', 'e', 'D', 'i', 'v', 'i', 's', 'i', 'o', 'n', '(', ')', ':', ' ',
+ 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '-', '1', '7', 'n', ' ',
+ '/', ' ', '5', 'n', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o',
+ 'n', ' ', 'n', 'e', 'g', 'a', 't', 'i', 'v', 'e', 'R', 'e', 'm', 'a', 'i', 'n', 'd', 'e', 'r', '(', ')', ':', ' ', 'b',
+ 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '-', '1', '7', 'n', ' ', '%',
+ ' ', '5', 'n', ';', '\n', '}', '\n']
+
+theorem characters_encoded : String.ofList characters = source := by kernel_rfl
+
+theorem characters_checked : source.toList = characters :=
+  characters_of_encoding characters_encoded
+
 def tokens : Array Token :=
 #[{ text := "export", span := { start := 0, stop := 6 }, lineBreak := false, stringValue := none },
   { text := "function", span := { start := 7, stop := 15 }, lineBreak := false, stringValue := none },
@@ -113,7 +138,10 @@ def tokens : Array Token :=
   { text := "}", span := { start := 401, stop := 402 }, lineBreak := true, stringValue := none },
   { text := "<eof>", span := { start := 403, stop := 403 }, lineBreak := true, stringValue := none }]
 
-theorem lex_checked : lex source = .ok tokens := by kernel_rfl
+theorem lex_checked : lex source = .ok tokens := by
+  unfold lex
+  rw [characters_checked]
+  kernel_rfl
 
 def program : Program :=
 { functions := [{ name := "lookupOrDefault",

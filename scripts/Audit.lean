@@ -6,7 +6,7 @@ import Ariadne.Collections
 open Lean in
 run_cmd do
   let env ← getEnv
-  let mut count := 0
+  let mut count : Nat := 0
   for (name, info) in env.constants.toList do
     let root := name.getRoot
     if ["Ariadne", "Examples", "Example_arithmetic", "Example_control_flow",

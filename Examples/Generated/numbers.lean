@@ -7,7 +7,54 @@ set_option maxHeartbeats 0
 namespace Example_numbers
 open Ariadne
 
-def source : String := "export function rounding(): boolean {\n  return 0.1 + 0.2 !== 0.3;\n}\n\nexport function negativeZero(): number {\n  return 1 / -0;\n}\n\nexport function remainder(): number {\n  return -5.5 % 2;\n}\n\nexport function demo(): number {\n  return Math.sqrt(144) + Math.floor(-2.5);\n}\n"
+def source : String := "export function rounding(): boolean {\n  return 0.1 + 0.2 !== 0.3;\n}\n\nexport function negativeZero(): number {\n  return 1 / -0;\n}\n\nexport function remainder(): number {\n  return -5.5 % 2;\n}\n\nexport function demo(): number {\n  return Math.sqrt(144) + Math.floor(-2.5);\n}\n\nexport function integerPrecisionLimit(): boolean {\n  return 9007199254740992 + 1 === 9007199254740992;\n}\n\nexport function underflow(): number {\n  return 1e-324;\n}\n\nexport function negativeUnderflow(): number {\n  return -1e-324;\n}\n\nexport function overflow(): number {\n  return 1e308 * 1e308;\n}\n\nexport function nanIsUnordered(): boolean {\n  return NaN < 1 || NaN === NaN;\n}\n\nexport function negativeZeroRemainder(): number {\n  return -4 % 2;\n}\n\nexport function truncNegativeZero(): number {\n  return 1 / Math.trunc(-0);\n}\n\nexport function sqrtNegative(): number {\n  return Math.sqrt(-1);\n}\n\nexport function infinityRemainder(): number {\n  return 1 % Infinity;\n}\n"
+
+def characters : List Char :=
+['e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'r', 'o', 'u', 'n', 'd', 'i', 'n', 'g',
+ '(', ')', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ' ', '{', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ',
+ '0', '.', '1', ' ', '+', ' ', '0', '.', '2', ' ', '!', '=', '=', ' ', '0', '.', '3', ';', '\n', '}', '\n', '\n', 'e',
+ 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'n', 'e', 'g', 'a', 't', 'i', 'v', 'e', 'Z',
+ 'e', 'r', 'o', '(', ')', ':', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ' ', '{', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r',
+ 'n', ' ', '1', ' ', '/', ' ', '-', '0', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n',
+ 'c', 't', 'i', 'o', 'n', ' ', 'r', 'e', 'm', 'a', 'i', 'n', 'd', 'e', 'r', '(', ')', ':', ' ', 'n', 'u', 'm', 'b', 'e',
+ 'r', ' ', '{', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '-', '5', '.', '5', ' ', '%', ' ', '2', ';', '\n',
+ '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'd', 'e', 'm', 'o',
+ '(', ')', ':', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ' ', '{', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'M',
+ 'a', 't', 'h', '.', 's', 'q', 'r', 't', '(', '1', '4', '4', ')', ' ', '+', ' ', 'M', 'a', 't', 'h', '.', 'f', 'l', 'o',
+ 'o', 'r', '(', '-', '2', '.', '5', ')', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n',
+ 'c', 't', 'i', 'o', 'n', ' ', 'i', 'n', 't', 'e', 'g', 'e', 'r', 'P', 'r', 'e', 'c', 'i', 's', 'i', 'o', 'n', 'L', 'i',
+ 'm', 'i', 't', '(', ')', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ' ', '{', '\n', ' ', ' ', 'r', 'e', 't', 'u',
+ 'r', 'n', ' ', '9', '0', '0', '7', '1', '9', '9', '2', '5', '4', '7', '4', '0', '9', '9', '2', ' ', '+', ' ', '1', ' ',
+ '=', '=', '=', ' ', '9', '0', '0', '7', '1', '9', '9', '2', '5', '4', '7', '4', '0', '9', '9', '2', ';', '\n', '}',
+ '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'u', 'n', 'd', 'e', 'r',
+ 'f', 'l', 'o', 'w', '(', ')', ':', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ' ', '{', '\n', ' ', ' ', 'r', 'e', 't', 'u',
+ 'r', 'n', ' ', '1', 'e', '-', '3', '2', '4', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u',
+ 'n', 'c', 't', 'i', 'o', 'n', ' ', 'n', 'e', 'g', 'a', 't', 'i', 'v', 'e', 'U', 'n', 'd', 'e', 'r', 'f', 'l', 'o', 'w',
+ '(', ')', ':', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ' ', '{', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '-',
+ '1', 'e', '-', '3', '2', '4', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't',
+ 'i', 'o', 'n', ' ', 'o', 'v', 'e', 'r', 'f', 'l', 'o', 'w', '(', ')', ':', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ' ', '{',
+ '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '1', 'e', '3', '0', '8', ' ', '*', ' ', '1', 'e', '3', '0', '8',
+ ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'n', 'a',
+ 'n', 'I', 's', 'U', 'n', 'o', 'r', 'd', 'e', 'r', 'e', 'd', '(', ')', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ' ',
+ '{', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'N', 'a', 'N', ' ', '<', ' ', '1', ' ', '|', '|', ' ', 'N',
+ 'a', 'N', ' ', '=', '=', '=', ' ', 'N', 'a', 'N', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f',
+ 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'n', 'e', 'g', 'a', 't', 'i', 'v', 'e', 'Z', 'e', 'r', 'o', 'R', 'e', 'm', 'a',
+ 'i', 'n', 'd', 'e', 'r', '(', ')', ':', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ' ', '{', '\n', ' ', ' ', 'r', 'e', 't',
+ 'u', 'r', 'n', ' ', '-', '4', ' ', '%', ' ', '2', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f',
+ 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 't', 'r', 'u', 'n', 'c', 'N', 'e', 'g', 'a', 't', 'i', 'v', 'e', 'Z', 'e', 'r',
+ 'o', '(', ')', ':', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ' ', '{', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ',
+ '1', ' ', '/', ' ', 'M', 'a', 't', 'h', '.', 't', 'r', 'u', 'n', 'c', '(', '-', '0', ')', ';', '\n', '}', '\n', '\n',
+ 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 's', 'q', 'r', 't', 'N', 'e', 'g', 'a',
+ 't', 'i', 'v', 'e', '(', ')', ':', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ' ', '{', '\n', ' ', ' ', 'r', 'e', 't', 'u',
+ 'r', 'n', ' ', 'M', 'a', 't', 'h', '.', 's', 'q', 'r', 't', '(', '-', '1', ')', ';', '\n', '}', '\n', '\n', 'e', 'x',
+ 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'i', 'n', 'f', 'i', 'n', 'i', 't', 'y', 'R', 'e',
+ 'm', 'a', 'i', 'n', 'd', 'e', 'r', '(', ')', ':', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ' ', '{', '\n', ' ', ' ', 'r',
+ 'e', 't', 'u', 'r', 'n', ' ', '1', ' ', '%', ' ', 'I', 'n', 'f', 'i', 'n', 'i', 't', 'y', ';', '\n', '}', '\n']
+
+theorem characters_encoded : String.ofList characters = source := by kernel_rfl
+
+theorem characters_checked : source.toList = characters :=
+  characters_of_encoding characters_encoded
 
 def tokens : Array Token :=
 #[{ text := "export", span := { start := 0, stop := 6 }, lineBreak := false, stringValue := none },
@@ -81,9 +128,152 @@ def tokens : Array Token :=
   { text := ")", span := { start := 264, stop := 265 }, lineBreak := false, stringValue := none },
   { text := ";", span := { start := 265, stop := 266 }, lineBreak := false, stringValue := none },
   { text := "}", span := { start := 267, stop := 268 }, lineBreak := true, stringValue := none },
-  { text := "<eof>", span := { start := 269, stop := 269 }, lineBreak := true, stringValue := none }]
+  { text := "export", span := { start := 270, stop := 276 }, lineBreak := true, stringValue := none },
+  { text := "function", span := { start := 277, stop := 285 }, lineBreak := false, stringValue := none },
+  { text := "integerPrecisionLimit", span := { start := 286, stop := 307 }, lineBreak := false, stringValue := none },
+  { text := "(", span := { start := 307, stop := 308 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 308, stop := 309 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 309, stop := 310 }, lineBreak := false, stringValue := none },
+  { text := "boolean", span := { start := 311, stop := 318 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 319, stop := 320 }, lineBreak := false, stringValue := none },
+  { text := "return", span := { start := 323, stop := 329 }, lineBreak := true, stringValue := none },
+  { text := "9007199254740992", span := { start := 330, stop := 346 }, lineBreak := false, stringValue := none },
+  { text := "+", span := { start := 347, stop := 348 }, lineBreak := false, stringValue := none },
+  { text := "1", span := { start := 349, stop := 350 }, lineBreak := false, stringValue := none },
+  { text := "===", span := { start := 351, stop := 354 }, lineBreak := false, stringValue := none },
+  { text := "9007199254740992", span := { start := 355, stop := 371 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 371, stop := 372 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 373, stop := 374 }, lineBreak := true, stringValue := none },
+  { text := "export", span := { start := 376, stop := 382 }, lineBreak := true, stringValue := none },
+  { text := "function", span := { start := 383, stop := 391 }, lineBreak := false, stringValue := none },
+  { text := "underflow", span := { start := 392, stop := 401 }, lineBreak := false, stringValue := none },
+  { text := "(", span := { start := 401, stop := 402 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 402, stop := 403 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 403, stop := 404 }, lineBreak := false, stringValue := none },
+  { text := "number", span := { start := 405, stop := 411 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 412, stop := 413 }, lineBreak := false, stringValue := none },
+  { text := "return", span := { start := 416, stop := 422 }, lineBreak := true, stringValue := none },
+  { text := "1e-324", span := { start := 423, stop := 429 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 429, stop := 430 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 431, stop := 432 }, lineBreak := true, stringValue := none },
+  { text := "export", span := { start := 434, stop := 440 }, lineBreak := true, stringValue := none },
+  { text := "function", span := { start := 441, stop := 449 }, lineBreak := false, stringValue := none },
+  { text := "negativeUnderflow", span := { start := 450, stop := 467 }, lineBreak := false, stringValue := none },
+  { text := "(", span := { start := 467, stop := 468 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 468, stop := 469 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 469, stop := 470 }, lineBreak := false, stringValue := none },
+  { text := "number", span := { start := 471, stop := 477 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 478, stop := 479 }, lineBreak := false, stringValue := none },
+  { text := "return", span := { start := 482, stop := 488 }, lineBreak := true, stringValue := none },
+  { text := "-", span := { start := 489, stop := 490 }, lineBreak := false, stringValue := none },
+  { text := "1e-324", span := { start := 490, stop := 496 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 496, stop := 497 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 498, stop := 499 }, lineBreak := true, stringValue := none },
+  { text := "export", span := { start := 501, stop := 507 }, lineBreak := true, stringValue := none },
+  { text := "function", span := { start := 508, stop := 516 }, lineBreak := false, stringValue := none },
+  { text := "overflow", span := { start := 517, stop := 525 }, lineBreak := false, stringValue := none },
+  { text := "(", span := { start := 525, stop := 526 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 526, stop := 527 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 527, stop := 528 }, lineBreak := false, stringValue := none },
+  { text := "number", span := { start := 529, stop := 535 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 536, stop := 537 }, lineBreak := false, stringValue := none },
+  { text := "return", span := { start := 540, stop := 546 }, lineBreak := true, stringValue := none },
+  { text := "1e308", span := { start := 547, stop := 552 }, lineBreak := false, stringValue := none },
+  { text := "*", span := { start := 553, stop := 554 }, lineBreak := false, stringValue := none },
+  { text := "1e308", span := { start := 555, stop := 560 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 560, stop := 561 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 562, stop := 563 }, lineBreak := true, stringValue := none },
+  { text := "export", span := { start := 565, stop := 571 }, lineBreak := true, stringValue := none },
+  { text := "function", span := { start := 572, stop := 580 }, lineBreak := false, stringValue := none },
+  { text := "nanIsUnordered", span := { start := 581, stop := 595 }, lineBreak := false, stringValue := none },
+  { text := "(", span := { start := 595, stop := 596 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 596, stop := 597 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 597, stop := 598 }, lineBreak := false, stringValue := none },
+  { text := "boolean", span := { start := 599, stop := 606 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 607, stop := 608 }, lineBreak := false, stringValue := none },
+  { text := "return", span := { start := 611, stop := 617 }, lineBreak := true, stringValue := none },
+  { text := "NaN", span := { start := 618, stop := 621 }, lineBreak := false, stringValue := none },
+  { text := "<", span := { start := 622, stop := 623 }, lineBreak := false, stringValue := none },
+  { text := "1", span := { start := 624, stop := 625 }, lineBreak := false, stringValue := none },
+  { text := "||", span := { start := 626, stop := 628 }, lineBreak := false, stringValue := none },
+  { text := "NaN", span := { start := 629, stop := 632 }, lineBreak := false, stringValue := none },
+  { text := "===", span := { start := 633, stop := 636 }, lineBreak := false, stringValue := none },
+  { text := "NaN", span := { start := 637, stop := 640 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 640, stop := 641 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 642, stop := 643 }, lineBreak := true, stringValue := none },
+  { text := "export", span := { start := 645, stop := 651 }, lineBreak := true, stringValue := none },
+  { text := "function", span := { start := 652, stop := 660 }, lineBreak := false, stringValue := none },
+  { text := "negativeZeroRemainder", span := { start := 661, stop := 682 }, lineBreak := false, stringValue := none },
+  { text := "(", span := { start := 682, stop := 683 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 683, stop := 684 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 684, stop := 685 }, lineBreak := false, stringValue := none },
+  { text := "number", span := { start := 686, stop := 692 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 693, stop := 694 }, lineBreak := false, stringValue := none },
+  { text := "return", span := { start := 697, stop := 703 }, lineBreak := true, stringValue := none },
+  { text := "-", span := { start := 704, stop := 705 }, lineBreak := false, stringValue := none },
+  { text := "4", span := { start := 705, stop := 706 }, lineBreak := false, stringValue := none },
+  { text := "%", span := { start := 707, stop := 708 }, lineBreak := false, stringValue := none },
+  { text := "2", span := { start := 709, stop := 710 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 710, stop := 711 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 712, stop := 713 }, lineBreak := true, stringValue := none },
+  { text := "export", span := { start := 715, stop := 721 }, lineBreak := true, stringValue := none },
+  { text := "function", span := { start := 722, stop := 730 }, lineBreak := false, stringValue := none },
+  { text := "truncNegativeZero", span := { start := 731, stop := 748 }, lineBreak := false, stringValue := none },
+  { text := "(", span := { start := 748, stop := 749 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 749, stop := 750 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 750, stop := 751 }, lineBreak := false, stringValue := none },
+  { text := "number", span := { start := 752, stop := 758 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 759, stop := 760 }, lineBreak := false, stringValue := none },
+  { text := "return", span := { start := 763, stop := 769 }, lineBreak := true, stringValue := none },
+  { text := "1", span := { start := 770, stop := 771 }, lineBreak := false, stringValue := none },
+  { text := "/", span := { start := 772, stop := 773 }, lineBreak := false, stringValue := none },
+  { text := "Math", span := { start := 774, stop := 778 }, lineBreak := false, stringValue := none },
+  { text := ".", span := { start := 778, stop := 779 }, lineBreak := false, stringValue := none },
+  { text := "trunc", span := { start := 779, stop := 784 }, lineBreak := false, stringValue := none },
+  { text := "(", span := { start := 784, stop := 785 }, lineBreak := false, stringValue := none },
+  { text := "-", span := { start := 785, stop := 786 }, lineBreak := false, stringValue := none },
+  { text := "0", span := { start := 786, stop := 787 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 787, stop := 788 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 788, stop := 789 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 790, stop := 791 }, lineBreak := true, stringValue := none },
+  { text := "export", span := { start := 793, stop := 799 }, lineBreak := true, stringValue := none },
+  { text := "function", span := { start := 800, stop := 808 }, lineBreak := false, stringValue := none },
+  { text := "sqrtNegative", span := { start := 809, stop := 821 }, lineBreak := false, stringValue := none },
+  { text := "(", span := { start := 821, stop := 822 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 822, stop := 823 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 823, stop := 824 }, lineBreak := false, stringValue := none },
+  { text := "number", span := { start := 825, stop := 831 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 832, stop := 833 }, lineBreak := false, stringValue := none },
+  { text := "return", span := { start := 836, stop := 842 }, lineBreak := true, stringValue := none },
+  { text := "Math", span := { start := 843, stop := 847 }, lineBreak := false, stringValue := none },
+  { text := ".", span := { start := 847, stop := 848 }, lineBreak := false, stringValue := none },
+  { text := "sqrt", span := { start := 848, stop := 852 }, lineBreak := false, stringValue := none },
+  { text := "(", span := { start := 852, stop := 853 }, lineBreak := false, stringValue := none },
+  { text := "-", span := { start := 853, stop := 854 }, lineBreak := false, stringValue := none },
+  { text := "1", span := { start := 854, stop := 855 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 855, stop := 856 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 856, stop := 857 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 858, stop := 859 }, lineBreak := true, stringValue := none },
+  { text := "export", span := { start := 861, stop := 867 }, lineBreak := true, stringValue := none },
+  { text := "function", span := { start := 868, stop := 876 }, lineBreak := false, stringValue := none },
+  { text := "infinityRemainder", span := { start := 877, stop := 894 }, lineBreak := false, stringValue := none },
+  { text := "(", span := { start := 894, stop := 895 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 895, stop := 896 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 896, stop := 897 }, lineBreak := false, stringValue := none },
+  { text := "number", span := { start := 898, stop := 904 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 905, stop := 906 }, lineBreak := false, stringValue := none },
+  { text := "return", span := { start := 909, stop := 915 }, lineBreak := true, stringValue := none },
+  { text := "1", span := { start := 916, stop := 917 }, lineBreak := false, stringValue := none },
+  { text := "%", span := { start := 918, stop := 919 }, lineBreak := false, stringValue := none },
+  { text := "Infinity", span := { start := 920, stop := 928 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 928, stop := 929 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 930, stop := 931 }, lineBreak := true, stringValue := none },
+  { text := "<eof>", span := { start := 932, stop := 932 }, lineBreak := true, stringValue := none }]
 
-theorem lex_checked : lex source = .ok tokens := by kernel_rfl
+theorem lex_checked : lex source = .ok tokens := by
+  unfold lex
+  rw [characters_checked]
+  kernel_rfl
 
 def program : Program :=
 { functions := [{ name := "rounding",
@@ -168,7 +358,161 @@ def program : Program :=
                                { start := 225, stop := 231 }]
                             { start := 221, stop := 268 },
                   exported := true,
-                  span := { start := 197, stop := 205 } }],
+                  span := { start := 197, stop := 205 } },
+                { name := "integerPrecisionLimit",
+                  params := [],
+                  result := Ariadne.Ty.boolean,
+                  body := Ariadne.Stmt.block
+                            [Ariadne.Stmt.return_
+                               (Ariadne.Expr.binary
+                                 "==="
+                                 (Ariadne.Expr.binary
+                                   "+"
+                                   (Ariadne.Expr.literal
+                                     (Ariadne.Literal.number 9007199254740992 0)
+                                     { start := 330, stop := 346 })
+                                   (Ariadne.Expr.literal (Ariadne.Literal.number 1 0) { start := 349, stop := 350 })
+                                   { start := 330, stop := 350 })
+                                 (Ariadne.Expr.literal
+                                   (Ariadne.Literal.number 9007199254740992 0)
+                                   { start := 355, stop := 371 })
+                                 { start := 330, stop := 371 })
+                               { start := 323, stop := 329 }]
+                            { start := 319, stop := 374 },
+                  exported := true,
+                  span := { start := 277, stop := 285 } },
+                { name := "underflow",
+                  params := [],
+                  result := Ariadne.Ty.number,
+                  body := Ariadne.Stmt.block
+                            [Ariadne.Stmt.return_
+                               (Ariadne.Expr.literal (Ariadne.Literal.number 1 (-324)) { start := 423, stop := 429 })
+                               { start := 416, stop := 422 }]
+                            { start := 412, stop := 432 },
+                  exported := true,
+                  span := { start := 383, stop := 391 } },
+                { name := "negativeUnderflow",
+                  params := [],
+                  result := Ariadne.Ty.number,
+                  body := Ariadne.Stmt.block
+                            [Ariadne.Stmt.return_
+                               (Ariadne.Expr.unary
+                                 "-"
+                                 (Ariadne.Expr.literal (Ariadne.Literal.number 1 (-324)) { start := 490, stop := 496 })
+                                 { start := 489, stop := 490 })
+                               { start := 482, stop := 488 }]
+                            { start := 478, stop := 499 },
+                  exported := true,
+                  span := { start := 441, stop := 449 } },
+                { name := "overflow",
+                  params := [],
+                  result := Ariadne.Ty.number,
+                  body := Ariadne.Stmt.block
+                            [Ariadne.Stmt.return_
+                               (Ariadne.Expr.binary
+                                 "*"
+                                 (Ariadne.Expr.literal (Ariadne.Literal.number 1 308) { start := 547, stop := 552 })
+                                 (Ariadne.Expr.literal (Ariadne.Literal.number 1 308) { start := 555, stop := 560 })
+                                 { start := 547, stop := 560 })
+                               { start := 540, stop := 546 }]
+                            { start := 536, stop := 563 },
+                  exported := true,
+                  span := { start := 508, stop := 516 } },
+                { name := "nanIsUnordered",
+                  params := [],
+                  result := Ariadne.Ty.boolean,
+                  body := Ariadne.Stmt.block
+                            [Ariadne.Stmt.return_
+                               (Ariadne.Expr.binary
+                                 "||"
+                                 (Ariadne.Expr.binary
+                                   "<"
+                                   (Ariadne.Expr.var "NaN" { start := 618, stop := 621 })
+                                   (Ariadne.Expr.literal (Ariadne.Literal.number 1 0) { start := 624, stop := 625 })
+                                   { start := 618, stop := 625 })
+                                 (Ariadne.Expr.binary
+                                   "==="
+                                   (Ariadne.Expr.var "NaN" { start := 629, stop := 632 })
+                                   (Ariadne.Expr.var "NaN" { start := 637, stop := 640 })
+                                   { start := 629, stop := 640 })
+                                 { start := 618, stop := 640 })
+                               { start := 611, stop := 617 }]
+                            { start := 607, stop := 643 },
+                  exported := true,
+                  span := { start := 572, stop := 580 } },
+                { name := "negativeZeroRemainder",
+                  params := [],
+                  result := Ariadne.Ty.number,
+                  body := Ariadne.Stmt.block
+                            [Ariadne.Stmt.return_
+                               (Ariadne.Expr.binary
+                                 "%"
+                                 (Ariadne.Expr.unary
+                                   "-"
+                                   (Ariadne.Expr.literal (Ariadne.Literal.number 4 0) { start := 705, stop := 706 })
+                                   { start := 704, stop := 705 })
+                                 (Ariadne.Expr.literal (Ariadne.Literal.number 2 0) { start := 709, stop := 710 })
+                                 { start := 704, stop := 710 })
+                               { start := 697, stop := 703 }]
+                            { start := 693, stop := 713 },
+                  exported := true,
+                  span := { start := 652, stop := 660 } },
+                { name := "truncNegativeZero",
+                  params := [],
+                  result := Ariadne.Ty.number,
+                  body := Ariadne.Stmt.block
+                            [Ariadne.Stmt.return_
+                               (Ariadne.Expr.binary
+                                 "/"
+                                 (Ariadne.Expr.literal (Ariadne.Literal.number 1 0) { start := 770, stop := 771 })
+                                 (Ariadne.Expr.call
+                                   (Ariadne.Expr.member
+                                     (Ariadne.Expr.var "Math" { start := 774, stop := 778 })
+                                     "trunc"
+                                     { start := 774, stop := 784 })
+                                   [Ariadne.Expr.unary
+                                      "-"
+                                      (Ariadne.Expr.literal (Ariadne.Literal.number 0 0) { start := 786, stop := 787 })
+                                      { start := 785, stop := 786 }]
+                                   { start := 774, stop := 788 })
+                                 { start := 770, stop := 788 })
+                               { start := 763, stop := 769 }]
+                            { start := 759, stop := 791 },
+                  exported := true,
+                  span := { start := 722, stop := 730 } },
+                { name := "sqrtNegative",
+                  params := [],
+                  result := Ariadne.Ty.number,
+                  body := Ariadne.Stmt.block
+                            [Ariadne.Stmt.return_
+                               (Ariadne.Expr.call
+                                 (Ariadne.Expr.member
+                                   (Ariadne.Expr.var "Math" { start := 843, stop := 847 })
+                                   "sqrt"
+                                   { start := 843, stop := 852 })
+                                 [Ariadne.Expr.unary
+                                    "-"
+                                    (Ariadne.Expr.literal (Ariadne.Literal.number 1 0) { start := 854, stop := 855 })
+                                    { start := 853, stop := 854 }]
+                                 { start := 843, stop := 856 })
+                               { start := 836, stop := 842 }]
+                            { start := 832, stop := 859 },
+                  exported := true,
+                  span := { start := 800, stop := 808 } },
+                { name := "infinityRemainder",
+                  params := [],
+                  result := Ariadne.Ty.number,
+                  body := Ariadne.Stmt.block
+                            [Ariadne.Stmt.return_
+                               (Ariadne.Expr.binary
+                                 "%"
+                                 (Ariadne.Expr.literal (Ariadne.Literal.number 1 0) { start := 916, stop := 917 })
+                                 (Ariadne.Expr.var "Infinity" { start := 920, stop := 928 })
+                                 { start := 916, stop := 928 })
+                               { start := 909, stop := 915 }]
+                            { start := 905, stop := 931 },
+                  exported := true,
+                  span := { start := 868, stop := 876 } }],
   aliases := [] }
 
 theorem parse_checked : parse source = .ok program := by
@@ -213,6 +557,78 @@ def ts_demo (fuel : Nat) (args : List Value) : Result Value :=
 
 theorem ts_demo_source {fuel : Nat} {args : List Value} {value : Value}
     (h : ts_demo fuel args = .ok value) : SourceReturns source "demo" args value :=
+  certificate.transfer_at h
+
+/-- Executable, fuel-indexed model of TypeScript `integerPrecisionLimit`. -/
+def ts_integerPrecisionLimit (fuel : Nat) (args : List Value) : Result Value :=
+  run program "integerPrecisionLimit" fuel args
+
+theorem ts_integerPrecisionLimit_source {fuel : Nat} {args : List Value} {value : Value}
+    (h : ts_integerPrecisionLimit fuel args = .ok value) : SourceReturns source "integerPrecisionLimit" args value :=
+  certificate.transfer_at h
+
+/-- Executable, fuel-indexed model of TypeScript `underflow`. -/
+def ts_underflow (fuel : Nat) (args : List Value) : Result Value :=
+  run program "underflow" fuel args
+
+theorem ts_underflow_source {fuel : Nat} {args : List Value} {value : Value}
+    (h : ts_underflow fuel args = .ok value) : SourceReturns source "underflow" args value :=
+  certificate.transfer_at h
+
+/-- Executable, fuel-indexed model of TypeScript `negativeUnderflow`. -/
+def ts_negativeUnderflow (fuel : Nat) (args : List Value) : Result Value :=
+  run program "negativeUnderflow" fuel args
+
+theorem ts_negativeUnderflow_source {fuel : Nat} {args : List Value} {value : Value}
+    (h : ts_negativeUnderflow fuel args = .ok value) : SourceReturns source "negativeUnderflow" args value :=
+  certificate.transfer_at h
+
+/-- Executable, fuel-indexed model of TypeScript `overflow`. -/
+def ts_overflow (fuel : Nat) (args : List Value) : Result Value :=
+  run program "overflow" fuel args
+
+theorem ts_overflow_source {fuel : Nat} {args : List Value} {value : Value}
+    (h : ts_overflow fuel args = .ok value) : SourceReturns source "overflow" args value :=
+  certificate.transfer_at h
+
+/-- Executable, fuel-indexed model of TypeScript `nanIsUnordered`. -/
+def ts_nanIsUnordered (fuel : Nat) (args : List Value) : Result Value :=
+  run program "nanIsUnordered" fuel args
+
+theorem ts_nanIsUnordered_source {fuel : Nat} {args : List Value} {value : Value}
+    (h : ts_nanIsUnordered fuel args = .ok value) : SourceReturns source "nanIsUnordered" args value :=
+  certificate.transfer_at h
+
+/-- Executable, fuel-indexed model of TypeScript `negativeZeroRemainder`. -/
+def ts_negativeZeroRemainder (fuel : Nat) (args : List Value) : Result Value :=
+  run program "negativeZeroRemainder" fuel args
+
+theorem ts_negativeZeroRemainder_source {fuel : Nat} {args : List Value} {value : Value}
+    (h : ts_negativeZeroRemainder fuel args = .ok value) : SourceReturns source "negativeZeroRemainder" args value :=
+  certificate.transfer_at h
+
+/-- Executable, fuel-indexed model of TypeScript `truncNegativeZero`. -/
+def ts_truncNegativeZero (fuel : Nat) (args : List Value) : Result Value :=
+  run program "truncNegativeZero" fuel args
+
+theorem ts_truncNegativeZero_source {fuel : Nat} {args : List Value} {value : Value}
+    (h : ts_truncNegativeZero fuel args = .ok value) : SourceReturns source "truncNegativeZero" args value :=
+  certificate.transfer_at h
+
+/-- Executable, fuel-indexed model of TypeScript `sqrtNegative`. -/
+def ts_sqrtNegative (fuel : Nat) (args : List Value) : Result Value :=
+  run program "sqrtNegative" fuel args
+
+theorem ts_sqrtNegative_source {fuel : Nat} {args : List Value} {value : Value}
+    (h : ts_sqrtNegative fuel args = .ok value) : SourceReturns source "sqrtNegative" args value :=
+  certificate.transfer_at h
+
+/-- Executable, fuel-indexed model of TypeScript `infinityRemainder`. -/
+def ts_infinityRemainder (fuel : Nat) (args : List Value) : Result Value :=
+  run program "infinityRemainder" fuel args
+
+theorem ts_infinityRemainder_source {fuel : Nat} {args : List Value} {value : Value}
+    (h : ts_infinityRemainder fuel args = .ok value) : SourceReturns source "infinityRemainder" args value :=
   certificate.transfer_at h
 
 end Example_numbers

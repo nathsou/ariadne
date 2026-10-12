@@ -9,6 +9,39 @@ open Ariadne
 
 def source : String := "// Missing reads are explicit, even though the loop invariant implies valid bounds.\nexport function binarySearch(values: number[], target: number): number {\n  let low = 0;\n  let high = values.length;\n  while (low < high) {\n    const middle = Math.floor((low + high) / 2);\n    const value = values[middle] ?? 0;\n    if (value < target) { low = middle + 1; } else { high = middle; }\n  }\n  if (low < values.length && (values[low] ?? 0) === target) { return low; }\n  return -1;\n}\n\nexport function demo(): number {\n  const values = [-8, -3, 0, 4, 7, 12, 19, 31];\n  return binarySearch(values, 12);\n}\n"
 
+def characters : List Char :=
+['/', '/', ' ', 'M', 'i', 's', 's', 'i', 'n', 'g', ' ', 'r', 'e', 'a', 'd', 's', ' ', 'a', 'r', 'e', ' ', 'e', 'x', 'p',
+ 'l', 'i', 'c', 'i', 't', ',', ' ', 'e', 'v', 'e', 'n', ' ', 't', 'h', 'o', 'u', 'g', 'h', ' ', 't', 'h', 'e', ' ', 'l',
+ 'o', 'o', 'p', ' ', 'i', 'n', 'v', 'a', 'r', 'i', 'a', 'n', 't', ' ', 'i', 'm', 'p', 'l', 'i', 'e', 's', ' ', 'v', 'a',
+ 'l', 'i', 'd', ' ', 'b', 'o', 'u', 'n', 'd', 's', '.', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c',
+ 't', 'i', 'o', 'n', ' ', 'b', 'i', 'n', 'a', 'r', 'y', 'S', 'e', 'a', 'r', 'c', 'h', '(', 'v', 'a', 'l', 'u', 'e', 's',
+ ':', ' ', 'n', 'u', 'm', 'b', 'e', 'r', '[', ']', ',', ' ', 't', 'a', 'r', 'g', 'e', 't', ':', ' ', 'n', 'u', 'm', 'b',
+ 'e', 'r', ')', ':', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ' ', '{', '\n', ' ', ' ', 'l', 'e', 't', ' ', 'l', 'o', 'w',
+ ' ', '=', ' ', '0', ';', '\n', ' ', ' ', 'l', 'e', 't', ' ', 'h', 'i', 'g', 'h', ' ', '=', ' ', 'v', 'a', 'l', 'u',
+ 'e', 's', '.', 'l', 'e', 'n', 'g', 't', 'h', ';', '\n', ' ', ' ', 'w', 'h', 'i', 'l', 'e', ' ', '(', 'l', 'o', 'w',
+ ' ', '<', ' ', 'h', 'i', 'g', 'h', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', 'c', 'o', 'n', 's', 't', ' ', 'm', 'i',
+ 'd', 'd', 'l', 'e', ' ', '=', ' ', 'M', 'a', 't', 'h', '.', 'f', 'l', 'o', 'o', 'r', '(', '(', 'l', 'o', 'w', ' ', '+',
+ ' ', 'h', 'i', 'g', 'h', ')', ' ', '/', ' ', '2', ')', ';', '\n', ' ', ' ', ' ', ' ', 'c', 'o', 'n', 's', 't', ' ',
+ 'v', 'a', 'l', 'u', 'e', ' ', '=', ' ', 'v', 'a', 'l', 'u', 'e', 's', '[', 'm', 'i', 'd', 'd', 'l', 'e', ']', ' ', '?',
+ '?', ' ', '0', ';', '\n', ' ', ' ', ' ', ' ', 'i', 'f', ' ', '(', 'v', 'a', 'l', 'u', 'e', ' ', '<', ' ', 't', 'a',
+ 'r', 'g', 'e', 't', ')', ' ', '{', ' ', 'l', 'o', 'w', ' ', '=', ' ', 'm', 'i', 'd', 'd', 'l', 'e', ' ', '+', ' ', '1',
+ ';', ' ', '}', ' ', 'e', 'l', 's', 'e', ' ', '{', ' ', 'h', 'i', 'g', 'h', ' ', '=', ' ', 'm', 'i', 'd', 'd', 'l', 'e',
+ ';', ' ', '}', '\n', ' ', ' ', '}', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'l', 'o', 'w', ' ', '<', ' ', 'v', 'a', 'l',
+ 'u', 'e', 's', '.', 'l', 'e', 'n', 'g', 't', 'h', ' ', '&', '&', ' ', '(', 'v', 'a', 'l', 'u', 'e', 's', '[', 'l', 'o',
+ 'w', ']', ' ', '?', '?', ' ', '0', ')', ' ', '=', '=', '=', ' ', 't', 'a', 'r', 'g', 'e', 't', ')', ' ', '{', ' ', 'r',
+ 'e', 't', 'u', 'r', 'n', ' ', 'l', 'o', 'w', ';', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '-',
+ '1', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'd',
+ 'e', 'm', 'o', '(', ')', ':', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ' ', '{', '\n', ' ', ' ', 'c', 'o', 'n', 's', 't',
+ ' ', 'v', 'a', 'l', 'u', 'e', 's', ' ', '=', ' ', '[', '-', '8', ',', ' ', '-', '3', ',', ' ', '0', ',', ' ', '4', ',',
+ ' ', '7', ',', ' ', '1', '2', ',', ' ', '1', '9', ',', ' ', '3', '1', ']', ';', '\n', ' ', ' ', 'r', 'e', 't', 'u',
+ 'r', 'n', ' ', 'b', 'i', 'n', 'a', 'r', 'y', 'S', 'e', 'a', 'r', 'c', 'h', '(', 'v', 'a', 'l', 'u', 'e', 's', ',', ' ',
+ '1', '2', ')', ';', '\n', '}', '\n']
+
+theorem characters_encoded : String.ofList characters = source := by kernel_rfl
+
+theorem characters_checked : source.toList = characters :=
+  characters_of_encoding characters_encoded
+
 def tokens : Array Token :=
 #[{ text := "export", span := { start := 84, stop := 90 }, lineBreak := true, stringValue := none },
   { text := "function", span := { start := 91, stop := 99 }, lineBreak := false, stringValue := none },
@@ -165,7 +198,10 @@ def tokens : Array Token :=
   { text := "}", span := { start := 593, stop := 594 }, lineBreak := true, stringValue := none },
   { text := "<eof>", span := { start := 595, stop := 595 }, lineBreak := true, stringValue := none }]
 
-theorem lex_checked : lex source = .ok tokens := by kernel_rfl
+theorem lex_checked : lex source = .ok tokens := by
+  unfold lex
+  rw [characters_checked]
+  kernel_rfl
 
 def program : Program :=
 { functions := [{ name := "binarySearch",

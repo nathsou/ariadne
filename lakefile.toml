@@ -1,6 +1,6 @@
 name = "ariadne"
 version = "0.1.0"
-defaultTargets = ["ariadne", "Ariadne", "Tests", "Examples"]
+defaultTargets = ["ariadne", "Ariadne", "Tests"]
 
 [[lean_lib]]
 name = "Ariadne"

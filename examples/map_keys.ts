@@ -17,3 +17,10 @@ export function countedValues(): bigint {
   entries.forEach((value: bigint, key: string) => { total += value; });
   return total;
 }
+
+export function presentUndefined(): boolean[] {
+  const entries = new Map<string, undefined>();
+  entries.set("present", undefined);
+  return [entries.has("present"), entries.has("missing"),
+    entries.get("present") === entries.get("missing")];
+}
