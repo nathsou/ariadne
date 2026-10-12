@@ -16,3 +16,34 @@ export function scoped(x: bigint): bigint {
 }
 export function abs_denotes(): bigint { return 3n; }
 export function CoreArtifacts(): bigint { return 4n; }
+
+export function guarded(x: bigint | undefined, floor: bigint): bigint {
+  if (x === undefined) { return floor; }
+  return x + 1n;
+}
+
+export function conjunction(x: bigint | undefined, floor: bigint): boolean {
+  return x !== undefined && x > floor;
+}
+
+export function disjunction(x: bigint | undefined, floor: bigint): boolean {
+  return x === undefined || x >= floor;
+}
+
+export function ternary(x: bigint | undefined): bigint {
+  return x !== undefined ? x + 1n : 0n;
+}
+
+export function forget(x: bigint | undefined, clear: boolean): bigint | undefined {
+  if (x !== undefined) {
+    if (clear) { x = undefined; } else { x += 1n; }
+  }
+  return x;
+}
+
+export function scopedTypes(x: bigint): bigint {
+  { const temporary: string = 'inner'; const unused = temporary + '!'; }
+  let temporary: bigint = x;
+  if (x > 0n) { temporary += 1n; }
+  return temporary;
+}

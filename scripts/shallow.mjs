@@ -17,7 +17,15 @@ const cases = {
   remainder: [[7, 3], [-7, 3], [-0, 2], [1, 0], [1, Infinity], [Infinity, 1], [NaN, 1]],
   scoped: [[0n], [-1n], [100000000000000000000n]],
   abs_denotes: [[]], CoreArtifacts: [[]],
+  guarded: [[undefined, 7n], [0n, 7n], [-9n, 7n]],
+  conjunction: [[undefined, 0n], [0n, 0n], [1n, 0n]],
+  disjunction: [[undefined, 0n], [-1n, 0n], [0n, 0n]],
+  ternary: [[undefined], [0n], [-2n]],
+  forget: [[undefined, true], [undefined, false], [5n, true], [5n, false]],
+  scopedTypes: [[0n], [-1n], [5n]],
 };
+const optionalInput = new Set(['fallback', 'guarded', 'conjunction', 'disjunction', 'ternary', 'forget']);
+const optionalOutput = new Set(['optional', 'forget']);
 const bits = n => {
   const view = new DataView(new ArrayBuffer(8));
   view.setFloat64(0, Number.isNaN(n) ? NaN : n);
@@ -53,8 +61,8 @@ try {
     for (const args of inputs) {
       const result = native[name](...args);
       expected.push({ ok: observe(result) }, { ok: observe(result) });
-      const call = `(Extracted_scalars.Shallow.${name} ${args.map(x => argument(x, name === 'fallback')).join(' ')})`;
-      const encoded = name === 'optional' ? `(${call}.map Value.bigint).getD .undefined` :
+      const call = `(Extracted_scalars.Shallow.${name} ${args.map((x, i) => argument(x, i === 0 && optionalInput.has(name))).join(' ')})`;
+      const encoded = optionalOutput.has(name) ? `(${call}.map Value.bigint).getD .undefined` :
         `.${typeof result === 'bigint' ? 'bigint' : typeof result === 'boolean' ? 'boolean' : typeof result} ${call}`;
       runner += `#eval IO.println ((observeResult (.ok ((${encoded}), {}))).compress)\n`;
       runner += `#eval IO.println ((observeResult (runState Extracted_scalars.program "${name}" 100 [${args.map(value)}])).compress)\n`;

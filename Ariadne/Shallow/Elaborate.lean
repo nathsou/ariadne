@@ -4,9 +4,25 @@ import Ariadne.Shallow.Denote
 namespace Ariadne.Shallow.Elaborate
 open Core
 
-abbrev Context := List (String × Core.Ty)
-abbrev Types (ctx : Context) := ctx.map Prod.snd
+structure Binding where
+  name : String
+  ty : Core.Ty
+  declared : Core.Ty
+
+abbrev Context := List Binding
+abbrev Types (ctx : Context) := ctx.map Binding.ty
 abbrev Typed (ctx : Context) := (t : Core.Ty) × Term (Types ctx) t
+
+def binding (name : String) (ty : Core.Ty) : Binding := { name, ty, declared := ty }
+
+def refined (ctx : Context) (name : String) (ty : Core.Ty) : Binding :=
+  { name, ty, declared := ((ctx.find? (·.name == name)).map Binding.declared).getD ty }
+
+/-- Continuations capture each live source binding once. Assignments invalidate
+type refinements, just as in the frontend checker. -/
+def afterWrites (ctx : Context) (writes : List String) : Context :=
+  ctx.foldl (fun out b => if out.any (·.name == b.name) then out else
+    out ++ [if writes.contains b.name then { b with ty := b.declared } else b]) []
 
 def refusal (code message : String) (span : Span) : Checked α :=
   .error { code, message, span, help := some "Use certify for the operational path. See docs/SHALLOW-PROGRESS.md for extraction coverage." }
@@ -23,14 +39,15 @@ where
     | _ + 1, .boolean => .ok .bool
     | _ + 1, .string | _ + 1, .stringLiteral _ => .ok .string
     | n + 1, .union t .undefined => return .option (← convert n t)
+    | n + 1, .union .undefined t => return .option (← convert n t)
     | n + 1, .readonly t | n + 1, .fieldReadonly t => convert n t
     | n + 1, .array t => return .list (← convert n t)
     | _, _ => refusal "A5102" "this type does not yet have an extraction representation" span
 
 def lookup : (ctx : Context) → String → Option ((t : Core.Ty) × Var (Types ctx) t)
   | [], _ => none
-  | (name, ty) :: ctx, wanted =>
-    if name == wanted then some ⟨ty, .here⟩
+  | b :: ctx, wanted =>
+    if b.name == wanted then some ⟨b.ty, .here⟩
     else (lookup ctx wanted).map fun ⟨t, v⟩ => ⟨t, .there v⟩
 
 def sourceType : Core.Ty → Ariadne.Ty
@@ -52,9 +69,13 @@ def callbackResult (p : Program) (fuel : Nat) (ctx : Context) (fn : Expr) : Chec
   let .lambda params body span := fn | refusal "A5104" "expected a literal callback" fn.span
   let bindings ← (params.mapM fun param => do
     return ({ name := param.name, ty := ← Check.resolve 100 p param.ty, mutable := true } : Check.Binding))
-  let captured := ctx.map fun (name, ty) => ({ name, ty := sourceType ty, mutable := true } : Check.Binding)
+  let captured := ctx.map fun b => ({ name := b.name, ty := sourceType b.ty, declared := some (sourceType b.declared), mutable := true } : Check.Binding)
   let result ← Check.inferCallback fuel { program := p, bindings := bindings ++ captured } body
   type p result span
+
+def expressionResult (p : Program) (fuel : Nat) (ctx : Context) (expr : Expr) : Checked Core.Ty := do
+  let bindings := ctx.map fun b => ({ name := b.name, ty := sourceType b.ty, declared := some (sourceType b.declared), mutable := true } : Check.Binding)
+  type p (← Check.infer fuel { program := p, bindings } expr) expr.span
 
 def cast (t : Core.Ty) (value : Typed ctx) (span : Span) : Checked (Term (Types ctx) t) :=
   if h : value.1 = t then .ok (h ▸ value.2)
@@ -122,6 +143,9 @@ def arithmetic (op : String) (a b : Typed ctx) (span : Span) : Checked (Typed ct
       let some_ := Term.unary .isSome a
       return ⟨.bool, if op == "!==" then some_ else .unary .not some_⟩
     refusal "A5104" "only an undefined comparison is supported on options" span
+  | ⟨.unit, _⟩ =>
+    if b.1 == .unit && (op == "===" || op == "!==") then return ⟨.bool, .bool (op == "===")⟩
+    refusal "A5104" "unsupported undefined operation" span
   | _ => refusal "A5104" "unsupported scalar operation" span
 
 mutual
@@ -151,12 +175,14 @@ mutual
           | refusal "A5102" "nullish extraction requires an option" span
         let b ← asType p n ctx b t
         return ⟨t, .optionCase a b (.var .here)⟩
+      | .binary "&&" _ _ span | .binary "||" _ _ span =>
+        return ⟨.bool, ← condition p n ctx expr
+          [.return_ (.literal (.boolean true) span) span]
+          [.return_ (.literal (.boolean false) span) span] .bool⟩
       | .binary op a b span => arithmetic op (← expression p n ctx a) (← expression p n ctx b) span
-      | .conditional c a b _ =>
-        let c ← asType p n ctx c .bool
-        let ⟨t, a⟩ ← expression p n ctx a
-        let b ← asType p n ctx b t
-        return ⟨t, .ite c a b⟩
+      | .conditional c a b span =>
+        let t ← expressionResult p n ctx expr
+        return ⟨t, ← condition p n ctx c [.return_ a span] [.return_ b span] t⟩
       | .array xs span =>
         let some first := xs.head? | refusal "A5102" "empty arrays require a type annotation" span
         let element ← match first with
@@ -222,7 +248,7 @@ mutual
     match fuel, t, expr with
     | 0, _, _ => refusal "A5101" "expression nesting budget exhausted" expr.span
     | n + 1, t, .conditional c a b _ => do
-      return .ite (← asType p n ctx c .bool) (← asType p n ctx a t) (← asType p n ctx b t)
+      condition p n ctx c [.return_ a a.span] [.return_ b b.span] t
     | n + 1, .list element, .array xs _ => elements p n ctx element xs
     | n + 1, t, expr => do coerce t (← expression p n ctx expr) expr.span
   def tupleArgs (p : Program) (fuel : Nat) (ctx : Context) (t : Core.Ty) (args : List Expr)
@@ -263,7 +289,7 @@ mutual
           let t ← type p param.ty param.span
           if t != a then refusal "A5102" "callback parameter type mismatch" param.span
           pure param.name
-      return .lam name (← lambda p n ((name, a) :: ctx) inputs params.tail result body)
+      return .lam name (← lambda p n (binding name a :: ctx) inputs params.tail result body)
     | _, _, _, _, _, body => refusal "A5102" "too many callback parameters" body.span
 
   def applications (p : Program) : Nat → (ctx : Context) → Typed ctx → List Expr → Span → Checked (Typed ctx)
@@ -272,6 +298,32 @@ mutual
     | n + 1, ctx, ⟨.fn a b, f⟩, x :: xs, span => do
       applications p n ctx ⟨b, .app f (← asType p n ctx x a)⟩ xs span
     | _, _, _, _, span => refusal "A5102" "too many function arguments" span
+
+  /-- Guards refine optional bindings in the selected branch. The missing arm
+  binds Unit, and the present arm binds the unwrapped native value. -/
+  def condition (p : Program) : Nat → (ctx : Context) → Expr → List Stmt → List Stmt →
+      (t : Core.Ty) → Checked (Term (Types ctx) t)
+    | 0, _, guard, _, _, _ => refusal "A5101" "condition lowering budget exhausted" guard.span
+    | n + 1, ctx, guard, yes, no, t => do
+      match guard with
+      | .unary "!" arg _ => condition p n ctx arg no yes t
+      | .binary "&&" a b span =>
+        condition p n ctx a [.if_ b (.block yes span) (.block no span) span] no t
+      | .binary "||" a b span =>
+        condition p n ctx a yes [.if_ b (.block yes span) (.block no span) span] t
+      | .binary op (.var name _) (.literal .undefined _) _ =>
+        if op == "===" || op == "!==" then
+          if let some ⟨.option element, v⟩ := lookup ctx name then
+            let missing := if op == "===" then yes else no
+            let present := if op == "!==" then yes else no
+            let absent ← statements p n (refined ctx name .unit :: ctx) missing t
+            let present ← statements p n (refined ctx name element :: ctx) present t
+            return .optionCase (.var v) (.let_ name .unit absent) present
+        return .ite (← asType p n ctx guard .bool)
+          (← statements p n ctx yes t) (← statements p n ctx no t)
+      | _ =>
+        return .ite (← asType p n ctx guard .bool)
+          (← statements p n ctx yes t) (← statements p n ctx no t)
 
 
   /-- Mutable locals become shadowed pure lets. Branches share their continuations.
@@ -283,7 +335,17 @@ mutual
     | _ + 1, _, [], _ => refusal "A5101" "extraction requires a return on every path" {}
     | n + 1, ctx, stmt :: rest, t => do
       match stmt with
-      | .block ss _ => statements p n ctx (ss ++ rest) t
+      | .block ss span =>
+        if rest.isEmpty || !ss.any (fun s => match s with | .let_ .. => true | _ => false) then
+          return ← statements p n ctx (ss ++ rest) t
+        let state := afterWrites ctx (Check.writes n stmt)
+        let continuation ← statements p n state rest t
+        let name := s!"#join{n}"
+        let domain := Core.environmentType (Types state)
+        let inner := binding name (.fn domain t) :: ctx
+        let jump : Stmt := .return_ (.call (.var name span)
+          (state.map fun b => .var b.name span) span) span
+        return .let_ "join" continuation.abstract (← statements p n inner (ss ++ [jump]) t)
       | .let_ _ name annotation value _ =>
         let ⟨a, value⟩ ← match annotation with
           | none => expression p n ctx value
@@ -291,28 +353,29 @@ mutual
             let a ← type p ty value.span
             let value ← asType p n ctx value a
             pure ⟨a, value⟩
-        return .let_ name value (← statements p n ((name, a) :: ctx) rest t)
+        return .let_ name value (← statements p n (binding name a :: ctx) rest t)
       | .assign (.var name _) value span =>
-        let some ⟨a, _⟩ := lookup ctx name | refusal "A5102" "unknown assignment target" span
+        let some target := ctx.find? (·.name == name) | refusal "A5102" "unknown assignment target" span
+        let a := target.declared
         let value ← asType p n ctx value a
-        return .let_ name value (← statements p n ((name, a) :: ctx) rest t)
+        return .let_ name value (← statements p n (binding name a :: ctx) rest t)
       | .if_ c a b span =>
         if rest.isEmpty then
-          return .ite (← asType p n ctx c .bool)
-            (← statements p n ctx [a] t) (← statements p n ctx [b] t)
-        let continuation ← statements p n ctx rest t
+          return ← condition p n ctx c [a] [b] t
+        if Check.exits n a || Check.exits n b then
+          return ← condition p n ctx c (a :: rest) (b :: rest) t
+        let state := afterWrites ctx (Check.writes n stmt)
+        let continuation ← statements p n state rest t
         let name := s!"#join{n}"
-        let domain := Core.environmentType (Types ctx)
-        let inner := (name, Core.Ty.fn domain t) :: ctx
+        let domain := Core.environmentType (Types state)
+        let inner := binding name (Core.Ty.fn domain t) :: ctx
         let jump : Stmt := .return_ (.call (.var name span)
-          (ctx.map fun (name, _) => .var name span) span) span
-        return .let_ "join" continuation.abstract
-          (.ite (← asType p n inner c .bool)
-            (← statements p n inner [a, jump] t) (← statements p n inner [b, jump] t))
+          (state.map fun b => .var b.name span) span) span
+        return .let_ "join" continuation.abstract (← condition p n inner c [a, jump] [b, jump] t)
       | .return_ value _ => asType p n ctx value t
       | .expr e _ =>
         let ⟨a, value⟩ ← expression p n ctx e
-        return .let_ "ignored" value (← statements p n (("#ignored", a) :: ctx) rest t)
+        return .let_ "ignored" value (← statements p n (binding "#ignored" a :: ctx) rest t)
       | .while_ .. | .for_ .. | .forOf .. | .measured .. =>
         refusal "A5101" "loop extraction is not implemented yet" stmt.span
       | _ => refusal "A5102" "this statement needs ownership or control-flow lowering" stmt.span
@@ -324,7 +387,7 @@ def function (p : Program) (name : String) : Checked Core.Function := do
     refusal "A5104" "Int53 extraction requires range obligations, which are not implemented yet" {}
   let some f := p.functions.find? (·.name == name)
     | refusal "A5101" "unknown extraction entry point" {}
-  let ctx ← f.params.mapM fun param => return (param.name, ← type p param.ty param.span)
+  let ctx ← f.params.mapM fun param => return binding param.name (← type p param.ty param.span)
   let result ← type p f.result f.span
   return { params := Types ctx, result, body := ← statements p 512 ctx [f.body] result }
 

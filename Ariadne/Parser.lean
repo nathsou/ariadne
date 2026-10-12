@@ -200,11 +200,12 @@ mutual
       let left ← atom n
       let left ← parsePostfix n left
       let left ← binaryTail n minPrec left
-      if minPrec == 1 && (← accept "?") then
-        let yes ← expression n
-        let _ ← expect ":"
-        let no ← expression n
-        return .conditional left yes no left.span
+      if minPrec == 1 then
+        if (← accept "?") then
+          let yes ← expression n
+          let _ ← expect ":"
+          let no ← expression n
+          return .conditional left yes no left.span
       return left
 
   def binaryTail (fuel minPrec : Nat) (left : Expr) : P Expr := do

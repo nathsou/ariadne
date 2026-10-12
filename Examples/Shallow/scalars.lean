@@ -8,7 +8,7 @@ set_option maxHeartbeats 0
 namespace Extracted_scalars
 open Ariadne
 
-def source : String := "export function abs(x: bigint): bigint { if (x < 0n) { return -x; } return x; }\nexport function update(x: bigint, y: bigint, flag: boolean): bigint { let total = x; if (flag) { total += y; } else { total -= y; } return total * 2n; }\nexport function fallback(x: bigint | undefined): bigint { return x ?? 9n; }\nexport function decimal(x: number, y: number): number { return (x * y) / (x + y); }\nexport function hello(name: string): string { return 'hello ' + name; }\nexport function optional(flag: boolean, value: bigint): bigint | undefined {\n  if (flag) { return value; }\n  return undefined;\n}\nexport function textBefore(a: string, b: string): boolean { return a < b; }\nexport function remainder(a: number, b: number): number { return a % b; }\nexport function scoped(x: bigint): bigint {\n  { let temporary = x + 1n; x = temporary * 2n; }\n  let temporary = x - 3n;\n  return temporary;\n}\nexport function abs_denotes(): bigint { return 3n; }\nexport function CoreArtifacts(): bigint { return 4n; }\n"
+def source : String := "export function abs(x: bigint): bigint { if (x < 0n) { return -x; } return x; }\nexport function update(x: bigint, y: bigint, flag: boolean): bigint { let total = x; if (flag) { total += y; } else { total -= y; } return total * 2n; }\nexport function fallback(x: bigint | undefined): bigint { return x ?? 9n; }\nexport function decimal(x: number, y: number): number { return (x * y) / (x + y); }\nexport function hello(name: string): string { return 'hello ' + name; }\nexport function optional(flag: boolean, value: bigint): bigint | undefined {\n  if (flag) { return value; }\n  return undefined;\n}\nexport function textBefore(a: string, b: string): boolean { return a < b; }\nexport function remainder(a: number, b: number): number { return a % b; }\nexport function scoped(x: bigint): bigint {\n  { let temporary = x + 1n; x = temporary * 2n; }\n  let temporary = x - 3n;\n  return temporary;\n}\nexport function abs_denotes(): bigint { return 3n; }\nexport function CoreArtifacts(): bigint { return 4n; }\n\nexport function guarded(x: bigint | undefined, floor: bigint): bigint {\n  if (x === undefined) { return floor; }\n  return x + 1n;\n}\n\nexport function conjunction(x: bigint | undefined, floor: bigint): boolean {\n  return x !== undefined && x > floor;\n}\n\nexport function disjunction(x: bigint | undefined, floor: bigint): boolean {\n  return x === undefined || x >= floor;\n}\n\nexport function ternary(x: bigint | undefined): bigint {\n  return x !== undefined ? x + 1n : 0n;\n}\n\nexport function forget(x: bigint | undefined, clear: boolean): bigint | undefined {\n  if (x !== undefined) {\n    if (clear) { x = undefined; } else { x += 1n; }\n  }\n  return x;\n}\n\nexport function scopedTypes(x: bigint): bigint {\n  { const temporary: string = 'inner'; const unused = temporary + '!'; }\n  let temporary: bigint = x;\n  if (x > 0n) { temporary += 1n; }\n  return temporary;\n}\n"
 
 def characters : List Char :=
 ['e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'a', 'b', 's', '(', 'x', ':', ' ', 'b',
@@ -53,7 +53,43 @@ def characters : List Char :=
  'n', 't', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '3', 'n', ';', ' ', '}', '\n', 'e', 'x', 'p', 'o', 'r',
  't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'C', 'o', 'r', 'e', 'A', 'r', 't', 'i', 'f', 'a', 'c', 't', 's',
  '(', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '4', 'n', ';', ' ',
- '}', '\n']
+ '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'g', 'u', 'a', 'r',
+ 'd', 'e', 'd', '(', 'x', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '|', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e',
+ 'd', ',', ' ', 'f', 'l', 'o', 'o', 'r', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n',
+ 't', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'x', ' ', '=', '=', '=', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n',
+ 'e', 'd', ')', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'f', 'l', 'o', 'o', 'r', ';', ' ', '}', '\n', ' ',
+ ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'x', ' ', '+', ' ', '1', 'n', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o',
+ 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'c', 'o', 'n', 'j', 'u', 'n', 'c', 't', 'i', 'o', 'n', '(',
+ 'x', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '|', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ',', ' ', 'f',
+ 'l', 'o', 'o', 'r', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ' ', '{',
+ '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'x', ' ', '!', '=', '=', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n',
+ 'e', 'd', ' ', '&', '&', ' ', 'x', ' ', '>', ' ', 'f', 'l', 'o', 'o', 'r', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p',
+ 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'd', 'i', 's', 'j', 'u', 'n', 'c', 't', 'i', 'o', 'n',
+ '(', 'x', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '|', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ',', ' ',
+ 'f', 'l', 'o', 'o', 'r', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ' ',
+ '{', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'x', ' ', '=', '=', '=', ' ', 'u', 'n', 'd', 'e', 'f', 'i',
+ 'n', 'e', 'd', ' ', '|', '|', ' ', 'x', ' ', '>', '=', ' ', 'f', 'l', 'o', 'o', 'r', ';', '\n', '}', '\n', '\n', 'e',
+ 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 't', 'e', 'r', 'n', 'a', 'r', 'y', '(', 'x',
+ ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '|', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ')', ':', ' ', 'b',
+ 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'x', ' ', '!', '=', '=', ' ',
+ 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ' ', '?', ' ', 'x', ' ', '+', ' ', '1', 'n', ' ', ':', ' ', '0', 'n', ';',
+ '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'f', 'o', 'r',
+ 'g', 'e', 't', '(', 'x', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '|', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e',
+ 'd', ',', ' ', 'c', 'l', 'e', 'a', 'r', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ')', ':', ' ', 'b', 'i', 'g', 'i',
+ 'n', 't', ' ', '|', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(',
+ 'x', ' ', '!', '=', '=', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ',
+ 'i', 'f', ' ', '(', 'c', 'l', 'e', 'a', 'r', ')', ' ', '{', ' ', 'x', ' ', '=', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n',
+ 'e', 'd', ';', ' ', '}', ' ', 'e', 'l', 's', 'e', ' ', '{', ' ', 'x', ' ', '+', '=', ' ', '1', 'n', ';', ' ', '}',
+ '\n', ' ', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'x', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p',
+ 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 's', 'c', 'o', 'p', 'e', 'd', 'T', 'y', 'p', 'e', 's',
+ '(', 'x', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ',
+ ' ', '{', ' ', 'c', 'o', 'n', 's', 't', ' ', 't', 'e', 'm', 'p', 'o', 'r', 'a', 'r', 'y', ':', ' ', 's', 't', 'r', 'i',
+ 'n', 'g', ' ', '=', ' ', '\'', 'i', 'n', 'n', 'e', 'r', '\'', ';', ' ', 'c', 'o', 'n', 's', 't', ' ', 'u', 'n', 'u',
+ 's', 'e', 'd', ' ', '=', ' ', 't', 'e', 'm', 'p', 'o', 'r', 'a', 'r', 'y', ' ', '+', ' ', '\'', '!', '\'', ';', ' ',
+ '}', '\n', ' ', ' ', 'l', 'e', 't', ' ', 't', 'e', 'm', 'p', 'o', 'r', 'a', 'r', 'y', ':', ' ', 'b', 'i', 'g', 'i',
+ 'n', 't', ' ', '=', ' ', 'x', ';', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'x', ' ', '>', ' ', '0', 'n', ')', ' ', '{',
+ ' ', 't', 'e', 'm', 'p', 'o', 'r', 'a', 'r', 'y', ' ', '+', '=', ' ', '1', 'n', ';', ' ', '}', '\n', ' ', ' ', 'r',
+ 'e', 't', 'u', 'r', 'n', ' ', 't', 'e', 'm', 'p', 'o', 'r', 'a', 'r', 'y', ';', '\n', '}', '\n']
 
 theorem characters_encoded : String.ofList characters = source := by kernel_rfl
 
@@ -336,7 +372,221 @@ def tokens : Array Token :=
   { text := "4n", span := { start := 988, stop := 990 }, lineBreak := false, stringValue := none },
   { text := ";", span := { start := 990, stop := 991 }, lineBreak := false, stringValue := none },
   { text := "}", span := { start := 992, stop := 993 }, lineBreak := false, stringValue := none },
-  { text := "<eof>", span := { start := 994, stop := 994 }, lineBreak := true, stringValue := none }]
+  { text := "export", span := { start := 995, stop := 1001 }, lineBreak := true, stringValue := none },
+  { text := "function", span := { start := 1002, stop := 1010 }, lineBreak := false, stringValue := none },
+  { text := "guarded", span := { start := 1011, stop := 1018 }, lineBreak := false, stringValue := none },
+  { text := "(", span := { start := 1018, stop := 1019 }, lineBreak := false, stringValue := none },
+  { text := "x", span := { start := 1019, stop := 1020 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1020, stop := 1021 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 1022, stop := 1028 }, lineBreak := false, stringValue := none },
+  { text := "|", span := { start := 1029, stop := 1030 }, lineBreak := false, stringValue := none },
+  { text := "undefined", span := { start := 1031, stop := 1040 }, lineBreak := false, stringValue := none },
+  { text := ",", span := { start := 1040, stop := 1041 }, lineBreak := false, stringValue := none },
+  { text := "floor", span := { start := 1042, stop := 1047 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1047, stop := 1048 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 1049, stop := 1055 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 1055, stop := 1056 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1056, stop := 1057 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 1058, stop := 1064 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 1065, stop := 1066 }, lineBreak := false, stringValue := none },
+  { text := "if", span := { start := 1069, stop := 1071 }, lineBreak := true, stringValue := none },
+  { text := "(", span := { start := 1072, stop := 1073 }, lineBreak := false, stringValue := none },
+  { text := "x", span := { start := 1073, stop := 1074 }, lineBreak := false, stringValue := none },
+  { text := "===", span := { start := 1075, stop := 1078 }, lineBreak := false, stringValue := none },
+  { text := "undefined", span := { start := 1079, stop := 1088 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 1088, stop := 1089 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 1090, stop := 1091 }, lineBreak := false, stringValue := none },
+  { text := "return", span := { start := 1092, stop := 1098 }, lineBreak := false, stringValue := none },
+  { text := "floor", span := { start := 1099, stop := 1104 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 1104, stop := 1105 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 1106, stop := 1107 }, lineBreak := false, stringValue := none },
+  { text := "return", span := { start := 1110, stop := 1116 }, lineBreak := true, stringValue := none },
+  { text := "x", span := { start := 1117, stop := 1118 }, lineBreak := false, stringValue := none },
+  { text := "+", span := { start := 1119, stop := 1120 }, lineBreak := false, stringValue := none },
+  { text := "1n", span := { start := 1121, stop := 1123 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 1123, stop := 1124 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 1125, stop := 1126 }, lineBreak := true, stringValue := none },
+  { text := "export", span := { start := 1128, stop := 1134 }, lineBreak := true, stringValue := none },
+  { text := "function", span := { start := 1135, stop := 1143 }, lineBreak := false, stringValue := none },
+  { text := "conjunction", span := { start := 1144, stop := 1155 }, lineBreak := false, stringValue := none },
+  { text := "(", span := { start := 1155, stop := 1156 }, lineBreak := false, stringValue := none },
+  { text := "x", span := { start := 1156, stop := 1157 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1157, stop := 1158 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 1159, stop := 1165 }, lineBreak := false, stringValue := none },
+  { text := "|", span := { start := 1166, stop := 1167 }, lineBreak := false, stringValue := none },
+  { text := "undefined", span := { start := 1168, stop := 1177 }, lineBreak := false, stringValue := none },
+  { text := ",", span := { start := 1177, stop := 1178 }, lineBreak := false, stringValue := none },
+  { text := "floor", span := { start := 1179, stop := 1184 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1184, stop := 1185 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 1186, stop := 1192 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 1192, stop := 1193 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1193, stop := 1194 }, lineBreak := false, stringValue := none },
+  { text := "boolean", span := { start := 1195, stop := 1202 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 1203, stop := 1204 }, lineBreak := false, stringValue := none },
+  { text := "return", span := { start := 1207, stop := 1213 }, lineBreak := true, stringValue := none },
+  { text := "x", span := { start := 1214, stop := 1215 }, lineBreak := false, stringValue := none },
+  { text := "!==", span := { start := 1216, stop := 1219 }, lineBreak := false, stringValue := none },
+  { text := "undefined", span := { start := 1220, stop := 1229 }, lineBreak := false, stringValue := none },
+  { text := "&&", span := { start := 1230, stop := 1232 }, lineBreak := false, stringValue := none },
+  { text := "x", span := { start := 1233, stop := 1234 }, lineBreak := false, stringValue := none },
+  { text := ">", span := { start := 1235, stop := 1236 }, lineBreak := false, stringValue := none },
+  { text := "floor", span := { start := 1237, stop := 1242 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 1242, stop := 1243 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 1244, stop := 1245 }, lineBreak := true, stringValue := none },
+  { text := "export", span := { start := 1247, stop := 1253 }, lineBreak := true, stringValue := none },
+  { text := "function", span := { start := 1254, stop := 1262 }, lineBreak := false, stringValue := none },
+  { text := "disjunction", span := { start := 1263, stop := 1274 }, lineBreak := false, stringValue := none },
+  { text := "(", span := { start := 1274, stop := 1275 }, lineBreak := false, stringValue := none },
+  { text := "x", span := { start := 1275, stop := 1276 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1276, stop := 1277 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 1278, stop := 1284 }, lineBreak := false, stringValue := none },
+  { text := "|", span := { start := 1285, stop := 1286 }, lineBreak := false, stringValue := none },
+  { text := "undefined", span := { start := 1287, stop := 1296 }, lineBreak := false, stringValue := none },
+  { text := ",", span := { start := 1296, stop := 1297 }, lineBreak := false, stringValue := none },
+  { text := "floor", span := { start := 1298, stop := 1303 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1303, stop := 1304 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 1305, stop := 1311 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 1311, stop := 1312 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1312, stop := 1313 }, lineBreak := false, stringValue := none },
+  { text := "boolean", span := { start := 1314, stop := 1321 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 1322, stop := 1323 }, lineBreak := false, stringValue := none },
+  { text := "return", span := { start := 1326, stop := 1332 }, lineBreak := true, stringValue := none },
+  { text := "x", span := { start := 1333, stop := 1334 }, lineBreak := false, stringValue := none },
+  { text := "===", span := { start := 1335, stop := 1338 }, lineBreak := false, stringValue := none },
+  { text := "undefined", span := { start := 1339, stop := 1348 }, lineBreak := false, stringValue := none },
+  { text := "||", span := { start := 1349, stop := 1351 }, lineBreak := false, stringValue := none },
+  { text := "x", span := { start := 1352, stop := 1353 }, lineBreak := false, stringValue := none },
+  { text := ">=", span := { start := 1354, stop := 1356 }, lineBreak := false, stringValue := none },
+  { text := "floor", span := { start := 1357, stop := 1362 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 1362, stop := 1363 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 1364, stop := 1365 }, lineBreak := true, stringValue := none },
+  { text := "export", span := { start := 1367, stop := 1373 }, lineBreak := true, stringValue := none },
+  { text := "function", span := { start := 1374, stop := 1382 }, lineBreak := false, stringValue := none },
+  { text := "ternary", span := { start := 1383, stop := 1390 }, lineBreak := false, stringValue := none },
+  { text := "(", span := { start := 1390, stop := 1391 }, lineBreak := false, stringValue := none },
+  { text := "x", span := { start := 1391, stop := 1392 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1392, stop := 1393 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 1394, stop := 1400 }, lineBreak := false, stringValue := none },
+  { text := "|", span := { start := 1401, stop := 1402 }, lineBreak := false, stringValue := none },
+  { text := "undefined", span := { start := 1403, stop := 1412 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 1412, stop := 1413 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1413, stop := 1414 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 1415, stop := 1421 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 1422, stop := 1423 }, lineBreak := false, stringValue := none },
+  { text := "return", span := { start := 1426, stop := 1432 }, lineBreak := true, stringValue := none },
+  { text := "x", span := { start := 1433, stop := 1434 }, lineBreak := false, stringValue := none },
+  { text := "!==", span := { start := 1435, stop := 1438 }, lineBreak := false, stringValue := none },
+  { text := "undefined", span := { start := 1439, stop := 1448 }, lineBreak := false, stringValue := none },
+  { text := "?", span := { start := 1449, stop := 1450 }, lineBreak := false, stringValue := none },
+  { text := "x", span := { start := 1451, stop := 1452 }, lineBreak := false, stringValue := none },
+  { text := "+", span := { start := 1453, stop := 1454 }, lineBreak := false, stringValue := none },
+  { text := "1n", span := { start := 1455, stop := 1457 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1458, stop := 1459 }, lineBreak := false, stringValue := none },
+  { text := "0n", span := { start := 1460, stop := 1462 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 1462, stop := 1463 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 1464, stop := 1465 }, lineBreak := true, stringValue := none },
+  { text := "export", span := { start := 1467, stop := 1473 }, lineBreak := true, stringValue := none },
+  { text := "function", span := { start := 1474, stop := 1482 }, lineBreak := false, stringValue := none },
+  { text := "forget", span := { start := 1483, stop := 1489 }, lineBreak := false, stringValue := none },
+  { text := "(", span := { start := 1489, stop := 1490 }, lineBreak := false, stringValue := none },
+  { text := "x", span := { start := 1490, stop := 1491 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1491, stop := 1492 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 1493, stop := 1499 }, lineBreak := false, stringValue := none },
+  { text := "|", span := { start := 1500, stop := 1501 }, lineBreak := false, stringValue := none },
+  { text := "undefined", span := { start := 1502, stop := 1511 }, lineBreak := false, stringValue := none },
+  { text := ",", span := { start := 1511, stop := 1512 }, lineBreak := false, stringValue := none },
+  { text := "clear", span := { start := 1513, stop := 1518 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1518, stop := 1519 }, lineBreak := false, stringValue := none },
+  { text := "boolean", span := { start := 1520, stop := 1527 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 1527, stop := 1528 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1528, stop := 1529 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 1530, stop := 1536 }, lineBreak := false, stringValue := none },
+  { text := "|", span := { start := 1537, stop := 1538 }, lineBreak := false, stringValue := none },
+  { text := "undefined", span := { start := 1539, stop := 1548 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 1549, stop := 1550 }, lineBreak := false, stringValue := none },
+  { text := "if", span := { start := 1553, stop := 1555 }, lineBreak := true, stringValue := none },
+  { text := "(", span := { start := 1556, stop := 1557 }, lineBreak := false, stringValue := none },
+  { text := "x", span := { start := 1557, stop := 1558 }, lineBreak := false, stringValue := none },
+  { text := "!==", span := { start := 1559, stop := 1562 }, lineBreak := false, stringValue := none },
+  { text := "undefined", span := { start := 1563, stop := 1572 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 1572, stop := 1573 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 1574, stop := 1575 }, lineBreak := false, stringValue := none },
+  { text := "if", span := { start := 1580, stop := 1582 }, lineBreak := true, stringValue := none },
+  { text := "(", span := { start := 1583, stop := 1584 }, lineBreak := false, stringValue := none },
+  { text := "clear", span := { start := 1584, stop := 1589 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 1589, stop := 1590 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 1591, stop := 1592 }, lineBreak := false, stringValue := none },
+  { text := "x", span := { start := 1593, stop := 1594 }, lineBreak := false, stringValue := none },
+  { text := "=", span := { start := 1595, stop := 1596 }, lineBreak := false, stringValue := none },
+  { text := "undefined", span := { start := 1597, stop := 1606 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 1606, stop := 1607 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 1608, stop := 1609 }, lineBreak := false, stringValue := none },
+  { text := "else", span := { start := 1610, stop := 1614 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 1615, stop := 1616 }, lineBreak := false, stringValue := none },
+  { text := "x", span := { start := 1617, stop := 1618 }, lineBreak := false, stringValue := none },
+  { text := "+=", span := { start := 1619, stop := 1621 }, lineBreak := false, stringValue := none },
+  { text := "1n", span := { start := 1622, stop := 1624 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 1624, stop := 1625 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 1626, stop := 1627 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 1630, stop := 1631 }, lineBreak := true, stringValue := none },
+  { text := "return", span := { start := 1634, stop := 1640 }, lineBreak := true, stringValue := none },
+  { text := "x", span := { start := 1641, stop := 1642 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 1642, stop := 1643 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 1644, stop := 1645 }, lineBreak := true, stringValue := none },
+  { text := "export", span := { start := 1647, stop := 1653 }, lineBreak := true, stringValue := none },
+  { text := "function", span := { start := 1654, stop := 1662 }, lineBreak := false, stringValue := none },
+  { text := "scopedTypes", span := { start := 1663, stop := 1674 }, lineBreak := false, stringValue := none },
+  { text := "(", span := { start := 1674, stop := 1675 }, lineBreak := false, stringValue := none },
+  { text := "x", span := { start := 1675, stop := 1676 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1676, stop := 1677 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 1678, stop := 1684 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 1684, stop := 1685 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1685, stop := 1686 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 1687, stop := 1693 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 1694, stop := 1695 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 1698, stop := 1699 }, lineBreak := true, stringValue := none },
+  { text := "const", span := { start := 1700, stop := 1705 }, lineBreak := false, stringValue := none },
+  { text := "temporary", span := { start := 1706, stop := 1715 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1715, stop := 1716 }, lineBreak := false, stringValue := none },
+  { text := "string", span := { start := 1717, stop := 1723 }, lineBreak := false, stringValue := none },
+  { text := "=", span := { start := 1724, stop := 1725 }, lineBreak := false, stringValue := none },
+  { text := "<string>",
+    span := { start := 1726, stop := 1733 },
+    lineBreak := false,
+    stringValue := some [105, 110, 110, 101, 114] },
+  { text := ";", span := { start := 1733, stop := 1734 }, lineBreak := false, stringValue := none },
+  { text := "const", span := { start := 1735, stop := 1740 }, lineBreak := false, stringValue := none },
+  { text := "unused", span := { start := 1741, stop := 1747 }, lineBreak := false, stringValue := none },
+  { text := "=", span := { start := 1748, stop := 1749 }, lineBreak := false, stringValue := none },
+  { text := "temporary", span := { start := 1750, stop := 1759 }, lineBreak := false, stringValue := none },
+  { text := "+", span := { start := 1760, stop := 1761 }, lineBreak := false, stringValue := none },
+  { text := "<string>", span := { start := 1762, stop := 1765 }, lineBreak := false, stringValue := some [33] },
+  { text := ";", span := { start := 1765, stop := 1766 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 1767, stop := 1768 }, lineBreak := false, stringValue := none },
+  { text := "let", span := { start := 1771, stop := 1774 }, lineBreak := true, stringValue := none },
+  { text := "temporary", span := { start := 1775, stop := 1784 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1784, stop := 1785 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 1786, stop := 1792 }, lineBreak := false, stringValue := none },
+  { text := "=", span := { start := 1793, stop := 1794 }, lineBreak := false, stringValue := none },
+  { text := "x", span := { start := 1795, stop := 1796 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 1796, stop := 1797 }, lineBreak := false, stringValue := none },
+  { text := "if", span := { start := 1800, stop := 1802 }, lineBreak := true, stringValue := none },
+  { text := "(", span := { start := 1803, stop := 1804 }, lineBreak := false, stringValue := none },
+  { text := "x", span := { start := 1804, stop := 1805 }, lineBreak := false, stringValue := none },
+  { text := ">", span := { start := 1806, stop := 1807 }, lineBreak := false, stringValue := none },
+  { text := "0n", span := { start := 1808, stop := 1810 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 1810, stop := 1811 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 1812, stop := 1813 }, lineBreak := false, stringValue := none },
+  { text := "temporary", span := { start := 1814, stop := 1823 }, lineBreak := false, stringValue := none },
+  { text := "+=", span := { start := 1824, stop := 1826 }, lineBreak := false, stringValue := none },
+  { text := "1n", span := { start := 1827, stop := 1829 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 1829, stop := 1830 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 1831, stop := 1832 }, lineBreak := false, stringValue := none },
+  { text := "return", span := { start := 1835, stop := 1841 }, lineBreak := true, stringValue := none },
+  { text := "temporary", span := { start := 1842, stop := 1851 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 1851, stop := 1852 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 1853, stop := 1854 }, lineBreak := true, stringValue := none },
+  { text := "<eof>", span := { start := 1855, stop := 1855 }, lineBreak := true, stringValue := none }]
 
 theorem lex_checked : lex source = .ok tokens := by
   unfold lex
@@ -344,7 +594,7 @@ theorem lex_checked : lex source = .ok tokens := by
   kernel_rfl
 
 def program : Program :=
-{ functions := [{ name := "abs",                   params := [{ name := "x", ty := Ariadne.Ty.bigint, span := { start := 20, stop := 21 } }],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.if_                                (Ariadne.Expr.binary                                  "<"                                  (Ariadne.Expr.var "x" { start := 45, stop := 46 })                                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 49, stop := 51 })                                  { start := 45, stop := 51 })                                (Ariadne.Stmt.block                                  [Ariadne.Stmt.return_                                     (Ariadne.Expr.unary                                       "-"                                       (Ariadne.Expr.var "x" { start := 63, stop := 64 })                                       { start := 62, stop := 63 })                                     { start := 55, stop := 61 }]                                  { start := 53, stop := 67 })                                (Ariadne.Stmt.block [] { start := 41, stop := 43 })                                { start := 41, stop := 43 },                              Ariadne.Stmt.return_                                (Ariadne.Expr.var "x" { start := 75, stop := 76 })                                { start := 68, stop := 74 }]                             { start := 39, stop := 79 },                   exported := true,                   decreases := none,                   span := { start := 7, stop := 15 } },                 { name := "update",                   params := [{ name := "x", ty := Ariadne.Ty.bigint, span := { start := 103, stop := 104 } },                              { name := "y", ty := Ariadne.Ty.bigint, span := { start := 114, stop := 115 } },                              { name := "flag", ty := Ariadne.Ty.boolean, span := { start := 125, stop := 129 } }],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.let_                                true                                "total"                                none                                (Ariadne.Expr.var "x" { start := 162, stop := 163 })                                { start := 150, stop := 153 },                              Ariadne.Stmt.if_                                (Ariadne.Expr.var "flag" { start := 169, stop := 173 })                                (Ariadne.Stmt.block                                  [Ariadne.Stmt.assign                                     (Ariadne.Expr.var "total" { start := 177, stop := 182 })                                     (Ariadne.Expr.binary                                       "+"                                       (Ariadne.Expr.var "total" { start := 177, stop := 182 })                                       (Ariadne.Expr.var "y" { start := 186, stop := 187 })                                       { start := 183, stop := 185 })                                     { start := 177, stop := 182 }]                                  { start := 175, stop := 190 })                                (Ariadne.Stmt.block                                  [Ariadne.Stmt.assign                                     (Ariadne.Expr.var "total" { start := 198, stop := 203 })                                     (Ariadne.Expr.binary                                       "-"                                       (Ariadne.Expr.var "total" { start := 198, stop := 203 })                                       (Ariadne.Expr.var "y" { start := 207, stop := 208 })                                       { start := 204, stop := 206 })                                     { start := 198, stop := 203 }]                                  { start := 196, stop := 211 })                                { start := 165, stop := 167 },                              Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "*"                                  (Ariadne.Expr.var "total" { start := 219, stop := 224 })                                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 2) { start := 227, stop := 229 })                                  { start := 219, stop := 229 })                                { start := 212, stop := 218 }]                             { start := 148, stop := 232 },                   exported := true,                   decreases := none,                   span := { start := 87, stop := 95 } },                 { name := "fallback",                   params := [{ name := "x",                                ty := Ariadne.Ty.union (Ariadne.Ty.bigint) (Ariadne.Ty.undefined),                                span := { start := 258, stop := 259 } }],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "??"                                  (Ariadne.Expr.var "x" { start := 298, stop := 299 })                                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 9) { start := 303, stop := 305 })                                  { start := 298, stop := 305 })                                { start := 291, stop := 297 }]                             { start := 289, stop := 308 },                   exported := true,                   decreases := none,                   span := { start := 240, stop := 248 } },                 { name := "decimal",                   params := [{ name := "x", ty := Ariadne.Ty.number, span := { start := 333, stop := 334 } },                              { name := "y", ty := Ariadne.Ty.number, span := { start := 344, stop := 345 } }],                   result := Ariadne.Ty.number,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "/"                                  (Ariadne.Expr.binary                                    "*"                                    (Ariadne.Expr.var "x" { start := 373, stop := 374 })                                    (Ariadne.Expr.var "y" { start := 377, stop := 378 })                                    { start := 373, stop := 378 })                                  (Ariadne.Expr.binary                                    "+"                                    (Ariadne.Expr.var "x" { start := 383, stop := 384 })                                    (Ariadne.Expr.var "y" { start := 387, stop := 388 })                                    { start := 383, stop := 388 })                                  { start := 373, stop := 388 })                                { start := 365, stop := 371 }]                             { start := 363, stop := 392 },                   exported := true,                   decreases := none,                   span := { start := 316, stop := 324 } },                 { name := "hello",                   params := [{ name := "name", ty := Ariadne.Ty.string, span := { start := 415, stop := 419 } }],                   result := Ariadne.Ty.string,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "+"                                  (Ariadne.Expr.literal                                    (Ariadne.Literal.string [104, 101, 108, 108, 111, 32])                                    { start := 446, stop := 454 })                                  (Ariadne.Expr.var "name" { start := 457, stop := 461 })                                  { start := 446, stop := 461 })                                { start := 439, stop := 445 }]                             { start := 437, stop := 464 },                   exported := true,                   decreases := none,                   span := { start := 400, stop := 408 } },                 { name := "optional",                   params := [{ name := "flag", ty := Ariadne.Ty.boolean, span := { start := 490, stop := 494 } },                              { name := "value", ty := Ariadne.Ty.bigint, span := { start := 505, stop := 510 } }],                   result := Ariadne.Ty.union (Ariadne.Ty.bigint) (Ariadne.Ty.undefined),                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.if_                                (Ariadne.Expr.var "flag" { start := 548, stop := 552 })                                (Ariadne.Stmt.block                                  [Ariadne.Stmt.return_                                     (Ariadne.Expr.var "value" { start := 563, stop := 568 })                                     { start := 556, stop := 562 }]                                  { start := 554, stop := 571 })                                (Ariadne.Stmt.block [] { start := 544, stop := 546 })                                { start := 544, stop := 546 },                              Ariadne.Stmt.return_                                (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 581, stop := 590 })                                { start := 574, stop := 580 }]                             { start := 540, stop := 593 },                   exported := true,                   decreases := none,                   span := { start := 472, stop := 480 } },                 { name := "textBefore",                   params := [{ name := "a", ty := Ariadne.Ty.string, span := { start := 621, stop := 622 } },                              { name := "b", ty := Ariadne.Ty.string, span := { start := 632, stop := 633 } }],                   result := Ariadne.Ty.boolean,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "<"                                  (Ariadne.Expr.var "a" { start := 661, stop := 662 })                                  (Ariadne.Expr.var "b" { start := 665, stop := 666 })                                  { start := 661, stop := 666 })                                { start := 654, stop := 660 }]                             { start := 652, stop := 669 },                   exported := true,                   decreases := none,                   span := { start := 601, stop := 609 } },                 { name := "remainder",                   params := [{ name := "a", ty := Ariadne.Ty.number, span := { start := 696, stop := 697 } },                              { name := "b", ty := Ariadne.Ty.number, span := { start := 707, stop := 708 } }],                   result := Ariadne.Ty.number,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "%"                                  (Ariadne.Expr.var "a" { start := 735, stop := 736 })                                  (Ariadne.Expr.var "b" { start := 739, stop := 740 })                                  { start := 735, stop := 740 })                                { start := 728, stop := 734 }]                             { start := 726, stop := 743 },                   exported := true,                   decreases := none,                   span := { start := 677, stop := 685 } },                 { name := "scoped",                   params := [{ name := "x", ty := Ariadne.Ty.bigint, span := { start := 767, stop := 768 } }],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.block                                [Ariadne.Stmt.let_                                   true                                   "temporary"                                   none                                   (Ariadne.Expr.binary                                     "+"                                     (Ariadne.Expr.var "x" { start := 808, stop := 809 })                                     (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 812, stop := 814 })                                     { start := 808, stop := 814 })                                   { start := 792, stop := 795 },                                 Ariadne.Stmt.assign                                   (Ariadne.Expr.var "x" { start := 816, stop := 817 })                                   (Ariadne.Expr.binary                                     "*"                                     (Ariadne.Expr.var "temporary" { start := 820, stop := 829 })                                     (Ariadne.Expr.literal (Ariadne.Literal.bigint 2) { start := 832, stop := 834 })                                     { start := 820, stop := 834 })                                   { start := 816, stop := 817 }]                                { start := 790, stop := 837 },                              Ariadne.Stmt.let_                                true                                "temporary"                                none                                (Ariadne.Expr.binary                                  "-"                                  (Ariadne.Expr.var "x" { start := 856, stop := 857 })                                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 3) { start := 860, stop := 862 })                                  { start := 856, stop := 862 })                                { start := 840, stop := 843 },                              Ariadne.Stmt.return_                                (Ariadne.Expr.var "temporary" { start := 873, stop := 882 })                                { start := 866, stop := 872 }]                             { start := 786, stop := 885 },                   exported := true,                   decreases := none,                   span := { start := 751, stop := 759 } },                 { name := "abs_denotes",                   params := [],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.literal (Ariadne.Literal.bigint 3) { start := 933, stop := 935 })                                { start := 926, stop := 932 }]                             { start := 924, stop := 938 },                   exported := true,                   decreases := none,                   span := { start := 893, stop := 901 } },                 { name := "CoreArtifacts",                   params := [],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.literal (Ariadne.Literal.bigint 4) { start := 988, stop := 990 })                                { start := 981, stop := 987 }]                             { start := 979, stop := 993 },                   exported := true,                   decreases := none,                   span := { start := 946, stop := 954 } }],   aliases := [],   classes := [] }
+{ functions := [{ name := "abs",                   params := [{ name := "x", ty := Ariadne.Ty.bigint, span := { start := 20, stop := 21 } }],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.if_                                (Ariadne.Expr.binary                                  "<"                                  (Ariadne.Expr.var "x" { start := 45, stop := 46 })                                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 49, stop := 51 })                                  { start := 45, stop := 51 })                                (Ariadne.Stmt.block                                  [Ariadne.Stmt.return_                                     (Ariadne.Expr.unary                                       "-"                                       (Ariadne.Expr.var "x" { start := 63, stop := 64 })                                       { start := 62, stop := 63 })                                     { start := 55, stop := 61 }]                                  { start := 53, stop := 67 })                                (Ariadne.Stmt.block [] { start := 41, stop := 43 })                                { start := 41, stop := 43 },                              Ariadne.Stmt.return_                                (Ariadne.Expr.var "x" { start := 75, stop := 76 })                                { start := 68, stop := 74 }]                             { start := 39, stop := 79 },                   exported := true,                   decreases := none,                   span := { start := 7, stop := 15 } },                 { name := "update",                   params := [{ name := "x", ty := Ariadne.Ty.bigint, span := { start := 103, stop := 104 } },                              { name := "y", ty := Ariadne.Ty.bigint, span := { start := 114, stop := 115 } },                              { name := "flag", ty := Ariadne.Ty.boolean, span := { start := 125, stop := 129 } }],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.let_                                true                                "total"                                none                                (Ariadne.Expr.var "x" { start := 162, stop := 163 })                                { start := 150, stop := 153 },                              Ariadne.Stmt.if_                                (Ariadne.Expr.var "flag" { start := 169, stop := 173 })                                (Ariadne.Stmt.block                                  [Ariadne.Stmt.assign                                     (Ariadne.Expr.var "total" { start := 177, stop := 182 })                                     (Ariadne.Expr.binary                                       "+"                                       (Ariadne.Expr.var "total" { start := 177, stop := 182 })                                       (Ariadne.Expr.var "y" { start := 186, stop := 187 })                                       { start := 183, stop := 185 })                                     { start := 177, stop := 182 }]                                  { start := 175, stop := 190 })                                (Ariadne.Stmt.block                                  [Ariadne.Stmt.assign                                     (Ariadne.Expr.var "total" { start := 198, stop := 203 })                                     (Ariadne.Expr.binary                                       "-"                                       (Ariadne.Expr.var "total" { start := 198, stop := 203 })                                       (Ariadne.Expr.var "y" { start := 207, stop := 208 })                                       { start := 204, stop := 206 })                                     { start := 198, stop := 203 }]                                  { start := 196, stop := 211 })                                { start := 165, stop := 167 },                              Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "*"                                  (Ariadne.Expr.var "total" { start := 219, stop := 224 })                                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 2) { start := 227, stop := 229 })                                  { start := 219, stop := 229 })                                { start := 212, stop := 218 }]                             { start := 148, stop := 232 },                   exported := true,                   decreases := none,                   span := { start := 87, stop := 95 } },                 { name := "fallback",                   params := [{ name := "x",                                ty := Ariadne.Ty.union (Ariadne.Ty.bigint) (Ariadne.Ty.undefined),                                span := { start := 258, stop := 259 } }],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "??"                                  (Ariadne.Expr.var "x" { start := 298, stop := 299 })                                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 9) { start := 303, stop := 305 })                                  { start := 298, stop := 305 })                                { start := 291, stop := 297 }]                             { start := 289, stop := 308 },                   exported := true,                   decreases := none,                   span := { start := 240, stop := 248 } },                 { name := "decimal",                   params := [{ name := "x", ty := Ariadne.Ty.number, span := { start := 333, stop := 334 } },                              { name := "y", ty := Ariadne.Ty.number, span := { start := 344, stop := 345 } }],                   result := Ariadne.Ty.number,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "/"                                  (Ariadne.Expr.binary                                    "*"                                    (Ariadne.Expr.var "x" { start := 373, stop := 374 })                                    (Ariadne.Expr.var "y" { start := 377, stop := 378 })                                    { start := 373, stop := 378 })                                  (Ariadne.Expr.binary                                    "+"                                    (Ariadne.Expr.var "x" { start := 383, stop := 384 })                                    (Ariadne.Expr.var "y" { start := 387, stop := 388 })                                    { start := 383, stop := 388 })                                  { start := 373, stop := 388 })                                { start := 365, stop := 371 }]                             { start := 363, stop := 392 },                   exported := true,                   decreases := none,                   span := { start := 316, stop := 324 } },                 { name := "hello",                   params := [{ name := "name", ty := Ariadne.Ty.string, span := { start := 415, stop := 419 } }],                   result := Ariadne.Ty.string,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "+"                                  (Ariadne.Expr.literal                                    (Ariadne.Literal.string [104, 101, 108, 108, 111, 32])                                    { start := 446, stop := 454 })                                  (Ariadne.Expr.var "name" { start := 457, stop := 461 })                                  { start := 446, stop := 461 })                                { start := 439, stop := 445 }]                             { start := 437, stop := 464 },                   exported := true,                   decreases := none,                   span := { start := 400, stop := 408 } },                 { name := "optional",                   params := [{ name := "flag", ty := Ariadne.Ty.boolean, span := { start := 490, stop := 494 } },                              { name := "value", ty := Ariadne.Ty.bigint, span := { start := 505, stop := 510 } }],                   result := Ariadne.Ty.union (Ariadne.Ty.bigint) (Ariadne.Ty.undefined),                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.if_                                (Ariadne.Expr.var "flag" { start := 548, stop := 552 })                                (Ariadne.Stmt.block                                  [Ariadne.Stmt.return_                                     (Ariadne.Expr.var "value" { start := 563, stop := 568 })                                     { start := 556, stop := 562 }]                                  { start := 554, stop := 571 })                                (Ariadne.Stmt.block [] { start := 544, stop := 546 })                                { start := 544, stop := 546 },                              Ariadne.Stmt.return_                                (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 581, stop := 590 })                                { start := 574, stop := 580 }]                             { start := 540, stop := 593 },                   exported := true,                   decreases := none,                   span := { start := 472, stop := 480 } },                 { name := "textBefore",                   params := [{ name := "a", ty := Ariadne.Ty.string, span := { start := 621, stop := 622 } },                              { name := "b", ty := Ariadne.Ty.string, span := { start := 632, stop := 633 } }],                   result := Ariadne.Ty.boolean,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "<"                                  (Ariadne.Expr.var "a" { start := 661, stop := 662 })                                  (Ariadne.Expr.var "b" { start := 665, stop := 666 })                                  { start := 661, stop := 666 })                                { start := 654, stop := 660 }]                             { start := 652, stop := 669 },                   exported := true,                   decreases := none,                   span := { start := 601, stop := 609 } },                 { name := "remainder",                   params := [{ name := "a", ty := Ariadne.Ty.number, span := { start := 696, stop := 697 } },                              { name := "b", ty := Ariadne.Ty.number, span := { start := 707, stop := 708 } }],                   result := Ariadne.Ty.number,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "%"                                  (Ariadne.Expr.var "a" { start := 735, stop := 736 })                                  (Ariadne.Expr.var "b" { start := 739, stop := 740 })                                  { start := 735, stop := 740 })                                { start := 728, stop := 734 }]                             { start := 726, stop := 743 },                   exported := true,                   decreases := none,                   span := { start := 677, stop := 685 } },                 { name := "scoped",                   params := [{ name := "x", ty := Ariadne.Ty.bigint, span := { start := 767, stop := 768 } }],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.block                                [Ariadne.Stmt.let_                                   true                                   "temporary"                                   none                                   (Ariadne.Expr.binary                                     "+"                                     (Ariadne.Expr.var "x" { start := 808, stop := 809 })                                     (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 812, stop := 814 })                                     { start := 808, stop := 814 })                                   { start := 792, stop := 795 },                                 Ariadne.Stmt.assign                                   (Ariadne.Expr.var "x" { start := 816, stop := 817 })                                   (Ariadne.Expr.binary                                     "*"                                     (Ariadne.Expr.var "temporary" { start := 820, stop := 829 })                                     (Ariadne.Expr.literal (Ariadne.Literal.bigint 2) { start := 832, stop := 834 })                                     { start := 820, stop := 834 })                                   { start := 816, stop := 817 }]                                { start := 790, stop := 837 },                              Ariadne.Stmt.let_                                true                                "temporary"                                none                                (Ariadne.Expr.binary                                  "-"                                  (Ariadne.Expr.var "x" { start := 856, stop := 857 })                                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 3) { start := 860, stop := 862 })                                  { start := 856, stop := 862 })                                { start := 840, stop := 843 },                              Ariadne.Stmt.return_                                (Ariadne.Expr.var "temporary" { start := 873, stop := 882 })                                { start := 866, stop := 872 }]                             { start := 786, stop := 885 },                   exported := true,                   decreases := none,                   span := { start := 751, stop := 759 } },                 { name := "abs_denotes",                   params := [],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.literal (Ariadne.Literal.bigint 3) { start := 933, stop := 935 })                                { start := 926, stop := 932 }]                             { start := 924, stop := 938 },                   exported := true,                   decreases := none,                   span := { start := 893, stop := 901 } },                 { name := "CoreArtifacts",                   params := [],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.literal (Ariadne.Literal.bigint 4) { start := 988, stop := 990 })                                { start := 981, stop := 987 }]                             { start := 979, stop := 993 },                   exported := true,                   decreases := none,                   span := { start := 946, stop := 954 } },                 { name := "guarded",                   params := [{ name := "x",                                ty := Ariadne.Ty.union (Ariadne.Ty.bigint) (Ariadne.Ty.undefined),                                span := { start := 1019, stop := 1020 } },                              { name := "floor", ty := Ariadne.Ty.bigint, span := { start := 1042, stop := 1047 } }],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.if_                                (Ariadne.Expr.binary                                  "==="                                  (Ariadne.Expr.var "x" { start := 1073, stop := 1074 })                                  (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 1079, stop := 1088 })                                  { start := 1073, stop := 1088 })                                (Ariadne.Stmt.block                                  [Ariadne.Stmt.return_                                     (Ariadne.Expr.var "floor" { start := 1099, stop := 1104 })                                     { start := 1092, stop := 1098 }]                                  { start := 1090, stop := 1107 })                                (Ariadne.Stmt.block [] { start := 1069, stop := 1071 })                                { start := 1069, stop := 1071 },                              Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "+"                                  (Ariadne.Expr.var "x" { start := 1117, stop := 1118 })                                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 1121, stop := 1123 })                                  { start := 1117, stop := 1123 })                                { start := 1110, stop := 1116 }]                             { start := 1065, stop := 1126 },                   exported := true,                   decreases := none,                   span := { start := 1002, stop := 1010 } },                 { name := "conjunction",                   params := [{ name := "x",                                ty := Ariadne.Ty.union (Ariadne.Ty.bigint) (Ariadne.Ty.undefined),                                span := { start := 1156, stop := 1157 } },                              { name := "floor", ty := Ariadne.Ty.bigint, span := { start := 1179, stop := 1184 } }],                   result := Ariadne.Ty.boolean,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "&&"                                  (Ariadne.Expr.binary                                    "!=="                                    (Ariadne.Expr.var "x" { start := 1214, stop := 1215 })                                    (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 1220, stop := 1229 })                                    { start := 1214, stop := 1229 })                                  (Ariadne.Expr.binary                                    ">"                                    (Ariadne.Expr.var "x" { start := 1233, stop := 1234 })                                    (Ariadne.Expr.var "floor" { start := 1237, stop := 1242 })                                    { start := 1233, stop := 1242 })                                  { start := 1214, stop := 1242 })                                { start := 1207, stop := 1213 }]                             { start := 1203, stop := 1245 },                   exported := true,                   decreases := none,                   span := { start := 1135, stop := 1143 } },                 { name := "disjunction",                   params := [{ name := "x",                                ty := Ariadne.Ty.union (Ariadne.Ty.bigint) (Ariadne.Ty.undefined),                                span := { start := 1275, stop := 1276 } },                              { name := "floor", ty := Ariadne.Ty.bigint, span := { start := 1298, stop := 1303 } }],                   result := Ariadne.Ty.boolean,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "||"                                  (Ariadne.Expr.binary                                    "==="                                    (Ariadne.Expr.var "x" { start := 1333, stop := 1334 })                                    (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 1339, stop := 1348 })                                    { start := 1333, stop := 1348 })                                  (Ariadne.Expr.binary                                    ">="                                    (Ariadne.Expr.var "x" { start := 1352, stop := 1353 })                                    (Ariadne.Expr.var "floor" { start := 1357, stop := 1362 })                                    { start := 1352, stop := 1362 })                                  { start := 1333, stop := 1362 })                                { start := 1326, stop := 1332 }]                             { start := 1322, stop := 1365 },                   exported := true,                   decreases := none,                   span := { start := 1254, stop := 1262 } },                 { name := "ternary",                   params := [{ name := "x",                                ty := Ariadne.Ty.union (Ariadne.Ty.bigint) (Ariadne.Ty.undefined),                                span := { start := 1391, stop := 1392 } }],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.conditional                                  (Ariadne.Expr.binary                                    "!=="                                    (Ariadne.Expr.var "x" { start := 1433, stop := 1434 })                                    (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 1439, stop := 1448 })                                    { start := 1433, stop := 1448 })                                  (Ariadne.Expr.binary                                    "+"                                    (Ariadne.Expr.var "x" { start := 1451, stop := 1452 })                                    (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 1455, stop := 1457 })                                    { start := 1451, stop := 1457 })                                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 1460, stop := 1462 })                                  { start := 1433, stop := 1448 })                                { start := 1426, stop := 1432 }]                             { start := 1422, stop := 1465 },                   exported := true,                   decreases := none,                   span := { start := 1374, stop := 1382 } },                 { name := "forget",                   params := [{ name := "x",                                ty := Ariadne.Ty.union (Ariadne.Ty.bigint) (Ariadne.Ty.undefined),                                span := { start := 1490, stop := 1491 } },                              { name := "clear", ty := Ariadne.Ty.boolean, span := { start := 1513, stop := 1518 } }],                   result := Ariadne.Ty.union (Ariadne.Ty.bigint) (Ariadne.Ty.undefined),                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.if_                                (Ariadne.Expr.binary                                  "!=="                                  (Ariadne.Expr.var "x" { start := 1557, stop := 1558 })                                  (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 1563, stop := 1572 })                                  { start := 1557, stop := 1572 })                                (Ariadne.Stmt.block                                  [Ariadne.Stmt.if_                                     (Ariadne.Expr.var "clear" { start := 1584, stop := 1589 })                                     (Ariadne.Stmt.block                                       [Ariadne.Stmt.assign                                          (Ariadne.Expr.var "x" { start := 1593, stop := 1594 })                                          (Ariadne.Expr.literal                                            (Ariadne.Literal.undefined)                                            { start := 1597, stop := 1606 })                                          { start := 1593, stop := 1594 }]                                       { start := 1591, stop := 1609 })                                     (Ariadne.Stmt.block                                       [Ariadne.Stmt.assign                                          (Ariadne.Expr.var "x" { start := 1617, stop := 1618 })                                          (Ariadne.Expr.binary                                            "+"                                            (Ariadne.Expr.var "x" { start := 1617, stop := 1618 })                                            (Ariadne.Expr.literal                                              (Ariadne.Literal.bigint 1)                                              { start := 1622, stop := 1624 })                                            { start := 1619, stop := 1621 })                                          { start := 1617, stop := 1618 }]                                       { start := 1615, stop := 1627 })                                     { start := 1580, stop := 1582 }]                                  { start := 1574, stop := 1631 })                                (Ariadne.Stmt.block [] { start := 1553, stop := 1555 })                                { start := 1553, stop := 1555 },                              Ariadne.Stmt.return_                                (Ariadne.Expr.var "x" { start := 1641, stop := 1642 })                                { start := 1634, stop := 1640 }]                             { start := 1549, stop := 1645 },                   exported := true,                   decreases := none,                   span := { start := 1474, stop := 1482 } },                 { name := "scopedTypes",                   params := [{ name := "x", ty := Ariadne.Ty.bigint, span := { start := 1675, stop := 1676 } }],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.block                                [Ariadne.Stmt.let_                                   false                                   "temporary"                                   (some (Ariadne.Ty.string))                                   (Ariadne.Expr.literal                                     (Ariadne.Literal.string [105, 110, 110, 101, 114])                                     { start := 1726, stop := 1733 })                                   { start := 1700, stop := 1705 },                                 Ariadne.Stmt.let_                                   false                                   "unused"                                   none                                   (Ariadne.Expr.binary                                     "+"                                     (Ariadne.Expr.var "temporary" { start := 1750, stop := 1759 })                                     (Ariadne.Expr.literal (Ariadne.Literal.string [33]) { start := 1762, stop := 1765 })                                     { start := 1750, stop := 1765 })                                   { start := 1735, stop := 1740 }]                                { start := 1698, stop := 1768 },                              Ariadne.Stmt.let_                                true                                "temporary"                                (some (Ariadne.Ty.bigint))                                (Ariadne.Expr.var "x" { start := 1795, stop := 1796 })                                { start := 1771, stop := 1774 },                              Ariadne.Stmt.if_                                (Ariadne.Expr.binary                                  ">"                                  (Ariadne.Expr.var "x" { start := 1804, stop := 1805 })                                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 1808, stop := 1810 })                                  { start := 1804, stop := 1810 })                                (Ariadne.Stmt.block                                  [Ariadne.Stmt.assign                                     (Ariadne.Expr.var "temporary" { start := 1814, stop := 1823 })                                     (Ariadne.Expr.binary                                       "+"                                       (Ariadne.Expr.var "temporary" { start := 1814, stop := 1823 })                                       (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 1827, stop := 1829 })                                       { start := 1824, stop := 1826 })                                     { start := 1814, stop := 1823 }]                                  { start := 1812, stop := 1832 })                                (Ariadne.Stmt.block [] { start := 1800, stop := 1802 })                                { start := 1800, stop := 1802 },                              Ariadne.Stmt.return_                                (Ariadne.Expr.var "temporary" { start := 1842, stop := 1851 })                                { start := 1835, stop := 1841 }]                             { start := 1694, stop := 1854 },                   exported := true,                   decreases := none,                   span := { start := 1654, stop := 1662 } }],   aliases := [],   classes := [] }
 
 theorem parse_checked : parse source = .ok program := by
   unfold parse
@@ -446,6 +696,54 @@ theorem ts_CoreArtifacts_source {fuel : Nat} {args : List Value} {value : Value}
     (h : ts_CoreArtifacts fuel args = .ok value) : SourceReturns source "CoreArtifacts" args value :=
   certificate.transfer_at h
 
+/-- Executable, fuel-indexed model of TypeScript `guarded`. -/
+def ts_guarded (fuel : Nat) (args : List Value) : Result Value :=
+  run program "guarded" fuel args
+
+theorem ts_guarded_source {fuel : Nat} {args : List Value} {value : Value}
+    (h : ts_guarded fuel args = .ok value) : SourceReturns source "guarded" args value :=
+  certificate.transfer_at h
+
+/-- Executable, fuel-indexed model of TypeScript `conjunction`. -/
+def ts_conjunction (fuel : Nat) (args : List Value) : Result Value :=
+  run program "conjunction" fuel args
+
+theorem ts_conjunction_source {fuel : Nat} {args : List Value} {value : Value}
+    (h : ts_conjunction fuel args = .ok value) : SourceReturns source "conjunction" args value :=
+  certificate.transfer_at h
+
+/-- Executable, fuel-indexed model of TypeScript `disjunction`. -/
+def ts_disjunction (fuel : Nat) (args : List Value) : Result Value :=
+  run program "disjunction" fuel args
+
+theorem ts_disjunction_source {fuel : Nat} {args : List Value} {value : Value}
+    (h : ts_disjunction fuel args = .ok value) : SourceReturns source "disjunction" args value :=
+  certificate.transfer_at h
+
+/-- Executable, fuel-indexed model of TypeScript `ternary`. -/
+def ts_ternary (fuel : Nat) (args : List Value) : Result Value :=
+  run program "ternary" fuel args
+
+theorem ts_ternary_source {fuel : Nat} {args : List Value} {value : Value}
+    (h : ts_ternary fuel args = .ok value) : SourceReturns source "ternary" args value :=
+  certificate.transfer_at h
+
+/-- Executable, fuel-indexed model of TypeScript `forget`. -/
+def ts_forget (fuel : Nat) (args : List Value) : Result Value :=
+  run program "forget" fuel args
+
+theorem ts_forget_source {fuel : Nat} {args : List Value} {value : Value}
+    (h : ts_forget fuel args = .ok value) : SourceReturns source "forget" args value :=
+  certificate.transfer_at h
+
+/-- Executable, fuel-indexed model of TypeScript `scopedTypes`. -/
+def ts_scopedTypes (fuel : Nat) (args : List Value) : Result Value :=
+  run program "scopedTypes" fuel args
+
+theorem ts_scopedTypes_source {fuel : Nat} {args : List Value} {value : Value}
+    (h : ts_scopedTypes fuel args = .ok value) : SourceReturns source "scopedTypes" args value :=
+  certificate.transfer_at h
+
 end Extracted_scalars
 
 -- Shallow denotation certificates. Operational adequacy is not yet proved.
@@ -453,34 +751,22 @@ namespace Extracted_scalars.Shallow
 open Ariadne Ariadne.Shallow
 set_option linter.unusedSimpArgs false
 
-def JoinCore.«abs#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
-  (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.int) (Ariadne.Shallow.Core.Ty.unit))
-  (Ariadne.Shallow.Core.Ty.int)) := (Core.Term.lam "state" (Core.Term.fst (Core.Term.var (Ariadne.Shallow.Core.Var.here))))
-
-@[simp] def JoinNative.«abs#0» : ((_root_.Int × _root_.Unit) → _root_.Int) :=
-  (fun «_state#0» : (_root_.Int × _root_.Unit) => («_state#0»).1)
-
-theorem JoinChecks.«abs#0» : Denote.term JoinCore.«abs#0» () = JoinNative.«abs#0» := by
-  unfold Extracted_scalars.Shallow.JoinNative.«abs#0»
-  simp only [JoinCore.«abs#0», Denote.term, Core.Var.get] <;> rfl
-
-def CoreArtifacts.«abs» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.let_ "join" (Core.Term.closed JoinCore.«abs#0») (Core.Term.ite (Core.Term.binary (Ariadne.Shallow.Core.Binary.intLt) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.int (0))) (Core.Term.unary (Ariadne.Shallow.Core.Unary.intNeg) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) (Core.Term.app (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) Core.Term.unit)))) }
+def CoreArtifacts.«abs» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.ite (Core.Term.binary (Ariadne.Shallow.Core.Binary.intLt) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.int (0))) (Core.Term.unary (Ariadne.Shallow.Core.Unary.intNeg) (Core.Term.var (Ariadne.Shallow.Core.Var.here))) (Core.Term.var (Ariadne.Shallow.Core.Var.here))) }
 
 theorem ElaborationChecks.«abs» :
     Elaborate.function _root_.Extracted_scalars.program "abs" = .ok CoreArtifacts.«abs» := by kernel_rfl
 
 def «abs» («x#arg» : _root_.Int) : _root_.Int :=
-  (let «join#0» := JoinNative.«abs#0»;
   (if (decide («x#arg» < (0 : _root_.Int))) then
   (-«x#arg»)
   else
-  («join#0» («x#arg», ()))))
+  «x#arg»)
 
 theorem DenotationChecks.«abs» :
     (fun env : Core.Env CoreArtifacts.«abs».params => «abs» (env.1)) =
       Denote.function CoreArtifacts.«abs» := by
   unfold Extracted_scalars.Shallow.«abs»
-  simp only [Denote.function, CoreArtifacts.«abs», Denote.term, Core.Var.get, JoinChecks.«abs#0»] <;> rfl
+  simp only [Denote.function, CoreArtifacts.«abs», Denote.term, Core.Var.get] <;> rfl
 
 def JoinCore.«update#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (Ariadne.Shallow.Core.Ty.pair
@@ -562,36 +848,22 @@ theorem DenotationChecks.«hello» :
   unfold Extracted_scalars.Shallow.«hello»
   simp only [Denote.function, CoreArtifacts.«hello», Denote.term, Core.Var.get] <;> rfl
 
-def JoinCore.«optional#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
-  (Ariadne.Shallow.Core.Ty.pair
-    (Ariadne.Shallow.Core.Ty.bool)
-    (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.int) (Ariadne.Shallow.Core.Ty.unit)))
-  (Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int))) := (Core.Term.lam "state" Core.Term.none)
-
-@[simp] def JoinNative.«optional#0» : ((_root_.Bool × (_root_.Int × _root_.Unit)) → (_root_.Option _root_.Int)) :=
-  (fun «_state#0» : (_root_.Bool × (_root_.Int × _root_.Unit)) => _root_.Option.none)
-
-theorem JoinChecks.«optional#0» : Denote.term JoinCore.«optional#0» () = JoinNative.«optional#0» := by
-  unfold Extracted_scalars.Shallow.JoinNative.«optional#0»
-  simp only [JoinCore.«optional#0», Denote.term, Core.Var.get] <;> rfl
-
-def CoreArtifacts.«optional» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.bool, Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int), body := (Core.Term.let_ "join" (Core.Term.closed JoinCore.«optional#0») (Core.Term.ite (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.some (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) (Core.Term.app (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) Core.Term.unit))))) }
+def CoreArtifacts.«optional» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.bool, Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int), body := (Core.Term.ite (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.some (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) Core.Term.none) }
 
 theorem ElaborationChecks.«optional» :
     Elaborate.function _root_.Extracted_scalars.program "optional" = .ok CoreArtifacts.«optional» := by kernel_rfl
 
 def «optional» («flag#arg» : _root_.Bool) («value#arg» : _root_.Int) : (_root_.Option _root_.Int) :=
-  (let «join#0» := JoinNative.«optional#0»;
   (if «flag#arg» then
   (_root_.Option.some «value#arg»)
   else
-  («join#0» («flag#arg», («value#arg», ())))))
+  _root_.Option.none)
 
 theorem DenotationChecks.«optional» :
     (fun env : Core.Env CoreArtifacts.«optional».params => «optional» (env.1) (env.2.1)) =
       Denote.function CoreArtifacts.«optional» := by
   unfold Extracted_scalars.Shallow.«optional»
-  simp only [Denote.function, CoreArtifacts.«optional», Denote.term, Core.Var.get, JoinChecks.«optional#0»] <;> rfl
+  simp only [Denote.function, CoreArtifacts.«optional», Denote.term, Core.Var.get] <;> rfl
 
 def CoreArtifacts.«textBefore» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.string, Ariadne.Shallow.Core.Ty.string], result := Ariadne.Shallow.Core.Ty.bool, body := (Core.Term.binary (Ariadne.Shallow.Core.Binary.strLt) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) }
 
@@ -621,22 +893,34 @@ theorem DenotationChecks.«remainder» :
   unfold Extracted_scalars.Shallow.«remainder»
   simp only [Denote.function, CoreArtifacts.«remainder», Denote.term, Core.Var.get] <;> rfl
 
-def CoreArtifacts.«scoped» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.let_ "temporary" (Core.Term.binary (Ariadne.Shallow.Core.Binary.intAdd) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.int (1))) (Core.Term.let_ "x" (Core.Term.binary (Ariadne.Shallow.Core.Binary.intMul) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.int (2))) (Core.Term.let_ "temporary" (Core.Term.binary (Ariadne.Shallow.Core.Binary.intSub) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.int (3))) (Core.Term.var (Ariadne.Shallow.Core.Var.here))))) }
+def JoinCore.«scoped#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
+  (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.int) (Ariadne.Shallow.Core.Ty.unit))
+  (Ariadne.Shallow.Core.Ty.int)) := (Core.Term.lam "state" (Core.Term.let_ "temporary" (Core.Term.binary (Ariadne.Shallow.Core.Binary.intSub) (Core.Term.fst (Core.Term.var (Ariadne.Shallow.Core.Var.here))) (Core.Term.int (3))) (Core.Term.var (Ariadne.Shallow.Core.Var.here))))
+
+@[simp] def JoinNative.«scoped#0» : ((_root_.Int × _root_.Unit) → _root_.Int) :=
+  (fun «_state#0» : (_root_.Int × _root_.Unit) => (let «temporary#1» := ((«_state#0»).1 - (3 : _root_.Int));
+  «temporary#1»))
+
+theorem JoinChecks.«scoped#0» : Denote.term JoinCore.«scoped#0» () = JoinNative.«scoped#0» := by
+  unfold Extracted_scalars.Shallow.JoinNative.«scoped#0»
+  simp only [JoinCore.«scoped#0», Denote.term, Core.Var.get] <;> rfl
+
+def CoreArtifacts.«scoped» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.let_ "join" (Core.Term.closed JoinCore.«scoped#0») (Core.Term.let_ "temporary" (Core.Term.binary (Ariadne.Shallow.Core.Binary.intAdd) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.int (1))) (Core.Term.let_ "x" (Core.Term.binary (Ariadne.Shallow.Core.Binary.intMul) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.int (2))) (Core.Term.app (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) Core.Term.unit))))) }
 
 theorem ElaborationChecks.«scoped» :
     Elaborate.function _root_.Extracted_scalars.program "scoped" = .ok CoreArtifacts.«scoped» := by kernel_rfl
 
 def «scoped» («x#arg» : _root_.Int) : _root_.Int :=
-  (let «temporary#0» := («x#arg» + (1 : _root_.Int));
-  (let «x#1» := («temporary#0» * (2 : _root_.Int));
-  (let «temporary#2» := («x#1» - (3 : _root_.Int));
-  «temporary#2»)))
+  (let «join#0» := JoinNative.«scoped#0»;
+  (let «temporary#1» := («x#arg» + (1 : _root_.Int));
+  (let «x#2» := («temporary#1» * (2 : _root_.Int));
+  («join#0» («x#2», ())))))
 
 theorem DenotationChecks.«scoped» :
     (fun env : Core.Env CoreArtifacts.«scoped».params => «scoped» (env.1)) =
       Denote.function CoreArtifacts.«scoped» := by
   unfold Extracted_scalars.Shallow.«scoped»
-  simp only [Denote.function, CoreArtifacts.«scoped», Denote.term, Core.Var.get] <;> rfl
+  simp only [Denote.function, CoreArtifacts.«scoped», Denote.term, Core.Var.get, JoinChecks.«scoped#0»] <;> rfl
 
 def CoreArtifacts.«abs_denotes» : Core.Function := { params := [], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.int (3)) }
 
@@ -665,5 +949,172 @@ theorem DenotationChecks.«CoreArtifacts» :
       Denote.function CoreArtifacts.«CoreArtifacts» := by
   unfold Extracted_scalars.Shallow.«CoreArtifacts»
   simp only [Denote.function, CoreArtifacts.«CoreArtifacts», Denote.term, Core.Var.get] <;> rfl
+
+def CoreArtifacts.«guarded» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int), Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.optionCase (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.let_ "x" Core.Term.unit (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) (Core.Term.binary (Ariadne.Shallow.Core.Binary.intAdd) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.int (1)))) }
+
+theorem ElaborationChecks.«guarded» :
+    Elaborate.function _root_.Extracted_scalars.program "guarded" = .ok CoreArtifacts.«guarded» := by kernel_rfl
+
+def «guarded» («x#arg» : (_root_.Option _root_.Int)) («floor#arg» : _root_.Int) : _root_.Int :=
+  (_root_.Option.elim «x#arg» (let «x#0» := ();
+  «floor#arg») (fun «value#0» => («value#0» + (1 : _root_.Int))))
+
+theorem DenotationChecks.«guarded» :
+    (fun env : Core.Env CoreArtifacts.«guarded».params => «guarded» (env.1) (env.2.1)) =
+      Denote.function CoreArtifacts.«guarded» := by
+  unfold Extracted_scalars.Shallow.«guarded»
+  simp only [Denote.function, CoreArtifacts.«guarded», Denote.term, Core.Var.get] <;> rfl
+
+def CoreArtifacts.«conjunction» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int), Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.bool, body := (Core.Term.optionCase (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.let_ "x" Core.Term.unit (Core.Term.bool false)) (Core.Term.ite (Core.Term.binary (Ariadne.Shallow.Core.Binary.intLt) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) (Core.Term.var (Ariadne.Shallow.Core.Var.here))) (Core.Term.bool true) (Core.Term.bool false))) }
+
+theorem ElaborationChecks.«conjunction» :
+    Elaborate.function _root_.Extracted_scalars.program "conjunction" = .ok CoreArtifacts.«conjunction» := by kernel_rfl
+
+def «conjunction» («x#arg» : (_root_.Option _root_.Int)) («floor#arg» : _root_.Int) : _root_.Bool :=
+  (_root_.Option.elim «x#arg» (let «x#0» := ();
+  false) (fun «value#0» => (if (decide («floor#arg» < «value#0»)) then
+  true
+  else
+  false)))
+
+theorem DenotationChecks.«conjunction» :
+    (fun env : Core.Env CoreArtifacts.«conjunction».params => «conjunction» (env.1) (env.2.1)) =
+      Denote.function CoreArtifacts.«conjunction» := by
+  unfold Extracted_scalars.Shallow.«conjunction»
+  simp only [Denote.function, CoreArtifacts.«conjunction», Denote.term, Core.Var.get] <;> rfl
+
+def CoreArtifacts.«disjunction» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int), Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.bool, body := (Core.Term.optionCase (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.let_ "x" Core.Term.unit (Core.Term.bool true)) (Core.Term.ite (Core.Term.binary (Ariadne.Shallow.Core.Binary.intLe) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) (Core.Term.var (Ariadne.Shallow.Core.Var.here))) (Core.Term.bool true) (Core.Term.bool false))) }
+
+theorem ElaborationChecks.«disjunction» :
+    Elaborate.function _root_.Extracted_scalars.program "disjunction" = .ok CoreArtifacts.«disjunction» := by kernel_rfl
+
+def «disjunction» («x#arg» : (_root_.Option _root_.Int)) («floor#arg» : _root_.Int) : _root_.Bool :=
+  (_root_.Option.elim «x#arg» (let «x#0» := ();
+  true) (fun «value#0» => (if (decide («floor#arg» ≤ «value#0»)) then
+  true
+  else
+  false)))
+
+theorem DenotationChecks.«disjunction» :
+    (fun env : Core.Env CoreArtifacts.«disjunction».params => «disjunction» (env.1) (env.2.1)) =
+      Denote.function CoreArtifacts.«disjunction» := by
+  unfold Extracted_scalars.Shallow.«disjunction»
+  simp only [Denote.function, CoreArtifacts.«disjunction», Denote.term, Core.Var.get] <;> rfl
+
+def CoreArtifacts.«ternary» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int)], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.optionCase (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.let_ "x" Core.Term.unit (Core.Term.int (0))) (Core.Term.binary (Ariadne.Shallow.Core.Binary.intAdd) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.int (1)))) }
+
+theorem ElaborationChecks.«ternary» :
+    Elaborate.function _root_.Extracted_scalars.program "ternary" = .ok CoreArtifacts.«ternary» := by kernel_rfl
+
+def «ternary» («x#arg» : (_root_.Option _root_.Int)) : _root_.Int :=
+  (_root_.Option.elim «x#arg» (let «x#0» := ();
+  (0 : _root_.Int)) (fun «value#0» => («value#0» + (1 : _root_.Int))))
+
+theorem DenotationChecks.«ternary» :
+    (fun env : Core.Env CoreArtifacts.«ternary».params => «ternary» (env.1)) =
+      Denote.function CoreArtifacts.«ternary» := by
+  unfold Extracted_scalars.Shallow.«ternary»
+  simp only [Denote.function, CoreArtifacts.«ternary», Denote.term, Core.Var.get] <;> rfl
+
+def JoinCore.«forget#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
+  (Ariadne.Shallow.Core.Ty.pair
+    (Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int))
+    (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.bool) (Ariadne.Shallow.Core.Ty.unit)))
+  (Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int))) := (Core.Term.lam "state" (Core.Term.fst (Core.Term.var (Ariadne.Shallow.Core.Var.here))))
+
+@[simp] def JoinNative.«forget#0» : (((_root_.Option _root_.Int) × (_root_.Bool × _root_.Unit)) → (_root_.Option _root_.Int)) :=
+  (fun «_state#0» : ((_root_.Option _root_.Int) × (_root_.Bool × _root_.Unit)) => («_state#0»).1)
+
+theorem JoinChecks.«forget#0» : Denote.term JoinCore.«forget#0» () = JoinNative.«forget#0» := by
+  unfold Extracted_scalars.Shallow.JoinNative.«forget#0»
+  simp only [JoinCore.«forget#0», Denote.term, Core.Var.get] <;> rfl
+
+def JoinCore.«forget#1» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
+  (Ariadne.Shallow.Core.Ty.pair
+    (Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int))
+    (Ariadne.Shallow.Core.Ty.pair
+      (Ariadne.Shallow.Core.Ty.fn
+        (Ariadne.Shallow.Core.Ty.pair
+          (Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int))
+          (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.bool) (Ariadne.Shallow.Core.Ty.unit)))
+        (Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int)))
+      (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.bool) (Ariadne.Shallow.Core.Ty.unit))))
+  (Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int))) := (Core.Term.lam "state" (Core.Term.app (Core.Term.fst (Core.Term.snd (Core.Term.var (Ariadne.Shallow.Core.Var.here)))) (Core.Term.pair (Core.Term.fst (Core.Term.var (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair (Core.Term.fst (Core.Term.snd (Core.Term.snd (Core.Term.var (Ariadne.Shallow.Core.Var.here))))) Core.Term.unit))))
+
+@[simp] def JoinNative.«forget#1» : (((_root_.Option _root_.Int) × ((((_root_.Option _root_.Int) × (_root_.Bool × _root_.Unit)) → (_root_.Option _root_.Int)) × (_root_.Bool × _root_.Unit))) → (_root_.Option _root_.Int)) :=
+  (fun «_state#0» : ((_root_.Option _root_.Int) × ((((_root_.Option _root_.Int) × (_root_.Bool × _root_.Unit)) → (_root_.Option _root_.Int)) × (_root_.Bool × _root_.Unit))) => (((«_state#0»).2).1 ((«_state#0»).1, ((((«_state#0»).2).2).1, ()))))
+
+theorem JoinChecks.«forget#1» : Denote.term JoinCore.«forget#1» () = JoinNative.«forget#1» := by
+  unfold Extracted_scalars.Shallow.JoinNative.«forget#1»
+  simp only [JoinCore.«forget#1», Denote.term, Core.Var.get, JoinChecks.«forget#0»] <;> rfl
+
+def CoreArtifacts.«forget» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int), Ariadne.Shallow.Core.Ty.bool], result := Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int), body := (Core.Term.let_ "join" (Core.Term.closed JoinCore.«forget#0») (Core.Term.optionCase (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.let_ "x" Core.Term.unit (Core.Term.app (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair Core.Term.none (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) Core.Term.unit)))) (Core.Term.let_ "join" (Core.Term.closed JoinCore.«forget#1») (Core.Term.ite (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there     (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))) (Core.Term.let_ "x" Core.Term.none (Core.Term.app (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there     (Ariadne.Shallow.Core.Var.there       (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))))) Core.Term.unit))))) (Core.Term.let_ "x" (Core.Term.some (Core.Term.binary (Ariadne.Shallow.Core.Binary.intAdd) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.int (1)))) (Core.Term.app (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there     (Ariadne.Shallow.Core.Var.there       (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))))) Core.Term.unit))))))))) }
+
+theorem ElaborationChecks.«forget» :
+    Elaborate.function _root_.Extracted_scalars.program "forget" = .ok CoreArtifacts.«forget» := by kernel_rfl
+
+def «forget» («x#arg» : (_root_.Option _root_.Int)) («clear#arg» : _root_.Bool) : (_root_.Option _root_.Int) :=
+  (let «join#0» := JoinNative.«forget#0»;
+  (_root_.Option.elim «x#arg» (let «x#1» := ();
+  («join#0» (_root_.Option.none, («clear#arg», ())))) (fun «value#1» => (let «join#2» := JoinNative.«forget#1»;
+  (if «clear#arg» then
+  (let «x#3» := _root_.Option.none;
+  («join#2» («x#3», («join#0», («clear#arg», ())))))
+  else
+  (let «x#3» := (_root_.Option.some («value#1» + (1 : _root_.Int)));
+  («join#2» («x#3», («join#0», («clear#arg», ()))))))))))
+
+theorem DenotationChecks.«forget» :
+    (fun env : Core.Env CoreArtifacts.«forget».params => «forget» (env.1) (env.2.1)) =
+      Denote.function CoreArtifacts.«forget» := by
+  unfold Extracted_scalars.Shallow.«forget»
+  simp only [Denote.function, CoreArtifacts.«forget», Denote.term, Core.Var.get, JoinChecks.«forget#0», JoinChecks.«forget#1»] <;> rfl
+
+def JoinCore.«scopedTypes#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
+  (Ariadne.Shallow.Core.Ty.pair
+    (Ariadne.Shallow.Core.Ty.int)
+    (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.int) (Ariadne.Shallow.Core.Ty.unit)))
+  (Ariadne.Shallow.Core.Ty.int)) := (Core.Term.lam "state" (Core.Term.fst (Core.Term.var (Ariadne.Shallow.Core.Var.here))))
+
+@[simp] def JoinNative.«scopedTypes#0» : ((_root_.Int × (_root_.Int × _root_.Unit)) → _root_.Int) :=
+  (fun «_state#0» : (_root_.Int × (_root_.Int × _root_.Unit)) => («_state#0»).1)
+
+theorem JoinChecks.«scopedTypes#0» : Denote.term JoinCore.«scopedTypes#0» () = JoinNative.«scopedTypes#0» := by
+  unfold Extracted_scalars.Shallow.JoinNative.«scopedTypes#0»
+  simp only [JoinCore.«scopedTypes#0», Denote.term, Core.Var.get] <;> rfl
+
+def JoinCore.«scopedTypes#1» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
+  (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.int) (Ariadne.Shallow.Core.Ty.unit))
+  (Ariadne.Shallow.Core.Ty.int)) := (Core.Term.lam "state" (Core.Term.let_ "temporary" (Core.Term.fst (Core.Term.var (Ariadne.Shallow.Core.Var.here))) (Core.Term.let_ "join" (Core.Term.closed JoinCore.«scopedTypes#0») (Core.Term.ite (Core.Term.binary (Ariadne.Shallow.Core.Binary.intLt) (Core.Term.int (0)) (Core.Term.fst (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))) (Core.Term.let_ "temporary" (Core.Term.binary (Ariadne.Shallow.Core.Binary.intAdd) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.int (1))) (Core.Term.app (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.fst (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))) Core.Term.unit)))) (Core.Term.app (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair (Core.Term.fst (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) Core.Term.unit)))))))
+
+@[simp] def JoinNative.«scopedTypes#1» : ((_root_.Int × _root_.Unit) → _root_.Int) :=
+  (fun «_state#0» : (_root_.Int × _root_.Unit) => (let «temporary#1» := («_state#0»).1;
+  (let «join#2» := JoinNative.«scopedTypes#0»;
+  (if (decide ((0 : _root_.Int) < («_state#0»).1)) then
+  (let «temporary#3» := («temporary#1» + (1 : _root_.Int));
+  («join#2» («temporary#3», ((«_state#0»).1, ()))))
+  else
+  («join#2» («temporary#1», ((«_state#0»).1, ())))))))
+
+theorem JoinChecks.«scopedTypes#1» : Denote.term JoinCore.«scopedTypes#1» () = JoinNative.«scopedTypes#1» := by
+  unfold Extracted_scalars.Shallow.JoinNative.«scopedTypes#1»
+  simp only [JoinCore.«scopedTypes#1», Denote.term, Core.Var.get, JoinChecks.«scopedTypes#0»] <;> rfl
+
+def CoreArtifacts.«scopedTypes» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.let_ "join" (Core.Term.closed JoinCore.«scopedTypes#1») (Core.Term.let_ "temporary" (Core.Term.string [105, 110, 110, 101, 114]) (Core.Term.let_ "unused" (Core.Term.binary (Ariadne.Shallow.Core.Binary.strAppend) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.string [33])) (Core.Term.app (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) Core.Term.unit))))) }
+
+theorem ElaborationChecks.«scopedTypes» :
+    Elaborate.function _root_.Extracted_scalars.program "scopedTypes" = .ok CoreArtifacts.«scopedTypes» := by kernel_rfl
+
+def «scopedTypes» («x#arg» : _root_.Int) : _root_.Int :=
+  (let «join#0» := JoinNative.«scopedTypes#1»;
+  (let «temporary#1» := ([105, 110, 110, 101, 114] : _root_.Ariadne.JSString);
+  (let «unused#2» := («temporary#1» ++ ([33] : _root_.Ariadne.JSString));
+  («join#0» («x#arg», ())))))
+
+theorem DenotationChecks.«scopedTypes» :
+    (fun env : Core.Env CoreArtifacts.«scopedTypes».params => «scopedTypes» (env.1)) =
+      Denote.function CoreArtifacts.«scopedTypes» := by
+  unfold Extracted_scalars.Shallow.«scopedTypes»
+  simp only [Denote.function, CoreArtifacts.«scopedTypes», Denote.term, Core.Var.get, JoinChecks.«scopedTypes#0», JoinChecks.«scopedTypes#1»] <;> rfl
 
 end Extracted_scalars.Shallow

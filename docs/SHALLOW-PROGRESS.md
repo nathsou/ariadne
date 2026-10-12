@@ -97,3 +97,11 @@ and readonly input preservation. Core renaming and substitution preservation are
 also proved and included in the axiom audit (1,878 theorems after adding these
 lemmas). Emitter tests cover source names that overlap generated metadata and Lean
 type/helper names. These checks still do not establish operational adequacy.
+
+The optional-value checkpoint adds flow-sensitive narrowing through early returns,
+short-circuit conditions and ternaries, invalidation after reassignment, and block
+scope preservation. The full suite passes with 57 scalar extraction comparisons
+and 51 frontend entry points. A parser regression now covers compound conditions
+before a ternary. The numeric-key prelude proves SameValueZero equivalence and
+positive-zero canonicalization against the operational definitions, without
+changing IEEE equality used by source `===`.

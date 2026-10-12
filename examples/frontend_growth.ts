@@ -96,3 +96,8 @@ function measured(n: bigint): bigint {
 }
 
 export function measures(): bigint { return measured(4n); }
+export function conditionalPrecedence(): number[] {
+  return [1 + 2 === 3 ? 4 : 5, 1 < 0 ? 6 : 7, !false ? 8 : 9,
+    true && false ? 10 : 11, false || true ? 12 : 13,
+    false ? 14 : true ? 15 : 16, 2 * 3 > 5 ? 17 + 1 : 19];
+}
