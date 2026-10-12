@@ -1,0 +1,17 @@
+name = "ariadne"
+version = "0.1.0"
+defaultTargets = ["ariadne", "Ariadne", "Tests"]
+
+[[lean_lib]]
+name = "Ariadne"
+
+[[lean_lib]]
+name = "Tests"
+
+[[lean_lib]]
+name = "Examples"
+
+[[lean_exe]]
+name = "ariadne"
+root = "Main"
+

@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import { hardenPristineRealm } from '../runtime/realm.ts';
+
+hardenPristineRealm();
+assert.throws(() => { Array.prototype.map = () => []; }, TypeError);
+assert.throws(() => { Map.prototype.get = () => 42; }, TypeError);
+assert.throws(() => { Object.prototype[0] = 'hole'; }, TypeError);
+assert.throws(() => { globalThis.Map = function FakeMap() {}; }, TypeError);
+assert.throws(() => { Math.floor = x => x; }, TypeError);
+assert.deepEqual([1, 2, 3].map(x => x * 2), [2, 4, 6]);
+const entries = new Map();
+entries.set(NaN, 'a').set(NaN, 'b').set(-0, 'zero');
+assert.equal(entries.size, 2);
+assert.equal(entries.get(0), 'zero');
+console.log('Pristine realm hardening checks passed.');

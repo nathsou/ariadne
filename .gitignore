@@ -1,0 +1,8 @@
+.lake/
+work/
+*.olean
+*.ilean
+*.olean.private
+*.olean.server
+*.trace
+

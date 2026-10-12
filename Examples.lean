@@ -1,0 +1,16 @@
+import Examples.Generated.arithmetic
+import Examples.Generated.control_flow
+import Examples.Generated.euclid
+import Examples.Generated.fibonacci
+import Examples.Generated.histogram
+import Examples.Generated.map_keys
+import Examples.Generated.numbers
+import Examples.Generated.optionals
+import Examples.Generated.pipelines
+import Examples.Generated.power
+import Examples.Generated.records
+import Examples.Generated.search
+import Examples.Generated.sorting
+import Examples.Generated.strings
+import Examples.Proofs.Arithmetic
+import Examples.Proofs.Executions
