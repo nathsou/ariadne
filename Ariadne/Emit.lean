@@ -14,7 +14,9 @@ def emit (source : String) (program : Program) (namespace_ : String := "Translat
   out := out ++ "import Ariadne.Certificate\n\nset_option maxRecDepth 100000\nset_option maxHeartbeats 0\n\n"
   out := out ++ s!"namespace {namespace_}\nopen Ariadne\n\ndef source : String := {quote source}\n\n"
   out := out ++ s!"def characters : List Char :=\n{reprStr source.toList}\n\n"
-  out := out ++ "theorem characters_encoded : String.ofList characters = source := by kernel_rfl\n\ntheorem characters_checked : source.toList = characters :=\n  characters_of_encoding characters_encoded\n\n"
+  out := out ++ "theorem characters_encoded : String.ofList characters = source := by kernel_rfl\n\n"
+  out := out ++ "theorem characters_checked : source.toList = characters :=\n" ++
+    "  characters_of_encoding characters_encoded\n\n"
   if let .ok tokens := lex source then
     out := out ++ s!"def tokens : Array Token :=\n{reprStr tokens}\n\n"
     out := out ++ "theorem lex_checked : lex source = .ok tokens := by\n  unfold lex\n  rw [characters_checked]\n  kernel_rfl\n\n"

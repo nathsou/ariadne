@@ -36,7 +36,12 @@ def expect (text : String) : P Token := do
 def identifier : P Token := do
   let t ← peek
   if t.text.toList.head?.any (fun c => c.isAlpha || c == '_' || c == '$') &&
-      !["return", "if", "else", "while", "for", "const", "let", "function", "new", "true", "false", "null", "undefined", "break", "continue", "class", "interface", "enum", "namespace", "try", "catch", "throw", "switch", "case", "default", "do", "with", "var", "debugger", "import", "export", "extends", "implements", "in", "instanceof", "this", "super", "delete", "typeof", "void", "yield", "await", "static", "private", "protected", "public", "package"].contains t.text then pop
+      !["return", "if", "else", "while", "for", "const", "let", "function", "new",
+        "true", "false", "null", "undefined", "break", "continue", "class", "interface",
+        "enum", "namespace", "try", "catch", "throw", "switch", "case", "default", "do",
+        "with", "var", "debugger", "import", "export", "extends", "implements", "in",
+        "instanceof", "this", "super", "delete", "typeof", "void", "yield", "await",
+        "static", "private", "protected", "public", "package"].contains t.text then pop
   else fail "A1000" "expected an identifier" t
 
 /-- Property names may be keywords, unlike variable bindings. -/
@@ -305,7 +310,9 @@ mutual
           if op.text != "=" then
             match target with
             | .var .. => pure ()
-            | _ => fail "A1001" "compound assignments require a local variable" op (some "Use a temporary variable and a simple assignment; receivers must be evaluated once.")
+            | _ =>
+              fail "A1001" "compound assignments require a local variable" op
+                (some "Use a temporary variable and a simple assignment; receivers must be evaluated once.")
           let value := if op.text == "=" then rhs else
             .binary (if op.text == "+=" then "+" else if op.text == "-=" then "-" else if op.text == "*=" then "*" else "/") target rhs op.span
           pure (.assign target value target.span)

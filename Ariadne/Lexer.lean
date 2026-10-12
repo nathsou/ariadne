@@ -102,7 +102,12 @@ private def lexGo : Nat → List Char → Nat → Bool → List Token → Checke
         let (units, tail, stop) ← quoted (cs.length + 1) c rest (pos + 1) []
         return ← lexGo n tail stop false (⟨"<string>", ⟨pos, stop⟩, newline, some units⟩ :: acc)
       if c == '`' then
-        throw { code := "A1001", message := "template literals are outside the supported subset", span := ⟨pos, pos + 1⟩, help := some "Use string literals and string concatenation." }
+        throw {
+          code := "A1001"
+          message := "template literals are outside the supported subset"
+          span := ⟨pos, pos + 1⟩
+          help := some "Use string literals and string concatenation."
+        }
       if identifierStart c then
         let word := cs.takeWhile identifierRest
         let stop := pos + byteLength word

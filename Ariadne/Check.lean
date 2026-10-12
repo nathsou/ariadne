@@ -96,14 +96,21 @@ def checkWrite (ctx : Context) (target : Expr) : Checked Unit := do
   if let some name := root target then
     if ctx.protectedRoots.contains name then
       let b ← binding ctx name target.span
-      throw { code := "A3002", message := s!"cannot mutate '{name}' while a traversal is reading it", span := target.span, labels := [{ span := b.span, message := "collection declared here" }], help := some "Move the mutation outside the traversal, or use a separate owned collection." }
+      throw {
+        code := "A3002"
+        message := s!"cannot mutate '{name}' while a traversal is reading it"
+        span := target.span
+        labels := [{ span := b.span, message := "collection declared here" }]
+        help := some "Move the mutation outside the traversal, or use a separate owned collection."
+      }
 
 def literalType : Literal → Ty
   | .number _ _ => .number | .bigint _ => .bigint | .boolean _ => .boolean
   | .string _ => .string | .null => .null | .undefined => .undefined
 
 def reserved (name : String) : Bool :=
-  ["NaN", "Infinity", "Math", "Number", "BigInt", "Map", "Array", "Object", "Reflect", "eval", "Function", "globalThis", "__proto__", "constructor", "prototype"].contains name
+  ["NaN", "Infinity", "Math", "Number", "BigInt", "Map", "Array", "Object", "Reflect",
+    "eval", "Function", "globalThis", "__proto__", "constructor", "prototype"].contains name
 
 def join (a b : Ty) : Ty := if a == b then a else .union a b
 
