@@ -1125,14 +1125,14 @@ def SourceChecks.«program».names : Adequacy.Names CoreArtifacts.«program».pa
 
 theorem SourceChecks.«program».translated :
     Adequacy.ScalarStatements SourceChecks.«program».names .int ([Ariadne.Stmt.return_    (Ariadne.Expr.binary      "+"      (Ariadne.Expr.var "Bool" { start := 1688, stop := 1692 })      (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 1695, stop := 1697 })      { start := 1688, stop := 1697 })    { start := 1681, stop := 1687 }]) CoreArtifacts.«program».body := by
-  exact .return_ (.binary .intAdd (.var .int (Ariadne.Shallow.Core.Var.here) _) (.int _ _) _) _ _
+  exact .return_ (.binary .intAdd (.var .int (Ariadne.Shallow.Core.Var.here) _ (by decide)) (.int _ _) _) _ _
 
 theorem «program_source» («_Bool#arg» : _root_.Int) (heap : Heap) :
     SourceReturnsFrom _root_.Extracted_arrays.source "program" heap [(Value.bigint «_Bool#arg»)] (Value.bigint («program» «_Bool#arg»)) := by
   have inputs : Adequacy.Environment SourceChecks.«program».names
       (Adequacy.bindArguments { heap } SourceChecks.«program».function.params [(Value.bigint «_Bool#arg»)])
       (interp := Interpretation.value) («_Bool#arg», ()) := by
-    intro t v scalar
+    intro t v scalar _visible
     cases v with
     | here =>
       cases scalar

@@ -84,7 +84,7 @@ private def scalarProof (names : List String) : Expr → Term Γ t → Option St
   | .literal (.string a) _, .string b => if a == b then some ".string _ _" else none
   | .var name _, .var v => do
     if names[index v]? != some name then none else
-      return s!".var {← scalarKind t} ({reprStr v}) _"
+      return s!".var {← scalarKind t} ({reprStr v}) _ (by decide)"
   | .unary source arg _, .unary op value => do
     let rule ← unaryRuleText op source
     return s!".unary {rule} ({← scalarProof names arg value}) _"
@@ -104,9 +104,9 @@ private def scalarProof (names : List String) : Expr → Term Γ t → Option St
   | _, _ => none
 termination_by structural _ term => term
 
-private def freshProof : Nat → String
-  | 0 => "cases v"
-  | n + 1 => "cases v with | here => decide | there v => " ++ freshProof n
+private def variableText : Nat → String
+  | 0 => "Core.Var.here"
+  | n + 1 => s!"(Core.Var.there {variableText n})"
 
 private def statementsProof : Nat → (names : List String) → List Stmt → Term Γ t → Option String
   | 0, _, _, _ => none
@@ -119,10 +119,15 @@ private def statementsProof : Nat → (names : List String) → List Stmt → Te
     | .block inner _ :: _, term => do
       return s!".block ({← statementsProof fuel names inner term}) _ _"
     | .let_ _ name _ expression _ :: rest, .let_ coreName value body => do
-      if name != coreName || names.contains name then none else
+      if name != coreName then none else
         return s!".let_ {reprStr name} ({← scalarProof names expression value}) " ++
-          s!"(by intro t v; {freshProof names.length}) " ++
           s!"({← statementsProof fuel (name :: names) rest body}) _ _ _"
+    | .assign (.var name _) expression _ :: rest, @Term.let_ _ a _ coreName value body => do
+      if name != coreName then none else
+        let target ← names.findIdx? (· == name)
+        if Γ[target]? != some a then none else
+          return s!".assign ({variableText target}) (by decide) ({← scalarProof names expression value}) " ++
+            s!"({← statementsProof fuel (name :: names) rest body}) _ _"
     | .if_ condition yes no _ :: rest, .ite test a b => do
       return s!".if_ ({← scalarProof names condition test}) " ++
         s!"({← statementsProof fuel names (yes :: rest) a}) " ++
@@ -138,7 +143,7 @@ private def inputProof (count : Nat) : String :=
       String.join (List.replicate n (indent ++ "  apply Adequacy.lookup_declare_other (by decide)\n")) ++
       indent ++ "  exact Adequacy.lookup_declare_self _ _ _\n" ++
       indent ++ "| there v =>\n" ++ casesFor n (indent ++ "  ")
-  "    intro t v scalar\n" ++ casesFor count "    "
+  "    intro t v scalar _visible\n" ++ casesFor count "    "
 
 private def sourceTheorem (namespace_ : String) (f : Ariadne.Function) (core : Core.Function)
     (params : String) (names : List String) (safeEnv : String) (publicAlias : Bool) : Option String := do

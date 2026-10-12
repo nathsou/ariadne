@@ -40,4 +40,20 @@ theorem nested_skips_inner (other : Bool) (value : Int) (heap : Heap) :
     SourceReturnsFrom Extracted_source.source "nested" heap [.boolean false, .boolean other, .bigint value] (.bigint 0) := by
   simpa [nested] using nested_source false other value heap
 
+theorem reassign_cancel (a : Int) (heap : Heap) :
+    SourceReturnsFrom Extracted_source.source "reassign" heap [.bigint a, .bigint (-a)] (.bigint 0) := by
+  simpa [reassign, show a + -a = 0 by omega] using reassign_source a (-a) heap
+
+theorem preserve_other (a : Int) (heap : Heap) :
+    SourceReturnsFrom Extracted_source.source "preserveOther" heap [.bigint a] (.bigint (2 * a + 1)) := by
+  simpa [preserveOther, show a + (a + 1) = 2 * a + 1 by omega] using preserveOther_source a heap
+
+theorem branch_assignment_nonnegative (value : Int) (nonnegative : 0 ≤ value) (heap : Heap) :
+    SourceReturnsFrom Extracted_source.source "branchAssign" heap [.bigint value] (.bigint value) := by
+  simpa [branchAssign, show ¬ value < 0 by omega] using branchAssign_source value heap
+
+theorem reassign_string_empty (value : JSString) (heap : Heap) :
+    SourceReturnsFrom Extracted_source.source "reassignString" heap [.string value, .string []] (.string value) := by
+  simpa [reassignString] using reassignString_source value [] heap
+
 end Examples.Proofs.SourceTransfer

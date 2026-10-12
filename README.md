@@ -54,8 +54,8 @@ array/Map/Set iteration, locally owned collection updates, counted bigint loops,
 scalar switches, and calls with scalar or immutable parameters. It also extracts
 named records, tagged unions, borrowed state, classes and Int53 arithmetic. All
 three reference programs extract and have universal native proofs. Generated
-source-transfer theorems currently cover supported scalar expressions, fresh
-local bindings and conditional early returns. Full data/state/class adequacy
+source-transfer theorems currently cover supported scalar expressions, local
+bindings, scalar reassignment and conditional early returns. Full data/state/class adequacy
 and the M5 extensions remain in progress. See
 [milestone status](docs/SHALLOW-PROGRESS.md).
 

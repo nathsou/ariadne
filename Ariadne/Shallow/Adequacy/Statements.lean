@@ -1,21 +1,46 @@
 import Ariadne.Shallow.Adequacy.Function
 import Ariadne.StatementConvergence
+import Ariadne.Bindings
+
 namespace Ariadne.Shallow.Adequacy
 open Core
 
 def Names.cons (name : String) (names : Names Γ) : Names (t :: Γ) :=
-  ⟨fun v => match v with | .here => name | .there v => names.get v⟩
-
-def Names.Fresh (names : Names Γ) (name : String) : Prop := ∀ {t} (v : Var Γ t), name ≠ names.get v
+  { get := fun v => match v with | .here => name | .there v => names.get v
+    visible := fun v => match v with | .here => true | .there v => names.visible v && names.get v != name }
 
 theorem Environment.declare {interp : Named.Interp} {names : Names Γ} {state : State} {env : Core.Env Γ interp}
-    (related : Environment names state env) (name : String) (scalar : Scalar t) (value : t.denote interp)
-    (fresh : names.Fresh name) :
+    (related : Environment names state env) (name : String) (scalar : Scalar t) (value : t.denote interp) :
     Environment (names.cons name) (state.declare name (scalar.encode value)) (value, env) := by
-  intro u v repr
+  intro u v repr visible
   cases v with
   | here => cases scalar <;> cases repr <;> exact lookup_declare_self ..
-  | there v => exact lookup_declare_other (fresh v) (related v repr)
+  | there v =>
+    have facts : names.visible v = true ∧ names.get v ≠ name := by simpa [Names.cons] using visible
+    exact lookup_declare_other (Ne.symm facts.2) (related v repr facts.1)
+
+theorem Environment.assign {interp : Named.Interp} {names : Names Γ} {state : State} {env : Core.Env Γ interp}
+    (related : Environment names state env) (bindings : state.ValidBindings)
+    (name : String) (address : Nat) (bound : state.Binds name address)
+    (scalar : Scalar t) (value : t.denote interp) :
+    Environment (names.cons name)
+      {state with heap := state.heap.set address (.cell (scalar.encode value))} (value, env) := by
+  intro u v repr visible
+  cases v with
+  | here => cases scalar <;> cases repr <;> exact State.lookup_written_self bound (bindings.allocated bound) _
+  | there v =>
+    have facts : names.visible v = true ∧ names.get v ≠ name := by simpa [Names.cons] using visible
+    exact State.lookup_written_other bindings bound (Ne.symm facts.2) (related v repr facts.1) _
+
+theorem assign_expression {program : Program} {state : State} {expression : Expr} {value : Value}
+    {name : String} {address : Nat}
+    (input : Evaluates program state expression value state) (bound : state.Binds name address)
+    (allocated : address < state.heap.length) (targetSpan span : Span) :
+    ExecutesStatement program state (.assign (.var name targetSpan) expression span)
+      { state := {state with heap := state.heap.set address (.cell value)} } := by
+  obtain ⟨_, fuel, evaluated⟩ := input
+  refine ⟨(by intro h; cases h), fuel + 2, ?_⟩
+  simp [exec, assignTarget, evaluated, State.assign_bound bound allocated value, bind, Except.bind, pure, Except.pure]
 
 /-- Returned statement sequences related to the actual typed Core body. Local
 bindings extend both environments; early returns discard the source suffix. -/
@@ -27,9 +52,17 @@ inductive ScalarStatements : {Γ : List Core.Ty} → Names Γ → {t : Core.Ty} 
   | let_ {names : Names Γ} {scalar : Scalar t} {repr : Scalar a} {expression : Expr}
       {value : Term Γ a} {body : Term (a :: Γ) t} {rest : List Stmt}
       (name : String) (input : ScalarExpr names repr expression value)
-      (fresh : names.Fresh name) (next : ScalarStatements (names.cons name) scalar rest body)
+      (next : ScalarStatements (names.cons name) scalar rest body)
       (mutable : Bool) (annotation : Option Ariadne.Ty) (span : Span) :
       ScalarStatements names scalar (.let_ mutable name annotation expression span :: rest) (.let_ name value body)
+  | assign {names : Names Γ} {scalar : Scalar t} {repr : Scalar a} {expression : Expr}
+      {value : Term Γ a} {body : Term (a :: Γ) t} {rest : List Stmt}
+      (target : Var Γ a) (visible : names.visible target = true)
+      (input : ScalarExpr names repr expression value)
+      (next : ScalarStatements (names.cons (names.get target)) scalar rest body)
+      (targetSpan span : Span) :
+      ScalarStatements names scalar (.assign (.var (names.get target) targetSpan) expression span :: rest)
+        (.let_ (names.get target) value body)
   | block {names : Names Γ} {scalar : Scalar t} {statements : List Stmt} {term : Term Γ t}
       (body : ScalarStatements names scalar statements term) (span : Span) (rest : List Stmt) :
       ScalarStatements names scalar (.block statements span :: rest) term
@@ -45,31 +78,40 @@ inductive ScalarStatements : {Γ : List Core.Ty} → Names Γ → {t : Core.Ty} 
 
 theorem ScalarStatements.sound {names : Names Γ} {scalar : Scalar t} {statements : List Stmt} {term : Term Γ t}
     (translation : ScalarStatements names scalar statements term) (program : Program) (interp : Named.Interp)
-    (state : State) (env : Core.Env Γ interp) (related : Environment names state env) :
+    (state : State) (env : Core.Env Γ interp) (related : Environment names state env)
+    (bindings : state.ValidBindings) :
     ∃ after, ExecutesBlock program state statements
       { control := .returned, value := scalar.encode (Denote.term term env), state := after } := by
   induction translation generalizing state with
   | return_ input span rest =>
     exact ⟨state, ExecutesBlock.stop (ExecutesStatement.return_ (input.sound program interp state env related) span) rest (by intro h; cases h)⟩
-  | @let_ Γ t a names scalar repr expression value body rest name input fresh next mutable annotation span ih =>
+  | @let_ Γ t a names scalar repr expression value body rest name input next mutable annotation span ih =>
     obtain ⟨after, executed⟩ := ih (state.declare name (repr.encode (Denote.term value env)))
-      (Denote.term value env, env) (related.declare name repr _ fresh)
+      (Denote.term value env, env) (related.declare name repr _) (bindings.declare name _)
     exact ⟨after, ExecutesBlock.next (ExecutesStatement.let_ (input.sound program interp state env related) mutable name annotation span) rfl executed⟩
+  | @assign Γ t a names scalar repr expression value body rest target visible input next targetSpan span ih =>
+    obtain ⟨address, bound, stored⟩ := State.lookup_binds (related target repr visible)
+    let after := {state with heap := state.heap.set address (.cell (repr.encode (Denote.term value env)))}
+    obtain ⟨finalState, executed⟩ := ih after (Denote.term value env, env)
+      (related.assign bindings (names.get target) address bound repr _) (bindings.write address _)
+    exact ⟨finalState, ExecutesBlock.next
+      (assign_expression (input.sound program interp state env related) bound (bindings.allocated bound) targetSpan span)
+      rfl executed⟩
   | block body span rest ih =>
-    obtain ⟨after, executed⟩ := ih state env related
+    obtain ⟨after, executed⟩ := ih state env related bindings
     exact ⟨{ after with env := state.env }, ExecutesBlock.stop (ExecutesStatement.block executed span) rest (by intro h; cases h)⟩
   | emptyBlock next span ih =>
-    obtain ⟨after, executed⟩ := ih state env related
+    obtain ⟨after, executed⟩ := ih state env related bindings
     exact ⟨after, ExecutesBlock.next (ExecutesStatement.block (ExecutesBlock.nil program state) span) rfl executed⟩
   | @if_ Γ t names scalar condition yes no rest test a b input yesBody noBody span ihy ihn =>
     cases value : Denote.term test env
-    · obtain ⟨after, executed⟩ := ihn state env related
+    · obtain ⟨after, executed⟩ := ihn state env related bindings
       have branch : ExecutesBlock program state
           ((if (Scalar.bool.encode (Denote.term test env)).truthy then yes else no) :: rest)
           { control := .returned, value := scalar.encode (Denote.term b env), state := after } := by
         simpa [Scalar.encode, Value.truthy, value] using executed
       exact ⟨after, by simpa [Denote.term, value] using ExecutesBlock.if_ (input.sound program interp state env related) branch span⟩
-    · obtain ⟨after, executed⟩ := ihy state env related
+    · obtain ⟨after, executed⟩ := ihy state env related bindings
       have branch : ExecutesBlock program state
           ((if (Scalar.bool.encode (Denote.term test env)).truthy then yes else no) :: rest)
           { control := .returned, value := scalar.encode (Denote.term a env), state := after } := by
@@ -95,6 +137,18 @@ theorem invoke_returned {program : Program} {function : Ariadne.Function} {befor
   rw [executed]
   rfl
 
+theorem bindArguments_valid (state : State) (params : List Param) (args : List Value) :
+    (bindArguments state params args).ValidBindings := by
+  have step : ∀ (entries : List (Param × Value)) (before : State), before.ValidBindings →
+      (entries.foldl (fun state (param, value) => state.declare param.name value) before).ValidBindings := by
+    intro entries
+    induction entries with
+    | nil => intro before valid; exact valid
+    | cons entry entries ih =>
+      intro before valid
+      exact ih _ (valid.declare entry.1.name entry.2)
+  exact step (params.zip args) _ (State.binds_empty state)
+
 /-- Source transfer through a returned statement sequence. The kernel checks
 both its source syntax and its actual Core body. -/
 theorem scalar_statements_source {source : String} (certificate : Certificate source)
@@ -106,7 +160,7 @@ theorem scalar_statements_source {source : String} (certificate : Certificate so
     (interp : Named.Interp) (env : Core.Env Γ interp) (heap : Heap) (args : List Value)
     (inputs : Environment names (bindArguments { heap } function.params args) env) :
     SourceReturnsFrom source function.name heap args (scalar.encode (Denote.term term env)) := by
-  obtain ⟨after, executed⟩ := translation.sound certificate.program interp _ env inputs
+  obtain ⟨after, executed⟩ := translation.sound certificate.program interp _ env inputs (bindArguments_valid _ _ _)
   apply certificate.transfer_from
   apply invoke_returned lookup
   rw [body]

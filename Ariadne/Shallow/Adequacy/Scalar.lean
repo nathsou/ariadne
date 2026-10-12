@@ -1,6 +1,5 @@
 import Ariadne.Convergence
 import Ariadne.Shallow.Denote
-import Ariadne.Shallow.Represents
 
 namespace Ariadne.Shallow.Adequacy
 open Core
@@ -65,8 +64,10 @@ theorem BinaryRule.correct {sa : Scalar a} {sb : Scalar b} {sc : Scalar c}
 
 structure Names (Γ : List Core.Ty) where
   get : ∀ {t}, Var Γ t → String
+  /-- Rebinding a source name hides its previous Core versions. -/
+  visible : ∀ {t}, Var Γ t → Bool := fun _ => true
 
-def Names.fromList (names : List String) : Names Γ := ⟨fun v => get names v⟩
+def Names.fromList (names : List String) : Names Γ := { get := fun v => get names v }
 where
   get {types : List Core.Ty} {t : Core.Ty} : List String → Var types t → String
     | [], _ => ""
@@ -74,7 +75,7 @@ where
     | _ :: names, .there v => get names v
 
 def Environment {interp : Named.Interp} (names : Names Γ) (state : State) (env : Core.Env Γ interp) : Prop :=
-  ∀ {t} (v : Var Γ t) (scalar : Scalar t),
+  ∀ {t} (v : Var Γ t) (scalar : Scalar t), names.visible v = true →
     state.lookup (names.get v) = .ok (scalar.encode (v.get env))
 
 /-- A syntax-directed correspondence witness for the pure scalar expression
@@ -86,7 +87,7 @@ inductive ScalarExpr {Γ : List Core.Ty} (names : Names Γ) : {t : Core.Ty} → 
   | int (n span) : ScalarExpr names .int (.literal (.bigint n) span) (.int n)
   | number (m e span) : ScalarExpr names .number (.literal (.number m e) span) (.number m e)
   | string (s span) : ScalarExpr names .string (.literal (.string s) span) (.string s)
-  | var (scalar : Scalar t) (v : Var Γ t) (span) :
+  | var (scalar : Scalar t) (v : Var Γ t) (span) (visible : names.visible v = true) :
       ScalarExpr names scalar (.var (names.get v) span) (.var v)
   | unary {a b : Core.Ty} {sa : Scalar a} {sb : Scalar b} {source : String}
       {op : Unary a b} {arg : Expr} {term : Term Γ a} (rule : UnaryRule sa sb source op) (input : ScalarExpr names sa arg term) (span) :
@@ -120,8 +121,8 @@ theorem ScalarExpr.sound {names : Names Γ} {scalar : Scalar t} {source : Expr} 
   | int n span => exact Evaluates.literal program state (.bigint n) span
   | number m e span => exact Evaluates.literal program state (.number m e) span
   | string s span => exact Evaluates.literal program state (.string s) span
-  | var scalar v span =>
-    exact Evaluates.variable program state _ span _ (State.lookup_present (related v scalar)) (related v scalar)
+  | var scalar v span visible =>
+    exact Evaluates.variable program state _ span _ (State.lookup_present (related v scalar visible)) (related v scalar visible)
   | unary rule input span ih =>
     exact ih.unary _ span (rule.correct interp _)
   | @notIte arg term input span ih =>

@@ -37,3 +37,28 @@ export function nested(flag: boolean, other: boolean, value: bigint): bigint {
   }
   return 0n;
 }
+
+export function reassign(value: bigint, delta: bigint): bigint {
+  value = value + delta;
+  value = value * 2n;
+  return value;
+}
+
+export function preserveOther(value: bigint): bigint {
+  const saved = value;
+  value = value + 1n;
+  return saved + value;
+}
+
+export function branchAssign(value: bigint): bigint {
+  if (value < 0n) {
+    value = -value;
+    return value;
+  }
+  return value;
+}
+
+export function reassignString(value: string, suffix: string): string {
+  value = value + suffix;
+  return value;
+}

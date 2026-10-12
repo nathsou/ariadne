@@ -404,3 +404,36 @@ fields and explicit `undefined`; class fields retain the required-field layout
 because the operational model interprets absent class members as methods.
 Replacing an owned root preserves disjoint child observations and framed heap
 objects. These primitive laws do not establish whole-record/class adequacy.
+
+The complete pinned-Bun `scripts/check.sh` run passes for the scalar statement
+and record checkpoint, including 4,658 audited theorems, all generated modules,
+fourteen source-transfer examples and five tamper checks, every differential
+suite, all original-reference comparisons and 2,428 formatting cases. CI #70
+also passed the preceding complete M3 checkpoint.
+
+## Scalar reassignment correspondence
+
+`Bindings.lean` proves allocation and separation of visible binding cells,
+preservation under declaration and writes, and lookup laws for assignment.
+The scalar environment relation now hides stale Core versions when a source
+name is rebound. Function parameter binding establishes the cell invariant
+without restricting the initial heap. The statement fundamental lemma and
+emitter now cover scalar reassignment, including repeated updates and early
+return branches; source-level shadowing remains a frontend restriction.
+
+Eighteen universal source fixture theorems compile. Native facts transfer for
+repeated updates, preservation of another local variable, conditional assignment
+and string reassignment. All six tamper checks pass, including an altered
+assignment target. Shared continuations, collection/state/class code and Int53
+still require further correspondence rules.
+
+`Safety/Scalar.lean` proves scalar value erasure for typed Core expressions,
+including arithmetic guard terms, local bindings, conditionals and closed
+terms. Lifting a native data environment establishes its relation to the safety
+environment. An accepted visited guard is proved true in the native denotation;
+this supplies a prerequisite for guarded Int53 operational correspondence.
+
+Validation for this checkpoint passes: all shallow and original-reference
+artifacts, `Ariadne` and `Examples`, 4,735 audited theorems, the shallow
+three-way comparisons, and all eighteen source examples and six tamper checks.
+CI #72 also passed the preceding statement/record checkpoint.

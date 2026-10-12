@@ -80,12 +80,20 @@ integer are outside the safe domain. Int53 source transfer remains pending.
 The proved scalar statement fragment additionally emits `f_source` theorems,
 using syntax-directed correspondence witnesses in `SourceChecks`. The proved
 rules cover bigint/binary64/string/boolean primitives, conditionals, boolean
-short-circuiting, fresh local declarations and conditional early returns, and quantify over every lawful interpretation and matching
+short-circuiting, local declarations, scalar reassignment and conditional early returns, and quantify over every lawful interpretation and matching
 environment. Parameter-binding and call-frame lemmas connect these witnesses to
 the original `Semantics` evaluator and source certificate. The resulting
 `SourceReturnsFrom` theorem holds for arbitrary native scalar inputs and an
 arbitrary initial heap, without a fuel or whole-function execution premise.
 When a user function already occupies `f_source`, its generated theorem is named
 `SourceChecks.f.source`. Unsupported fragments retain denotation certificates
-and do not receive an operational theorem. Local reassignment, shared continuations, collections,
+and do not receive an operational theorem. Shared continuations, collections,
 classes and Int53 still await the full M4 correspondence.
+
+The scalar environment relation tracks visibility of rebound Core variables.
+Distinct visible source names have distinct allocated binding cells, and
+parameter binding establishes this invariant from any initial heap. Assignment
+updates the selected cell while preserving other variables. The scalar safety
+value theorem proves that collecting guards does not change denotation; a
+visited accepted guard is therefore true in the native interpretation. This is
+not yet the full safety/adequacy relation for higher-order and data terms.
