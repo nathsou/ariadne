@@ -8,6 +8,7 @@ private def usage : String :=
   "  ariadne translate FILE --out FILE.lean [--namespace NAME]\n" ++
   "  ariadne certify FILE --out FILE.lean [--namespace NAME]\n" ++
   "  ariadne compile FILE FUNCTION --out FILE.lean [--namespace NAME] [--json]\n" ++
+  "  ariadne extract FILE --out FILE.lean [--namespace NAME] [--json]\n" ++
   "  ariadne eval FILE FUNCTION [FUEL]\n" ++
   "  ariadne explain CODE\n\n" ++
   "eval invokes a zero-argument function. Fuel exhaustion is inconclusive.\n" ++
@@ -28,6 +29,11 @@ private def validOutputOptions (args : List String) (seen : List String := []) :
 
 private def explain (code : String) : String :=
   match code with
+  | "A5000" => "Shallow extraction is not available for this program yet. Use certify for the operational model."
+  | "A5101" => "This construct needs a termination measure or is outside the shallow fragment."
+  | "A5102" => "Ownership is insufficient to give this program value semantics."
+  | "A5103" => "Shallow callbacks must be pure."
+  | "A5104" => "This builtin has no shallow model yet."
   | "A4101" => "This accepted TypeScript construct is outside the scalar compiler backend. Use translate/certify for an operational model."
   | "A4102" => "Scalar compilation exceeded its nesting budget. Simplify deeply nested blocks or expressions."
   | "A4103" => "The selected compiler entry point does not exist in this source file."
@@ -49,7 +55,7 @@ private def process (args : List String) : IO UInt32 := do
     return 0
   let command := args[0]!
   let some path := args[1]? | IO.eprintln usage; return 2
-  if !["check", "translate", "certify", "compile", "eval"].contains command then
+  if !["check", "translate", "certify", "compile", "extract", "eval"].contains command then
     IO.eprintln usage
     return 2
   if (System.FilePath.mk path).extension != some "ts" then
@@ -70,6 +76,12 @@ private def process (args : List String) : IO UInt32 := do
         (options.filter (· == "--json")).length > 1 ||
         !validOutputOptions (options.filter (· != "--json")) then
       IO.eprintln "Expected compile FILE FUNCTION --out FILE.lean [--namespace NAME] [--json]"
+      return 2
+  if command == "extract" then
+    let options := args.drop 2
+    if (options.filter (· == "--json")).length > 1 ||
+        !validOutputOptions (options.filter (· != "--json")) then
+      IO.eprintln "Expected extract FILE --out FILE.lean [--namespace NAME] [--json]"
       return 2
   let text ← IO.FS.readFile (System.FilePath.mk path)
   let source : Source := { path, text }
@@ -109,6 +121,11 @@ private def process (args : List String) : IO UInt32 := do
     if (← IO.FS.realPath outputPath) == (← IO.FS.realPath path) then
       IO.eprintln "Refusing to overwrite the TypeScript source"
       return 2
+  if command == "extract" then
+    let d : Diagnostic := { code := "A5000", message := "shallow extraction is not implemented yet" }
+    if args.contains "--json" then IO.println ((d.toJson source).compress)
+    else IO.eprint (d.render source)
+    return 1
   let artifact ← if command == "compile" then
     match emitCompiled text program args[2]! namespace_ with
     | .ok artifact => pure artifact

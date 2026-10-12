@@ -28,3 +28,4 @@ fi
 "$js" scripts/realm.mjs
 "$js" scripts/cli.mjs
 "$js" scripts/compiler.mjs
+"$js" scripts/reference.mjs
