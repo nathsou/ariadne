@@ -7,7 +7,7 @@ when their exit criteria pass; finite native tests are not universal proofs.
 | --- | --- | --- |
 | M0 | Complete | Reference sources and historical diagnostics; pinned CI downloads; reserved extraction diagnostics; output preservation tests |
 | M1 | Complete | All reference programs check and certify; grammar, ownership checks, operational semantics and the builtin table have differential coverage. Conservative dialect limits are listed below. |
-| M2 | In progress | Typed Core, scalar/list/Map/Set extraction, owned local updates, structural loops, pure calls, structural denotation, three-way differential and tamper tests. Lawful named records/unions and direct borrowed-state calls are implemented; class states, Int53 guards and original reference extraction are implemented; the full integration regression gate is pending. |
+| M2 | Complete | Typed Core, scalar/list/Map/Set extraction, owned local updates, structural loops, pure calls, structural denotation, three-way differential and tamper tests. Lawful named records/unions and direct borrowed-state calls are implemented; class states, Int53 guards and original reference extraction are implemented; the full integration regression gate passed. |
 | M3 | In progress | The original decision extraction has universal membership, floor and permutation proofs. Register convergence and idempotence are proved against the emitted methods. All three original reference proofs are complete over emitted definitions; general Int53 exactness and remaining library lemmas are pending. |
 | M4 | Pending | Fundamental lemma, footprint preservation, adequacy and source transfer |
 | M5 | Pending | Measures, larger ownership, polymorphism, exceptions and scalar backend integration |
@@ -216,7 +216,7 @@ not replace the universal reference theorems or operational adequacy.
 Local Lean 4.34.1 module builds took 36 seconds for decision, 24 seconds for
 registers, and 42 seconds for tree. These timings include source, frontend, Core
 elaboration and denotation checks together; they are not isolated tactic timings.
-The full integration suite is pending.
+The full integration suite passed with 3,830 audited theorems.
 
 The original emitted decision program now has universal fold, membership,
 floor-bound, valid-only and permutation-invariance theorems in
@@ -240,3 +240,17 @@ excludes reachability of the moved node from the target; attaching the new edge
 then admits an explicit decreasing rank. `reachable_root` therefore applies to
 every reachable state, including detach-on-cycle moves. These remain native
 proofs until M4 supplies source transfer.
+
+M2 integration gate: the full `scripts/check.sh` run passed with all original
+references extracted, certified and compared, including 52 Int53 safety cases,
+98 decision inputs and 25 original class traces. The audit accepted 3,830
+proofs using only standard Lean logical axioms. The native reference proof
+checkpoints are included in this run; operational adequacy remains M4.
+
+The prelude now includes string strict-total-order and concatenation laws,
+loop composition/invariant/fold laws, Set lookup congruence, Map deletion order
+and entry folds, and stable merge-sort properties under explicit comparator
+conditions. `Loop.each_append` requires a break-free prefix: `Exit.done` erases
+whether a loop stopped early, so unconditional concatenation would be false.
+The sort lemmas concern the pure native prelude; the operational sort bridge is
+part of the pending adequacy work.
