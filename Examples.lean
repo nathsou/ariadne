@@ -2,6 +2,7 @@ import Examples.Generated.arithmetic
 import Examples.Generated.control_flow
 import Examples.Generated.euclid
 import Examples.Generated.fibonacci
+import Examples.Generated.frontend_growth
 import Examples.Generated.histogram
 import Examples.Generated.map_keys
 import Examples.Generated.numbers
@@ -26,3 +27,6 @@ import Examples.Compiled.reverse
 import Examples.Compiled.triangular
 import Examples.Proofs.Compiled
 import Examples.Proofs.ScalarExecutions
+import Examples.OperationalReference.decision
+import Examples.OperationalReference.registers
+import Examples.OperationalReference.tree

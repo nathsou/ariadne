@@ -75,44 +75,7 @@ theorem lex_checked : lex source = .ok tokens := by
   kernel_rfl
 
 def program : Program :=
-{ functions := [{ name := "numberEdges",
-                  params := [{ name := "left", ty := Ariadne.Ty.number, span := { start := 101, stop := 105 } },
-                             { name := "right", ty := Ariadne.Ty.number, span := { start := 115, stop := 120 } }],
-                  result := Ariadne.Ty.number,
-                  body := Ariadne.Stmt.block
-                            [Ariadne.Stmt.let_
-                               false
-                               "remainder"
-                               none
-                               (Ariadne.Expr.binary
-                                 "%"
-                                 (Ariadne.Expr.var "left" { start := 160, stop := 164 })
-                                 (Ariadne.Expr.var "right" { start := 167, stop := 172 })
-                                 { start := 160, stop := 172 })
-                               { start := 142, stop := 147 },
-                             Ariadne.Stmt.if_
-                               (Ariadne.Expr.binary
-                                 "==="
-                                 (Ariadne.Expr.var "remainder" { start := 180, stop := 189 })
-                                 (Ariadne.Expr.literal (Ariadne.Literal.number 0 0) { start := 194, stop := 195 })
-                                 { start := 180, stop := 195 })
-                               (Ariadne.Stmt.block
-                                 [Ariadne.Stmt.return_
-                                    (Ariadne.Expr.unary
-                                      "-"
-                                      (Ariadne.Expr.var "remainder" { start := 207, stop := 216 })
-                                      { start := 206, stop := 207 })
-                                    { start := 199, stop := 205 }]
-                                 { start := 197, stop := 219 })
-                               (Ariadne.Stmt.block [] { start := 176, stop := 178 })
-                               { start := 176, stop := 178 },
-                             Ariadne.Stmt.return_
-                               (Ariadne.Expr.var "remainder" { start := 229, stop := 238 })
-                               { start := 222, stop := 228 }]
-                            { start := 138, stop := 241 },
-                  exported := true,
-                  span := { start := 80, stop := 88 } }],
-  aliases := [] }
+{ functions := [{ name := "numberEdges",                   params := [{ name := "left", ty := Ariadne.Ty.number, span := { start := 101, stop := 105 } },                              { name := "right", ty := Ariadne.Ty.number, span := { start := 115, stop := 120 } }],                   result := Ariadne.Ty.number,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.let_                                false                                "remainder"                                none                                (Ariadne.Expr.binary                                  "%"                                  (Ariadne.Expr.var "left" { start := 160, stop := 164 })                                  (Ariadne.Expr.var "right" { start := 167, stop := 172 })                                  { start := 160, stop := 172 })                                { start := 142, stop := 147 },                              Ariadne.Stmt.if_                                (Ariadne.Expr.binary                                  "==="                                  (Ariadne.Expr.var "remainder" { start := 180, stop := 189 })                                  (Ariadne.Expr.literal (Ariadne.Literal.number 0 0) { start := 194, stop := 195 })                                  { start := 180, stop := 195 })                                (Ariadne.Stmt.block                                  [Ariadne.Stmt.return_                                     (Ariadne.Expr.unary                                       "-"                                       (Ariadne.Expr.var "remainder" { start := 207, stop := 216 })                                       { start := 206, stop := 207 })                                     { start := 199, stop := 205 }]                                  { start := 197, stop := 219 })                                (Ariadne.Stmt.block [] { start := 176, stop := 178 })                                { start := 176, stop := 178 },                              Ariadne.Stmt.return_                                (Ariadne.Expr.var "remainder" { start := 229, stop := 238 })                                { start := 222, stop := 228 }]                             { start := 138, stop := 241 },                   exported := true,                   decreases := none,                   span := { start := 80, stop := 88 } }],   aliases := [],   classes := [] }
 
 theorem parse_checked : parse source = .ok program := by
   unfold parse

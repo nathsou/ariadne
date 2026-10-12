@@ -92,63 +92,7 @@ theorem lex_checked : lex source = .ok tokens := by
   kernel_rfl
 
 def program : Program :=
-{ functions := [{ name := "findUnit",
-                  params := [{ name := "text", ty := Ariadne.Ty.string, span := { start := 103, stop := 107 } },
-                             { name := "unit", ty := Ariadne.Ty.string, span := { start := 117, stop := 121 } }],
-                  result := Ariadne.Ty.number,
-                  body := Ariadne.Stmt.block
-                            [Ariadne.Stmt.for_
-                               (Ariadne.Stmt.let_
-                                 true
-                                 "i"
-                                 none
-                                 (Ariadne.Expr.literal (Ariadne.Literal.number 0 0) { start := 156, stop := 157 })
-                                 { start := 148, stop := 151 })
-                               (Ariadne.Expr.binary
-                                 "<"
-                                 (Ariadne.Expr.var "i" { start := 159, stop := 160 })
-                                 (Ariadne.Expr.member
-                                   (Ariadne.Expr.var "text" { start := 163, stop := 167 })
-                                   "length"
-                                   { start := 163, stop := 174 })
-                                 { start := 159, stop := 174 })
-                               (Ariadne.Stmt.assign
-                                 (Ariadne.Expr.var "i" { start := 176, stop := 177 })
-                                 (Ariadne.Expr.binary
-                                   "+"
-                                   (Ariadne.Expr.var "i" { start := 180, stop := 181 })
-                                   (Ariadne.Expr.literal (Ariadne.Literal.number 1 0) { start := 184, stop := 185 })
-                                   { start := 180, stop := 185 })
-                                 { start := 176, stop := 177 })
-                               (Ariadne.Stmt.block
-                                 [Ariadne.Stmt.if_
-                                    (Ariadne.Expr.binary
-                                      "==="
-                                      (Ariadne.Expr.index
-                                        (Ariadne.Expr.var "text" { start := 197, stop := 201 })
-                                        (Ariadne.Expr.var "i" { start := 202, stop := 203 })
-                                        { start := 197, stop := 204 })
-                                      (Ariadne.Expr.var "unit" { start := 209, stop := 213 })
-                                      { start := 197, stop := 213 })
-                                    (Ariadne.Stmt.block
-                                      [Ariadne.Stmt.return_
-                                         (Ariadne.Expr.var "i" { start := 224, stop := 225 })
-                                         { start := 217, stop := 223 }]
-                                      { start := 215, stop := 228 })
-                                    (Ariadne.Stmt.block [] { start := 193, stop := 195 })
-                                    { start := 193, stop := 195 }]
-                                 { start := 187, stop := 232 })
-                               { start := 143, stop := 146 },
-                             Ariadne.Stmt.return_
-                               (Ariadne.Expr.unary
-                                 "-"
-                                 (Ariadne.Expr.literal (Ariadne.Literal.number 1 0) { start := 243, stop := 244 })
-                                 { start := 242, stop := 243 })
-                               { start := 235, stop := 241 }]
-                            { start := 139, stop := 247 },
-                  exported := true,
-                  span := { start := 85, stop := 93 } }],
-  aliases := [] }
+{ functions := [{ name := "findUnit",                   params := [{ name := "text", ty := Ariadne.Ty.string, span := { start := 103, stop := 107 } },                              { name := "unit", ty := Ariadne.Ty.string, span := { start := 117, stop := 121 } }],                   result := Ariadne.Ty.number,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.for_                                (Ariadne.Stmt.let_                                  true                                  "i"                                  none                                  (Ariadne.Expr.literal (Ariadne.Literal.number 0 0) { start := 156, stop := 157 })                                  { start := 148, stop := 151 })                                (Ariadne.Expr.binary                                  "<"                                  (Ariadne.Expr.var "i" { start := 159, stop := 160 })                                  (Ariadne.Expr.member                                    (Ariadne.Expr.var "text" { start := 163, stop := 167 })                                    "length"                                    { start := 163, stop := 174 })                                  { start := 159, stop := 174 })                                (Ariadne.Stmt.assign                                  (Ariadne.Expr.var "i" { start := 176, stop := 177 })                                  (Ariadne.Expr.binary                                    "+"                                    (Ariadne.Expr.var "i" { start := 180, stop := 181 })                                    (Ariadne.Expr.literal (Ariadne.Literal.number 1 0) { start := 184, stop := 185 })                                    { start := 180, stop := 185 })                                  { start := 176, stop := 177 })                                (Ariadne.Stmt.block                                  [Ariadne.Stmt.if_                                     (Ariadne.Expr.binary                                       "==="                                       (Ariadne.Expr.index                                         (Ariadne.Expr.var "text" { start := 197, stop := 201 })                                         (Ariadne.Expr.var "i" { start := 202, stop := 203 })                                         { start := 197, stop := 204 })                                       (Ariadne.Expr.var "unit" { start := 209, stop := 213 })                                       { start := 197, stop := 213 })                                     (Ariadne.Stmt.block                                       [Ariadne.Stmt.return_                                          (Ariadne.Expr.var "i" { start := 224, stop := 225 })                                          { start := 217, stop := 223 }]                                       { start := 215, stop := 228 })                                     (Ariadne.Stmt.block [] { start := 193, stop := 195 })                                     { start := 193, stop := 195 }]                                  { start := 187, stop := 232 })                                { start := 143, stop := 146 },                              Ariadne.Stmt.return_                                (Ariadne.Expr.unary                                  "-"                                  (Ariadne.Expr.literal (Ariadne.Literal.number 1 0) { start := 243, stop := 244 })                                  { start := 242, stop := 243 })                                { start := 235, stop := 241 }]                             { start := 139, stop := 247 },                   exported := true,                   decreases := none,                   span := { start := 85, stop := 93 } }],   aliases := [],   classes := [] }
 
 theorem parse_checked : parse source = .ok program := by
   unfold parse

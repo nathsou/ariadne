@@ -75,3 +75,17 @@ that is evidence, not a universal language-conformance theorem.
 The `compile` backend currently accepts a smaller scalar fragment of this language.
 See [COMPILER.md](COMPILER.md) for its supported constructs and diagnostics. Ordinary
 `check` acceptance does not imply that every compiler backend supports the function.
+## Frontend growth on the shallow-translation branch
+
+The operational path also accepts interfaces, readonly and optional record fields,
+literal/tagged unions with narrowing, classes with initialized fields and methods,
+Sets, `for…of`, explicit-exit `switch`, array/record spread, nullish comparisons,
+templates with non-number scalar substitutions, and `@decreases` annotations.
+Readonly fields cannot be assigned; container reads are shared and cannot mutate
+their contents. Stored mutable values must be fresh. Pure callbacks cannot assign
+captured locals; `forEach` retains its effectful loop behavior.
+
+Map/Set iterator results are consumed immediately with spread or `for…of`; they
+are not arrays. See [implementation status](SHALLOW-PROGRESS.md) for the remaining
+shallow milestones and restrictions. Existing `certify` results still describe the
+operational model, not shallow extraction or totality.

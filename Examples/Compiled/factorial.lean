@@ -74,48 +74,7 @@ theorem lex_checked : lex source = .ok tokens := by
   kernel_rfl
 
 def program : Program :=
-{ functions := [{ name := "factorial",
-                  params := [{ name := "count", ty := Ariadne.Ty.bigint, span := { start := 26, stop := 31 } }],
-                  result := Ariadne.Ty.bigint,
-                  body := Ariadne.Stmt.block
-                            [Ariadne.Stmt.let_
-                               true
-                               "product"
-                               none
-                               (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 67, stop := 69 })
-                               { start := 53, stop := 56 },
-                             Ariadne.Stmt.while_
-                               (Ariadne.Expr.binary
-                                 ">"
-                                 (Ariadne.Expr.var "count" { start := 80, stop := 85 })
-                                 (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 88, stop := 90 })
-                                 { start := 80, stop := 90 })
-                               (Ariadne.Stmt.block
-                                 [Ariadne.Stmt.assign
-                                    (Ariadne.Expr.var "product" { start := 98, stop := 105 })
-                                    (Ariadne.Expr.binary
-                                      "*"
-                                      (Ariadne.Expr.var "product" { start := 108, stop := 115 })
-                                      (Ariadne.Expr.var "count" { start := 118, stop := 123 })
-                                      { start := 108, stop := 123 })
-                                    { start := 98, stop := 105 },
-                                  Ariadne.Stmt.assign
-                                    (Ariadne.Expr.var "count" { start := 129, stop := 134 })
-                                    (Ariadne.Expr.binary
-                                      "-"
-                                      (Ariadne.Expr.var "count" { start := 137, stop := 142 })
-                                      (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 145, stop := 147 })
-                                      { start := 137, stop := 147 })
-                                    { start := 129, stop := 134 }]
-                                 { start := 92, stop := 152 })
-                               { start := 73, stop := 78 },
-                             Ariadne.Stmt.return_
-                               (Ariadne.Expr.var "product" { start := 162, stop := 169 })
-                               { start := 155, stop := 161 }]
-                            { start := 49, stop := 172 },
-                  exported := true,
-                  span := { start := 7, stop := 15 } }],
-  aliases := [] }
+{ functions := [{ name := "factorial",                   params := [{ name := "count", ty := Ariadne.Ty.bigint, span := { start := 26, stop := 31 } }],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.let_                                true                                "product"                                none                                (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 67, stop := 69 })                                { start := 53, stop := 56 },                              Ariadne.Stmt.while_                                (Ariadne.Expr.binary                                  ">"                                  (Ariadne.Expr.var "count" { start := 80, stop := 85 })                                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 88, stop := 90 })                                  { start := 80, stop := 90 })                                (Ariadne.Stmt.block                                  [Ariadne.Stmt.assign                                     (Ariadne.Expr.var "product" { start := 98, stop := 105 })                                     (Ariadne.Expr.binary                                       "*"                                       (Ariadne.Expr.var "product" { start := 108, stop := 115 })                                       (Ariadne.Expr.var "count" { start := 118, stop := 123 })                                       { start := 108, stop := 123 })                                     { start := 98, stop := 105 },                                   Ariadne.Stmt.assign                                     (Ariadne.Expr.var "count" { start := 129, stop := 134 })                                     (Ariadne.Expr.binary                                       "-"                                       (Ariadne.Expr.var "count" { start := 137, stop := 142 })                                       (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 145, stop := 147 })                                       { start := 137, stop := 147 })                                     { start := 129, stop := 134 }]                                  { start := 92, stop := 152 })                                { start := 73, stop := 78 },                              Ariadne.Stmt.return_                                (Ariadne.Expr.var "product" { start := 162, stop := 169 })                                { start := 155, stop := 161 }]                             { start := 49, stop := 172 },                   exported := true,                   decreases := none,                   span := { start := 7, stop := 15 } }],   aliases := [],   classes := [] }
 
 theorem parse_checked : parse source = .ok program := by
   unfold parse

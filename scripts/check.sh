@@ -4,11 +4,15 @@ cd "$(dirname "$0")/.."
 
 lake build ariadne Tests Ariadne
 scripts/regenerate.sh
-git diff --exit-code -- Examples/Generated Examples/Compiled
+git diff --exit-code -- Examples/Generated Examples/Compiled Examples/OperationalReference
 # Kernel computation is memory intensive. Compile independent certificates serially.
 for source in examples/*.ts; do
   stem=$(basename "$source" .ts)
   lake build "Examples.Generated.$stem"
+done
+for source in examples/reference/*.ts; do
+  stem=$(basename "$source" .ts)
+  lake build "Examples.OperationalReference.$stem"
 done
 for source in examples/scalar/*.ts; do
   stem=$(basename "$source" .ts)
@@ -29,3 +33,4 @@ fi
 "$js" scripts/cli.mjs
 "$js" scripts/compiler.mjs
 "$js" scripts/reference.mjs
+"$js" scripts/reference-operational.mjs

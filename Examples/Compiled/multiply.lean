@@ -81,49 +81,7 @@ theorem lex_checked : lex source = .ok tokens := by
   kernel_rfl
 
 def program : Program :=
-{ functions := [{ name := "multiply",
-                  params := [{ name := "value", ty := Ariadne.Ty.bigint, span := { start := 88, stop := 93 } },
-                             { name := "count", ty := Ariadne.Ty.bigint, span := { start := 103, stop := 108 } }],
-                  result := Ariadne.Ty.bigint,
-                  body := Ariadne.Stmt.block
-                            [Ariadne.Stmt.let_
-                               true
-                               "total"
-                               none
-                               (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 142, stop := 144 })
-                               { start := 130, stop := 133 },
-                             Ariadne.Stmt.while_
-                               (Ariadne.Expr.binary
-                                 ">"
-                                 (Ariadne.Expr.var "count" { start := 155, stop := 160 })
-                                 (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 163, stop := 165 })
-                                 { start := 155, stop := 165 })
-                               (Ariadne.Stmt.block
-                                 [Ariadne.Stmt.assign
-                                    (Ariadne.Expr.var "total" { start := 173, stop := 178 })
-                                    (Ariadne.Expr.binary
-                                      "+"
-                                      (Ariadne.Expr.var "total" { start := 181, stop := 186 })
-                                      (Ariadne.Expr.var "value" { start := 189, stop := 194 })
-                                      { start := 181, stop := 194 })
-                                    { start := 173, stop := 178 },
-                                  Ariadne.Stmt.assign
-                                    (Ariadne.Expr.var "count" { start := 200, stop := 205 })
-                                    (Ariadne.Expr.binary
-                                      "-"
-                                      (Ariadne.Expr.var "count" { start := 208, stop := 213 })
-                                      (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 216, stop := 218 })
-                                      { start := 208, stop := 218 })
-                                    { start := 200, stop := 205 }]
-                                 { start := 167, stop := 223 })
-                               { start := 148, stop := 153 },
-                             Ariadne.Stmt.return_
-                               (Ariadne.Expr.var "total" { start := 233, stop := 238 })
-                               { start := 226, stop := 232 }]
-                            { start := 126, stop := 241 },
-                  exported := true,
-                  span := { start := 70, stop := 78 } }],
-  aliases := [] }
+{ functions := [{ name := "multiply",                   params := [{ name := "value", ty := Ariadne.Ty.bigint, span := { start := 88, stop := 93 } },                              { name := "count", ty := Ariadne.Ty.bigint, span := { start := 103, stop := 108 } }],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.let_                                true                                "total"                                none                                (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 142, stop := 144 })                                { start := 130, stop := 133 },                              Ariadne.Stmt.while_                                (Ariadne.Expr.binary                                  ">"                                  (Ariadne.Expr.var "count" { start := 155, stop := 160 })                                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 163, stop := 165 })                                  { start := 155, stop := 165 })                                (Ariadne.Stmt.block                                  [Ariadne.Stmt.assign                                     (Ariadne.Expr.var "total" { start := 173, stop := 178 })                                     (Ariadne.Expr.binary                                       "+"                                       (Ariadne.Expr.var "total" { start := 181, stop := 186 })                                       (Ariadne.Expr.var "value" { start := 189, stop := 194 })                                       { start := 181, stop := 194 })                                     { start := 173, stop := 178 },                                   Ariadne.Stmt.assign                                     (Ariadne.Expr.var "count" { start := 200, stop := 205 })                                     (Ariadne.Expr.binary                                       "-"                                       (Ariadne.Expr.var "count" { start := 208, stop := 213 })                                       (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 216, stop := 218 })                                       { start := 208, stop := 218 })                                     { start := 200, stop := 205 }]                                  { start := 167, stop := 223 })                                { start := 148, stop := 153 },                              Ariadne.Stmt.return_                                (Ariadne.Expr.var "total" { start := 233, stop := 238 })                                { start := 226, stop := 232 }]                             { start := 126, stop := 241 },                   exported := true,                   decreases := none,                   span := { start := 70, stop := 78 } }],   aliases := [],   classes := [] }
 
 theorem parse_checked : parse source = .ok program := by
   unfold parse

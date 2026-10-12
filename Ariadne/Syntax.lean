@@ -4,6 +4,12 @@ namespace Ariadne
 
 inductive Ty where
   | number | bigint | boolean | string | undefined | null | void
+  | stringLiteral (units : List UInt16)
+  | readonly (ty : Ty)
+  | fieldReadonly (ty : Ty)
+  | set (element : Ty)
+  | iterator (element : Ty)
+  | class_ (name : String)
   | array (element : Ty)
   | map (key value : Ty)
   | tuple (elements : List Ty)
@@ -21,7 +27,9 @@ def Ty.equalFuel : Nat → Ty → Ty → Bool
     match a, b with
     | .number, .number | .bigint, .bigint | .boolean, .boolean
     | .string, .string | .undefined, .undefined | .null, .null | .void, .void => true
-    | .array a, .array b => equalFuel n a b
+    | .array a, .array b | .readonly a, .readonly b | .fieldReadonly a, .fieldReadonly b | .set a, .set b | .iterator a, .iterator b => equalFuel n a b
+    | .stringLiteral a, .stringLiteral b => a == b
+    | .class_ a, .class_ b => a == b
     | .map a b, .map c d | .union a b, .union c d => equalFuel n a c && equalFuel n b d
     | .named a, .named b => a == b
     | .tuple a, .tuple b => a.length == b.length && (a.zip b).all (fun (x, y) => equalFuel n x y)
@@ -32,7 +40,7 @@ def Ty.equalFuel : Nat → Ty → Ty → Bool
     | _, _ => false
 
 def Ty.depth : Ty → Nat
-  | .array a => a.depth + 1
+  | .array a | .readonly a | .fieldReadonly a | .set a | .iterator a => a.depth + 1
   | .map a b | .union a b => max a.depth b.depth + 1
   | .tuple ts => (ts.map Ty.depth).foldl max 0 + 1
   | .record fs => (fs.map (fun p => p.2.depth)).foldl max 0 + 1
@@ -76,6 +84,9 @@ mutual
     | record (fields : List (String × Expr)) (span : Span)
     | lambda (params : List Param) (body : Stmt) (span : Span)
     | newMap (key value : Ty) (span : Span)
+    | newSet (element : Ty) (span : Span)
+    | newClass (name : String) (args : List Expr) (span : Span)
+    | spread (value : Expr) (span : Span)
     deriving Repr, BEq, Inhabited
 
   inductive Stmt where
@@ -87,6 +98,9 @@ mutual
     | if_ (condition : Expr) (yes no : Stmt) (span : Span)
     | while_ (condition : Expr) (body : Stmt) (span : Span)
     | for_ (init : Stmt) (condition : Expr) (update body : Stmt) (span : Span)
+    | forOf (mutable : Bool) (name : String) (collection : Expr) (body : Stmt) (span : Span)
+    | measured (measure : Expr) (body : Stmt) (span : Span)
+    | switch_ (value : Expr) (cases : List (Option Expr × List Stmt)) (span : Span)
     | return_ (value : Expr) (span : Span)
     | break_ (span : Span)
     | continue_ (span : Span)
@@ -96,12 +110,13 @@ end
 def Expr.span : Expr → Span
   | .literal _ s | .var _ s | .unary _ _ s | .binary _ _ _ s
   | .conditional _ _ _ s | .call _ _ s | .member _ _ s | .index _ _ s
-  | .array _ s | .record _ s | .lambda _ _ s | .newMap _ _ s => s
+  | .array _ s | .record _ s | .lambda _ _ s | .newMap _ _ s
+  | .newSet _ s | .newClass _ _ s | .spread _ s => s
 
 def Stmt.span : Stmt → Span
   | .block _ s | .let_ _ _ _ _ s | .assign _ _ s | .expr _ s
   | .if_ _ _ _ s | .while_ _ _ s | .for_ _ _ _ _ s | .return_ _ s
-  | .break_ s | .continue_ s => s
+  | .break_ s | .continue_ s | .forOf _ _ _ _ s | .switch_ _ _ s | .measured _ _ s => s
 
 structure Function where
   name : String
@@ -109,12 +124,31 @@ structure Function where
   result : Ty
   body : Stmt
   exported : Bool := false
+  decreases : Option Expr := none
+  span : Span := {}
+  deriving Repr, BEq, Inhabited
+
+structure Field where
+  name : String
+  ty : Option Ty
+  value : Expr
+  private_ : Bool := false
+  readonly_ : Bool := false
+  span : Span := {}
+  deriving Repr, BEq, Inhabited
+
+structure Class where
+  name : String
+  fields : List Field
+  methods : List Function
+  constructor_ : Option Function := none
   span : Span := {}
   deriving Repr, BEq, Inhabited
 
 structure Program where
   functions : List Function
   aliases : List (String × Ty) := []
+  classes : List Class := []
   deriving Repr, BEq, Inhabited
 
 end Ariadne

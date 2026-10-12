@@ -22,7 +22,8 @@ def observe (fuel : Nat) (state : State) (value : Value) : Lean.Json :=
       | some (.array xs) => tag "array" [Lean.Json.arr ((xs.map (observe n state)).toArray)]
       | some (.map xs) => tag "map" [Lean.Json.arr ((xs.map fun (k, v) =>
           Lean.Json.arr #[observe n state k, observe n state v]).toArray)]
-      | some (.record xs) => tag "record" [Lean.Json.arr ((xs.map fun (k, v) =>
+      | some (.set xs) => tag "set" [Lean.Json.arr ((xs.map (observe n state)).toArray)]
+      | some (.instance_ _ xs) | some (.record xs) => tag "record" [Lean.Json.arr ((xs.map fun (k, v) =>
           Lean.Json.arr #[Lean.toJson k, observe n state v]).toArray)]
       | _ => tag "opaque-reference" [Lean.toJson loc]
     | _ => tag "function" []

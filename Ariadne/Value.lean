@@ -27,6 +27,9 @@ inductive Object where
   | array (values : List Value)
   | record (fields : List (String × Value))
   | map (entries : List (Value × Value))
+  | set (values : List Value)
+  | iterator (values : List Value)
+  | instance_ (name : String) (fields : List (String × Value))
   | closure (params : List Param) (body : Stmt) (captured : Env)
   deriving Repr, BEq, Inhabited
 
@@ -117,6 +120,9 @@ def unary (op : String) (v : Value) : Result Value :=
   | _, _ => .error (.typeError s!"invalid operand for '{op}'")
 
 def binary (op : String) (a b : Value) : Result Value := do
+  if op == "==" || op == "!=" then
+    let equal := (a == .null || a == .undefined) && (b == .null || b == .undefined)
+    return .boolean (if op == "==" then equal else !equal)
   if op == "===" then return .boolean (strictEqual a b)
   if op == "!==" then return .boolean (!strictEqual a b)
   match a, b with

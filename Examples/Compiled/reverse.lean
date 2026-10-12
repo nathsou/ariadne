@@ -94,68 +94,7 @@ theorem lex_checked : lex source = .ok tokens := by
   kernel_rfl
 
 def program : Program :=
-{ functions := [{ name := "reverse",
-                  params := [{ name := "text", ty := Ariadne.Ty.string, span := { start := 101, stop := 105 } }],
-                  result := Ariadne.Ty.string,
-                  body := Ariadne.Stmt.block
-                            [Ariadne.Stmt.let_
-                               true
-                               "result"
-                               none
-                               (Ariadne.Expr.literal (Ariadne.Literal.string []) { start := 140, stop := 142 })
-                               { start := 127, stop := 130 },
-                             Ariadne.Stmt.for_
-                               (Ariadne.Stmt.let_
-                                 true
-                                 "i"
-                                 none
-                                 (Ariadne.Expr.binary
-                                   "-"
-                                   (Ariadne.Expr.member
-                                     (Ariadne.Expr.var "text" { start := 159, stop := 163 })
-                                     "length"
-                                     { start := 159, stop := 170 })
-                                   (Ariadne.Expr.literal (Ariadne.Literal.number 1 0) { start := 173, stop := 174 })
-                                   { start := 159, stop := 174 })
-                                 { start := 151, stop := 154 })
-                               (Ariadne.Expr.binary
-                                 ">="
-                                 (Ariadne.Expr.var "i" { start := 176, stop := 177 })
-                                 (Ariadne.Expr.literal (Ariadne.Literal.number 0 0) { start := 181, stop := 182 })
-                                 { start := 176, stop := 182 })
-                               (Ariadne.Stmt.assign
-                                 (Ariadne.Expr.var "i" { start := 184, stop := 185 })
-                                 (Ariadne.Expr.binary
-                                   "-"
-                                   (Ariadne.Expr.var "i" { start := 188, stop := 189 })
-                                   (Ariadne.Expr.literal (Ariadne.Literal.number 1 0) { start := 192, stop := 193 })
-                                   { start := 188, stop := 193 })
-                                 { start := 184, stop := 185 })
-                               (Ariadne.Stmt.block
-                                 [Ariadne.Stmt.assign
-                                    (Ariadne.Expr.var "result" { start := 201, stop := 207 })
-                                    (Ariadne.Expr.binary
-                                      "+"
-                                      (Ariadne.Expr.var "result" { start := 210, stop := 216 })
-                                      (Ariadne.Expr.binary
-                                        "??"
-                                        (Ariadne.Expr.index
-                                          (Ariadne.Expr.var "text" { start := 220, stop := 224 })
-                                          (Ariadne.Expr.var "i" { start := 225, stop := 226 })
-                                          { start := 220, stop := 227 })
-                                        (Ariadne.Expr.literal (Ariadne.Literal.string []) { start := 231, stop := 233 })
-                                        { start := 220, stop := 233 })
-                                      { start := 210, stop := 233 })
-                                    { start := 201, stop := 207 }]
-                                 { start := 195, stop := 239 })
-                               { start := 146, stop := 149 },
-                             Ariadne.Stmt.return_
-                               (Ariadne.Expr.var "result" { start := 249, stop := 255 })
-                               { start := 242, stop := 248 }]
-                            { start := 123, stop := 258 },
-                  exported := true,
-                  span := { start := 84, stop := 92 } }],
-  aliases := [] }
+{ functions := [{ name := "reverse",                   params := [{ name := "text", ty := Ariadne.Ty.string, span := { start := 101, stop := 105 } }],                   result := Ariadne.Ty.string,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.let_                                true                                "result"                                none                                (Ariadne.Expr.literal (Ariadne.Literal.string []) { start := 140, stop := 142 })                                { start := 127, stop := 130 },                              Ariadne.Stmt.for_                                (Ariadne.Stmt.let_                                  true                                  "i"                                  none                                  (Ariadne.Expr.binary                                    "-"                                    (Ariadne.Expr.member                                      (Ariadne.Expr.var "text" { start := 159, stop := 163 })                                      "length"                                      { start := 159, stop := 170 })                                    (Ariadne.Expr.literal (Ariadne.Literal.number 1 0) { start := 173, stop := 174 })                                    { start := 159, stop := 174 })                                  { start := 151, stop := 154 })                                (Ariadne.Expr.binary                                  ">="                                  (Ariadne.Expr.var "i" { start := 176, stop := 177 })                                  (Ariadne.Expr.literal (Ariadne.Literal.number 0 0) { start := 181, stop := 182 })                                  { start := 176, stop := 182 })                                (Ariadne.Stmt.assign                                  (Ariadne.Expr.var "i" { start := 184, stop := 185 })                                  (Ariadne.Expr.binary                                    "-"                                    (Ariadne.Expr.var "i" { start := 188, stop := 189 })                                    (Ariadne.Expr.literal (Ariadne.Literal.number 1 0) { start := 192, stop := 193 })                                    { start := 188, stop := 193 })                                  { start := 184, stop := 185 })                                (Ariadne.Stmt.block                                  [Ariadne.Stmt.assign                                     (Ariadne.Expr.var "result" { start := 201, stop := 207 })                                     (Ariadne.Expr.binary                                       "+"                                       (Ariadne.Expr.var "result" { start := 210, stop := 216 })                                       (Ariadne.Expr.binary                                         "??"                                         (Ariadne.Expr.index                                           (Ariadne.Expr.var "text" { start := 220, stop := 224 })                                           (Ariadne.Expr.var "i" { start := 225, stop := 226 })                                           { start := 220, stop := 227 })                                         (Ariadne.Expr.literal (Ariadne.Literal.string []) { start := 231, stop := 233 })                                         { start := 220, stop := 233 })                                       { start := 210, stop := 233 })                                     { start := 201, stop := 207 }]                                  { start := 195, stop := 239 })                                { start := 146, stop := 149 },                              Ariadne.Stmt.return_                                (Ariadne.Expr.var "result" { start := 249, stop := 255 })                                { start := 242, stop := 248 }]                             { start := 123, stop := 258 },                   exported := true,                   decreases := none,                   span := { start := 84, stop := 92 } }],   aliases := [],   classes := [] }
 
 theorem parse_checked : parse source = .ok program := by
   unfold parse

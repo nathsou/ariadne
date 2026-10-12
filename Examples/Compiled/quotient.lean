@@ -55,22 +55,7 @@ theorem lex_checked : lex source = .ok tokens := by
   kernel_rfl
 
 def program : Program :=
-{ functions := [{ name := "quotient",
-                  params := [{ name := "numerator", ty := Ariadne.Ty.bigint, span := { start := 93, stop := 102 } },
-                             { name := "denominator", ty := Ariadne.Ty.bigint, span := { start := 112, stop := 123 } }],
-                  result := Ariadne.Ty.bigint,
-                  body := Ariadne.Stmt.block
-                            [Ariadne.Stmt.return_
-                               (Ariadne.Expr.binary
-                                 "/"
-                                 (Ariadne.Expr.var "numerator" { start := 152, stop := 161 })
-                                 (Ariadne.Expr.var "denominator" { start := 164, stop := 175 })
-                                 { start := 152, stop := 175 })
-                               { start := 145, stop := 151 }]
-                            { start := 141, stop := 178 },
-                  exported := true,
-                  span := { start := 75, stop := 83 } }],
-  aliases := [] }
+{ functions := [{ name := "quotient",                   params := [{ name := "numerator", ty := Ariadne.Ty.bigint, span := { start := 93, stop := 102 } },                              { name := "denominator", ty := Ariadne.Ty.bigint, span := { start := 112, stop := 123 } }],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "/"                                  (Ariadne.Expr.var "numerator" { start := 152, stop := 161 })                                  (Ariadne.Expr.var "denominator" { start := 164, stop := 175 })                                  { start := 152, stop := 175 })                                { start := 145, stop := 151 }]                             { start := 141, stop := 178 },                   exported := true,                   decreases := none,                   span := { start := 75, stop := 83 } }],   aliases := [],   classes := [] }
 
 theorem parse_checked : parse source = .ok program := by
   unfold parse

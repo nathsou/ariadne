@@ -78,54 +78,7 @@ theorem lex_checked : lex source = .ok tokens := by
   kernel_rfl
 
 def program : Program :=
-{ functions := [{ name := "triangular",
-                  params := [{ name := "count", ty := Ariadne.Ty.bigint, span := { start := 27, stop := 32 } }],
-                  result := Ariadne.Ty.bigint,
-                  body := Ariadne.Stmt.block
-                            [Ariadne.Stmt.let_
-                               true
-                               "total"
-                               none
-                               (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 66, stop := 68 })
-                               { start := 54, stop := 57 },
-                             Ariadne.Stmt.for_
-                               (Ariadne.Stmt.let_
-                                 true
-                                 "i"
-                                 none
-                                 (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 85, stop := 87 })
-                                 { start := 77, stop := 80 })
-                               (Ariadne.Expr.binary
-                                 "<="
-                                 (Ariadne.Expr.var "i" { start := 89, stop := 90 })
-                                 (Ariadne.Expr.var "count" { start := 94, stop := 99 })
-                                 { start := 89, stop := 99 })
-                               (Ariadne.Stmt.assign
-                                 (Ariadne.Expr.var "i" { start := 101, stop := 102 })
-                                 (Ariadne.Expr.binary
-                                   "+"
-                                   (Ariadne.Expr.var "i" { start := 105, stop := 106 })
-                                   (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 109, stop := 111 })
-                                   { start := 105, stop := 111 })
-                                 { start := 101, stop := 102 })
-                               (Ariadne.Stmt.block
-                                 [Ariadne.Stmt.assign
-                                    (Ariadne.Expr.var "total" { start := 119, stop := 124 })
-                                    (Ariadne.Expr.binary
-                                      "+"
-                                      (Ariadne.Expr.var "total" { start := 127, stop := 132 })
-                                      (Ariadne.Expr.var "i" { start := 135, stop := 136 })
-                                      { start := 127, stop := 136 })
-                                    { start := 119, stop := 124 }]
-                                 { start := 113, stop := 141 })
-                               { start := 72, stop := 75 },
-                             Ariadne.Stmt.return_
-                               (Ariadne.Expr.var "total" { start := 151, stop := 156 })
-                               { start := 144, stop := 150 }]
-                            { start := 50, stop := 159 },
-                  exported := true,
-                  span := { start := 7, stop := 15 } }],
-  aliases := [] }
+{ functions := [{ name := "triangular",                   params := [{ name := "count", ty := Ariadne.Ty.bigint, span := { start := 27, stop := 32 } }],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.let_                                true                                "total"                                none                                (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 66, stop := 68 })                                { start := 54, stop := 57 },                              Ariadne.Stmt.for_                                (Ariadne.Stmt.let_                                  true                                  "i"                                  none                                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 85, stop := 87 })                                  { start := 77, stop := 80 })                                (Ariadne.Expr.binary                                  "<="                                  (Ariadne.Expr.var "i" { start := 89, stop := 90 })                                  (Ariadne.Expr.var "count" { start := 94, stop := 99 })                                  { start := 89, stop := 99 })                                (Ariadne.Stmt.assign                                  (Ariadne.Expr.var "i" { start := 101, stop := 102 })                                  (Ariadne.Expr.binary                                    "+"                                    (Ariadne.Expr.var "i" { start := 105, stop := 106 })                                    (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 109, stop := 111 })                                    { start := 105, stop := 111 })                                  { start := 101, stop := 102 })                                (Ariadne.Stmt.block                                  [Ariadne.Stmt.assign                                     (Ariadne.Expr.var "total" { start := 119, stop := 124 })                                     (Ariadne.Expr.binary                                       "+"                                       (Ariadne.Expr.var "total" { start := 127, stop := 132 })                                       (Ariadne.Expr.var "i" { start := 135, stop := 136 })                                       { start := 127, stop := 136 })                                     { start := 119, stop := 124 }]                                  { start := 113, stop := 141 })                                { start := 72, stop := 75 },                              Ariadne.Stmt.return_                                (Ariadne.Expr.var "total" { start := 151, stop := 156 })                                { start := 144, stop := 150 }]                             { start := 50, stop := 159 },                   exported := true,                   decreases := none,                   span := { start := 7, stop := 15 } }],   aliases := [],   classes := [] }
 
 theorem parse_checked : parse source = .ok program := by
   unfold parse

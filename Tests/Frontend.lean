@@ -25,7 +25,26 @@ theorem maximal_munch :
       .ok ["a", "===", "b", "!==", "c", "<eof>"] := by
   kernel_rfl
 
-theorem unsupported_template : (lex "`text`").isOk = false := by kernel_rfl
+theorem template_literal_accepted : (lex "`text`").isOk = true := by kernel_rfl
+
+theorem nul_and_unicode_escapes :
+    (lex "'\\0\\u{1f600}\\ud800'").map (fun ts => ts[0]!.stringValue) =
+      .ok (some [0, 55357, 56832, 55296]) := by kernel_rfl
+
+theorem decimal_escape_rejected : (lex "'\\01'").isOk = false := by kernel_rfl
+
+theorem nested_template :
+    (do
+      let p ← frontend "function f(): string { return `a${`b${2n}`}c`; }"
+      return run p "f" 50 []) = .ok (.ok (.string [97, 98, 50, 99])) := by kernel_rfl
+
+theorem iterator_is_not_array :
+    (frontend "function f(): number[] { const s = new Set<number>(); return s.values(); }").isOk = false := by
+  kernel_rfl
+
+theorem narrowing_invalidated_by_assignment :
+    (frontend "function f(x: bigint | undefined): bigint { if (x === undefined) { return 0n; } x = undefined; return x; }").isOk = false := by
+  kernel_rfl
 
 theorem short_circuit_prevents_division_by_zero :
     (do

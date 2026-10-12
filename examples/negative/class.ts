@@ -1,2 +1,2 @@
-// expected: A1001
-class Box {}
+// expected: A1000
+class Box extends Object {}

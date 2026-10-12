@@ -67,35 +67,7 @@ theorem lex_checked : lex source = .ok tokens := by
   kernel_rfl
 
 def program : Program :=
-{ functions := [{ name := "choose",
-                  params := [{ name := "enabled", ty := Ariadne.Ty.boolean, span := { start := 23, stop := 30 } },
-                             { name := "text",
-                               ty := Ariadne.Ty.union (Ariadne.Ty.string) (Ariadne.Ty.undefined),
-                               span := { start := 41, stop := 45 } }],
-                  result := Ariadne.Ty.string,
-                  body := Ariadne.Stmt.block
-                            [Ariadne.Stmt.if_
-                               (Ariadne.Expr.var "enabled" { start := 83, stop := 90 })
-                               (Ariadne.Stmt.block
-                                 [Ariadne.Stmt.return_
-                                    (Ariadne.Expr.binary
-                                      "??"
-                                      (Ariadne.Expr.var "text" { start := 101, stop := 105 })
-                                      (Ariadne.Expr.literal
-                                        (Ariadne.Literal.string [102, 97, 108, 108, 98, 97, 99, 107])
-                                        { start := 109, stop := 119 })
-                                      { start := 101, stop := 119 })
-                                    { start := 94, stop := 100 }]
-                                 { start := 92, stop := 122 })
-                               (Ariadne.Stmt.block [] { start := 79, stop := 81 })
-                               { start := 79, stop := 81 },
-                             Ariadne.Stmt.return_
-                               (Ariadne.Expr.literal (Ariadne.Literal.string []) { start := 132, stop := 134 })
-                               { start := 125, stop := 131 }]
-                            { start := 75, stop := 137 },
-                  exported := true,
-                  span := { start := 7, stop := 15 } }],
-  aliases := [] }
+{ functions := [{ name := "choose",                   params := [{ name := "enabled", ty := Ariadne.Ty.boolean, span := { start := 23, stop := 30 } },                              { name := "text",                                ty := Ariadne.Ty.union (Ariadne.Ty.string) (Ariadne.Ty.undefined),                                span := { start := 41, stop := 45 } }],                   result := Ariadne.Ty.string,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.if_                                (Ariadne.Expr.var "enabled" { start := 83, stop := 90 })                                (Ariadne.Stmt.block                                  [Ariadne.Stmt.return_                                     (Ariadne.Expr.binary                                       "??"                                       (Ariadne.Expr.var "text" { start := 101, stop := 105 })                                       (Ariadne.Expr.literal                                         (Ariadne.Literal.string [102, 97, 108, 108, 98, 97, 99, 107])                                         { start := 109, stop := 119 })                                       { start := 101, stop := 119 })                                     { start := 94, stop := 100 }]                                  { start := 92, stop := 122 })                                (Ariadne.Stmt.block [] { start := 79, stop := 81 })                                { start := 79, stop := 81 },                              Ariadne.Stmt.return_                                (Ariadne.Expr.literal (Ariadne.Literal.string []) { start := 132, stop := 134 })                                { start := 125, stop := 131 }]                             { start := 75, stop := 137 },                   exported := true,                   decreases := none,                   span := { start := 7, stop := 15 } }],   aliases := [],   classes := [] }
 
 theorem parse_checked : parse source = .ok program := by
   unfold parse

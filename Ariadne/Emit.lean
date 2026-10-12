@@ -21,7 +21,12 @@ def emit (source : String) (program : Program) (namespace_ : String := "Translat
   if let .ok tokens := lex source then
     out := out ++ s!"def tokens : Array Token :=\n{reprStr tokens}\n\n"
     out := out ++ "theorem lex_checked : lex source = .ok tokens := by\n  unfold lex\n  rw [characters_checked]\n  kernel_rfl\n\n"
-  out := out ++ s!"def program : Program :=\n{reprStr program}\n\n"
+  -- Derived Repr can indent `some { ... }` below the record's opening column
+  -- (notably class constructors), which is not valid Lean layout. The AST is
+  -- certificate data, so render its whitespace flat; escaped source strings
+  -- retain their literal backslashes. The parse equation checks this rendering.
+  let programText := (reprStr program).replace "\n" " "
+  out := out ++ s!"def program : Program :=\n{programText}\n\n"
   out := out ++ "theorem parse_checked : parse source = .ok program := by\n  unfold parse\n  rw [lex_checked]\n  kernel_rfl\n\n"
   out := out ++ "theorem types_checked : Check.program program = .ok () := by kernel_rfl\n\n"
   out := out ++ "theorem source_checked : frontend source = .ok program :=\n  frontend_of_parse parse_checked types_checked\n\n"

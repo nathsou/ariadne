@@ -104,6 +104,7 @@ def expression (p : Program) : (budget : Nat) → (e : Expr) → Checked (Expres
   | _ + 1, e@(.record ..) => .error (unsupported e.span "record allocation")
   | _ + 1, e@(.newMap ..) => .error (unsupported e.span "Map allocation")
   | _ + 1, e@(.lambda ..) => .error (unsupported e.span "callbacks")
+  | _ + 1, e => .error (unsupported e.span "collection and class expressions")
 
 mutual
   def statement (p : Program) : (budget : Nat) → (s : Stmt) → Checked (Command p s)
@@ -203,6 +204,7 @@ mutual
         code := Target.continue_
         correct := by funext fuel s; cases fuel <;> rfl
         text := "Target.continue_" }
+    | _ + 1, s => .error (unsupported s.span "iteration and switch")
 
   def block (p : Program) : (budget : Nat) → (ss : List Stmt) → Checked (Block p ss)
     | 0, ss => .error (exhausted ((ss.head?.map Stmt.span).getD {}))

@@ -64,7 +64,7 @@ the diagnostic highlights the construct or parameter and suggests the operationa
 translator. `A4102` is the compiler nesting limit. `A4103` is a missing entry name.
 These errors leave an existing output file untouched. A generated artifact that
 fails kernel checking reports `A4001` and remains an uncertified candidate.
-# Shallow extraction
+## Shallow extraction
 
 `extract` reserves `A5xxx`. `A5000` reports an unavailable extraction backend;
 `A5101` a totality refusal; `A5102` an ownership refusal; `A5103` an impure

@@ -57,6 +57,10 @@ local macro "refine_fuel" : tactic => `(tactic|
   | exact hs _ _
   | exact hb _ _
   | exact hl _ _ _ _
+  | exact hel _ _
+  | exact hfi _ _ _
+  | exact hea _ _ _ _
+  | exact hsc _ _ _ _ _
   | apply Result.Refines.bind
   | apply Result.Refines.map
   | intro x
@@ -74,6 +78,10 @@ private structure FuelStep (p : Program) (n : Nat) : Prop where
   statement : ∀ s b, (exec p n s b).Refines (exec p (n + 1) s b)
   block : ∀ s bs, (execBlock p n s bs).Refines (execBlock p (n + 1) s bs)
   loop : ∀ s c b u, (loop p n s c b u).Refines (loop p (n + 1) s c b u)
+  elements : ∀ s es, (evalElements p n s es).Refines (evalElements p (n + 1) s es)
+  fields : ∀ s fs acc, (evalFields p n s fs acc).Refines (evalFields p (n + 1) s fs acc)
+  each : ∀ s name body xs, (eachBody p n s name body xs).Refines (eachBody p (n + 1) s name body xs)
+  select : ∀ s v cs i d, (selectCase p n s v cs i d).Refines (selectCase p (n + 1) s v cs i d)
 
 private theorem fuel_step (p : Program) (n : Nat) : FuelStep p n := by
   induction n with
@@ -81,7 +89,7 @@ private theorem fuel_step (p : Program) (n : Nat) : FuelStep p n := by
     constructor
     all_goals intros; exact Or.inl rfl
   | succ n ih =>
-    rcases ih with ⟨he, ha, hf, hc, ht, hr, hm, hw, hs, hb, hl⟩
+    rcases ih with ⟨he, ha, hf, hc, ht, hr, hm, hw, hs, hb, hl, hel, hfi, hea, hsc⟩
     constructor
     · intro s e; cases e
       all_goals simp only [evalExpr]; refine_fuel
@@ -119,6 +127,17 @@ private theorem fuel_step (p : Program) (n : Nat) : FuelStep p n := by
       conv => lhs; unfold loop
       conv => rhs; unfold loop
       refine_fuel
+
+    · intro s es; cases es
+      all_goals simp only [evalElements]; refine_fuel
+    · intro s fs acc; cases fs with
+      | nil => exact Result.Refines.refl _
+      | cons f fs => cases f; simp only [evalFields]; refine_fuel
+    · intro s name body xs; cases xs
+      all_goals simp only [eachBody]; refine_fuel
+    · intro s v cs i d; cases cs with
+      | nil => exact Result.Refines.refl _
+      | cons c cs => cases c; simp only [selectCase]; refine_fuel
 
 /-- Lift the one-step proof to arbitrary larger budgets. -/
 theorem Result.refines_of_step (f : Nat → Result α)
