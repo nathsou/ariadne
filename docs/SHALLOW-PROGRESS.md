@@ -261,3 +261,11 @@ cover comparison, conversion injectivity, exact addition/subtraction/multiplicat
 necessary nonzero condition. They use range hypotheses, not primitive equality
 guards. Exact exponent scaling is proved for the remaining arithmetic work;
 multiplication preserves canonical zero under `CanonicalProduct`; quotient/remainder exactness remains pending.
+
+CI found a NaN-observation portability bug in the new Int53 harness: Bun returned
+a negative NaN for division by zero while the model canonicalizes NaNs. The
+harness now uses the same NaN normalization as the existing differential suites,
+while preserving exact signed-zero comparisons. The corrected 52-case harness
+passes under Node 24.19.0 and pinned Bun 1.3.5; original-reference comparisons
+also pass under Bun. The numeric exactness checkpoint builds and audits 3,885
+theorems. Fresh CI is pending.

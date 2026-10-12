@@ -20,7 +20,12 @@ const cases = {
   optionalEqual: [[[undefined,2],true], [[2,2],true], [[2,3],true]],
   optionalPair: [[[undefined,undefined],true], [[2,undefined],true], [[undefined,2],true], [[2,2],true]],
 };
-const bits = value => {const view = new DataView(new ArrayBuffer(8)); view.setFloat64(0,value); return view.getBigUint64(0).toString();};
+const bits = value => {
+  const view = new DataView(new ArrayBuffer(8));
+  // The model canonicalizes NaN; engines may choose different NaN signs/payloads.
+  view.setFloat64(0, Number.isNaN(value) ? NaN : value);
+  return view.getBigUint64(0).toString();
+};
 const observe = value => typeof value === 'boolean' ? ['boolean', value] : ['number', bits(value)];
 const argument = (value, optional=false) => optional ? value === undefined ? '(none : Option Int)' : `(some (${value} : Int))` :
   Array.isArray(value) ? `([${value}] : List Int)` : typeof value === 'boolean' ? String(value) : `(${value} : Int)`;
