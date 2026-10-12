@@ -304,6 +304,17 @@ def reserved (name : String) : Bool :=
 
 def join (a b : Ty) : Ty := if a == b then a else .union a b
 
+/-- A property is available on a union only when every variant declares it.
+Remove the field's write qualifier, retaining readonly collection qualifiers. -/
+def commonField : Nat → Ty → String → Option Ty
+  | 0, _, _ => none
+  | n + 1, .readonly ty, name | n + 1, .fieldReadonly ty, name => commonField n ty name
+  | _ + 1, .record fields, name => (fields.lookup name).map fun ty =>
+      match ty with | .fieldReadonly value => value | value => value
+  | n + 1, .union a b, name => do
+      return join (← commonField n a name) (← commonField n b name)
+  | _, _, _ => none
+
 
 mutual
   def infer (fuel : Nat) (ctx : Context) (expr : Expr) : Checked Ty := do
@@ -430,12 +441,9 @@ mutual
           | some ty => resolve 100 ctx.program ty
           | none => infer n { ctx with bindings := [] } f.value
         | .union a b, _ =>
-          let lookup := fun t => match unreadonly t with
-            | .record fs => (fs.lookup field).map unreadonly
-            | _ => none
-          match lookup a, lookup b with
-          | some a, some b => return join a b
-          | _, _ => error "A2006" "narrow the union before accessing this field" span
+          match commonField n (.union a b) field with
+          | some ty => return ty
+          | none => error "A2006" "narrow the union before accessing this field" span
         | _, _ => error "A2006" s!"unknown property '{field}' on {typeName t}" span
       | .index object index span =>
         requireType (← infer n ctx index) .number index.span

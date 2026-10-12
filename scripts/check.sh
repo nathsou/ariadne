@@ -43,4 +43,5 @@ fi
 "$js" scripts/shallow-loops.mjs
 "$js" scripts/shallow-collections.mjs
 "$js" scripts/shallow-records.mjs
+"$js" scripts/shallow-unions.mjs
 "$js" scripts/builtins.mjs

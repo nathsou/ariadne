@@ -251,21 +251,72 @@ private def emitRecord (program : Program) (declaration : Named.Declaration) : C
     "  construct_destruct := by\n    intro value\n    cases value\n    rfl\n\n"
   return out
 
+private def declarationOrder (program : Program) : Nat → Named.Declaration → Checked (List Named.Declaration)
+  | 0, _ => Elaborate.refusal "A5101" "native declaration nesting budget exhausted" {}
+  | n + 1, declaration => do
+    if let some (left, right) ← Declarations.union program declaration {} then
+      return (← declarationOrder program n left.declaration) ++
+        (← declarationOrder program n right.declaration) ++ [declaration]
+    return [declaration]
+
+private def constructorName (source : Ariadne.Ty) (fallback : String) : String :=
+  match Check.unreadonly source with
+  | .record fields =>
+    match fields.findSome? (fun (_, source) => Declarations.fixedString source) with
+    | some tag =>
+      let name := String.ofList (tag.map (fun unit => Char.ofNat unit.toNat))
+      if !name.isEmpty && name.toList.all (fun c => c.isAlpha || c.isDigit || c == '_') &&
+          !["rec", "recOn", "casesOn", "noConfusion", "noConfusionType", "below", "brecOn"].contains name
+      then name else fallback
+    | none => fallback
+  | _ => fallback
+
+private def emitDeclaration (program : Program) (declaration : Named.Declaration) : Checked String := do
+  let some (left, right) ← Declarations.union program declaration {} | emitRecord program declaration
+  let name := ident declaration.name
+  let leftName := ident left.declaration.name
+  let rightName := ident right.declaration.name
+  let lc := constructorName left.source "left"
+  let rc := constructorName right.source "right"
+  let (lc, rc) := if lc == rc then ("left", "right") else (lc, rc)
+  let lc := ident lc
+  let rc := ident rc
+  let payload := typeText (Core.shapeType declaration.shape)
+  let data := (reprStr declaration).replace "\n" " "
+  return s!"inductive NativeTypes.{name} where\n" ++
+    s!"  | {lc} (value : NativeTypes.{leftName})\n  | {rc} (value : NativeTypes.{rightName})\n\n" ++
+    s!"@[simp] def NativeConstruct.{name} (payload : {payload}) : NativeTypes.{name} :=\n" ++
+    s!"  Sum.elim (fun value => .{lc} (NativeConstruct.{leftName} value))\n" ++
+    s!"    (fun value => .{rc} (NativeConstruct.{rightName} value)) payload\n\n" ++
+    s!"@[simp] def NativeDestruct.{name} (value : NativeTypes.{name}) : {payload} :=\n" ++
+    s!"  match value with\n  | .{lc} value => .inl (NativeDestruct.{leftName} value)\n" ++
+    s!"  | .{rc} value => .inr (NativeDestruct.{rightName} value)\n\n" ++
+    s!"def NativeRepresentations.{name} : Named.Representation (({data} : Named.Declaration).shape) where\n" ++
+    s!"  Native := NativeTypes.{name}\n  construct := NativeConstruct.{name}\n  destruct := NativeDestruct.{name}\n" ++
+    "  destruct_construct := by\n    intro value\n    cases value with\n" ++
+    s!"    | inl value => exact congrArg Sum.inl (NativeRepresentations.{leftName}.destruct_construct value)\n" ++
+    s!"    | inr value => exact congrArg Sum.inr (NativeRepresentations.{rightName}.destruct_construct value)\n" ++
+    "  construct_destruct := by\n    intro value\n    cases value with\n" ++
+    s!"    | {lc} value => exact congrArg NativeTypes.{name}.{lc} (NativeRepresentations.{leftName}.construct_destruct value)\n" ++
+    s!"    | {rc} value => exact congrArg NativeTypes.{name}.{rc} (NativeRepresentations.{rightName}.construct_destruct value)\n\n"
+
 def emit (source : String) (program : Program) (namespace_ : String) : Checked String := do
   if !program.classes.isEmpty then
     Elaborate.refusal "A5102" "class extraction is not implemented yet" program.classes.head!.span
   if program.functions.isEmpty then
     Elaborate.refusal "A5101" "there are no functions to extract" {}
   let compiled ← program.functions.mapM fun f => do return (f, ← Elaborate.function program f.name)
-  let declarations := (compiled.flatMap fun (_, core) =>
+  let expanded ← Declarations.withVariants program
+  let roots := (compiled.flatMap fun (_, core) =>
     core.params.flatMap typeDeclarations ++ termDeclarations core.body).eraseDups
+  let declarations := (← roots.mapM (declarationOrder expanded 100)).flatten.eraseDups
   let mut out := (Ariadne.emit source program namespace_).replace
     "import Ariadne.Certificate\n" "import Ariadne.Certificate\nimport Ariadne.Shallow.Elaborate\n"
   out := out ++ "\n-- Shallow denotation certificates. Operational adequacy is not yet proved.\n" ++
     s!"namespace {namespace_}.Shallow\nopen Ariadne Ariadne.Shallow\nset_option linter.unusedSimpArgs false\n\n"
   let mut interpretation := "Named.canonical"
   for declaration in declarations do
-    out := out ++ (← emitRecord program declaration)
+    out := out ++ (← emitDeclaration expanded declaration)
     let data := (reprStr declaration).replace "\n" " "
     interpretation := s!"(Named.Interp.insert {interpretation} ({data}) NativeRepresentations.{ident declaration.name})"
   out := out ++ s!"def Interpretation.value : Named.Interp := {interpretation}\n\n" ++

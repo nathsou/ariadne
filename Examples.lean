@@ -36,8 +36,10 @@ import Examples.Shallow.arrays
 import Examples.Shallow.loops
 import Examples.Shallow.collections
 import Examples.Shallow.records
+import Examples.Shallow.unions
 import Examples.Proofs.ShallowScalars
 import Examples.Proofs.ShallowArrays
 import Examples.Proofs.ShallowLoops
 import Examples.Proofs.ShallowCollections
 import Examples.Proofs.ShallowRecords
+import Examples.Proofs.ShallowUnions

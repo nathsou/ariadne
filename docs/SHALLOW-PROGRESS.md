@@ -73,7 +73,7 @@ Branch continuations are shared through typed tuple arguments. Array `for…of`,
 counted bigint loops, scalar switches, and nested break/continue/return lower to
 typed `Step`/`Exit` combinators. Maps and Sets have scalar keys, insertion-ordered
 iteration, reads, and locally owned updates. Owned array `push` becomes append.
-Named records have lawful native representations. Tagged unions, mutation through borrowed parameters, classes, number-valued counted
+Named records and tagged unions have lawful native representations. Mutation through borrowed parameters, classes, number-valued counted
 loops, and Int53 refinement are explicitly refused.
 This is an incremental M2 slice, not the M2 reference-program exit gate.
 
@@ -142,3 +142,14 @@ suite compares declared-field observations and checks that input heaps are
 preserved. Native proofs cover field preservation, update composition, sum
 permutation invariance, and first-match membership/floor properties. These remain
 native properties, without a shallow source-transfer claim.
+
+The record checkpoint passed the full local suite and CI with 2,622 audited
+theorems. The next slice adds native tagged inductives, typed variant views,
+reinjection into parent unions, discriminant narrowing and switches, including
+three or more variants. Its 55 three-way cases cover construction, optional
+fallback, reassignment, filtering and decision-input permutations, with input
+heap preservation. The frontend's common-field lookup now descends through
+nested unions and retains readonly collection qualifiers.
+Native proofs establish the bigint decision fixture's fold specification,
+input membership, valid-only output, and floor bound for arbitrary inputs.
+The original Int53 reference program and its permutation theorem remain pending.

@@ -47,7 +47,7 @@ not part of the proof chain.
 
 The initial `extract` fragment has scalars, readonly array operations, pure
 callbacks/calls, branches, local reassignment, collection iteration and locally
-owned updates, counted bigint loops, scalar switches, and named records. Its generated `Shallow`
+owned updates, counted bigint loops, switches, named records and tagged unions. Its generated `Shallow`
 namespace contains definitions over `Int`, `Bool`, UTF-16 `JSString`, binary64
 `Float.Model`, `Option`, `List`, ordered `JSMap`/`JSSet` values, and explicit loop
 state/exit types. Number-keyed collections use separate SameValueZero wrappers.
@@ -55,7 +55,8 @@ Named records become Lean structures with checked constructor/destructor laws.
 Core denotation, renaming and substitution are parameterized by a lawful named
 interpretation. Record fields are observed by their declared types; absent optional
 fields and explicit `undefined` both read as `none`. Property enumeration and
-own-property tests are not admitted. Tagged unions and classes are still pending.
+own-property tests are not admitted. Tagged unions become native inductives with
+lawful variant representations. Classes are still pending.
 Its
 `ElaborationChecks` and `DenotationChecks` namespaces certify the new links.
 Those checks do **not** establish adequacy: an elaborator bug could still choose

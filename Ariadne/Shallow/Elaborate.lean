@@ -1,6 +1,6 @@
 import Ariadne.Check
 import Ariadne.Shallow.Denote
-import Ariadne.Shallow.Declarations
+import Ariadne.Shallow.Unions
 
 namespace Ariadne.Shallow.Elaborate
 open Core
@@ -45,7 +45,7 @@ where
     | 0, _ => refusal "A5101" "type nesting budget exhausted" span
     | n + 1, .named name => do
       let some source := p.aliases.lookup name | refusal "A5102" "unknown type alias" span
-      match source with
+      match Check.unreadonly source with
       | .record _ => return .named (← Declarations.info p name span).declaration
       | .union a b =>
         if a != .undefined && b != .undefined then
@@ -109,24 +109,36 @@ def callbackResult (p : Program) (fuel : Nat) (ctx : Context) (fn : Expr) : Chec
   let result ← Check.inferCallback fuel { program := p, bindings := bindings ++ captured } body
   type p result span
 
-def expressionResult (p : Program) (fuel : Nat) (ctx : Context) (expr : Expr) : Checked Core.Ty := do
+def expressionSource (p : Program) (fuel : Nat) (ctx : Context) (expr : Expr) : Checked Ariadne.Ty := do
   let bindings ← ctx.mapM fun b => do
     let ty ← Check.resolve 100 p (sourceType b.ty)
     let declared ← Check.resolve 100 p (sourceType b.declared)
     pure ({ name := b.name, ty, declared := some declared, mutable := true } : Check.Binding)
-  type p (← Check.infer fuel { program := p, bindings } expr) expr.span
+  Check.infer fuel { program := p, bindings } expr
+
+def expressionResult (p : Program) (fuel : Nat) (ctx : Context) (expr : Expr) : Checked Core.Ty := do
+  type p (← expressionSource p fuel ctx expr) expr.span
 
 def cast (t : Core.Ty) (value : Typed ctx) (span : Span) : Checked (Term (Types ctx) t) :=
   if h : value.1 = t then .ok (h ▸ value.2)
   else refusal "A5102" "expression requires an unsupported type conversion" span
+
+def coercePlain (t : Core.Ty) (value : Typed ctx) (span : Span) : Checked (Term (Types ctx) t) :=
+  if h : value.1 = t then .ok (h ▸ value.2)
+  else match t, value with
+  | .named parent, ⟨.named child, value⟩ =>
+    match Declarations.inject parent child (.unpack value) with
+    | some payload => .ok (.pack parent payload)
+    | none => refusal "A5102" "named value is not a view of the target declaration" span
+  | _, _ => refusal "A5102" "expression requires an unsupported type conversion" span
 
 def coerce (t : Core.Ty) (value : Typed ctx) (span : Span) : Checked (Term (Types ctx) t) :=
   if h : value.1 = t then .ok (h ▸ value.2)
   else match t with
   | .option inner => do
     if value.1 == .unit then return .none
-    return .some (← cast inner value span)
-  | _ => refusal "A5102" "expression requires an unsupported type conversion" span
+    return .some (← coercePlain inner value span)
+  | other => coercePlain other value span
 
 def iterable (value : Typed ctx) (span : Span) : Checked (Typed ctx) :=
   match value with
@@ -143,6 +155,30 @@ def recordField (name : String) (span : Span) : List (String × Ariadne.Ty) → 
       | none => .ok ⟨a, .fst value⟩
     else recordField name span fields ⟨b, .snd value⟩
   | _, _ => refusal "A5102" "unknown field or invalid named record shape" span
+
+
+def packSubstitution (Γ : List Core.Ty) (child : Named.Declaration) :
+    Core.Substitution (.named child :: Γ) (shapeType child.shape :: Γ) :=
+  fun v => match v with
+    | .here => .pack child (.var .here)
+    | .there v => .var (.there v)
+
+def variantBody (ctx : Context) (name : String) (child : Named.Declaration)
+    (body : Term (Types (refined ctx name (.named child) :: ctx)) t) :
+    Term (shapeType child.shape :: Types ctx) t :=
+  body.substitute (packSubstitution (Types ctx) child)
+
+def canonicalField : Nat → (ctx : Context) → Ariadne.Ty → Typed ctx → String → Span → Checked (Typed ctx)
+  | 0, _, _, _, _, span => refusal "A5101" "union field nesting budget exhausted" span
+  | n + 1, ctx, source, payload, name, span => do
+    match Check.unreadonly source, payload with
+    | .record fields, payload => recordField name span fields payload
+    | .union left right, ⟨.sum a b, payload⟩ =>
+      let ⟨result, leftBody⟩ ← canonicalField n (binding "#payload" a :: ctx) left ⟨a, .var .here⟩ name span
+      let rightBody ← canonicalField n (binding "#payload" b :: ctx) right ⟨b, .var .here⟩ name span
+      return ⟨result, .sumCase payload leftBody (← cast result rightBody span)⟩
+    | _, _ => refusal "A5102" "this named value has no common record field" span
+
 
 def arithmetic (op : String) (a b : Typed ctx) (span : Span) : Checked (Typed ctx) := do
   match a with
@@ -317,7 +353,7 @@ mutual
       | .member object field span =>
         match ← expression p n ctx object with
         | ⟨.named declaration, value⟩ =>
-          recordField field span (← Declarations.record p declaration span) ⟨_, .unpack value⟩
+          canonicalField n ctx (← Declarations.info p declaration.name span).source ⟨_, .unpack value⟩ field span
         | ⟨.list _, xs⟩ =>
           if field == "length" then return ⟨.number, .unary .length xs⟩
           refusal "A5104" "this array property has no lowering" span
@@ -411,15 +447,23 @@ mutual
     | 0, _, _ => refusal "A5101" "expression nesting budget exhausted" expr.span
     | n + 1, t, .conditional c a b _ => do
       condition p n ctx c [.return_ a a.span] [.return_ b b.span] t
+    | n + 1, .option inner, .record fields span =>
+      return .some (← asType p n ctx (.record fields span) inner)
     | n + 1, .named declaration, .record fields span => do
-      let target ← Declarations.record p declaration span
       for (name, value) in fields do
         if name == "" then refusal "A5102" "named record spread is not lowered yet" span
-        -- Every initializer must be in the total extraction fragment, including
-        -- extra source fields and fixed literal tags that carry no native data.
+        -- Check overwritten and erased initializers as well as retained fields.
         let _ ← expression p n ctx value
       let fields := fields.foldl (fun out (name, value) =>
         (out.filter (·.1 != name)) ++ [(name, value)]) []
+      if let some (left, right) ← Declarations.union p declaration span then
+        let source ← expressionSource p n ctx (.record fields span)
+        let child ← if Check.compatible source left.source then pure left else
+          if Check.compatible source right.source then pure right else
+          refusal "A5102" "record initializer does not select a union variant" span
+        let value ← asType p n ctx (.record fields span) (.named child.declaration)
+        return ← coercePlain (.named declaration) ⟨.named child.declaration, value⟩ span
+      let target ← Declarations.record p declaration span
       return .pack declaration (← cast (Core.shapeType declaration.shape)
         (← recordValue p n ctx fields target span) span)
     | n + 1, .list element, .array xs _ => elements p n ctx element xs
@@ -497,6 +541,21 @@ mutual
         condition p n ctx a [.if_ b (.block yes span) (.block no span) span] no t
       | .binary "||" a b span =>
         condition p n ctx a yes [.if_ b (.block yes span) (.block no span) span] t
+      | .binary op (.member (.var name _) field _) (.literal (.string tag) _) span =>
+        if op == "===" || op == "!==" then
+          if let some ⟨.named declaration, v⟩ := lookup ctx name then
+            if let some (left, right) ← Declarations.union p declaration span then
+              let payload ← cast (.sum (shapeType left.declaration.shape) (shapeType right.declaration.shape))
+                ⟨_, .unpack (.var v)⟩ span
+              return .sumCase payload
+                (← unionArm p n ctx name left field tag (op == "===") guard yes no t)
+                (← unionArm p n ctx name right field tag (op == "===") guard yes no t)
+            if let .record fields := Check.unreadonly (← Declarations.info p declaration.name span).source then
+              if let some source := fields.lookup field then
+                if let some actual := Declarations.fixedString source then
+                  return ← statements p n ctx (if (actual == tag) == (op == "===") then yes else no) t
+        return .ite (← asType p n ctx guard .bool)
+          (← statements p n ctx yes t) (← statements p n ctx no t)
       | .binary op (.var name _) (.literal .undefined _) _ =>
         if op == "===" || op == "!==" then
           if let some ⟨.option element, v⟩ := lookup ctx name then
@@ -510,6 +569,22 @@ mutual
       | _ =>
         return .ite (← asType p n ctx guard .bool)
           (← statements p n ctx yes t) (← statements p n ctx no t)
+
+  def unionArm (p : Program) : Nat → (ctx : Context) → String → (child : Declarations.Info) →
+      String → JSString → Bool → Expr → List Stmt → List Stmt → (t : Core.Ty) →
+      Checked (Term (shapeType child.declaration.shape :: Types ctx) t)
+    | 0, _, _, _, _, _, _, guard, _, _, _ => refusal "A5101" "union narrowing budget exhausted" guard.span
+    | n + 1, ctx, name, child, field, tag, positive, guard, yes, no, t => do
+      let inner := refined ctx name (.named child.declaration) :: ctx
+      let body ← match Check.unreadonly child.source with
+        | .record fields => do
+          let some source := fields.lookup field | refusal "A5102" "union variant lacks the discriminant" guard.span
+          let some actual := Declarations.fixedString source
+            | refusal "A5102" "union narrowing requires fixed literal discriminants" guard.span
+          statements p n inner (if (actual == tag) == positive then yes else no) t
+        | .union .. => condition p n inner guard yes no t
+        | _ => refusal "A5102" "only tagged record unions support narrowing" guard.span
+      return variantBody ctx name child.declaration body
 
 
   def localMutation (p : Program) (fuel : Nat) (ctx : Context) (expr : Expr) :
@@ -593,8 +668,15 @@ mutual
         let ⟨a, value⟩ ← expression p n ctx e
         return .let_ "ignored" value (← statements p n (binding "#ignored" a :: ctx) rest t)
       | .switch_ value cases span =>
+        let direct := match value with
+          | .member (.var name _) _ _ => match lookup ctx name with
+            | some ⟨.named ⟨_, .sum ..⟩, _⟩ => true
+            | _ => false
+          | _ => false
         if let some (_, fallback) := cases.find? (·.1.isNone) then
           if !cases.any (fun c => c.2.any (switchBreaks n)) then
+            if direct then
+              return ← statements p n ctx [switchDispatch value (.block fallback span) cases] t
             let ⟨a, value⟩ ← expression p n ctx value
             let saved := s!"#switch{n}"
             let dispatch := switchDispatch (.var saved span) (.block fallback span) cases
@@ -611,6 +693,9 @@ mutual
         let fallback := match cases.find? (·.1.isNone) with
           | some (_, body) => Stmt.block body span
           | none => jump
+        if direct then
+          return .let_ "joinSwitch" continuation.abstract
+            (← statements p n (binding name (.fn domain t) :: ctx) [switchDispatch value fallback cases] t)
         let ⟨a, value⟩ ← expression p n ctx value
         let saved := s!"#switch{n}"
         let inner := binding saved a :: binding name (.fn domain t) :: ctx
@@ -676,6 +761,7 @@ end
 def function (p : Program) (name : String) : Checked Core.Function := do
   if p.aliases.any (·.1 == "Int53") then
     refusal "A5104" "Int53 extraction requires range obligations, which are not implemented yet" {}
+  let p ← Declarations.withVariants p
   let some f := p.functions.find? (·.name == name)
     | refusal "A5101" "unknown extraction entry point" {}
   let ctx ← f.params.mapM fun param => return binding param.name (← type p param.ty param.span)
