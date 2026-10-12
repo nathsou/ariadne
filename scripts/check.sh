@@ -18,6 +18,10 @@ for source in examples/scalar/*.ts; do
   stem=$(basename "$source" .ts)
   lake build "Examples.Compiled.$stem"
 done
+for source in examples/shallow/*.ts; do
+  stem=$(basename "$source" .ts)
+  lake build "Examples.Shallow.$stem"
+done
 lake build Examples
 lake env lean scripts/Audit.lean
 
@@ -37,4 +41,5 @@ fi
 "$js" scripts/shallow.mjs
 "$js" scripts/shallow-arrays.mjs
 "$js" scripts/shallow-loops.mjs
+"$js" scripts/shallow-collections.mjs
 "$js" scripts/builtins.mjs

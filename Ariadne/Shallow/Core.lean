@@ -1,7 +1,7 @@
 import Ariadne.Value
 import Ariadne.Shallow.Prelude.Loop
 import Ariadne.Shallow.Prelude.Array
-import Ariadne.Shallow.Prelude.Set
+import Ariadne.Shallow.Key
 
 namespace Ariadne.Shallow.Core
 
@@ -11,11 +11,19 @@ inductive Ty where
   | unit | bool | int | number | string
   | option (value : Ty)
   | list (element : Ty)
+  | map (key : Key) (value : Ty)
+  | set (key : Key)
   | pair (left right : Ty)
   | fn (argument result : Ty)
   | step (state result : Ty)
   | exit (state result : Ty)
   deriving Repr, DecidableEq, BEq, Inhabited
+
+abbrev Key.type : Key → Ty
+  | .int => .int
+  | .number => .number
+  | .string => .string
+  | .bool => .bool
 
 abbrev Ty.denote : Ty → Type
   | .unit => Unit
@@ -25,6 +33,8 @@ abbrev Ty.denote : Ty → Type
   | .string => JSString
   | .option t => Option t.denote
   | .list t => List t.denote
+  | .map k v => k.Map v.denote
+  | .set k => k.Set
   | .pair a b => a.denote × b.denote
   | .fn a b => a.denote → b.denote
   | .step s r => Step s.denote r.denote
@@ -50,6 +60,13 @@ inductive Unary : Ty → Ty → Type where
   | isSome : Unary (.option t) .bool
   | length : Unary (.list t) .number
   | reverse : Unary (.list t) (.list t)
+  | mapSize : Unary (.map k v) .number
+  | mapKeys : Unary (.map k v) (.list k.type)
+  | mapValues : Unary (.map k v) (.list v)
+  | mapEntries : Unary (.map k v) (.list (.pair k.type v))
+  | setSize : Unary (.set k) .number
+  | setValues : Unary (.set k) (.list k.type)
+  | setEntries : Unary (.set k) (.list (.pair k.type k.type))
   deriving Repr
 
 inductive Binary : Ty → Ty → Ty → Type where
@@ -77,6 +94,12 @@ inductive Binary : Ty → Ty → Ty → Type where
   | or : Binary .bool .bool .bool
   | append : Binary (.list t) (.list t) (.list t)
   | get : Binary (.list t) .number (.option t)
+  | mapGet : Binary (.map k v) k.type (.option v)
+  | mapHas : Binary (.map k v) k.type .bool
+  | mapDelete : Binary (.map k v) k.type (.map k v)
+  | setHas : Binary (.set k) k.type .bool
+  | setAdd : Binary (.set k) k.type (.set k)
+  | setDelete : Binary (.set k) k.type (.set k)
   deriving Repr
 
 /-- Every term is well typed by construction. There are no dynamic value tags,
@@ -111,6 +134,9 @@ inductive Term : List Ty → Ty → Type where
   | listFind : Term Γ (.fn a (.fn .number .bool)) → Term Γ (.list a) → Term Γ (.option a)
   | listFindIndex : Term Γ (.fn a (.fn .number .bool)) → Term Γ (.list a) → Term Γ .number
   | listSlice : Term Γ (.list a) → Term Γ .number → Term Γ .number → Term Γ (.list a)
+  | mapEmpty : Term Γ (.map k v)
+  | mapSet : Term Γ (.map k v) → Term Γ k.type → Term Γ v → Term Γ (.map k v)
+  | setEmpty : Term Γ (.set k)
   | next : Term Γ s → Term Γ (.step s r)
   | stop : Term Γ s → Term Γ (.step s r)
   | ret : Term Γ r → Term Γ (.step s r)
@@ -154,6 +180,9 @@ def Term.rename (r : Renaming Γ Δ) : Term Γ t → Term Δ t
   | .listFind f xs => .listFind (f.rename r) (xs.rename r)
   | .listFindIndex f xs => .listFindIndex (f.rename r) (xs.rename r)
   | .listSlice xs a b => .listSlice (xs.rename r) (a.rename r) (b.rename r)
+  | .mapEmpty => .mapEmpty
+  | .setEmpty => .setEmpty
+  | .mapSet m k v => .mapSet (m.rename r) (k.rename r) (v.rename r)
   | .next a => .next (a.rename r)
   | .stop a => .stop (a.rename r)
   | .ret a => .ret (a.rename r)
@@ -196,6 +225,9 @@ def Term.substitute (s : Substitution Γ Δ) : Term Γ t → Term Δ t
   | .listFind f xs => .listFind (f.substitute s) (xs.substitute s)
   | .listFindIndex f xs => .listFindIndex (f.substitute s) (xs.substitute s)
   | .listSlice xs a b => .listSlice (xs.substitute s) (a.substitute s) (b.substitute s)
+  | .mapEmpty => .mapEmpty
+  | .setEmpty => .setEmpty
+  | .mapSet m k v => .mapSet (m.substitute s) (k.substitute s) (v.substitute s)
   | .next a => .next (a.substitute s)
   | .stop a => .stop (a.substitute s)
   | .ret a => .ret (a.substitute s)

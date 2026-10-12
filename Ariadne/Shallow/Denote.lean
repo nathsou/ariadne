@@ -10,6 +10,27 @@ def Denote.unary : Unary a b → a.denote → b.denote
   | .isSome, a => a.isSome
   | .length, xs => Float.Model.ofNat xs.length
   | .reverse, xs => xs.reverse
+  | @Unary.mapSize k _, value => match k with
+    | .number => Float.Model.ofNat (NumberMap.size value)
+    | .int | .string | .bool => Float.Model.ofNat (JSMap.size value)
+  | @Unary.mapKeys k _, value => match k with
+    | .number => NumberMap.keys value
+    | .int | .string | .bool => JSMap.keys value
+  | @Unary.mapValues k _, value => match k with
+    | .number => NumberMap.values value
+    | .int | .string | .bool => JSMap.values value
+  | @Unary.mapEntries k _, value => match k with
+    | .number => NumberMap.entries value
+    | .int | .string | .bool => JSMap.entries value
+  | @Unary.setSize k, value => match k with
+    | .number => Float.Model.ofNat (NumberSet.size value)
+    | .int | .string | .bool => Float.Model.ofNat (JSSet.size value)
+  | @Unary.setValues k, value => match k with
+    | .number => NumberSet.values value
+    | .int | .string | .bool => JSSet.values value
+  | @Unary.setEntries k, value => match k with
+    | .number => NumberSet.entries value
+    | .int | .string | .bool => JSSet.entries value
 
 def Denote.binary : Binary a b c → a.denote → b.denote → c.denote
   | .intAdd, a, b => a + b
@@ -36,6 +57,30 @@ def Denote.binary : Binary a b c → a.denote → b.denote → c.denote
   | .or, a, b => a || b
   | .append, a, b => a ++ b
   | .get, xs, i => JSArray.get xs i
+  | @Binary.mapGet k _, value, key => match k with
+    | .number => NumberMap.get value key
+    | .int | .string | .bool => JSMap.get value key
+  | @Binary.mapHas k _, value, key => match k with
+    | .number => NumberMap.has value key
+    | .int | .string | .bool => JSMap.has value key
+  | @Binary.mapDelete k _, value, key => match k with
+    | .number => NumberMap.delete value key
+    | .int | .string | .bool => JSMap.delete value key
+  | @Binary.setHas k, value, key => match k with
+    | .number => NumberSet.has value key
+    | .int | .string | .bool => JSSet.has value key
+  | @Binary.setAdd k, value, key => match k with
+    | .number => NumberSet.add value key
+    | .int | .string | .bool => JSSet.add value key
+  | @Binary.setDelete k, value, key => match k with
+    | .number => NumberSet.delete value key
+    | .int | .string | .bool => JSSet.delete value key
+
+def Denote.mapSet (k : Key) {v : Core.Ty} :
+    (Core.Ty.map k v).denote → k.type.denote → v.denote → (Core.Ty.map k v).denote :=
+  match k with
+  | .number => NumberMap.set
+  | .int | .string | .bool => JSMap.set
 
 /-- Structural interpretation into native Lean values. -/
 def Denote.term : Term Γ t → Core.Env Γ → t.denote
@@ -68,6 +113,9 @@ def Denote.term : Term Γ t → Core.Env Γ → t.denote
   | .listFind f xs, env => JSArray.find (term f env) (term xs env)
   | .listFindIndex f xs, env => JSArray.findIndex (term f env) (term xs env)
   | .listSlice xs a b, env => JSArray.slice (term xs env) (term a env) (term b env)
+  | @Term.mapEmpty _ k _, _ => Key.mapEmpty k
+  | @Term.setEmpty _ k, _ => Key.setEmpty k
+  | @Term.mapSet _ k _ m key value, env => mapSet k (term m env) (term key env) (term value env)
   | .next a, env => .next (term a env)
   | .stop a, env => .stop (term a env)
   | .ret a, env => .ret (term a env)

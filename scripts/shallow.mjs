@@ -94,6 +94,8 @@ try {
     ['function f(n: bigint): bigint { for (let i = 0n; i < n; i += 1n) { i += 1n; } return n; }', 'A5101'],
     ['function f(x: { value: number }): number { return x.value; }', 'A5102'],
     ['function copy(xs: number[]): number[] { return xs.slice(); } function f(xs: number[]): number[] { return copy(xs); }', 'A5102'],
+    ['function f(m: Map<string, bigint>): void { m.set("x", 1n); }', 'A5102'],
+    ['function f(xs: bigint[]): void { xs.push(1n); }', 'A5102'],
     ['function f(x: bigint): bigint { return x / 2n; }', 'A5104'],
     ['type Int53 = number; function f(x: Int53): Int53 { return x; }', 'A5104'],
   ]) {

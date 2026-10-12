@@ -146,6 +146,17 @@ def fresh : Expr → Bool
   | .call (.member _ method _) _ _ => ["map", "filter", "slice", "concat", "toReversed", "toSorted", "entries", "keys", "values"].contains method
   | _ => false
 
+/-- Entry iteration allocates a new pair at every step. Its members must still
+be immutable; copying a pair must not duplicate a nested mutable owner. -/
+def freshEntries (expr : Expr) (ty : Ty) : Bool :=
+  match unreadonly ty with
+  | .map k v => immutable k && immutable v
+  | .iterator (.tuple fields) =>
+    match expr with
+    | .call (.member _ "entries" _) [] _ => fields.all immutable
+    | _ => false
+  | _ => false
+
 /-- Container reads are shared loans, never additional owners. -/
 def sharedRead : Expr → Bool
   | .index .. => true
@@ -353,7 +364,10 @@ mutual
         let t := ts.foldl join ts.head!
         for (x, tx) in xs.zip ts do
           requireType tx t x.span
-          if referenceType tx && !immutable tx && !fresh x then
+          let copied ← match x with
+            | .spread e _ => pure (freshEntries e (← infer n ctx e))
+            | _ => pure false
+          if referenceType tx && !immutable tx && !fresh x && !copied then
             error "A3001" "stored mutable references must be freshly allocated" x.span
         return .array t
       | .record fields _ =>
@@ -517,12 +531,14 @@ mutual
         for x in xs do
           match x with
           | .spread e _ =>
-            let item ← match unreadonly (← infer n ctx e) with
+            let sourceType ← infer n ctx e
+            let item ← match unreadonly sourceType with
               | .array t | .iterator t | .set t => pure t
               | .map k v => pure (.tuple [k, v])
               | _ => error "A2002" "spread requires a collection or iterator" e.span
             requireType item t e.span
-            if referenceType item && !immutable item then error "A3001" "spread would share mutable elements" e.span
+            if referenceType item && !immutable item && !freshEntries e sourceType then
+              error "A3001" "spread would share mutable elements" e.span
           | _ =>
             checkExpr n ctx x t
             if referenceType t && !immutable t && !fresh x then

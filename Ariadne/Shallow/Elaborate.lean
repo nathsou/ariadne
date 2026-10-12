@@ -8,15 +8,17 @@ structure Binding where
   name : String
   ty : Core.Ty
   declared : Core.Ty
+  owned : Bool := false
 
 abbrev Context := List Binding
 abbrev Types (ctx : Context) := ctx.map Binding.ty
 abbrev Typed (ctx : Context) := (t : Core.Ty) × Term (Types ctx) t
 
-def binding (name : String) (ty : Core.Ty) : Binding := { name, ty, declared := ty }
+def binding (name : String) (ty : Core.Ty) (owned : Bool := false) : Binding := { name, ty, declared := ty, owned }
 
 def refined (ctx : Context) (name : String) (ty : Core.Ty) : Binding :=
-  { name, ty, declared := ((ctx.find? (·.name == name)).map Binding.declared).getD ty }
+  { name, ty, declared := ((ctx.find? (·.name == name)).map Binding.declared).getD ty,
+    owned := ((ctx.find? (·.name == name)).map Binding.owned).getD false }
 
 /-- Continuations capture each live source binding once. Assignments invalidate
 type refinements, just as in the frontend checker. -/
@@ -26,6 +28,14 @@ def afterWrites (ctx : Context) (writes : List String) : Context :=
 
 def refusal (code message : String) (span : Span) : Checked α :=
   .error { code, message, span, help := some "Use certify for the operational path. See docs/SHALLOW-PROGRESS.md for extraction coverage." }
+
+def collectionKey (ty : Ariadne.Ty) (span : Span) : Checked Core.Key :=
+  match ty with
+  | .bigint => .ok .int
+  | .number => .ok .number
+  | .string | .stringLiteral _ => .ok .string
+  | .boolean => .ok .bool
+  | _ => refusal "A5102" "collection keys require a scalar value representation" span
 
 def type (p : Program) (ty : Ariadne.Ty) (span : Span) : Checked Core.Ty := do
   let ty ← Check.resolve 100 p ty
@@ -41,7 +51,10 @@ where
     | n + 1, .union t .undefined => return .option (← convert n t)
     | n + 1, .union .undefined t => return .option (← convert n t)
     | n + 1, .readonly t | n + 1, .fieldReadonly t => convert n t
-    | n + 1, .array t => return .list (← convert n t)
+    | n + 1, .array t | n + 1, .iterator t => return .list (← convert n t)
+    | n + 1, .tuple [a, b] => return .pair (← convert n a) (← convert n b)
+    | n + 1, .map k v => return .map (← collectionKey k span) (← convert n v)
+    | _ + 1, .set k => return .set (← collectionKey k span)
     | _, _ => refusal "A5102" "this type does not yet have an extraction representation" span
 
 def lookup : (ctx : Context) → String → Option ((t : Core.Ty) × Var (Types ctx) t)
@@ -49,6 +62,12 @@ def lookup : (ctx : Context) → String → Option ((t : Core.Ty) × Var (Types 
   | b :: ctx, wanted =>
     if b.name == wanted then some ⟨b.ty, .here⟩
     else (lookup ctx wanted).map fun ⟨t, v⟩ => ⟨t, .there v⟩
+
+def keySourceType : Core.Key → Ariadne.Ty
+  | .int => .bigint
+  | .number => .number
+  | .string => .string
+  | .bool => .boolean
 
 def sourceType : Core.Ty → Ariadne.Ty
   | .unit => .undefined
@@ -58,6 +77,8 @@ def sourceType : Core.Ty → Ariadne.Ty
   | .string => .string
   | .option t => .union (sourceType t) .undefined
   | .list t => .array (sourceType t)
+  | .map k v => .map (keySourceType k) (sourceType v)
+  | .set k => .set (keySourceType k)
   | .pair a b => .tuple [sourceType a, sourceType b]
   | .fn a b => .function [sourceType a] (sourceType b)
   | .step .. | .exit .. => .void -- Internal control types are never source bindings.
@@ -89,6 +110,13 @@ def coerce (t : Core.Ty) (value : Typed ctx) (span : Span) : Checked (Term (Type
     if value.1 == .unit then return .none
     return .some (← cast inner value span)
   | _ => refusal "A5102" "expression requires an unsupported type conversion" span
+
+def iterable (value : Typed ctx) (span : Span) : Checked (Typed ctx) :=
+  match value with
+  | ⟨.list t, xs⟩ => .ok ⟨.list t, xs⟩
+  | ⟨.map k v, m⟩ => .ok ⟨.list (.pair k.type v), .unary .mapEntries m⟩
+  | ⟨.set k, s⟩ => .ok ⟨.list k.type, .unary .setValues s⟩
+  | _ => refusal "A5102" "this value has no iterable representation" span
 
 def arithmetic (op : String) (a b : Typed ctx) (span : Span) : Checked (Typed ctx) := do
   match a with
@@ -246,48 +274,82 @@ mutual
       | .conditional c a b span =>
         let t ← expressionResult p n ctx expr
         return ⟨t, ← condition p n ctx c [.return_ a span] [.return_ b span] t⟩
+      | .newMap key value span =>
+        let .map k v ← type p (.map key value) span | refusal "A5102" "invalid Map type" span
+        return ⟨.map k v, .mapEmpty⟩
+      | .newSet key span =>
+        let .set k ← type p (.set key) span | refusal "A5102" "invalid Set type" span
+        return ⟨.set k, .setEmpty⟩
       | .array xs span =>
         let some first := xs.head? | refusal "A5102" "empty arrays require a type annotation" span
         let element ← match first with
           | .spread e _ => do
-            let ⟨.list t, _⟩ ← expression p n ctx e | refusal "A5102" "spread requires a list" span
+            let ⟨.list t, _⟩ ← iterable (← expression p n ctx e) span | refusal "A5102" "spread requires a list" span
             pure t
           | _ => (expression p n ctx first).map Sigma.fst
         return ⟨.list element, ← elements p n ctx element xs⟩
       | .member object "length" span =>
-        let ⟨.list _, xs⟩ ← expression p n ctx object | refusal "A5104" "this length operation has no lowering" span
-        return ⟨.number, .unary .length xs⟩
+        match ← expression p n ctx object with
+        | ⟨.list _, xs⟩ => return ⟨.number, .unary .length xs⟩
+        | ⟨.pair _ _, _⟩ => return ⟨.number, .number 2 0⟩
+        | _ => refusal "A5104" "this length operation has no lowering" span
+      | .member object "size" span =>
+        match ← expression p n ctx object with
+        | ⟨.map _ _, m⟩ => return ⟨.number, .unary .mapSize m⟩
+        | ⟨.set _, s⟩ => return ⟨.number, .unary .setSize s⟩
+        | _ => refusal "A5102" "size requires a Map or Set" span
       | .index object index span =>
-        let ⟨.list t, xs⟩ ← expression p n ctx object | refusal "A5102" "indexing requires a list" span
-        return ⟨.option t, .binary .get xs (← asType p n ctx index .number)⟩
+        match ← expression p n ctx object with
+        | ⟨.list t, xs⟩ => return ⟨.option t, .binary .get xs (← asType p n ctx index .number)⟩
+        | ⟨.pair a b, pair⟩ =>
+          match index with
+          | .literal (.number 0 0) _ => return ⟨a, .fst pair⟩
+          | .literal (.number 1 0) _ => return ⟨b, .snd pair⟩
+          | _ => refusal "A5102" "pair indices must be 0 or 1" span
+        | _ => refusal "A5102" "indexing requires a list or pair" span
       | .call (.member object method _) args span =>
-        let ⟨.list t, xs⟩ ← expression p n ctx object
-          | refusal "A5104" "this method has no shallow lowering" span
-        match method, args with
-        | "map", [fn] =>
-          let b ← callbackResult p n ctx fn
-          return ⟨.list b, .listMap (← callback p n ctx [t, .number] b fn) xs⟩
-        | "filter", [fn] => return ⟨.list t, .listFilter (← callback p n ctx [t, .number] .bool fn) xs⟩
-        | "some", [fn] => return ⟨.bool, .listSome (← callback p n ctx [t, .number] .bool fn) xs⟩
-        | "every", [fn] => return ⟨.bool, .listEvery (← callback p n ctx [t, .number] .bool fn) xs⟩
-        | "find", [fn] => return ⟨.option t, .listFind (← callback p n ctx [t, .number] .bool fn) xs⟩
-        | "findIndex", [fn] => return ⟨.number, .listFindIndex (← callback p n ctx [t, .number] .bool fn) xs⟩
-        | "reduce", [fn, initial] =>
-          let ⟨acc, initial⟩ ← expression p n ctx initial
-          return ⟨acc, .listReduce (← callback p n ctx [acc, t, .number] acc fn) initial xs⟩
-        | "slice", [] => return ⟨.list t, xs⟩
-        | "slice", [start] => return ⟨.list t, .listSlice xs (← asType p n ctx start .number) (.unary .length xs)⟩
-        | "slice", [start, stop] => return ⟨.list t, .listSlice xs (← asType p n ctx start .number) (← asType p n ctx stop .number)⟩
-        | "toReversed", [] => return ⟨.list t, .unary .reverse xs⟩
-        | "concat", args =>
-          let mut result := xs
-          for arg in args do
-            let value ← expression p n ctx arg
-            let list ← if value.1 == .list t then cast (.list t) value arg.span
-              else (coerce t value arg.span).map (fun v => Term.cons v .nil)
-            result := .binary .append result list
-          return ⟨.list t, result⟩
-        | _, _ => refusal "A5104" "this array method has no shallow lowering" span
+        match ← expression p n ctx object with
+        | ⟨.map k v, m⟩ =>
+          match method, args with
+          | "get", [key] => return ⟨.option v, .binary .mapGet m (← asType p n ctx key k.type)⟩
+          | "has", [key] => return ⟨.bool, .binary .mapHas m (← asType p n ctx key k.type)⟩
+          | "keys", [] => return ⟨.list k.type, .unary .mapKeys m⟩
+          | "values", [] => return ⟨.list v, .unary .mapValues m⟩
+          | "entries", [] => return ⟨.list (.pair k.type v), .unary .mapEntries m⟩
+          | _, _ => refusal "A5104" "this Map method needs statement-level state lowering" span
+        | ⟨.set k, s⟩ =>
+          match method, args with
+          | "has", [key] => return ⟨.bool, .binary .setHas s (← asType p n ctx key k.type)⟩
+          | "keys", [] | "values", [] => return ⟨.list k.type, .unary .setValues s⟩
+          | "entries", [] => return ⟨.list (.pair k.type k.type), .unary .setEntries s⟩
+          | _, _ => refusal "A5104" "this Set method needs statement-level state lowering" span
+        | ⟨.list t, xs⟩ =>
+          match method, args with
+          | "map", [fn] =>
+            let b ← callbackResult p n ctx fn
+            return ⟨.list b, .listMap (← callback p n ctx [t, .number] b fn) xs⟩
+          | "filter", [fn] => return ⟨.list t, .listFilter (← callback p n ctx [t, .number] .bool fn) xs⟩
+          | "some", [fn] => return ⟨.bool, .listSome (← callback p n ctx [t, .number] .bool fn) xs⟩
+          | "every", [fn] => return ⟨.bool, .listEvery (← callback p n ctx [t, .number] .bool fn) xs⟩
+          | "find", [fn] => return ⟨.option t, .listFind (← callback p n ctx [t, .number] .bool fn) xs⟩
+          | "findIndex", [fn] => return ⟨.number, .listFindIndex (← callback p n ctx [t, .number] .bool fn) xs⟩
+          | "reduce", [fn, initial] =>
+            let ⟨acc, initial⟩ ← expression p n ctx initial
+            return ⟨acc, .listReduce (← callback p n ctx [acc, t, .number] acc fn) initial xs⟩
+          | "slice", [] => return ⟨.list t, xs⟩
+          | "slice", [start] => return ⟨.list t, .listSlice xs (← asType p n ctx start .number) (.unary .length xs)⟩
+          | "slice", [start, stop] => return ⟨.list t, .listSlice xs (← asType p n ctx start .number) (← asType p n ctx stop .number)⟩
+          | "toReversed", [] => return ⟨.list t, .unary .reverse xs⟩
+          | "concat", args =>
+            let mut result := xs
+            for arg in args do
+              let value ← expression p n ctx arg
+              let list ← if value.1 == .list t then cast (.list t) value arg.span
+                else (coerce t value arg.span).map (fun v => Term.cons v .nil)
+              result := .binary .append result list
+            return ⟨.list t, result⟩
+          | _, _ => refusal "A5104" "this array method has no shallow lowering" span
+        | _ => refusal "A5104" "this method has no shallow lowering" span
       | .call (.var name _) args span =>
         if name.startsWith "#internal" then
           let some ⟨t, v⟩ := lookup ctx name
@@ -317,6 +379,7 @@ mutual
     | n + 1, t, .conditional c a b _ => do
       condition p n ctx c [.return_ a a.span] [.return_ b b.span] t
     | n + 1, .list element, .array xs _ => elements p n ctx element xs
+    | n + 1, .pair a b, .array [x, y] _ => do return .pair (← asType p n ctx x a) (← asType p n ctx y b)
     | n + 1, t, expr => do coerce t (← expression p n ctx expr) expr.span
   def tupleArgs (p : Program) (fuel : Nat) (ctx : Context) (t : Core.Ty) (args : List Expr)
       (span : Span) : Checked (Term (Types ctx) t) :=
@@ -334,7 +397,7 @@ mutual
     | n + 1, ctx, t, x :: xs => do
       let rest ← elements p n ctx t xs
       match x with
-      | .spread value _ => return .binary .append (← asType p n ctx value (.list t)) rest
+      | .spread value _ => return .binary .append (← cast (.list t) (← iterable (← expression p n ctx value) value.span) value.span) rest
       | _ => return .cons (← asType p n ctx x t) rest
 
   def callback (p : Program) (fuel : Nat) (ctx : Context) (inputs : List Core.Ty) (result : Core.Ty) (fn : Expr) :
@@ -393,6 +456,32 @@ mutual
           (← statements p n ctx yes t) (← statements p n ctx no t)
 
 
+  def localMutation (p : Program) (fuel : Nat) (ctx : Context) (expr : Expr) :
+      Checked (Option (String × Typed ctx)) := do
+    match fuel with
+    | 0 => refusal "A5101" "mutation lowering budget exhausted" expr.span
+    | n + 1 =>
+      let .call (.member (.var name _) method _) args span := expr | return none
+      if !["set", "add", "delete", "clear", "push", "pop"].contains method then return none
+      let some target := ctx.find? (·.name == name) | refusal "A5102" "unknown mutation target" span
+      if !target.owned then refusal "A5102" "mutating a borrowed parameter requires a returned state component" span
+      let some ⟨ty, index⟩ := lookup ctx name | refusal "A5102" "unknown mutation target" span
+      let updated ← match (⟨ty, .var index⟩ : Typed ctx), method, args with
+        | ⟨.map k v, collection⟩, "set", [key, value] => do
+          pure ⟨.map k v, .mapSet collection (← asType p n ctx key k.type) (← asType p n ctx value v)⟩
+        | ⟨.map k v, collection⟩, "delete", [key] => do
+          pure ⟨.map k v, .binary .mapDelete collection (← asType p n ctx key k.type)⟩
+        | ⟨.map k v, _⟩, "clear", [] => pure ⟨.map k v, .mapEmpty⟩
+        | ⟨.set k, collection⟩, "add", [key] => do
+          pure ⟨.set k, .binary .setAdd collection (← asType p n ctx key k.type)⟩
+        | ⟨.set k, collection⟩, "delete", [key] => do
+          pure ⟨.set k, .binary .setDelete collection (← asType p n ctx key k.type)⟩
+        | ⟨.set k, _⟩, "clear", [] => pure ⟨.set k, .setEmpty⟩
+        | ⟨.list a, collection⟩, "push", [value] => do
+          pure ⟨.list a, .binary .append collection (.cons (← asType p n ctx value a) .nil)⟩
+        | _, _, _ => refusal "A5104" "this mutation has no native state operation" span
+      return some (name, updated)
+
   /-- Mutable locals become shadowed pure lets. Branches share their continuations.
   Structural loops carry an explicit value state and typed exits. -/
   def statements (p : Program) : Nat → (ctx : Context) → List Stmt → (t : Core.Ty) →
@@ -414,18 +503,20 @@ mutual
           (state.map fun b => .var b.name span) span) span
         return .let_ "join" continuation.abstract (← statements p n inner (ss ++ [jump]) t)
       | .let_ _ name annotation value _ =>
+        let owns := Check.fresh value
         let ⟨a, value⟩ ← match annotation with
           | none => expression p n ctx value
           | some ty => do
             let a ← type p ty value.span
             let value ← asType p n ctx value a
             pure ⟨a, value⟩
-        return .let_ name value (← statements p n (binding name a :: ctx) rest t)
+        return .let_ name value (← statements p n (binding name a owns :: ctx) rest t)
       | .assign (.var name _) value span =>
         let some target := ctx.find? (·.name == name) | refusal "A5102" "unknown assignment target" span
         let a := target.declared
+        let owns := Check.fresh value
         let value ← asType p n ctx value a
-        return .let_ name value (← statements p n (binding name a :: ctx) rest t)
+        return .let_ name value (← statements p n (binding name a owns :: ctx) rest t)
       | .if_ c a b span =>
         if rest.isEmpty then
           return ← condition p n ctx c [a] [b] t
@@ -441,6 +532,8 @@ mutual
         return .let_ "join" continuation.abstract (← condition p n inner c [a, jump] [b, jump] t)
       | .return_ value _ => asType p n ctx value t
       | .expr e _ =>
+        if let some (name, ⟨a, value⟩) ← localMutation p n ctx e then
+          return .let_ name value (← statements p n (binding name a true :: ctx) rest t)
         let ⟨a, value⟩ ← expression p n ctx e
         return .let_ "ignored" value (← statements p n (binding "#ignored" a :: ctx) rest t)
       | .switch_ value cases span =>
@@ -469,7 +562,7 @@ mutual
         return .let_ "joinSwitch" continuation.abstract
           (.let_ "switchValue" (value.rename Var.there) (← statements p n inner [dispatch] t))
       | .forOf _ name collection body span =>
-        let ⟨.list a, xs⟩ ← expression p n ctx collection
+        let ⟨.list a, xs⟩ ← iterable (← expression p n ctx collection) span
           | refusal "A5102" "this collection has no loop lowering" span
         let state := afterWrites ctx (Check.writes n body)
         let stateType := Core.environmentType (Types state)

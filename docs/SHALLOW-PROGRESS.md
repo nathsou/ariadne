@@ -7,7 +7,7 @@ when their exit criteria pass; finite native tests are not universal proofs.
 | --- | --- | --- |
 | M0 | Complete | Reference sources and historical diagnostics; pinned CI downloads; reserved extraction diagnostics; output preservation tests |
 | M1 | Complete | All reference programs check and certify; grammar, ownership checks, operational semantics and the builtin table have differential coverage. Conservative dialect limits are listed below. |
-| M2 | In progress | Typed Core, scalar/list extraction, structural loops, pure calls, structural denotation, three-way differential and tamper tests. Map/Set prelude laws are implemented. Named types, collection mutation, Int53 safety and reference extraction remain pending. |
+| M2 | In progress | Typed Core, scalar/list/Map/Set extraction, owned local updates, structural loops, pure calls, structural denotation, three-way differential and tamper tests. Named types, borrowed-state threading, Int53 safety and reference extraction remain pending. |
 | M3 | Pending | Loop invariant/fold lemmas and scalar native proofs are seeded; the universal proofs of the three emitted references remain pending. |
 | M4 | Pending | Fundamental lemma, footprint preservation, adequacy and source transfer |
 | M5 | Pending | Measures, larger ownership, polymorphism, exceptions and scalar backend integration |
@@ -71,8 +71,10 @@ indexed pure callbacks, map/filter/reduce/search, indexing, slicing, reversal,
 concatenation and spread. Calls with scalar or immutable parameters are accepted.
 Branch continuations are shared through typed tuple arguments. Array `for…of`,
 counted bigint loops, scalar switches, and nested break/continue/return lower to
-typed `Step`/`Exit` combinators. Named types, collection mutation, classes,
-number-valued counted loops, and Int53 refinement are explicitly refused.
+typed `Step`/`Exit` combinators. Maps and Sets have scalar keys, insertion-ordered
+iteration, reads, and locally owned updates. Owned array `push` becomes append.
+Named types, mutation through borrowed parameters, classes, number-valued counted
+loops, and Int53 refinement are explicitly refused.
 This is an incremental M2 slice, not the M2 reference-program exit gate.
 
 The extraction checkpoint passes the complete `scripts/check.sh` suite: 1,559
@@ -90,7 +92,7 @@ transfer.
 
 The collection prelude has insertion-ordered Map/Set representations carrying
 key-uniqueness proofs, lookup and update laws, insertion-order/size lemmas, and
-lookup equivalence. Map/Set source lowering is still pending. Array proof examples
+lookup equivalence. Array proof examples
 establish a fold specification and permutation invariance of a sum, a transform's
 nonnegativity, and a pure call's result directly over emitted definitions.
 
@@ -121,3 +123,11 @@ establish sum permutation invariance and first-match membership/floor properties
 The numeric collection wrappers prove update/lookup laws, idempotence, NaN
 membership, and positive-zero insertion behavior. Their subsequent library build
 and expanded axiom audit pass with 2,135 theorems.
+
+The collection checkpoint passes the full suite with 2,392 audited theorems and
+49 additional three-way cases. It checks insertion order, NaN and signed-zero
+keys, deletion, clearing, entry tuples, nested stored arrays, local array pushes,
+and preservation of readonly input heaps. The emitted histogram has universal
+fold, count, membership and permutation/lookup-equivalence proofs. Entry spreads
+copy fresh tuples with immutable members; copying nested mutable owners remains
+rejected. Shallow certificates are built serially to bound CI memory use.

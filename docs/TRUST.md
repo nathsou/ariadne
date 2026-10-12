@@ -46,10 +46,12 @@ and input-shape/ownership assumptions are additional boundaries. CI tools are
 not part of the proof chain.
 
 The initial `extract` fragment has scalars, readonly array operations, pure
-callbacks/calls, branches, local reassignment, array iteration, counted bigint
-loops, and scalar switches. Its generated `Shallow`
+callbacks/calls, branches, local reassignment, collection iteration and locally
+owned updates, counted bigint loops, and scalar switches. Its generated `Shallow`
 namespace contains definitions over `Int`, `Bool`, UTF-16 `JSString`, binary64
-`Float.Model`, `Option`, `List`, and explicit loop state/exit types. Its
+`Float.Model`, `Option`, `List`, ordered `JSMap`/`JSSet` values, and explicit loop
+state/exit types. Number-keyed collections use separate SameValueZero wrappers.
+Its
 `ElaborationChecks` and `DenotationChecks` namespaces certify the new links.
 Those checks do **not** establish adequacy: an elaborator bug could still choose
 the wrong Core, and a denotation bug could still give it the wrong source meaning.

@@ -6,6 +6,17 @@ open Core
 
 private def ident (name : String) : String := "«" ++ name ++ "»"
 
+private def keyText : Key → String
+  | .int => "_root_.Int"
+  | .number => "_root_.Float.Model"
+  | .string => "_root_.Ariadne.JSString"
+  | .bool => "_root_.Bool"
+
+private def mapNamespace (k : Key) : String :=
+  if k == .number then "_root_.Ariadne.Shallow.NumberMap" else "_root_.Ariadne.Shallow.JSMap"
+private def setNamespace (k : Key) : String :=
+  if k == .number then "_root_.Ariadne.Shallow.NumberSet" else "_root_.Ariadne.Shallow.JSSet"
+
 private def typeText : Core.Ty → String
   | .unit => "_root_.Unit"
   | .bool => "_root_.Bool"
@@ -14,6 +25,10 @@ private def typeText : Core.Ty → String
   | .string => "_root_.Ariadne.JSString"
   | .option t => s!"(_root_.Option {typeText t})"
   | .list t => s!"(_root_.List {typeText t})"
+  | .map .number v => s!"(_root_.Ariadne.Shallow.NumberMap {typeText v})"
+  | .map k v => s!"(_root_.Ariadne.Shallow.JSMap {keyText k} {typeText v})"
+  | .set .number => "_root_.Ariadne.Shallow.NumberSet"
+  | .set k => s!"(_root_.Ariadne.Shallow.JSSet {keyText k})"
   | .pair a b => s!"({typeText a} × {typeText b})"
   | .fn a b => s!"({typeText a} → {typeText b})"
   | .step a b => s!"(_root_.Ariadne.Shallow.Step {typeText a} {typeText b})"
@@ -30,6 +45,13 @@ private def unaryText : Unary a b → String → String
   | .isSome, a => s!"({a}).isSome"
   | .length, xs => s!"(_root_.Float.Model.ofNat ({xs}).length)"
   | .reverse, xs => s!"({xs}).reverse"
+  | @Unary.mapSize k _, value => s!"(_root_.Float.Model.ofNat ({mapNamespace k}.size {value}))"
+  | @Unary.mapKeys k _, value => s!"({mapNamespace k}.keys {value})"
+  | @Unary.mapValues k _, value => s!"({mapNamespace k}.values {value})"
+  | @Unary.mapEntries k _, value => s!"({mapNamespace k}.entries {value})"
+  | @Unary.setSize k, value => s!"(_root_.Float.Model.ofNat ({setNamespace k}.size {value}))"
+  | @Unary.setValues k, value => s!"({setNamespace k}.values {value})"
+  | @Unary.setEntries k, value => s!"({setNamespace k}.entries {value})"
 
 private def binaryText : Binary a b c → String → String → String
   | .intAdd, a, b | .numAdd, a, b => s!"({a} + {b})"
@@ -48,12 +70,18 @@ private def binaryText : Binary a b c → String → String → String
   | .or, a, b => s!"({a} || {b})"
   | .append, a, b => s!"({a} ++ {b})"
   | .get, xs, i => s!"(_root_.Ariadne.Shallow.JSArray.get {xs} {i})"
+  | @Binary.mapGet k _, value, key => s!"({mapNamespace k}.get {value} {key})"
+  | @Binary.mapHas k _, value, key => s!"({mapNamespace k}.has {value} {key})"
+  | @Binary.mapDelete k _, value, key => s!"({mapNamespace k}.delete {value} {key})"
+  | @Binary.setHas k, value, key => s!"({setNamespace k}.has {value} {key})"
+  | @Binary.setAdd k, value, key => s!"({setNamespace k}.add {value} {key})"
+  | @Binary.setDelete k, value, key => s!"({setNamespace k}.delete {value} {key})"
 
 private def closedTerms : Term Γ t → List ((t : Core.Ty) × Term [] t)
   | .closed body => closedTerms body ++ [⟨_, body⟩]
   | .unary _ a | .some a | .fst a | .snd a | .lam _ a | .next a | .stop a | .ret a => closedTerms a
   | .binary _ a b | .let_ _ a b | .cons a b | .pair a b | .app a b => closedTerms a ++ closedTerms b
-  | .ite a b c | .optionCase a b c | .each a b c | .exitCase a b c => closedTerms a ++ closedTerms b ++ closedTerms c
+  | .ite a b c | .optionCase a b c | .each a b c | .exitCase a b c | .mapSet a b c => closedTerms a ++ closedTerms b ++ closedTerms c
   | .listMap a b | .listFilter a b | .listSome a b | .listEvery a b |
       .listFind a b | .listFindIndex a b => closedTerms a ++ closedTerms b
   | .listReduce a b c | .listSlice a b c => closedTerms a ++ closedTerms b ++ closedTerms c
@@ -99,6 +127,9 @@ private def coreText (label : String) (keys : List String) : Term Γ t → Strin
   | .ret a => s!"(Core.Term.ret {coreText label keys a})"
   | .each a b c => s!"(Core.Term.each {coreText label keys a} {coreText label keys b} {coreText label keys c})"
   | .exitCase a b c => s!"(Core.Term.exitCase {coreText label keys a} {coreText label keys b} {coreText label keys c})"
+  | .mapEmpty => "Core.Term.mapEmpty"
+  | .setEmpty => "Core.Term.setEmpty"
+  | .mapSet m k v => s!"(Core.Term.mapSet {coreText label keys m} {coreText label keys k} {coreText label keys v})"
 
 private def termText (label : String) (keys : List String) (term : Term Γ t) (names : List String) (depth : Nat := 0) : String :=
   match term with
@@ -142,6 +173,9 @@ private def termText (label : String) (keys : List String) (term : Term Γ t) (n
   | .ret a => s!"(_root_.Ariadne.Shallow.Step.ret {termText label keys a names depth})"
   | .each xs init body => s!"(_root_.Ariadne.Shallow.Loop.each {termText label keys xs names depth} {termText label keys init names depth} {termText label keys body names depth})"
   | .exitCase e done ret => s!"(_root_.Ariadne.Shallow.Exit.elim {termText label keys e names depth} {termText label keys done names depth} {termText label keys ret names depth})"
+  | @Term.mapEmpty _ k _ => s!"{mapNamespace k}.empty"
+  | @Term.setEmpty _ k => s!"{setNamespace k}.empty"
+  | @Term.mapSet _ k _ m key value => s!"({mapNamespace k}.set {termText label keys m names depth} {termText label keys key names depth} {termText label keys value names depth})"
 
 def emit (source : String) (program : Program) (namespace_ : String) : Checked String := do
   if !program.classes.isEmpty then
