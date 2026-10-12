@@ -2,6 +2,7 @@
 import Ariadne.Certificate
 import Ariadne.Shallow.Elaborate
 import Ariadne.Shallow.Safety
+import Ariadne.Shallow.Adequacy.Function
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
@@ -522,7 +523,7 @@ theorem ts_addBorrowed_source {fuel : Nat} {args : List Value} {value : Value}
 
 end Extracted_classes
 
--- Shallow denotation certificates. Operational adequacy is not yet proved.
+-- Shallow denotation certificates. Source transfer is emitted for proved fragments.
 namespace Extracted_classes.Shallow
 open Ariadne Ariadne.Shallow
 set_option linter.unusedSimpArgs false

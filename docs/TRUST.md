@@ -9,7 +9,7 @@ model. No plugin-provided axiom or native decision procedure discharges those eq
 | Lexer/parser | Total Lean definitions; exact per-file source → tokens → AST equations | No independent ECMAScript grammar or universal grammar-equivalence proof |
 | Checker | Exact per-file acceptance equation; conservative type/ownership restrictions | No universal preservation/progress or ownership-soundness theorem |
 | Emission | Incorrect source/AST/compiled-code substitution fails kernel checking; source certificates are unique | The printer is untrusted; certification must finish successfully |
-| Shallow extraction | Intrinsically typed Core, kernel-checked elaboration equation and emitted-definition/denotation equality | Until M4, the denotation is the meaning of extracted code; no general equality with the operational model or shallow source-transfer theorem is claimed |
+| Shallow extraction | Intrinsically typed Core, kernel-checked elaboration equation and emitted-definition/denotation equality | Universal source transfer for the returned scalar-expression fragment; the general M4 fundamental lemma and transfer for stateful/data fragments remain pending |
 | Scalar compiler | Proof-carrying compilation and general equality with the evaluator at every fuel/input | Smaller fragment; explicit cells, no calls/collections or typed state optimization yet |
 | Fuel | All evaluator entry points preserve non-timeout outcomes at larger budgets; convergence and source returns are deterministic | Convergence is defined from evaluator approximations, not an independent ECMAScript semantics |
 | Scalars | Explicit binary64 logical model from Lean core, UTF-16 code units, signed unbounded integers | Conformance of these definitions to an actual JS engine is assumed and differentially tested |
@@ -62,8 +62,9 @@ constructors and explicit receiver functions are included in the kernel-checked
 elaboration equation. Mutating methods return updated receiver state.
 Its
 `ElaborationChecks` and `DenotationChecks` namespaces certify the new links.
-Those checks do **not** establish adequacy: an elaborator bug could still choose
-the wrong Core, and a denotation bug could still give it the wrong source meaning.
+Those two checks alone do **not** establish adequacy: an elaborator bug could
+still choose the wrong Core, and a denotation bug could still give it the wrong
+source meaning.
 The three-way differential tests provide regression evidence only. The separate
 operational `ts_*_source` theorems in the same file retain their existing meaning.
 
@@ -73,4 +74,17 @@ it remains part of the meaning/trust boundary until M4 relates it to operational
 execution. Current predicates retain primitive bit-equality guards in addition
 to ranges and nonzero divisors. Thus no general range-only binary64 exactness
 theorem is being assumed. Signed-zero results that cannot be represented by an
-integer are outside the safe domain. Source transfer remains pending.
+integer are outside the safe domain. Int53 source transfer remains pending.
+
+The returned scalar-expression fragment additionally emits `f_source` theorems,
+using syntax-directed correspondence witnesses in `SourceChecks`. The proved
+rules cover bigint/binary64/string/boolean primitives, conditionals and boolean
+short-circuiting, and quantify over every lawful interpretation and matching
+environment. Parameter-binding and call-frame lemmas connect these witnesses to
+the original `Semantics` evaluator and source certificate. The resulting
+`SourceReturnsFrom` theorem holds for arbitrary native scalar inputs and an
+arbitrary initial heap, without a fuel or whole-function execution premise.
+When a user function already occupies `f_source`, its generated theorem is named
+`SourceChecks.f.source`. Unsupported fragments retain denotation certificates
+and do not receive an operational theorem. Stateful functions, collections,
+classes and Int53 still await the full M4 correspondence.

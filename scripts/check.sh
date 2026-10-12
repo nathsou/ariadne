@@ -40,6 +40,7 @@ fi
 "$js" scripts/reference.mjs
 "$js" scripts/reference-operational.mjs
 "$js" scripts/shallow.mjs
+"$js" scripts/source-transfer.mjs
 "$js" scripts/shallow-arrays.mjs
 "$js" scripts/shallow-loops.mjs
 "$js" scripts/shallow-collections.mjs

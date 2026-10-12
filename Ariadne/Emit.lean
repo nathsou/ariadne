@@ -33,9 +33,11 @@ def emit (source : String) (program : Program) (namespace_ : String := "Translat
   out := out ++ "def certificate : Certificate source := ⟨program, source_checked⟩\n\n"
   for f in program.functions do
     let name := leanName f.name
+    let sourceName := if program.functions.any (fun other => leanName other.name == name ++ "_source") then
+      name ++ ".source" else name ++ "_source"
     out := out ++ s!"/-- Executable, fuel-indexed model of TypeScript `{f.name}`. -/\n"
     out := out ++ s!"def {name} (fuel : Nat) (args : List Value) : Result Value :=\n  run program {quote f.name} fuel args\n\n"
-    out := out ++ s!"theorem {name}_source " ++ "{fuel : Nat} {args : List Value} {value : Value}\n"
+    out := out ++ s!"theorem {sourceName} " ++ "{fuel : Nat} {args : List Value} {value : Value}\n"
     out := out ++ s!"    (h : {name} fuel args = .ok value) : SourceReturns source {quote f.name} args value :=\n"
     out := out ++ "  certificate.transfer_at h\n\n"
   return out ++ s!"end {namespace_}\n"

@@ -2,6 +2,7 @@
 import Ariadne.Certificate
 import Ariadne.Shallow.Elaborate
 import Ariadne.Shallow.Safety
+import Ariadne.Shallow.Adequacy.Function
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
@@ -826,7 +827,7 @@ theorem ts_afterNames_source {fuel : Nat} {args : List Value} {value : Value}
 
 end Extracted_arrays
 
--- Shallow denotation certificates. Operational adequacy is not yet proved.
+-- Shallow denotation certificates. Source transfer is emitted for proved fragments.
 namespace Extracted_arrays.Shallow
 open Ariadne Ariadne.Shallow
 set_option linter.unusedSimpArgs false
@@ -1116,6 +1117,31 @@ theorem DenotationChecks.«program» :
       Denote.function (interp := Interpretation.value) CoreArtifacts.«program» := by
   unfold Extracted_arrays.Shallow.«program»
   simp only [Denote.function, CoreArtifacts.«program», Denote.term, Core.Var.get] <;> rfl
+
+def SourceChecks.«program».function : Ariadne.Function := { name := "program",   params := [{ name := "Bool", ty := Ariadne.Ty.bigint, span := { start := 1657, stop := 1661 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "+"                  (Ariadne.Expr.var "Bool" { start := 1688, stop := 1692 })                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 1695, stop := 1697 })                  { start := 1688, stop := 1697 })                { start := 1681, stop := 1687 }]             { start := 1679, stop := 1700 },   exported := true,   decreases := none,   span := { start := 1640, stop := 1648 } }
+
+def SourceChecks.«program».names : Adequacy.Names CoreArtifacts.«program».params :=
+  Adequacy.Names.fromList ["Bool"]
+
+theorem SourceChecks.«program».translated :
+    Adequacy.ScalarExpr SourceChecks.«program».names .int (Ariadne.Expr.binary   "+"   (Ariadne.Expr.var "Bool" { start := 1688, stop := 1692 })   (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 1695, stop := 1697 })   { start := 1688, stop := 1697 }) CoreArtifacts.«program».body := by
+  exact .binary .intAdd (.var .int (Ariadne.Shallow.Core.Var.here) _) (.int _ _) _
+
+theorem «program_source» («_Bool#arg» : _root_.Int) (heap : Heap) :
+    SourceReturnsFrom _root_.Extracted_arrays.source "program" heap [(Value.bigint «_Bool#arg»)] (Value.bigint («program» «_Bool#arg»)) := by
+  have inputs : Adequacy.Environment SourceChecks.«program».names
+      (Adequacy.bindArguments { heap } SourceChecks.«program».function.params [(Value.bigint «_Bool#arg»)])
+      (interp := Interpretation.value) («_Bool#arg», ()) := by
+    intro t v scalar
+    cases v with
+    | here =>
+      cases scalar
+      exact Adequacy.lookup_declare_self _ _ _
+    | there v =>
+      cases v
+  exact Adequacy.scalar_source _root_.Extracted_arrays.certificate SourceChecks.«program».function SourceChecks.«program».names .int CoreArtifacts.«program».body
+    (Ariadne.Expr.binary   "+"   (Ariadne.Expr.var "Bool" { start := 1688, stop := 1692 })   (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 1695, stop := 1697 })   { start := 1688, stop := 1697 }) ({ start := 1681, stop := 1687 }) ({ start := 1679, stop := 1700 })
+    (by kernel_rfl) (by kernel_rfl) SourceChecks.«program».translated Interpretation.value («_Bool#arg», ()) heap [(Value.bigint «_Bool#arg»)] inputs
 
 def CoreArtifacts.«Int» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int)], result := Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int), body := (Core.Term.listMap (Core.Term.lam "#unused1" (Core.Term.lam "#unused0" (Core.Term.int (1)))) (Core.Term.var (Ariadne.Shallow.Core.Var.here))) }
 

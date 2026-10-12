@@ -58,3 +58,5 @@ import Examples.Proofs.ReferenceDecision
 import Examples.Proofs.ReferenceRegisters
 import Examples.Proofs.ReferenceTree
 import Examples.Proofs.Int53Safety
+import Examples.Shallow.source
+import Examples.Proofs.SourceTransfer

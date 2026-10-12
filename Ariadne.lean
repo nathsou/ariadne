@@ -12,3 +12,6 @@ import Ariadne.Shallow.Prelude.Int53Exact
 import Ariadne.Shallow.Represents
 import Ariadne.SourceFrom
 import Ariadne.Convergence
+import Ariadne.Shallow.Adequacy.Function
+import Ariadne.Shallow.Adequacy.Array
+import Ariadne.Shallow.Adequacy.Map

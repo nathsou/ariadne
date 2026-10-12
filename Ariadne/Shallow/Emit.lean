@@ -7,6 +7,22 @@ open Core
 
 private def ident (name : String) : String := "«" ++ name ++ "»"
 
+private def scalarKind : Core.Ty → Option String
+  | .unit => some ".unit"
+  | .bool => some ".bool"
+  | .int => some ".int"
+  | .number => some ".number"
+  | .string => some ".string"
+  | _ => none
+
+private def scalarValue : Core.Ty → String → Option String
+  | .unit, _ => some "Value.undefined"
+  | .bool, value => some s!"(Value.boolean {value})"
+  | .int, value => some s!"(Value.bigint {value})"
+  | .number, value => some s!"(Value.number {value})"
+  | .string, value => some s!"(Value.string {value})"
+  | _, _ => none
+
 private def keyText : Key → String
   | .int | .int53 => "_root_.Int"
   | .number => "_root_.Float.Model"
@@ -40,6 +56,92 @@ private def typeText : Core.Ty → String
 private def index : Var Γ t → Nat
   | .here => 0
   | .there v => index v + 1
+
+private def unaryRuleText : Unary a b → String → Option String
+  | .not, "!" => some ".not"
+  | .intNeg, "-" => some ".intNeg"
+  | .numNeg, "-" => some ".numNeg"
+  | _, _ => none
+
+private def binaryRuleText : Binary a b c → String → Option String
+  | .intAdd, "+" => some ".intAdd" | .intSub, "-" => some ".intSub" | .intMul, "*" => some ".intMul"
+  | .intEq, "===" => some ".intEq" | .intLt, "<" => some ".intLt" | .intLe, "<=" => some ".intLe"
+  | .numAdd, "+" => some ".numAdd" | .numSub, "-" => some ".numSub" | .numMul, "*" => some ".numMul"
+  | .numDiv, "/" => some ".numDiv" | .numMod, "%" => some ".numMod"
+  | .numEq, "===" => some ".numEq" | .numLt, "<" => some ".numLt" | .numLe, "<=" => some ".numLe"
+  | .strAppend, "+" => some ".strAppend" | .strEq, "===" => some ".strEq"
+  | .strLt, "<" => some ".strLt" | .strLe, "<=" => some ".strLe" | .boolEq, "===" => some ".boolEq"
+  | _, _ => none
+
+/-- Print correspondence witnesses only for rules with a proved operational
+interpretation. The Lean kernel checks the witness against the source AST and
+the emitted Core term, so this printer is not a semantic oracle. -/
+private def scalarProof (names : List String) : Expr → Term Γ t → Option String
+  | .literal .undefined _, .unit => some ".unit _"
+  | .literal (.boolean a) _, .bool b => if a == b then some ".bool _ _" else none
+  | .literal (.bigint a) _, .int b => if a == b then some ".int _ _" else none
+  | .literal (.number a e) _, .number b f => if a == b && e == f then some ".number _ _ _" else none
+  | .literal (.string a) _, .string b => if a == b then some ".string _ _" else none
+  | .var name _, .var v => do
+    if names[index v]? != some name then none else
+      return s!".var {← scalarKind t} ({reprStr v}) _"
+  | .unary source arg _, .unary op value => do
+    let rule ← unaryRuleText op source
+    return s!".unary {rule} ({← scalarProof names arg value}) _"
+  | .binary source lhs rhs _, .binary op a b => do
+    let rule ← binaryRuleText op source
+    return s!".binary {rule} ({← scalarProof names lhs a}) ({← scalarProof names rhs b}) _"
+  | .conditional condition yes no _, .ite c a b => do
+    return s!".conditional ({← scalarProof names condition c}) ({← scalarProof names yes a}) ({← scalarProof names no b}) _"
+  | .binary "&&" lhs rhs _, .ite a b (.bool false) => do
+    return s!".and ({← scalarProof names lhs a}) ({← scalarProof names rhs b}) _"
+  | .binary "||" lhs rhs _, .ite a (.bool true) b => do
+    return s!".or ({← scalarProof names lhs a}) ({← scalarProof names rhs b}) _"
+  | .unary "!" arg _, .ite a (.bool false) (.bool true) => do
+    return s!".notIte ({← scalarProof names arg a}) _"
+  | expression, .ite a (.bool true) (.bool false) => do
+    return s!".boolIte ({← scalarProof names expression a})"
+  | _, _ => none
+termination_by structural _ term => term
+
+private def inputProof (count : Nat) : String :=
+  let rec casesFor (remaining : Nat) (indent : String) : String :=
+    match remaining with
+    | 0 => indent ++ "cases v\n"
+    | n + 1 =>
+      indent ++ "cases v with\n" ++ indent ++ "| here =>\n" ++ indent ++ "  cases scalar\n" ++
+      String.join (List.replicate n (indent ++ "  apply Adequacy.lookup_declare_other (by decide)\n")) ++
+      indent ++ "  exact Adequacy.lookup_declare_self _ _ _\n" ++
+      indent ++ "| there v =>\n" ++ casesFor n (indent ++ "  ")
+  "    intro t v scalar\n" ++ casesFor count "    "
+
+private def sourceTheorem (namespace_ : String) (f : Ariadne.Function) (core : Core.Function)
+    (params : String) (names : List String) (safeEnv : String) (publicAlias : Bool) : Option String := do
+  let .block [.return_ expression returnSpan] blockSpan := f.body | none
+  let kind ← scalarKind core.result
+  let proof ← scalarProof (f.params.map Param.name) expression core.body
+  let args ← (core.params.zip names).mapM fun (ty, name) => scalarValue ty name
+  let encoded ← scalarValue core.result s!"({ident f.name}{String.join (names.map (" " ++ ·))})"
+  let args := "[" ++ String.intercalate ", " args ++ "]"
+  let checkName := s!"SourceChecks.{ident f.name}"
+  let theoremName := if publicAlias then ident (f.name ++ "_source") else s!"{checkName}.source"
+  let coreName := s!"CoreArtifacts.{ident f.name}"
+  let functionData := (reprStr f).replace "\n" " "
+  let exprData := (reprStr expression).replace "\n" " "
+  return s!"def {checkName}.function : Ariadne.Function := {functionData}\n\n" ++
+    s!"def {checkName}.names : Adequacy.Names {coreName}.params :=\n" ++
+    s!"  Adequacy.Names.fromList {reprStr (f.params.map Param.name)}\n\n" ++
+    s!"theorem {checkName}.translated :\n" ++
+    s!"    Adequacy.ScalarExpr {checkName}.names {kind} ({exprData}) {coreName}.body := by\n" ++
+    s!"  exact {proof}\n\n" ++
+    s!"theorem {theoremName}{params} (heap : Heap) :\n" ++
+    s!"    SourceReturnsFrom _root_.{namespace_}.source {reprStr f.name} heap {args} {encoded} := by\n" ++
+    s!"  have inputs : Adequacy.Environment {checkName}.names\n" ++
+    s!"      (Adequacy.bindArguments \u007b heap \u007d {checkName}.function.params {args})\n" ++
+    s!"      (interp := Interpretation.value) {safeEnv} := by\n" ++ inputProof core.params.length ++
+    s!"  exact Adequacy.scalar_source _root_.{namespace_}.certificate {checkName}.function {checkName}.names {kind} {coreName}.body\n" ++
+    s!"    ({exprData}) ({reprStr returnSpan}) ({reprStr blockSpan})\n" ++
+    s!"    (by kernel_rfl) (by kernel_rfl) {checkName}.translated Interpretation.value {safeEnv} heap {args} inputs\n\n"
 
 private def unaryText : Unary a b → String → String
   | .intToInt53, a | .int53ToInt, a => a
@@ -329,8 +431,8 @@ def emit (source : String) (program : Program) (namespace_ : String) : Checked S
     core.params.flatMap typeDeclarations ++ termDeclarations core.body).eraseDups
   let declarations := (← roots.mapM (declarationOrder expanded 100)).flatten.eraseDups
   let mut out := (Ariadne.emit source original namespace_).replace
-    "import Ariadne.Certificate\n" "import Ariadne.Certificate\nimport Ariadne.Shallow.Elaborate\nimport Ariadne.Shallow.Safety\n"
-  out := out ++ "\n-- Shallow denotation certificates. Operational adequacy is not yet proved.\n" ++
+    "import Ariadne.Certificate\n" "import Ariadne.Certificate\nimport Ariadne.Shallow.Elaborate\nimport Ariadne.Shallow.Safety\nimport Ariadne.Shallow.Adequacy.Function\n"
+  out := out ++ "\n-- Shallow denotation certificates. Source transfer is emitted for proved fragments.\n" ++
     s!"namespace {namespace_}.Shallow\nopen Ariadne Ariadne.Shallow\nset_option linter.unusedSimpArgs false\n\n"
   let mut interpretation := "Named.canonical"
   for declaration in declarations do
@@ -380,6 +482,10 @@ def emit (source : String) (program : Program) (namespace_ : String) : Checked S
       s!"  unfold {namespace_}.Shallow.{functionName}\n" ++
       s!"  simp only [Denote.function, {coreName}, Denote.term, Core.Var.get" ++
       String.join (checks.map (", " ++ ·)) ++ "] <;> rfl\n\n"
+    if original.functions.any (·.name == f.name) then
+      if let some theoremText := sourceTheorem namespace_ f core params names safeEnv
+          (!(program.functions.any (·.name == f.name ++ "_source"))) then
+        out := out ++ theoremText
   return out ++ s!"end {namespace_}.Shallow\n"
 
 end Ariadne.Shallow

@@ -149,7 +149,7 @@ private def process (args : List String) : IO UInt32 := do
       return 1
     if let some parent := outputPath.parent then IO.FS.createDirAll parent
     IO.FS.writeFile outputPath artifact
-    IO.println s!"Certified shallow denotation: {out}. Operational adequacy is not yet proved."
+    IO.println s!"Certified shallow denotation: {out}. Source-transfer theorems are included for proved fragments."
     return 0
   if let some parent := outputPath.parent then IO.FS.createDirAll parent
   IO.FS.writeFile outputPath artifact

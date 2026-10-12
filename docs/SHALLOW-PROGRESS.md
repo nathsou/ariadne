@@ -9,7 +9,7 @@ when their exit criteria pass; finite native tests are not universal proofs.
 | M1 | Complete | All reference programs check and certify; grammar, ownership checks, operational semantics and the builtin table have differential coverage. Conservative dialect limits are listed below. |
 | M2 | Complete | Typed Core, scalar/list/Map/Set extraction, owned local updates, structural loops, pure calls, structural denotation, three-way differential and tamper tests. Lawful named records/unions and direct borrowed-state calls are implemented; class states, Int53 guards and original reference extraction are implemented; the full integration regression gate passed. |
 | M3 | In progress | The original decision extraction has universal membership, floor and permutation proofs. Register convergence and idempotence are proved against the emitted methods. All three original reference proofs are complete over emitted definitions; general Int53 exactness and remaining library lemmas are pending. |
-| M4 | In progress | Heap framing, compositional data relations and external-heap source predicates are proved. The fundamental lemma and generated source transfer remain pending. |
+| M4 | In progress | Heap framing, compositional data relations and external-heap source predicates are proved. Scalar expression correspondence and generated source transfer are proved; full stateful/data adequacy remains pending. |
 | M5 | Pending | Measures, larger ownership, polymorphism, exceptions and scalar backend integration |
 
 ## Reference specifications
@@ -316,3 +316,31 @@ audit (4,206 theorems). `Convergence.lean` proves compositional evaluation rules
 for strict scalar operations, conditionals, short-circuit boolean operators and
 member/index reads. These rules preserve source evaluation order and combine
 finite witnesses through the existing fuel monotonicity theorem.
+
+## First generated operational source theorems
+
+`Adequacy/Scalar.lean` proves the fundamental expression lemma by induction on a
+source/Core correspondence witness. Its supported scalar primitives, conditional
+choices and boolean short-circuiting converge in the original evaluator and
+preserve state, for every lawful interpretation and matching environment. The
+function bridge proves parameter-cell binding and call-frame behavior. The
+printer now emits checked witnesses and `f_source` for functions consisting of a
+return of a supported scalar expression; it does not assert adequacy for the
+remaining fragment. No whole-program execution assumption occurs in these
+theorems. The original decision/register/tree transfers are still pending.
+
+The new `source.ts` fixture covers ten universal emitted source theorems. Native
+algebraic and short-circuit facts transfer to the original source for arbitrary
+inputs and arbitrary initial heaps. A user function named `choice_source`
+exposed a name collision in the legacy operational emitter as well; both emitters
+now preserve the user name and place the colliding theorem in a namespace.
+Three additional tamper checks alter primitive rules, parameter bindings and
+source-function selection, independently of the existing source/Core/native
+certificate checks.
+
+Array length and indexed reads are now proved against heap representations;
+index coercion covers every binary64 input and returned elements borrow a
+sub-footprint. Map lookup likewise agrees with native ordered lookup under the
+scalar key equality relation. Bigint, string, boolean and SameValueZero number
+keys discharge that relation directly. These primitive lemmas do not yet supply
+whole-function transfer for collection code.

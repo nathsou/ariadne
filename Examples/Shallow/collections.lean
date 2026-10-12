@@ -2,6 +2,7 @@
 import Ariadne.Certificate
 import Ariadne.Shallow.Elaborate
 import Ariadne.Shallow.Safety
+import Ariadne.Shallow.Adequacy.Function
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
@@ -1508,7 +1509,7 @@ theorem ts_tupleSize_source {fuel : Nat} {args : List Value} {value : Value}
 
 end Extracted_collections
 
--- Shallow denotation certificates. Operational adequacy is not yet proved.
+-- Shallow denotation certificates. Source transfer is emitted for proved fragments.
 namespace Extracted_collections.Shallow
 open Ariadne Ariadne.Shallow
 set_option linter.unusedSimpArgs false
