@@ -755,93 +755,13 @@ end Extracted_scalars
 namespace Extracted_scalars.Wrapper
 open Ariadne
 
-def source : String := "// Generated ownership entry wrappers. Requires the Ariadne pristine realm contract.\nexport function abs(x: bigint): bigint { if (x < 0n) { return -x; } return x; }\nexport function update(x: bigint, y: bigint, flag: boolean): bigint { let total = x; if (flag) { total += y; } else { total -= y; } return total * 2n; }\nexport function fallback(x: bigint | undefined): bigint { return x ?? 9n; }\nexport function decimal(x: number, y: number): number { return (x * y) / (x + y); }\nexport function hello(name: string): string { return 'hello ' + name; }\nexport function optional(flag: boolean, value: bigint): bigint | undefined {\n  if (flag) { return value; }\n  return undefined;\n}\nexport function textBefore(a: string, b: string): boolean { return a < b; }\nexport function remainder(a: number, b: number): number { return a % b; }\nexport function scoped(x: bigint): bigint {\n  { let temporary = x + 1n; x = temporary * 2n; }\n  let temporary = x - 3n;\n  return temporary;\n}\nexport function abs_denotes(): bigint { return 3n; }\nexport function CoreArtifacts(): bigint { return 4n; }\n\nexport function guarded(x: bigint | undefined, floor: bigint): bigint {\n  if (x === undefined) { return floor; }\n  return x + 1n;\n}\n\nexport function conjunction(x: bigint | undefined, floor: bigint): boolean {\n  return x !== undefined && x > floor;\n}\n\nexport function disjunction(x: bigint | undefined, floor: bigint): boolean {\n  return x === undefined || x >= floor;\n}\n\nexport function ternary(x: bigint | undefined): bigint {\n  return x !== undefined ? x + 1n : 0n;\n}\n\nexport function forget(x: bigint | undefined, clear: boolean): bigint | undefined {\n  if (x !== undefined) {\n    if (clear) { x = undefined; } else { x += 1n; }\n  }\n  return x;\n}\n\nexport function scopedTypes(x: bigint): bigint {\n  { const temporary: string = 'inner'; const unused = temporary + '!'; }\n  let temporary: bigint = x;\n  if (x > 0n) { temporary += 1n; }\n  return temporary;\n}\n"
+def source : String := Ownership.Wrap.header ++ _root_.Extracted_scalars.source
 
-def characters : List Char := ['/', '/', ' ', 'G', 'e', 'n', 'e', 'r', 'a', 't', 'e', 'd', ' ', 'o', 'w', 'n', 'e', 'r', 's', 'h', 'i', 'p', ' ', 'e',
- 'n', 't', 'r', 'y', ' ', 'w', 'r', 'a', 'p', 'p', 'e', 'r', 's', '.', ' ', 'R', 'e', 'q', 'u', 'i', 'r', 'e', 's', ' ',
- 't', 'h', 'e', ' ', 'A', 'r', 'i', 'a', 'd', 'n', 'e', ' ', 'p', 'r', 'i', 's', 't', 'i', 'n', 'e', ' ', 'r', 'e', 'a',
- 'l', 'm', ' ', 'c', 'o', 'n', 't', 'r', 'a', 'c', 't', '.', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n',
- 'c', 't', 'i', 'o', 'n', ' ', 'a', 'b', 's', '(', 'x', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'i',
- 'g', 'i', 'n', 't', ' ', '{', ' ', 'i', 'f', ' ', '(', 'x', ' ', '<', ' ', '0', 'n', ')', ' ', '{', ' ', 'r', 'e', 't',
- 'u', 'r', 'n', ' ', '-', 'x', ';', ' ', '}', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'x', ';', ' ', '}', '\n', 'e',
- 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'u', 'p', 'd', 'a', 't', 'e', '(', 'x', ':',
- ' ', 'b', 'i', 'g', 'i', 'n', 't', ',', ' ', 'y', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ',', ' ', 'f', 'l', 'a', 'g',
- ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', ' ', 'l', 'e', 't',
- ' ', 't', 'o', 't', 'a', 'l', ' ', '=', ' ', 'x', ';', ' ', 'i', 'f', ' ', '(', 'f', 'l', 'a', 'g', ')', ' ', '{', ' ',
- 't', 'o', 't', 'a', 'l', ' ', '+', '=', ' ', 'y', ';', ' ', '}', ' ', 'e', 'l', 's', 'e', ' ', '{', ' ', 't', 'o', 't',
- 'a', 'l', ' ', '-', '=', ' ', 'y', ';', ' ', '}', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 't', 'o', 't', 'a', 'l', ' ',
- '*', ' ', '2', 'n', ';', ' ', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n',
- ' ', 'f', 'a', 'l', 'l', 'b', 'a', 'c', 'k', '(', 'x', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '|', ' ', 'u', 'n',
- 'd', 'e', 'f', 'i', 'n', 'e', 'd', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r',
- 'n', ' ', 'x', ' ', '?', '?', ' ', '9', 'n', ';', ' ', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n',
- 'c', 't', 'i', 'o', 'n', ' ', 'd', 'e', 'c', 'i', 'm', 'a', 'l', '(', 'x', ':', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ',',
- ' ', 'y', ':', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ')', ':', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ' ', '{', ' ', 'r', 'e',
- 't', 'u', 'r', 'n', ' ', '(', 'x', ' ', '*', ' ', 'y', ')', ' ', '/', ' ', '(', 'x', ' ', '+', ' ', 'y', ')', ';', ' ',
- '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'h', 'e', 'l', 'l', 'o',
- '(', 'n', 'a', 'm', 'e', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ')', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ' ', '{',
- ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '\'', 'h', 'e', 'l', 'l', 'o', ' ', '\'', ' ', '+', ' ', 'n', 'a', 'm', 'e',
- ';', ' ', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'o', 'p', 't',
- 'i', 'o', 'n', 'a', 'l', '(', 'f', 'l', 'a', 'g', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ',', ' ', 'v', 'a', 'l',
- 'u', 'e', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '|', ' ', 'u', 'n',
- 'd', 'e', 'f', 'i', 'n', 'e', 'd', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'f', 'l', 'a', 'g', ')', ' ', '{',
- ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'v', 'a', 'l', 'u', 'e', ';', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u',
- 'r', 'n', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ';', '\n', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ',
- 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 't', 'e', 'x', 't', 'B', 'e', 'f', 'o', 'r', 'e', '(', 'a', ':', ' ', 's',
- 't', 'r', 'i', 'n', 'g', ',', ' ', 'b', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ')', ':', ' ', 'b', 'o', 'o', 'l', 'e',
- 'a', 'n', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'a', ' ', '<', ' ', 'b', ';', ' ', '}', '\n', 'e', 'x',
- 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'r', 'e', 'm', 'a', 'i', 'n', 'd', 'e', 'r', '(',
- 'a', ':', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ',', ' ', 'b', ':', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ')', ':', ' ', 'n',
- 'u', 'm', 'b', 'e', 'r', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'a', ' ', '%', ' ', 'b', ';', ' ', '}',
- '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 's', 'c', 'o', 'p', 'e', 'd',
- '(', 'x', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ',
- ' ', '{', ' ', 'l', 'e', 't', ' ', 't', 'e', 'm', 'p', 'o', 'r', 'a', 'r', 'y', ' ', '=', ' ', 'x', ' ', '+', ' ', '1',
- 'n', ';', ' ', 'x', ' ', '=', ' ', 't', 'e', 'm', 'p', 'o', 'r', 'a', 'r', 'y', ' ', '*', ' ', '2', 'n', ';', ' ', '}',
- '\n', ' ', ' ', 'l', 'e', 't', ' ', 't', 'e', 'm', 'p', 'o', 'r', 'a', 'r', 'y', ' ', '=', ' ', 'x', ' ', '-', ' ',
- '3', 'n', ';', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 't', 'e', 'm', 'p', 'o', 'r', 'a', 'r', 'y', ';',
- '\n', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'a', 'b', 's', '_',
- 'd', 'e', 'n', 'o', 't', 'e', 's', '(', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', ' ', 'r', 'e', 't', 'u',
- 'r', 'n', ' ', '3', 'n', ';', ' ', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o',
- 'n', ' ', 'C', 'o', 'r', 'e', 'A', 'r', 't', 'i', 'f', 'a', 'c', 't', 's', '(', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n',
- 't', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '4', 'n', ';', ' ', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r',
- 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'g', 'u', 'a', 'r', 'd', 'e', 'd', '(', 'x', ':', ' ', 'b', 'i',
- 'g', 'i', 'n', 't', ' ', '|', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ',', ' ', 'f', 'l', 'o', 'o', 'r', ':',
- ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'i', 'f',
- ' ', '(', 'x', ' ', '=', '=', '=', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ')', ' ', '{', ' ', 'r', 'e', 't',
- 'u', 'r', 'n', ' ', 'f', 'l', 'o', 'o', 'r', ';', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'x',
- ' ', '+', ' ', '1', 'n', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i',
- 'o', 'n', ' ', 'c', 'o', 'n', 'j', 'u', 'n', 'c', 't', 'i', 'o', 'n', '(', 'x', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't',
- ' ', '|', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ',', ' ', 'f', 'l', 'o', 'o', 'r', ':', ' ', 'b', 'i', 'g',
- 'i', 'n', 't', ')', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ' ', '{', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r',
- 'n', ' ', 'x', ' ', '!', '=', '=', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ' ', '&', '&', ' ', 'x', ' ', '>',
- ' ', 'f', 'l', 'o', 'o', 'r', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't',
- 'i', 'o', 'n', ' ', 'd', 'i', 's', 'j', 'u', 'n', 'c', 't', 'i', 'o', 'n', '(', 'x', ':', ' ', 'b', 'i', 'g', 'i', 'n',
- 't', ' ', '|', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ',', ' ', 'f', 'l', 'o', 'o', 'r', ':', ' ', 'b', 'i',
- 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ' ', '{', '\n', ' ', ' ', 'r', 'e', 't', 'u',
- 'r', 'n', ' ', 'x', ' ', '=', '=', '=', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ' ', '|', '|', ' ', 'x', ' ',
- '>', '=', ' ', 'f', 'l', 'o', 'o', 'r', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n',
- 'c', 't', 'i', 'o', 'n', ' ', 't', 'e', 'r', 'n', 'a', 'r', 'y', '(', 'x', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ',
- '|', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n',
- ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'x', ' ', '!', '=', '=', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd',
- ' ', '?', ' ', 'x', ' ', '+', ' ', '1', 'n', ' ', ':', ' ', '0', 'n', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o',
- 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'f', 'o', 'r', 'g', 'e', 't', '(', 'x', ':', ' ', 'b', 'i',
- 'g', 'i', 'n', 't', ' ', '|', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ',', ' ', 'c', 'l', 'e', 'a', 'r', ':',
- ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '|', ' ', 'u', 'n', 'd', 'e',
- 'f', 'i', 'n', 'e', 'd', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'x', ' ', '!', '=', '=', ' ', 'u', 'n', 'd',
- 'e', 'f', 'i', 'n', 'e', 'd', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', 'i', 'f', ' ', '(', 'c', 'l', 'e', 'a', 'r',
- ')', ' ', '{', ' ', 'x', ' ', '=', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ';', ' ', '}', ' ', 'e', 'l', 's',
- 'e', ' ', '{', ' ', 'x', ' ', '+', '=', ' ', '1', 'n', ';', ' ', '}', '\n', ' ', ' ', '}', '\n', ' ', ' ', 'r', 'e',
- 't', 'u', 'r', 'n', ' ', 'x', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't',
- 'i', 'o', 'n', ' ', 's', 'c', 'o', 'p', 'e', 'd', 'T', 'y', 'p', 'e', 's', '(', 'x', ':', ' ', 'b', 'i', 'g', 'i', 'n',
- 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', '{', ' ', 'c', 'o', 'n', 's', 't', ' ',
- 't', 'e', 'm', 'p', 'o', 'r', 'a', 'r', 'y', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ' ', '=', ' ', '\'', 'i', 'n',
- 'n', 'e', 'r', '\'', ';', ' ', 'c', 'o', 'n', 's', 't', ' ', 'u', 'n', 'u', 's', 'e', 'd', ' ', '=', ' ', 't', 'e',
- 'm', 'p', 'o', 'r', 'a', 'r', 'y', ' ', '+', ' ', '\'', '!', '\'', ';', ' ', '}', '\n', ' ', ' ', 'l', 'e', 't', ' ',
- 't', 'e', 'm', 'p', 'o', 'r', 'a', 'r', 'y', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '=', ' ', 'x', ';', '\n',
- ' ', ' ', 'i', 'f', ' ', '(', 'x', ' ', '>', ' ', '0', 'n', ')', ' ', '{', ' ', 't', 'e', 'm', 'p', 'o', 'r', 'a', 'r',
- 'y', ' ', '+', '=', ' ', '1', 'n', ';', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 't', 'e', 'm',
- 'p', 'o', 'r', 'a', 'r', 'y', ';', '\n', '}', '\n']
+def characters : List Char := Ownership.Wrap.headerCharacters ++ _root_.Extracted_scalars.characters
 
-theorem characters_encoded : String.ofList characters = source := by kernel_rfl
+theorem characters_encoded : String.ofList characters = source := by
+  simp only [characters, String.ofList_append, Ownership.Wrap.header_encoded, _root_.Extracted_scalars.characters_encoded]
+  rfl
 
 theorem rendered : Ownership.Wrap.emitCharacterData
     _root_.Extracted_scalars.characters _root_.Extracted_scalars.tokens.toList _root_.Extracted_scalars.program = .ok characters := by kernel_rfl
@@ -878,7 +798,7 @@ def «abs» («_x#arg» : _root_.Int) : _root_.Int :=
 abbrev «abs».safe («_x#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«abs» (by decide) («_x#arg», ())
 
-def EntryGuards.«abs».function : Ariadne.Function := { name := "abs",   params := [{ name := "x", ty := Ariadne.Ty.bigint, span := { start := 20, stop := 21 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.if_                (Ariadne.Expr.binary                  "<"                  (Ariadne.Expr.var "x" { start := 45, stop := 46 })                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 49, stop := 51 })                  { start := 45, stop := 51 })                (Ariadne.Stmt.block                  [Ariadne.Stmt.return_                     (Ariadne.Expr.unary                       "-"                       (Ariadne.Expr.var "x" { start := 63, stop := 64 })                       { start := 62, stop := 63 })                     { start := 55, stop := 61 }]                  { start := 53, stop := 67 })                (Ariadne.Stmt.block [] { start := 41, stop := 43 })                { start := 41, stop := 43 },              Ariadne.Stmt.return_ (Ariadne.Expr.var "x" { start := 75, stop := 76 }) { start := 68, stop := 74 }]             { start := 39, stop := 79 },   exported := true,   decreases := none,   span := { start := 7, stop := 15 } }
+def EntryGuards.«abs».function : Ariadne.Function := _root_.Extracted_scalars.program.functions[0]!
 
 def EntryGuards.«abs».plan : List Ownership.ArgumentCheck := []
 
@@ -959,7 +879,7 @@ def «update» («_x#arg» : _root_.Int) («_y#arg» : _root_.Int) («_flag#arg�
 abbrev «update».safe («_x#arg» : _root_.Int) («_y#arg» : _root_.Int) («_flag#arg» : _root_.Bool) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«update» (by decide) («_x#arg», («_y#arg», («_flag#arg», ())))
 
-def EntryGuards.«update».function : Ariadne.Function := { name := "update",   params := [{ name := "x", ty := Ariadne.Ty.bigint, span := { start := 103, stop := 104 } },              { name := "y", ty := Ariadne.Ty.bigint, span := { start := 114, stop := 115 } },              { name := "flag", ty := Ariadne.Ty.boolean, span := { start := 125, stop := 129 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.let_                true                "total"                none                (Ariadne.Expr.var "x" { start := 162, stop := 163 })                { start := 150, stop := 153 },              Ariadne.Stmt.if_                (Ariadne.Expr.var "flag" { start := 169, stop := 173 })                (Ariadne.Stmt.block                  [Ariadne.Stmt.assign                     (Ariadne.Expr.var "total" { start := 177, stop := 182 })                     (Ariadne.Expr.binary                       "+"                       (Ariadne.Expr.var "total" { start := 177, stop := 182 })                       (Ariadne.Expr.var "y" { start := 186, stop := 187 })                       { start := 183, stop := 185 })                     { start := 177, stop := 182 }]                  { start := 175, stop := 190 })                (Ariadne.Stmt.block                  [Ariadne.Stmt.assign                     (Ariadne.Expr.var "total" { start := 198, stop := 203 })                     (Ariadne.Expr.binary                       "-"                       (Ariadne.Expr.var "total" { start := 198, stop := 203 })                       (Ariadne.Expr.var "y" { start := 207, stop := 208 })                       { start := 204, stop := 206 })                     { start := 198, stop := 203 }]                  { start := 196, stop := 211 })                { start := 165, stop := 167 },              Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "*"                  (Ariadne.Expr.var "total" { start := 219, stop := 224 })                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 2) { start := 227, stop := 229 })                  { start := 219, stop := 229 })                { start := 212, stop := 218 }]             { start := 148, stop := 232 },   exported := true,   decreases := none,   span := { start := 87, stop := 95 } }
+def EntryGuards.«update».function : Ariadne.Function := _root_.Extracted_scalars.program.functions[1]!
 
 def EntryGuards.«update».plan : List Ownership.ArgumentCheck := []
 
@@ -1104,7 +1024,7 @@ def «fallback» («_x#arg» : (_root_.Option _root_.Int)) : _root_.Int :=
 abbrev «fallback».safe («_x#arg» : (_root_.Option _root_.Int)) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«fallback» (by decide) («_x#arg», ())
 
-def EntryGuards.«fallback».function : Ariadne.Function := { name := "fallback",   params := [{ name := "x",                ty := Ariadne.Ty.union (Ariadne.Ty.bigint) (Ariadne.Ty.undefined),                span := { start := 258, stop := 259 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "??"                  (Ariadne.Expr.var "x" { start := 298, stop := 299 })                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 9) { start := 303, stop := 305 })                  { start := 298, stop := 305 })                { start := 291, stop := 297 }]             { start := 289, stop := 308 },   exported := true,   decreases := none,   span := { start := 240, stop := 248 } }
+def EntryGuards.«fallback».function : Ariadne.Function := _root_.Extracted_scalars.program.functions[2]!
 
 def EntryGuards.«fallback».plan : List Ownership.ArgumentCheck := []
 
@@ -1136,7 +1056,7 @@ def «decimal» («_x#arg» : _root_.Float.Model) («_y#arg» : _root_.Float.Mod
 abbrev «decimal».safe («_x#arg» : _root_.Float.Model) («_y#arg» : _root_.Float.Model) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«decimal» (by decide) («_x#arg», («_y#arg», ()))
 
-def EntryGuards.«decimal».function : Ariadne.Function := { name := "decimal",   params := [{ name := "x", ty := Ariadne.Ty.number, span := { start := 333, stop := 334 } },              { name := "y", ty := Ariadne.Ty.number, span := { start := 344, stop := 345 } }],   result := Ariadne.Ty.number,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "/"                  (Ariadne.Expr.binary                    "*"                    (Ariadne.Expr.var "x" { start := 373, stop := 374 })                    (Ariadne.Expr.var "y" { start := 377, stop := 378 })                    { start := 373, stop := 378 })                  (Ariadne.Expr.binary                    "+"                    (Ariadne.Expr.var "x" { start := 383, stop := 384 })                    (Ariadne.Expr.var "y" { start := 387, stop := 388 })                    { start := 383, stop := 388 })                  { start := 373, stop := 388 })                { start := 365, stop := 371 }]             { start := 363, stop := 392 },   exported := true,   decreases := none,   span := { start := 316, stop := 324 } }
+def EntryGuards.«decimal».function : Ariadne.Function := _root_.Extracted_scalars.program.functions[3]!
 
 def EntryGuards.«decimal».plan : List Ownership.ArgumentCheck := []
 
@@ -1199,7 +1119,7 @@ def «hello» («_name#arg» : _root_.Ariadne.JSString) : _root_.Ariadne.JSStrin
 abbrev «hello».safe («_name#arg» : _root_.Ariadne.JSString) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«hello» (by decide) («_name#arg», ())
 
-def EntryGuards.«hello».function : Ariadne.Function := { name := "hello",   params := [{ name := "name", ty := Ariadne.Ty.string, span := { start := 415, stop := 419 } }],   result := Ariadne.Ty.string,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "+"                  (Ariadne.Expr.literal                    (Ariadne.Literal.string [104, 101, 108, 108, 111, 32])                    { start := 446, stop := 454 })                  (Ariadne.Expr.var "name" { start := 457, stop := 461 })                  { start := 446, stop := 461 })                { start := 439, stop := 445 }]             { start := 437, stop := 464 },   exported := true,   decreases := none,   span := { start := 400, stop := 408 } }
+def EntryGuards.«hello».function : Ariadne.Function := _root_.Extracted_scalars.program.functions[4]!
 
 def EntryGuards.«hello».plan : List Ownership.ArgumentCheck := []
 
@@ -1260,7 +1180,7 @@ def «optional» («_flag#arg» : _root_.Bool) («_value#arg» : _root_.Int) : (
 abbrev «optional».safe («_flag#arg» : _root_.Bool) («_value#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«optional» (by decide) («_flag#arg», («_value#arg», ()))
 
-def EntryGuards.«optional».function : Ariadne.Function := { name := "optional",   params := [{ name := "flag", ty := Ariadne.Ty.boolean, span := { start := 490, stop := 494 } },              { name := "value", ty := Ariadne.Ty.bigint, span := { start := 505, stop := 510 } }],   result := Ariadne.Ty.union (Ariadne.Ty.bigint) (Ariadne.Ty.undefined),   body := Ariadne.Stmt.block             [Ariadne.Stmt.if_                (Ariadne.Expr.var "flag" { start := 548, stop := 552 })                (Ariadne.Stmt.block                  [Ariadne.Stmt.return_                     (Ariadne.Expr.var "value" { start := 563, stop := 568 })                     { start := 556, stop := 562 }]                  { start := 554, stop := 571 })                (Ariadne.Stmt.block [] { start := 544, stop := 546 })                { start := 544, stop := 546 },              Ariadne.Stmt.return_                (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 581, stop := 590 })                { start := 574, stop := 580 }]             { start := 540, stop := 593 },   exported := true,   decreases := none,   span := { start := 472, stop := 480 } }
+def EntryGuards.«optional».function : Ariadne.Function := _root_.Extracted_scalars.program.functions[5]!
 
 def EntryGuards.«optional».plan : List Ownership.ArgumentCheck := []
 
@@ -1292,7 +1212,7 @@ def «textBefore» («_a#arg» : _root_.Ariadne.JSString) («_b#arg» : _root_.A
 abbrev «textBefore».safe («_a#arg» : _root_.Ariadne.JSString) («_b#arg» : _root_.Ariadne.JSString) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«textBefore» (by decide) («_a#arg», («_b#arg», ()))
 
-def EntryGuards.«textBefore».function : Ariadne.Function := { name := "textBefore",   params := [{ name := "a", ty := Ariadne.Ty.string, span := { start := 621, stop := 622 } },              { name := "b", ty := Ariadne.Ty.string, span := { start := 632, stop := 633 } }],   result := Ariadne.Ty.boolean,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "<"                  (Ariadne.Expr.var "a" { start := 661, stop := 662 })                  (Ariadne.Expr.var "b" { start := 665, stop := 666 })                  { start := 661, stop := 666 })                { start := 654, stop := 660 }]             { start := 652, stop := 669 },   exported := true,   decreases := none,   span := { start := 601, stop := 609 } }
+def EntryGuards.«textBefore».function : Ariadne.Function := _root_.Extracted_scalars.program.functions[6]!
 
 def EntryGuards.«textBefore».plan : List Ownership.ArgumentCheck := []
 
@@ -1355,7 +1275,7 @@ def «remainder» («_a#arg» : _root_.Float.Model) («_b#arg» : _root_.Float.M
 abbrev «remainder».safe («_a#arg» : _root_.Float.Model) («_b#arg» : _root_.Float.Model) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«remainder» (by decide) («_a#arg», («_b#arg», ()))
 
-def EntryGuards.«remainder».function : Ariadne.Function := { name := "remainder",   params := [{ name := "a", ty := Ariadne.Ty.number, span := { start := 696, stop := 697 } },              { name := "b", ty := Ariadne.Ty.number, span := { start := 707, stop := 708 } }],   result := Ariadne.Ty.number,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "%"                  (Ariadne.Expr.var "a" { start := 735, stop := 736 })                  (Ariadne.Expr.var "b" { start := 739, stop := 740 })                  { start := 735, stop := 740 })                { start := 728, stop := 734 }]             { start := 726, stop := 743 },   exported := true,   decreases := none,   span := { start := 677, stop := 685 } }
+def EntryGuards.«remainder».function : Ariadne.Function := _root_.Extracted_scalars.program.functions[7]!
 
 def EntryGuards.«remainder».plan : List Ownership.ArgumentCheck := []
 
@@ -1433,7 +1353,7 @@ def «scoped» («_x#arg» : _root_.Int) : _root_.Int :=
 abbrev «scoped».safe («_x#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«scoped» (by decide) («_x#arg», ())
 
-def EntryGuards.«scoped».function : Ariadne.Function := { name := "scoped",   params := [{ name := "x", ty := Ariadne.Ty.bigint, span := { start := 767, stop := 768 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.block                [Ariadne.Stmt.let_                   true                   "temporary"                   none                   (Ariadne.Expr.binary                     "+"                     (Ariadne.Expr.var "x" { start := 808, stop := 809 })                     (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 812, stop := 814 })                     { start := 808, stop := 814 })                   { start := 792, stop := 795 },                 Ariadne.Stmt.assign                   (Ariadne.Expr.var "x" { start := 816, stop := 817 })                   (Ariadne.Expr.binary                     "*"                     (Ariadne.Expr.var "temporary" { start := 820, stop := 829 })                     (Ariadne.Expr.literal (Ariadne.Literal.bigint 2) { start := 832, stop := 834 })                     { start := 820, stop := 834 })                   { start := 816, stop := 817 }]                { start := 790, stop := 837 },              Ariadne.Stmt.let_                true                "temporary"                none                (Ariadne.Expr.binary                  "-"                  (Ariadne.Expr.var "x" { start := 856, stop := 857 })                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 3) { start := 860, stop := 862 })                  { start := 856, stop := 862 })                { start := 840, stop := 843 },              Ariadne.Stmt.return_                (Ariadne.Expr.var "temporary" { start := 873, stop := 882 })                { start := 866, stop := 872 }]             { start := 786, stop := 885 },   exported := true,   decreases := none,   span := { start := 751, stop := 759 } }
+def EntryGuards.«scoped».function : Ariadne.Function := _root_.Extracted_scalars.program.functions[8]!
 
 def EntryGuards.«scoped».plan : List Ownership.ArgumentCheck := []
 
@@ -1533,7 +1453,7 @@ def «abs_denotes» : _root_.Int :=
 abbrev «abs_denotes».safe : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«abs_denotes» (by decide) ()
 
-def EntryGuards.«abs_denotes».function : Ariadne.Function := { name := "abs_denotes",   params := [],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.literal (Ariadne.Literal.bigint 3) { start := 933, stop := 935 })                { start := 926, stop := 932 }]             { start := 924, stop := 938 },   exported := true,   decreases := none,   span := { start := 893, stop := 901 } }
+def EntryGuards.«abs_denotes».function : Ariadne.Function := _root_.Extracted_scalars.program.functions[9]!
 
 def EntryGuards.«abs_denotes».plan : List Ownership.ArgumentCheck := []
 
@@ -1585,7 +1505,7 @@ def «CoreArtifacts» : _root_.Int :=
 abbrev «CoreArtifacts».safe : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«CoreArtifacts» (by decide) ()
 
-def EntryGuards.«CoreArtifacts».function : Ariadne.Function := { name := "CoreArtifacts",   params := [],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.literal (Ariadne.Literal.bigint 4) { start := 988, stop := 990 })                { start := 981, stop := 987 }]             { start := 979, stop := 993 },   exported := true,   decreases := none,   span := { start := 946, stop := 954 } }
+def EntryGuards.«CoreArtifacts».function : Ariadne.Function := _root_.Extracted_scalars.program.functions[10]!
 
 def EntryGuards.«CoreArtifacts».plan : List Ownership.ArgumentCheck := []
 
@@ -1638,7 +1558,7 @@ def «guarded» («_x#arg» : (_root_.Option _root_.Int)) («_floor#arg» : _roo
 abbrev «guarded».safe («_x#arg» : (_root_.Option _root_.Int)) («_floor#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«guarded» (by decide) («_x#arg», («_floor#arg», ()))
 
-def EntryGuards.«guarded».function : Ariadne.Function := { name := "guarded",   params := [{ name := "x",                ty := Ariadne.Ty.union (Ariadne.Ty.bigint) (Ariadne.Ty.undefined),                span := { start := 1019, stop := 1020 } },              { name := "floor", ty := Ariadne.Ty.bigint, span := { start := 1042, stop := 1047 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.if_                (Ariadne.Expr.binary                  "==="                  (Ariadne.Expr.var "x" { start := 1073, stop := 1074 })                  (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 1079, stop := 1088 })                  { start := 1073, stop := 1088 })                (Ariadne.Stmt.block                  [Ariadne.Stmt.return_                     (Ariadne.Expr.var "floor" { start := 1099, stop := 1104 })                     { start := 1092, stop := 1098 }]                  { start := 1090, stop := 1107 })                (Ariadne.Stmt.block [] { start := 1069, stop := 1071 })                { start := 1069, stop := 1071 },              Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "+"                  (Ariadne.Expr.var "x" { start := 1117, stop := 1118 })                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 1121, stop := 1123 })                  { start := 1117, stop := 1123 })                { start := 1110, stop := 1116 }]             { start := 1065, stop := 1126 },   exported := true,   decreases := none,   span := { start := 1002, stop := 1010 } }
+def EntryGuards.«guarded».function : Ariadne.Function := _root_.Extracted_scalars.program.functions[11]!
 
 def EntryGuards.«guarded».plan : List Ownership.ArgumentCheck := []
 
@@ -1674,7 +1594,7 @@ def «conjunction» («_x#arg» : (_root_.Option _root_.Int)) («_floor#arg» : 
 abbrev «conjunction».safe («_x#arg» : (_root_.Option _root_.Int)) («_floor#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«conjunction» (by decide) («_x#arg», («_floor#arg», ()))
 
-def EntryGuards.«conjunction».function : Ariadne.Function := { name := "conjunction",   params := [{ name := "x",                ty := Ariadne.Ty.union (Ariadne.Ty.bigint) (Ariadne.Ty.undefined),                span := { start := 1156, stop := 1157 } },              { name := "floor", ty := Ariadne.Ty.bigint, span := { start := 1179, stop := 1184 } }],   result := Ariadne.Ty.boolean,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "&&"                  (Ariadne.Expr.binary                    "!=="                    (Ariadne.Expr.var "x" { start := 1214, stop := 1215 })                    (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 1220, stop := 1229 })                    { start := 1214, stop := 1229 })                  (Ariadne.Expr.binary                    ">"                    (Ariadne.Expr.var "x" { start := 1233, stop := 1234 })                    (Ariadne.Expr.var "floor" { start := 1237, stop := 1242 })                    { start := 1233, stop := 1242 })                  { start := 1214, stop := 1242 })                { start := 1207, stop := 1213 }]             { start := 1203, stop := 1245 },   exported := true,   decreases := none,   span := { start := 1135, stop := 1143 } }
+def EntryGuards.«conjunction».function : Ariadne.Function := _root_.Extracted_scalars.program.functions[12]!
 
 def EntryGuards.«conjunction».plan : List Ownership.ArgumentCheck := []
 
@@ -1710,7 +1630,7 @@ def «disjunction» («_x#arg» : (_root_.Option _root_.Int)) («_floor#arg» : 
 abbrev «disjunction».safe («_x#arg» : (_root_.Option _root_.Int)) («_floor#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«disjunction» (by decide) («_x#arg», («_floor#arg», ()))
 
-def EntryGuards.«disjunction».function : Ariadne.Function := { name := "disjunction",   params := [{ name := "x",                ty := Ariadne.Ty.union (Ariadne.Ty.bigint) (Ariadne.Ty.undefined),                span := { start := 1275, stop := 1276 } },              { name := "floor", ty := Ariadne.Ty.bigint, span := { start := 1298, stop := 1303 } }],   result := Ariadne.Ty.boolean,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "||"                  (Ariadne.Expr.binary                    "==="                    (Ariadne.Expr.var "x" { start := 1333, stop := 1334 })                    (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 1339, stop := 1348 })                    { start := 1333, stop := 1348 })                  (Ariadne.Expr.binary                    ">="                    (Ariadne.Expr.var "x" { start := 1352, stop := 1353 })                    (Ariadne.Expr.var "floor" { start := 1357, stop := 1362 })                    { start := 1352, stop := 1362 })                  { start := 1333, stop := 1362 })                { start := 1326, stop := 1332 }]             { start := 1322, stop := 1365 },   exported := true,   decreases := none,   span := { start := 1254, stop := 1262 } }
+def EntryGuards.«disjunction».function : Ariadne.Function := _root_.Extracted_scalars.program.functions[13]!
 
 def EntryGuards.«disjunction».plan : List Ownership.ArgumentCheck := []
 
@@ -1743,7 +1663,7 @@ def «ternary» («_x#arg» : (_root_.Option _root_.Int)) : _root_.Int :=
 abbrev «ternary».safe («_x#arg» : (_root_.Option _root_.Int)) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«ternary» (by decide) («_x#arg», ())
 
-def EntryGuards.«ternary».function : Ariadne.Function := { name := "ternary",   params := [{ name := "x",                ty := Ariadne.Ty.union (Ariadne.Ty.bigint) (Ariadne.Ty.undefined),                span := { start := 1391, stop := 1392 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.conditional                  (Ariadne.Expr.binary                    "!=="                    (Ariadne.Expr.var "x" { start := 1433, stop := 1434 })                    (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 1439, stop := 1448 })                    { start := 1433, stop := 1448 })                  (Ariadne.Expr.binary                    "+"                    (Ariadne.Expr.var "x" { start := 1451, stop := 1452 })                    (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 1455, stop := 1457 })                    { start := 1451, stop := 1457 })                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 1460, stop := 1462 })                  { start := 1433, stop := 1448 })                { start := 1426, stop := 1432 }]             { start := 1422, stop := 1465 },   exported := true,   decreases := none,   span := { start := 1374, stop := 1382 } }
+def EntryGuards.«ternary».function : Ariadne.Function := _root_.Extracted_scalars.program.functions[14]!
 
 def EntryGuards.«ternary».plan : List Ownership.ArgumentCheck := []
 
@@ -1817,7 +1737,7 @@ def «forget» («_x#arg» : (_root_.Option _root_.Int)) («_clear#arg» : _root
 abbrev «forget».safe («_x#arg» : (_root_.Option _root_.Int)) («_clear#arg» : _root_.Bool) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«forget» (by decide) («_x#arg», («_clear#arg», ()))
 
-def EntryGuards.«forget».function : Ariadne.Function := { name := "forget",   params := [{ name := "x",                ty := Ariadne.Ty.union (Ariadne.Ty.bigint) (Ariadne.Ty.undefined),                span := { start := 1490, stop := 1491 } },              { name := "clear", ty := Ariadne.Ty.boolean, span := { start := 1513, stop := 1518 } }],   result := Ariadne.Ty.union (Ariadne.Ty.bigint) (Ariadne.Ty.undefined),   body := Ariadne.Stmt.block             [Ariadne.Stmt.if_                (Ariadne.Expr.binary                  "!=="                  (Ariadne.Expr.var "x" { start := 1557, stop := 1558 })                  (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 1563, stop := 1572 })                  { start := 1557, stop := 1572 })                (Ariadne.Stmt.block                  [Ariadne.Stmt.if_                     (Ariadne.Expr.var "clear" { start := 1584, stop := 1589 })                     (Ariadne.Stmt.block                       [Ariadne.Stmt.assign                          (Ariadne.Expr.var "x" { start := 1593, stop := 1594 })                          (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 1597, stop := 1606 })                          { start := 1593, stop := 1594 }]                       { start := 1591, stop := 1609 })                     (Ariadne.Stmt.block                       [Ariadne.Stmt.assign                          (Ariadne.Expr.var "x" { start := 1617, stop := 1618 })                          (Ariadne.Expr.binary                            "+"                            (Ariadne.Expr.var "x" { start := 1617, stop := 1618 })                            (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 1622, stop := 1624 })                            { start := 1619, stop := 1621 })                          { start := 1617, stop := 1618 }]                       { start := 1615, stop := 1627 })                     { start := 1580, stop := 1582 }]                  { start := 1574, stop := 1631 })                (Ariadne.Stmt.block [] { start := 1553, stop := 1555 })                { start := 1553, stop := 1555 },              Ariadne.Stmt.return_                (Ariadne.Expr.var "x" { start := 1641, stop := 1642 })                { start := 1634, stop := 1640 }]             { start := 1549, stop := 1645 },   exported := true,   decreases := none,   span := { start := 1474, stop := 1482 } }
+def EntryGuards.«forget».function : Ariadne.Function := _root_.Extracted_scalars.program.functions[15]!
 
 def EntryGuards.«forget».plan : List Ownership.ArgumentCheck := []
 
@@ -1882,7 +1802,7 @@ def «scopedTypes» («_x#arg» : _root_.Int) : _root_.Int :=
 abbrev «scopedTypes».safe («_x#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«scopedTypes» (by decide) («_x#arg», ())
 
-def EntryGuards.«scopedTypes».function : Ariadne.Function := { name := "scopedTypes",   params := [{ name := "x", ty := Ariadne.Ty.bigint, span := { start := 1675, stop := 1676 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.block                [Ariadne.Stmt.let_                   false                   "temporary"                   (some (Ariadne.Ty.string))                   (Ariadne.Expr.literal                     (Ariadne.Literal.string [105, 110, 110, 101, 114])                     { start := 1726, stop := 1733 })                   { start := 1700, stop := 1705 },                 Ariadne.Stmt.let_                   false                   "unused"                   none                   (Ariadne.Expr.binary                     "+"                     (Ariadne.Expr.var "temporary" { start := 1750, stop := 1759 })                     (Ariadne.Expr.literal (Ariadne.Literal.string [33]) { start := 1762, stop := 1765 })                     { start := 1750, stop := 1765 })                   { start := 1735, stop := 1740 }]                { start := 1698, stop := 1768 },              Ariadne.Stmt.let_                true                "temporary"                (some (Ariadne.Ty.bigint))                (Ariadne.Expr.var "x" { start := 1795, stop := 1796 })                { start := 1771, stop := 1774 },              Ariadne.Stmt.if_                (Ariadne.Expr.binary                  ">"                  (Ariadne.Expr.var "x" { start := 1804, stop := 1805 })                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 1808, stop := 1810 })                  { start := 1804, stop := 1810 })                (Ariadne.Stmt.block                  [Ariadne.Stmt.assign                     (Ariadne.Expr.var "temporary" { start := 1814, stop := 1823 })                     (Ariadne.Expr.binary                       "+"                       (Ariadne.Expr.var "temporary" { start := 1814, stop := 1823 })                       (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 1827, stop := 1829 })                       { start := 1824, stop := 1826 })                     { start := 1814, stop := 1823 }]                  { start := 1812, stop := 1832 })                (Ariadne.Stmt.block [] { start := 1800, stop := 1802 })                { start := 1800, stop := 1802 },              Ariadne.Stmt.return_                (Ariadne.Expr.var "temporary" { start := 1842, stop := 1851 })                { start := 1835, stop := 1841 }]             { start := 1694, stop := 1854 },   exported := true,   decreases := none,   span := { start := 1654, stop := 1662 } }
+def EntryGuards.«scopedTypes».function : Ariadne.Function := _root_.Extracted_scalars.program.functions[16]!
 
 def EntryGuards.«scopedTypes».plan : List Ownership.ArgumentCheck := []
 

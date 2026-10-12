@@ -158,30 +158,13 @@ end Extracted_tamper_source
 namespace Extracted_tamper_source.Wrapper
 open Ariadne
 
-def source : String := "// Generated ownership entry wrappers. Requires the Ariadne pristine realm contract.\n// Small source-certificate fixture: primitive/parameter/function checks and\n// local declaration, branch condition and assignment-target checks.\nexport function arithmetic(flag: boolean, x: bigint, y: bigint): bigint {\n  return flag ? x + y : x - y;\n}\n\nexport function flow(x: bigint, y: bigint): bigint {\n  const sum = x + y;\n  x = x + 1n;\n  if (x < y) { return sum; }\n  return x;\n}\n"
+def source : String := Ownership.Wrap.header ++ _root_.Extracted_tamper_source.source
 
-def characters : List Char := ['/', '/', ' ', 'G', 'e', 'n', 'e', 'r', 'a', 't', 'e', 'd', ' ', 'o', 'w', 'n', 'e', 'r', 's', 'h', 'i', 'p', ' ', 'e',
- 'n', 't', 'r', 'y', ' ', 'w', 'r', 'a', 'p', 'p', 'e', 'r', 's', '.', ' ', 'R', 'e', 'q', 'u', 'i', 'r', 'e', 's', ' ',
- 't', 'h', 'e', ' ', 'A', 'r', 'i', 'a', 'd', 'n', 'e', ' ', 'p', 'r', 'i', 's', 't', 'i', 'n', 'e', ' ', 'r', 'e', 'a',
- 'l', 'm', ' ', 'c', 'o', 'n', 't', 'r', 'a', 'c', 't', '.', '\n', '/', '/', ' ', 'S', 'm', 'a', 'l', 'l', ' ', 's',
- 'o', 'u', 'r', 'c', 'e', '-', 'c', 'e', 'r', 't', 'i', 'f', 'i', 'c', 'a', 't', 'e', ' ', 'f', 'i', 'x', 't', 'u', 'r',
- 'e', ':', ' ', 'p', 'r', 'i', 'm', 'i', 't', 'i', 'v', 'e', '/', 'p', 'a', 'r', 'a', 'm', 'e', 't', 'e', 'r', '/', 'f',
- 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'c', 'h', 'e', 'c', 'k', 's', ' ', 'a', 'n', 'd', '\n', '/', '/', ' ', 'l',
- 'o', 'c', 'a', 'l', ' ', 'd', 'e', 'c', 'l', 'a', 'r', 'a', 't', 'i', 'o', 'n', ',', ' ', 'b', 'r', 'a', 'n', 'c', 'h',
- ' ', 'c', 'o', 'n', 'd', 'i', 't', 'i', 'o', 'n', ' ', 'a', 'n', 'd', ' ', 'a', 's', 's', 'i', 'g', 'n', 'm', 'e', 'n',
- 't', '-', 't', 'a', 'r', 'g', 'e', 't', ' ', 'c', 'h', 'e', 'c', 'k', 's', '.', '\n', 'e', 'x', 'p', 'o', 'r', 't',
- ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'a', 'r', 'i', 't', 'h', 'm', 'e', 't', 'i', 'c', '(', 'f', 'l', 'a',
- 'g', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ',', ' ', 'x', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ',', ' ', 'y',
- ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'r',
- 'e', 't', 'u', 'r', 'n', ' ', 'f', 'l', 'a', 'g', ' ', '?', ' ', 'x', ' ', '+', ' ', 'y', ' ', ':', ' ', 'x', ' ', '-',
- ' ', 'y', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ',
- 'f', 'l', 'o', 'w', '(', 'x', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ',', ' ', 'y', ':', ' ', 'b', 'i', 'g', 'i', 'n',
- 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'c', 'o', 'n', 's', 't', ' ', 's', 'u',
- 'm', ' ', '=', ' ', 'x', ' ', '+', ' ', 'y', ';', '\n', ' ', ' ', 'x', ' ', '=', ' ', 'x', ' ', '+', ' ', '1', 'n',
- ';', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'x', ' ', '<', ' ', 'y', ')', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n',
- ' ', 's', 'u', 'm', ';', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'x', ';', '\n', '}', '\n']
+def characters : List Char := Ownership.Wrap.headerCharacters ++ _root_.Extracted_tamper_source.characters
 
-theorem characters_encoded : String.ofList characters = source := by kernel_rfl
+theorem characters_encoded : String.ofList characters = source := by
+  simp only [characters, String.ofList_append, Ownership.Wrap.header_encoded, _root_.Extracted_tamper_source.characters_encoded]
+  rfl
 
 theorem rendered : Ownership.Wrap.emitCharacterData
     _root_.Extracted_tamper_source.characters _root_.Extracted_tamper_source.tokens.toList _root_.Extracted_tamper_source.program = .ok characters := by kernel_rfl
@@ -218,7 +201,7 @@ def «arithmetic» («_flag#arg» : _root_.Bool) («_x#arg» : _root_.Int) («_y
 abbrev «arithmetic».safe («_flag#arg» : _root_.Bool) («_x#arg» : _root_.Int) («_y#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«arithmetic» (by decide) («_flag#arg», («_x#arg», («_y#arg», ())))
 
-def EntryGuards.«arithmetic».function : Ariadne.Function := { name := "arithmetic",   params := [{ name := "flag", ty := Ariadne.Ty.boolean, span := { start := 173, stop := 177 } },              { name := "x", ty := Ariadne.Ty.bigint, span := { start := 188, stop := 189 } },              { name := "y", ty := Ariadne.Ty.bigint, span := { start := 199, stop := 200 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.conditional                  (Ariadne.Expr.var "flag" { start := 229, stop := 233 })                  (Ariadne.Expr.binary                    "+"                    (Ariadne.Expr.var "x" { start := 236, stop := 237 })                    (Ariadne.Expr.var "y" { start := 240, stop := 241 })                    { start := 236, stop := 241 })                  (Ariadne.Expr.binary                    "-"                    (Ariadne.Expr.var "x" { start := 244, stop := 245 })                    (Ariadne.Expr.var "y" { start := 248, stop := 249 })                    { start := 244, stop := 249 })                  { start := 229, stop := 233 })                { start := 222, stop := 228 }]             { start := 218, stop := 252 },   exported := true,   decreases := none,   span := { start := 153, stop := 161 } }
+def EntryGuards.«arithmetic».function : Ariadne.Function := _root_.Extracted_tamper_source.program.functions[0]!
 
 def EntryGuards.«arithmetic».plan : List Ownership.ArgumentCheck := []
 
@@ -293,7 +276,7 @@ def «flow» («_x#arg» : _root_.Int) («_y#arg» : _root_.Int) : _root_.Int :=
 abbrev «flow».safe («_x#arg» : _root_.Int) («_y#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«flow» (by decide) («_x#arg», («_y#arg», ()))
 
-def EntryGuards.«flow».function : Ariadne.Function := { name := "flow",   params := [{ name := "x", ty := Ariadne.Ty.bigint, span := { start := 275, stop := 276 } },              { name := "y", ty := Ariadne.Ty.bigint, span := { start := 286, stop := 287 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.let_                false                "sum"                none                (Ariadne.Expr.binary                  "+"                  (Ariadne.Expr.var "x" { start := 321, stop := 322 })                  (Ariadne.Expr.var "y" { start := 325, stop := 326 })                  { start := 321, stop := 326 })                { start := 309, stop := 314 },              Ariadne.Stmt.assign                (Ariadne.Expr.var "x" { start := 330, stop := 331 })                (Ariadne.Expr.binary                  "+"                  (Ariadne.Expr.var "x" { start := 334, stop := 335 })                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 338, stop := 340 })                  { start := 334, stop := 340 })                { start := 330, stop := 331 },              Ariadne.Stmt.if_                (Ariadne.Expr.binary                  "<"                  (Ariadne.Expr.var "x" { start := 348, stop := 349 })                  (Ariadne.Expr.var "y" { start := 352, stop := 353 })                  { start := 348, stop := 353 })                (Ariadne.Stmt.block                  [Ariadne.Stmt.return_                     (Ariadne.Expr.var "sum" { start := 364, stop := 367 })                     { start := 357, stop := 363 }]                  { start := 355, stop := 370 })                (Ariadne.Stmt.block [] { start := 344, stop := 346 })                { start := 344, stop := 346 },              Ariadne.Stmt.return_ (Ariadne.Expr.var "x" { start := 380, stop := 381 }) { start := 373, stop := 379 }]             { start := 305, stop := 384 },   exported := true,   decreases := none,   span := { start := 261, stop := 269 } }
+def EntryGuards.«flow».function : Ariadne.Function := _root_.Extracted_tamper_source.program.functions[1]!
 
 def EntryGuards.«flow».plan : List Ownership.ArgumentCheck := []
 

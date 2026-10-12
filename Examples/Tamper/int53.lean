@@ -132,27 +132,13 @@ end Extracted_tamper_int53
 namespace Extracted_tamper_int53.Wrapper
 open Ariadne
 
-def source : String := "// Generated ownership entry wrappers. Requires the Ariadne pristine realm contract.\ntype Int53 = number;\n// Keep Math correspondence, integer correspondence and computed-guard checks\n// independent of the larger Int53 regression artifact.\nexport function floorDivide(a: Int53, b: Int53): Int53 { return Math.floor(a / b); }\nexport function add(a: Int53, b: Int53): Int53 { return a + b; }\n"
+def source : String := Ownership.Wrap.header ++ _root_.Extracted_tamper_int53.source
 
-def characters : List Char := ['/', '/', ' ', 'G', 'e', 'n', 'e', 'r', 'a', 't', 'e', 'd', ' ', 'o', 'w', 'n', 'e', 'r', 's', 'h', 'i', 'p', ' ', 'e',
- 'n', 't', 'r', 'y', ' ', 'w', 'r', 'a', 'p', 'p', 'e', 'r', 's', '.', ' ', 'R', 'e', 'q', 'u', 'i', 'r', 'e', 's', ' ',
- 't', 'h', 'e', ' ', 'A', 'r', 'i', 'a', 'd', 'n', 'e', ' ', 'p', 'r', 'i', 's', 't', 'i', 'n', 'e', ' ', 'r', 'e', 'a',
- 'l', 'm', ' ', 'c', 'o', 'n', 't', 'r', 'a', 'c', 't', '.', '\n', 't', 'y', 'p', 'e', ' ', 'I', 'n', 't', '5', '3',
- ' ', '=', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ';', '\n', '/', '/', ' ', 'K', 'e', 'e', 'p', ' ', 'M', 'a', 't', 'h',
- ' ', 'c', 'o', 'r', 'r', 'e', 's', 'p', 'o', 'n', 'd', 'e', 'n', 'c', 'e', ',', ' ', 'i', 'n', 't', 'e', 'g', 'e', 'r',
- ' ', 'c', 'o', 'r', 'r', 'e', 's', 'p', 'o', 'n', 'd', 'e', 'n', 'c', 'e', ' ', 'a', 'n', 'd', ' ', 'c', 'o', 'm', 'p',
- 'u', 't', 'e', 'd', '-', 'g', 'u', 'a', 'r', 'd', ' ', 'c', 'h', 'e', 'c', 'k', 's', '\n', '/', '/', ' ', 'i', 'n',
- 'd', 'e', 'p', 'e', 'n', 'd', 'e', 'n', 't', ' ', 'o', 'f', ' ', 't', 'h', 'e', ' ', 'l', 'a', 'r', 'g', 'e', 'r', ' ',
- 'I', 'n', 't', '5', '3', ' ', 'r', 'e', 'g', 'r', 'e', 's', 's', 'i', 'o', 'n', ' ', 'a', 'r', 't', 'i', 'f', 'a', 'c',
- 't', '.', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'f', 'l', 'o', 'o',
- 'r', 'D', 'i', 'v', 'i', 'd', 'e', '(', 'a', ':', ' ', 'I', 'n', 't', '5', '3', ',', ' ', 'b', ':', ' ', 'I', 'n', 't',
- '5', '3', ')', ':', ' ', 'I', 'n', 't', '5', '3', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'M', 'a', 't', 'h',
- '.', 'f', 'l', 'o', 'o', 'r', '(', 'a', ' ', '/', ' ', 'b', ')', ';', ' ', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't',
- ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'a', 'd', 'd', '(', 'a', ':', ' ', 'I', 'n', 't', '5', '3', ',', ' ',
- 'b', ':', ' ', 'I', 'n', 't', '5', '3', ')', ':', ' ', 'I', 'n', 't', '5', '3', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r',
- 'n', ' ', 'a', ' ', '+', ' ', 'b', ';', ' ', '}', '\n']
+def characters : List Char := Ownership.Wrap.headerCharacters ++ _root_.Extracted_tamper_int53.characters
 
-theorem characters_encoded : String.ofList characters = source := by kernel_rfl
+theorem characters_encoded : String.ofList characters = source := by
+  simp only [characters, String.ofList_append, Ownership.Wrap.header_encoded, _root_.Extracted_tamper_int53.characters_encoded]
+  rfl
 
 theorem rendered : Ownership.Wrap.emitCharacterData
     _root_.Extracted_tamper_int53.characters _root_.Extracted_tamper_int53.tokens.toList _root_.Extracted_tamper_int53.program = .ok characters := by kernel_rfl
@@ -186,7 +172,7 @@ def «floorDivide» («_a#arg» : _root_.Int) («_b#arg» : _root_.Int) : _root_
 abbrev «floorDivide».safe («_a#arg» : _root_.Int) («_b#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«floorDivide» (by decide) («_a#arg», («_b#arg», ()))
 
-def EntryGuards.«floorDivide».function : Ariadne.Function := { name := "floorDivide",   params := [{ name := "a", ty := Ariadne.Ty.named "Int53", span := { start := 183, stop := 184 } },              { name := "b", ty := Ariadne.Ty.named "Int53", span := { start := 193, stop := 194 } }],   result := Ariadne.Ty.named "Int53",   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.call                  (Ariadne.Expr.member                    (Ariadne.Expr.var "Math" { start := 219, stop := 223 })                    "floor"                    { start := 219, stop := 229 })                  [Ariadne.Expr.binary                     "/"                     (Ariadne.Expr.var "a" { start := 230, stop := 231 })                     (Ariadne.Expr.var "b" { start := 234, stop := 235 })                     { start := 230, stop := 235 }]                  { start := 219, stop := 236 })                { start := 212, stop := 218 }]             { start := 210, stop := 239 },   exported := true,   decreases := none,   span := { start := 162, stop := 170 } }
+def EntryGuards.«floorDivide».function : Ariadne.Function := _root_.Extracted_tamper_int53.program.functions[0]!
 
 def EntryGuards.«floorDivide».plan : List Ownership.ArgumentCheck := []
 
@@ -249,7 +235,7 @@ def «add» («_a#arg» : _root_.Int) («_b#arg» : _root_.Int) : _root_.Int :=
 abbrev «add».safe («_a#arg» : _root_.Int) («_b#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«add» (by decide) («_a#arg», («_b#arg», ()))
 
-def EntryGuards.«add».function : Ariadne.Function := { name := "add",   params := [{ name := "a", ty := Ariadne.Ty.named "Int53", span := { start := 260, stop := 261 } },              { name := "b", ty := Ariadne.Ty.named "Int53", span := { start := 270, stop := 271 } }],   result := Ariadne.Ty.named "Int53",   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "+"                  (Ariadne.Expr.var "a" { start := 296, stop := 297 })                  (Ariadne.Expr.var "b" { start := 300, stop := 301 })                  { start := 296, stop := 301 })                { start := 289, stop := 295 }]             { start := 287, stop := 304 },   exported := true,   decreases := none,   span := { start := 247, stop := 255 } }
+def EntryGuards.«add».function : Ariadne.Function := _root_.Extracted_tamper_int53.program.functions[1]!
 
 def EntryGuards.«add».plan : List Ownership.ArgumentCheck := []
 

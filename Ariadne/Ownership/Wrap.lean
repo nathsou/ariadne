@@ -15,6 +15,13 @@ private def joinCharacters (separator : List Char) : List (List Char) → List C
   | [value] => value
   | value :: next :: rest => value ++ separator ++ joinCharacters separator (next :: rest)
 
+def headerCharacters : List Char :=
+  chars! "// Generated ownership entry wrappers. Requires the Ariadne pristine realm contract.\n"
+
+def header : String := "// Generated ownership entry wrappers. Requires the Ariadne pristine realm contract.\n"
+
+theorem header_encoded : String.ofList headerCharacters = header := by kernel_rfl
+
 private def sliceCharacters : List Char → Nat → Nat → Nat → List Char
   | [], _, _, _ => []
   | character :: rest, position, start, stop =>
@@ -135,7 +142,7 @@ def emitCharacterData (characters : List Char) (tokens : List Token) (program : 
             chars! "  const " ++ helperPrefix.toList ++ chars! "implementation = () => " ++ body ++
             chars! ";\n  " ++ helperPrefix.toList ++ chars! "implementation();\n}"⟩ :: edits
   let ordered := orderEdits edits
-  let mut result := chars! "// Generated ownership entry wrappers. Requires the Ariadne pristine realm contract.\n"
+  let mut result := headerCharacters
   if deep then result := result ++ helpers helperPrefix program
   let mut position := 0
   for edit in ordered do

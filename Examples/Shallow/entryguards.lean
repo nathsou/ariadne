@@ -708,7 +708,7 @@ def «grow» («_rows#arg» : (_root_.List (_root_.List _root_.Int))) («_items#
 abbrev «grow».safe («_rows#arg» : (_root_.List (_root_.List _root_.Int))) («_items#arg» : (_root_.List _root_.Int)) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«grow» (by decide) («_rows#arg», («_items#arg», ()))
 
-def EntryGuards.«grow».function : Ariadne.Function := { name := "grow",   params := [{ name := "rows",                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.array (Ariadne.Ty.bigint))),                span := { start := 21, stop := 25 } },              { name := "items", ty := Ariadne.Ty.array (Ariadne.Ty.bigint), span := { start := 48, stop := 53 } }],   result := Ariadne.Ty.void,   body := Ariadne.Stmt.block             [Ariadne.Stmt.expr                (Ariadne.Expr.call                  (Ariadne.Expr.member                    (Ariadne.Expr.var "items" { start := 75, stop := 80 })                    "push"                    { start := 75, stop := 85 })                  [Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 86, stop := 88 }]                  { start := 75, stop := 89 })                { start := 75, stop := 89 }]             { start := 71, stop := 92 },   exported := true,   decreases := none,   span := { start := 7, stop := 15 } }
+def EntryGuards.«grow».function : Ariadne.Function := _root_.Extracted_entryguards.program.functions[0]!
 
 def EntryGuards.«grow».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.deep,    rightTraversal := Ariadne.Ownership.Traversal.root }]
 
@@ -744,7 +744,7 @@ def «outer» («_rows#arg» : (_root_.List (_root_.List _root_.Int))) («_items
 abbrev «outer».safe («_rows#arg» : (_root_.List (_root_.List _root_.Int))) («_items#arg» : (_root_.List _root_.Int)) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«outer» (by decide) («_rows#arg», («_items#arg», ()))
 
-def EntryGuards.«outer».function : Ariadne.Function := { name := "outer",   params := [{ name := "rows",                ty := Ariadne.Ty.array (Ariadne.Ty.array (Ariadne.Ty.bigint)),                span := { start := 116, stop := 120 } },              { name := "items",                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.bigint)),                span := { start := 134, stop := 139 } }],   result := Ariadne.Ty.void,   body := Ariadne.Stmt.block             [Ariadne.Stmt.expr                (Ariadne.Expr.call                  (Ariadne.Expr.member                    (Ariadne.Expr.var "rows" { start := 170, stop := 174 })                    "push"                    { start := 170, stop := 179 })                  [Ariadne.Expr.array                     [Ariadne.Expr.literal (Ariadne.Literal.bigint 2) { start := 181, stop := 183 }]                     { start := 180, stop := 184 }]                  { start := 170, stop := 185 })                { start := 170, stop := 185 }]             { start := 166, stop := 188 },   exported := true,   decreases := none,   span := { start := 101, stop := 109 } }
+def EntryGuards.«outer».function : Ariadne.Function := _root_.Extracted_entryguards.program.functions[1]!
 
 def EntryGuards.«outer».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.deep,    rightTraversal := Ariadne.Ownership.Traversal.root }]
 
@@ -780,7 +780,7 @@ def «mapped» («_rows#arg» : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSS
 abbrev «mapped».safe («_rows#arg» : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString (_root_.List _root_.Int))) («_items#arg» : (_root_.List _root_.Int)) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«mapped» (by decide) («_rows#arg», («_items#arg», ()))
 
-def EntryGuards.«mapped».function : Ariadne.Function := { name := "mapped",   params := [{ name := "rows",                ty := Ariadne.Ty.map (Ariadne.Ty.string) (Ariadne.Ty.array (Ariadne.Ty.bigint)),                span := { start := 213, stop := 217 } },              { name := "items", ty := Ariadne.Ty.array (Ariadne.Ty.bigint), span := { start := 242, stop := 247 } }],   result := Ariadne.Ty.void,   body := Ariadne.Stmt.block             [Ariadne.Stmt.expr                (Ariadne.Expr.call                  (Ariadne.Expr.member                    (Ariadne.Expr.var "items" { start := 269, stop := 274 })                    "push"                    { start := 269, stop := 279 })                  [Ariadne.Expr.literal (Ariadne.Literal.bigint 3) { start := 280, stop := 282 }]                  { start := 269, stop := 283 })                { start := 269, stop := 283 }]             { start := 265, stop := 286 },   exported := true,   decreases := none,   span := { start := 197, stop := 205 } }
+def EntryGuards.«mapped».function : Ariadne.Function := _root_.Extracted_entryguards.program.functions[2]!
 
 def EntryGuards.«mapped».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.deep,    rightTraversal := Ariadne.Ownership.Traversal.root }]
 
@@ -816,7 +816,7 @@ def «flat» («_left#arg» : (_root_.List _root_.Int)) («_right#arg» : (_root
 abbrev «flat».safe («_left#arg» : (_root_.List _root_.Int)) («_right#arg» : (_root_.List _root_.Int)) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«flat» (by decide) («_left#arg», («_right#arg», ()))
 
-def EntryGuards.«flat».function : Ariadne.Function := { name := "flat",   params := [{ name := "left", ty := Ariadne.Ty.array (Ariadne.Ty.bigint), span := { start := 309, stop := 313 } },              { name := "right",                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.bigint)),                span := { start := 325, stop := 330 } }],   result := Ariadne.Ty.void,   body := Ariadne.Stmt.block             [Ariadne.Stmt.expr                (Ariadne.Expr.call                  (Ariadne.Expr.member                    (Ariadne.Expr.var "left" { start := 361, stop := 365 })                    "push"                    { start := 361, stop := 370 })                  [Ariadne.Expr.literal (Ariadne.Literal.bigint 4) { start := 371, stop := 373 }]                  { start := 361, stop := 374 })                { start := 361, stop := 374 }]             { start := 357, stop := 377 },   exported := true,   decreases := none,   span := { start := 295, stop := 303 } }
+def EntryGuards.«flat».function : Ariadne.Function := _root_.Extracted_entryguards.program.functions[3]!
 
 def EntryGuards.«flat».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root }]
 
@@ -848,7 +848,7 @@ def «observations» («_left#arg» : (_root_.List _root_.Int)) («_right#arg» 
 abbrev «observations».safe («_left#arg» : (_root_.List _root_.Int)) («_right#arg» : (_root_.List _root_.Int)) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«observations» (by decide) («_left#arg», («_right#arg», ()))
 
-def EntryGuards.«observations».function : Ariadne.Function := { name := "observations",   params := [{ name := "left",                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.bigint)),                span := { start := 408, stop := 412 } },              { name := "right",                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.bigint)),                span := { start := 433, stop := 438 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.literal (Ariadne.Literal.bigint 5) { start := 478, stop := 480 })                { start := 471, stop := 477 }]             { start := 467, stop := 483 },   exported := true,   decreases := none,   span := { start := 386, stop := 394 } }
+def EntryGuards.«observations».function : Ariadne.Function := _root_.Extracted_entryguards.program.functions[4]!
 
 def EntryGuards.«observations».plan : List Ownership.ArgumentCheck := []
 
@@ -915,7 +915,7 @@ def «encapsulated» («_left#arg» : NativeTypes.«Box#state») («_right#arg»
 abbrev «encapsulated».safe («_left#arg» : NativeTypes.«Box#state») («_right#arg» : NativeTypes.«Box#state») : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«encapsulated» (by decide) («_left#arg», («_right#arg», ()))
 
-def EntryGuards.«encapsulated».function : Ariadne.Function := { name := "encapsulated",   params := [{ name := "left", ty := Ariadne.Ty.named "Box", span := { start := 625, stop := 629 } },              { name := "right", ty := Ariadne.Ty.named "Box", span := { start := 636, stop := 641 } }],   result := Ariadne.Ty.void,   body := Ariadne.Stmt.block             [Ariadne.Stmt.expr                (Ariadne.Expr.call                  (Ariadne.Expr.member                    (Ariadne.Expr.var "left" { start := 656, stop := 660 })                    "add"                    { start := 656, stop := 664 })                  [Ariadne.Expr.literal (Ariadne.Literal.bigint 6) { start := 665, stop := 667 }]                  { start := 656, stop := 668 })                { start := 656, stop := 668 }]             { start := 654, stop := 671 },   exported := true,   decreases := none,   span := { start := 603, stop := 611 } }
+def EntryGuards.«encapsulated».function : Ariadne.Function := _root_.Extracted_entryguards.program.functions[5]!
 
 def EntryGuards.«encapsulated».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root }]
 
@@ -951,7 +951,7 @@ def «exposed» («_box#arg» : NativeTypes.«PublicBox#state») («_items#arg»
 abbrev «exposed».safe («_box#arg» : NativeTypes.«PublicBox#state») («_items#arg» : (_root_.List _root_.Int)) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«exposed» (by decide) («_box#arg», («_items#arg», ()))
 
-def EntryGuards.«exposed».function : Ariadne.Function := { name := "exposed",   params := [{ name := "box", ty := Ariadne.Ty.named "PublicBox", span := { start := 751, stop := 754 } },              { name := "items", ty := Ariadne.Ty.array (Ariadne.Ty.bigint), span := { start := 767, stop := 772 } }],   result := Ariadne.Ty.void,   body := Ariadne.Stmt.block             [Ariadne.Stmt.expr                (Ariadne.Expr.call                  (Ariadne.Expr.member                    (Ariadne.Expr.var "items" { start := 792, stop := 797 })                    "push"                    { start := 792, stop := 802 })                  [Ariadne.Expr.literal (Ariadne.Literal.bigint 7) { start := 803, stop := 805 }]                  { start := 792, stop := 806 })                { start := 792, stop := 806 }]             { start := 790, stop := 809 },   exported := true,   decreases := none,   span := { start := 734, stop := 742 } }
+def EntryGuards.«exposed».function : Ariadne.Function := _root_.Extracted_entryguards.program.functions[6]!
 
 def EntryGuards.«exposed».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.deep,    rightTraversal := Ariadne.Ownership.Traversal.root }]
 
@@ -987,7 +987,7 @@ def «names» («___ariadne0_contains#arg» : (_root_.List _root_.Int)) («_othe
 abbrev «names».safe («___ariadne0_contains#arg» : (_root_.List _root_.Int)) («_other#arg» : (_root_.List _root_.Int)) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«names» (by decide) («___ariadne0_contains#arg», («_other#arg», ()))
 
-def EntryGuards.«names».function : Ariadne.Function := { name := "names",   params := [{ name := "__ariadne0_contains",                ty := Ariadne.Ty.array (Ariadne.Ty.bigint),                span := { start := 892, stop := 911 } },              { name := "other",                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.bigint)),                span := { start := 923, stop := 928 } }],   result := Ariadne.Ty.void,   body := Ariadne.Stmt.block             [Ariadne.Stmt.expr                (Ariadne.Expr.call                  (Ariadne.Expr.member                    (Ariadne.Expr.var "__ariadne0_contains" { start := 959, stop := 978 })                    "push"                    { start := 959, stop := 983 })                  [Ariadne.Expr.literal (Ariadne.Literal.bigint 8) { start := 984, stop := 986 }]                  { start := 959, stop := 987 })                { start := 959, stop := 987 }]             { start := 955, stop := 990 },   exported := true,   decreases := none,   span := { start := 877, stop := 885 } }
+def EntryGuards.«names».function : Ariadne.Function := _root_.Extracted_entryguards.program.functions[7]!
 
 def EntryGuards.«names».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root }]
 

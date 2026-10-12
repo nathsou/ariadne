@@ -68,7 +68,8 @@ try {
   assert.equal(await readFile(source, 'utf8'), beforeAlias);
   const tamperedWrapper = resolve(dir, 'TamperedWrapper.lean');
   await writeFile(tamperedWrapper, checkedCandidate.replace(
-    'Generated ownership entry wrappers', 'Modified ownership entry wrappers'));
+    'def source : String := Ownership.Wrap.header ++',
+    'def source : String := "Modified wrapper header\\n" ++'));
   const rejectedWrapper = run('lake', ['env', 'lean', tamperedWrapper]);
   assert.notEqual(rejectedWrapper.status, 0, 'modified wrapper bytes must invalidate their certificate');
   const alias = resolve(dir, 'Alias.lean');

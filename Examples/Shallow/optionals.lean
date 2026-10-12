@@ -734,99 +734,13 @@ end Extracted_optionals
 namespace Extracted_optionals.Wrapper
 open Ariadne
 
-def source : String := "// Generated ownership entry wrappers. Requires the Ariadne pristine realm contract.\ntype Int53 = number;\ntype Maybe = Int53 | undefined;\ntype Nested = Maybe | undefined;\ntype OptionalRecord = { value?: Maybe };\nexport function missing(xs: readonly Maybe[]): boolean { return xs[0] === undefined; }\nexport function present(xs: readonly Maybe[]): boolean { return xs[0] !== undefined; }\nexport function fallback(xs: readonly Maybe[], defaultValue: Int53): Int53 { return xs[0] ?? defaultValue; }\nexport function foundMissing(xs: readonly Maybe[]): boolean { return xs.find((x: Maybe) => true) === undefined; }\nexport function mapMissing(values: ReadonlyMap<bigint, Maybe>, key: bigint): boolean { return values.get(key) === undefined; }\nexport function mapFallback(values: ReadonlyMap<bigint, Maybe>, key: bigint, defaultValue: Int53): Int53 { return values.get(key) ?? defaultValue; }\nexport function unitMissing(xs: readonly undefined[]): boolean { return xs[0] === undefined; }\nexport function nestedMissing(value: Nested): boolean { return value === undefined; }\nexport function recordMissing(value: OptionalRecord): boolean { return value.value === undefined; }\nfunction checkedUndefined(x: Int53): undefined { const next: Int53 = x + 1; return undefined; }\nexport function retainedCoercion(x: Int53): Maybe { return checkedUndefined(x); }\nexport function retainedLeft(x: Int53, value: Maybe): boolean { return checkedUndefined(x) === value; }\nexport function retainedRight(value: Maybe, x: Int53): boolean { return value === checkedUndefined(x); }\nexport function retainedUnits(x: Int53): boolean { return checkedUndefined(x) === undefined; }\ntype LiteralContainer = { readonly xs: readonly \"ok\"[] };\ntype OptionalTag = { readonly kind?: \"ok\" };\ntype UndefinedRecord = { readonly value?: undefined };\nexport function literalPresent(value: LiteralContainer): boolean { return value.xs[0] !== undefined; }\nexport function tagPresent(value: OptionalTag): boolean { return value.kind !== undefined; }\nexport function unitField(value: UndefinedRecord): boolean { return value.value === undefined; }\n"
+def source : String := Ownership.Wrap.header ++ _root_.Extracted_optionals.source
 
-def characters : List Char := ['/', '/', ' ', 'G', 'e', 'n', 'e', 'r', 'a', 't', 'e', 'd', ' ', 'o', 'w', 'n', 'e', 'r', 's', 'h', 'i', 'p', ' ', 'e',
- 'n', 't', 'r', 'y', ' ', 'w', 'r', 'a', 'p', 'p', 'e', 'r', 's', '.', ' ', 'R', 'e', 'q', 'u', 'i', 'r', 'e', 's', ' ',
- 't', 'h', 'e', ' ', 'A', 'r', 'i', 'a', 'd', 'n', 'e', ' ', 'p', 'r', 'i', 's', 't', 'i', 'n', 'e', ' ', 'r', 'e', 'a',
- 'l', 'm', ' ', 'c', 'o', 'n', 't', 'r', 'a', 'c', 't', '.', '\n', 't', 'y', 'p', 'e', ' ', 'I', 'n', 't', '5', '3',
- ' ', '=', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ';', '\n', 't', 'y', 'p', 'e', ' ', 'M', 'a', 'y', 'b', 'e', ' ', '=',
- ' ', 'I', 'n', 't', '5', '3', ' ', '|', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ';', '\n', 't', 'y', 'p',
- 'e', ' ', 'N', 'e', 's', 't', 'e', 'd', ' ', '=', ' ', 'M', 'a', 'y', 'b', 'e', ' ', '|', ' ', 'u', 'n', 'd', 'e', 'f',
- 'i', 'n', 'e', 'd', ';', '\n', 't', 'y', 'p', 'e', ' ', 'O', 'p', 't', 'i', 'o', 'n', 'a', 'l', 'R', 'e', 'c', 'o',
- 'r', 'd', ' ', '=', ' ', '{', ' ', 'v', 'a', 'l', 'u', 'e', '?', ':', ' ', 'M', 'a', 'y', 'b', 'e', ' ', '}', ';',
- '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'm', 'i', 's', 's', 'i', 'n',
- 'g', '(', 'x', 's', ':', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'M', 'a', 'y', 'b', 'e', '[', ']', ')', ':',
- ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'x', 's', '[', '0', ']', ' ',
- '=', '=', '=', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ';', ' ', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't',
- ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'p', 'r', 'e', 's', 'e', 'n', 't', '(', 'x', 's', ':', ' ', 'r', 'e',
- 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'M', 'a', 'y', 'b', 'e', '[', ']', ')', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n',
- ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'x', 's', '[', '0', ']', ' ', '!', '=', '=', ' ', 'u', 'n', 'd', 'e',
- 'f', 'i', 'n', 'e', 'd', ';', ' ', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o',
- 'n', ' ', 'f', 'a', 'l', 'l', 'b', 'a', 'c', 'k', '(', 'x', 's', ':', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ',
- 'M', 'a', 'y', 'b', 'e', '[', ']', ',', ' ', 'd', 'e', 'f', 'a', 'u', 'l', 't', 'V', 'a', 'l', 'u', 'e', ':', ' ', 'I',
- 'n', 't', '5', '3', ')', ':', ' ', 'I', 'n', 't', '5', '3', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'x', 's',
- '[', '0', ']', ' ', '?', '?', ' ', 'd', 'e', 'f', 'a', 'u', 'l', 't', 'V', 'a', 'l', 'u', 'e', ';', ' ', '}', '\n',
- 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'f', 'o', 'u', 'n', 'd', 'M', 'i', 's',
- 's', 'i', 'n', 'g', '(', 'x', 's', ':', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'M', 'a', 'y', 'b', 'e', '[',
- ']', ')', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'x', 's', '.',
- 'f', 'i', 'n', 'd', '(', '(', 'x', ':', ' ', 'M', 'a', 'y', 'b', 'e', ')', ' ', '=', '>', ' ', 't', 'r', 'u', 'e', ')',
- ' ', '=', '=', '=', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ';', ' ', '}', '\n', 'e', 'x', 'p', 'o', 'r',
- 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'm', 'a', 'p', 'M', 'i', 's', 's', 'i', 'n', 'g', '(', 'v', 'a',
- 'l', 'u', 'e', 's', ':', ' ', 'R', 'e', 'a', 'd', 'o', 'n', 'l', 'y', 'M', 'a', 'p', '<', 'b', 'i', 'g', 'i', 'n', 't',
- ',', ' ', 'M', 'a', 'y', 'b', 'e', '>', ',', ' ', 'k', 'e', 'y', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ',
- 'b', 'o', 'o', 'l', 'e', 'a', 'n', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'v', 'a', 'l', 'u', 'e', 's', '.',
- 'g', 'e', 't', '(', 'k', 'e', 'y', ')', ' ', '=', '=', '=', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ';', ' ',
- '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'm', 'a', 'p', 'F', 'a',
- 'l', 'l', 'b', 'a', 'c', 'k', '(', 'v', 'a', 'l', 'u', 'e', 's', ':', ' ', 'R', 'e', 'a', 'd', 'o', 'n', 'l', 'y', 'M',
- 'a', 'p', '<', 'b', 'i', 'g', 'i', 'n', 't', ',', ' ', 'M', 'a', 'y', 'b', 'e', '>', ',', ' ', 'k', 'e', 'y', ':', ' ',
- 'b', 'i', 'g', 'i', 'n', 't', ',', ' ', 'd', 'e', 'f', 'a', 'u', 'l', 't', 'V', 'a', 'l', 'u', 'e', ':', ' ', 'I', 'n',
- 't', '5', '3', ')', ':', ' ', 'I', 'n', 't', '5', '3', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'v', 'a', 'l',
- 'u', 'e', 's', '.', 'g', 'e', 't', '(', 'k', 'e', 'y', ')', ' ', '?', '?', ' ', 'd', 'e', 'f', 'a', 'u', 'l', 't', 'V',
- 'a', 'l', 'u', 'e', ';', ' ', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n',
- ' ', 'u', 'n', 'i', 't', 'M', 'i', 's', 's', 'i', 'n', 'g', '(', 'x', 's', ':', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l',
- 'y', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', '[', ']', ')', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ' ',
- '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'x', 's', '[', '0', ']', ' ', '=', '=', '=', ' ', 'u', 'n', 'd', 'e', 'f',
- 'i', 'n', 'e', 'd', ';', ' ', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n',
- ' ', 'n', 'e', 's', 't', 'e', 'd', 'M', 'i', 's', 's', 'i', 'n', 'g', '(', 'v', 'a', 'l', 'u', 'e', ':', ' ', 'N', 'e',
- 's', 't', 'e', 'd', ')', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ',
- 'v', 'a', 'l', 'u', 'e', ' ', '=', '=', '=', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ';', ' ', '}', '\n',
- 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'r', 'e', 'c', 'o', 'r', 'd', 'M', 'i',
- 's', 's', 'i', 'n', 'g', '(', 'v', 'a', 'l', 'u', 'e', ':', ' ', 'O', 'p', 't', 'i', 'o', 'n', 'a', 'l', 'R', 'e', 'c',
- 'o', 'r', 'd', ')', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'v',
- 'a', 'l', 'u', 'e', '.', 'v', 'a', 'l', 'u', 'e', ' ', '=', '=', '=', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd',
- ';', ' ', '}', '\n', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'c', 'h', 'e', 'c', 'k', 'e', 'd', 'U', 'n', 'd',
- 'e', 'f', 'i', 'n', 'e', 'd', '(', 'x', ':', ' ', 'I', 'n', 't', '5', '3', ')', ':', ' ', 'u', 'n', 'd', 'e', 'f', 'i',
- 'n', 'e', 'd', ' ', '{', ' ', 'c', 'o', 'n', 's', 't', ' ', 'n', 'e', 'x', 't', ':', ' ', 'I', 'n', 't', '5', '3', ' ',
- '=', ' ', 'x', ' ', '+', ' ', '1', ';', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e',
- 'd', ';', ' ', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'r', 'e',
- 't', 'a', 'i', 'n', 'e', 'd', 'C', 'o', 'e', 'r', 'c', 'i', 'o', 'n', '(', 'x', ':', ' ', 'I', 'n', 't', '5', '3', ')',
- ':', ' ', 'M', 'a', 'y', 'b', 'e', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'c', 'h', 'e', 'c', 'k', 'e', 'd',
- 'U', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', '(', 'x', ')', ';', ' ', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ',
- 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'r', 'e', 't', 'a', 'i', 'n', 'e', 'd', 'L', 'e', 'f', 't', '(', 'x', ':',
- ' ', 'I', 'n', 't', '5', '3', ',', ' ', 'v', 'a', 'l', 'u', 'e', ':', ' ', 'M', 'a', 'y', 'b', 'e', ')', ':', ' ', 'b',
- 'o', 'o', 'l', 'e', 'a', 'n', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'c', 'h', 'e', 'c', 'k', 'e', 'd', 'U',
- 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', '(', 'x', ')', ' ', '=', '=', '=', ' ', 'v', 'a', 'l', 'u', 'e', ';', ' ', '}',
- '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'r', 'e', 't', 'a', 'i', 'n',
- 'e', 'd', 'R', 'i', 'g', 'h', 't', '(', 'v', 'a', 'l', 'u', 'e', ':', ' ', 'M', 'a', 'y', 'b', 'e', ',', ' ', 'x', ':',
- ' ', 'I', 'n', 't', '5', '3', ')', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r',
- 'n', ' ', 'v', 'a', 'l', 'u', 'e', ' ', '=', '=', '=', ' ', 'c', 'h', 'e', 'c', 'k', 'e', 'd', 'U', 'n', 'd', 'e', 'f',
- 'i', 'n', 'e', 'd', '(', 'x', ')', ';', ' ', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't',
- 'i', 'o', 'n', ' ', 'r', 'e', 't', 'a', 'i', 'n', 'e', 'd', 'U', 'n', 'i', 't', 's', '(', 'x', ':', ' ', 'I', 'n', 't',
- '5', '3', ')', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'c', 'h',
- 'e', 'c', 'k', 'e', 'd', 'U', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', '(', 'x', ')', ' ', '=', '=', '=', ' ', 'u', 'n',
- 'd', 'e', 'f', 'i', 'n', 'e', 'd', ';', ' ', '}', '\n', 't', 'y', 'p', 'e', ' ', 'L', 'i', 't', 'e', 'r', 'a', 'l',
- 'C', 'o', 'n', 't', 'a', 'i', 'n', 'e', 'r', ' ', '=', ' ', '{', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'x',
- 's', ':', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', '\"', 'o', 'k', '\"', '[', ']', ' ', '}', ';', '\n', 't',
- 'y', 'p', 'e', ' ', 'O', 'p', 't', 'i', 'o', 'n', 'a', 'l', 'T', 'a', 'g', ' ', '=', ' ', '{', ' ', 'r', 'e', 'a', 'd',
- 'o', 'n', 'l', 'y', ' ', 'k', 'i', 'n', 'd', '?', ':', ' ', '\"', 'o', 'k', '\"', ' ', '}', ';', '\n', 't', 'y', 'p',
- 'e', ' ', 'U', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', 'R', 'e', 'c', 'o', 'r', 'd', ' ', '=', ' ', '{', ' ', 'r', 'e',
- 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'v', 'a', 'l', 'u', 'e', '?', ':', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd',
- ' ', '}', ';', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'l', 'i', 't',
- 'e', 'r', 'a', 'l', 'P', 'r', 'e', 's', 'e', 'n', 't', '(', 'v', 'a', 'l', 'u', 'e', ':', ' ', 'L', 'i', 't', 'e', 'r',
- 'a', 'l', 'C', 'o', 'n', 't', 'a', 'i', 'n', 'e', 'r', ')', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ' ', '{', ' ',
- 'r', 'e', 't', 'u', 'r', 'n', ' ', 'v', 'a', 'l', 'u', 'e', '.', 'x', 's', '[', '0', ']', ' ', '!', '=', '=', ' ', 'u',
- 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ';', ' ', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c',
- 't', 'i', 'o', 'n', ' ', 't', 'a', 'g', 'P', 'r', 'e', 's', 'e', 'n', 't', '(', 'v', 'a', 'l', 'u', 'e', ':', ' ', 'O',
- 'p', 't', 'i', 'o', 'n', 'a', 'l', 'T', 'a', 'g', ')', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ' ', '{', ' ', 'r',
- 'e', 't', 'u', 'r', 'n', ' ', 'v', 'a', 'l', 'u', 'e', '.', 'k', 'i', 'n', 'd', ' ', '!', '=', '=', ' ', 'u', 'n', 'd',
- 'e', 'f', 'i', 'n', 'e', 'd', ';', ' ', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i',
- 'o', 'n', ' ', 'u', 'n', 'i', 't', 'F', 'i', 'e', 'l', 'd', '(', 'v', 'a', 'l', 'u', 'e', ':', ' ', 'U', 'n', 'd', 'e',
- 'f', 'i', 'n', 'e', 'd', 'R', 'e', 'c', 'o', 'r', 'd', ')', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ' ', '{', ' ',
- 'r', 'e', 't', 'u', 'r', 'n', ' ', 'v', 'a', 'l', 'u', 'e', '.', 'v', 'a', 'l', 'u', 'e', ' ', '=', '=', '=', ' ', 'u',
- 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ';', ' ', '}', '\n']
+def characters : List Char := Ownership.Wrap.headerCharacters ++ _root_.Extracted_optionals.characters
 
-theorem characters_encoded : String.ofList characters = source := by kernel_rfl
+theorem characters_encoded : String.ofList characters = source := by
+  simp only [characters, String.ofList_append, Ownership.Wrap.header_encoded, _root_.Extracted_optionals.characters_encoded]
+  rfl
 
 theorem rendered : Ownership.Wrap.emitCharacterData
     _root_.Extracted_optionals.characters _root_.Extracted_optionals.tokens.toList _root_.Extracted_optionals.program = .ok characters := by kernel_rfl
@@ -950,7 +864,7 @@ def «missing» («_xs#arg» : (_root_.List (_root_.Option _root_.Int))) : _root
 abbrev «missing».safe («_xs#arg» : (_root_.List (_root_.Option _root_.Int))) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«missing» (by decide) («_xs#arg», ())
 
-def EntryGuards.«missing».function : Ariadne.Function := { name := "missing",   params := [{ name := "xs",                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.named "Maybe")),                span := { start := 151, stop := 153 } }],   result := Ariadne.Ty.boolean,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "==="                  (Ariadne.Expr.index                    (Ariadne.Expr.var "xs" { start := 191, stop := 193 })                    (Ariadne.Expr.literal (Ariadne.Literal.number 0 0) { start := 194, stop := 195 })                    { start := 191, stop := 196 })                  (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 201, stop := 210 })                  { start := 191, stop := 210 })                { start := 184, stop := 190 }]             { start := 182, stop := 213 },   exported := true,   decreases := none,   span := { start := 134, stop := 142 } }
+def EntryGuards.«missing».function : Ariadne.Function := _root_.Extracted_optionals.program.functions[0]!
 
 def EntryGuards.«missing».plan : List Ownership.ArgumentCheck := []
 
@@ -984,7 +898,7 @@ def «present» («_xs#arg» : (_root_.List (_root_.Option _root_.Int))) : _root
 abbrev «present».safe («_xs#arg» : (_root_.List (_root_.Option _root_.Int))) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«present» (by decide) («_xs#arg», ())
 
-def EntryGuards.«present».function : Ariadne.Function := { name := "present",   params := [{ name := "xs",                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.named "Maybe")),                span := { start := 238, stop := 240 } }],   result := Ariadne.Ty.boolean,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "!=="                  (Ariadne.Expr.index                    (Ariadne.Expr.var "xs" { start := 278, stop := 280 })                    (Ariadne.Expr.literal (Ariadne.Literal.number 0 0) { start := 281, stop := 282 })                    { start := 278, stop := 283 })                  (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 288, stop := 297 })                  { start := 278, stop := 297 })                { start := 271, stop := 277 }]             { start := 269, stop := 300 },   exported := true,   decreases := none,   span := { start := 221, stop := 229 } }
+def EntryGuards.«present».function : Ariadne.Function := _root_.Extracted_optionals.program.functions[1]!
 
 def EntryGuards.«present».plan : List Ownership.ArgumentCheck := []
 
@@ -1016,7 +930,7 @@ def «fallback» («_xs#arg» : (_root_.List (_root_.Option _root_.Int))) («_de
 abbrev «fallback».safe («_xs#arg» : (_root_.List (_root_.Option _root_.Int))) («_defaultValue#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«fallback» (by decide) («_xs#arg», («_defaultValue#arg», ()))
 
-def EntryGuards.«fallback».function : Ariadne.Function := { name := "fallback",   params := [{ name := "xs",                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.named "Maybe")),                span := { start := 326, stop := 328 } },              { name := "defaultValue", ty := Ariadne.Ty.named "Int53", span := { start := 348, stop := 360 } }],   result := Ariadne.Ty.named "Int53",   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "??"                  (Ariadne.Expr.index                    (Ariadne.Expr.var "xs" { start := 385, stop := 387 })                    (Ariadne.Expr.literal (Ariadne.Literal.number 0 0) { start := 388, stop := 389 })                    { start := 385, stop := 390 })                  (Ariadne.Expr.var "defaultValue" { start := 394, stop := 406 })                  { start := 385, stop := 406 })                { start := 378, stop := 384 }]             { start := 376, stop := 409 },   exported := true,   decreases := none,   span := { start := 308, stop := 316 } }
+def EntryGuards.«fallback».function : Ariadne.Function := _root_.Extracted_optionals.program.functions[2]!
 
 def EntryGuards.«fallback».plan : List Ownership.ArgumentCheck := []
 
@@ -1050,7 +964,7 @@ def «foundMissing» («_xs#arg» : (_root_.List (_root_.Option _root_.Int))) : 
 abbrev «foundMissing».safe («_xs#arg» : (_root_.List (_root_.Option _root_.Int))) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«foundMissing» (by decide) («_xs#arg», ())
 
-def EntryGuards.«foundMissing».function : Ariadne.Function := { name := "foundMissing",   params := [{ name := "xs",                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.named "Maybe")),                span := { start := 439, stop := 441 } }],   result := Ariadne.Ty.boolean,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "==="                  (Ariadne.Expr.call                    (Ariadne.Expr.member                      (Ariadne.Expr.var "xs" { start := 479, stop := 481 })                      "find"                      { start := 479, stop := 486 })                    [Ariadne.Expr.lambda                       [{ name := "x", ty := Ariadne.Ty.named "Maybe", span := { start := 488, stop := 489 } }]                       (Ariadne.Stmt.return_                         (Ariadne.Expr.literal (Ariadne.Literal.boolean true) { start := 501, stop := 505 })                         { start := 501, stop := 505 })                       { start := 487, stop := 488 }]                    { start := 479, stop := 506 })                  (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 511, stop := 520 })                  { start := 479, stop := 520 })                { start := 472, stop := 478 }]             { start := 470, stop := 523 },   exported := true,   decreases := none,   span := { start := 417, stop := 425 } }
+def EntryGuards.«foundMissing».function : Ariadne.Function := _root_.Extracted_optionals.program.functions[3]!
 
 def EntryGuards.«foundMissing».plan : List Ownership.ArgumentCheck := []
 
@@ -1084,7 +998,7 @@ def «mapMissing» («_values#arg» : (_root_.Ariadne.Shallow.JSMap _root_.Int (
 abbrev «mapMissing».safe («_values#arg» : (_root_.Ariadne.Shallow.JSMap _root_.Int (_root_.Option _root_.Int))) («_key#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«mapMissing» (by decide) («_values#arg», («_key#arg», ()))
 
-def EntryGuards.«mapMissing».function : Ariadne.Function := { name := "mapMissing",   params := [{ name := "values",                ty := Ariadne.Ty.readonly (Ariadne.Ty.map (Ariadne.Ty.bigint) (Ariadne.Ty.named "Maybe")),                span := { start := 551, stop := 557 } },              { name := "key", ty := Ariadne.Ty.bigint, span := { start := 587, stop := 590 } }],   result := Ariadne.Ty.boolean,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "==="                  (Ariadne.Expr.call                    (Ariadne.Expr.member                      (Ariadne.Expr.var "values" { start := 618, stop := 624 })                      "get"                      { start := 618, stop := 628 })                    [Ariadne.Expr.var "key" { start := 629, stop := 632 }]                    { start := 618, stop := 633 })                  (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 638, stop := 647 })                  { start := 618, stop := 647 })                { start := 611, stop := 617 }]             { start := 609, stop := 650 },   exported := true,   decreases := none,   span := { start := 531, stop := 539 } }
+def EntryGuards.«mapMissing».function : Ariadne.Function := _root_.Extracted_optionals.program.functions[4]!
 
 def EntryGuards.«mapMissing».plan : List Ownership.ArgumentCheck := []
 
@@ -1116,7 +1030,7 @@ def «mapFallback» («_values#arg» : (_root_.Ariadne.Shallow.JSMap _root_.Int 
 abbrev «mapFallback».safe («_values#arg» : (_root_.Ariadne.Shallow.JSMap _root_.Int (_root_.Option _root_.Int))) («_key#arg» : _root_.Int) («_defaultValue#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«mapFallback» (by decide) («_values#arg», («_key#arg», («_defaultValue#arg», ())))
 
-def EntryGuards.«mapFallback».function : Ariadne.Function := { name := "mapFallback",   params := [{ name := "values",                ty := Ariadne.Ty.readonly (Ariadne.Ty.map (Ariadne.Ty.bigint) (Ariadne.Ty.named "Maybe")),                span := { start := 679, stop := 685 } },              { name := "key", ty := Ariadne.Ty.bigint, span := { start := 715, stop := 718 } },              { name := "defaultValue", ty := Ariadne.Ty.named "Int53", span := { start := 728, stop := 740 } }],   result := Ariadne.Ty.named "Int53",   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "??"                  (Ariadne.Expr.call                    (Ariadne.Expr.member                      (Ariadne.Expr.var "values" { start := 765, stop := 771 })                      "get"                      { start := 765, stop := 775 })                    [Ariadne.Expr.var "key" { start := 776, stop := 779 }]                    { start := 765, stop := 780 })                  (Ariadne.Expr.var "defaultValue" { start := 784, stop := 796 })                  { start := 765, stop := 796 })                { start := 758, stop := 764 }]             { start := 756, stop := 799 },   exported := true,   decreases := none,   span := { start := 658, stop := 666 } }
+def EntryGuards.«mapFallback».function : Ariadne.Function := _root_.Extracted_optionals.program.functions[5]!
 
 def EntryGuards.«mapFallback».plan : List Ownership.ArgumentCheck := []
 
@@ -1151,7 +1065,7 @@ def «unitMissing» («_xs#arg» : (_root_.List _root_.Unit)) : _root_.Bool :=
 abbrev «unitMissing».safe («_xs#arg» : (_root_.List _root_.Unit)) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«unitMissing» (by decide) («_xs#arg», ())
 
-def EntryGuards.«unitMissing».function : Ariadne.Function := { name := "unitMissing",   params := [{ name := "xs",                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.undefined)),                span := { start := 828, stop := 830 } }],   result := Ariadne.Ty.boolean,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "==="                  (Ariadne.Expr.index                    (Ariadne.Expr.var "xs" { start := 872, stop := 874 })                    (Ariadne.Expr.literal (Ariadne.Literal.number 0 0) { start := 875, stop := 876 })                    { start := 872, stop := 877 })                  (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 882, stop := 891 })                  { start := 872, stop := 891 })                { start := 865, stop := 871 }]             { start := 863, stop := 894 },   exported := true,   decreases := none,   span := { start := 807, stop := 815 } }
+def EntryGuards.«unitMissing».function : Ariadne.Function := _root_.Extracted_optionals.program.functions[6]!
 
 def EntryGuards.«unitMissing».plan : List Ownership.ArgumentCheck := []
 
@@ -1185,7 +1099,7 @@ def «nestedMissing» («_value#arg» : (_root_.Option _root_.Int)) : _root_.Boo
 abbrev «nestedMissing».safe («_value#arg» : (_root_.Option _root_.Int)) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«nestedMissing» (by decide) («_value#arg», ())
 
-def EntryGuards.«nestedMissing».function : Ariadne.Function := { name := "nestedMissing",   params := [{ name := "value", ty := Ariadne.Ty.named "Nested", span := { start := 925, stop := 930 } }],   result := Ariadne.Ty.boolean,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "==="                  (Ariadne.Expr.var "value" { start := 958, stop := 963 })                  (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 968, stop := 977 })                  { start := 958, stop := 977 })                { start := 951, stop := 957 }]             { start := 949, stop := 980 },   exported := true,   decreases := none,   span := { start := 902, stop := 910 } }
+def EntryGuards.«nestedMissing».function : Ariadne.Function := _root_.Extracted_optionals.program.functions[7]!
 
 def EntryGuards.«nestedMissing».plan : List Ownership.ArgumentCheck := []
 
@@ -1219,7 +1133,7 @@ def «recordMissing» («_value#arg» : NativeTypes.«OptionalRecord») : _root_
 abbrev «recordMissing».safe («_value#arg» : NativeTypes.«OptionalRecord») : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«recordMissing» (by decide) («_value#arg», ())
 
-def EntryGuards.«recordMissing».function : Ariadne.Function := { name := "recordMissing",   params := [{ name := "value", ty := Ariadne.Ty.named "OptionalRecord", span := { start := 1011, stop := 1016 } }],   result := Ariadne.Ty.boolean,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "==="                  (Ariadne.Expr.member                    (Ariadne.Expr.var "value" { start := 1052, stop := 1057 })                    "value"                    { start := 1052, stop := 1063 })                  (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 1068, stop := 1077 })                  { start := 1052, stop := 1077 })                { start := 1045, stop := 1051 }]             { start := 1043, stop := 1080 },   exported := true,   decreases := none,   span := { start := 988, stop := 996 } }
+def EntryGuards.«recordMissing».function : Ariadne.Function := _root_.Extracted_optionals.program.functions[8]!
 
 def EntryGuards.«recordMissing».plan : List Ownership.ArgumentCheck := []
 
@@ -1305,7 +1219,7 @@ def «retainedCoercion» («_x#arg» : _root_.Int) : (_root_.Option _root_.Int) 
 abbrev «retainedCoercion».safe («_x#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«retainedCoercion» (by decide) («_x#arg», ())
 
-def EntryGuards.«retainedCoercion».function : Ariadne.Function := { name := "retainedCoercion",   params := [{ name := "x", ty := Ariadne.Ty.named "Int53", span := { start := 1210, stop := 1211 } }],   result := Ariadne.Ty.named "Maybe",   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.call                  (Ariadne.Expr.var "checkedUndefined" { start := 1236, stop := 1252 })                  [Ariadne.Expr.var "x" { start := 1253, stop := 1254 }]                  { start := 1236, stop := 1255 })                { start := 1229, stop := 1235 }]             { start := 1227, stop := 1258 },   exported := true,   decreases := none,   span := { start := 1184, stop := 1192 } }
+def EntryGuards.«retainedCoercion».function : Ariadne.Function := _root_.Extracted_optionals.program.functions[10]!
 
 def EntryGuards.«retainedCoercion».plan : List Ownership.ArgumentCheck := []
 
@@ -1349,7 +1263,7 @@ def «retainedLeft» («_x#arg» : _root_.Int) («_value#arg» : (_root_.Option 
 abbrev «retainedLeft».safe («_x#arg» : _root_.Int) («_value#arg» : (_root_.Option _root_.Int)) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«retainedLeft» (by decide) («_x#arg», («_value#arg», ()))
 
-def EntryGuards.«retainedLeft».function : Ariadne.Function := { name := "retainedLeft",   params := [{ name := "x", ty := Ariadne.Ty.named "Int53", span := { start := 1288, stop := 1289 } },              { name := "value", ty := Ariadne.Ty.named "Maybe", span := { start := 1298, stop := 1303 } }],   result := Ariadne.Ty.boolean,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "==="                  (Ariadne.Expr.call                    (Ariadne.Expr.var "checkedUndefined" { start := 1330, stop := 1346 })                    [Ariadne.Expr.var "x" { start := 1347, stop := 1348 }]                    { start := 1330, stop := 1349 })                  (Ariadne.Expr.var "value" { start := 1354, stop := 1359 })                  { start := 1330, stop := 1359 })                { start := 1323, stop := 1329 }]             { start := 1321, stop := 1362 },   exported := true,   decreases := none,   span := { start := 1266, stop := 1274 } }
+def EntryGuards.«retainedLeft».function : Ariadne.Function := _root_.Extracted_optionals.program.functions[11]!
 
 def EntryGuards.«retainedLeft».plan : List Ownership.ArgumentCheck := []
 
@@ -1393,7 +1307,7 @@ def «retainedRight» («_value#arg» : (_root_.Option _root_.Int)) («_x#arg» 
 abbrev «retainedRight».safe («_value#arg» : (_root_.Option _root_.Int)) («_x#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«retainedRight» (by decide) («_value#arg», («_x#arg», ()))
 
-def EntryGuards.«retainedRight».function : Ariadne.Function := { name := "retainedRight",   params := [{ name := "value", ty := Ariadne.Ty.named "Maybe", span := { start := 1393, stop := 1398 } },              { name := "x", ty := Ariadne.Ty.named "Int53", span := { start := 1407, stop := 1408 } }],   result := Ariadne.Ty.boolean,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "==="                  (Ariadne.Expr.var "value" { start := 1435, stop := 1440 })                  (Ariadne.Expr.call                    (Ariadne.Expr.var "checkedUndefined" { start := 1445, stop := 1461 })                    [Ariadne.Expr.var "x" { start := 1462, stop := 1463 }]                    { start := 1445, stop := 1464 })                  { start := 1435, stop := 1464 })                { start := 1428, stop := 1434 }]             { start := 1426, stop := 1467 },   exported := true,   decreases := none,   span := { start := 1370, stop := 1378 } }
+def EntryGuards.«retainedRight».function : Ariadne.Function := _root_.Extracted_optionals.program.functions[12]!
 
 def EntryGuards.«retainedRight».plan : List Ownership.ArgumentCheck := []
 
@@ -1437,7 +1351,7 @@ def «retainedUnits» («_x#arg» : _root_.Int) : _root_.Bool :=
 abbrev «retainedUnits».safe («_x#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«retainedUnits» (by decide) («_x#arg», ())
 
-def EntryGuards.«retainedUnits».function : Ariadne.Function := { name := "retainedUnits",   params := [{ name := "x", ty := Ariadne.Ty.named "Int53", span := { start := 1498, stop := 1499 } }],   result := Ariadne.Ty.boolean,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "==="                  (Ariadne.Expr.call                    (Ariadne.Expr.var "checkedUndefined" { start := 1526, stop := 1542 })                    [Ariadne.Expr.var "x" { start := 1543, stop := 1544 }]                    { start := 1526, stop := 1545 })                  (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 1550, stop := 1559 })                  { start := 1526, stop := 1559 })                { start := 1519, stop := 1525 }]             { start := 1517, stop := 1562 },   exported := true,   decreases := none,   span := { start := 1475, stop := 1483 } }
+def EntryGuards.«retainedUnits».function : Ariadne.Function := _root_.Extracted_optionals.program.functions[13]!
 
 def EntryGuards.«retainedUnits».plan : List Ownership.ArgumentCheck := []
 
@@ -1471,7 +1385,7 @@ def «literalPresent» («_value#arg» : NativeTypes.«LiteralContainer») : _ro
 abbrev «literalPresent».safe («_value#arg» : NativeTypes.«LiteralContainer») : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«literalPresent» (by decide) («_value#arg», ())
 
-def EntryGuards.«literalPresent».function : Ariadne.Function := { name := "literalPresent",   params := [{ name := "value", ty := Ariadne.Ty.named "LiteralContainer", span := { start := 1752, stop := 1757 } }],   result := Ariadne.Ty.boolean,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "!=="                  (Ariadne.Expr.index                    (Ariadne.Expr.member                      (Ariadne.Expr.var "value" { start := 1795, stop := 1800 })                      "xs"                      { start := 1795, stop := 1803 })                    (Ariadne.Expr.literal (Ariadne.Literal.number 0 0) { start := 1804, stop := 1805 })                    { start := 1795, stop := 1806 })                  (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 1811, stop := 1820 })                  { start := 1795, stop := 1820 })                { start := 1788, stop := 1794 }]             { start := 1786, stop := 1823 },   exported := true,   decreases := none,   span := { start := 1728, stop := 1736 } }
+def EntryGuards.«literalPresent».function : Ariadne.Function := _root_.Extracted_optionals.program.functions[14]!
 
 def EntryGuards.«literalPresent».plan : List Ownership.ArgumentCheck := []
 
@@ -1505,7 +1419,7 @@ def «tagPresent» («_value#arg» : NativeTypes.«OptionalTag») : _root_.Bool 
 abbrev «tagPresent».safe («_value#arg» : NativeTypes.«OptionalTag») : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«tagPresent» (by decide) («_value#arg», ())
 
-def EntryGuards.«tagPresent».function : Ariadne.Function := { name := "tagPresent",   params := [{ name := "value", ty := Ariadne.Ty.named "OptionalTag", span := { start := 1851, stop := 1856 } }],   result := Ariadne.Ty.boolean,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "!=="                  (Ariadne.Expr.member                    (Ariadne.Expr.var "value" { start := 1889, stop := 1894 })                    "kind"                    { start := 1889, stop := 1899 })                  (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 1904, stop := 1913 })                  { start := 1889, stop := 1913 })                { start := 1882, stop := 1888 }]             { start := 1880, stop := 1916 },   exported := true,   decreases := none,   span := { start := 1831, stop := 1839 } }
+def EntryGuards.«tagPresent».function : Ariadne.Function := _root_.Extracted_optionals.program.functions[15]!
 
 def EntryGuards.«tagPresent».plan : List Ownership.ArgumentCheck := []
 
@@ -1539,7 +1453,7 @@ def «unitField» («_value#arg» : NativeTypes.«UndefinedRecord») : _root_.Bo
 abbrev «unitField».safe («_value#arg» : NativeTypes.«UndefinedRecord») : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«unitField» (by decide) («_value#arg», ())
 
-def EntryGuards.«unitField».function : Ariadne.Function := { name := "unitField",   params := [{ name := "value", ty := Ariadne.Ty.named "UndefinedRecord", span := { start := 1943, stop := 1948 } }],   result := Ariadne.Ty.boolean,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "==="                  (Ariadne.Expr.member                    (Ariadne.Expr.var "value" { start := 1985, stop := 1990 })                    "value"                    { start := 1985, stop := 1996 })                  (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 2001, stop := 2010 })                  { start := 1985, stop := 2010 })                { start := 1978, stop := 1984 }]             { start := 1976, stop := 2013 },   exported := true,   decreases := none,   span := { start := 1924, stop := 1932 } }
+def EntryGuards.«unitField».function : Ariadne.Function := _root_.Extracted_optionals.program.functions[16]!
 
 def EntryGuards.«unitField».plan : List Ownership.ArgumentCheck := []
 

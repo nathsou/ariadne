@@ -596,10 +596,17 @@ def emit (source : String) (program : Program) (namespace_ : String) : Checked S
   let declarations := (← roots.mapM (declarationOrder expanded 100)).flatten.eraseDups
   let mut out := (Ariadne.emit source original namespace_).replace
     "import Ariadne.Certificate\n" "import Ariadne.Certificate\nimport Ariadne.Shallow.Elaborate\nimport Ariadne.Shallow.Safety\nimport Ariadne.Shallow.Adequacy.Statements\nimport Ariadne.Shallow.Adequacy.GuardedStatements\nimport Ariadne.Shallow.Adequacy.JoinsContext\nimport Ariadne.Shallow.Adequacy.GuardedJoinsContext\nimport Ariadne.Ownership.Source\n"
-  out := out ++ s!"\nnamespace {namespace_}.Wrapper\nopen Ariadne\n\n" ++
-    s!"def source : String := {reprStr wrapper}\n\n" ++
-    s!"def characters : List Char := {reprStr wrapper.toList}\n\n" ++
-    "theorem characters_encoded : String.ofList characters = source := by kernel_rfl\n\n" ++
+  out := out ++ s!"\nnamespace {namespace_}.Wrapper\nopen Ariadne\n\n"
+  if wrapper == Ownership.Wrap.header ++ source then
+    out := out ++ s!"def source : String := Ownership.Wrap.header ++ _root_.{namespace_}.source\n\n" ++
+      s!"def characters : List Char := Ownership.Wrap.headerCharacters ++ _root_.{namespace_}.characters\n\n" ++
+      "theorem characters_encoded : String.ofList characters = source := by\n" ++
+      s!"  simp only [characters, String.ofList_append, Ownership.Wrap.header_encoded, _root_.{namespace_}.characters_encoded]\n  rfl\n\n"
+  else
+    out := out ++ s!"def source : String := {reprStr wrapper}\n\n" ++
+      s!"def characters : List Char := {reprStr wrapper.toList}\n\n" ++
+      "theorem characters_encoded : String.ofList characters = source := by kernel_rfl\n\n"
+  out := out ++
     "theorem rendered : Ownership.Wrap.emitCharacterData\n" ++
     s!"    _root_.{namespace_}.characters _root_.{namespace_}.tokens.toList _root_.{namespace_}.program = .ok characters := by kernel_rfl\n\n" ++
     s!"theorem checked : Ownership.Wrap.emit _root_.{namespace_}.source _root_.{namespace_}.program = .ok source :=\n" ++
@@ -652,7 +659,9 @@ def emit (source : String) (program : Program) (namespace_ : String) : Checked S
     if f.exported && original.functions.any (·.name == f.name) then
       let plan ← Ownership.entryPlan original f
       let entry := "EntryGuards." ++ ident f.name
-      out := out ++ s!"def {entry}.function : Ariadne.Function := {(reprStr f).replace "\n" " "}\n\n" ++
+      let some index := original.functions.findIdx? (·.name == f.name)
+        | Elaborate.refusal "A5101" "missing original exported function" f.span
+      out := out ++ s!"def {entry}.function : Ariadne.Function := _root_.{namespace_}.program.functions[{index}]!\n\n" ++
         s!"def {entry}.plan : List Ownership.ArgumentCheck := {(reprStr plan).replace "\n" " "}\n\n" ++
         s!"theorem {entry}.planned : Ownership.entryPlan _root_.{namespace_}.program {entry}.function = .ok {entry}.plan := by kernel_rfl\n\n" ++
         s!"def {entry}.certificate : Ownership.EntryCertificate _root_.{namespace_}.Wrapper.certificate {reprStr f.name} :=\n" ++

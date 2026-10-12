@@ -190,7 +190,7 @@ def «grow» («_rows#arg» : (_root_.List (_root_.List _root_.Int))) («_items#
 abbrev «grow».safe («_rows#arg» : (_root_.List (_root_.List _root_.Int))) («_items#arg» : (_root_.List _root_.Int)) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«grow» (by decide) («_rows#arg», («_items#arg», ()))
 
-def EntryGuards.«grow».function : Ariadne.Function := { name := "grow",   params := [{ name := "rows",                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.array (Ariadne.Ty.bigint))),                span := { start := 21, stop := 25 } },              { name := "items", ty := Ariadne.Ty.array (Ariadne.Ty.bigint), span := { start := 48, stop := 53 } }],   result := Ariadne.Ty.void,   body := Ariadne.Stmt.block             [Ariadne.Stmt.expr                (Ariadne.Expr.call                  (Ariadne.Expr.member                    (Ariadne.Expr.var "items" { start := 75, stop := 80 })                    "push"                    { start := 75, stop := 85 })                  [Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 86, stop := 88 }]                  { start := 75, stop := 89 })                { start := 75, stop := 89 }]             { start := 71, stop := 92 },   exported := true,   decreases := none,   span := { start := 7, stop := 15 } }
+def EntryGuards.«grow».function : Ariadne.Function := _root_.Extracted_tamper_entryguards.program.functions[0]!
 
 def EntryGuards.«grow».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.deep,    rightTraversal := Ariadne.Ownership.Traversal.root }]
 
