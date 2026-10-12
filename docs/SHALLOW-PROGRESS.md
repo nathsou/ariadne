@@ -75,6 +75,14 @@ Deriving those facts from checker soundness and integrating write/read footprint
 permissions into general stateful transfer remain M4 obligations. This does not
 complete adequacy, projections or M5.
 
+Projection proof foundation: partial lenses for ordered Maps and arrays satisfy
+get/put, put/get, repeated-put, modification and composition laws. Element and
+Map-key focus rules rebuild container representations while framing all other
+elements. Array-of-arrays and Map-of-arrays push rules prove actual operational
+invocations, retain the outer runtime references, and write only the selected
+inner array. The parser, exclusive statement checks and lowering still need to
+connect these rules to projection source programs.
+
 CI #96 on `5e31ceb` passes in 11m23s, compared with baseline CI #82's 21m18s.
 Its logged source-transfer and Int53 tamper phases take 17s and 7s respectively,
 compared with the baseline 1m51s and 1m29s. The axiom audit covers 5,435 theorems.
