@@ -463,3 +463,24 @@ The guarded checkpoint's complete artifact rebuild, `Ariadne`, `Examples` and
 `Tests` build, 4,851-theorem axiom audit, shallow differential gate, and original
 scalar source gate (eighteen theorems and six tamper checks) all pass. CI #74
 passed the preceding reassignment checkpoint. Project regeneration is current.
+
+## Owned push and structural function erasure
+
+`Adequacy/ArrayMutation.lean` composes disjoint element footprints through append
+and proves original array `push` invocation correspondence. An inserted owned
+value must be separate from the old array; capacity is explicit. The resulting
+array represents the native append, only its root is written, and framed heap
+observations remain valid. This is a primitive mutation law, not whole-array
+function transfer.
+
+`Safety/Erasure.lean` relates guarded and native values at every Core type,
+including functions by their action on related inputs and containers retaining
+function values. All unary and binary primitives preserve the relation. Value
+erasure is proved for the structural fragment containing functions, application,
+options, lists, products, sums and scalar control flow. Renaming, substitution,
+projection and continuation abstraction preserve the fragment. Callback
+traversal, named construction and the general source-control relation remain
+required before claiming a complete fundamental lemma.
+
+Both modules and `Ariadne` build successfully. The dependency audit passes for
+4,916 theorems using only standard Lean logical axioms.

@@ -21,3 +21,5 @@ import Ariadne.Shallow.Adequacy.Loop
 import Ariadne.Shallow.Prelude.CollectionSizes
 import Ariadne.Shallow.Safety.Scalar
 import Ariadne.Shallow.Adequacy.GuardedStatements
+import Ariadne.Shallow.Adequacy.ArrayMutation
+import Ariadne.Shallow.Safety.Erasure
