@@ -1,5 +1,8 @@
 # Verified scalar compilation milestone
 
+Historical plan for the completed scalar milestone. The subsequent calls milestone
+is documented in [RECURSIVE-CALLS-PLAN.md](RECURSIVE-CALLS-PLAN.md).
+
 This milestone builds on PR #1. It has four acceptance criteria:
 
 1. Prove that every evaluator entry point preserves successful results and

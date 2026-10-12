@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import assert from 'node:assert/strict';
+import { observe, lean } from './scalar-observations.mjs';
 
 const cases = {
   multiply: [[7n, 13n], [-9n, 20n], [100000000000000000000n, 9n], [9n, -3n], [3n, 0n]],
@@ -20,28 +21,6 @@ const cases = {
     [2, Infinity], [NaN, 2], [Number.MIN_VALUE, 2], [2 ** 53, 3]],
 };
 
-function bits(value) {
-  const bytes = new DataView(new ArrayBuffer(8));
-  bytes.setFloat64(0, Number.isNaN(value) ? NaN : value);
-  return bytes.getBigUint64(0).toString();
-}
-const units = value => Array.from({ length: value.length }, (_, i) => value.charCodeAt(i));
-function observe(value) {
-  if (value === undefined) return ['undefined'];
-  if (typeof value === 'bigint') return ['bigint', value.toString()];
-  if (typeof value === 'number') return ['number', bits(value)];
-  if (typeof value === 'string') return ['string', units(value)];
-  if (typeof value === 'boolean') return ['boolean', value];
-  throw new Error('Unsupported test value');
-}
-function lean(value) {
-  if (value === undefined) return '.undefined';
-  if (typeof value === 'bigint') return `(.bigint (${value}))`;
-  if (typeof value === 'number') return `(.number (Float.Model.ofBits ${bits(value)}))`;
-  if (typeof value === 'string') return `(.string [${units(value).join(', ')}])`;
-  if (typeof value === 'boolean') return `(.boolean ${value})`;
-  throw new Error('Unsupported test value');
-}
 const run = (cmd, args) => spawnSync(cmd, args, { encoding: 'utf8', timeout: 120000, maxBuffer: 8e6 });
 const cli = args => run('.lake/build/bin/ariadne', args);
 await mkdir('work', { recursive: true });
@@ -73,11 +52,10 @@ try {
   const source = resolve(dir, 'input.ts');
   const artifact = resolve(dir, 'Output.lean');
   const unsupported = [
-    ['function helper(): bigint { return 1n; } export function demo(): bigint { return helper(); }', 'A4101', 'helper()'],
     ['export function demo(): number { const xs = [1]; return xs.length; }', 'A4101', '[1]'],
     ['export function demo(xs: number[]): number { return xs.length; }', 'A4101', 'xs'],
     ['export function demo(): bigint { const m = new Map<string, bigint>(); return 0n; }', 'A4101', 'Map'],
-    ['export function demo(): number { return Math.abs(-1); }', 'A4101', 'Math.abs'],
+    ['function unused(): number { const xs = [1]; return xs.length; } function helper(): bigint { return 1n; } export function demo(): bigint { return helper(); }', 'A4101', '[1]'],
   ];
   for (const [text, code, highlighted] of unsupported) {
     await writeFile(source, text);

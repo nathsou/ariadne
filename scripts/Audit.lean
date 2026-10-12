@@ -12,7 +12,8 @@ run_cmd do
     if ["Ariadne", "Examples", "Example_arithmetic", "Example_control_flow",
         "Example_euclid", "Example_fibonacci", "Example_histogram", "Example_map_keys",
         "Example_numbers", "Example_optionals", "Example_pipelines", "Example_power",
-        "Example_records", "Example_search", "Example_sorting", "Example_strings", "Tests"].contains root.toString || root.toString.startsWith "Compiled_" then
+        "Example_records", "Example_search", "Example_sorting", "Example_strings", "Tests"].contains root.toString || root.toString.startsWith "Compiled_" ||
+        root.toString.startsWith "Recursive_" then
       if info.isTheorem then
         count := count + 1
         for axiomName in ← collectAxioms name do

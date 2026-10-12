@@ -44,11 +44,15 @@ state/collection observations and reusable reasoning principles.
 semantic functions, lifts it to arbitrary larger budgets, and proves convergence
 and source-return determinism. It preserves non-timeout faults as well as values.
 
-`Target` defines executable expression/command combinators. `Compiler` recursively
-constructs these functions together with equality proofs against `Semantics`.
-Its loop proof covers every runtime budget. `Emit.emitCompiled` prints a selected
-entry point plus an equation checking the printed code against the compiler result.
-The target retains cells and dynamic values; it never dispatches on source statements.
+`Target` defines executable expression/command combinators. `OpenCompiler` constructs
+them with equality and causality proofs; `Compiler` specializes this shared logic
+to call-free entries. `CompilerBase` contains common fragments, diagnostics, and
+the loop preservation proof. `Calls` proves causality for target combinators.
+`Linker` builds certified definition tables and proves recursive linking correct
+for every budget. `Emit.emitCompiled` checks the printed entry and linked table
+against the compiler result. The target retains cells and dynamic values. Named
+calls execute compiled bodies; reference-valued callables retain an explicit
+source-model compatibility branch pending a heap-shape invariant proof.
 
 `Main` implements check, translate, certify, compile, eval, and explain. `Observe` creates
 lossless test observations: number bits, bigint strings, UTF-16 units, explicit

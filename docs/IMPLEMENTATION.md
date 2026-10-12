@@ -26,6 +26,14 @@ proof-carrying scalar compilation, kernel-checked target emission, ten compiled
 examples, and an arbitrary-input multiplication proof with a termination bound.
 See [the compiler guide](COMPILER.md) and [the milestone plan](NEXT-STEPS.md).
 
+## Recursive calls milestone
+
+The next milestone adds causal open compilation, verified linking for direct and
+mutual recursion, scalar/string builtin calls, ten recursive/composition examples,
+and arbitrary-input countdown and universal modeled-divergence proofs. Printed
+function tables are kernel-checked. See [the milestone plan](RECURSIVE-CALLS-PLAN.md)
+for the explicit reference-call compatibility boundary.
+
 ## Remaining research and larger-subset work
 
 This is a usable experimental foundation, not the completion of a universally
@@ -34,8 +42,8 @@ verified Aeneas equivalent. The following are explicitly not implemented:
 1. An independent formal grammar and a universal proof that parsing implements it.
 2. Type/ownership preservation and progress for all accepted programs, plus a precise
    relation to an independently specified ECMAScript subset.
-3. Extending the proved scalar compiler to named calls/recursion, typed state tuples,
-   and collections. The current scalar target uses Lean function combinators and
+3. Proving heap-shape preservation to remove the reference-call compatibility
+   branch, then extending the scalar compiler to typed state tuples and collections. The current scalar target uses Lean function combinators and
    explicit cells; the larger operational translation still invokes the interpreter.
 4. Interprocedural effect summaries, region-based loans, nested mutable references,
    object keys, ownership transfer, and validated external-heap entry points.
@@ -43,7 +51,7 @@ verified Aeneas equivalent. The following are explicitly not implemented:
    inference, and multi-error parser recovery.
 6. Automated verification-condition generation, loop invariants, termination
    certificate synthesis, and universal correctness proofs for the larger example
-   algorithms. Multiplication already has a manual arbitrary-input termination proof.
+   algorithms. Multiplication and countdown already have manual arbitrary-input termination proofs.
 7. A formal conformance bridge for native binary64/string/collection builtins and
    a verified JavaScript engine or erasure pipeline.
 

@@ -3,7 +3,7 @@ import Ariadne
 open Ariadne
 
 private def usage : String :=
-  "Ariadne 0.2.0 — TypeScript subset to Lean 4\n\n" ++
+  "Ariadne 0.3.0 — TypeScript subset to Lean 4\n\n" ++
   "  ariadne check FILE [--json]\n" ++
   "  ariadne translate FILE --out FILE.lean [--namespace NAME]\n" ++
   "  ariadne certify FILE --out FILE.lean [--namespace NAME]\n" ++

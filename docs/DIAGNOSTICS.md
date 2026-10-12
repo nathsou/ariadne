@@ -61,6 +61,8 @@ exit status. Message prose may improve without changing those codes.
 `compile FILE FUNCTION --out FILE.lean --json` uses the same schema. `A4101`
 means the frontend accepted a construct that the scalar backend cannot compile;
 the diagnostic highlights the construct or parameter and suggests the operational
-translator. `A4102` is the compiler nesting limit. `A4103` is a missing entry name.
+translator. A failure in a linked unit also names the function and explains that
+every function in the unit must fit the backend, including unused functions.
+`A4102` is the compiler nesting limit. `A4103` is a missing entry name.
 These errors leave an existing output file untouched. A generated artifact that
 fails kernel checking reports `A4001` and remains an uncertified candidate.
