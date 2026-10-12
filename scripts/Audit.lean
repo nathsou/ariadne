@@ -3,7 +3,7 @@ import Tests
 import Ariadne.Hoare
 import Ariadne.Collections
 import Ariadne.Shallow.Lemmas.Core
-import Ariadne.Shallow.Prelude.NumberKey
+import Ariadne.Shallow.Prelude.NumericCollections
 
 open Lean in
 run_cmd do

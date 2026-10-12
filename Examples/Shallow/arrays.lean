@@ -1035,14 +1035,14 @@ theorem DenotationChecks.«score» :
   unfold Extracted_arrays.Shallow.«score»
   simp only [Denote.function, CoreArtifacts.«score», Denote.term, Core.Var.get, JoinChecks.«score#0»] <;> rfl
 
-def CoreArtifacts.«empty» : Core.Function := { params := [], result := Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int), body := (Core.Term.let_ "values" Core.Term.nil (Core.Term.var (Ariadne.Shallow.Core.Var.here))) }
+def CoreArtifacts.«empty» : Core.Function := { params := [], result := Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int), body := (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int)) "values" Core.Term.nil (Core.Term.var (Ariadne.Shallow.Core.Var.here))) }
 
 theorem ElaborationChecks.«empty» :
     Elaborate.function _root_.Extracted_arrays.program "empty" = .ok CoreArtifacts.«empty» := by kernel_rfl
 
 def «empty» : (_root_.List _root_.Int) :=
-  (let «values#0» := [];
-  «values#0»)
+  (let «_values#0» : (_root_.List _root_.Int) := [];
+  «_values#0»)
 
 theorem DenotationChecks.«empty» :
     (fun _env : Core.Env CoreArtifacts.«empty».params => «empty») =

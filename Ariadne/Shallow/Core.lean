@@ -13,6 +13,8 @@ inductive Ty where
   | list (element : Ty)
   | pair (left right : Ty)
   | fn (argument result : Ty)
+  | step (state result : Ty)
+  | exit (state result : Ty)
   deriving Repr, DecidableEq, BEq, Inhabited
 
 abbrev Ty.denote : Ty → Type
@@ -25,6 +27,8 @@ abbrev Ty.denote : Ty → Type
   | .list t => List t.denote
   | .pair a b => a.denote × b.denote
   | .fn a b => a.denote → b.denote
+  | .step s r => Step s.denote r.denote
+  | .exit s r => Exit s.denote r.denote
 
 abbrev Env : List Ty → Type
   | [] => Unit
@@ -55,6 +59,7 @@ inductive Binary : Ty → Ty → Ty → Type where
   | intEq : Binary .int .int .bool
   | intLt : Binary .int .int .bool
   | intLe : Binary .int .int .bool
+  | intRange : Binary .int .int (.list .int)
   | numAdd : Binary .number .number .number
   | numSub : Binary .number .number .number
   | numMul : Binary .number .number .number
@@ -106,6 +111,11 @@ inductive Term : List Ty → Ty → Type where
   | listFind : Term Γ (.fn a (.fn .number .bool)) → Term Γ (.list a) → Term Γ (.option a)
   | listFindIndex : Term Γ (.fn a (.fn .number .bool)) → Term Γ (.list a) → Term Γ .number
   | listSlice : Term Γ (.list a) → Term Γ .number → Term Γ .number → Term Γ (.list a)
+  | next : Term Γ s → Term Γ (.step s r)
+  | stop : Term Γ s → Term Γ (.step s r)
+  | ret : Term Γ r → Term Γ (.step s r)
+  | each : Term Γ (.list a) → Term Γ s → Term Γ (.fn a (.fn s (.step s r))) → Term Γ (.exit s r)
+  | exitCase : Term Γ (.exit s r) → Term Γ (.fn s t) → Term Γ (.fn r t) → Term Γ t
   deriving Repr
 
 abbrev Renaming (Γ Δ : List Ty) := ∀ {t}, Var Γ t → Var Δ t
@@ -144,6 +154,11 @@ def Term.rename (r : Renaming Γ Δ) : Term Γ t → Term Δ t
   | .listFind f xs => .listFind (f.rename r) (xs.rename r)
   | .listFindIndex f xs => .listFindIndex (f.rename r) (xs.rename r)
   | .listSlice xs a b => .listSlice (xs.rename r) (a.rename r) (b.rename r)
+  | .next a => .next (a.rename r)
+  | .stop a => .stop (a.rename r)
+  | .ret a => .ret (a.rename r)
+  | .each a b c => .each (a.rename r) (b.rename r) (c.rename r)
+  | .exitCase a b c => .exitCase (a.rename r) (b.rename r) (c.rename r)
 
 abbrev Substitution (Γ Δ : List Ty) := ∀ {t}, Var Γ t → Term Δ t
 
@@ -181,6 +196,11 @@ def Term.substitute (s : Substitution Γ Δ) : Term Γ t → Term Δ t
   | .listFind f xs => .listFind (f.substitute s) (xs.substitute s)
   | .listFindIndex f xs => .listFindIndex (f.substitute s) (xs.substitute s)
   | .listSlice xs a b => .listSlice (xs.substitute s) (a.substitute s) (b.substitute s)
+  | .next a => .next (a.substitute s)
+  | .stop a => .stop (a.substitute s)
+  | .ret a => .ret (a.substitute s)
+  | .each a b c => .each (a.substitute s) (b.substitute s) (c.substitute s)
+  | .exitCase a b c => .exitCase (a.substitute s) (b.substitute s) (c.substitute s)
 
 def environmentType : List Ty → Ty
   | [] => .unit

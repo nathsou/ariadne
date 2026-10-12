@@ -7,7 +7,7 @@ when their exit criteria pass; finite native tests are not universal proofs.
 | --- | --- | --- |
 | M0 | Complete | Reference sources and historical diagnostics; pinned CI downloads; reserved extraction diagnostics; output preservation tests |
 | M1 | Complete | All reference programs check and certify; grammar, ownership checks, operational semantics and the builtin table have differential coverage. Conservative dialect limits are listed below. |
-| M2 | In progress | Typed Core, scalar/list extraction, pure calls, structural denotation, three-way differential and tamper tests. Map/Set prelude laws are implemented. Named types, collection mutation, loops, Int53 safety and reference extraction remain pending. |
+| M2 | In progress | Typed Core, scalar/list extraction, structural loops, pure calls, structural denotation, three-way differential and tamper tests. Map/Set prelude laws are implemented. Named types, collection mutation, Int53 safety and reference extraction remain pending. |
 | M3 | Pending | Loop invariant/fold lemmas and scalar native proofs are seeded; the universal proofs of the three emitted references remain pending. |
 | M4 | Pending | Fundamental lemma, footprint preservation, adequacy and source transfer |
 | M5 | Pending | Measures, larger ownership, polymorphism, exceptions and scalar backend integration |
@@ -69,8 +69,10 @@ bigint addition/subtraction/multiplication and comparisons, binary64 arithmetic,
 UTF-16 string operations, and optional scalar values. Arrays lower to lists, with
 indexed pure callbacks, map/filter/reduce/search, indexing, slicing, reversal,
 concatenation and spread. Calls with scalar or immutable parameters are accepted.
-Branch continuations are shared through typed tuple arguments. Loops, named
-types, collection mutation, classes, and Int53 refinement are explicitly refused.
+Branch continuations are shared through typed tuple arguments. Array `for…of`,
+counted bigint loops, scalar switches, and nested break/continue/return lower to
+typed `Step`/`Exit` combinators. Named types, collection mutation, classes,
+number-valued counted loops, and Int53 refinement are explicitly refused.
 This is an incremental M2 slice, not the M2 reference-program exit gate.
 
 The extraction checkpoint passes the complete `scripts/check.sh` suite: 1,559
@@ -105,3 +107,17 @@ and 51 frontend entry points. A parser regression now covers compound conditions
 before a ternary. The numeric-key prelude proves SameValueZero equivalence and
 positive-zero canonicalization against the operational definitions, without
 changing IEEE equality used by source `===`.
+
+Loop proof examples establish the emitted sum's fold specification and append
+law. The prelude supplies invariant, fold, congruence, mapped-input, and exact
+integer-range lemmas. Counted-loop extraction checks that the bound is stable
+and that only the update step assigns the counter. Frontend return analysis now
+tracks normal, return, break and continue outcomes, including exhaustive switches
+and unreachable statements after a break.
+
+The loop checkpoint passes the full suite, including 44 new three-way loop cases,
+57 scalar cases, 51 array cases, and 48 negative fixtures. Native loop proofs also
+establish sum permutation invariance and first-match membership/floor properties.
+The numeric collection wrappers prove update/lookup laws, idempotence, NaN
+membership, and positive-zero insertion behavior. Their subsequent library build
+and expanded axiom audit pass with 2,135 theorems.

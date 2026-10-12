@@ -16,6 +16,8 @@ private def typeText : Core.Ty → String
   | .list t => s!"(_root_.List {typeText t})"
   | .pair a b => s!"({typeText a} × {typeText b})"
   | .fn a b => s!"({typeText a} → {typeText b})"
+  | .step a b => s!"(_root_.Ariadne.Shallow.Step {typeText a} {typeText b})"
+  | .exit a b => s!"(_root_.Ariadne.Shallow.Exit {typeText a} {typeText b})"
 
 private def index : Var Γ t → Nat
   | .here => 0
@@ -38,6 +40,7 @@ private def binaryText : Binary a b c → String → String → String
   | .intEq, a, b | .numEq, a, b | .strEq, a, b | .boolEq, a, b => s!"({a} == {b})"
   | .intLt, a, b | .numLt, a, b => s!"(decide ({a} < {b}))"
   | .intLe, a, b | .numLe, a, b => s!"(decide ({a} ≤ {b}))"
+  | .intRange, a, b => s!"(_root_.Ariadne.Shallow.Loop.integers {a} {b})"
   | .strAppend, a, b => s!"({a} ++ {b})"
   | .strLt, a, b => s!"(compare {a} {b} == Ordering.lt)"
   | .strLe, a, b => s!"(compare {a} {b} != Ordering.gt)"
@@ -48,9 +51,9 @@ private def binaryText : Binary a b c → String → String → String
 
 private def closedTerms : Term Γ t → List ((t : Core.Ty) × Term [] t)
   | .closed body => closedTerms body ++ [⟨_, body⟩]
-  | .unary _ a | .some a | .fst a | .snd a | .lam _ a => closedTerms a
+  | .unary _ a | .some a | .fst a | .snd a | .lam _ a | .next a | .stop a | .ret a => closedTerms a
   | .binary _ a b | .let_ _ a b | .cons a b | .pair a b | .app a b => closedTerms a ++ closedTerms b
-  | .ite a b c | .optionCase a b c => closedTerms a ++ closedTerms b ++ closedTerms c
+  | .ite a b c | .optionCase a b c | .each a b c | .exitCase a b c => closedTerms a ++ closedTerms b ++ closedTerms c
   | .listMap a b | .listFilter a b | .listSome a b | .listEvery a b |
       .listFind a b | .listFindIndex a b => closedTerms a ++ closedTerms b
   | .listReduce a b c | .listSlice a b c => closedTerms a ++ closedTerms b ++ closedTerms c
@@ -71,7 +74,7 @@ private def coreText (label : String) (keys : List String) : Term Γ t → Strin
   | .string s => s!"(Core.Term.string {reprStr s})"
   | .unary op a => s!"(Core.Term.unary ({reprStr op}) {coreText label keys a})"
   | .binary op a b => s!"(Core.Term.binary ({reprStr op}) {coreText label keys a} {coreText label keys b})"
-  | .let_ name a b => s!"(Core.Term.let_ {reprStr name} {coreText label keys a} {coreText label keys b})"
+  | @Term.let_ _ t _ name a b => s!"(Core.Term.let_ (a := {reprStr t}) {reprStr name} {coreText label keys a} {coreText label keys b})"
   | .ite a b c => s!"(Core.Term.ite {coreText label keys a} {coreText label keys b} {coreText label keys c})"
   | .none => "Core.Term.none"
   | .some a => s!"(Core.Term.some {coreText label keys a})"
@@ -91,6 +94,11 @@ private def coreText (label : String) (keys : List String) : Term Γ t → Strin
   | .listFind f xs => s!"(Core.Term.listFind {coreText label keys f} {coreText label keys xs})"
   | .listFindIndex f xs => s!"(Core.Term.listFindIndex {coreText label keys f} {coreText label keys xs})"
   | .listSlice xs a b => s!"(Core.Term.listSlice {coreText label keys xs} {coreText label keys a} {coreText label keys b})"
+  | .next a => s!"(Core.Term.next {coreText label keys a})"
+  | .stop a => s!"(Core.Term.stop {coreText label keys a})"
+  | .ret a => s!"(Core.Term.ret {coreText label keys a})"
+  | .each a b c => s!"(Core.Term.each {coreText label keys a} {coreText label keys b} {coreText label keys c})"
+  | .exitCase a b c => s!"(Core.Term.exitCase {coreText label keys a} {coreText label keys b} {coreText label keys c})"
 
 private def termText (label : String) (keys : List String) (term : Term Γ t) (names : List String) (depth : Nat := 0) : String :=
   match term with
@@ -102,9 +110,9 @@ private def termText (label : String) (keys : List String) (term : Term Γ t) (n
   | .string s => s!"({reprStr s} : _root_.Ariadne.JSString)"
   | .unary op a => unaryText op (termText label keys a names depth)
   | .binary op a b => binaryText op (termText label keys a names depth) (termText label keys b names depth)
-  | .let_ name a b =>
-    let name := ident s!"{name}#{depth}"
-    s!"(let {name} := {termText label keys a names depth};\n{termText label keys b (name :: names) (depth + 1)})"
+  | @Term.let_ _ t _ name a b =>
+    let name := ident s!"_{name}#{depth}"
+    s!"(let {name} : {typeText t} := {termText label keys a names depth};\n{termText label keys b (name :: names) (depth + 1)})"
   | .ite c a b => s!"(if {termText label keys c names depth} then\n{termText label keys a names depth}\nelse\n{termText label keys b names depth})"
   | .none => "_root_.Option.none"
   | .some a => s!"(_root_.Option.some {termText label keys a names depth})"
@@ -129,6 +137,11 @@ private def termText (label : String) (keys : List String) (term : Term Γ t) (n
   | .listFind f xs => s!"(_root_.Ariadne.Shallow.JSArray.find {termText label keys f names depth} {termText label keys xs names depth})"
   | .listFindIndex f xs => s!"(_root_.Ariadne.Shallow.JSArray.findIndex {termText label keys f names depth} {termText label keys xs names depth})"
   | .listSlice xs a b => s!"(_root_.Ariadne.Shallow.JSArray.slice {termText label keys xs names depth} {termText label keys a names depth} {termText label keys b names depth})"
+  | .next a => s!"(_root_.Ariadne.Shallow.Step.next {termText label keys a names depth})"
+  | .stop a => s!"(_root_.Ariadne.Shallow.Step.stop {termText label keys a names depth})"
+  | .ret a => s!"(_root_.Ariadne.Shallow.Step.ret {termText label keys a names depth})"
+  | .each xs init body => s!"(_root_.Ariadne.Shallow.Loop.each {termText label keys xs names depth} {termText label keys init names depth} {termText label keys body names depth})"
+  | .exitCase e done ret => s!"(_root_.Ariadne.Shallow.Exit.elim {termText label keys e names depth} {termText label keys done names depth} {termText label keys ret names depth})"
 
 def emit (source : String) (program : Program) (namespace_ : String) : Checked String := do
   if !program.classes.isEmpty then

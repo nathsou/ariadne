@@ -11,6 +11,11 @@ inductive Exit (σ τ : Type) where
   | ret (value : τ)
   deriving Repr, DecidableEq
 
+def Exit.elim (e : Exit σ τ) (done : σ → α) (ret : τ → α) : α :=
+  match e with
+  | .done s => done s
+  | .ret v => ret v
+
 def Exit.finish (e : Exit σ τ) (rest : σ → τ) : τ :=
   match e with
   | .done s => rest s
@@ -26,6 +31,45 @@ def Loop.each (xs : List α) (init : σ) (body : α → σ → Step σ τ) : Exi
 
 def Loop.range (start count : Nat) (init : σ) (body : Nat → σ → Step σ τ) : Exit σ τ :=
   each (List.range' start count) init body
+
+/-- Exact half-open integer bounds; an inverted interval is empty. -/
+def Loop.integers (start stop : Int) : List Int :=
+  (List.range (stop - start).toNat).map (fun (i : Nat) => start + (i : Int))
+
+@[simp] theorem Loop.integers_length (start stop : Int) :
+    (integers start stop).length = (stop - start).toNat := by
+  simp [integers]
+
+@[simp] theorem Loop.mem_integers (x start stop : Int) :
+    x ∈ integers start stop ↔ start ≤ x ∧ x < stop := by
+  simp only [integers, List.mem_map, List.mem_range]
+  constructor
+  · rintro ⟨i, hi, rfl⟩
+    omega
+  · rintro ⟨lower, upper⟩
+    refine ⟨(x - start).toNat, ?_, ?_⟩ <;> omega
+
+theorem Loop.each_congr (xs : List α) (init : σ) (f g : α → σ → Step σ τ)
+    (h : ∀ x ∈ xs, ∀ s, f x s = g x s) : each xs init f = each xs init g := by
+  induction xs generalizing init with
+  | nil => rfl
+  | cons x xs ih =>
+    simp only [each, h x (by simp)]
+    cases g x init with
+    | next s => exact ih s (fun y hy => h y (by simp [hy]))
+    | stop s => rfl
+    | ret v => rfl
+
+theorem Loop.each_map (xs : List α) (f : α → β) (init : σ) (body : β → σ → Step σ τ) :
+    each (xs.map f) init body = each xs init (fun x => body (f x)) := by
+  induction xs generalizing init with
+  | nil => rfl
+  | cons x xs ih =>
+    simp only [List.map_cons, each]
+    cases body (f x) init with
+    | next s => exact ih s
+    | stop s => rfl
+    | ret v => rfl
 
 @[simp] theorem Loop.each_nil (init : σ) (body : α → σ → Step σ τ) :
     each [] init body = .done init := rfl

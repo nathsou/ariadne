@@ -60,6 +60,7 @@ def sourceType : Core.Ty → Ariadne.Ty
   | .list t => .array (sourceType t)
   | .pair a b => .tuple [sourceType a, sourceType b]
   | .fn a b => .function [sourceType a] (sourceType b)
+  | .step .. | .exit .. => .void -- Internal control types are never source bindings.
 
 def functionType : List Core.Ty → Core.Ty → Core.Ty
   | [], result => result
@@ -148,6 +149,68 @@ def arithmetic (op : String) (a b : Typed ctx) (span : Span) : Checked (Typed ct
     refusal "A5104" "unsupported undefined operation" span
   | _ => refusal "A5104" "unsupported scalar operation" span
 
+/-- Convert exits in one loop to typed control constructors. Nested loop exits
+belong to that nested loop; source returns still leave the enclosing function. -/
+def loopControl (fuel : Nat) (retName nextName stopName : String) (state : Context)
+    (canBreak canContinue : Bool) (stmt : Stmt) : Stmt :=
+  match fuel with
+  | 0 => stmt
+  | n + 1 =>
+    let recur := loopControl n retName nextName stopName state canBreak canContinue
+    let jump := fun name span => Stmt.return_ (.call (.var name span)
+      (state.map fun b => .var b.name span) span) span
+    match stmt with
+    | .return_ value span => .return_ (.call (.var retName span) [value] span) span
+    | .break_ span => if canBreak then jump stopName span else stmt
+    | .continue_ span => if canContinue then jump nextName span else stmt
+    | .block ss span => .block (ss.map recur) span
+    | .if_ c a b span => .if_ c (recur a) (recur b) span
+    | .forOf mutable name xs body span =>
+      .forOf mutable name xs (loopControl n retName nextName stopName state false false body) span
+    | .for_ init c update body span =>
+      .for_ init c update (loopControl n retName nextName stopName state false false body) span
+    | .while_ c body span =>
+      .while_ c (loopControl n retName nextName stopName state false false body) span
+    | .switch_ value cases span => .switch_ value (cases.map fun (label, ss) =>
+        (label, ss.map (loopControl n retName nextName stopName state false canContinue))) span
+    | .measured measure body span => .measured measure (recur body) span
+    | _ => stmt
+
+/-- A switch break leaves only the switch; nested loops and switches retain
+control of their own breaks. -/
+def switchControl : Nat → Stmt → Stmt → Stmt
+  | 0, _, stmt => stmt
+  | n + 1, jump, stmt => match stmt with
+    | .break_ _ => jump
+    | .block ss span => .block (ss.map (switchControl n jump)) span
+    | .if_ c a b span => .if_ c (switchControl n jump a) (switchControl n jump b) span
+    | .measured measure body span => .measured measure (switchControl n jump body) span
+    | _ => stmt
+
+def switchBreaks : Nat → Stmt → Bool
+  | 0, _ => true
+  | _ + 1, .break_ _ => true
+  | n + 1, .block ss _ => ss.any (switchBreaks n)
+  | n + 1, .if_ _ a b _ => switchBreaks n a || switchBreaks n b
+  | n + 1, .measured _ body _ => switchBreaks n body
+  | _, _ => false
+
+def switchDispatch (value : Expr) (fallback : Stmt) : List (Option Expr × List Stmt) → Stmt
+  | [] => fallback
+  | (none, _) :: rest => switchDispatch value fallback rest
+  | (some label, body) :: rest =>
+    .if_ (.binary "===" value label label.span) (.block body label.span)
+      (switchDispatch value fallback rest) label.span
+
+def loopVariable : Var (a :: Γ) t → Term [Core.environmentType Γ, a] t
+  | .here => .var (.there .here)
+  | .there v => Core.project (.var .here) v
+
+/-- Close a loop body over its element and explicit state tuple. -/
+def abstractLoop (name : String) (body : Term (a :: Γ) t) :
+    Term Δ (.fn a (.fn (Core.environmentType Γ) t)) :=
+  .closed (.lam name (.lam "state" (body.substitute loopVariable)))
+
 mutual
   def expression (p : Program) (fuel : Nat) (ctx : Context) (expr : Expr) : Checked (Typed ctx) := do
     match fuel with
@@ -226,6 +289,10 @@ mutual
           return ⟨.list t, result⟩
         | _, _ => refusal "A5104" "this array method has no shallow lowering" span
       | .call (.var name _) args span =>
+        if name.startsWith "#internal" then
+          let some ⟨t, v⟩ := lookup ctx name
+            | refusal "A5102" "invalid generated control function" span
+          return ← applications p n ctx ⟨t, .var v⟩ args span
         if name.startsWith "#join" then
           let some ⟨.fn domain result, v⟩ := lookup ctx name
             | refusal "A5102" "invalid generated continuation" span
@@ -327,7 +394,7 @@ mutual
 
 
   /-- Mutable locals become shadowed pure lets. Branches share their continuations.
-  Loops and reference mutation are refused until their state lowering has landed. -/
+  Structural loops carry an explicit value state and typed exits. -/
   def statements (p : Program) : Nat → (ctx : Context) → List Stmt → (t : Core.Ty) →
       Checked (Term (Types ctx) t)
     | 0, _, _, _ => refusal "A5101" "statement nesting budget exhausted" {}
@@ -376,7 +443,82 @@ mutual
       | .expr e _ =>
         let ⟨a, value⟩ ← expression p n ctx e
         return .let_ "ignored" value (← statements p n (binding "#ignored" a :: ctx) rest t)
-      | .while_ .. | .for_ .. | .forOf .. | .measured .. =>
+      | .switch_ value cases span =>
+        if let some (_, fallback) := cases.find? (·.1.isNone) then
+          if !cases.any (fun c => c.2.any (switchBreaks n)) then
+            let ⟨a, value⟩ ← expression p n ctx value
+            let saved := s!"#switch{n}"
+            let dispatch := switchDispatch (.var saved span) (.block fallback span) cases
+            return .let_ "switchValue" value
+              (← statements p n (binding saved a :: ctx) [dispatch] t)
+        let state := afterWrites ctx (Check.writes n stmt)
+        let continuation ← statements p n state rest t
+        let name := s!"#joinSwitch{n}"
+        let domain := Core.environmentType (Types state)
+        let jump : Stmt := .return_ (.call (.var name span)
+          (state.map fun b => .var b.name span) span) span
+        let cases := cases.map fun (label, body) =>
+          (label, body.map (switchControl n jump))
+        let fallback := match cases.find? (·.1.isNone) with
+          | some (_, body) => Stmt.block body span
+          | none => jump
+        let ⟨a, value⟩ ← expression p n ctx value
+        let saved := s!"#switch{n}"
+        let inner := binding saved a :: binding name (.fn domain t) :: ctx
+        let dispatch := switchDispatch (.var saved span) fallback cases
+        return .let_ "joinSwitch" continuation.abstract
+          (.let_ "switchValue" (value.rename Var.there) (← statements p n inner [dispatch] t))
+      | .forOf _ name collection body span =>
+        let ⟨.list a, xs⟩ ← expression p n ctx collection
+          | refusal "A5102" "this collection has no loop lowering" span
+        let state := afterWrites ctx (Check.writes n body)
+        let stateType := Core.environmentType (Types state)
+        let stepType := Core.Ty.step stateType t
+        let retName := s!"#internalReturn{n}"
+        let nextName := s!"#joinNext{n}"
+        let stopName := s!"#joinStop{n}"
+        let bodyCtx := binding name a :: state
+        let retCtx := binding retName (.fn t stepType) :: bodyCtx
+        let nextCtx := binding nextName (.fn stateType stepType) :: retCtx
+        let inner := binding stopName (.fn stateType stepType) :: nextCtx
+        let body := loopControl n retName nextName stopName state true true body
+        let jump := Stmt.return_ (.call (.var nextName span)
+          (state.map fun b => .var b.name span) span) span
+        let body ← statements p n inner [body, jump] stepType
+        let body := Term.let_ retName (.lam "result" (.ret (.var .here)))
+          (.let_ nextName (.lam "state" (.next (.var .here)))
+            (.let_ stopName (.lam "state" (.stop (.var .here))) body))
+        let initial ← tupleArgs p n ctx stateType (state.map fun b => .var b.name span) span
+        let continuation ← statements p n state rest t
+        return .exitCase (.each xs initial (abstractLoop name body))
+          continuation.abstract (.lam "result" (.var .here))
+      | .for_ init guard update body span =>
+        let .let_ _ name annotation start _ := init
+          | refusal "A5101" "counted loops must declare their own counter" span
+        let .binary "<" (.var tested _) stop _ := guard
+          | refusal "A5101" "counted loops require an increasing half-open bound" span
+        let .assign (.var updated _) (.binary "+" (.var prior _) (.literal (.bigint 1) _) _) _ := update
+          | refusal "A5101" "this counter update needs Int53 safety or a termination measure" span
+        if tested != name || updated != name || prior != name || (Check.writes n body).contains name then
+          refusal "A5101" "only the update step may assign the counted-loop counter" span
+        match stop with
+        | .var bound _ =>
+          if bound == name || (Check.writes n body).contains bound then
+            refusal "A5101" "the counted-loop bound must be invariant" span
+        | .literal (.bigint _) _ => pure ()
+        | _ => refusal "A5101" "this counted-loop bound has no invariance check" span
+        if let some ty := annotation then
+          if (← type p ty span) != .int then refusal "A5101" "this counter needs Int53 safety" span
+        let _ ← asType p n ctx start .int
+        let _ ← asType p n ctx stop .int
+        let rangeName := s!"#internalRange{n}"
+        let rangeTy := Core.Ty.fn .int (.fn .int (.list .int))
+        let range : Term (Types ctx) rangeTy := .lam "start" (.lam "stop"
+          (.binary .intRange (.var (.there .here)) (.var .here)))
+        let inner := binding rangeName rangeTy :: ctx
+        let loop := Stmt.forOf true name (.call (.var rangeName span) [start, stop] span) body span
+        return .let_ "range" range (← statements p n inner (loop :: rest) t)
+      | .while_ .. | .measured .. =>
         refusal "A5101" "loop extraction is not implemented yet" stmt.span
       | _ => refusal "A5102" "this statement needs ownership or control-flow lowering" stmt.span
 

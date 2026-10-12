@@ -158,12 +158,38 @@ def scalarPrintable : Ty → Bool
   | .union a b => scalarPrintable a && scalarPrintable b
   | _ => false
 
-def exits : Nat → Stmt → Bool
-  | 0, _ => false
-  | _ + 1, .return_ .. | _ + 1, .break_ .. | _ + 1, .continue_ .. => true
-  | n + 1, .block ss _ => ss.any (exits n)
-  | n + 1, .if_ _ a b _ => exits n a && exits n b
-  | _, _ => false
+/-- Possible ways to leave a statement. Sequential composition follows only the
+normal path, so an unreachable return cannot hide a preceding break. -/
+structure Flow where
+  normal : Bool := false
+  returned : Bool := false
+  broken : Bool := false
+  continued : Bool := false
+
+def Flow.alternative (a b : Flow) : Flow :=
+  ⟨a.normal || b.normal, a.returned || b.returned,
+    a.broken || b.broken, a.continued || b.continued⟩
+
+def Flow.sequence (a b : Flow) : Flow :=
+  if a.normal then { a with normal := false }.alternative b else a
+
+def flow : Nat → Stmt → Flow
+  | 0, _ => { normal := true }
+  | _ + 1, .return_ .. => { returned := true }
+  | _ + 1, .break_ .. => { broken := true }
+  | _ + 1, .continue_ .. => { continued := true }
+  | n + 1, .block ss _ => ss.foldl (fun out stmt => out.sequence (flow n stmt)) { normal := true }
+  | n + 1, .if_ _ a b _ => (flow n a).alternative (flow n b)
+  | n + 1, .switch_ _ cases span =>
+    let branches := cases.foldl (fun (out : Flow) c => out.alternative (flow n (.block c.2 span)))
+      { normal := !cases.any (·.1.isNone) }
+    { branches with normal := branches.normal || branches.broken, broken := false }
+  | n + 1, .while_ _ body _ | n + 1, .for_ _ _ _ body _ | n + 1, .forOf _ _ _ body _ =>
+    { normal := true, returned := (flow n body).returned }
+  | n + 1, .measured _ body _ => flow n body
+  | _, _ => { normal := true }
+
+def exits (fuel : Nat) (stmt : Stmt) : Bool := !(flow fuel stmt).normal
 
 def filterType (p : Ty → Bool) : Ty → Option Ty
   | .union a b => match filterType p a, filterType p b with
@@ -804,12 +830,9 @@ mutual
       | stmt :: rest => checkBlock n (← checkStmt n ctx stmt) rest
 end
 
-def returns : Nat → Stmt → Bool
-  | 0, _ => false
-  | _ + 1, .return_ _ _ => true
-  | n + 1, .block ss _ => ss.any (returns n)
-  | n + 1, .if_ _ yes no _ => returns n yes && returns n no
-  | _, _ => false
+def returns (fuel : Nat) (stmt : Stmt) : Bool :=
+  let out := flow fuel stmt
+  out.returned && !(out.normal || out.broken || out.continued)
 
 def program (p : Program) : Checked Unit := do
   if (p.functions.map Function.name).eraseDups.length != p.functions.length then

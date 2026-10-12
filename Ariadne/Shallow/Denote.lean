@@ -18,6 +18,7 @@ def Denote.binary : Binary a b c → a.denote → b.denote → c.denote
   | .intEq, a, b => a == b
   | .intLt, a, b => decide (a < b)
   | .intLe, a, b => decide (a ≤ b)
+  | .intRange, a, b => Loop.integers a b
   | .numAdd, a, b => a + b
   | .numSub, a, b => a - b
   | .numMul, a, b => a * b
@@ -67,6 +68,11 @@ def Denote.term : Term Γ t → Core.Env Γ → t.denote
   | .listFind f xs, env => JSArray.find (term f env) (term xs env)
   | .listFindIndex f xs, env => JSArray.findIndex (term f env) (term xs env)
   | .listSlice xs a b, env => JSArray.slice (term xs env) (term a env) (term b env)
+  | .next a, env => .next (term a env)
+  | .stop a, env => .stop (term a env)
+  | .ret a, env => .ret (term a env)
+  | .each xs init body, env => Loop.each (term xs env) (term init env) (term body env)
+  | .exitCase e done ret, env => Exit.elim (term e env) (term done env) (term ret env)
 
 def Denote.function (f : Core.Function) : Core.Env f.params → f.result.denote := term f.body
 

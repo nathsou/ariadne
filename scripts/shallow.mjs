@@ -90,6 +90,8 @@ try {
   assert.equal(checkedJoins.status, 0, checkedJoins.stdout + checkedJoins.stderr);
   for (const [text, code] of [
     ['function f(): bigint { while (true) {} return 0n; }', 'A5101'],
+    ['function f(n: bigint): bigint { for (let i = 0n; i < n; i += 1n) { n -= 1n; } return n; }', 'A5101'],
+    ['function f(n: bigint): bigint { for (let i = 0n; i < n; i += 1n) { i += 1n; } return n; }', 'A5101'],
     ['function f(x: { value: number }): number { return x.value; }', 'A5102'],
     ['function copy(xs: number[]): number[] { return xs.slice(); } function f(xs: number[]): number[] { return copy(xs); }', 'A5102'],
     ['function f(x: bigint): bigint { return x / 2n; }', 'A5104'],
