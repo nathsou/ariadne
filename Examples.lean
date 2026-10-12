@@ -1,4 +1,5 @@
 import Examples.Generated.arithmetic
+import Examples.Generated.builtins
 import Examples.Generated.control_flow
 import Examples.Generated.euclid
 import Examples.Generated.fibonacci

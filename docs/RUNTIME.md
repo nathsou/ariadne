@@ -23,6 +23,9 @@ A claim about native TypeScript needs the following host assumptions:
    this for that execution. Static acceptance alone does not.
 5. Ignore allocation/resource exhaustion and engine-specific stack limits. Termination
    and required evaluation fuel are separate proof obligations.
+6. Comparators supplied to `toSorted` are consistent on the elements being sorted.
+   The model uses stable merge sort. An inconsistent comparator need not produce
+   the same result on different native engines.
 
 `runtime/realm.ts` supplies an optional **host bootstrap**, not translated code.
 Call `hardenPristineRealm()` before any application code in a fresh realm. It freezes

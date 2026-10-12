@@ -61,10 +61,15 @@ local macro "refine_fuel" : tactic => `(tactic|
   | exact hfi _ _ _
   | exact hea _ _ _ _
   | exact hsc _ _ _ _ _
+  | exact hsearch _ _ _ _ _
+  | exact hmerge _ _ _ _
+  | exact hsort _ _ _
   | apply Result.Refines.bind
   | apply Result.Refines.map
   | intro x
-  | split)
+  | dsimp only []
+  | split
+  | cases x)
 
 private structure FuelStep (p : Program) (n : Nat) : Prop where
   expr : ∀ s e, (evalExpr p n s e).Refines (evalExpr p (n + 1) s e)
@@ -82,6 +87,9 @@ private structure FuelStep (p : Program) (n : Nat) : Prop where
   fields : ∀ s fs acc, (evalFields p n s fs acc).Refines (evalFields p (n + 1) s fs acc)
   each : ∀ s name body xs, (eachBody p n s name body xs).Refines (eachBody p (n + 1) s name body xs)
   select : ∀ s v cs i d, (selectCase p n s v cs i d).Refines (selectCase p (n + 1) s v cs i d)
+  search : ∀ s cb xs i m, (search p n s cb xs i m).Refines (search p (n + 1) s cb xs i m)
+  merge : ∀ s cb xs ys, (merge p n s cb xs ys).Refines (merge p (n + 1) s cb xs ys)
+  sort : ∀ s cb xs, (sort p n s cb xs).Refines (sort p (n + 1) s cb xs)
 
 private theorem fuel_step (p : Program) (n : Nat) : FuelStep p n := by
   induction n with
@@ -89,7 +97,7 @@ private theorem fuel_step (p : Program) (n : Nat) : FuelStep p n := by
     constructor
     all_goals intros; exact Or.inl rfl
   | succ n ih =>
-    rcases ih with ⟨he, ha, hf, hc, ht, hr, hm, hw, hs, hb, hl, hel, hfi, hea, hsc⟩
+    rcases ih with ⟨he, ha, hf, hc, ht, hr, hm, hw, hs, hb, hl, hel, hfi, hea, hsc, hsearch, hmerge, hsort⟩
     constructor
     · intro s e; cases e
       all_goals simp only [evalExpr]; refine_fuel
@@ -138,6 +146,18 @@ private theorem fuel_step (p : Program) (n : Nat) : FuelStep p n := by
     · intro s v cs i d; cases cs with
       | nil => exact Result.Refines.refl _
       | cons c cs => cases c; simp only [selectCase]; refine_fuel
+    · intros
+      conv => lhs; unfold search
+      conv => rhs; unfold search
+      refine_fuel
+    · intros
+      conv => lhs; unfold merge
+      conv => rhs; unfold merge
+      refine_fuel
+    · intros
+      conv => lhs; unfold sort
+      conv => rhs; unfold sort
+      refine_fuel
 
 /-- Lift the one-step proof to arbitrary larger budgets. -/
 theorem Result.refines_of_step (f : Nat → Result α)

@@ -1,4 +1,4 @@
-import Ariadne.Value
+import Ariadne.Builtins
 
 namespace Ariadne
 
@@ -48,11 +48,9 @@ def readIndex (s : State) (receiver index : Value) : Result Value := do
 
 def invokeScalar (name : String) (args : List Value) : Result Value := do
   match name, args with
-  | "#templateString", [.string s] => return .string s
-  | "#templateString", [.bigint n] => return .string ((toString n).toList.map (fun c => UInt16.ofNat c.toNat))
-  | "#templateString", [.boolean b] => return .string ((if b then "true" else "false").toList.map (fun c => UInt16.ofNat c.toNat))
-  | "#templateString", [.undefined] => return .string ("undefined".toList.map (fun c => UInt16.ofNat c.toNat))
-  | "#templateString", [.null] => return .string ("null".toList.map (fun c => UInt16.ofNat c.toNat))
+  | "#templateString", [value] => return .string (← Builtins.scalarString value)
+  | "Math.min", values => Builtins.extremum true values
+  | "Math.max", values => Builtins.extremum false values
   | "Number.isNaN", [.number x] => return .boolean x.isNaN
   | "Number.isNaN", [_] => return .boolean false
   | "Number.isFinite", [.number x] => return .boolean x.isFinite
@@ -87,16 +85,25 @@ def sliceBound (v : Value) (length : Nat) : Nat :=
 
 def invokeString (units : JSString) (name : String) (args : List Value) : Result Value := do
   match name, args with
+  | "charCodeAt", [] =>
+    return .number ((units[0]?.map fun u => Float.Model.ofNat u.toNat).getD Float.Model.nan)
   | "charCodeAt", [index] =>
     -- Index arguments accepted by the checker are numbers; NaN becomes zero.
     let i := match index with | .number x => x.unpack.toInt (-1) (-1) | _ => -1
     if i < 0 then return .number Float.Model.nan
     return .number ((units[i.toNat]?.map fun u => Float.Model.ofNat u.toNat).getD Float.Model.nan)
+  | "slice", [] => return .string units
   | "slice", [start] => return .string (units.drop (sliceBound start units.length))
   | "slice", [start, stop] =>
     let first := sliceBound start units.length
     let last := sliceBound stop units.length
     return .string ((units.drop first).take (last - first))
+  | "startsWith", [.string needle] | "endsWith", [.string needle] |
+      "includes", [.string needle] | "indexOf", [.string needle] =>
+    return Builtins.stringSearch units name needle (if name == "endsWith" then units.length else 0)
+  | "startsWith", [.string needle, pos] | "endsWith", [.string needle, pos] |
+      "includes", [.string needle, pos] | "indexOf", [.string needle, pos] =>
+    return Builtins.stringSearch units name needle (Builtins.position pos units.length)
   | _, _ => throw (.typeError s!"invalid string method '{name}'")
 
 /-- Allocate pair arrays in insertion order for Map entries/iteration. -/
@@ -183,6 +190,8 @@ mutual
     | _n + 1, s, .lambda params body _ => do
       let (loc, s) := s.alloc (.closure params body s.env)
       return (.ref loc, s)
+  termination_by structural fuel _ _ => fuel
+
 
   def evalElements (program : Program) : Nat → State → List Expr → Result (List Value × State)
     | 0, _, _ => .error .timeout
@@ -197,6 +206,8 @@ mutual
           pure ([value], s)
       let (tail, s) ← evalElements program n s rest
       return (head ++ tail, s)
+  termination_by structural fuel _ _ => fuel
+
 
   def evalFields (program : Program) : Nat → State → List (String × Expr) →
       List (String × Value) → Result (List (String × Value) × State)
@@ -212,6 +223,8 @@ mutual
         pure (fields.foldl (fun fs (k, v) => fieldSet fs k v) acc)
         else pure (fieldSet acc key value)
       evalFields program n s rest acc
+  termination_by structural fuel _ _ _ => fuel
+
 
   def evalArgs (program : Program) : Nat → State → List Expr → Result (List Value × State)
     | 0, _, _ => .error .timeout
@@ -220,6 +233,8 @@ mutual
       let (v, s) ← evalExpr program n s e
       let (vs, s) ← evalArgs program n s rest
       return (v :: vs, s)
+  termination_by structural fuel _ _ => fuel
+
 
   def apply (program : Program) (fuel : Nat) (s : State) (fn : Value) (args : List Value) : Result (Value × State) := do
     match fuel with
@@ -260,9 +275,29 @@ mutual
             let (out, s) := s.alloc (.array ys)
             return (.ref out, s)
           | "reduce", [callback, initial] => reduce program n s callback xs initial 0
+          | "some", [callback] | "every", [callback] | "find", [callback] | "findIndex", [callback] =>
+            search program n s callback xs 0 name
+          | "toSorted", [callback] =>
+            let (ys, s) ← sort program n s callback xs
+            let (out, s) := s.alloc (.array ys)
+            return (.ref out, s)
+          | "concat", values =>
+            let ys := values.flatMap fun v => match v with
+              | .ref loc => match s.heap[loc]? with | some (.array ys) => ys | _ => [v]
+              | _ => [v]
+            let (out, s) := s.alloc (.array (xs ++ ys))
+            return (.ref out, s)
+          | "join", [] => return (.string (← Builtins.join xs [44]), s)
+          | "join", [.string sep] => return (.string (← Builtins.join xs sep), s)
           | "includes", [value] => return (.boolean (xs.any (sameValueZero · value)), s)
+          | "includes", [value, start] =>
+            return (.boolean ((xs.drop (sliceBound start xs.length)).any (sameValueZero · value)), s)
           | "indexOf", [value] =>
             return (.number (Float.Model.ofInt ((xs.findIdx? (strictEqual · value)).map Int.ofNat |>.getD (-1))), s)
+          | "indexOf", [value, start] =>
+            let first := sliceBound start xs.length
+            let found := (xs.drop first).findIdx? (strictEqual · value)
+            return (.number (Float.Model.ofInt (found.map (fun i => Int.ofNat (first + i)) |>.getD (-1))), s)
           | "toReversed", [] =>
             let (out, s) := s.alloc (.array xs.reverse)
             return (.ref out, s)
@@ -314,6 +349,8 @@ mutual
             method.body (.ref loc :: args)
         | _ => throw (.typeError "invalid method receiver")
       | _ => throw (.typeError "value is not callable")
+  termination_by structural fuel
+
 
   def callBody (program : Program) (fuel : Nat) (s : State) (captured : Env)
       (params : List Param) (body : Stmt) (args : List Value) : Result (Value × State) := do
@@ -325,6 +362,8 @@ mutual
       let out ← exec program n s body
       if out.control == .broke || out.control == .continued then throw (.invariant "loop control escaped a function")
       return (out.value, { out.state with env := caller })
+  termination_by structural fuel
+
 
   def traverse (program : Program) (fuel : Nat) (s : State) (callback : Value)
       (xs : List Value) (index : Nat) (mode : String) : Result (List Value × State) := do
@@ -337,6 +376,8 @@ mutual
         let (y, s) ← apply program n s callback [x, .number (Float.Model.ofNat index)]
         let (ys, s) ← traverse program n s callback rest (index + 1) mode
         return (if mode == "filter" then (if y.truthy then x :: ys else ys) else y :: ys, s)
+  termination_by structural fuel
+
 
   def reduce (program : Program) (fuel : Nat) (s : State) (callback : Value)
       (xs : List Value) (acc : Value) (index : Nat) : Result (Value × State) := do
@@ -348,6 +389,8 @@ mutual
       | x :: rest =>
         let (acc, s) ← apply program n s callback [acc, x, .number (Float.Model.ofNat index)]
         reduce program n s callback rest acc (index + 1)
+  termination_by structural fuel
+
 
   def mapTraverse (program : Program) (fuel : Nat) (s : State) (callback : Value)
       (entries : List (Value × Value)) : Result State := do
@@ -359,6 +402,61 @@ mutual
       | (key, value) :: rest =>
         let (_, s) ← apply program n s callback [value, key]
         mapTraverse program n s callback rest
+  termination_by structural fuel
+
+
+  /-- Searches stop as soon as the result is determined. -/
+  def search (program : Program) (fuel : Nat) (s : State) (callback : Value)
+      (xs : List Value) (index : Nat) (mode : String) : Result (Value × State) := do
+    match fuel with
+    | 0 => throw .timeout
+    | n + 1 => match xs with
+      | [] => return (if mode == "find" then .undefined else if mode == "findIndex" then
+          .number (Float.Model.ofInt (-1)) else .boolean (mode == "every"), s)
+      | x :: rest =>
+        let (answer, s) ← apply program n s callback [x, .number (Float.Model.ofNat index)]
+        if answer.truthy != (mode == "every") then
+          return (if mode == "find" then x else if mode == "findIndex" then
+            .number (Float.Model.ofNat index) else .boolean (mode != "every"), s)
+        search program n s callback rest (index + 1) mode
+  termination_by structural fuel
+
+
+  /-- A stable merge: NaN comparator results are treated as zero. -/
+  def merge (program : Program) (fuel : Nat) (s : State) (callback : Value)
+      (xs ys : List Value) : Result (List Value × State) := do
+    match fuel with
+    | 0 => throw .timeout
+    | n + 1 => match xs, ys with
+      | [], ys => return (ys, s)
+      | xs, [] => return (xs, s)
+      | x :: xs, y :: ys =>
+        -- Undefined elements sort last without calling the user comparator.
+        let (comparison, s) ← if x == .undefined then
+            pure (.number (Float.Model.ofNat (if y == .undefined then 0 else 1)), s)
+          else if y == .undefined then pure (.number (Float.Model.ofInt (-1)), s)
+          else apply program n s callback [x, y]
+        let .number cmp := comparison | throw (.typeError "sort comparator must return a number")
+        if cmp > Float.Model.ofNat 0 then
+          let (zs, s) ← merge program n s callback (x :: xs) ys
+          return (y :: zs, s)
+        else
+          let (zs, s) ← merge program n s callback xs (y :: ys)
+          return (x :: zs, s)
+  termination_by structural fuel
+
+
+  def sort (program : Program) (fuel : Nat) (s : State) (callback : Value)
+      (xs : List Value) : Result (List Value × State) := do
+    match fuel with
+    | 0 => throw .timeout
+    | n + 1 =>
+      if xs.length < 2 then return (xs, s)
+      let half := xs.length / 2
+      let (left, s) ← sort program n s callback (xs.take half)
+      let (right, s) ← sort program n s callback (xs.drop half)
+      merge program n s callback left right
+  termination_by structural fuel
 
   def assignTarget (program : Program) (fuel : Nat) (s : State) (target rhs : Expr) : Result State := do
     match fuel with
@@ -388,6 +486,8 @@ mutual
         | some (.instance_ name fields) => s.write loc (.instance_ name (fieldSet fields field value))
         | _ => throw (.typeError "assignment requires a record")
       | _ => throw (.invariant "invalid assignment target")
+  termination_by structural fuel
+
 
   def exec (program : Program) : Nat → State → Stmt → Result Completion
     | 0, _, _ => .error .timeout
@@ -430,6 +530,8 @@ mutual
       return { control := .returned, value := v, state := s }
     | _n + 1, s, .break_ _ => do return { control := .broke, state := s }
     | _n + 1, s, .continue_ _ => do return { control := .continued, state := s }
+  termination_by structural fuel _ _ => fuel
+
 
   def eachBody (program : Program) : Nat → State → String → Stmt → List Value → Result Completion
     | 0, _, _, _, _ => .error .timeout
@@ -440,6 +542,8 @@ mutual
       if out.control == .returned then return out
       if out.control == .broke then return { state := out.state }
       eachBody program n out.state name body xs
+  termination_by structural fuel _ _ _ _ => fuel
+
 
   /-- Case expressions are restricted to literals by the checker, hence effect-free. -/
   def selectCase (program : Program) : Nat → State → Value → List (Option Expr × List Stmt) →
@@ -453,6 +557,8 @@ mutual
         let (v, _) ← evalExpr program n s label
         if strictEqual value v then return some index
         selectCase program n s value cases (index + 1) fallback
+  termination_by structural fuel _ _ _ _ _ => fuel
+
 
   def execBlock (program : Program) : Nat → State → List Stmt → Result Completion
     | 0, _, _ => .error .timeout
@@ -461,6 +567,8 @@ mutual
       let out ← exec program n s stmt
       if out.control != .normal then return out
       execBlock program n out.state rest
+  termination_by structural fuel _ _ => fuel
+
 
   def loop (program : Program) (fuel : Nat) (s : State) (condition : Expr)
       (body : Stmt) (update : Option Stmt) : Result Completion := do
@@ -476,6 +584,8 @@ mutual
         | none => pure out.state
         | some stmt => (exec program n out.state stmt).map Completion.state
       loop program n s condition body update
+  termination_by structural fuel
+
 end
 
 def runState (program : Program) (name : String) (fuel : Nat) (args : List Value) : Result (Value × State) :=

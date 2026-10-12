@@ -25,6 +25,8 @@ structure Context where
   /-- Callbacks may not call user functions until interprocedural effects are available. -/
   inCallback : Bool := false
   pureCallback : Bool := true
+  /-- First callback pass discovers the result; the second checks every return. -/
+  inferReturns : Bool := false
 
 def error (code message : String) (span : Span) (help : Option String := none) : Checked α :=
   .error { code, message, span, help }
@@ -141,14 +143,19 @@ def root : Expr → Option String
 def fresh : Expr → Bool
   | .array .. | .record .. | .newMap .. | .newSet .. | .newClass .. => true
   | .call (.var ..) _ _ => true
-  | .call (.member _ method _) _ _ => ["map", "filter", "slice", "concat", "toReversed", "entries", "keys", "values"].contains method
+  | .call (.member _ method _) _ _ => ["map", "filter", "slice", "concat", "toReversed", "toSorted", "entries", "keys", "values"].contains method
   | _ => false
 
 /-- Container reads are shared loans, never additional owners. -/
 def sharedRead : Expr → Bool
   | .index .. => true
-  | .call (.member _ "get" _) _ _ => true
+  | .call (.member _ "get" _) _ _ | .call (.member _ "find" _) _ _ => true
   | .binary "??" a b _ => sharedRead a && (fresh b || sharedRead b)
+  | _ => false
+
+def scalarPrintable : Ty → Bool
+  | .number | .bigint | .string | .stringLiteral _ | .boolean | .null | .undefined => true
+  | .union a b => scalarPrintable a && scalarPrintable b
   | _ => false
 
 def exits : Nat → Stmt → Bool
@@ -411,10 +418,10 @@ mutual
             error "A3004" s!"cannot shadow reserved name '{param.name}'" param.span
           if ctx.bindings.any (fun b => b.name == param.name) then
             error "A2005" "callback parameter shadowing is not supported" param.span
-        let bindings := params.map fun p => ({ name := p.name, ty := p.ty, mutable := true, borrowed := referenceType p.ty, span := p.span } : Binding)
+        let bindings := params.map fun p => ({ name := p.name, ty := p.ty, mutable := true, borrowed := referenceType p.ty, readOnly := referenceType p.ty, span := p.span } : Binding)
         let inner := { ctx with bindings := bindings ++ ctx.bindings, result := .void, loopDepth := 0, switchDepth := 0, inCallback := true, protectedRoots := (if ctx.pureCallback then ctx.bindings.map Binding.name else []) ++ ctx.protectedRoots }
         let result ← inferCallback n inner body
-        let _ ← checkStmt n { inner with result } body
+        let _ ← checkStmt n { inner with result, inferReturns := false } body
         if referenceType result then error "A3001" "callbacks cannot return mutable references" span
         return .function (params.map Param.ty) result
       | .call callee args span =>
@@ -424,10 +431,7 @@ mutual
             match args with
             | [arg] =>
               let t := unreadonly (← infer n ctx arg)
-              if ![Ty.string, .bigint, .boolean, .undefined, .null].contains t then
-                match t with
-                | .stringLiteral _ => pure ()
-                | _ => error "A1001" "template interpolation supports strings, bigint, booleans, null and undefined" span
+              if !scalarPrintable t then error "A1001" "template interpolation requires scalar values" span
               return .string
             | _ => error "A2007" "invalid template interpolation" span
           if ["Number", "BigInt"].contains name then
@@ -476,7 +480,7 @@ mutual
       match stmts with
       | [] => return .void
       | [last] => inferCallback n ctx last
-      | first :: rest => inferCallbackBlock n (← checkStmt n ctx first) rest
+      | first :: rest => inferCallbackBlock n (← checkStmt n { ctx with inferReturns := true } first) rest
 
   def checkExpr (fuel : Nat) (ctx : Context) (expr : Expr) (expected : Ty) : Checked Unit := do
     match fuel with
@@ -511,6 +515,9 @@ mutual
     | n + 1 =>
       if let .var namespace_ _ := object then
         if namespace_ == "Math" || namespace_ == "Number" then
+          if namespace_ == "Math" && ["min", "max"].contains name then
+            for arg in args do checkExpr n ctx arg .number
+            return .number
           if args.length != 1 then error "A2007" "numeric builtin requires one argument" span
           let t ← infer n ctx args.head!
           if namespace_ == "Number" && ["isNaN", "isFinite"].contains name then return .boolean
@@ -564,7 +571,7 @@ mutual
       | .array t, "map", [fn] | .array t, "filter", [fn] | .array t, "forEach", [fn] =>
         let ft ← infer n { (protect ctx object) with pureCallback := name != "forEach" } fn
         let .function ps r := ft | error "A2002" "expected a typed callback" fn.span
-        if ps != [t] && ps != [t, .number] then error "A2002" "callback parameters do not match array element/index types" fn.span
+        if ps != [] && ps != [t] && ps != [t, .number] then error "A2002" "callback parameters do not match array element/index types" fn.span
         if name == "filter" then
           if referenceType t && !immutable t then error "A3001" "filter would share mutable elements" span
           requireType r .boolean fn.span
@@ -574,9 +581,35 @@ mutual
         let acc ← infer n ctx initial
         let ft ← infer n { (protect ctx object) with pureCallback := name != "forEach" } fn
         let .function ps r := ft | error "A2002" "expected a typed callback" fn.span
-        if ps != [acc, t] && ps != [acc, t, .number] then error "A2002" "reduce callback parameters do not match" fn.span
+        if ps != [] && ps != [acc] && ps != [acc, t] && ps != [acc, t, .number] then error "A2002" "reduce callback parameters do not match" fn.span
         requireType r acc fn.span
         return acc
+      | .array t, "some", [fn] | .array t, "every", [fn] |
+          .array t, "find", [fn] | .array t, "findIndex", [fn] =>
+        let ft ← infer n { (protect ctx object) with pureCallback := true } fn
+        let .function ps r := ft | error "A2002" "expected a typed callback" fn.span
+        if ps != [] && ps != [t] && ps != [t, .number] then error "A2002" "callback parameters do not match array element/index types" fn.span
+        requireType r .boolean fn.span
+        return if name == "find" then .union t .undefined
+          else if name == "findIndex" then .number else .boolean
+      | .array t, "toSorted", [fn] =>
+        if referenceType t && !immutable t then error "A3001" "sorting would share mutable elements" span
+        let ft ← infer n { (protect ctx object) with pureCallback := true } fn
+        let .function ps r := ft | error "A2002" "expected a typed comparator" fn.span
+        if ps != [] && ps != [t] && ps != [t, t] then error "A2002" "comparator parameters must be array elements" fn.span
+        requireType r .number fn.span
+        return .array t
+      | .array t, "concat", args =>
+        if referenceType t && !immutable t then error "A3001" "concatenation would share mutable elements" span
+        for arg in args do
+          match unreadonly (← infer n ctx arg) with
+          | .array a => requireType a t arg.span
+          | a => requireType a t arg.span
+        return .array t
+      | .array t, "join", [] | .array t, "join", [_] =>
+        if !scalarPrintable t then error "A1001" "join requires scalar array elements" span
+        for arg in args do checkExpr n ctx arg .string
+        return .string
       | .map k v, "get", [key] => checkExpr n ctx key k; return .union v .undefined
       | .map k _, "has", [key] | .map k _, "delete", [key] => checkExpr n ctx key k; return .boolean
       | .map k v, "set", [key, value] =>
@@ -587,7 +620,7 @@ mutual
       | .map k v, "forEach", [fn] =>
         let ft ← infer n { (protect ctx object) with pureCallback := name != "forEach" } fn
         let .function ps _ := ft | error "A2002" "expected a typed callback" fn.span
-        if ps != [v, k] && ps != [v] then error "A2002" "Map callback takes value, then key" fn.span
+        if ps != [] && ps != [v, k] && ps != [v] then error "A2002" "Map callback takes value, then key" fn.span
         return .void
       | .set t, "add", [v] | .set t, "has", [v] | .set t, "delete", [v] =>
         checkExpr n ctx v t
@@ -602,16 +635,27 @@ mutual
         return .iterator (.tuple [k, v])
       | .set t, "keys", [] | .set t, "values", [] => return .iterator t
       | .set t, "entries", [] => return .iterator (.tuple [t, t])
-      | .array t, "includes", [v] | .array t, "indexOf", [v] =>
+      | .array t, "includes", [v] | .array t, "indexOf", [v] |
+          .array t, "includes", [v, _] | .array t, "indexOf", [v, _] =>
         if referenceType t then error "A1001" "reference identity search is unsupported" span
         checkExpr n ctx v t
+        if let some start := args[1]? then checkExpr n ctx start .number
         return if name == "includes" then .boolean else .number
       | .array t, "entries", [] =>
         if referenceType t && !immutable t then error "A3001" "entries would share mutable elements" span
         return .iterator (.tuple [.number, t])
       | .string, "charCodeAt", [i] => checkExpr n ctx i .number; return .number
+      | .string, "charCodeAt", [] => return .number
+      | .string, "slice", [] => return .string
       | .string, "slice", [a] => checkExpr n ctx a .number; return .string
       | .string, "slice", [a, b] => checkExpr n ctx a .number; checkExpr n ctx b .number; return .string
+      | .string, "startsWith", [a] | .string, "endsWith", [a] |
+          .string, "includes", [a] | .string, "indexOf", [a] |
+          .string, "startsWith", [a, _] | .string, "endsWith", [a, _] |
+          .string, "includes", [a, _] | .string, "indexOf", [a, _] =>
+        checkExpr n ctx a .string
+        if let some pos := args[1]? then checkExpr n ctx pos .number
+        return if name == "indexOf" then .number else .boolean
       | _, _, _ => error "A1001" s!"unsupported method or argument list: {typeName ty}.{name}" span
 
   def checkStmt (fuel : Nat) (ctx : Context) (stmt : Stmt) : Checked Context := do
@@ -726,6 +770,9 @@ mutual
           let _ ← checkBlock n inner body
         return ctx
       | .return_ e span =>
+        if ctx.inferReturns then
+          let _ ← infer n ctx e
+          return ctx
         checkExpr n ctx e ctx.result
         if referenceType ctx.result && root e == some "this" then
           error "A3001" "this and its mutable fields cannot escape a method" span
@@ -737,7 +784,7 @@ mutual
           | .array .. | .record .. | .newMap .. | .newSet .. | .newClass .. => pure ()
           | .call (.var ..) _ _ => pure ()
           | .call (.member _ method _) _ _ =>
-            if !["map", "filter", "slice", "toReversed", "keys", "values", "entries"].contains method then
+            if !["map", "filter", "slice", "concat", "toReversed", "toSorted", "keys", "values", "entries"].contains method then
               error "A3001" "a returned reference must be owned; this method can return its receiver" span
           | _ => error "A3001" "return an owned local variable or a fresh collection" span
         return ctx

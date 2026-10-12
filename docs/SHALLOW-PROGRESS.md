@@ -6,7 +6,7 @@ when their exit criteria pass; finite native tests are not universal proofs.
 | Milestone | Status | Evidence / remaining work |
 | --- | --- | --- |
 | M0 | Complete | Reference sources and historical diagnostics; pinned CI downloads; reserved extraction diagnostics; output preservation tests |
-| M1 | In progress | All reference programs check and certify; classes, unions, interfaces, readonly/optional fields, narrowing, loops, switch, spread, Sets, escapes, templates and measure syntax implemented. Remaining builtin coverage is tracked below. |
+| M1 | Complete | All reference programs check and certify; grammar, ownership checks, operational semantics and the builtin table have differential coverage. Conservative dialect limits are listed below. |
 | M2 | In progress | Typed scalar Core, structural denotation, checked extraction, three-way differential and tamper tests. Named types, collections, loops, calls, Int53 safety and reference extraction remain pending. |
 | M3 | Pending | Loop invariant/fold lemmas and scalar native proofs are seeded; the universal proofs of the three emitted references remain pending. |
 | M4 | Pending | Fundamental lemma, footprint preservation, adequacy and source transfer |
@@ -38,13 +38,15 @@ operational and scalar comparisons, adversarial certificates and diagnostics, an
 - Iterators returned by `keys`, `values` and `entries` are consumed immediately by
   spread or `for…of`. They are distinct from arrays; storing a live iterator is
   rejected until the checker tracks its lifetime.
-- Template interpolation supports strings, bigint, boolean, null and undefined.
-  Binary64-to-decimal conversion is not yet modeled.
+- Template interpolation supports all scalar types. Decimal binary64 formatting
+  is modeled with integer arithmetic and tested at decimal boundaries and their
+  adjacent floats. Array `join` currently accepts scalar elements.
 - Switch clauses must exit explicitly; grouped labels and implicit fallthrough are rejected.
 - `@decreases` is preserved and typechecked, but is not a termination proof on
   the operational path. Tier-1 extraction is still pending.
-- The full M1 builtin table (search callbacks, sorting, string search, concat/join,
-  and variadic Math functions) remains in progress.
+- Sorting uses a stable merge and requires a consistent comparator for agreement
+  with every native engine. Undefined elements are placed last without invoking
+  the comparator. Callback element references are shared read-only borrows.
 - The type/ownership checker still has no general soundness theorem. M4 must
   establish adequacy before extracted definitions can support source claims.
 
@@ -52,6 +54,13 @@ Frontend checkpoint: the complete `scripts/check.sh` suite passes with 1,217
 audited theorems, 42 native entry points, 64 generated programs, 51 scalar
 comparisons, 37 negative fixtures, and 21 reference inputs/traces. All three
 reference operational certificates build in CI. This is not M2–M5 completion.
+
+The completed M1 builtin checkpoint passes the full suite with 1,582 audited
+theorems, 50 native entry points, 46 negative fixtures, and 2,428 binary64 decimal
+formatting comparisons. It covers short-circuit callback searches, stable sorting,
+string searches and position clamping, concatenation and scalar joining, variadic
+Math extrema, signed zero, and numeric templates. The fuel monotonicity proof
+includes the new search, merge and sort evaluator clauses.
 
 ## Initial extraction fragment
 
