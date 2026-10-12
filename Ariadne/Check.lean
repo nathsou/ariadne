@@ -127,6 +127,26 @@ def compatibleFuel : Nat → Ty → Ty → Bool
 
 def compatible (actual expected : Ty) : Bool := compatibleFuel 100 actual expected
 
+/-- Existing mutable owners retain their writable element and field types.
+Fresh allocations may still be widened by `compatible`; readonly observations
+may be covariant. Record width subtyping preserves each writable field type. -/
+def borrowedCompatibleFuel : Nat → Ty → Ty → Bool
+  | 0, _, _ => false
+  | n + 1, actual, expected => actual == expected || match actual, expected with
+    | .union a b, t => borrowedCompatibleFuel n a t && borrowedCompatibleFuel n b t
+    | t, .union a b => borrowedCompatibleFuel n t a || borrowedCompatibleFuel n t b
+    | .record actual, .record expected => expected.all fun (name, field) =>
+        let stored := (actual.lookup name).getD .undefined
+        match field with
+        | .fieldReadonly value =>
+          if referenceType value && !immutable value then
+            borrowedCompatibleFuel n (match stored with | .fieldReadonly t => t | t => t) value
+          else compatible stored field
+        | _ => stored == field
+    | _, _ => false
+
+def borrowedCompatible (actual expected : Ty) : Bool := borrowedCompatibleFuel 100 actual expected
+
 def requireType (actual expected : Ty) (span : Span) : Checked Unit :=
   if compatible actual expected then .ok ()
   else error "A2002" s!"expected {typeName expected}, found {typeName actual}" span
@@ -441,6 +461,9 @@ mutual
           let ty ← resolve 100 ctx.program param.ty
           checkExpr n ctx arg ty
           if referenceType ty then
+            if !immutable ty && !fresh arg then
+              if !borrowedCompatible (← infer n ctx arg) ty then
+                error "A3001" "mutable constructor arguments must preserve writable types" arg.span
             if immutable ty && !fresh arg then
               if !immutable (← infer n ctx arg) then error "A3001" "a mutable owner cannot be shared with a constructor" arg.span
             if !immutable ty then checkWrite ctx arg
@@ -520,6 +543,9 @@ mutual
             let expected ← resolve 100 ctx.program param.ty
             checkExpr n ctx arg expected
             if referenceType expected then
+              if !immutable expected && !fresh arg then
+                if !borrowedCompatible (← infer n ctx arg) expected then
+                  error "A3001" "mutable arguments must preserve writable types" arg.span
               if immutable expected && !fresh arg then
                 if !immutable (← infer n ctx arg) then
                   error "A3001" "a mutable owner cannot be shared as an immutable argument" arg.span

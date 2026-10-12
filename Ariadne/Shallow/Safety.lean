@@ -158,6 +158,7 @@ def binarySafe {interp : Named.Interp} : Binary a b c → Model a interp → Mod
   | .guard, condition, _ => condition
   | .intTdiv, _, divisor | .intFdiv, _, divisor | .intTmod, _, divisor => divisor != 0
   | .int53Range, start, stop => inRange start && inRange stop
+  | .append, left, right => decide (left.length + right.length < 4294967296)
   | _, _, _ => true
 
 def call2 {α β γ : Type} (f : α → (β → γ × Bool) × Bool) (a : α) (b : β) : γ × Bool :=
@@ -227,7 +228,7 @@ def term {interp : Named.Interp} : Term Γ t → Environment Γ interp → Model
   | .cons a b, env =>
     let (a, sa) := term (interp := interp) a env
     let (b, sb) := term (interp := interp) b env
-    (a :: b, sa && sb)
+    (a :: b, sa && sb && decide (b.length + 1 < 4294967296))
   | .pair a b, env =>
     let (a, sa) := term (interp := interp) a env
     let (b, sb) := term (interp := interp) b env

@@ -25,3 +25,4 @@ import Ariadne.Shallow.Adequacy.ArrayMutation
 import Ariadne.Shallow.Safety.Erasure
 import Ariadne.Shallow.Safety.Erasure.Term
 import Ariadne.Shallow.Prelude.Measured
+import Ariadne.Shallow.Safety.Capacity

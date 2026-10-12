@@ -154,6 +154,7 @@ mutual
       return (← readIndex s v i, s)
     | n + 1, s, .array elements _ => do
       let (xs, s) ← evalElements program n s elements
+      if xs.length ≥ 4294967296 then throw (.rangeError "maximum array length exceeded")
       let (loc, s) := s.alloc (.array xs)
       return (.ref loc, s)
     | n + 1, s, .record fields _ => do
@@ -277,6 +278,7 @@ mutual
             let ys := values.flatMap fun v => match v with
               | .ref loc => match s.heap[loc]? with | some (.array ys) => ys | _ => [v]
               | _ => [v]
+            if xs.length + ys.length ≥ 4294967296 then throw (.rangeError "maximum array length exceeded")
             let (out, s) := s.alloc (.array (xs ++ ys))
             return (.ref out, s)
           | "join", [] => return (.string (← Builtins.join xs [44]), s)

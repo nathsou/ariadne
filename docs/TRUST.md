@@ -118,3 +118,10 @@ and outputs, `Safety.term_lift_value` states equality after the representation
 cast. The denotation agrees with the value computed while collecting guards,
 including for shared closures. General agreement with the original heap-based
 source evaluator remains the open M4 obligation.
+
+Array-producing cons/append carry the JavaScript length bound, and literal/spread
+allocation and concatenation check it in the original evaluator. The erasure
+fundamental lemma connects accepted capacity guards to native result lengths.
+Existing mutable arguments preserve their writable types; covariant Int53-to-
+number views cannot be used to insert non-integer values into an Int53 owner.
+The frontend still has no general ownership/type-soundness theorem.

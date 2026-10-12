@@ -506,3 +506,24 @@ measured source lowering and `termination_by` emission are not implemented yet.
 The full Core erasure modules, measured-loop bridge, `Ariadne`, `Examples` and
 `Tests` build successfully. The theorem-dependency audit passes with standard
 Lean logical axioms only.
+
+## Array capacity and writable type preservation
+
+Core array cons and append collect a capacity guard; the original evaluator
+checks the same limit when allocating literal/spread arrays and concatenation.
+`Safety/Capacity.lean` proves that accepted guards bound the actual native
+result length below 2^32. Synthetic counted-loop ranges remain unbounded by
+array capacity because they do not allocate source arrays.
+
+The frontend previously accepted an existing mutable Int53 array, Set or record
+through a wider number parameter, allowing a callee to insert a non-integer.
+`borrowedCompatible` preserves writable element/field types for existing mutable
+arguments, including constructors. Fresh allocations and readonly observations
+retain their existing conversions, and record width subtyping preserves writable
+field types. Three new negative fixtures reproduce and reject the unsafe cases.
+All 53 negative fixtures, project regeneration and shallow/reference artifact
+builds pass. The audit accepts 4,968 theorems. The full gate caught an eager
+argument-inference regression for fresh empty arrays; inference now runs only
+for existing mutable arguments. All 21 reference operational comparisons pass
+after that correction. The complete regression gate is running again. CI #80
+passed the preceding full Core erasure checkpoint.
