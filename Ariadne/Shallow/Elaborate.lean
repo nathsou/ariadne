@@ -1,6 +1,7 @@
 import Ariadne.Check
 import Ariadne.Shallow.Denote
 import Ariadne.Shallow.Unions
+import Ariadne.Shallow.StatePlan
 
 namespace Ariadne.Shallow.Elaborate
 open Core
@@ -10,6 +11,7 @@ structure Binding where
   ty : Core.Ty
   declared : Core.Ty
   owned : Bool := false
+  loan : Option String := none
 
 abbrev Context := List Binding
 abbrev Types (ctx : Context) := ctx.map Binding.ty
@@ -19,7 +21,8 @@ def binding (name : String) (ty : Core.Ty) (owned : Bool := false) : Binding := 
 
 def refined (ctx : Context) (name : String) (ty : Core.Ty) : Binding :=
   { name, ty, declared := ((ctx.find? (·.name == name)).map Binding.declared).getD ty,
-    owned := ((ctx.find? (·.name == name)).map Binding.owned).getD false }
+    owned := ((ctx.find? (·.name == name)).map Binding.owned).getD false,
+    loan := (ctx.find? (·.name == name)).bind Binding.loan }
 
 /-- Continuations capture each live source binding once. Assignments invalidate
 type refinements, just as in the frontend checker. -/
@@ -65,6 +68,29 @@ where
     | n + 1, .map k v => return .map (← collectionKey (← Check.resolve 100 p k) span) (← convert n v)
     | _ + 1, .set k => return .set (← collectionKey (← Check.resolve 100 p k) span)
     | _, _ => refusal "A5102" "this type does not yet have an extraction representation" span
+
+structure Prepared where
+  ctx : Context
+  result : Core.Ty
+  body : Stmt
+  loans : List Param
+
+def prepare (p : Program) (fuel : Nat) (f : Ariadne.Function) : Checked Prepared := do
+  let names ← StatePlan.effects p fuel f
+  let loans := f.params.filter (fun param => names.contains param.name)
+  let ctx ← f.params.mapM fun param => do
+    let ty ← type p param.ty param.span
+    let loan := if names.contains param.name then some (StatePlan.loanName param.name) else none
+    return ({ name := param.name, ty, declared := ty, owned := names.contains param.name, loan } : Binding)
+  let result ← type p f.result f.span
+  if names.isEmpty then return ⟨ctx, result, f.body, []⟩
+  let states ← loans.mapM fun param => type p param.ty param.span
+  let endBody := if result == .unit then
+    Stmt.block [f.body, .return_ (.literal .undefined f.span) f.span] f.span else f.body
+  let body ← StatePlan.returns names fuel endBody
+  let body := Stmt.block (names.map (fun name =>
+    Stmt.let_ false (StatePlan.loanName name) none (.var name f.span) f.span) ++ [body]) f.span
+  return ⟨ctx, .pair result (Core.environmentType states), body, loans⟩
 
 def lookup : (ctx : Context) → String → Option ((t : Core.Ty) × Var (Types ctx) t)
   | [], _ => none
@@ -430,10 +456,8 @@ mutual
           return ⟨result, .app (.var v) (← tupleArgs p n ctx domain args span)⟩
         let some f := p.functions.find? (·.name == name)
           | refusal "A5104" "this intrinsic has no shallow lowering" span
-        for param in f.params do
-          let ty ← Check.resolve 100 p param.ty
-          if Check.referenceType ty && !Check.immutable ty then
-            refusal "A5102" "calls with mutable reference parameters need state threading" span
+        if !(← StatePlan.effects p n f).isEmpty then
+          refusal "A5102" "this effectful call needs statement-level state threading" span
         let inputs ← f.params.mapM fun param => type p param.ty param.span
         let result ← type p f.result f.span
         let closed ← lambda p n [] inputs f.params result f.body
@@ -592,6 +616,12 @@ mutual
     match fuel with
     | 0 => refusal "A5101" "mutation lowering budget exhausted" expr.span
     | n + 1 =>
+      if let .call (.var restore _) [value] span := expr then
+        if restore.startsWith "#restore:" then
+          let name := restore.drop 9 |>.toString
+          let some target := ctx.find? (·.name == name) | refusal "A5102" "unknown restored owner" span
+          if !target.owned then refusal "A5102" "call mutation needs an exclusive owner" span
+          return some (name, ⟨target.ty, ← asType p n ctx value target.ty⟩)
       let .call (.member (.var name _) method _) args span := expr | return none
       if !["set", "add", "delete", "clear", "push", "pop"].contains method then return none
       let some target := ctx.find? (·.name == name) | refusal "A5102" "unknown mutation target" span
@@ -621,8 +651,42 @@ mutual
     | _ + 1, _, [], .unit => .ok .unit
     | _ + 1, _, [], _ => refusal "A5101" "extraction requires a return on every path" {}
     | n + 1, ctx, stmt :: rest, t => do
+      let value := match stmt with
+        | .let_ _ _ _ value _ | .expr value _ | .return_ value _ => some value
+        | .assign (.var ..) value _ => some value
+        | _ => none
+      if let some (.call (.var name _) args span) := value then
+        if let some f := p.functions.find? (·.name == name) then
+          let prepared ← prepare p n f
+          if !prepared.loans.isEmpty then
+            let body ← statements p n prepared.ctx [prepared.body] prepared.result
+            let call := Term.app body.abstract (← tupleArgs p n ctx (Core.environmentType (Types prepared.ctx)) args span)
+            let package := s!"#borrowedCall{n}"
+            let component := fun (base : Expr) (index : Nat) => Expr.index base (.literal (.number index 0) span) span
+            let root := Expr.var package span
+            let sourceResult := component root 0
+            let states := component root 1
+            let mut restores : List Stmt := []
+            for (param, i) in prepared.loans.zipIdx do
+              let some (_, argument) := (f.params.zip args).find? (·.1.name == param.name)
+                | refusal "A5102" "invalid borrowed call arguments" span
+              match argument with
+              | .var owner _ =>
+                let state := component ((List.range i).foldl (fun value _ => component value 1) states) 0
+                restores := restores ++ [.expr (.call (.var ("#restore:" ++ owner) span) [state] span) span]
+              | _ =>
+                if !Check.fresh argument then refusal "A5102" "nested borrowed arguments need backward functions" argument.span
+            let resumed := match stmt with
+              | .let_ mutable name annotation _ span => .let_ mutable name annotation sourceResult span
+              | .expr _ span => .expr sourceResult span
+              | .return_ _ span => .return_ sourceResult span
+              | .assign target _ span => .assign target sourceResult span
+              | other => other
+            return .let_ package call
+              (← statements p n (binding package prepared.result :: ctx) (restores ++ resumed :: rest) t)
       match stmt with
       | .block ss span =>
+        if Check.exits n stmt then return ← statements p n ctx ss t
         if rest.isEmpty || !ss.any (fun s => match s with | .let_ .. => true | _ => false) then
           return ← statements p n ctx (ss ++ rest) t
         let state := afterWrites ctx (Check.writes n stmt)
@@ -634,7 +698,10 @@ mutual
           (state.map fun b => .var b.name span) span) span
         return .let_ "join" continuation.abstract (← statements p n inner (ss ++ [jump]) t)
       | .let_ _ name annotation value _ =>
-        let owns := Check.fresh value
+        let restoredResult := match value with
+          | .index (.var package _) (.literal (.number 0 0) _) _ => package.startsWith "#borrowedCall"
+          | _ => false
+        let owns := Check.fresh value || restoredResult
         let ⟨a, value⟩ ← match annotation with
           | none => expression p n ctx value
           | some ty => do
@@ -644,6 +711,8 @@ mutual
         return .let_ name value (← statements p n (binding name a owns :: ctx) rest t)
       | .assign (.var name _) value span =>
         let some target := ctx.find? (·.name == name) | refusal "A5102" "unknown assignment target" span
+        if target.loan.isSome then
+          refusal "A5102" "reassigning a mutated borrowed parameter requires conditional loan tracking" span
         let a := target.declared
         let owns := Check.fresh value
         let value ← asType p n ctx value a
@@ -664,7 +733,12 @@ mutual
       | .return_ value _ => asType p n ctx value t
       | .expr e _ =>
         if let some (name, ⟨a, value⟩) ← localMutation p n ctx e then
-          return .let_ name value (← statements p n (binding name a true :: ctx) rest t)
+          let target := (ctx.find? (·.name == name)).getD (binding name a true)
+          let inner := ({ name, ty := a, declared := target.declared, owned := true, loan := target.loan } : Binding) :: ctx
+          if let some loan := target.loan then
+            return .let_ name value (.let_ loan (.var .here)
+              (← statements p n (binding loan a :: inner) rest t))
+          return .let_ name value (← statements p n inner rest t)
         let ⟨a, value⟩ ← expression p n ctx e
         return .let_ "ignored" value (← statements p n (binding "#ignored" a :: ctx) rest t)
       | .switch_ value cases span =>
@@ -764,8 +838,8 @@ def function (p : Program) (name : String) : Checked Core.Function := do
   let p ← Declarations.withVariants p
   let some f := p.functions.find? (·.name == name)
     | refusal "A5101" "unknown extraction entry point" {}
-  let ctx ← f.params.mapM fun param => return binding param.name (← type p param.ty param.span)
-  let result ← type p f.result f.span
-  return { params := Types ctx, result, body := ← statements p 512 ctx [f.body] result }
+  let prepared ← prepare p 512 f
+  let body ← statements p 512 prepared.ctx [prepared.body] prepared.result
+  return { params := Types prepared.ctx, result := prepared.result, body }
 
 end Ariadne.Shallow.Elaborate

@@ -47,7 +47,8 @@ not part of the proof chain.
 
 The initial `extract` fragment has scalars, readonly array operations, pure
 callbacks/calls, branches, local reassignment, collection iteration and locally
-owned updates, counted bigint loops, switches, named records and tagged unions. Its generated `Shallow`
+owned updates, borrowed-state threading at direct calls, counted bigint loops,
+switches, named records and tagged unions. Its generated `Shallow`
 namespace contains definitions over `Int`, `Bool`, UTF-16 `JSString`, binary64
 `Float.Model`, `Option`, `List`, ordered `JSMap`/`JSSet` values, and explicit loop
 state/exit types. Number-keyed collections use separate SameValueZero wrappers.

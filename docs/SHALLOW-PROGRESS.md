@@ -7,7 +7,7 @@ when their exit criteria pass; finite native tests are not universal proofs.
 | --- | --- | --- |
 | M0 | Complete | Reference sources and historical diagnostics; pinned CI downloads; reserved extraction diagnostics; output preservation tests |
 | M1 | Complete | All reference programs check and certify; grammar, ownership checks, operational semantics and the builtin table have differential coverage. Conservative dialect limits are listed below. |
-| M2 | In progress | Typed Core, scalar/list/Map/Set extraction, owned local updates, structural loops, pure calls, structural denotation, three-way differential and tamper tests. Named types, borrowed-state threading, Int53 safety and reference extraction remain pending. |
+| M2 | In progress | Typed Core, scalar/list/Map/Set extraction, owned local updates, structural loops, pure calls, structural denotation, three-way differential and tamper tests. Lawful named records/unions and direct borrowed-state calls are implemented; classes, Int53 safety and reference extraction remain pending. |
 | M3 | Pending | Loop invariant/fold lemmas and scalar native proofs are seeded; the universal proofs of the three emitted references remain pending. |
 | M4 | Pending | Fundamental lemma, footprint preservation, adequacy and source transfer |
 | M5 | Pending | Measures, larger ownership, polymorphism, exceptions and scalar backend integration |
@@ -73,7 +73,9 @@ Branch continuations are shared through typed tuple arguments. Array `for…of`,
 counted bigint loops, scalar switches, and nested break/continue/return lower to
 typed `Step`/`Exit` combinators. Maps and Sets have scalar keys, insertion-ordered
 iteration, reads, and locally owned updates. Owned array `push` becomes append.
-Named records and tagged unions have lawful native representations. Mutation through borrowed parameters, classes, number-valued counted
+Named records and tagged unions have lawful native representations. Mutated
+borrowed parameters are returned as state components and rebound at direct calls.
+Classes, number-valued counted
 loops, and Int53 refinement are explicitly refused.
 This is an incremental M2 slice, not the M2 reference-program exit gate.
 
@@ -153,3 +155,13 @@ nested unions and retains readonly collection qualifiers.
 Native proofs establish the bigint decision fixture's fold specification,
 input membership, valid-only output, and floor bound for arbitrary inputs.
 The original Int53 reference program and its permutation theorem remain pending.
+
+The union checkpoint passed the full local suite and CI with 2,804 audited
+theorems. Borrowed-state extraction now returns each updated mutable parameter
+alongside the source result. Direct calls restore the caller's owners, including
+calls inside loops and early-return paths. Read-only calls retain their ordinary
+result type. A 36-case three-way suite compares both results and caller-visible
+heaps for Maps, Sets and arrays. Native proofs cover increments, preservation of
+other keys, repeated calls, transfers, fresh results and array append. Reassigning
+a mutated borrowed parameter, nested borrowed arguments, and effectful calls
+inside larger expressions still have explicit extraction refusals.
