@@ -80,3 +80,4 @@ incoming heap/realm assumptions remain explicit obligations.
 - [Architecture and development](docs/ARCHITECTURE.md)
 - [Performance consequences](docs/PERFORMANCE.md)
 - [Implementation stages and remaining research](docs/IMPLEMENTATION.md)
+- [Design proposal: certified shallow translation](docs/DESIGN.md)
