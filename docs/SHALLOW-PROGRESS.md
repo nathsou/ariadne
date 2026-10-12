@@ -8,7 +8,7 @@ when their exit criteria pass; finite native tests are not universal proofs.
 | M0 | Complete | Reference sources and historical diagnostics; pinned CI downloads; reserved extraction diagnostics; output preservation tests |
 | M1 | Complete | All reference programs check and certify; grammar, ownership checks, operational semantics and the builtin table have differential coverage. Conservative dialect limits are listed below. |
 | M2 | In progress | Typed Core, scalar/list/Map/Set extraction, owned local updates, structural loops, pure calls, structural denotation, three-way differential and tamper tests. Lawful named records/unions and direct borrowed-state calls are implemented; class states, Int53 guards and original reference extraction are implemented; the full integration regression gate is pending. |
-| M3 | In progress | The original decision extraction has universal membership, floor and permutation proofs. Register/tree proofs and general Int53 exactness lemmas remain pending. |
+| M3 | In progress | The original decision extraction has universal membership, floor and permutation proofs. Register convergence and idempotence are proved against the emitted methods. Tree proofs and general Int53 exactness lemmas remain pending. |
 | M4 | Pending | Fundamental lemma, footprint preservation, adequacy and source transfer |
 | M5 | Pending | Measures, larger ownership, polymorphism, exceptions and scalar backend integration |
 
@@ -222,3 +222,11 @@ The original emitted decision program now has universal fold, membership,
 floor-bound, valid-only and permutation-invariance theorems in
 `Examples/Proofs/ReferenceDecision.lean`. They reason over native data and
 structural folds, independently of heap addresses or evaluator fuel.
+
+The original register extraction now has universal idempotence and permutation
+convergence proofs in `Examples/Proofs/ReferenceRegisters.lean`. Operations use
+the emitted methods, and convergence covers mixed writes and counter updates
+from any initial state. Equal encoded keys and stamps must identify equal values.
+The conclusions include both emitted read accessors and preserve the distinction
+between absent counter entries and stored values. The string prelude proves
+composite-key injectivity when the first components exclude the delimiter.

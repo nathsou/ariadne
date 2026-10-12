@@ -55,3 +55,4 @@ import Examples.ShallowReference.registers
 import Examples.ShallowReference.tree
 import Examples.Proofs.ShallowInt53
 import Examples.Proofs.ReferenceDecision
+import Examples.Proofs.ReferenceRegisters
