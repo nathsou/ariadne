@@ -254,3 +254,10 @@ conditions. `Loop.each_append` requires a break-free prefix: `Exit.done` erases
 whether a loop stopped early, so unconditional concatenation would be false.
 The sort lemmas concern the pure native prelude; the operational sort bridge is
 part of the pending adequacy work.
+
+`Prelude/Int53Exact.lean` derives canonical safe-integer representations from
+Lean's binary64 packing and rounding model. Kernel-checked universal lemmas now
+cover comparison, conversion injectivity, exact addition/subtraction/multiplication, absolute value, and negation with the
+necessary nonzero condition. They use range hypotheses, not primitive equality
+guards. Exact exponent scaling is proved for the remaining arithmetic work;
+multiplication preserves canonical zero under `CanonicalProduct`; quotient/remainder exactness remains pending.

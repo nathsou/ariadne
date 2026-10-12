@@ -8,3 +8,4 @@ import Ariadne.Shallow.Prelude.NumericCollections
 import Ariadne.Shallow.Prelude.String
 import Ariadne.Shallow.Lemmas.Prelude
 import Ariadne.Shallow.Prelude.Sort
+import Ariadne.Shallow.Prelude.Int53Exact
