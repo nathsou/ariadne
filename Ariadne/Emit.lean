@@ -1,4 +1,5 @@
 import Ariadne.Certificate
+import Ariadne.Compiler
 
 namespace Ariadne
 
@@ -33,5 +34,26 @@ def emit (source : String) (program : Program) (namespace_ : String := "Translat
     out := out ++ s!"    (h : {name} fuel args = .ok value) : SourceReturns source {quote f.name} args value :=\n"
     out := out ++ "  certificate.transfer_at h\n\n"
   return out ++ s!"end {namespace_}\n"
+
+/-- Emit the compiled function and a kernel-checkable equation tying the printed
+term to the proof-carrying compiler. A printer bug cannot establish correctness. -/
+def emitCompiled (source : String) (program : Program) (entry : String)
+    (namespace_ : String := "Translated") : Checked String := do
+  let compiled ← Compile.function program entry
+  let name := leanName entry
+  let base := (emit source program namespace_).replace
+    "import Ariadne.Certificate\n" "import Ariadne.Certificate\nimport Ariadne.Compiler\n"
+  let out := base ++ s!"\nnamespace {namespace_}\nopen Ariadne\n\n" ++
+    s!"/-- Compiled scalar function; no source-AST dispatch in its execution. -/\n" ++
+    s!"def compiled_{name} : Nat → List Value → Result Value :=\n  {compiled.text}\n\n" ++
+    s!"theorem compilation_checked : (Compile.function program {quote entry}).map Compile.Fragment.code =\n" ++
+    s!"    .ok compiled_{name} := by kernel_rfl\n\n" ++
+    s!"theorem compiled_correct : compiled_{name} = {name} :=\n" ++
+    "  Compile.function_correct compilation_checked\n\n" ++
+    s!"theorem compiled_source " ++ "{fuel : Nat} {args : List Value} {value : Value}\n" ++
+    s!"    (h : compiled_{name} fuel args = .ok value) : SourceReturns source {quote entry} args value := by\n" ++
+    "  rw [compiled_correct] at h\n  exact certificate.transfer_at h\n\n" ++
+    s!"end {namespace_}\n"
+  return out
 
 end Ariadne

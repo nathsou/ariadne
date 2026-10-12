@@ -14,3 +14,15 @@ import Examples.Generated.sorting
 import Examples.Generated.strings
 import Examples.Proofs.Arithmetic
 import Examples.Proofs.Executions
+import Examples.Compiled.boundedSum
+import Examples.Compiled.choose
+import Examples.Compiled.factorial
+import Examples.Compiled.findUnit
+import Examples.Compiled.gcd
+import Examples.Compiled.multiply
+import Examples.Compiled.numberEdges
+import Examples.Compiled.quotient
+import Examples.Compiled.reverse
+import Examples.Compiled.triangular
+import Examples.Proofs.Compiled
+import Examples.Proofs.ScalarExecutions

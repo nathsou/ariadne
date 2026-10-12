@@ -6,8 +6,10 @@ flowchart LR
   L --> P[Handwritten parser]
   P --> C[Type and ownership checker]
   C --> E[Untrusted Lean printer]
+  C --> V[Proof-carrying scalar compiler]
+  V --> E
   E --> K[Lean kernel]
-  K --> A[Source-bound operational model]
+  K --> A[Source-bound model or compiled function]
   A --> T[User properties and transfer theorems]
 ```
 
@@ -38,7 +40,17 @@ reduction of UTF-8 decoding without trusting a native decoder. `Kernel` supplies
 kernel-checked reflexivity tactic. `Properties`, `Hoare`, and `Collections` provide
 state/collection observations and reusable reasoning principles.
 
-`Main` implements check, translate, certify, eval, and explain. `Observe` creates
+`Fuel` proves approximation monotonicity for all eleven mutually recursive
+semantic functions, lifts it to arbitrary larger budgets, and proves convergence
+and source-return determinism. It preserves non-timeout faults as well as values.
+
+`Target` defines executable expression/command combinators. `Compiler` recursively
+constructs these functions together with equality proofs against `Semantics`.
+Its loop proof covers every runtime budget. `Emit.emitCompiled` prints a selected
+entry point plus an equation checking the printed code against the compiler result.
+The target retains cells and dynamic values; it never dispatches on source statements.
+
+`Main` implements check, translate, certify, compile, eval, and explain. `Observe` creates
 lossless test observations: number bits, bigint strings, UTF-16 units, explicit
 undefined, and insertion-ordered collections. The JavaScript differential harness
 normalizes NaN payloads, which cannot be observed by this subset.

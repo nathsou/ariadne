@@ -5,7 +5,7 @@ ownership/type checker, explicit scalar/heap/control semantics, source-bound ker
 certificates, a CLI, diagnostics, native differential tests, CI, and proof examples.
 It uses no Lake dependencies or external runtime libraries.
 
-The first release's acceptance gates are:
+The first release's acceptance gates, retained in CI, are:
 
 - Every supported source fixture passes parsing/checking and its generated replay
   equations pass the kernel.
@@ -19,6 +19,13 @@ The first release's acceptance gates are:
 - Regeneration is deterministic and the transitive axiom audit rejects proof holes
   and native-evaluation axioms.
 
+## Scalar compilation milestone
+
+This milestone adds full-evaluator fuel stability, deterministic convergence,
+proof-carrying scalar compilation, kernel-checked target emission, ten compiled
+examples, and an arbitrary-input multiplication proof with a termination bound.
+See [the compiler guide](COMPILER.md) and [the milestone plan](NEXT-STEPS.md).
+
 ## Remaining research and larger-subset work
 
 This is a usable experimental foundation, not the completion of a universally
@@ -27,15 +34,16 @@ verified Aeneas equivalent. The following are explicitly not implemented:
 1. An independent formal grammar and a universal proof that parsing implements it.
 2. Type/ownership preservation and progress for all accepted programs, plus a precise
    relation to an independently specified ECMAScript subset.
-3. A shallow typed functional compiler with a universal simulation theorem. Current
-   output calls the proved-source-bound interpreter. The arbitrary-input arithmetic
-   proofs demonstrate how readable functional specifications can be connected today.
+3. Extending the proved scalar compiler to named calls/recursion, typed state tuples,
+   and collections. The current scalar target uses Lean function combinators and
+   explicit cells; the larger operational translation still invokes the interpreter.
 4. Interprocedural effect summaries, region-based loans, nested mutable references,
    object keys, ownership transfer, and validated external-heap entry points.
 5. Modules/import resolution, generic utilities, discriminated unions, richer callback
    inference, and multi-error parser recovery.
 6. Automated verification-condition generation, loop invariants, termination
-   certificates, and universal correctness proofs for the larger example algorithms.
+   certificate synthesis, and universal correctness proofs for the larger example
+   algorithms. Multiplication already has a manual arbitrary-input termination proof.
 7. A formal conformance bridge for native binary64/string/collection builtins and
    a verified JavaScript engine or erasure pipeline.
 

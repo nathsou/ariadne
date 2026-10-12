@@ -71,3 +71,7 @@ exponents are limited to absolute magnitude 4096.
 The handwritten grammar is not independently proved equivalent to TypeScript's
 standard grammar. Native execution tests cover examples and generated programs;
 that is evidence, not a universal language-conformance theorem.
+
+The `compile` backend currently accepts a smaller scalar fragment of this language.
+See [COMPILER.md](COMPILER.md) for its supported constructs and diagnostics. Ordinary
+`check` acceptance does not imply that every compiler backend supports the function.

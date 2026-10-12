@@ -1,15 +1,16 @@
 # Ariadne
 
-A dependency-free Lean 4 frontend and certifying executable-model translator for a
-restricted TypeScript dialect. The lexer, parser, checker, heap model, command-line
+A dependency-free Lean 4 frontend, scalar compiler, and executable-model translator
+for a restricted TypeScript dialect. The lexer, parser, checker, heap model, command-line
 tool, and proof library are written in Lean. Native JavaScript is used only by tests
 and the optional host bootstrap.
 
-**Status:** an experimental, source-bound operational translation. It accepts
-functions, local mutation, `while`/`for`, native dense arrays and Maps, typed callbacks,
+**Status:** experimental, with a verified scalar compiler and a larger source-bound
+operational translation. The frontend accepts functions, local mutation, `while`/`for`, native dense arrays and Maps, typed callbacks,
 `number`, `bigint`, UTF-16 strings, booleans, optional values, records, and tuples.
-It generates a deeply embedded, fuel-indexed Lean model, not an optimized Aeneas-style
-shallow functional translation. Read [the proof boundary](docs/TRUST.md) before using
+`compile` emits proved-correct Lean function combinators for a smaller scalar
+fragment; `translate`/`certify` emit the larger operational model. The compiler still
+uses explicit cells and fuel. Read [the proof boundary](docs/TRUST.md) before using
 its theorems as claims about a deployed JavaScript program.
 
 ## Build and use
@@ -24,10 +25,12 @@ lake build ariadne
 .lake/build/bin/ariadne eval examples/fibonacci.ts demo
 .lake/build/bin/ariadne certify examples/fibonacci.ts \
   --out work/Fibonacci.lean --namespace Fibonacci
+.lake/build/bin/ariadne compile examples/scalar/multiply.ts multiply \
+  --out work/Multiply.lean --namespace Multiply
 ```
 
-Run commands from this repository's root. `certify` needs `lake` on `PATH` and invokes
-`lake env lean` to check its output. `translate` only writes an **uncertified candidate**;
+Run commands from this repository's root. `compile` and `certify` need `lake` on
+`PATH` and invoke `lake env lean` to check its output. `translate` only writes an **uncertified candidate**;
 `check` only accepts or rejects the subset. Neither silently claims certification.
 The original TypeScript can run directly in a conforming controlled JavaScript realm.
 
@@ -48,7 +51,13 @@ lexer, parser, and checker equations establish that these artifacts belong toget
 Transfer theorems connect properties of its operational model to that source text.
 The printer and native translator executable are outside this correctness chain.
 
-The proof library includes a general loop-invariant rule, Map lookup/update laws,
+The scalar compiler carries semantic equality proofs for every successful result.
+Its emitted function is kernel-checked against that compiler result. The
+[compiled multiplication proof](Examples/Proofs/Compiled.lean) covers arbitrary
+integers, an explicit termination bound, and every larger fuel budget.
+
+The proof library also proves fuel stability and deterministic completed outcomes
+for the full evaluator, a general loop-invariant rule, Map lookup/update laws,
 and conditional equivalences from modeled `Array.map`/`reduce` to Lean
 `List.map`/`foldl`. The [arithmetic examples](Examples/Proofs/Arithmetic.lean) prove
 absolute value, maximum, and clamp properties for arbitrary integers. The
@@ -64,6 +73,7 @@ incoming heap/realm assumptions remain explicit obligations.
 ## Documentation
 
 - [Language and supported operations](docs/LANGUAGE.md)
+- [Scalar compiler and proof workflow](docs/COMPILER.md)
 - [Native runtime and ownership contract](docs/RUNTIME.md)
 - [Proof coverage and trusted boundary](docs/TRUST.md)
 - [Diagnostics and editor payloads](docs/DIAGNOSTICS.md)

@@ -1,6 +1,6 @@
 import Ariadne.Kernel
 import Ariadne.Check
-import Ariadne.Semantics
+import Ariadne.Fuel
 
 namespace Ariadne
 
@@ -53,5 +53,15 @@ theorem Certificate.transfer_property {source : String} (c : Certificate source)
   have eq : p = c.program := Except.ok.inj (hp.symm.trans c.checked)
   subst p
   exact h v hv
+
+/-- Successful observations of the same source agree even at different budgets. -/
+theorem SourceReturns.deterministic {source name : String} {args : List Value}
+    {a b : Value} (ha : SourceReturns source name args a)
+    (hb : SourceReturns source name args b) : a = b := by
+  rcases ha with ⟨p, hp, ha⟩
+  rcases hb with ⟨q, hq, hb⟩
+  have same : p = q := Except.ok.inj (hp.symm.trans hq)
+  subst q
+  exact returns_deterministic ha hb
 
 end Ariadne

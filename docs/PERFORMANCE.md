@@ -35,7 +35,11 @@ not a portable benchmark or a promise about larger inputs. The check script comp
 certificates serially, and the default `lake build` excludes the heavy example proof
 suite. No broad native-program speedup/slowdown percentage is claimed.
 
-Future work should profile parser sharing, use validated certificates with smaller
-replay steps, specialize the operational model into shallow functions, and prove
-that optimization preserves behavior. Measure these separately from native runtime
+The scalar backend now specializes source syntax into proved-correct Lean function
+combinators. It retains the list-based cells and dynamic scalar representation, so
+removing AST dispatch does not establish an asymptotic or measured speedup. Its
+correctness proofs are erased during native execution.
+
+Future work should profile parser sharing, use certificates with smaller replay
+steps, and prove a transition from cells to specialized typed state tuples. Measure these separately from native runtime
 performance so that a faster checker is not mistaken for a faster TypeScript program.
