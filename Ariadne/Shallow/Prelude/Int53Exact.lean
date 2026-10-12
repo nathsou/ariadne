@@ -1,4 +1,5 @@
 import Ariadne.Shallow.Prelude.Int53
+import Ariadne.Builtins
 set_option maxHeartbeats 400000
 namespace Ariadne.Shallow.Int53
 open Float.Model Float.Model.UnpackedFloat
@@ -460,12 +461,109 @@ theorem mul_exact (a b : Int) (ha : InRange a) (hb : InRange b) (product : InRan
       rw [rounded_shift (sa * sb) (n * m) k nmpos nmbound enough, signed_product]
       change Float.Model.pack (normalize Format.binary64 ((sa * sb).apply ((n * m : Nat) : Int)) 0 .positive) = _
       rw [normalize_signed (sa * sb) (n * m) 0 .positive nmpos]
+
+private theorem extended_zero_shift (k : Nat) :
+    (ExtendedMantissa.mk 0 false false >>> k) = ExtendedMantissa.mk 0 false false := by
+  simpa using extended_shift_exact 0 k
+
+private theorem round_zero (sign : Sign) (e : Int) : round Format.binary64 sign 0 e = .zero sign := by
+  simp [round, roundWithAccuracy, shiftToTargetExponent, shiftToExponent, decreaseExponent,
+    ExtendedMantissa.ofMantissaAndAccuracy, extended_zero_shift,
+    ExtendedMantissa.roundedMantissa, ExtendedMantissa.accuracy, Accuracy.roundToNearestEven]
+
+private theorem signed_remainder (sa sb : Sign) (n m : Nat) :
+    Int.tmod (sa.apply (n : Int)) (sb.apply (m : Int)) = sa.apply ((n % m : Nat) : Int) := by
+  cases sa <;> cases sb <;> simp [Sign.apply, ← Int.ofNat_tmod]
+
+def CanonicalRemainder (a b : Int) : Prop := Int.tmod a b = 0 → 0 ≤ a
+
+theorem remainder_exact (a b : Int) (ha : InRange a) (hb : InRange b) (divisor : b ≠ 0)
+    (canonical : CanonicalRemainder a b) :
+    Float.Model.ofInt (Int.tmod a b) = Ariadne.numberRemainder (Float.Model.ofInt a) (Float.Model.ofInt b) := by
+  rcases safe_cases b hb with zero | ⟨sb, m, mp, mb, rfl⟩
+  · exact False.elim (divisor zero)
+  · rcases safe_cases a ha with rfl | ⟨sa, n, np, nb, rfl⟩
+    · simp only [Int.zero_tmod, Ariadne.numberRemainder, unpack_zero, unpack_ofInt_signed sb m mp mb]
+    · unfold Ariadne.numberRemainder
+      rw [unpack_ofInt_signed sa n np nb, unpack_ofInt_signed sb m mp mb, signed_remainder]
+      let k := max (52 - n.log2) (52 - m.log2)
+      have kn : 52 - n.log2 ≤ k := Nat.le_max_left _ _
+      have km : 52 - m.log2 ≤ k := Nat.le_max_right _ _
+      have small : min (-((52 - n.log2 : Nat) : Int)) (-((52 - m.log2 : Nat) : Int)) = -(k : Int) := by
+        dsimp [k]; omega
+      have aligned (x pad : Nat) (enough : pad ≤ k) :
+          (x <<< pad) * 2 ^ (-(pad : Int) - -(k : Int)).toNat = x <<< k := by
+        have h := congrArg Prod.fst (align_integer x pad k enough)
+        simpa [decreaseExponent, Nat.shiftLeft_eq] using h
+      simp only [small, aligned n _ kn, aligned m _ km]
+      have rem : (n <<< k) % (m <<< k) = (n % m) <<< k := by
+        simp only [Nat.shiftLeft_eq]
+        simpa [Nat.mul_comm] using Nat.mul_mod_mul_left (2 ^ k) n m
+      rw [rem]
+      by_cases zero : n % m = 0
+      · have nonneg : 0 ≤ sa.apply (n : Int) := canonical (by rw [signed_remainder, zero]; cases sa <;> rfl)
+        rw [zero]
+        simp only [Nat.zero_shiftLeft, round_zero]
+        cases sa with
+        | negative => simp [Sign.apply] at nonneg; omega
+        | positive => rfl
+      · have positive : 0 < n % m := by omega
+        have bound : n % m < 2 ^ 53 := Nat.lt_trans (Nat.mod_lt n mp) mb
+        rw [round_shift sa (n % m) k positive bound]
+        change Float.Model.pack (normalize Format.binary64 (sa.apply ((n % m : Nat) : Int)) 0 .positive) = _
+        rw [normalize_signed sa (n % m) 0 .positive positive]
+
+theorem range_iff_natAbs (a : Int) : InRange a ↔ a.natAbs ≤ 9007199254740991 := by
+  cases a <;> simp [InRange, limit, Int.natAbs] <;> omega
+
+theorem tdiv_range (a b : Int) (safe : InRange a) : InRange (a.tdiv b) := by
+  rw [range_iff_natAbs] at safe ⊢
+  exact Nat.le_trans (Int.natAbs_tdiv_le_natAbs a b) safe
+
+theorem fdiv_range (a b : Int) (safe : InRange a) : InRange (a.fdiv b) := by
+  rw [range_iff_natAbs] at safe ⊢
+  exact Nat.le_trans (Int.natAbs_fdiv_le_natAbs a b) safe
+
+theorem remainder_range (a b : Int) (safe : InRange a) : InRange (a.tmod b) := by
+  rw [range_iff_natAbs] at safe ⊢
+  rw [Int.natAbs_tmod]
+  exact Nat.le_trans (Nat.mod_le _ _) safe
+
+theorem length_range (xs : List α) (length : xs.length < 2 ^ 32) : InRange (xs.length : Int) := by
+  simp only [InRange, limit]
+  omega
+
+theorem isFinite_ofInt (a : Int) (safe : InRange a) : (Float.Model.ofInt a).isFinite = true := by
+  rcases safe_cases a safe with rfl | ⟨sign, n, positive, bound, rfl⟩
+  · kernel_rfl
+  · unfold Float.Model.isFinite
+    rw [unpack_ofInt_signed sign n positive bound]
+    rfl
+
+theorem toInt_ofInt (a : Int) (safe : InRange a) : (Float.Model.ofInt a).unpack.toInt 0 0 = a := by
+  rcases safe_cases a safe with rfl | ⟨sign, n, positive, bound, rfl⟩
+  · kernel_rfl
+  · rw [unpack_ofInt_signed sign n positive bound]
+    let pad := 52 - n.log2
+    have first : (-(pad : Int)).toNat = 0 := by omega
+    have second : (0 - -(pad : Int)).toNat = pad := by omega
+    change roundToInt sign (n <<< pad) (-(pad : Int)) = _
+    simp only [roundToInt, decreaseExponent, first, Nat.shiftLeft_zero, Int.natCast_zero, Int.sub_zero,
+      shiftToExponent, second, ExtendedMantissa.ofMantissaAndAccuracy, extended_shift_exact]
+
+theorem trunc_ofInt (a : Int) (safe : InRange a) :
+    Builtins.numberTrunc (Float.Model.ofInt a) = Float.Model.ofInt a := by
+  have zero : Float.Model.ofNat 0 = Float.Model.ofInt 0 := rfl
+  simp only [Builtins.numberTrunc, isFinite_ofInt a safe, Bool.not_true, Bool.false_or, zero,
+    beq_ofInt a 0 safe zero_inRange, toInt_ofInt a safe]
+  by_cases eq : a = 0
+  · simp [eq]
+  · simp [eq]
+
+theorem floor_ofInt (a : Int) (safe : InRange a) :
+    Builtins.numberFloor (Float.Model.ofInt a) = Float.Model.ofInt a := by
+  have zero : Float.Model.ofNat 0 = Float.Model.ofInt 0 := rfl
+  simp only [Builtins.numberFloor, isFinite_ofInt a safe, Bool.not_true, Bool.false_or, zero,
+    beq_ofInt a 0 safe zero_inRange, toInt_ofInt a safe, lt_ofInt a a safe safe, Int.lt_irrefl, ↓reduceIte]
+  split <;> rfl
 end Ariadne.Shallow.Int53
-
-
-
-
-
-
-
-

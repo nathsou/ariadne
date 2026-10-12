@@ -260,7 +260,7 @@ Lean's binary64 packing and rounding model. Kernel-checked universal lemmas now
 cover comparison, conversion injectivity, exact addition/subtraction/multiplication, absolute value, and negation with the
 necessary nonzero condition. They use range hypotheses, not primitive equality
 guards. Exact exponent scaling is proved for the remaining arithmetic work;
-multiplication preserves canonical zero under `CanonicalProduct`; quotient/remainder exactness remains pending.
+multiplication preserves canonical zero under `CanonicalProduct`; remainder exactness is proved under `CanonicalRemainder`. Quotient rounding remains pending.
 
 CI found a NaN-observation portability bug in the new Int53 harness: Bun returned
 a negative NaN for division by zero while the model canonicalizes NaNs. The
@@ -269,3 +269,9 @@ while preserving exact signed-zero comparisons. The corrected 52-case harness
 passes under Node 24.19.0 and pinned Bun 1.3.5; original-reference comparisons
 also pass under Bun. The numeric exactness checkpoint builds and audits 3,885
 theorems. Fresh CI is pending.
+
+The numeric library also proves that truncation and floor leave canonical safe
+integers unchanged, conversion back to `Int` is exact, and integer quotients and
+remainders remain in range. List lengths below the JavaScript array bound are
+proved to fit Int53. The remaining numeric correspondence is floor/truncation of
+rounded nonintegral binary64 quotients.
