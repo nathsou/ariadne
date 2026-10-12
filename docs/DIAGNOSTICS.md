@@ -55,3 +55,12 @@ recovery and richer alias-expansion traces are planned extensions.
 See `examples/negative/` for executable diagnostic fixtures. Their first line records
 the expected stable error code; tests additionally check the JSON schema and failure
 exit status. Message prose may improve without changing those codes.
+
+## Scalar compiler diagnostics
+
+`compile FILE FUNCTION --out FILE.lean --json` uses the same schema. `A4101`
+means the frontend accepted a construct that the scalar backend cannot compile;
+the diagnostic highlights the construct or parameter and suggests the operational
+translator. `A4102` is the compiler nesting limit. `A4103` is a missing entry name.
+These errors leave an existing output file untouched. A generated artifact that
+fails kernel checking reports `A4001` and remains an uncertified candidate.

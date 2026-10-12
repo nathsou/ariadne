@@ -39,8 +39,11 @@ theorem eq_of_completed {a b : Result α} (h : a.Refines b)
 end Result.Refines
 
 
+-- Each evaluator clause is built from fuel-independent primitives, monadic
+-- composition, and recursive calls at the smaller budget. Split only after
+-- applying the bind/map rules, so effectful continuations use the same state.
 set_option hygiene false in
-macro "refine_fuel" : tactic => `(tactic|
+local macro "refine_fuel" : tactic => `(tactic|
   repeat' first
   | exact Result.Refines.refl _
   | exact he _ _
@@ -59,25 +62,27 @@ macro "refine_fuel" : tactic => `(tactic|
   | intro x
   | split)
 
-private theorem fuel_step (p : Program) (n : Nat) :
-    (∀ s e, (evalExpr p n s e).Refines (evalExpr p (n + 1) s e)) ∧
-    (∀ s es, (evalArgs p n s es).Refines (evalArgs p (n + 1) s es)) ∧
-    (∀ s f as, (apply p n s f as).Refines (apply p (n + 1) s f as)) ∧
-    (∀ s env ps b as, (callBody p n s env ps b as).Refines (callBody p (n + 1) s env ps b as)) ∧
-    (∀ s cb xs i m, (traverse p n s cb xs i m).Refines (traverse p (n + 1) s cb xs i m)) ∧
-    (∀ s cb xs a i, (reduce p n s cb xs a i).Refines (reduce p (n + 1) s cb xs a i)) ∧
-    (∀ s cb xs, (mapTraverse p n s cb xs).Refines (mapTraverse p (n + 1) s cb xs)) ∧
-    (∀ s t r, (assignTarget p n s t r).Refines (assignTarget p (n + 1) s t r)) ∧
-    (∀ s b, (exec p n s b).Refines (exec p (n + 1) s b)) ∧
-    (∀ s bs, (execBlock p n s bs).Refines (execBlock p (n + 1) s bs)) ∧
-    (∀ s c b u, (loop p n s c b u).Refines (loop p (n + 1) s c b u)) := by
+private structure FuelStep (p : Program) (n : Nat) : Prop where
+  expr : ∀ s e, (evalExpr p n s e).Refines (evalExpr p (n + 1) s e)
+  args : ∀ s es, (evalArgs p n s es).Refines (evalArgs p (n + 1) s es)
+  call : ∀ s f as, (apply p n s f as).Refines (apply p (n + 1) s f as)
+  frame : ∀ s env ps b as, (callBody p n s env ps b as).Refines (callBody p (n + 1) s env ps b as)
+  traverse : ∀ s cb xs i m, (traverse p n s cb xs i m).Refines (traverse p (n + 1) s cb xs i m)
+  reduce : ∀ s cb xs a i, (reduce p n s cb xs a i).Refines (reduce p (n + 1) s cb xs a i)
+  mapTraverse : ∀ s cb xs, (mapTraverse p n s cb xs).Refines (mapTraverse p (n + 1) s cb xs)
+  assign : ∀ s t r, (assignTarget p n s t r).Refines (assignTarget p (n + 1) s t r)
+  statement : ∀ s b, (exec p n s b).Refines (exec p (n + 1) s b)
+  block : ∀ s bs, (execBlock p n s bs).Refines (execBlock p (n + 1) s bs)
+  loop : ∀ s c b u, (loop p n s c b u).Refines (loop p (n + 1) s c b u)
+
+private theorem fuel_step (p : Program) (n : Nat) : FuelStep p n := by
   induction n with
   | zero =>
-    repeat' constructor
+    constructor
     all_goals intros; exact Or.inl rfl
   | succ n ih =>
     rcases ih with ⟨he, ha, hf, hc, ht, hr, hm, hw, hs, hb, hl⟩
-    repeat' apply And.intro
+    constructor
     · intro s e; cases e
       all_goals simp only [evalExpr]; refine_fuel
     · intro s es; cases es
@@ -127,67 +132,67 @@ theorem evalExpr_fuel_mono (p : Program) {small large : Nat} (le : small ≤ lar
     (s : State) (e : Expr) :
     (evalExpr p small s e).Refines (evalExpr p large s e) :=
   Result.refines_of_step (fun n => evalExpr p n s e)
-    (fun n => (fuel_step p n).1 s e) le
+    (fun n => (fuel_step p n).expr s e) le
 
 theorem evalArgs_fuel_mono (p : Program) {small large : Nat} (le : small ≤ large)
     (s : State) (es : List Expr) :
     (evalArgs p small s es).Refines (evalArgs p large s es) :=
   Result.refines_of_step (fun n => evalArgs p n s es)
-    (fun n => (fuel_step p n).2.1 s es) le
+    (fun n => (fuel_step p n).args s es) le
 
 theorem apply_fuel_mono (p : Program) {small large : Nat} (le : small ≤ large)
     (s : State) (fn : Value) (args : List Value) :
     (apply p small s fn args).Refines (apply p large s fn args) :=
   Result.refines_of_step (fun n => apply p n s fn args)
-    (fun n => (fuel_step p n).2.2.1 s fn args) le
+    (fun n => (fuel_step p n).call s fn args) le
 
 theorem callBody_fuel_mono (p : Program) {small large : Nat} (le : small ≤ large)
     (s : State) (env : Env) (ps : List Param) (body : Stmt) (args : List Value) :
     (callBody p small s env ps body args).Refines (callBody p large s env ps body args) :=
   Result.refines_of_step (fun n => callBody p n s env ps body args)
-    (fun n => (fuel_step p n).2.2.2.1 s env ps body args) le
+    (fun n => (fuel_step p n).frame s env ps body args) le
 
 theorem traverse_fuel_mono (p : Program) {small large : Nat} (le : small ≤ large)
     (s : State) (cb : Value) (xs : List Value) (i : Nat) (mode : String) :
     (traverse p small s cb xs i mode).Refines (traverse p large s cb xs i mode) :=
   Result.refines_of_step (fun n => traverse p n s cb xs i mode)
-    (fun n => (fuel_step p n).2.2.2.2.1 s cb xs i mode) le
+    (fun n => (fuel_step p n).traverse s cb xs i mode) le
 
 theorem reduce_fuel_mono (p : Program) {small large : Nat} (le : small ≤ large)
     (s : State) (cb : Value) (xs : List Value) (acc : Value) (i : Nat) :
     (reduce p small s cb xs acc i).Refines (reduce p large s cb xs acc i) :=
   Result.refines_of_step (fun n => reduce p n s cb xs acc i)
-    (fun n => (fuel_step p n).2.2.2.2.2.1 s cb xs acc i) le
+    (fun n => (fuel_step p n).reduce s cb xs acc i) le
 
 theorem mapTraverse_fuel_mono (p : Program) {small large : Nat} (le : small ≤ large)
     (s : State) (cb : Value) (xs : List (Value × Value)) :
     (mapTraverse p small s cb xs).Refines (mapTraverse p large s cb xs) :=
   Result.refines_of_step (fun n => mapTraverse p n s cb xs)
-    (fun n => (fuel_step p n).2.2.2.2.2.2.1 s cb xs) le
+    (fun n => (fuel_step p n).mapTraverse s cb xs) le
 
 theorem assignTarget_fuel_mono (p : Program) {small large : Nat} (le : small ≤ large)
     (s : State) (target rhs : Expr) :
     (assignTarget p small s target rhs).Refines (assignTarget p large s target rhs) :=
   Result.refines_of_step (fun n => assignTarget p n s target rhs)
-    (fun n => (fuel_step p n).2.2.2.2.2.2.2.1 s target rhs) le
+    (fun n => (fuel_step p n).assign s target rhs) le
 
 theorem exec_fuel_mono (p : Program) {small large : Nat} (le : small ≤ large)
     (s : State) (body : Stmt) :
     (exec p small s body).Refines (exec p large s body) :=
   Result.refines_of_step (fun n => exec p n s body)
-    (fun n => (fuel_step p n).2.2.2.2.2.2.2.2.1 s body) le
+    (fun n => (fuel_step p n).statement s body) le
 
 theorem execBlock_fuel_mono (p : Program) {small large : Nat} (le : small ≤ large)
     (s : State) (body : List Stmt) :
     (execBlock p small s body).Refines (execBlock p large s body) :=
   Result.refines_of_step (fun n => execBlock p n s body)
-    (fun n => (fuel_step p n).2.2.2.2.2.2.2.2.2.1 s body) le
+    (fun n => (fuel_step p n).block s body) le
 
 theorem loop_fuel_mono (p : Program) {small large : Nat} (le : small ≤ large)
     (s : State) (guard : Expr) (body : Stmt) (update : Option Stmt) :
     (loop p small s guard body update).Refines (loop p large s guard body update) :=
   Result.refines_of_step (fun n => loop p n s guard body update)
-    (fun n => (fuel_step p n).2.2.2.2.2.2.2.2.2.2 s guard body update) le
+    (fun n => (fuel_step p n).loop s guard body update) le
 
 theorem runState_fuel_mono (p : Program) (name : String) (args : List Value)
     {small large : Nat} (le : small ≤ large) :
