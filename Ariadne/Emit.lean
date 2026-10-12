@@ -1,5 +1,5 @@
 import Ariadne.Certificate
-import Ariadne.Compiler
+import Ariadne.Linker
 
 namespace Ariadne
 
@@ -39,17 +39,27 @@ def emit (source : String) (program : Program) (namespace_ : String := "Translat
 term to the proof-carrying compiler. A printer bug cannot establish correctness. -/
 def emitCompiled (source : String) (program : Program) (entry : String)
     (namespace_ : String := "Translated") : Checked String := do
-  let compiled ← Compile.function program entry
+  let compiled ← Compile.entry program entry
   let name := leanName entry
+  let (declarations, targetText) ← match Compile.function program entry with
+    | .ok _ => pure ("", compiled.text)
+    | .error _ => do
+      let table ← Compile.definitions program program.functions
+      let definitions := "def compiled_definitions : List Target.Definition := [\n  " ++
+        String.intercalate ",\n  " (table.texts.map fun text => text.replace "\n" "\n  ") ++ "]\n\n"
+      let target := "(fun fuel args => (Target.link (apply program) compiled_definitions " ++
+        "fuel fuel {} (.function " ++ quote entry ++ ") args).map Prod.fst)"
+      pure (definitions, target)
   let base := (emit source program namespace_).replace
-    "import Ariadne.Certificate\n" "import Ariadne.Certificate\nimport Ariadne.Compiler\n"
+    "import Ariadne.Certificate\n" "import Ariadne.Certificate\nimport Ariadne.Linker\n"
   let out := base ++ s!"\nnamespace {namespace_}\nopen Ariadne\n\n" ++
-    s!"/-- Compiled scalar function; no source-AST dispatch in its execution. -/\n" ++
-    s!"def compiled_{name} : Nat → List Value → Result Value :=\n  {compiled.text}\n\n" ++
-    s!"theorem compilation_checked : (Compile.function program {quote entry}).map Compile.Fragment.code =\n" ++
+    declarations ++
+    s!"/-- Compiled scalar entry; named calls use the certified linked bodies. -/\n" ++
+    s!"def compiled_{name} : Nat → List Value → Result Value :=\n  {targetText}\n\n" ++
+    s!"theorem compilation_checked : (Compile.entry program {quote entry}).map Compile.Fragment.code =\n" ++
     s!"    .ok compiled_{name} := by kernel_rfl\n\n" ++
     s!"theorem compiled_correct : compiled_{name} = {name} :=\n" ++
-    "  Compile.function_correct compilation_checked\n\n" ++
+    "  Compile.entry_correct compilation_checked\n\n" ++
     s!"theorem compiled_source " ++ "{fuel : Nat} {args : List Value} {value : Value}\n" ++
     s!"    (h : compiled_{name} fuel args = .ok value) : SourceReturns source {quote entry} args value := by\n" ++
     "  rw [compiled_correct] at h\n  exact certificate.transfer_at h\n\n" ++
