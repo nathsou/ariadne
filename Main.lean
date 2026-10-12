@@ -3,10 +3,11 @@ import Ariadne
 open Ariadne
 
 private def usage : String :=
-  "Ariadne 0.1.0 — TypeScript subset to Lean 4\n\n" ++
+  "Ariadne 0.2.0 — TypeScript subset to Lean 4\n\n" ++
   "  ariadne check FILE [--json]\n" ++
   "  ariadne translate FILE --out FILE.lean [--namespace NAME]\n" ++
   "  ariadne certify FILE --out FILE.lean [--namespace NAME]\n" ++
+  "  ariadne compile FILE FUNCTION --out FILE.lean [--namespace NAME] [--json]\n" ++
   "  ariadne eval FILE FUNCTION [FUEL]\n" ++
   "  ariadne explain CODE\n\n" ++
   "eval invokes a zero-argument function. Fuel exhaustion is inconclusive.\n" ++
@@ -27,6 +28,9 @@ private def validOutputOptions (args : List String) (seen : List String := []) :
 
 private def explain (code : String) : String :=
   match code with
+  | "A4101" => "This accepted TypeScript construct is outside the scalar compiler backend. Use translate/certify for an operational model."
+  | "A4102" => "Scalar compilation exceeded its nesting budget. Simplify deeply nested blocks or expressions."
+  | "A4103" => "The selected compiler entry point does not exist in this source file."
   | "A1001" => "Recognized language construct or builtin outside the supported subset. See docs/LANGUAGE.md."
   | "A1005" => "A newline after return changes JavaScript behavior. Put the expression on the return line."
   | "A2002" => "Type mismatch. Ariadne requires explicit conversions and handles missing values explicitly."
@@ -45,7 +49,7 @@ private def process (args : List String) : IO UInt32 := do
     return 0
   let command := args[0]!
   let some path := args[1]? | IO.eprintln usage; return 2
-  if !["check", "translate", "certify", "eval"].contains command then
+  if !["check", "translate", "certify", "compile", "eval"].contains command then
     IO.eprintln usage
     return 2
   if (System.FilePath.mk path).extension != some "ts" then
@@ -60,6 +64,13 @@ private def process (args : List String) : IO UInt32 := do
   if (command == "translate" || command == "certify") && !validOutputOptions (args.drop 2) then
     IO.eprintln "Expected --out FILE.lean and optional --namespace NAME, without duplicate options"
     return 2
+  if command == "compile" then
+    let options := args.drop 3
+    if args.length < 3 || (args[2]!).startsWith "--" ||
+        (options.filter (· == "--json")).length > 1 ||
+        !validOutputOptions (options.filter (· != "--json")) then
+      IO.eprintln "Expected compile FILE FUNCTION --out FILE.lean [--namespace NAME] [--json]"
+      return 2
   let text ← IO.FS.readFile (System.FilePath.mk path)
   let source : Source := { path, text }
   let program ← match frontend text with
@@ -98,8 +109,16 @@ private def process (args : List String) : IO UInt32 := do
     if (← IO.FS.realPath outputPath) == (← IO.FS.realPath path) then
       IO.eprintln "Refusing to overwrite the TypeScript source"
       return 2
+  let artifact ← if command == "compile" then
+    match emitCompiled text program args[2]! namespace_ with
+    | .ok artifact => pure artifact
+    | .error d =>
+      if args.contains "--json" then IO.println ((d.toJson source).compress)
+      else IO.eprint (d.render source)
+      return 1
+    else pure (emit text program namespace_)
   if let some parent := outputPath.parent then IO.FS.createDirAll parent
-  IO.FS.writeFile outputPath (emit text program namespace_)
+  IO.FS.writeFile outputPath artifact
   if command == "translate" then
     IO.println s!"Wrote {out}. This candidate has not been kernel-checked."
     return 0
@@ -109,7 +128,8 @@ private def process (args : List String) : IO UInt32 := do
     IO.eprint result.stdout
     IO.eprint result.stderr
     return 1
-  IO.println s!"Certified source/model correspondence: {out}"
+  if command == "compile" then IO.println s!"Certified scalar compilation: {out}"
+  else IO.println s!"Certified source/model correspondence: {out}"
   return 0
 
 def main (args : List String) : IO UInt32 := do
