@@ -1,5 +1,6 @@
 import Ariadne.Shallow.Represents
 import Ariadne.SourceFrom
+import Ariadne.Shallow.Prelude.Int53Exact
 
 namespace Ariadne.Shallow.Adequacy
 open Heap DataRelation
@@ -81,5 +82,15 @@ theorem number_key {heap : Heap} {source : Value} {native query : Float.Model} {
     sameValueZero source (.number query) = NumberKey.equal native query := by
   rcases input with ⟨rfl, _⟩
   rfl
+
+theorem int53_key {heap : Heap} {source : Value} {native query : Int} {footprint : Footprint}
+    (input : DataRelation.int53.Holds heap source native footprint) (valid : Int53.InRange query) :
+    sameValueZero source (.number (Float.Model.ofInt query)) = (native == query) := by
+  rcases input with ⟨⟨safe, rfl⟩, _⟩
+  have finite := Int53.isFinite_ofInt native safe
+  have notNaN : (Float.Model.ofInt native).isNaN = false := by
+    cases value : (Float.Model.ofInt native).unpack <;>
+      simp_all [Float.Model.isFinite, Float.Model.isNaN, Float.Model.UnpackedFloat.isFinite, Float.Model.UnpackedFloat.isNaN]
+  simp [sameValueZero, notNaN, Int53.beq_ofInt native query safe valid]
 
 end Ariadne.Shallow.Adequacy

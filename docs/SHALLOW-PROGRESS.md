@@ -344,3 +344,22 @@ sub-footprint. Map lookup likewise agrees with native ordered lookup under the
 scalar key equality relation. Bigint, string, boolean and SameValueZero number
 keys discharge that relation directly. These primitive lemmas do not yet supply
 whole-function transfer for collection code.
+
+The full `scripts/check.sh` run passed under pinned Bun 1.3.5, including all
+generated certificates, 4,518 audited theorems, ten generated universal scalar
+source theorems and their three tamper checks, all differential suites, and all
+original-reference comparisons. The original references still lack source
+transfer; this gate verifies the current partial M4 coverage.
+
+The structural loop bridge now relates `Loop.each` to operational `eachBody`
+and `for…of`, including continue, break, return and lexical-environment
+restoration. It consumes the actual visited guards and a local body
+correspondence; it does not assume execution of the whole loop or require a
+fixed body budget. State relations can carry heap/ownership invariants. Separate
+lemmas prove that collecting guards preserves loop, fold, map/filter and search
+values. The generic Core/body correspondence needed to apply this bridge to all
+extracted loops remains pending.
+
+Map and Set deletion-size laws, including SameValueZero numeric wrappers, now
+use the unique-key invariant. Int53 map-key equality follows from the proved
+binary64 comparison theorem and both key range hypotheses.
