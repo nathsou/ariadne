@@ -53,7 +53,7 @@ private theorem unpackSign_components (sign : Sign) (exponent : BitVec 11) (mant
   simp [BitVec.getLsbD_eq_getElem]
 
 private theorem unpack_pack_normal (sign : Sign) (m : Nat) (e : Int)
-    (positive : 0 < m) (bits : m.log2 = 52) (lower : -52 ≤ e) (upper : e ≤ 0) :
+    (positive : 0 < m) (bits : m.log2 = 52) (lower : -1074 ≤ e) (upper : e ≤ 971) :
     (Float.Model.pack (.finite sign m e positive)).unpack = .finite sign m e positive := by
   have mbounds : 2 ^ 52 ≤ m ∧ m < 2 ^ 53 := (Nat.log2_eq_iff (Nat.ne_of_gt positive)).mp bits
   let biased := (e + 1075).toNat
@@ -666,4 +666,541 @@ theorem floor_div_exact_of_integral (a b : Int) (ha : InRange a) (hb : InRange b
     Int.fdiv_eq_of_eq_mul_left divisor (Int.tdiv_mul_cancel_of_tmod_eq_zero integral).symm
   rw [same, ← div_exact_of_integral a b ha hb divisor integral canonical]
   exact floor_ofInt _ (tdiv_range a b ha)
+
+/-! Division needs more than a bound on the rounded quotient's magnitude. The
+binary64 error must be smaller than the distance to either neighboring integer.
+We normalize the quotient to a common power-of-two scale, prove that rounding
+stays strictly inside that integer interval, and then recover truncation and
+flooring from the actual Float model. -/
+
+private theorem nearest_bounds (d : Nat) (accuracy : Accuracy) :
+    d ≤ accuracy.roundToNearestEven d ∧ accuracy.roundToNearestEven d ≤ d + 1 := by
+  cases accuracy with
+  | exact => simp [Accuracy.roundToNearestEven]
+  | inexact order => cases order <;> simp [Accuracy.roundToNearestEven] <;> omega
+
+private theorem rounded_accuracy (d : Nat) (accuracy : Accuracy) :
+    (ExtendedMantissa.ofMantissaAndAccuracy d accuracy).roundedMantissa = accuracy.roundToNearestEven d := by
+  cases accuracy with
+  | exact => rfl
+  | inexact order => cases order <;> rfl
+
+private theorem unshifted_error (d r denominator : Nat) (bound : r < denominator) :
+    let rounded := (ExtendedMantissa.ofMantissaAndAccuracy d (accuracyOfFraction r denominator)).roundedMantissa
+    rounded * denominator ≤ d * denominator + r + denominator ∧
+      d * denominator + r ≤ rounded * denominator + denominator := by
+  dsimp only
+  rw [rounded_accuracy]
+  have bounds := nearest_bounds d (accuracyOfFraction r denominator)
+  have lower := Nat.mul_le_mul_right denominator bounds.1
+  have upper := Nat.mul_le_mul_right denominator bounds.2
+  rw [Nat.add_mul, Nat.one_mul] at upper
+  omega
+
+private theorem shifted_error (d r denominator : Nat) (bound : r < denominator) :
+    let rounded := (ExtendedMantissa.shiftRightOne
+      (ExtendedMantissa.ofMantissaAndAccuracy d (accuracyOfFraction r denominator))).roundedMantissa
+    (2 * rounded) * denominator ≤ d * denominator + r + denominator ∧
+      d * denominator + r ≤ (2 * rounded) * denominator + denominator := by
+  have parity : d % 2 = 0 ∨ d % 2 = 1 := by omega
+  have halfParity : (d / 2) % 2 = 0 ∨ (d / 2) % 2 = 1 := by omega
+  have scaled := congrArg (fun n => n * denominator) (Nat.mod_add_div d 2)
+  simp only [Nat.add_mul, Nat.mul_assoc] at scaled
+  by_cases exact : r = 0
+  · subst r
+    rcases parity with parity | parity <;> rcases halfParity with halfParity | halfParity
+    all_goals simp [accuracyOfFraction, ExtendedMantissa.ofMantissaAndAccuracy,
+      ExtendedMantissa.shiftRightOne, parity, halfParity,
+      ExtendedMantissa.roundedMantissa, ExtendedMantissa.accuracy, Accuracy.roundToNearestEven,
+      Nat.add_mul, Nat.mul_add, Nat.mul_assoc] at *
+    all_goals omega
+  · cases order : compare (2 * r) denominator <;> rcases parity with parity | parity
+    all_goals simp [accuracyOfFraction, exact, order, ExtendedMantissa.ofMantissaAndAccuracy,
+      ExtendedMantissa.shiftRightOne, parity,
+      ExtendedMantissa.roundedMantissa, ExtendedMantissa.accuracy, Accuracy.roundToNearestEven,
+      Nat.add_mul, Nat.mul_add, Nat.mul_assoc] at *
+    all_goals omega
+
+private theorem shift_add (d : Nat) (e : Int) (accuracy : Accuracy) (shift : Nat) :
+    shiftToExponent d e accuracy (e + shift) =
+      (ExtendedMantissa.ofMantissaAndAccuracy d accuracy >>> shift, e + shift) := by
+  have amount : (e + (shift : Int) - e).toNat = shift := by omega
+  simp [shiftToExponent, amount]
+
+private theorem quotient_log (d : Nat) (lo : 2 ^ 52 ≤ d) (hi : d < 2 ^ 54) :
+    d.log2 = 52 ∨ d.log2 = 53 := by
+  have positive : d ≠ 0 := by omega
+  have lower := (Nat.le_log2 positive).mpr lo
+  have upper := (Nat.log2_lt positive).mpr hi
+  omega
+
+private def divisionShift (d : Nat) := d.log2 - 52
+private def divisionRounded (d r denominator : Nat) :=
+  ((ExtendedMantissa.ofMantissaAndAccuracy d (accuracyOfFraction r denominator)) >>> divisionShift d).roundedMantissa
+
+private theorem division_shift_cases (d : Nat) (lo : 2 ^ 52 ≤ d) (hi : d < 2 ^ 54) :
+    divisionShift d = 0 ∨ divisionShift d = 1 := by
+  rcases quotient_log d lo hi with h | h <;> simp [divisionShift, h]
+
+private theorem division_target (d k : Nat) (lo : 2 ^ 52 ≤ d) (hi : d < 2 ^ 54)
+    (kbound : k ≤ 105) :
+    Format.binary64.targetExponent (totalExponent d (-(k : Int))) = -(k : Int) + divisionShift d := by
+  rcases quotient_log d lo hi with bits | bits
+  all_goals simp only [Format.targetExponent, totalExponent, Format.mantissaBits,
+    Format.minExponent, divisionShift, bits]
+  all_goals omega
+
+private theorem division_rounded_bounds (d r denominator : Nat) (lo : 2 ^ 52 ≤ d) (hi : d < 2 ^ 54) :
+    2 ^ 52 ≤ divisionRounded d r denominator ∧ divisionRounded d r denominator ≤ 2 ^ 53 := by
+  rcases quotient_log d lo hi with bits | bits
+  · have dbound : d < 2 ^ 53 := (Nat.log2_lt (by omega)).mp (by omega)
+    have h := nearest_bounds d (accuracyOfFraction r denominator)
+    simp only [divisionRounded, divisionShift, bits, Nat.sub_self, HShiftRight.hShiftRight, Nat.repeat,
+      rounded_accuracy]
+    omega
+  · have lower : 2 ^ 53 ≤ d := (Nat.le_log2 (by omega)).mp (by omega)
+    have h := nearest_bounds (d / 2)
+      (ExtendedMantissa.shiftRightOne (ExtendedMantissa.ofMantissaAndAccuracy d (accuracyOfFraction r denominator))).accuracy
+    simp only [divisionRounded, divisionShift, bits]
+    change 2 ^ 52 ≤ (ExtendedMantissa.shiftRightOne
+      (ExtendedMantissa.ofMantissaAndAccuracy d (accuracyOfFraction r denominator))).roundedMantissa ∧
+      (ExtendedMantissa.shiftRightOne
+      (ExtendedMantissa.ofMantissaAndAccuracy d (accuracyOfFraction r denominator))).roundedMantissa ≤ 2 ^ 53
+    have mantissa : (ExtendedMantissa.ofMantissaAndAccuracy d (accuracyOfFraction r denominator)).mantissa = d := by
+      cases accuracyOfFraction r denominator with
+      | exact => rfl
+      | inexact order => cases order <;> rfl
+    simp only [ExtendedMantissa.roundedMantissa, ExtendedMantissa.shiftRightOne, mantissa] at h ⊢
+    omega
+
+private theorem division_rounded_error (d r denominator : Nat) (lo : 2 ^ 52 ≤ d) (hi : d < 2 ^ 54)
+    (bound : r < denominator) :
+    divisionRounded d r denominator * 2 ^ divisionShift d * denominator ≤ d * denominator + r + denominator ∧
+      d * denominator + r ≤ divisionRounded d r denominator * 2 ^ divisionShift d * denominator + denominator := by
+  rcases division_shift_cases d lo hi with shift | shift
+  · simpa [divisionRounded, shift, HShiftRight.hShiftRight, Nat.repeat] using unshifted_error d r denominator bound
+  · simpa [divisionRounded, shift, HShiftRight.hShiftRight, Nat.repeat, Nat.mul_comm] using shifted_error d r denominator bound
+
+private def divisionCarry (m : Nat) := if m = 2 ^ 53 then 1 else 0
+private def divisionMantissa (m : Nat) := if m = 2 ^ 53 then 2 ^ 52 else m
+
+private theorem division_mantissa_bits (m : Nat) (lo : 2 ^ 52 ≤ m) (hi : m ≤ 2 ^ 53) :
+    (divisionMantissa m).log2 = 52 := by
+  by_cases overflow : m = 2 ^ 53
+  · simp [divisionMantissa, overflow]; decide
+  · simp only [divisionMantissa, overflow, ↓reduceIte]
+    exact (Nat.log2_eq_iff (by omega)).mpr ⟨lo, by omega⟩
+
+private theorem division_mantissa_positive (m : Nat) (lo : 2 ^ 52 ≤ m) : 0 < divisionMantissa m := by
+  unfold divisionMantissa
+  split <;> omega
+
+private theorem division_mantissa_scaled (m : Nat) (lo : 2 ^ 52 ≤ m) (hi : m ≤ 2 ^ 53) :
+    divisionMantissa m * 2 ^ divisionCarry m = m := by
+  by_cases overflow : m = 2 ^ 53
+  · subst m; decide
+  · simp [divisionMantissa, divisionCarry, overflow]
+
+private theorem division_final_shift (m : Nat) (e : Int) (lo : 2 ^ 52 ≤ m) (hi : m ≤ 2 ^ 53)
+    (lower : -105 ≤ e) :
+    shiftToTargetExponent Format.binary64 m e .exact =
+      (⟨divisionMantissa m, false, false⟩, e + divisionCarry m) := by
+  have bits : m.log2 = 52 + divisionCarry m := by
+    by_cases overflow : m = 2 ^ 53
+    · subst m; decide
+    · simp only [divisionCarry, overflow, ↓reduceIte, Nat.add_zero]
+      exact (Nat.log2_eq_iff (by omega)).mpr ⟨lo, by omega⟩
+  have target : Format.binary64.targetExponent (totalExponent m e) = e + divisionCarry m := by
+    simp only [Format.targetExponent, totalExponent, Format.mantissaBits, Format.minExponent, bits]
+    have nonnegative : 0 ≤ (divisionCarry m : Int) := by omega
+    omega
+  unfold shiftToTargetExponent
+  rw [target, shift_add]
+  by_cases overflow : m = 2 ^ 53
+  · subst m
+    simp [divisionCarry, divisionMantissa, HShiftRight.hShiftRight, Nat.repeat,
+      ExtendedMantissa.shiftRightOne, ExtendedMantissa.ofMantissaAndAccuracy]
+  · simp [divisionCarry, divisionMantissa, overflow, HShiftRight.hShiftRight, Nat.repeat,
+      ExtendedMantissa.ofMantissaAndAccuracy]
+
+private theorem division_round_finite (sign : Sign) (d r denominator k : Nat)
+    (lo : 2 ^ 52 ≤ d) (hi : d < 2 ^ 54) (kbound : k ≤ 105) :
+    roundWithAccuracy Format.binary64 sign d (-(k : Int)) (accuracyOfFraction r denominator) =
+      .finite sign (divisionMantissa (divisionRounded d r denominator))
+        (-(k : Int) + divisionShift d + divisionCarry (divisionRounded d r denominator))
+        (division_mantissa_positive _ (division_rounded_bounds d r denominator lo hi).1) := by
+  have first : shiftToTargetExponent Format.binary64 d (-(k : Int)) (accuracyOfFraction r denominator) =
+      (ExtendedMantissa.ofMantissaAndAccuracy d (accuracyOfFraction r denominator) >>> divisionShift d,
+        -(k : Int) + divisionShift d) := by
+    unfold shiftToTargetExponent
+    rw [division_target d k lo hi kbound, shift_add]
+  have lower : -105 ≤ -(k : Int) + divisionShift d := by omega
+  have second := division_final_shift (divisionRounded d r denominator) (-(k : Int) + divisionShift d)
+    (division_rounded_bounds d r denominator lo hi).1 (division_rounded_bounds d r denominator lo hi).2 lower
+  have positive := division_mantissa_positive _ (division_rounded_bounds d r denominator lo hi).1
+  unfold roundWithAccuracy
+  rw [first]
+  change (let (mantissa, exponent) := shiftToTargetExponent Format.binary64 (divisionRounded d r denominator) (-(k : Int) + divisionShift d) .exact;
+    if h : mantissa.mantissa = 0 then UnpackedFloat.zero sign
+    else .finite sign mantissa.mantissa exponent (Nat.pos_of_ne_zero h)) = _
+  rw [second]
+  simp [Nat.ne_of_gt positive]
+
+/-- A one-unit rounding error at this scale cannot cross an integer boundary. -/
+private theorem quotient_interval (n m scale rounded : Nat) (divisor : 0 < m)
+    (nonintegral : 0 < n % m) (precision : m < scale)
+    (upper : rounded * m ≤ n * scale + m) (lower : n * scale ≤ rounded * m + m) :
+    (n / m) * scale < rounded ∧ rounded < (n / m + 1) * scale := by
+  have remBound := Nat.mod_lt n divisor
+  have equation : n * scale = (n / m) * scale * m + (n % m) * scale := by
+    calc
+      n * scale = (n % m + m * (n / m)) * scale := congrArg (fun x => x * scale) (Nat.mod_add_div n m).symm
+      _ = _ := by rw [Nat.add_mul]; ac_rfl
+  have gapLo : m < (n % m) * scale :=
+    Nat.lt_of_lt_of_le precision (by simpa using Nat.mul_le_mul_right scale nonintegral)
+  have gapHi : (n % m) * scale + m < m * scale := by
+    have h := Nat.mul_le_mul_right scale (show n % m + 1 ≤ m by omega)
+    rw [Nat.add_mul, Nat.one_mul] at h
+    omega
+  constructor
+  · apply Nat.lt_of_not_ge
+    intro fail
+    have h := Nat.mul_le_mul_right m (show rounded ≤ n / m * scale by omega)
+    rw [equation] at lower
+    omega
+  · apply Nat.lt_of_not_ge
+    intro fail
+    have h := Nat.mul_le_mul_right m (show (n / m + 1) * scale ≤ rounded by omega)
+    simp only [Nat.add_mul, Nat.one_mul] at h
+    rw [equation] at upper
+    have commute : scale * m = m * scale := Nat.mul_comm ..
+    omega
+
+private theorem accuracy_scaled (r m scale : Nat) (positive : 0 < scale) :
+    accuracyOfFraction (r * scale) (m * scale) = accuracyOfFraction r m := by
+  simp [accuracyOfFraction, Nat.mul_eq_zero, Nat.ne_of_gt positive, Nat.compare_eq_ite_lt,
+    ← Nat.mul_assoc, Nat.mul_lt_mul_right positive]
+
+private def quotientScale (n m : Nat) := 52 - n.log2 + 53 - (52 - m.log2)
+
+private theorem divCore_integer (n m : Nat) (np : 0 < n) (mp : 0 < m)
+    (nb : n < 2 ^ 53) (mb : m < 2 ^ 53) :
+    divCore Format.binary64 (n <<< (52 - n.log2)) (-((52 - n.log2 : Nat) : Int))
+      (m <<< (52 - m.log2)) (-((52 - m.log2 : Nat) : Int)) =
+      ((n * 2 ^ quotientScale n m) / m, -(quotientScale n m : Int),
+        accuracyOfFraction ((n * 2 ^ quotientScale n m) % m) m) := by
+  have ln : n.log2 ≤ 52 := by have := (Nat.log2_lt (Nat.ne_of_gt np)).mpr nb; omega
+  have lm : m.log2 ≤ 52 := by have := (Nat.log2_lt (Nat.ne_of_gt mp)).mpr mb; omega
+  have bitsn : (n <<< (52 - n.log2)).log2 = 52 := by rw [log2_shift _ _ np]; omega
+  have bitsm : (m <<< (52 - m.log2)).log2 = 52 := by rw [log2_shift _ _ mp]; omega
+  rw [divCore_canonical _ _ _ _ bitsn bitsm (by omega) (by omega)]
+  have exponents : 52 - n.log2 + 53 = quotientScale n m + (52 - m.log2) := by unfold quotientScale; omega
+  have numerator : (n <<< (52 - n.log2)) <<< 53 =
+      (n * 2 ^ quotientScale n m) * 2 ^ (52 - m.log2) := by
+    rw [← Nat.shiftLeft_add, Nat.shiftLeft_eq, exponents, Nat.pow_add, Nat.mul_assoc]
+  rw [numerator, Nat.shiftLeft_eq]
+  simp only [Nat.mul_div_mul_right _ _ (Nat.two_pow_pos _),
+    Nat.mul_mod_mul_right, accuracy_scaled _ _ _ (Nat.two_pow_pos _)]
+  rfl
+
+private theorem quotient_precision (n m : Nat) (np : 0 < n) (mp : 0 < m)
+    (nb : n < 2 ^ 53) (mb : m < 2 ^ 53) (nonintegral : 0 < n % m) :
+    2 ≤ quotientScale n m ∧ quotientScale n m ≤ 105 ∧ m < 2 ^ quotientScale n m := by
+  have ln : n.log2 ≤ 52 := by have := (Nat.log2_lt (Nat.ne_of_gt np)).mpr nb; omega
+  have lm : m.log2 ≤ 52 := by have := (Nat.log2_lt (Nat.ne_of_gt mp)).mpr mb; omega
+  have remainderBound := Nat.mod_lt n mp
+  have mlower : 1 ≤ m.log2 := (Nat.le_log2 (Nat.ne_of_gt mp)).mpr (by omega)
+  have enough : m.log2 + 1 ≤ quotientScale n m := by unfold quotientScale; omega
+  refine ⟨?_, ?_, Nat.lt_of_lt_of_le (Nat.lt_log2_self) (Nat.pow_le_pow_right (by decide) enough)⟩
+  all_goals unfold quotientScale; omega
+
+private theorem quotient_digit_bounds (n m : Nat) (np : 0 < n) (mp : 0 < m)
+    (nb : n < 2 ^ 53) (mb : m < 2 ^ 53) :
+    2 ^ 52 ≤ (n * 2 ^ quotientScale n m) / m ∧
+      (n * 2 ^ quotientScale n m) / m < 2 ^ 54 := by
+  have ln : n.log2 ≤ 52 := by have := (Nat.log2_lt (Nat.ne_of_gt np)).mpr nb; omega
+  have lm : m.log2 ≤ 52 := by have := (Nat.log2_lt (Nat.ne_of_gt mp)).mpr mb; omega
+  have bitsn : (n <<< (52 - n.log2)).log2 = 52 := by rw [log2_shift _ _ np]; omega
+  have bitsm : (m <<< (52 - m.log2)).log2 = 52 := by rw [log2_shift _ _ mp]; omega
+  have npositive : 0 < n <<< (52 - n.log2) := by rw [Nat.shiftLeft_eq]; exact Nat.mul_pos np (Nat.two_pow_pos _)
+  have mpositive : 0 < m <<< (52 - m.log2) := by rw [Nat.shiftLeft_eq]; exact Nat.mul_pos mp (Nat.two_pow_pos _)
+  have nbound := (Nat.log2_eq_iff (Nat.ne_of_gt npositive)).mp bitsn
+  have mbound := (Nat.log2_eq_iff (Nat.ne_of_gt mpositive)).mp bitsm
+  have core := congrArg Prod.fst (divCore_integer n m np mp nb mb)
+  rw [divCore_canonical _ _ _ _ bitsn bitsm (by omega) (by omega)] at core
+  dsimp only at core
+  rw [← core]
+  constructor
+  · rw [Nat.le_div_iff_mul_le mpositive, Nat.shiftLeft_eq]
+    omega
+  · rw [Nat.div_lt_iff_lt_mul mpositive, Nat.shiftLeft_eq]
+    omega
+private theorem extended_shift_mantissa (em : ExtendedMantissa) (k : Nat) :
+    (em >>> k).mantissa = em.mantissa / 2 ^ k := by
+  induction k generalizing em with
+  | zero => simp [HShiftRight.hShiftRight, Nat.repeat]
+  | succ k ih =>
+    have repeat_next (f : ExtendedMantissa → ExtendedMantissa) (j : Nat) (x : ExtendedMantissa) :
+        Nat.repeat f (j + 1) x = Nat.repeat f j (f x) := by
+      induction j with
+      | zero => rfl
+      | succ j h => change f (Nat.repeat f (j + 1) x) = f (Nat.repeat f j (f x)); rw [h]
+    change (Nat.repeat ExtendedMantissa.shiftRightOne (k + 1) em).mantissa = _
+    rw [repeat_next]
+    change ((ExtendedMantissa.shiftRightOne em) >>> k).mantissa = _
+    rw [ih]
+    simp only [ExtendedMantissa.shiftRightOne, Nat.div_div_eq_div_mul, Nat.pow_succ, Nat.mul_comm]
+
+private theorem roundToInt_negative_exponent (sign : Sign) (m k : Nat) :
+    roundToInt sign m (-(k : Int)) = sign.apply ((m / 2 ^ k : Nat) : Int) := by
+  have first : (-(k : Int)).toNat = 0 := by omega
+  have second : (0 - -(k : Int)).toNat = k := by omega
+  simp only [roundToInt, decreaseExponent, first, Nat.shiftLeft_zero, Int.natCast_zero, Int.sub_zero,
+    shiftToExponent, second, extended_shift_mantissa, ExtendedMantissa.ofMantissaAndAccuracy]
+
+/-- The actual packed quotient remains strictly between consecutive integers. -/
+private theorem rounded_division_shape (sign : Sign) (n m : Nat)
+    (np : 0 < n) (mp : 0 < m) (nb : n < 2 ^ 53) (mb : m < 2 ^ 53)
+    (nonintegral : 0 < n % m) :
+    ∃ (mantissa h : Nat) (positive : 0 < mantissa), mantissa.log2 = 52 ∧ h ≤ 105 ∧
+      (Float.Model.pack (roundWithAccuracy Format.binary64 sign
+        ((n * 2 ^ quotientScale n m) / m) (-(quotientScale n m : Int))
+        (accuracyOfFraction ((n * 2 ^ quotientScale n m) % m) m))).unpack =
+        .finite sign mantissa (-(h : Int)) positive ∧
+      (n / m) * 2 ^ h < mantissa ∧ mantissa < (n / m + 1) * 2 ^ h := by
+  let k := quotientScale n m
+  let d := (n * 2 ^ k) / m
+  let r := (n * 2 ^ k) % m
+  let u := divisionRounded d r m
+  let s := divisionShift d + divisionCarry u
+  let mantissa := divisionMantissa u
+  have dbounds := quotient_digit_bounds n m np mp nb mb
+  have precision := quotient_precision n m np mp nb mb nonintegral
+  have ubounds := division_rounded_bounds d r m dbounds.1 dbounds.2
+  have spos : s ≤ 2 := by
+    have shift := division_shift_cases d dbounds.1 dbounds.2
+    dsimp [s, divisionCarry]; split <;> omega
+  have enough : s ≤ k := by omega
+  have bits := division_mantissa_bits u ubounds.1 ubounds.2
+  have positive := division_mantissa_positive u ubounds.1
+  have scaled : mantissa * 2 ^ s = u * 2 ^ divisionShift d := by
+    dsimp only [s]
+    rw [Nat.pow_add, ← Nat.mul_assoc, Nat.mul_right_comm, division_mantissa_scaled u ubounds.1 ubounds.2]
+  have error := division_rounded_error d r m dbounds.1 dbounds.2 (Nat.mod_lt _ mp)
+  have equation : d * m + r = n * 2 ^ k := by
+    dsimp [d, r]; simpa [Nat.mul_comm, Nat.add_comm] using Nat.mod_add_div (n * 2 ^ k) m
+  rw [equation] at error
+  have interval := quotient_interval n m (2 ^ k) (u * 2 ^ divisionShift d) mp nonintegral precision.2.2 error.1 error.2
+  have exponent : -(k : Int) + divisionShift d + divisionCarry u = -((k - s : Nat) : Int) := by
+    dsimp [s] at enough ⊢; omega
+  refine ⟨mantissa, k - s, positive, bits, by omega, ?_, ?_⟩
+  · change (Float.Model.pack (roundWithAccuracy Format.binary64 sign d (-(k : Int))
+      (accuracyOfFraction r m))).unpack = _
+    rw [division_round_finite sign d r m k dbounds.1 dbounds.2 precision.2.1]
+    change (Float.Model.pack (.finite sign mantissa (-(k : Int) + divisionShift d + divisionCarry u) positive)).unpack = _
+    rw [exponent, unpack_pack_normal _ _ _ positive bits (by omega) (by omega)]
+  · rw [← scaled] at interval
+    have exponentNat : k = (k - s) + s := by omega
+    have power : 2 ^ k = 2 ^ (k - s) * 2 ^ s := by rw [← Nat.pow_add, ← exponentNat]
+    simpa only [power, ← Nat.mul_assoc, Nat.mul_lt_mul_right (Nat.two_pow_pos s)] using interval
+
+private theorem rounded_division_toInt (sign : Sign) (n m : Nat)
+    (np : 0 < n) (mp : 0 < m) (nb : n < 2 ^ 53) (mb : m < 2 ^ 53)
+    (nonintegral : 0 < n % m) :
+    (Float.Model.pack (roundWithAccuracy Format.binary64 sign
+      ((n * 2 ^ quotientScale n m) / m) (-(quotientScale n m : Int))
+      (accuracyOfFraction ((n * 2 ^ quotientScale n m) % m) m))).unpack.toInt 0 0 =
+      sign.apply ((n / m : Nat) : Int) := by
+  obtain ⟨mantissa, h, positive, bits, hbound, shape, lower, upper⟩ :=
+    rounded_division_shape sign n m np mp nb mb nonintegral
+  rw [shape]
+  change roundToInt sign mantissa (-(h : Int)) = _
+  rw [roundToInt_negative_exponent]
+  have ratio : mantissa / 2 ^ h = n / m := by
+    have lo := (Nat.le_div_iff_mul_le (Nat.two_pow_pos h)).mpr (Nat.le_of_lt lower)
+    have hi := (Nat.div_lt_iff_lt_mul (Nat.two_pow_pos h)).mpr upper
+    omega
+  rw [ratio]
+
+private theorem div_signed_toInt (sa sb : Sign) (n m : Nat)
+    (np : 0 < n) (mp : 0 < m) (nb : n < 2 ^ 53) (mb : m < 2 ^ 53) :
+    (Float.Model.ofInt (sa.apply (n : Int)) / Float.Model.ofInt (sb.apply (m : Int))).unpack.toInt 0 0 =
+      (sa / sb).apply ((n / m : Nat) : Int) := by
+  by_cases integral : n % m = 0
+  · rw [← div_signed_exact sa sb n m np mp nb mb integral]
+    apply toInt_ofInt
+    change InRange ((sa / sb).apply ((n / m : Nat) : Int))
+    have bound := Nat.lt_of_le_of_lt (Nat.div_le_self n m) nb
+    generalize n / m = q at *
+    cases sa / sb <;> simp only [Sign.apply, InRange, limit]
+    all_goals omega
+  · change (Float.Model.pack (UnpackedFloat.div Format.binary64 _ _)).unpack.toInt 0 0 = _
+    rw [unpack_ofInt_signed sa n np nb, unpack_ofInt_signed sb m mp mb]
+    simp only [UnpackedFloat.div]
+    rw [divCore_integer n m np mp nb mb]
+    exact rounded_division_toInt (sa / sb) n m np mp nb mb (by omega)
+
+/-- Integer conversion of a safe-integer quotient agrees with truncating integer division,
+including nonintegral quotients and signed zero. -/
+theorem toInt_div (a b : Int) (ha : InRange a) (hb : InRange b) (divisor : b ≠ 0) :
+    (Float.Model.ofInt a / Float.Model.ofInt b).unpack.toInt 0 0 = a.tdiv b := by
+  rcases safe_cases b hb with zero | ⟨sb, m, mp, mb, rfl⟩
+  · exact False.elim (divisor zero)
+  · rcases safe_cases a ha with rfl | ⟨sa, n, np, nb, rfl⟩
+    · change (Float.Model.pack (UnpackedFloat.div Format.binary64 _ _)).unpack.toInt 0 0 = _
+      rw [unpack_zero, unpack_ofInt_signed sb m mp mb]
+      cases sb <;> simp only [Int.zero_tdiv, UnpackedFloat.div]
+      all_goals kernel_rfl
+    · rw [signed_quotient]
+      exact div_signed_toInt sa sb n m np mp nb mb
+private theorem div_signed_shape (sa sb : Sign) (n m : Nat)
+    (np : 0 < n) (mp : 0 < m) (nb : n < 2 ^ 53) (mb : m < 2 ^ 53)
+    (nonintegral : 0 < n % m) :
+    ∃ (mantissa h : Nat) (positive : 0 < mantissa), mantissa.log2 = 52 ∧ h ≤ 105 ∧
+      (Float.Model.ofInt (sa.apply (n : Int)) / Float.Model.ofInt (sb.apply (m : Int))).unpack =
+        .finite (sa / sb) mantissa (-(h : Int)) positive ∧
+      (n / m) * 2 ^ h < mantissa ∧ mantissa < (n / m + 1) * 2 ^ h := by
+  change ∃ mantissa h positive, _ ∧ _ ∧
+    (Float.Model.pack (UnpackedFloat.div Format.binary64 _ _)).unpack = _ ∧ _
+  rw [unpack_ofInt_signed sa n np nb, unpack_ofInt_signed sb m mp mb]
+  simp only [UnpackedFloat.div]
+  rw [divCore_integer n m np mp nb mb]
+  exact rounded_division_shape (sa / sb) n m np mp nb mb nonintegral
+
+private theorem fraction_compare_integer (sign : Sign) (mantissa h q : Nat)
+    (positive : 0 < mantissa) (bits : mantissa.log2 = 52)
+    (qb : q < 2 ^ 53) (lower : q * 2 ^ h < mantissa) :
+    UnpackedFloat.compare (.finite sign mantissa (-(h : Int)) positive)
+      (Float.Model.ofInt (sign.apply (q : Int))).unpack =
+      some (match sign with | .negative => .lt | .positive => .gt) := by
+  by_cases zero : q = 0
+  · subst q
+    cases sign <;> simp only [Sign.apply, Int.natCast_zero, Int.neg_zero, unpack_zero, UnpackedFloat.compare]
+  · have qp := Nat.pos_of_ne_zero zero
+    have mbound := ((Nat.log2_eq_iff (Nat.ne_of_gt positive)).mp bits).2
+    have shiftedBound : q <<< h < 2 ^ 53 := by simpa [Nat.shiftLeft_eq] using Nat.lt_trans lower mbound
+    have shiftedPositive : 0 < q <<< h := by rw [Nat.shiftLeft_eq]; exact Nat.mul_pos qp (Nat.two_pow_pos _)
+    have logbound := (Nat.log2_lt (Nat.ne_of_gt shiftedPositive)).mpr shiftedBound
+    rw [log2_shift q h qp] at logbound
+    have enough : h ≤ 52 - q.log2 := by omega
+    rw [unpack_ofInt_signed sign q qp qb]
+    have order : (compare (-(h : Int)) (-((52 - q.log2 : Nat) : Int))).then
+        (compare mantissa (q <<< (52 - q.log2))) = .gt := by
+      by_cases same : h = 52 - q.log2
+      · rw [← same, Std.ReflOrd.compare_self, Ordering.eq_then]
+        exact Nat.compare_eq_gt.mpr (by simpa [Nat.shiftLeft_eq] using lower)
+      · have exp : -((52 - q.log2 : Nat) : Int) < -(h : Int) := by omega
+        simp [Int.compare_eq_gt.mpr exp]
+    cases sign <;> simp only [UnpackedFloat.compare, order, Ordering.swap_gt]
+private theorem trunc_fraction (x : Float.Model) (sign : Sign) (mantissa h q : Nat)
+    (positive : 0 < mantissa)
+    (shape : x.unpack = .finite sign mantissa (-(h : Int)) positive)
+    (conversion : x.unpack.toInt 0 0 = sign.apply (q : Int))
+    (canonical : q = 0 → sign = .positive) :
+    Builtins.numberTrunc x = Float.Model.ofInt (sign.apply (q : Int)) := by
+  have zero : (Float.Model.ofNat 0).unpack = .zero .positive := unpack_zero
+  have nonzero : (x == Float.Model.ofNat 0) = false := by
+    change (x.unpack.compare (Float.Model.ofNat 0).unpack == some .eq) = false
+    rw [shape, zero]; cases sign <;> rfl
+  have finite : x.isFinite = true := by rw [Float.Model.isFinite, shape]; rfl
+  simp only [Builtins.numberTrunc, finite, Bool.not_true, nonzero, Bool.false_or, Bool.false_eq_true,
+    ↓reduceIte, conversion]
+  cases sign with
+  | positive =>
+    have notnegative : ¬ x < Float.Model.ofNat 0 := by
+      change ¬ (x.unpack.compare (Float.Model.ofNat 0).unpack == some .lt) = true
+      rw [shape, zero]; simp only [UnpackedFloat.compare]; decide
+    simp [notnegative]
+  | negative =>
+    have nonzero : q ≠ 0 := by intro h; have := canonical h; contradiction
+    simp [Sign.apply, nonzero]
+
+private theorem floor_fraction (x : Float.Model) (sign : Sign) (mantissa h q : Nat)
+    (positive : 0 < mantissa) (bits : mantissa.log2 = 52)
+    (shape : x.unpack = .finite sign mantissa (-(h : Int)) positive)
+    (conversion : x.unpack.toInt 0 0 = sign.apply (q : Int))
+    (qb : q < 2 ^ 53) (lower : q * 2 ^ h < mantissa) :
+    Builtins.numberFloor x = Float.Model.ofInt
+      (match sign with | .positive => (q : Int) | .negative => -(q : Int) - 1) := by
+  have zero : (Float.Model.ofNat 0).unpack = .zero .positive := unpack_zero
+  have nonzero : (x == Float.Model.ofNat 0) = false := by
+    change (x.unpack.compare (Float.Model.ofNat 0).unpack == some .eq) = false
+    rw [shape, zero]; cases sign <;> rfl
+  have finite : x.isFinite = true := by rw [Float.Model.isFinite, shape]; rfl
+  have order := fraction_compare_integer sign mantissa h q positive bits qb lower
+  have comparison : (x < Float.Model.ofInt (sign.apply (q : Int))) ↔ sign = .negative := by
+    change ((x.unpack.compare (Float.Model.ofInt (sign.apply (q : Int))).unpack == some .lt) = true) ↔ _
+    rw [shape, order]; cases sign <;> decide
+  simp only [Builtins.numberFloor, finite, Bool.not_true, nonzero, Bool.false_or, Bool.false_eq_true,
+    ↓reduceIte, conversion, gt_iff_lt, comparison]
+  cases sign <;> simp [Sign.apply]
+/-- Truncating to zero must not produce the negative-zero bit pattern. -/
+def CanonicalTruncQuotient (a b : Int) : Prop := a.tdiv b = 0 → (a < 0 ↔ b < 0)
+
+/-- Truncation after binary64 division agrees with integer truncating division,
+provided its zero result has the canonical positive sign. -/
+theorem trunc_div_exact (a b : Int) (ha : InRange a) (hb : InRange b)
+    (divisor : b ≠ 0) (canonical : CanonicalTruncQuotient a b) :
+    Builtins.numberTrunc (Float.Model.ofInt a / Float.Model.ofInt b) = Float.Model.ofInt (a.tdiv b) := by
+  by_cases integral : a.tmod b = 0
+  · apply trunc_div_exact_of_integral a b ha hb divisor integral
+    intro zero
+    subst a
+    have h := canonical (by simp)
+    omega
+  · rcases safe_cases b hb with zero | ⟨sb, m, mp, mb, rfl⟩
+    · exact False.elim (divisor zero)
+    · rcases safe_cases a ha with zero | ⟨sa, n, np, nb, rfl⟩
+      · simp [zero] at integral
+      · have nonintegral : 0 < n % m := by
+          have h : n % m ≠ 0 := by
+            intro h
+            apply integral
+            cases sa <;> cases sb <;> simp [Sign.apply, Int.tmod_neg, Int.neg_tmod, ← Int.ofNat_tmod, h]
+          omega
+        obtain ⟨mantissa, h, positive, bits, hbound, shape, lower, upper⟩ :=
+          div_signed_shape sa sb n m np mp nb mb nonintegral
+        rw [signed_quotient]
+        apply trunc_fraction _ (sa / sb) mantissa h (n / m) positive shape
+          (div_signed_toInt sa sb n m np mp nb mb)
+        intro zero
+        have eq : (sa.apply (n : Int)).tdiv (sb.apply (m : Int)) = 0 := by
+          rw [signed_quotient, zero]; cases sa / sb <;> rfl
+        have same := canonical eq
+        cases sa <;> cases sb <;> simp only [Sign.apply] at same ⊢ <;> try rfl
+        all_goals omega
+
+/-- Flooring a zero numerator must preserve positive zero. -/
+def CanonicalFloorQuotient (a b : Int) : Prop := a = 0 → 0 ≤ b
+
+/-- Flooring after binary64 division agrees with integer floor division. -/
+theorem floor_div_exact (a b : Int) (ha : InRange a) (hb : InRange b)
+    (divisor : b ≠ 0) (canonical : CanonicalFloorQuotient a b) :
+    Builtins.numberFloor (Float.Model.ofInt a / Float.Model.ofInt b) = Float.Model.ofInt (a.fdiv b) := by
+  by_cases integral : a.tmod b = 0
+  · exact floor_div_exact_of_integral a b ha hb divisor integral canonical
+  · rcases safe_cases b hb with zero | ⟨sb, m, mp, mb, rfl⟩
+    · exact False.elim (divisor zero)
+    · rcases safe_cases a ha with zero | ⟨sa, n, np, nb, rfl⟩
+      · simp [zero] at integral
+      · have nonintegral : 0 < n % m := by
+          have h : n % m ≠ 0 := by
+            intro h
+            apply integral
+            cases sa <;> cases sb <;> simp [Sign.apply, Int.tmod_neg, Int.neg_tmod, ← Int.ofNat_tmod, h]
+          omega
+        obtain ⟨mantissa, h, positive, bits, hbound, shape, lower, upper⟩ :=
+          div_signed_shape sa sb n m np mp nb mb nonintegral
+        have rounded := floor_fraction _ (sa / sb) mantissa h (n / m) positive bits shape
+          (div_signed_toInt sa sb n m np mp nb mb)
+          (Nat.lt_of_le_of_lt (Nat.div_le_self n m) nb) lower
+        rw [rounded]
+        have notDivides : ¬ (sb.apply (m : Int)) ∣ (sa.apply (n : Int)) := by
+          intro h
+          exact integral (Int.tmod_eq_zero_of_dvd h)
+        rw [Int.fdiv_eq_tdiv, ite_eq_right notDivides, signed_quotient]
+        have npositive : (0 : Int) < n := by omega
+        have mpositive : (0 : Int) < m := by omega
+        cases sa <;> cases sb <;> simp [Sign.apply, Nat.ne_of_gt np, Nat.ne_of_gt mp, Int.sign_eq_one_of_pos mpositive] <;> rfl
+
 end Ariadne.Shallow.Int53

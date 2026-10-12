@@ -28,4 +28,17 @@ theorem remainder_safe (a b : Int) (ha : Int53.InRange a) (hb : Int53.InRange b)
   simp [remainder.safe, Safety.function, Safety.validEnvironment, Safety.liftEnvironment, CoreArtifacts.remainder,
     Safety.term, Safety.getVariable, Safety.valid, Safety.unary, Safety.unarySafe, Safety.binary,
     Safety.binarySafe, Int53.inRange, Int53.remainder_exact a b ha hb nonzero canonical, ha, hb, hr, nonzero]
+theorem truncDivide_safe (a b : Int) (ha : Int53.InRange a) (hb : Int53.InRange b)
+    (nonzero : b ≠ 0) (canonical : Int53.CanonicalTruncQuotient a b) : truncDivide.safe a b := by
+  have hr := Int53.tdiv_range a b ha
+  simp [truncDivide.safe, Safety.function, Safety.validEnvironment, Safety.liftEnvironment, CoreArtifacts.truncDivide,
+    Safety.term, Safety.getVariable, Safety.valid, Safety.unary, Safety.unarySafe, Safety.binary,
+    Safety.binarySafe, Int53.inRange, Int53.trunc_div_exact a b ha hb nonzero canonical, ha, hb, hr, nonzero]
+
+theorem floorDivide_safe (a b : Int) (ha : Int53.InRange a) (hb : Int53.InRange b)
+    (nonzero : b ≠ 0) (canonical : Int53.CanonicalFloorQuotient a b) : floorDivide.safe a b := by
+  have hr := Int53.fdiv_range a b ha
+  simp [floorDivide.safe, Safety.function, Safety.validEnvironment, Safety.liftEnvironment, CoreArtifacts.floorDivide,
+    Safety.term, Safety.getVariable, Safety.valid, Safety.unary, Safety.unarySafe, Safety.binary,
+    Safety.binarySafe, Int53.inRange, Int53.floor_div_exact a b ha hb nonzero canonical, ha, hb, hr, nonzero]
 end Examples.Proofs.Int53Safety

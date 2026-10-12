@@ -72,8 +72,9 @@ Int53 extraction has a distinct Core type with native `Int` values and executabl
 `f.safe` predicates. Safety interpretation follows actual calls and control flow;
 it remains part of the meaning/trust boundary until M4 relates it to operational
 execution. Current predicates retain primitive bit-equality guards in addition
-to ranges and nonzero divisors. Thus no general range-only binary64 exactness
-theorem is being assumed. Signed-zero results that cannot be represented by an
+to ranges and nonzero divisors. Universal arithmetic correspondence, including floor/truncation of rounded
+nonintegral quotients, is proved separately from range, divisor and signed-zero
+premises. No primitive bit-equality hypothesis is assumed by those theorems. Signed-zero results that cannot be represented by an
 integer are outside the safe domain. Int53 source transfer remains pending.
 
 The returned scalar-expression fragment additionally emits `f_source` theorems,

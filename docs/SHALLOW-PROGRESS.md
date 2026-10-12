@@ -8,7 +8,7 @@ when their exit criteria pass; finite native tests are not universal proofs.
 | M0 | Complete | Reference sources and historical diagnostics; pinned CI downloads; reserved extraction diagnostics; output preservation tests |
 | M1 | Complete | All reference programs check and certify; grammar, ownership checks, operational semantics and the builtin table have differential coverage. Conservative dialect limits are listed below. |
 | M2 | Complete | Typed Core, scalar/list/Map/Set extraction, owned local updates, structural loops, pure calls, structural denotation, three-way differential and tamper tests. Lawful named records/unions and direct borrowed-state calls are implemented; class states, Int53 guards and original reference extraction are implemented; the full integration regression gate passed. |
-| M3 | In progress | The original decision extraction has universal membership, floor and permutation proofs. Register convergence and idempotence are proved against the emitted methods. All three original reference proofs are complete over emitted definitions; general Int53 exactness and remaining library lemmas are pending. |
+| M3 | Complete | All three original reference acceptance proofs hold universally over emitted definitions. The native proof library includes loop, collection, string and stable-sort laws, and general Int53 arithmetic correspondence, including rounded nonintegral division. |
 | M4 | In progress | Heap framing, compositional data relations and external-heap source predicates are proved. Scalar expression correspondence and generated source transfer are proved; full stateful/data adequacy remains pending. |
 | M5 | Pending | Measures, larger ownership, polymorphism, exceptions and scalar backend integration |
 
@@ -363,3 +363,21 @@ extracted loops remains pending.
 Map and Set deletion-size laws, including SameValueZero numeric wrappers, now
 use the unique-key invariant. Int53 map-key equality follows from the proved
 binary64 comparison theorem and both key range hypotheses.
+
+## General Int53 quotient correspondence
+
+The remaining nonintegral quotient proof is complete. `toInt_div` proves that
+conversion of the actual rounded binary64 quotient agrees with `Int.tdiv`.
+`trunc_div_exact` and `floor_div_exact` prove the actual `Math` wrappers agree
+with integer division under explicit canonical-zero conditions. The proof bounds
+binary64 rounding at a common power-of-two scale and shows that a nonintegral
+quotient stays strictly between the same consecutive integers. It then follows
+the model's packing, unpacking, comparison and conversion definitions. No
+primitive bit-equality hypothesis or new axiom is used.
+
+The emitted `truncDivide.safe` and `floorDivide.safe` predicates are discharged
+from range, nonzero-divisor and signed-zero premises for arbitrary inputs.
+`lake build Ariadne Examples` passes, and the audit passes at 4,576 theorems.
+Together with the existing native reference and prelude proofs, this closes M3.
+M4 remains partial: the general stateful/data correspondence and reference
+source transfers are still required. M5 has not been completed.
