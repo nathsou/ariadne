@@ -57,16 +57,8 @@ def invokeScalar (name : String) (args : List Value) : Result Value := do
   | "Number.isFinite", [_] => return .boolean false
   | "Math.abs", [.number x] => return .number x.abs
   | "Math.sqrt", [.number x] => return .number x.sqrt
-  | "Math.trunc", [.number x] =>
-    if !x.isFinite || x == Float.Model.ofNat 0 then return .number x
-    let i := x.unpack.toInt 0 0
-    if i == 0 && x < Float.Model.ofNat 0 then
-      return .number (Float.Model.ofNat 0).neg
-    return .number (Float.Model.ofInt i)
-  | "Math.floor", [.number x] =>
-    if !x.isFinite || x == Float.Model.ofNat 0 then return .number x
-    let i := x.unpack.toInt 0 0
-    return .number (Float.Model.ofInt (if Float.Model.ofInt i > x then i - 1 else i))
+  | "Math.trunc", [.number x] => return .number (Builtins.numberTrunc x)
+  | "Math.floor", [.number x] => return .number (Builtins.numberFloor x)
   | "BigInt", [.number x] =>
     let i := x.unpack.toInt 0 0
     if x.isFinite && Float.Model.ofInt i == x then return .bigint i

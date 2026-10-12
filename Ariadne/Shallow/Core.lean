@@ -8,7 +8,7 @@ namespace Ariadne.Shallow.Core
 /-- Intrinsic types of the first extraction fragment. Additional source types
 are refused by elaboration until their native representation is implemented. -/
 inductive Ty where
-  | unit | bool | int | number | string
+  | unit | bool | int | int53 | number | string
   | option (value : Ty)
   | list (element : Ty)
   | map (key : Key) (value : Ty)
@@ -22,6 +22,7 @@ inductive Ty where
   deriving Repr, DecidableEq, BEq, Inhabited
 
 abbrev Key.type : Key → Ty
+  | .int53 => .int53
   | .int => .int
   | .number => .number
   | .string => .string
@@ -31,7 +32,7 @@ abbrev Ty.denote (t : Ty) (interp : Named.Interp := Named.canonical) : Type :=
   match t with
   | .unit => Unit
   | .bool => Bool
-  | .int => Int
+  | .int | .int53 => Int
   | .number => Float.Model
   | .string => JSString
   | .option t => Option (t.denote interp)
@@ -53,6 +54,7 @@ abbrev Env (types : List Ty) (interp : Named.Interp := Named.canonical) : Type :
 def shapeType : Named.Shape → Ty
   | .unit => .unit
   | .bool => .bool
+  | .int53 => .int53
   | .int => .int
   | .number => .number
   | .string => .string
@@ -79,7 +81,19 @@ def Var.get {interp : Named.Interp} : Var ts t → Env ts interp → t.denote in
 inductive Unary : Ty → Ty → Type where
   | not : Unary .bool .bool
   | intNeg : Unary .int .int
+  | intToInt53 : Unary .int .int53
+  | int53ToInt : Unary .int53 .int
+  | int53ToNumber : Unary .int53 .number
+  | intSafe : Unary .int .bool
+  | intAbs : Unary .int .int
+  | lengthInt53 : Unary (.list t) .int53
+  | mapSizeInt53 : Unary (.map k v) .int53
+  | setSizeInt53 : Unary (.set k) .int53
   | numNeg : Unary .number .number
+  | numTrunc : Unary .number .number
+  | numFloor : Unary .number .number
+  | numAbs : Unary .number .number
+  | intToNumber : Unary .int .number
   | isSome : Unary (.option t) .bool
   | length : Unary (.list t) .number
   | reverse : Unary (.list t) (.list t)
@@ -93,6 +107,12 @@ inductive Unary : Ty → Ty → Type where
   deriving Repr
 
 inductive Binary : Ty → Ty → Ty → Type where
+  | guard : Binary .bool t t
+  | intTdiv : Binary .int .int .int
+  | intFdiv : Binary .int .int .int
+  | intTmod : Binary .int .int .int
+  | numBitsEq : Binary .number .number .bool
+  | int53Range : Binary .int53 .int53 (.list .int53)
   | intAdd : Binary .int .int .int
   | intSub : Binary .int .int .int
   | intMul : Binary .int .int .int

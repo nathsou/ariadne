@@ -6,33 +6,55 @@ open Core
 def Denote.unary {interp : Named.Interp} : Unary a b → a.denote interp → b.denote interp
   | .not, a => !a
   | .intNeg, a => -a
+  | .intToInt53, a => a
+  | .int53ToInt, a => a
+  | .int53ToNumber, a => Float.Model.ofInt a
+  | .intSafe, a => decide (-9007199254740991 ≤ a ∧ a ≤ 9007199254740991)
+  | .intAbs, a => Int.ofNat a.natAbs
+  | .lengthInt53, xs => Int.ofNat xs.length
+  | @Unary.mapSizeInt53 k _, value => match k with
+    | .number => Int.ofNat (NumberMap.size value)
+    | .int | .int53 | .string | .bool => Int.ofNat (JSMap.size value)
+  | @Unary.setSizeInt53 k, value => match k with
+    | .number => Int.ofNat (NumberSet.size value)
+    | .int | .int53 | .string | .bool => Int.ofNat (JSSet.size value)
   | .numNeg, a => -a
+  | .numTrunc, a => Builtins.numberTrunc a
+  | .numFloor, a => Builtins.numberFloor a
+  | .numAbs, a => a.abs
+  | .intToNumber, a => Float.Model.ofInt a
   | .isSome, a => a.isSome
   | .length, xs => Float.Model.ofNat xs.length
   | .reverse, xs => xs.reverse
   | @Unary.mapSize k _, value => match k with
     | .number => Float.Model.ofNat (NumberMap.size value)
-    | .int | .string | .bool => Float.Model.ofNat (JSMap.size value)
+    | .int | .int53 | .string | .bool => Float.Model.ofNat (JSMap.size value)
   | @Unary.mapKeys k _, value => match k with
     | .number => NumberMap.keys value
-    | .int | .string | .bool => JSMap.keys value
+    | .int | .int53 | .string | .bool => JSMap.keys value
   | @Unary.mapValues k _, value => match k with
     | .number => NumberMap.values value
-    | .int | .string | .bool => JSMap.values value
+    | .int | .int53 | .string | .bool => JSMap.values value
   | @Unary.mapEntries k _, value => match k with
     | .number => NumberMap.entries value
-    | .int | .string | .bool => JSMap.entries value
+    | .int | .int53 | .string | .bool => JSMap.entries value
   | @Unary.setSize k, value => match k with
     | .number => Float.Model.ofNat (NumberSet.size value)
-    | .int | .string | .bool => Float.Model.ofNat (JSSet.size value)
+    | .int | .int53 | .string | .bool => Float.Model.ofNat (JSSet.size value)
   | @Unary.setValues k, value => match k with
     | .number => NumberSet.values value
-    | .int | .string | .bool => JSSet.values value
+    | .int | .int53 | .string | .bool => JSSet.values value
   | @Unary.setEntries k, value => match k with
     | .number => NumberSet.entries value
-    | .int | .string | .bool => JSSet.entries value
+    | .int | .int53 | .string | .bool => JSSet.entries value
 
 def Denote.binary {interp : Named.Interp} : Binary a b c → a.denote interp → b.denote interp → c.denote interp
+  | .guard, _, b => b
+  | .intTdiv, a, b => Int.tdiv a b
+  | .intFdiv, a, b => Int.fdiv a b
+  | .intTmod, a, b => Int.tmod a b
+  | .numBitsEq, a, b => a.toBits == b.toBits
+  | .int53Range, a, b => Loop.integers a b
   | .intAdd, a, b => a + b
   | .intSub, a, b => a - b
   | .intMul, a, b => a * b
@@ -59,28 +81,28 @@ def Denote.binary {interp : Named.Interp} : Binary a b c → a.denote interp →
   | .get, xs, i => JSArray.get xs i
   | @Binary.mapGet k _, value, key => match k with
     | .number => NumberMap.get value key
-    | .int | .string | .bool => JSMap.get value key
+    | .int | .int53 | .string | .bool => JSMap.get value key
   | @Binary.mapHas k _, value, key => match k with
     | .number => NumberMap.has value key
-    | .int | .string | .bool => JSMap.has value key
+    | .int | .int53 | .string | .bool => JSMap.has value key
   | @Binary.mapDelete k _, value, key => match k with
     | .number => NumberMap.delete value key
-    | .int | .string | .bool => JSMap.delete value key
+    | .int | .int53 | .string | .bool => JSMap.delete value key
   | @Binary.setHas k, value, key => match k with
     | .number => NumberSet.has value key
-    | .int | .string | .bool => JSSet.has value key
+    | .int | .int53 | .string | .bool => JSSet.has value key
   | @Binary.setAdd k, value, key => match k with
     | .number => NumberSet.add value key
-    | .int | .string | .bool => JSSet.add value key
+    | .int | .int53 | .string | .bool => JSSet.add value key
   | @Binary.setDelete k, value, key => match k with
     | .number => NumberSet.delete value key
-    | .int | .string | .bool => JSSet.delete value key
+    | .int | .int53 | .string | .bool => JSSet.delete value key
 
 def Denote.mapSet {interp : Named.Interp} (k : Key) {v : Core.Ty} :
     (Core.Ty.map k v).denote interp → k.type.denote interp → v.denote interp → (Core.Ty.map k v).denote interp :=
   match k with
   | .number => NumberMap.set
-  | .int | .string | .bool => JSMap.set
+  | .int | .int53 | .string | .bool => JSMap.set
 
 /-- Structural interpretation into native Lean values. -/
 def Denote.term {interp : Named.Interp} : Term Γ t → Core.Env Γ interp → t.denote interp

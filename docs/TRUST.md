@@ -66,3 +66,11 @@ Those checks do **not** establish adequacy: an elaborator bug could still choose
 the wrong Core, and a denotation bug could still give it the wrong source meaning.
 The three-way differential tests provide regression evidence only. The separate
 operational `ts_*_source` theorems in the same file retain their existing meaning.
+
+Int53 extraction has a distinct Core type with native `Int` values and executable
+`f.safe` predicates. Safety interpretation follows actual calls and control flow;
+it remains part of the meaning/trust boundary until M4 relates it to operational
+execution. Current predicates retain primitive bit-equality guards in addition
+to ranges and nonzero divisors. Thus no general range-only binary64 exactness
+theorem is being assumed. Signed-zero results that cannot be represented by an
+integer are outside the safe domain. Source transfer remains pending.

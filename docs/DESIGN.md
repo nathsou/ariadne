@@ -396,7 +396,9 @@ sees `number`; Ariadne sees integers.
   `f.safe : ⟦params⟧ → Prop`. It is the denotation of these conditions:
   - every `Int53` operation stays in the safe range;
   - every `%` has a nonzero divisor;
-  - every owned-array write is in bounds.
+  - every owned-array write is in bounds;
+  - refined results preserve canonical integer zero. Operations producing `-0`
+    need an additional guard, since widening a native `Int` zero produces `+0`.
 - Adequacy holds under `f.safe`.
 - The prelude proves that binary64 arithmetic on safe integers is exact. For
   example, `Float.Model.ofInt (a + b) = Float.Model.ofInt a + Float.Model.ofInt b`

@@ -39,6 +39,7 @@ def resolve (fuel : Nat) (p : Program) (ty : Ty) : Checked Ty := do
     | .named name =>
       if p.classes.any (·.name == name) then return .class_ name
       let some t := p.aliases.lookup name | error "A2001" s!"unknown type '{name}'" {}
+      if name == "Int53" && t == .number then return .int53
       resolve n p t
     | .array t => return .array (← resolve n p t)
     | .set t => return .set (← resolve n p t)
@@ -53,7 +54,7 @@ def resolve (fuel : Nat) (p : Program) (ty : Ty) : Checked Ty := do
     | t => return t
 
 def typeName : Ty → String
-  | .number => "number" | .bigint => "bigint" | .boolean => "boolean"
+  | .int53 => "Int53" | .number => "number" | .bigint => "bigint" | .boolean => "boolean"
   | .string => "string" | .undefined => "undefined" | .null => "null" | .void => "void"
   | .array t => typeName t ++ "[]"
   | .set t => s!"Set<{typeName t}>"
@@ -78,7 +79,7 @@ def unreadonly : Ty → Ty
 
 def immutableFuel : Nat → Ty → Bool
   | 0, _ => false
-  | _ + 1, .number | _ + 1, .bigint | _ + 1, .boolean | _ + 1, .string
+  | _ + 1, .int53 | _ + 1, .number | _ + 1, .bigint | _ + 1, .boolean | _ + 1, .string
   | _ + 1, .stringLiteral _ | _ + 1, .undefined | _ + 1, .null | _ + 1, .void => true
   | n + 1, .union a b => immutableFuel n a && immutableFuel n b
   | n + 1, .record fs => fs.all fun (_, t) => match t with | .fieldReadonly t => immutableFuel n t | _ => false
@@ -114,6 +115,7 @@ def compatibleFuel : Nat → Ty → Ty → Bool
     | a, .readonly b | a, .fieldReadonly b => compatibleFuel n a b
     | .union a b, t => compatibleFuel n a t && compatibleFuel n b t
     | t, .union a b => compatibleFuel n t a || compatibleFuel n t b
+    | .int53, .number => true
     | .stringLiteral _, .string => true
     | .array a, .array b | .set a, .set b => compatibleFuel n a b
     | .record actual, .record expected => expected.all fun (key, t) =>
@@ -165,7 +167,7 @@ def sharedRead : Expr → Bool
   | _ => false
 
 def scalarPrintable : Ty → Bool
-  | .number | .bigint | .string | .stringLiteral _ | .boolean | .null | .undefined => true
+  | .int53 | .number | .bigint | .string | .stringLiteral _ | .boolean | .null | .undefined => true
   | .union a b => scalarPrintable a && scalarPrintable b
   | _ => false
 
@@ -294,15 +296,34 @@ def checkWrite (ctx : Context) (target : Expr) (rebinding : Bool := false) : Che
         help := some "Move the mutation outside the traversal, or use a separate owned collection."
       }
 
-def literalType : Literal → Ty
-  | .number _ _ => .number | .bigint _ => .bigint | .boolean _ => .boolean
+def int53Enabled (p : Program) : Bool := p.aliases.lookup "Int53" == some .number
+
+def integerType (p : Program) : Ty := if int53Enabled p then .int53 else .number
+
+/-- Parse exact integer scientific literals without constructing powers larger
+than the input coefficient. This does not round fractional literals to integers. -/
+def integerLiteral (mantissa : Nat) (exponent : Int) : Option Int := do
+  if mantissa == 0 then return 0
+  let value ← if exponent ≥ 0 then do
+    if exponent > 16 then none else some (mantissa * 10 ^ exponent.toNat)
+  else do
+    let places := (-exponent).toNat
+    if places > mantissa.log2 + 1 then none else
+      let divisor := 10 ^ places
+      if mantissa % divisor != 0 then none else some (mantissa / divisor)
+  if value ≤ 9007199254740991 then some value else none
+
+def literalType (p : Program) : Literal → Ty
+  | .number m e => if int53Enabled p && (integerLiteral m e).isSome then .int53 else .number
+  | .bigint _ => .bigint | .boolean _ => .boolean
   | .string s => .stringLiteral s | .null => .null | .undefined => .undefined
 
 def reserved (name : String) : Bool :=
   ["#templateString", "NaN", "Infinity", "Math", "Number", "BigInt", "Map", "Set", "Array", "Object", "Reflect",
     "eval", "Function", "globalThis", "__proto__", "constructor", "prototype"].contains name
 
-def join (a b : Ty) : Ty := if a == b then a else .union a b
+def join (a b : Ty) : Ty := if a == b then a else
+  if (a == .int53 && b == .number) || (a == .number && b == .int53) then .number else .union a b
 
 /-- A property is available on a union only when every variant declares it.
 Remove the field's write qualifier, retaining readonly collection qualifiers. -/
@@ -322,7 +343,7 @@ mutual
     | 0 => error "A2000" "type checking resource bound exceeded" expr.span
     | n + 1 =>
       match expr with
-      | .literal value _ => return literalType value
+      | .literal value _ => return literalType ctx.program value
       | .var name span =>
         if name == "NaN" || name == "Infinity" then return .number
         return (← binding ctx name span).ty
@@ -331,7 +352,7 @@ mutual
         if op == "!" then
           requireType t .boolean span
           return .boolean
-        if t == .number || (op == "-" && t == .bigint) then return t
+        if t == .number || t == .int53 || (op == "-" && t == .bigint) then return t
         error "A2002" s!"invalid operand {typeName t} for '{op}'" span
       | .binary op a b span =>
         let ta ← infer n ctx a
@@ -352,12 +373,15 @@ mutual
           return .boolean
         let ta := match unreadonly ta with | .stringLiteral _ => Ty.string | t => t
         let tb := match unreadonly tb with | .stringLiteral _ => Ty.string | t => t
+        let (ta, tb) := if (ta == .int53 && tb == .number) || (ta == .number && tb == .int53)
+          then (Ty.number, Ty.number) else (ta, tb)
         requireType tb ta b.span
         if op == "&&" || op == "||" then requireType ta .boolean a.span; return .boolean
         if ["<", "<=", ">", ">="].contains op then
-          if ![Ty.number, .bigint, .string].contains ta then
+          if ![Ty.number, .int53, .bigint, .string].contains ta then
             error "A2002" "ordered comparison requires numeric or string operands" span
           return .boolean
+        if ta == .int53 then return if op == "/" then .number else .int53
         if ta == .number || ta == .bigint || (op == "+" && ta == .string) then return ta
         error "A2002" s!"operator '{op}' does not accept {typeName ta}" span
       | .conditional c a b _ =>
@@ -429,7 +453,7 @@ mutual
         if reserved field then error "A3004" s!"access to '{field}' is forbidden by the runtime contract" span
         let t := unreadonly (← infer n ctx object)
         match t, field with
-        | .array _, "length" | .tuple _, "length" | .string, "length" | .stringLiteral _, "length" | .map _ _, "size" | .set _, "size" => return .number
+        | .array _, "length" | .tuple _, "length" | .string, "length" | .stringLiteral _, "length" | .map _ _, "size" | .set _, "size" => return integerType ctx.program
         | .record fs, _ =>
           let some ty := fs.lookup field | error "A2006" s!"record has no field '{field}'" span
           return match ty with | .fieldReadonly t => t | t => t
@@ -485,7 +509,7 @@ mutual
           if ["Number", "BigInt"].contains name then
             if args.length != 1 then error "A2007" "conversion requires exactly one argument" span
             let t ← infer n ctx args.head!
-            if t != .number && t != .bigint then error "A2002" "conversion accepts number or bigint" span
+            if t != .number && t != .int53 && t != .bigint then error "A2002" "conversion accepts number or bigint" span
             return if name == "Number" then .number else .bigint
           if ctx.inCallback then error "A3003" "user function calls inside callbacks require interprocedural effect summaries" span
           let some f := ctx.program.functions.find? (fun f => f.name == name)
@@ -566,13 +590,18 @@ mutual
       if let .var namespace_ _ := object then
         if namespace_ == "Math" || namespace_ == "Number" then
           if namespace_ == "Math" && ["min", "max"].contains name then
-            for arg in args do checkExpr n ctx arg .number
-            return .number
+            let types ← args.mapM (infer n ctx)
+            for (arg, ty) in args.zip types do requireType ty .number arg.span
+            return if !types.isEmpty && types.all (· == .int53) then .int53 else .number
           if args.length != 1 then error "A2007" "numeric builtin requires one argument" span
           let t ← infer n ctx args.head!
           if namespace_ == "Number" && ["isNaN", "isFinite"].contains name then return .boolean
           if namespace_ == "Math" && ["abs", "floor", "trunc", "sqrt"].contains name then
             requireType t .number span
+            if name != "sqrt" && t == .int53 then return .int53
+            if ["floor", "trunc"].contains name then
+              if let .binary "/" a b _ := args.head! then
+                if (← infer n ctx a) == .int53 && (← infer n ctx b) == .int53 then return .int53
             return .number
           error "A1001" s!"builtin '{namespace_}.{name}' is not supported" span
       let raw ← infer n ctx object
@@ -789,7 +818,7 @@ mutual
         return ctx
       | .measured measure body _ =>
         let ty ← infer n { ctx with inCallback := true, pureCallback := true } measure
-        if ty != .number && ty != .bigint then error "A2002" "a measure must have a numeric type" measure.span
+        if ty != .number && ty != .int53 && ty != .bigint then error "A2002" "a measure must have a numeric type" measure.span
         checkStmt n ctx body
       | .forOf mutable name collection body span =>
         if reserved name || ctx.bindings.any (·.name == name) then error "A2005" "duplicate or reserved loop binding" span
@@ -864,6 +893,8 @@ def program (p : Program) : Checked Unit := do
   if (p.aliases.map Prod.fst).eraseDups.length != p.aliases.length then
     error "A2005" "duplicate type alias" {}
   for (name, ty) in p.aliases do
+    if name == "Int53" && ty != .number then
+      error "A2001" "the reserved Int53 refinement must be declared exactly as type Int53 = number" {}
     if reserved name || ["number", "bigint", "string", "boolean", "undefined", "null", "void"].contains name then
       error "A3004" s!"cannot shadow builtin type '{name}'" {}
     requireSupportedType (← resolve 100 p ty) {}
@@ -880,7 +911,7 @@ def program (p : Program) : Checked Unit := do
     requireSupportedType result f.span
     if let some measure := f.decreases then
       let ty ← infer 256 { program := p, bindings, result, inCallback := true } measure
-      if ty != .number && ty != .bigint then error "A2002" "a measure must have a numeric type" measure.span
+      if ty != .number && ty != .int53 && ty != .bigint then error "A2002" "a measure must have a numeric type" measure.span
     let _ ← checkStmt 256 { program := p, bindings, result } f.body
     if result != .void && !returns 256 f.body then
       error "A2010" s!"function '{f.name}' may fall through without returning a value" f.span

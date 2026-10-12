@@ -2,6 +2,18 @@ import Ariadne.Value
 
 namespace Ariadne.Builtins
 
+/-- Math.trunc preserves negative zero. -/
+def numberTrunc (x : Float.Model) : Float.Model :=
+  if !x.isFinite || x == Float.Model.ofNat 0 then x else
+    let i := x.unpack.toInt 0 0
+    if i == 0 && x < Float.Model.ofNat 0 then -(Float.Model.ofNat 0) else Float.Model.ofInt i
+
+/-- Math.floor preserves existing signed zero and rounds toward negative infinity. -/
+def numberFloor (x : Float.Model) : Float.Model :=
+  if !x.isFinite || x == Float.Model.ofNat 0 then x else
+    let i := x.unpack.toInt 0 0
+    Float.Model.ofInt (if Float.Model.ofInt i > x then i - 1 else i)
+
 def units (s : String) : JSString := s.toList.map (fun c => UInt16.ofNat c.toNat)
 
 /-- Math min/max keep the ECMAScript signed-zero tie rule and propagate NaN. -/

@@ -5,7 +5,7 @@ namespace Ariadne.Shallow.Named
 /-- Canonical data carried by a named declaration. Nested source declarations
 are expanded here; native declarations can retain their original field types. -/
 inductive Shape where
-  | unit | bool | int | number | string
+  | unit | bool | int | int53 | number | string
   | option (value : Shape)
   | list (element : Shape)
   | map (key : Core.Key) (value : Shape)
@@ -17,7 +17,7 @@ inductive Shape where
 abbrev Shape.denote : Shape → Type
   | .unit => Unit
   | .bool => Bool
-  | .int => Int
+  | .int | .int53 => Int
   | .number => Float.Model
   | .string => JSString
   | .option value => Option value.denote

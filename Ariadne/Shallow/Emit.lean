@@ -1,5 +1,6 @@
 import Ariadne.Emit
 import Ariadne.Shallow.Elaborate
+import Ariadne.Shallow.Safety
 
 namespace Ariadne.Shallow
 open Core
@@ -7,7 +8,7 @@ open Core
 private def ident (name : String) : String := "«" ++ name ++ "»"
 
 private def keyText : Key → String
-  | .int => "_root_.Int"
+  | .int | .int53 => "_root_.Int"
   | .number => "_root_.Float.Model"
   | .string => "_root_.Ariadne.JSString"
   | .bool => "_root_.Bool"
@@ -20,7 +21,7 @@ private def setNamespace (k : Key) : String :=
 private def typeText : Core.Ty → String
   | .unit => "_root_.Unit"
   | .bool => "_root_.Bool"
-  | .int => "_root_.Int"
+  | .int | .int53 => "_root_.Int"
   | .number => "_root_.Float.Model"
   | .string => "_root_.Ariadne.JSString"
   | .option t => s!"(_root_.Option {typeText t})"
@@ -41,9 +42,20 @@ private def index : Var Γ t → Nat
   | .there v => index v + 1
 
 private def unaryText : Unary a b → String → String
+  | .intToInt53, a | .int53ToInt, a => a
+  | .int53ToNumber, a => s!"(_root_.Float.Model.ofInt {a})"
+  | .intSafe, a => s!"(decide ((-9007199254740991 : Int) ≤ {a} ∧ {a} ≤ 9007199254740991))"
+  | .intAbs, a => s!"(Int.ofNat ({a}).natAbs)"
+  | .lengthInt53, xs => s!"(Int.ofNat ({xs}).length)"
+  | @Unary.mapSizeInt53 k _, value => s!"(Int.ofNat ({mapNamespace k}.size {value}))"
+  | @Unary.setSizeInt53 k, value => s!"(Int.ofNat ({setNamespace k}.size {value}))"
   | .not, a => s!"(!{a})"
   | .intNeg, a => s!"(-{a})"
   | .numNeg, a => s!"(-{a})"
+  | .numTrunc, a => s!"(_root_.Ariadne.Builtins.numberTrunc {a})"
+  | .numFloor, a => s!"(_root_.Ariadne.Builtins.numberFloor {a})"
+  | .numAbs, a => s!"({a}).abs"
+  | .intToNumber, a => s!"(_root_.Float.Model.ofInt {a})"
   | .isSome, a => s!"({a}).isSome"
   | .length, xs => s!"(_root_.Float.Model.ofNat ({xs}).length)"
   | .reverse, xs => s!"({xs}).reverse"
@@ -56,6 +68,12 @@ private def unaryText : Unary a b → String → String
   | @Unary.setEntries k, value => s!"({setNamespace k}.entries {value})"
 
 private def binaryText : Binary a b c → String → String → String
+  | .guard, _, value => value
+  | .intTdiv, a, b => s!"(Int.tdiv {a} {b})"
+  | .intFdiv, a, b => s!"(Int.fdiv {a} {b})"
+  | .intTmod, a, b => s!"(Int.tmod {a} {b})"
+  | .numBitsEq, a, b => s!"(({a}).toBits == ({b}).toBits)"
+  | .int53Range, a, b => s!"(_root_.Ariadne.Shallow.Loop.integers {a} {b})"
   | .intAdd, a, b | .numAdd, a, b => s!"({a} + {b})"
   | .intSub, a, b | .numSub, a, b => s!"({a} - {b})"
   | .intMul, a, b | .numMul, a, b => s!"({a} * {b})"
@@ -311,7 +329,7 @@ def emit (source : String) (program : Program) (namespace_ : String) : Checked S
     core.params.flatMap typeDeclarations ++ termDeclarations core.body).eraseDups
   let declarations := (← roots.mapM (declarationOrder expanded 100)).flatten.eraseDups
   let mut out := (Ariadne.emit source original namespace_).replace
-    "import Ariadne.Certificate\n" "import Ariadne.Certificate\nimport Ariadne.Shallow.Elaborate\n"
+    "import Ariadne.Certificate\n" "import Ariadne.Certificate\nimport Ariadne.Shallow.Elaborate\nimport Ariadne.Shallow.Safety\n"
   out := out ++ "\n-- Shallow denotation certificates. Operational adequacy is not yet proved.\n" ++
     s!"namespace {namespace_}.Shallow\nopen Ariadne Ariadne.Shallow\nset_option linter.unusedSimpArgs false\n\n"
   let mut interpretation := "Named.canonical"
@@ -350,6 +368,9 @@ def emit (source : String) (program : Program) (namespace_ : String) : Checked S
     out := out ++ s!"theorem {"ElaborationChecks." ++ ident f.name} :\n" ++
       s!"    Elaborate.function _root_.{namespace_}.program {reprStr f.name} = .ok {coreName} := by kernel_rfl\n\n"
     out := out ++ s!"def {functionName}{params} : {typeText core.result} :=\n  {body}\n\n"
+    let safeEnv := names.foldr (fun name rest => s!"({name}, {rest})") "()"
+    out := out ++ s!"abbrev {functionName}.safe{params} : Prop :=\n" ++
+      s!"  Safety.function (interp := Interpretation.value) {coreName} (by decide) {safeEnv}\n\n"
     let envName := if core.params.isEmpty then "_env" else "env"
     let args := String.join ((List.range core.params.length).map fun i =>
       " (" ++ envName ++ String.join (List.replicate i ".2") ++ ".1)")

@@ -3,7 +3,7 @@ import Ariadne.Source
 namespace Ariadne
 
 inductive Ty where
-  | number | bigint | boolean | string | undefined | null | void
+  | number | int53 | bigint | boolean | string | undefined | null | void
   | stringLiteral (units : List UInt16)
   | readonly (ty : Ty)
   | fieldReadonly (ty : Ty)
@@ -25,7 +25,7 @@ def Ty.equalFuel : Nat → Ty → Ty → Bool
   | 0, _, _ => false
   | n + 1, a, b =>
     match a, b with
-    | .number, .number | .bigint, .bigint | .boolean, .boolean
+    | .number, .number | .int53, .int53 | .bigint, .bigint | .boolean, .boolean
     | .string, .string | .undefined, .undefined | .null, .null | .void, .void => true
     | .array a, .array b | .readonly a, .readonly b | .fieldReadonly a, .fieldReadonly b | .set a, .set b | .iterator a, .iterator b => equalFuel n a b
     | .stringLiteral a, .stringLiteral b => a == b

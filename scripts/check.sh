@@ -4,7 +4,7 @@ cd "$(dirname "$0")/.."
 
 lake build ariadne Tests Ariadne
 scripts/regenerate.sh
-git diff --exit-code -- Examples/Generated Examples/Compiled Examples/OperationalReference Examples/Shallow
+git diff --exit-code -- Examples/Generated Examples/Compiled Examples/OperationalReference Examples/ShallowReference Examples/Shallow
 # Kernel computation is memory intensive. Compile independent certificates serially.
 for source in examples/*.ts; do
   stem=$(basename "$source" .ts)
@@ -13,6 +13,7 @@ done
 for source in examples/reference/*.ts; do
   stem=$(basename "$source" .ts)
   lake build "Examples.OperationalReference.$stem"
+  lake build "Examples.ShallowReference.$stem"
 done
 for source in examples/scalar/*.ts; do
   stem=$(basename "$source" .ts)
@@ -46,4 +47,6 @@ fi
 "$js" scripts/shallow-unions.mjs
 "$js" scripts/shallow-state.mjs
 "$js" scripts/shallow-classes.mjs
+"$js" scripts/shallow-int53.mjs
+"$js" scripts/reference-shallow.mjs
 "$js" scripts/builtins.mjs

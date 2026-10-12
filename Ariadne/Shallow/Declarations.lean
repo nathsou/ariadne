@@ -8,6 +8,7 @@ def unsupported (message : String) (span : Span) : Checked α :=
 
 def key (ty : Ariadne.Ty) (span : Span) : Checked Core.Key :=
   match Check.unreadonly ty with
+  | .int53 => .ok .int53
   | .bigint => .ok .int
   | .number => .ok .number
   | .string | .stringLiteral _ => .ok .string
@@ -25,6 +26,7 @@ def shape (span : Span) : Nat → Ariadne.Ty → Checked Named.Shape
   | 0, _ => unsupported "named data exceeds the type nesting budget" span
   | _ + 1, .void | _ + 1, .undefined | _ + 1, .stringLiteral _ => .ok .unit
   | _ + 1, .boolean => .ok .bool
+  | _ + 1, .int53 => .ok .int53
   | _ + 1, .bigint => .ok .int
   | _ + 1, .number => .ok .number
   | _ + 1, .string => .ok .string

@@ -13,11 +13,13 @@ for source in examples/shallow/*.ts; do
   .lake/build/bin/ariadne extract "$source" \
     --out "Examples/Shallow/${stem}.lean" --namespace "Extracted_${stem}"
 done
-mkdir -p Examples/OperationalReference
+mkdir -p Examples/OperationalReference Examples/ShallowReference
 for source in examples/reference/*.ts; do
   stem=$(basename "$source" .ts)
   .lake/build/bin/ariadne translate "$source" \
     --out "Examples/OperationalReference/${stem}.lean" --namespace "Reference_${stem}"
+  .lake/build/bin/ariadne extract "$source" \
+    --out "Examples/ShallowReference/${stem}.lean" --namespace "Extracted_reference_${stem}"
 done
 mkdir -p Examples/Compiled
 for source in examples/scalar/*.ts; do

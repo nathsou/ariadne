@@ -35,6 +35,7 @@ def refusal (code message : String) (span : Span) : Checked α :=
 
 def collectionKey (ty : Ariadne.Ty) (span : Span) : Checked Core.Key :=
   match ty with
+  | .int53 => .ok .int53
   | .bigint => .ok .int
   | .number => .ok .number
   | .string | .stringLiteral _ => .ok .string
@@ -47,6 +48,7 @@ where
   convert : Nat → Ariadne.Ty → Checked Core.Ty
     | 0, _ => refusal "A5101" "type nesting budget exhausted" span
     | n + 1, .named name => do
+      if name == "Int53" && Check.int53Enabled p then return .int53
       let name := if p.classes.any (·.name == name) then ClassPlan.stateName name else name
       let some source := p.aliases.lookup name | refusal "A5102" "unknown type alias" span
       match Check.unreadonly source with
@@ -57,6 +59,7 @@ where
         convert n source
       | _ => convert n source
     | _ + 1, .void | _ + 1, .undefined => .ok .unit
+    | _ + 1, .int53 => .ok .int53
     | _ + 1, .bigint => .ok .int
     | _ + 1, .number => .ok .number
     | _ + 1, .boolean => .ok .bool
@@ -111,6 +114,7 @@ def lowerClassCall (p : Program) (ctx : Context) (expr : Expr) : Option Expr := 
   | _ => none
 
 def keySourceType : Core.Key → Ariadne.Ty
+  | .int53 => .int53
   | .int => .bigint
   | .number => .number
   | .string => .string
@@ -119,6 +123,7 @@ def keySourceType : Core.Key → Ariadne.Ty
 def sourceType : Core.Ty → Ariadne.Ty
   | .unit => .undefined
   | .bool => .boolean
+  | .int53 => .int53
   | .int => .bigint
   | .number => .number
   | .string => .string
@@ -164,6 +169,7 @@ def cast (t : Core.Ty) (value : Typed ctx) (span : Span) : Checked (Term (Types 
 def coercePlain (t : Core.Ty) (value : Typed ctx) (span : Span) : Checked (Term (Types ctx) t) :=
   if h : value.1 = t then .ok (h ▸ value.2)
   else match t, value with
+  | .number, ⟨.int53, value⟩ => .ok (.unary .int53ToNumber value)
   | .named parent, ⟨.named child, value⟩ =>
     match Declarations.inject parent child (.unpack value) with
     | some payload => .ok (.pack parent payload)
@@ -236,8 +242,75 @@ def canonicalField : Nat → (ctx : Context) → Ariadne.Ty → Typed ctx → St
     | _, _ => refusal "A5102" "this named value has no common record field" span
 
 
+/-- A primitive exactness guard includes signed zero. Range lemmas will simplify
+these guards; they are not a claim of whole-program operational adequacy. -/
+def guardedInteger (value : Term Γ .int) (source : Term Γ .number) : Term Γ .int53 :=
+  let result := Term.unary .intToInt53 value
+  .binary .guard (.binary .numBitsEq source (.unary .int53ToNumber result)) result
+
+def integerArithmetic (op : String) (a b : Term (Types ctx) .int53) (span : Span) : Checked (Typed ctx) := do
+  let ai := Term.unary .int53ToInt a
+  let bi := Term.unary .int53ToInt b
+  let af := Term.unary .int53ToNumber a
+  let bf := Term.unary .int53ToNumber b
+  match op with
+  | "+" => return ⟨.int53, guardedInteger (.binary .intAdd ai bi) (.binary .numAdd af bf)⟩
+  | "-" => return ⟨.int53, guardedInteger (.binary .intSub ai bi) (.binary .numSub af bf)⟩
+  | "*" => return ⟨.int53, guardedInteger (.binary .intMul ai bi) (.binary .numMul af bf)⟩
+  | "%" => return ⟨.int53, guardedInteger (.binary .intTmod ai bi) (.binary .numMod af bf)⟩
+  | "/" => return ⟨.number, .binary .numDiv af bf⟩
+  | "===" => return ⟨.bool, .binary .intEq ai bi⟩
+  | "!==" => return ⟨.bool, .unary .not (.binary .intEq ai bi)⟩
+  | "<" => return ⟨.bool, .binary .intLt ai bi⟩
+  | "<=" => return ⟨.bool, .binary .intLe ai bi⟩
+  | ">" => return ⟨.bool, .binary .intLt bi ai⟩
+  | ">=" => return ⟨.bool, .binary .intLe bi ai⟩
+  | _ => refusal "A5104" "unsupported Int53 operation" span
+
+def scalarEqual (a b : Typed ctx) (span : Span) : Checked (Term (Types ctx) .bool) := do
+  match a, b with
+  | ⟨.int, a⟩, ⟨.int, b⟩ => return .binary .intEq a b
+  | ⟨.int53, a⟩, ⟨.int53, b⟩ => return .binary .intEq (.unary .int53ToInt a) (.unary .int53ToInt b)
+  | ⟨.number, a⟩, ⟨.number, b⟩ => return .binary .numEq a b
+  | ⟨.int53, a⟩, ⟨.number, b⟩ => return .binary .numEq (.unary .int53ToNumber a) b
+  | ⟨.number, a⟩, ⟨.int53, b⟩ => return .binary .numEq a (.unary .int53ToNumber b)
+  | ⟨.string, a⟩, ⟨.string, b⟩ => return .binary .strEq a b
+  | ⟨.bool, a⟩, ⟨.bool, b⟩ => return .binary .boolEq a b
+  | _, _ => refusal "A5104" "optional equality requires compatible scalar payloads" span
+
+def optionalEqual (a : Term (Types ctx) (.option t)) (b : Typed ctx) (span : Span) :
+    Checked (Term (Types ctx) .bool) := do
+  match b with
+  | ⟨.unit, _⟩ => return .unary .not (.unary .isSome a)
+  | ⟨.option u, b⟩ =>
+    let equal ← scalarEqual (ctx := binding "#right" u :: binding "#left" t :: ctx)
+      ⟨t, .var (.there .here)⟩ ⟨u, .var .here⟩ span
+    return .optionCase a (.unary .not (.unary .isSome b))
+      (.optionCase (b.rename Var.there) (.bool false) equal)
+  | ⟨u, b⟩ =>
+    let equal ← scalarEqual (ctx := binding "#left" t :: ctx)
+      ⟨t, .var .here⟩ ⟨u, b.rename Var.there⟩ span
+    return .optionCase a (.bool false) equal
+
 def arithmetic (op : String) (a b : Typed ctx) (span : Span) : Checked (Typed ctx) := do
+  if op == "===" || op == "!==" then
+    if let ⟨.option _, value⟩ := a then
+      if b.1 == .unit then
+        let present := Term.unary .isSome value
+        return ⟨.bool, if op == "!==" then present else .unary .not present⟩
+      let equal ← optionalEqual value b span
+      return ⟨.bool, if op == "===" then equal else .unary .not equal⟩
+    if let ⟨.option _, value⟩ := b then
+      if a.1 == .unit then
+        let present := Term.unary .isSome value
+        return ⟨.bool, if op == "!==" then present else .unary .not present⟩
+      let equal ← optionalEqual value a span
+      return ⟨.bool, if op == "===" then equal else .unary .not equal⟩
+  let (a, b) ← if (a.1 == .int53 && b.1 == .number) || (a.1 == .number && b.1 == .int53) then do
+    pure ((⟨.number, ← coerce .number a span⟩ : Typed ctx), (⟨.number, ← coerce .number b span⟩ : Typed ctx))
+    else pure (a, b)
   match a with
+  | ⟨.int53, a⟩ => integerArithmetic op a (← cast .int53 b span) span
   | ⟨.int, a⟩ =>
     let b ← cast .int b span
     match op with
@@ -366,7 +439,11 @@ mutual
         return ← expression p n ctx lowered
       match expr with
       | .literal (.bigint v) _ => return ⟨.int, .int v⟩
-      | .literal (.number m e) _ => return ⟨.number, .number m e⟩
+      | .literal (.number m e) _ =>
+        if Check.int53Enabled p then
+          if let some value := Check.integerLiteral m e then
+            return ⟨.int53, guardedInteger (.int value) (.number m e)⟩
+        return ⟨.number, .number m e⟩
       | .literal (.boolean v) _ => return ⟨.bool, .bool v⟩
       | .literal (.string v) _ => return ⟨.string, .string v⟩
       | .literal .undefined _ => return ⟨.unit, .unit⟩
@@ -377,6 +454,9 @@ mutual
         let a ← expression p n ctx arg
         match op, a with
         | "!", ⟨.bool, a⟩ => return ⟨.bool, .unary .not a⟩
+        | "-", ⟨.int53, a⟩ => return ⟨.int53,
+            guardedInteger (.unary .intNeg (.unary .int53ToInt a)) (.unary .numNeg (.unary .int53ToNumber a))⟩
+        | "+", ⟨.int53, a⟩ => return ⟨.int53, a⟩
         | "-", ⟨.int, a⟩ => return ⟨.int, .unary .intNeg a⟩
         | "-", ⟨.number, a⟩ => return ⟨.number, .unary .numNeg a⟩
         | "+", ⟨.number, a⟩ => return ⟨.number, a⟩
@@ -413,16 +493,24 @@ mutual
         | ⟨.named declaration, value⟩ =>
           canonicalField n ctx (← Declarations.info p declaration.name span).source ⟨_, .unpack value⟩ field span
         | ⟨.list _, xs⟩ =>
-          if field == "length" then return ⟨.number, .unary .length xs⟩
+          if field == "length" then
+            if Check.int53Enabled p then return ⟨.int53, .unary .lengthInt53 xs⟩
+            return ⟨.number, .unary .length xs⟩
           refusal "A5104" "this array property has no lowering" span
         | ⟨.pair _ _, _⟩ =>
-          if field == "length" then return ⟨.number, .number 2 0⟩
+          if field == "length" then
+            if Check.int53Enabled p then return ⟨.int53, .unary .intToInt53 (.int 2)⟩
+            return ⟨.number, .number 2 0⟩
           refusal "A5104" "this tuple property has no lowering" span
         | ⟨.map _ _, m⟩ =>
-          if field == "size" then return ⟨.number, .unary .mapSize m⟩
+          if field == "size" then
+            if Check.int53Enabled p then return ⟨.int53, .unary .mapSizeInt53 m⟩
+            return ⟨.number, .unary .mapSize m⟩
           refusal "A5104" "this Map property has no lowering" span
         | ⟨.set _, s⟩ =>
-          if field == "size" then return ⟨.number, .unary .setSize s⟩
+          if field == "size" then
+            if Check.int53Enabled p then return ⟨.int53, .unary .setSizeInt53 s⟩
+            return ⟨.number, .unary .setSize s⟩
           refusal "A5104" "this Set property has no lowering" span
         | _ => refusal "A5104" "this property has no shallow lowering" span
       | .index object index span =>
@@ -434,6 +522,36 @@ mutual
           | .literal (.number 1 0) _ => return ⟨b, .snd pair⟩
           | _ => refusal "A5102" "pair indices must be 0 or 1" span
         | _ => refusal "A5102" "indexing requires a list or pair" span
+      | .call (.member (.var "Math" _) method _) args span =>
+        if ["floor", "trunc"].contains method then
+          if let [.binary "/" a b _] := args then
+            let ⟨.int53, a⟩ ← expression p n ctx a | refusal "A5104" "integer quotient rounding requires Int53 operands" span
+            let b ← asType p n ctx b .int53
+            let result := Term.binary (if method == "floor" then .intFdiv else .intTdiv)
+              (.unary .int53ToInt a) (.unary .int53ToInt b)
+            let source := Term.unary (if method == "floor" then .numFloor else .numTrunc)
+              (.binary .numDiv (.unary .int53ToNumber a) (.unary .int53ToNumber b))
+            return ⟨.int53, guardedInteger result source⟩
+        if let [arg] := args then
+          let ⟨.int53, value⟩ ← expression p n ctx arg | refusal "A5104" "this Math extraction requires Int53" span
+          if method == "abs" then return ⟨.int53,
+            guardedInteger (.unary .intAbs (.unary .int53ToInt value)) (.unary .numAbs (.unary .int53ToNumber value))⟩
+          if ["floor", "trunc", "min", "max"].contains method then return ⟨.int53, value⟩
+        if ["min", "max"].contains method then
+          let some first := args.head? | refusal "A5104" "empty extrema have a number result" span
+          let mut value ← asType p n ctx first .int53
+          for arg in args.tail do
+            let next ← asType p n ctx arg .int53
+            let less := Term.binary .intLt (.unary .int53ToInt value) (.unary .int53ToInt next)
+            value := if method == "min" then .ite less value next else .ite less next value
+          return ⟨.int53, value⟩
+        refusal "A5104" "this Math operation has no shallow lowering" span
+      | .call (.var "Number" _) [arg] span =>
+        match ← expression p n ctx arg with
+        | ⟨.int53, value⟩ => return ⟨.number, .unary .int53ToNumber value⟩
+        | ⟨.int, value⟩ => return ⟨.number, .unary .intToNumber value⟩
+        | ⟨.number, value⟩ => return ⟨.number, value⟩
+        | _ => refusal "A5104" "Number requires a numeric value" span
       | .call (.member object method _) args span =>
         match ← expression p n ctx object with
         | ⟨.map k v, m⟩ =>
@@ -867,24 +985,38 @@ mutual
           | refusal "A5101" "counted loops must declare their own counter" span
         let .binary "<" (.var tested _) stop _ := guard
           | refusal "A5101" "counted loops require an increasing half-open bound" span
-        let .assign (.var updated _) (.binary "+" (.var prior _) (.literal (.bigint 1) _) _) _ := update
-          | refusal "A5101" "this counter update needs Int53 safety or a termination measure" span
+        let .assign (.var updated _) (.binary "+" (.var prior _) increment _) _ := update
+          | refusal "A5101" "counted loops require a unit increment" span
+        let ⟨counter, _⟩ ← expression p n ctx start
+        let validIncrement := match counter, increment with
+          | .int, .literal (.bigint 1) _ => true
+          | .int53, .literal (.number m e) _ => Check.integerLiteral m e == some 1
+          | _, _ => false
+        if !validIncrement then refusal "A5101" "counted loops require an integer unit increment" span
         if tested != name || updated != name || prior != name || (Check.writes n body).contains name then
           refusal "A5101" "only the update step may assign the counted-loop counter" span
+        let writes := Check.writes n body ++ (← StatePlan.statementEffects p n body)
         match stop with
         | .var bound _ =>
-          if bound == name || (Check.writes n body).contains bound then
+          if bound == name || writes.contains bound then
             refusal "A5101" "the counted-loop bound must be invariant" span
-        | .literal (.bigint _) _ => pure ()
+        | .member collection "size" _ | .member collection "length" _ =>
+          let some owner := Check.root collection
+            | refusal "A5101" "collection bounds require a stable owner" span
+          if owner == name || writes.contains owner then
+            refusal "A5101" "the counted-loop collection bound must be invariant" span
+        | .literal (.bigint _) _ | .literal (.number _ _) _ => pure ()
         | _ => refusal "A5101" "this counted-loop bound has no invariance check" span
         if let some ty := annotation then
-          if (← type p ty span) != .int then refusal "A5101" "this counter needs Int53 safety" span
-        let _ ← asType p n ctx start .int
-        let _ ← asType p n ctx stop .int
+          if (← type p ty span) != counter then refusal "A5101" "the counter annotation must preserve its integer refinement" span
+        let _ ← asType p n ctx stop counter
         let rangeName := s!"#internalRange{n}"
-        let rangeTy := Core.Ty.fn .int (.fn .int (.list .int))
-        let range : Term (Types ctx) rangeTy := .lam "start" (.lam "stop"
-          (.binary .intRange (.var (.there .here)) (.var .here)))
+        let ⟨rangeTy, range⟩ ← match counter with
+          | .int => pure (⟨.fn .int (.fn .int (.list .int)),
+              .lam "start" (.lam "stop" (.binary .intRange (.var (.there .here)) (.var .here)))⟩ : Typed ctx)
+          | .int53 => pure (⟨.fn .int53 (.fn .int53 (.list .int53)),
+              .lam "start" (.lam "stop" (.binary .int53Range (.var (.there .here)) (.var .here)))⟩ : Typed ctx)
+          | _ => refusal "A5101" "counted loops require bigint or Int53 counters" span
         let inner := binding rangeName rangeTy :: ctx
         let loop := Stmt.forOf true name (.call (.var rangeName span) [start, stop] span) body span
         return .let_ "range" range (← statements p n inner (loop :: rest) t)
@@ -895,8 +1027,6 @@ mutual
 end
 
 def function (p : Program) (name : String) : Checked Core.Function := do
-  if p.aliases.any (·.1 == "Int53") then
-    refusal "A5104" "Int53 extraction requires range obligations, which are not implemented yet" {}
   let p ← ClassPlan.lower p
   let p ← Declarations.withVariants p
   let some f := p.functions.find? (·.name == name)

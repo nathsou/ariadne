@@ -97,7 +97,7 @@ try {
     ['function f(xs: bigint[]): void { xs = []; xs.push(1n); }', 'A5102'],
     ['function bump(m: Map<string, bigint>): bigint { m.set("x", 1n); return 1n; } function f(m: Map<string, bigint>): bigint { return 1n + bump(m); }', 'A5102'],
     ['function f(x: bigint): bigint { return x / 2n; }', 'A5104'],
-    ['type Int53 = number; function f(x: Int53): Int53 { return x; }', 'A5104'],
+    ['type Int53 = number; function f(x: Int53): number { return Math.sqrt(x); }', 'A5104'],
   ]) {
     await writeFile(source, text);
     await writeFile(artifact, 'preserve existing output\n');

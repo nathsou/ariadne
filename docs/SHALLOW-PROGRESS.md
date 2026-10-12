@@ -7,8 +7,8 @@ when their exit criteria pass; finite native tests are not universal proofs.
 | --- | --- | --- |
 | M0 | Complete | Reference sources and historical diagnostics; pinned CI downloads; reserved extraction diagnostics; output preservation tests |
 | M1 | Complete | All reference programs check and certify; grammar, ownership checks, operational semantics and the builtin table have differential coverage. Conservative dialect limits are listed below. |
-| M2 | In progress | Typed Core, scalar/list/Map/Set extraction, owned local updates, structural loops, pure calls, structural denotation, three-way differential and tamper tests. Lawful named records/unions and direct borrowed-state calls are implemented; class states and direct method calls are implemented; Int53 safety and reference extraction remain pending. |
-| M3 | Pending | Loop invariant/fold lemmas and scalar native proofs are seeded; the universal proofs of the three emitted references remain pending. |
+| M2 | In progress | Typed Core, scalar/list/Map/Set extraction, owned local updates, structural loops, pure calls, structural denotation, three-way differential and tamper tests. Lawful named records/unions and direct borrowed-state calls are implemented; class states, Int53 guards and original reference extraction are implemented; the full integration regression gate is pending. |
+| M3 | In progress | The original decision extraction has universal membership, floor and permutation proofs. Register/tree proofs and general Int53 exactness lemmas remain pending. |
 | M4 | Pending | Fundamental lemma, footprint preservation, adequacy and source transfer |
 | M5 | Pending | Measures, larger ownership, polymorphism, exceptions and scalar backend integration |
 
@@ -76,7 +76,9 @@ iteration, reads, and locally owned updates. Owned array `push` becomes append.
 Named records and tagged unions have lawful native representations. Mutated
 borrowed parameters are returned as state components and rebound at direct calls.
 Classes lower to named field records with explicit receiver state and constructors.
-Number-valued counted loops and Int53 refinement are explicitly refused.
+Files declaring `type Int53 = number` opt into the integer refinement. Counted
+Int53 loops accept stable scalar or collection-size bounds. Arbitrary number
+loops still require a termination/refinement argument.
 This is an incremental M2 slice, not the M2 reference-program exit gate.
 
 The extraction checkpoint passes the complete `scripts/check.sh` suite: 1,559
@@ -185,3 +187,38 @@ and nested collection loans remain outside this extraction slice.
 The preceding borrowed-state checkpoint passed the complete suite with 2,981
 audited theorems and green CI. The class checkpoint also passed the full local
 suite and CI, with 3,145 audited theorems. Operational adequacy remains the separate M4 gate.
+
+## Int53 and original-reference extraction
+
+The exact `type Int53 = number` declaration enables the refinement, including
+aliases of it, integer literals, lengths, sizes and counted-loop counters. The
+frontend preserves the distinction from both `number` and `bigint`; widening to
+`number` is implicit. Floor/truncated Int53 quotients and remainder have integer
+denotations. Optional scalar equality supports the tree's cursor comparison.
+
+Each emitted function has an executable `f.safe` predicate. Its interpreter
+collects conditions along actual branches, loop exits and callback invocations,
+including short-circuit searches. It checks refined inputs, operation ranges and
+nonzero integer divisors. Primitive arithmetic also retains explicit binary64
+bit-equality guards: general range-only exactness simplification lemmas are still
+pending in M3. These guards distinguish signed zero. In particular, `(-1) * 0`
+and `-0` cannot be represented by the canonical integer zero; both are rejected
+by their safety predicates, with kernel-checked counterexamples to a range-only
+claim. Runtime Int53 input representation will likewise use canonical positive
+zero in M4.
+
+The three original references now extract and pass kernel checking. Three-way
+tests cover 98 decision inputs, 25 register/tree traces with intermediate state
+observations, and 52 numerical safety cases. Native numerical proofs cover
+arithmetic equations and both accepted and rejected safety paths. These tests do
+not replace the universal reference theorems or operational adequacy.
+
+Local Lean 4.34.1 module builds took 36 seconds for decision, 24 seconds for
+registers, and 42 seconds for tree. These timings include source, frontend, Core
+elaboration and denotation checks together; they are not isolated tactic timings.
+The full integration suite is pending.
+
+The original emitted decision program now has universal fold, membership,
+floor-bound, valid-only and permutation-invariance theorems in
+`Examples/Proofs/ReferenceDecision.lean`. They reason over native data and
+structural folds, independently of heap addresses or evaluator fuel.

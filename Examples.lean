@@ -48,3 +48,10 @@ import Examples.Proofs.ShallowState
 
 import Examples.Shallow.classes
 import Examples.Proofs.ShallowClasses
+
+import Examples.Shallow.int53
+import Examples.ShallowReference.decision
+import Examples.ShallowReference.registers
+import Examples.ShallowReference.tree
+import Examples.Proofs.ShallowInt53
+import Examples.Proofs.ReferenceDecision
