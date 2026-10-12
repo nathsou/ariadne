@@ -183,5 +183,5 @@ rejects reference arguments at class-method call sites. Nested receiver expressi
 and nested collection loans remain outside this extraction slice.
 
 The preceding borrowed-state checkpoint passed the complete suite with 2,981
-audited theorems and green CI. The class checkpoint's full regression gate is
-pending. Operational adequacy remains the separate M4 gate.
+audited theorems and green CI. The class checkpoint also passed the full local
+suite and CI, with 3,145 audited theorems. Operational adequacy remains the separate M4 gate.
