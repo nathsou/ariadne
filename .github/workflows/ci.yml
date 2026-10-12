@@ -37,7 +37,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        phase: [operational, shallow]
+        phase: [operational, shallow-data, shallow-values]
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - name: Install checksum-pinned Lean, elan, and Bun
@@ -69,7 +69,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - name: Require successful preparation and both example jobs
+      - name: Require successful preparation and all example jobs
         env:
           PREPARE_RESULT: ${{ needs.prepare.result }}
           EXAMPLES_RESULT: ${{ needs.examples.result }}

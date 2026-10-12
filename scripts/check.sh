@@ -5,8 +5,8 @@ cd "$(dirname "$0")/.."
 # CI restores the prepare job's build before invoking individual phases.
 # Local invocation runs the same phases in sequence.
 phase=${1:-all}
-if (( $# > 1 )) || [[ ! "$phase" =~ ^(all|prepare|operational|shallow|verify)$ ]]; then
-  echo "Usage: scripts/check.sh [all|prepare|operational|shallow|verify]" >&2
+if (( $# > 1 )) || [[ ! "$phase" =~ ^(all|prepare|operational|shallow|shallow-data|shallow-values|verify)$ ]]; then
+  echo "Usage: scripts/check.sh [all|prepare|operational|shallow|shallow-data|shallow-values|verify]" >&2
   exit 2
 fi
 
@@ -39,19 +39,37 @@ run_operational() {
   done
 }
 
-run_shallow() {
+run_shallow_data() {
   for source in examples/reference/*.ts; do
     stem=$(basename "$source" .ts)
     lake build "Examples.ShallowReference.$stem"
   done
   for source in examples/shallow/*.ts; do
     stem=$(basename "$source" .ts)
-    lake build "Examples.Shallow.$stem"
+    case "$stem" in
+      arrays|collections|loops) lake build "Examples.Shallow.$stem" ;;
+    esac
+  done
+}
+
+run_shallow_values() {
+  for source in examples/shallow/*.ts; do
+    stem=$(basename "$source" .ts)
+    # Every other file, including future fixtures, belongs to this group.
+    case "$stem" in
+      arrays|collections|loops) ;;
+      *) lake build "Examples.Shallow.$stem" ;;
+    esac
   done
   for source in examples/tamper/*.ts; do
     stem=$(basename "$source" .ts)
     lake build "Examples.Tamper.$stem"
   done
+}
+
+run_shallow() {
+  run_shallow_data
+  run_shallow_values
 }
 
 run_verify() {
@@ -93,5 +111,7 @@ case "$phase" in
     timed shallow run_shallow
     timed verify run_verify
     ;;
+  shallow-data) timed "$phase" run_shallow_data ;;
+  shallow-values) timed "$phase" run_shallow_values ;;
   *) timed "$phase" "run_$phase" ;;
 esac

@@ -75,10 +75,11 @@ artifacts include source text directly, so review can check which program a theo
 actually describes. The axiom audit traverses project theorems transitively.
 
 CI runs the same `scripts/check.sh` gates in four phases. `prepare` builds the
-library and checks regeneration; `operational` and `shallow` build certificates
-serially on separate runners; `verify` restores both sets of checked modules,
+library and checks regeneration; `operational`, `shallow-data` and `shallow-values`
+build certificates serially on separate runners. The shallow groups partition
+all fixtures, with new files included automatically. `verify` restores all checked modules,
 builds the user proofs, audits axioms and runs every native regression. The final
-job fails if either certificate job fails. Local `scripts/check.sh` runs all four
+job fails if any certificate job fails. Local `scripts/check.sh` runs all four
 phases in sequence.
 
 Regeneration uses `extract --no-check` to write candidates for the subsequent
