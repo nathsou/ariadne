@@ -35,3 +35,17 @@ export function through(n: Int53, stop: Int53): Int53 {
 }
 export function optionalEqual(a: Int53 | undefined, b: Int53): boolean { return a === b; }
 export function optionalPair(a: Int53 | undefined, b: Int53 | undefined): boolean { return a === b; }
+
+export function less(a: Int53, b: Int53): boolean { return a < b; }
+export function equal(a: Int53, b: Int53): boolean { return a === b; }
+export function atMost(a: Int53, b: Int53): boolean { return a <= b; }
+export function incrementTwice(value: Int53): Int53 {
+  value = value + 1;
+  value = value + 1;
+  return value;
+}
+export function localAbsolute(value: Int53): Int53 {
+  const magnitude = Math.abs(value);
+  if (magnitude === 0) { return 0; }
+  return magnitude;
+}

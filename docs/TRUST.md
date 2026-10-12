@@ -88,7 +88,8 @@ arbitrary initial heap, without a fuel or whole-function execution premise.
 When a user function already occupies `f_source`, its generated theorem is named
 `SourceChecks.f.source`. Unsupported fragments retain denotation certificates
 and do not receive an operational theorem. Shared continuations, collections,
-classes and Int53 still await the full M4 correspondence.
+classes still await the full M4 correspondence. Guarded scalar Int53
+expressions and statement sequences have a separate operational proof.
 
 The scalar environment relation tracks visibility of rebound Core variables.
 Distinct visible source names have distinct allocated binding cells, and
@@ -97,3 +98,14 @@ updates the selected cell while preserving other variables. The scalar safety
 value theorem proves that collecting guards does not change denotation; a
 visited accepted guard is therefore true in the native interpretation. This is
 not yet the full safety/adequacy relation for higher-order and data terms.
+
+
+Guarded scalar transfer consumes the actual `Safety.term` guards. Integer
+lowering is justified by its checked binary64 bit equality, including the sign
+of zero; Int53 comparisons use the proved primitive order/equality laws.
+Builtin calls check that `Math` is unbound in the source frame and that the
+selected builtin is absent from the source function table. Those checks are
+proved from the concrete program and parameter list. Generated Int53 theorems
+assume `f.safe`; arithmetic range and canonical-zero laws discharge it in the
+source property proofs. No whole-function execution assumption is added to
+`f.safe`. Shared continuations and general data/state correspondence remain open.

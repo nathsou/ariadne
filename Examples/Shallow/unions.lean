@@ -3,6 +3,7 @@ import Ariadne.Certificate
 import Ariadne.Shallow.Elaborate
 import Ariadne.Shallow.Safety
 import Ariadne.Shallow.Adequacy.Statements
+import Ariadne.Shallow.Adequacy.GuardedStatements
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0

@@ -173,6 +173,128 @@ private def sourceTheorem (namespace_ : String) (f : Ariadne.Function) (core : C
     s!"    ({statementData}) ({reprStr blockSpan})\n" ++
     s!"    (by kernel_rfl) (by kernel_rfl) {checkName}.translated Interpretation.value {safeEnv} heap {args} inputs\n\n"
 
+private def guardedScalarKind : Core.Ty → Option String
+  | .int53 => some ".int53"
+  | t => scalarKind t
+
+private def guardedScalarValue : Core.Ty → String → Option String
+  | .int53, value => some s!"(Value.number (Float.Model.ofInt {value}))"
+  | t, value => scalarValue t value
+
+private def scalarCoreProof : Term Γ t → Option String
+  | .var v => do return s!".var {← guardedScalarKind t} ({reprStr v})"
+  | .unit => some ".unit"
+  | .bool _ => some ".bool _"
+  | .int _ => some ".int _"
+  | .number _ _ => some ".number _ _"
+  | .string _ => some ".string _"
+  | @Term.unary a b _ op value => do
+    return s!".unary (sa := {← guardedScalarKind a}) (sb := {← guardedScalarKind b}) ({reprStr op}) ({← scalarCoreProof value})"
+  | @Term.binary a b c _ op left right => do
+    return s!".binary (sa := {← guardedScalarKind a}) (sb := {← guardedScalarKind b}) (sc := {← guardedScalarKind c}) " ++
+      s!"({reprStr op}) ({← scalarCoreProof left}) ({← scalarCoreProof right})"
+  | @Term.let_ _ a b name value body => do
+    return s!".let_ (sa := {← guardedScalarKind a}) (sb := {← guardedScalarKind b}) {reprStr name} " ++
+      s!"({← scalarCoreProof value}) ({← scalarCoreProof body})"
+  | .ite condition yes no => do
+    return s!".ite ({← scalarCoreProof condition}) ({← scalarCoreProof yes}) ({← scalarCoreProof no})"
+  | .closed body => do return s!".closed ({← scalarCoreProof body})"
+  | _ => none
+
+private def comparisonRuleText : Binary .int .int t → String → Option String
+  | .intEq, "===" => some ".eq"
+  | .intLt, "<" => some ".lt"
+  | .intLe, "<=" => some ".le"
+  | _, _ => none
+
+private def mathRuleText : Unary a t → String → Option String
+  | .numAbs, "abs" => some ".abs"
+  | .numFloor, "floor" => some ".floor"
+  | .numTrunc, "trunc" => some ".trunc"
+  | _, _ => none
+
+private def guardedProof (names : List String) : Expr → Term Γ t → Option String
+  | source, .binary .guard (.binary .numBitsEq number (.unary .int53ToNumber (.unary .intToInt53 _))) (.unary .intToInt53 value) => do
+    return s!".integer ({← scalarCoreProof value}) ({← guardedProof names source number})"
+  | source, .unary .int53ToNumber value => do
+    return s!".widen ({← guardedProof names source value})"
+  | .binary source left right _, .binary op (.unary .int53ToInt a) (.unary .int53ToInt b) => do
+    let rule ← comparisonRuleText op source
+    return s!".compare {rule} ({← guardedProof names left a}) ({← guardedProof names right b}) _"
+  | .call (.member (.var "Math" _) method _) [arg] _, .unary op term => do
+    let rule ← mathRuleText op method
+    return s!".math {rule} ({← guardedProof names arg term}) _ _ _"
+  | .var name _, .var v => do
+    if names[index v]? != some name then none else
+      return s!".total (.var {← guardedScalarKind t} ({reprStr v}) _ (by decide))"
+  | .unary source arg _, .unary op value => do
+    let rule ← unaryRuleText op source
+    return s!".unary {rule} ({← guardedProof names arg value}) _"
+  | .binary source left right _, .binary op a b => do
+    let rule ← binaryRuleText op source
+    return s!".binary {rule} ({← guardedProof names left a}) ({← guardedProof names right b}) _"
+  | .conditional condition yes no _, .ite test a b => do
+    return s!".conditional ({← guardedProof names condition test}) ({← guardedProof names yes a}) ({← guardedProof names no b}) _"
+  | source, term => do return s!".total ({← scalarProof names source term})"
+termination_by structural _ term => term
+
+private def guardedStatementsProof : Nat → (names : List String) → List Stmt → Term Γ t → Option String
+  | 0, _, _, _ => none
+  | fuel + 1, names, statements, term =>
+    match statements, term with
+    | .return_ expression _ :: _, term => do
+      return s!".return_ ({← guardedProof names expression term}) _ _"
+    | .block [] _ :: rest, term => do
+      return s!".emptyBlock ({← guardedStatementsProof fuel names rest term}) _"
+    | .block inner _ :: _, term => do
+      return s!".block ({← guardedStatementsProof fuel names inner term}) _ _"
+    | .let_ _ name _ expression _ :: rest, .let_ coreName value body => do
+      if name != coreName || name == "Math" then none else
+        return s!".let_ {reprStr name} (by decide) ({← guardedProof names expression value}) " ++
+          s!"({← guardedStatementsProof fuel (name :: names) rest body}) _ _ _"
+    | .assign (.var name _) expression _ :: rest, @Term.let_ _ a _ coreName value body => do
+      if name != coreName || name == "Math" then none else
+        let target ← names.findIdx? (· == name)
+        if Γ[target]? != some a then none else
+          return s!".assign ({variableText target}) (by decide) ({← guardedProof names expression value}) " ++
+            s!"({← guardedStatementsProof fuel (name :: names) rest body}) _ _"
+    | .if_ condition yes no _ :: rest, .ite test a b => do
+      return s!".if_ ({← guardedProof names condition test}) " ++
+        s!"({← guardedStatementsProof fuel names (yes :: rest) a}) " ++
+        s!"({← guardedStatementsProof fuel names (no :: rest) b}) _"
+    | _, _ => none
+
+private def guardedSourceTheorem (namespace_ : String) (f : Ariadne.Function) (core : Core.Function)
+    (params : String) (names : List String) (safeEnv : String) (publicAlias : Bool) : Option String := do
+  let .block statements blockSpan := f.body | none
+  if f.params.any (·.name == "Math") then none else pure ()
+  let kind ← guardedScalarKind core.result
+  let proof ← guardedStatementsProof 1024 (f.params.map Param.name) statements core.body
+  let args ← (core.params.zip names).mapM fun (ty, name) => guardedScalarValue ty name
+  let functionCall := s!"{ident f.name}{String.join (names.map (" " ++ ·))}"
+  let safetyCall := s!"{ident f.name}.safe{String.join (names.map (" " ++ ·))}"
+  let encoded ← guardedScalarValue core.result s!"({functionCall})"
+  let args := "[" ++ String.intercalate ", " args ++ "]"
+  let checkName := s!"SourceChecks.{ident f.name}"
+  let theoremName := if publicAlias then ident (f.name ++ "_source") else s!"{checkName}.source"
+  let coreName := s!"CoreArtifacts.{ident f.name}"
+  let functionData := (reprStr f).replace "\n" " "
+  let exprData := (reprStr statements).replace "\n" " "
+  return s!"def {checkName}.function : Ariadne.Function := {functionData}\n\n" ++
+    s!"def {checkName}.names : Adequacy.Names {coreName}.params :=\n" ++
+    s!"  Adequacy.Names.fromList {reprStr (f.params.map Param.name)}\n\n" ++
+    s!"theorem {checkName}.translated :\n" ++
+    s!"    Adequacy.GuardedStatements {checkName}.names {kind} ({exprData}) {coreName}.body := by\n" ++
+    s!"  exact {proof}\n\n" ++
+    s!"theorem {theoremName}{params} (heap : Heap) (safe : {safetyCall}) :\n" ++
+    s!"    SourceReturnsFrom _root_.{namespace_}.source {reprStr f.name} heap {args} {encoded} := by\n" ++
+    s!"  have inputs : Adequacy.Environment {checkName}.names\n" ++
+    s!"      (Adequacy.bindArguments \u007b heap \u007d {checkName}.function.params {args})\n" ++
+    s!"      (interp := Interpretation.value) {safeEnv} := by\n" ++ inputProof core.params.length ++
+    s!"  exact Adequacy.guarded_statements_source _root_.{namespace_}.certificate {checkName}.function {checkName}.names {kind} {coreName}.body\n" ++
+    s!"    ({exprData}) ({reprStr blockSpan})\n" ++
+    s!"    (by kernel_rfl) (by kernel_rfl) {checkName}.translated Interpretation.value {safeEnv} heap {args} inputs (by constructor <;> rfl) (by decide) safe.2\n\n"
+
 private def unaryText : Unary a b → String → String
   | .intToInt53, a | .int53ToInt, a => a
   | .int53ToNumber, a => s!"(_root_.Float.Model.ofInt {a})"
@@ -461,7 +583,7 @@ def emit (source : String) (program : Program) (namespace_ : String) : Checked S
     core.params.flatMap typeDeclarations ++ termDeclarations core.body).eraseDups
   let declarations := (← roots.mapM (declarationOrder expanded 100)).flatten.eraseDups
   let mut out := (Ariadne.emit source original namespace_).replace
-    "import Ariadne.Certificate\n" "import Ariadne.Certificate\nimport Ariadne.Shallow.Elaborate\nimport Ariadne.Shallow.Safety\nimport Ariadne.Shallow.Adequacy.Statements\n"
+    "import Ariadne.Certificate\n" "import Ariadne.Certificate\nimport Ariadne.Shallow.Elaborate\nimport Ariadne.Shallow.Safety\nimport Ariadne.Shallow.Adequacy.Statements\nimport Ariadne.Shallow.Adequacy.GuardedStatements\n"
   out := out ++ "\n-- Shallow denotation certificates. Source transfer is emitted for proved fragments.\n" ++
     s!"namespace {namespace_}.Shallow\nopen Ariadne Ariadne.Shallow\nset_option linter.unusedSimpArgs false\n\n"
   let mut interpretation := "Named.canonical"
@@ -513,8 +635,10 @@ def emit (source : String) (program : Program) (namespace_ : String) : Checked S
       s!"  simp only [Denote.function, {coreName}, Denote.term, Core.Var.get" ++
       String.join (checks.map (", " ++ ·)) ++ "] <;> rfl\n\n"
     if original.functions.any (·.name == f.name) then
-      if let some theoremText := sourceTheorem namespace_ f core params names safeEnv
-          (!(program.functions.any (·.name == f.name ++ "_source"))) then
+      if let some theoremText := (sourceTheorem namespace_ f core params names safeEnv
+          (!(program.functions.any (·.name == f.name ++ "_source")))).orElse (fun _ =>
+            guardedSourceTheorem namespace_ f core params names safeEnv
+              (!(program.functions.any (·.name == f.name ++ "_source")))) then
         out := out ++ theoremText
   return out ++ s!"end {namespace_}.Shallow\n"
 

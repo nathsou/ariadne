@@ -55,7 +55,8 @@ scalar switches, and calls with scalar or immutable parameters. It also extracts
 named records, tagged unions, borrowed state, classes and Int53 arithmetic. All
 three reference programs extract and have universal native proofs. Generated
 source-transfer theorems currently cover supported scalar expressions, local
-bindings, scalar reassignment and conditional early returns. Full data/state/class adequacy
+bindings, scalar reassignment, conditional early returns and guarded Int53
+arithmetic, comparisons and unary Math calls. Full data/state/class adequacy
 and the M5 extensions remain in progress. See
 [milestone status](docs/SHALLOW-PROGRESS.md).
 

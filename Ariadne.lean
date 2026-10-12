@@ -20,3 +20,4 @@ import Ariadne.Shallow.Adequacy.Map
 import Ariadne.Shallow.Adequacy.Loop
 import Ariadne.Shallow.Prelude.CollectionSizes
 import Ariadne.Shallow.Safety.Scalar
+import Ariadne.Shallow.Adequacy.GuardedStatements

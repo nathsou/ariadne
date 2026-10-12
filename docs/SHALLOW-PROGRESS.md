@@ -437,3 +437,29 @@ Validation for this checkpoint passes: all shallow and original-reference
 artifacts, `Ariadne` and `Examples`, 4,735 audited theorems, the shallow
 three-way comparisons, and all eighteen source examples and six tamper checks.
 CI #72 also passed the preceding statement/record checkpoint.
+
+
+## Guarded Int53 source correspondence
+
+`CallConvergence.lean` composes actual callee, argument and invocation convergence
+without a user-visible budget. `Adequacy/GuardedScalar.lean` proves scalar
+correspondence under the guards computed by `Safety.term`; `GuardedStatements`
+extends it to declarations, reassignment and early-return branches. The integer
+wrapper's bit equality establishes canonical binary64 results, including signed
+zero. Comparisons use the primitive Int53 laws. Unary Math calls check actual
+builtin resolution in the caller frame and program table.
+
+Fourteen guarded Int53 fixture theorems are emitted, including arithmetic,
+nonintegral floor/trunc division, comparisons, local bindings, repeated updates
+and conditional early returns. Six arithmetic properties transfer to the
+original source for arbitrary inputs and initial heaps using ordinary range and
+canonical-zero hypotheses. All fourteen generated theorems, three kernel tamper
+checks and 63 differential safety/operational/native comparisons pass.
+
+Math extrema, shared continuations and full collection/state/class transfer
+remain outside this operational fragment. M4 is still partial and M5 is pending.
+
+The guarded checkpoint's complete artifact rebuild, `Ariadne`, `Examples` and
+`Tests` build, 4,851-theorem axiom audit, shallow differential gate, and original
+scalar source gate (eighteen theorems and six tamper checks) all pass. CI #74
+passed the preceding reassignment checkpoint. Project regeneration is current.

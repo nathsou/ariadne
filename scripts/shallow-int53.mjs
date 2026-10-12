@@ -5,6 +5,11 @@ import assert from 'node:assert/strict';
 import * as js from '../examples/shallow/int53.ts';
 const max = 9007199254740991;
 const cases = {
+  less: [[[1,2],true], [[max,-max],true]],
+  equal: [[[max,max],true], [[0,1],true]],
+  atMost: [[[-max,-max],true], [[max,0],true]],
+  incrementTwice: [[[0],true], [[max-2],true], [[max-1],false]],
+  localAbsolute: [[[0],true], [[-max],true]],
   add: [[[1,2],true], [[max,0],true], [[max,1],false], [[-max,max],true]],
   multiply: [[[3,4],true], [[-1,0],false], [[0,-1],false], [[0,1],true], [[max,2],false]],
   negate: [[[0],false], [[1],true], [[-max],true]],
