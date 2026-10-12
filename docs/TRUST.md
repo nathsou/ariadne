@@ -109,3 +109,12 @@ proved from the concrete program and parameter list. Generated Int53 theorems
 assume `f.safe`; arithmetic range and canonical-zero laws discharge it in the
 source property proofs. No whole-function execution assumption is added to
 `f.safe`. Shared continuations and general data/state correspondence remain open.
+
+The full typed Core safety-value relation now has a fundamental lemma:
+`Safety.term_erases` relates the guarded result to `Denote.term` for every Core
+term and named interpretation. Functions are related on related inputs; all
+collection traversals retain actual invocation guards. For native data inputs
+and outputs, `Safety.term_lift_value` states equality after the representation
+cast. The denotation agrees with the value computed while collecting guards,
+including for shared closures. General agreement with the original heap-based
+source evaluator remains the open M4 obligation.

@@ -484,3 +484,25 @@ required before claiming a complete fundamental lemma.
 
 Both modules and `Ariadne` build successfully. The dependency audit passes for
 4,916 theorems using only standard Lean logical axioms.
+
+## Full Core value erasure
+
+The fragment restriction on value erasure is removed. `Erasure/Traversal.lean`
+relates all collection callbacks and early-exit iteration; `Erasure/Data.lean`
+proves native data lifting and named-shape cast correspondence; `Erasure/Term`
+proves the fundamental value lemma by induction on every typed Core term.
+Guarded function values retain their invocation guards and agree with native
+functions on related inputs. The result holds for every named interpretation,
+even when a computed guard fails. The earlier structural witness is retired.
+This closes the safety-value/denotation relation; the general operational
+source fundamental lemma and reference-program transfer remain open.
+
+`Prelude/Measured.lean` supplies the well-founded/fuel bridge needed for M5:
+every continuing step strictly decreases a natural-number measure, and fueled
+iteration agrees with well-founded recursion at every budget above that measure.
+Stop and return branches require no decrease. This is a proved library foundation;
+measured source lowering and `termination_by` emission are not implemented yet.
+
+The full Core erasure modules, measured-loop bridge, `Ariadne`, `Examples` and
+`Tests` build successfully. The theorem-dependency audit passes with standard
+Lean logical axioms only.

@@ -136,7 +136,7 @@ private theorem list_get {relation : α → β → Prop} {left : List α} {right
     | zero => exact head
     | succ index => exact ih index
 
-private theorem entries_set [BEq κ] {left : List (κ × α)} {right : List (κ × β)}
+private theorem entries_set [eqκ : BEq κ] {left : List (κ × α)} {right : List (κ × β)}
     {relation : α → β → Prop} (related : ListRelated (fun a b => a.1 = b.1 ∧ relation a.2 b.2) left right)
     (key : κ) {a : α} {b : β} (value : relation a b) :
     ListRelated (fun a b => a.1 = b.1 ∧ relation a.2 b.2)
@@ -206,6 +206,20 @@ theorem binary_erases {interp : Named.Interp} (op : Binary a b c)
   case setAdd k => cases k <;> simp only [Erases] at left right ⊢ <;> cases left <;> cases right <;> rfl
   case setDelete k => cases k <;> simp only [Erases] at left right ⊢ <;> cases left <;> cases right <;> rfl
 
+theorem mapSet_erases {interp : Named.Interp} (k : Key) {v : Core.Ty}
+    (model : Model (.map k v) interp) (native : (Core.Ty.map k v).denote interp)
+    (key : Model k.type interp) (nativeKey : k.type.denote interp)
+    (value : Model v interp) (nativeValue : v.denote interp)
+    (collection : Erases (.map k v) model native) (keys : Erases k.type key nativeKey)
+    (values : Erases v value nativeValue) :
+    Erases (.map k v) (mapSet k model key value) (Denote.mapSet k native nativeKey nativeValue) := by
+  cases k <;> simp only [Erases] at collection keys ⊢ <;> cases keys
+  all_goals
+    simp only [mapSet, Denote.mapSet, JSMap.set, NumberMap.set, NumberMap.entries]
+    first
+    | exact entries_set (eqκ := NumberKey.equality) collection _ values
+    | exact entries_set collection _ values
+
 def ErasesEnvironment {interp : Named.Interp} (model : Environment Γ interp) (native : Core.Env Γ interp) : Prop :=
   ∀ {t} (v : Var Γ t), Erases t (getVariable v model) (v.get native)
 
@@ -216,164 +230,5 @@ theorem ErasesEnvironment.cons {interp : Named.Interp} {model : Environment Γ i
   cases v with
   | here => exact equal
   | there v => exact related v
-
-/-- Structural Core terms whose values erase compositionally. Collection
-callbacks and named construction require their own traversal/layout lemmas. -/
-inductive ErasureTerm : {Γ : List Core.Ty} → {t : Core.Ty} → Term Γ t → Prop where
-  | var (v : Var Γ t) : ErasureTerm (.var v)
-  | unit : ErasureTerm (.unit : Term Γ .unit)
-  | bool (value : Bool) : ErasureTerm (.bool value : Term Γ .bool)
-  | int (value : Int) : ErasureTerm (.int value : Term Γ .int)
-  | number (mantissa : Nat) (exponent : Int) : ErasureTerm (.number mantissa exponent : Term Γ .number)
-  | string (value : JSString) : ErasureTerm (.string value : Term Γ .string)
-  | unary (op : Unary a b) {value : Term Γ a} (input : ErasureTerm value) : ErasureTerm (.unary op value)
-  | binary (op : Binary a b c) {a : Term Γ a} {b : Term Γ b}
-      (left : ErasureTerm a) (right : ErasureTerm b) : ErasureTerm (.binary op a b)
-  | let_ (name : String) {value : Term Γ a} {body : Term (a :: Γ) b}
-      (input : ErasureTerm value) (next : ErasureTerm body) : ErasureTerm (.let_ name value body)
-  | ite {condition : Term Γ .bool} {yes no : Term Γ t}
-      (test : ErasureTerm condition) (yesBody : ErasureTerm yes) (noBody : ErasureTerm no) :
-      ErasureTerm (.ite condition yes no)
-  | none : ErasureTerm (.none : Term Γ (.option t))
-  | some {value : Term Γ t} (input : ErasureTerm value) : ErasureTerm (.some value)
-  | optionCase {option : Term Γ (.option a)} {fallback : Term Γ b} {body : Term (a :: Γ) b}
-      (input : ErasureTerm option) (empty : ErasureTerm fallback) (present : ErasureTerm body) :
-      ErasureTerm (.optionCase option fallback body)
-  | nil : ErasureTerm (.nil : Term Γ (.list t))
-  | cons {value : Term Γ t} {rest : Term Γ (.list t)} (head : ErasureTerm value) (tail : ErasureTerm rest) :
-      ErasureTerm (.cons value rest)
-  | pair {a : Term Γ a} {b : Term Γ b} (left : ErasureTerm a) (right : ErasureTerm b) : ErasureTerm (.pair a b)
-  | fst {value : Term Γ (.pair a b)} (input : ErasureTerm value) : ErasureTerm (.fst value)
-  | snd {value : Term Γ (.pair a b)} (input : ErasureTerm value) : ErasureTerm (.snd value)
-  | inl {value : Term Γ a} (input : ErasureTerm value) : ErasureTerm (.inl (b := b) value)
-  | inr {value : Term Γ b} (input : ErasureTerm value) : ErasureTerm (.inr (a := a) value)
-  | sumCase {value : Term Γ (.sum a b)} {left : Term (a :: Γ) c} {right : Term (b :: Γ) c}
-      (input : ErasureTerm value) (lhs : ErasureTerm left) (rhs : ErasureTerm right) :
-      ErasureTerm (.sumCase value left right)
-  | lam (name : String) {body : Term (a :: Γ) b} (input : ErasureTerm body) : ErasureTerm (.lam name body)
-  | app {f : Term Γ (.fn a b)} {arg : Term Γ a} (function : ErasureTerm f) (argument : ErasureTerm arg) :
-      ErasureTerm (.app f arg)
-  | closed {body : Term [] t} (input : ErasureTerm body) : ErasureTerm (Term.closed (Γ := Γ) body)
-
-/-- Function guards are retained in the model, while all related results agree
-with native evaluation. This lemma does not assert operational source adequacy. -/
-theorem ErasureTerm.value {interp : Named.Interp} {body : Term Γ t} (input : ErasureTerm body)
-    (model : Environment Γ interp) (native : Core.Env Γ interp) (related : ErasesEnvironment model native) :
-    Erases t (term body model).1 (Denote.term body native) := by
-  induction input with
-  | var v => exact related v
-  | unit => rfl
-  | bool value => rfl
-  | int value => rfl
-  | number mantissa exponent => rfl
-  | string value => rfl
-  | unary op input ih => exact unary_erases op _ _ (ih model native related)
-  | binary op left right ihl ihr => exact binary_erases op _ _ _ _ (ihl model native related) (ihr model native related)
-  | let_ name input next ihv ihb => exact ihb _ _ (related.cons (ihv model native related))
-  | @ite Γ t condition yes no test yesBody noBody ihc ihy ihn =>
-    have testValue : (term condition model).1 = Denote.term condition native := ihc model native related
-    cases value : Denote.term condition native
-    · simpa only [term, testValue, Denote.term, value, Bool.false_eq_true, ↓reduceIte] using ihn model native related
-    · simpa only [term, testValue, Denote.term, value, ↓reduceIte] using ihy model native related
-  | none => trivial
-  | some input ih => exact ih model native related
-  | @optionCase Γ a b option fallback body input empty present iho ihe ihp =>
-    have options := iho model native related
-    cases hx : (term option model).1 <;> cases hy : Denote.term option native
-    all_goals simp only [hx, hy, Erases, OptionRelated] at options
-    · simpa only [term, Denote.term, hx, hy, Option.elim_none] using ihe model native related
-    · simpa only [term, Denote.term, hx, hy, Option.elim_some] using ihp _ _ (related.cons options)
-  | nil => exact .nil
-  | cons head tail ihh iht => exact .cons (ihh model native related) (iht model native related)
-  | pair left right ihl ihr => exact ⟨ihl model native related, ihr model native related⟩
-  | fst input ih => exact (ih model native related).1
-  | snd input ih => exact (ih model native related).2
-  | inl input ih => exact ih model native related
-  | inr input ih => exact ih model native related
-  | @sumCase Γ a b c value left right input lhs rhs ihv ihl ihr =>
-    have values := ihv model native related
-    cases hx : (term value model).1 <;> cases hy : Denote.term value native
-    all_goals simp only [hx, hy, Erases] at values
-    · simpa only [term, Denote.term, hx, hy, Sum.elim_inl] using ihl _ _ (related.cons values)
-    · simpa only [term, Denote.term, hx, hy, Sum.elim_inr] using ihr _ _ (related.cons values)
-  | lam name input ih =>
-    intro x y h
-    exact ih _ _ (related.cons h)
-  | app function argument ihf iha => exact ihf model native related _ _ (iha model native related)
-  | closed input ih => exact ih () () (by intro t v; cases v)
-
-theorem ErasureTerm.rename {body : Term Γ t} (input : ErasureTerm body) (r : Renaming Γ Δ) :
-    ErasureTerm (body.rename r) := by
-  induction input generalizing Δ with
-  | var v => exact .var _
-  | unit => exact .unit
-  | bool value => exact .bool _
-  | int value => exact .int _
-  | number mantissa exponent => exact .number _ _
-  | string value => exact .string _
-  | unary op input ih => exact .unary op (ih r)
-  | binary op left right ihl ihr => exact .binary op (ihl r) (ihr r)
-  | let_ name input next ihv ihb => exact .let_ name (ihv r) (ihb r.lift)
-  | ite test yes no ihc ihy ihn => exact .ite (ihc r) (ihy r) (ihn r)
-  | none => exact .none
-  | some input ih => exact .some (ih r)
-  | optionCase input empty present iho ihe ihp => exact .optionCase (iho r) (ihe r) (ihp r.lift)
-  | nil => exact .nil
-  | cons head tail ihh iht => exact .cons (ihh r) (iht r)
-  | pair left right ihl ihr => exact .pair (ihl r) (ihr r)
-  | fst input ih => exact .fst (ih r)
-  | snd input ih => exact .snd (ih r)
-  | inl input ih => exact .inl (ih r)
-  | inr input ih => exact .inr (ih r)
-  | sumCase input lhs rhs ihv ihl ihr => exact .sumCase (ihv r) (ihl r.lift) (ihr r.lift)
-  | lam name input ih => exact .lam name (ih r.lift)
-  | app function argument ihf iha => exact .app (ihf r) (iha r)
-  | closed input ih => exact .closed input
-
-private theorem erasure_lift {a : Core.Ty} (s : Substitution Γ Δ)
-    (variables : ∀ {t} (v : Var Γ t), ErasureTerm (s v)) :
-    ∀ {t} (v : Var (a :: Γ) t), ErasureTerm (s.lift v) := by
-  intro t v
-  cases v with
-  | here => exact .var _
-  | there v => exact (variables v).rename (fun v => .there v)
-
-theorem ErasureTerm.substitute {body : Term Γ t} (input : ErasureTerm body) (s : Substitution Γ Δ)
-    (variables : ∀ {t} (v : Var Γ t), ErasureTerm (s v)) : ErasureTerm (body.substitute s) := by
-  induction input generalizing Δ with
-  | var v => exact variables v
-  | unit => exact .unit
-  | bool value => exact .bool _
-  | int value => exact .int _
-  | number mantissa exponent => exact .number _ _
-  | string value => exact .string _
-  | unary op input ih => exact .unary op (ih s variables)
-  | binary op left right ihl ihr => exact .binary op (ihl s variables) (ihr s variables)
-  | let_ name input next ihv ihb => exact .let_ name (ihv s variables) (ihb s.lift (erasure_lift s variables))
-  | ite test yes no ihc ihy ihn => exact .ite (ihc s variables) (ihy s variables) (ihn s variables)
-  | none => exact .none
-  | some input ih => exact .some (ih s variables)
-  | optionCase input empty present iho ihe ihp => exact .optionCase (iho s variables) (ihe s variables) (ihp s.lift (erasure_lift s variables))
-  | nil => exact .nil
-  | cons head tail ihh iht => exact .cons (ihh s variables) (iht s variables)
-  | pair left right ihl ihr => exact .pair (ihl s variables) (ihr s variables)
-  | fst input ih => exact .fst (ih s variables)
-  | snd input ih => exact .snd (ih s variables)
-  | inl input ih => exact .inl (ih s variables)
-  | inr input ih => exact .inr (ih s variables)
-  | sumCase input lhs rhs ihv ihl ihr => exact .sumCase (ihv s variables) (ihl s.lift (erasure_lift s variables)) (ihr s.lift (erasure_lift s variables))
-  | lam name input ih => exact .lam name (ih s.lift (erasure_lift s variables))
-  | app function argument ihf iha => exact .app (ihf s variables) (iha s variables)
-  | closed input ih => exact .closed input
-
-theorem ErasureTerm.project {tuple : Term Δ (environmentType Γ)} (input : ErasureTerm tuple) (v : Var Γ t) :
-    ErasureTerm (Core.project tuple v) := by
-  induction v generalizing Δ with
-  | here => exact .fst input
-  | there v ih => exact ih (.snd input)
-
-theorem ErasureTerm.abstract {body : Term Γ t} (input : ErasureTerm body) :
-    ErasureTerm (body.abstract : Term Δ (.fn (environmentType Γ) t)) :=
-  .closed (.lam "state" (input.substitute _ (fun v => ErasureTerm.project (.var .here) v)))
 
 end Ariadne.Shallow.Safety
