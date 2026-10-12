@@ -30,6 +30,8 @@ private def typeText : Core.Ty → String
   | .set .number => "_root_.Ariadne.Shallow.NumberSet"
   | .set k => s!"(_root_.Ariadne.Shallow.JSSet {keyText k})"
   | .pair a b => s!"({typeText a} × {typeText b})"
+  | .sum a b => s!"(_root_.Sum {typeText a} {typeText b})"
+  | .named declaration => s!"NativeTypes.{ident declaration.name}"
   | .fn a b => s!"({typeText a} → {typeText b})"
   | .step a b => s!"(_root_.Ariadne.Shallow.Step {typeText a} {typeText b})"
   | .exit a b => s!"(_root_.Ariadne.Shallow.Exit {typeText a} {typeText b})"
@@ -79,9 +81,9 @@ private def binaryText : Binary a b c → String → String → String
 
 private def closedTerms : Term Γ t → List ((t : Core.Ty) × Term [] t)
   | .closed body => closedTerms body ++ [⟨_, body⟩]
-  | .unary _ a | .some a | .fst a | .snd a | .lam _ a | .next a | .stop a | .ret a => closedTerms a
+  | .unary _ a | .some a | .fst a | .snd a | .lam _ a | .next a | .stop a | .ret a | .inl a | .inr a | .pack _ a | .unpack a => closedTerms a
   | .binary _ a b | .let_ _ a b | .cons a b | .pair a b | .app a b => closedTerms a ++ closedTerms b
-  | .ite a b c | .optionCase a b c | .each a b c | .exitCase a b c | .mapSet a b c => closedTerms a ++ closedTerms b ++ closedTerms c
+  | .ite a b c | .optionCase a b c | .each a b c | .exitCase a b c | .mapSet a b c | .sumCase a b c => closedTerms a ++ closedTerms b ++ closedTerms c
   | .listMap a b | .listFilter a b | .listSome a b | .listEvery a b |
       .listFind a b | .listFindIndex a b => closedTerms a ++ closedTerms b
   | .listReduce a b c | .listSlice a b c => closedTerms a ++ closedTerms b ++ closedTerms c
@@ -130,6 +132,11 @@ private def coreText (label : String) (keys : List String) : Term Γ t → Strin
   | .mapEmpty => "Core.Term.mapEmpty"
   | .setEmpty => "Core.Term.setEmpty"
   | .mapSet m k v => s!"(Core.Term.mapSet {coreText label keys m} {coreText label keys k} {coreText label keys v})"
+  | .inl a => s!"(Core.Term.inl {coreText label keys a})"
+  | .inr a => s!"(Core.Term.inr {coreText label keys a})"
+  | .sumCase a b c => s!"(Core.Term.sumCase {coreText label keys a} {coreText label keys b} {coreText label keys c})"
+  | .pack declaration a => s!"(Core.Term.pack ({reprStr declaration}) {coreText label keys a})"
+  | .unpack a => s!"(Core.Term.unpack {coreText label keys a})"
 
 private def termText (label : String) (keys : List String) (term : Term Γ t) (names : List String) (depth : Nat := 0) : String :=
   match term with
@@ -176,21 +183,97 @@ private def termText (label : String) (keys : List String) (term : Term Γ t) (n
   | @Term.mapEmpty _ k _ => s!"{mapNamespace k}.empty"
   | @Term.setEmpty _ k => s!"{setNamespace k}.empty"
   | @Term.mapSet _ k _ m key value => s!"({mapNamespace k}.set {termText label keys m names depth} {termText label keys key names depth} {termText label keys value names depth})"
+  | .inl a => s!"(_root_.Sum.inl {termText label keys a names depth})"
+  | .inr a => s!"(_root_.Sum.inr {termText label keys a names depth})"
+  | @Term.sumCase _ a b _ value left right =>
+    let leftName := ident s!"_left#{depth}"
+    let rightName := ident s!"_right#{depth}"
+    s!"(_root_.Sum.elim (fun {leftName} : {typeText a} => {termText label keys left (leftName :: names) (depth + 1)}) (fun {rightName} : {typeText b} => {termText label keys right (rightName :: names) (depth + 1)}) {termText label keys value names depth})"
+  | .pack declaration a => s!"(NativeConstruct.{ident declaration.name} {termText label keys a names depth})"
+  | @Term.unpack _ declaration a => s!"(NativeDestruct.{ident declaration.name} {termText label keys a names depth})"
+
+private def typeDeclarations : Core.Ty → List Named.Declaration
+  | .named declaration => [declaration]
+  | .option t | .list t | .map _ t => typeDeclarations t
+  | .pair a b | .sum a b | .fn a b | .step a b | .exit a b => typeDeclarations a ++ typeDeclarations b
+  | _ => []
+
+private def termDeclarations (term : Term Γ t) : List Named.Declaration :=
+  typeDeclarations t ++ match term with
+  | .closed body => termDeclarations body
+  | .unary _ a | .some a | .fst a | .snd a | .lam _ a | .next a | .stop a | .ret a |
+      .inl a | .inr a | .pack _ a | .unpack a => termDeclarations a
+  | .binary _ a b | .let_ _ a b | .cons a b | .pair a b | .app a b => termDeclarations a ++ termDeclarations b
+  | .ite a b c | .optionCase a b c | .each a b c | .exitCase a b c | .mapSet a b c |
+      .sumCase a b c | .listReduce a b c | .listSlice a b c =>
+    termDeclarations a ++ termDeclarations b ++ termDeclarations c
+  | .listMap a b | .listFilter a b | .listSome a b | .listEvery a b |
+      .listFind a b | .listFindIndex a b => termDeclarations a ++ termDeclarations b
+  | _ => []
+
+private def nativeFieldNames (fields : List (String × Ariadne.Ty)) : List String :=
+  let reserved := ["mk", "rec", "recOn", "casesOn", "noConfusion", "noConfusionType", "brecOn", "below"]
+  let names := fields.zipIdx.map fun ((name, _), i) =>
+    if name.isEmpty || reserved.contains name || name.contains '»' || name.contains '\n' || name.contains '\r'
+    then s!"field{i}" else name
+  if names.eraseDups.length == names.length then names else
+    fields.zipIdx.map fun (_, i) => s!"field{i}"
+
+private def emitRecord (program : Program) (declaration : Named.Declaration) : Checked String := do
+  let fields ← Declarations.record program declaration {}
+  let names := nativeFieldNames fields
+  let name := ident declaration.name
+  let payloadType := typeText (Core.shapeType declaration.shape)
+  let mut out := s!"structure NativeTypes.{name} where\n"
+  let mut args : List String := []
+  let mut payload : List String := []
+  let mut pattern : List String := []
+  for ((_field, source), i) in fields.zipIdx do
+    if (Declarations.fixedString source).isSome then
+      payload := payload ++ ["()"]
+      pattern := pattern ++ ["⟨⟩"]
+    else
+      let fieldName := ident names[i]!
+      let ty := Core.shapeType (← Declarations.shape {} 100 source)
+      out := out ++ s!"  {fieldName} : {typeText ty}\n"
+      args := args ++ ["(_payload" ++ String.join (List.replicate i ".2") ++ ".1)"]
+      payload := payload ++ [s!"_value.{fieldName}"]
+      pattern := pattern ++ [s!"_field{i}"]
+  out := out ++ s!"\n@[simp] def NativeConstruct.{name} (_payload : {payloadType}) : NativeTypes.{name} :=\n" ++
+    s!"  NativeTypes.{name}.mk" ++ String.join (args.map (" " ++ ·)) ++ "\n\n"
+  let tuple := payload.foldr (fun value rest => s!"({value}, {rest})") "()"
+  out := out ++ s!"@[simp] def NativeDestruct.{name} (_value : NativeTypes.{name}) : {payloadType} :=\n  {tuple}\n\n"
+  let split := pattern.foldr (fun field rest => s!"⟨{field}, {rest}⟩") "⟨⟩"
+  let data := (reprStr declaration).replace "\n" " "
+  out := out ++ s!"def NativeRepresentations.{name} : Named.Representation (({data} : Named.Declaration).shape) where\n" ++
+    s!"  Native := NativeTypes.{name}\n  construct := NativeConstruct.{name}\n  destruct := NativeDestruct.{name}\n" ++
+    s!"  destruct_construct := by\n    intro value\n    rcases value with {split}\n    rfl\n" ++
+    "  construct_destruct := by\n    intro value\n    cases value\n    rfl\n\n"
+  return out
 
 def emit (source : String) (program : Program) (namespace_ : String) : Checked String := do
   if !program.classes.isEmpty then
     Elaborate.refusal "A5102" "class extraction is not implemented yet" program.classes.head!.span
   if program.functions.isEmpty then
     Elaborate.refusal "A5101" "there are no functions to extract" {}
+  let compiled ← program.functions.mapM fun f => do return (f, ← Elaborate.function program f.name)
+  let declarations := (compiled.flatMap fun (_, core) =>
+    core.params.flatMap typeDeclarations ++ termDeclarations core.body).eraseDups
   let mut out := (Ariadne.emit source program namespace_).replace
     "import Ariadne.Certificate\n" "import Ariadne.Certificate\nimport Ariadne.Shallow.Elaborate\n"
   out := out ++ "\n-- Shallow denotation certificates. Operational adequacy is not yet proved.\n" ++
     s!"namespace {namespace_}.Shallow\nopen Ariadne Ariadne.Shallow\nset_option linter.unusedSimpArgs false\n\n"
-  for f in program.functions do
-    let core ← Elaborate.function program f.name
+  let mut interpretation := "Named.canonical"
+  for declaration in declarations do
+    out := out ++ (← emitRecord program declaration)
+    let data := (reprStr declaration).replace "\n" " "
+    interpretation := s!"(Named.Interp.insert {interpretation} ({data}) NativeRepresentations.{ident declaration.name})"
+  out := out ++ s!"def Interpretation.value : Named.Interp := {interpretation}\n\n" ++
+    "theorem Interpretation.lawful : Named.Lawful Interpretation.value := Named.lawful _\n\n"
+  for (f, core) in compiled do
     let coreName := "CoreArtifacts." ++ ident f.name
     let functionName := ident f.name
-    let names := f.params.map (fun param => ident s!"{param.name}#arg")
+    let names := f.params.map (fun param => ident s!"_{param.name}#arg")
     let params := String.join ((names.zip core.params).map fun (name, t) => s!" ({name} : {typeText t})")
     let joins := (closedTerms core.body).foldl (fun acc entry =>
       if acc.any (fun other => closedKey other.2 == closedKey entry.2) then acc else acc ++ [entry]) []
@@ -202,7 +285,7 @@ def emit (source : String) (program : Program) (namespace_ : String) : Checked S
       let native := (termText f.name keys join []).replace "\n" "\n  "
       out := out ++ s!"def JoinCore.{j} : Core.Term [] ({reprStr t}) := {code}\n\n"
       out := out ++ s!"@[simp] def JoinNative.{j} : {typeText t} :=\n  {native}\n\n"
-      out := out ++ s!"theorem JoinChecks.{j} : Denote.term JoinCore.{j} () = JoinNative.{j} := by\n" ++
+      out := out ++ s!"theorem JoinChecks.{j} : Denote.term (interp := Interpretation.value) JoinCore.{j} () = JoinNative.{j} := by\n" ++
         s!"  unfold {namespace_}.Shallow.JoinNative.{j}\n" ++
         s!"  simp only [JoinCore.{j}, Denote.term, Core.Var.get" ++
         String.join (checks.map (", " ++ ·)) ++ "] <;> rfl\n\n"
@@ -220,8 +303,8 @@ def emit (source : String) (program : Program) (namespace_ : String) : Checked S
     let args := String.join ((List.range core.params.length).map fun i =>
       " (" ++ envName ++ String.join (List.replicate i ".2") ++ ".1)")
     out := out ++ s!"theorem {"DenotationChecks." ++ ident f.name} :\n" ++
-      s!"    (fun {envName} : Core.Env {coreName}.params => {functionName}{args}) =\n" ++
-      s!"      Denote.function {coreName} := by\n" ++
+      s!"    (fun {envName} : Core.Env {coreName}.params Interpretation.value => {functionName}{args}) =\n" ++
+      s!"      Denote.function (interp := Interpretation.value) {coreName} := by\n" ++
       s!"  unfold {namespace_}.Shallow.{functionName}\n" ++
       s!"  simp only [Denote.function, {coreName}, Denote.term, Core.Var.get" ++
       String.join (checks.map (", " ++ ·)) ++ "] <;> rfl\n\n"

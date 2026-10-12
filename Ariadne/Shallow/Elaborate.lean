@@ -1,5 +1,6 @@
 import Ariadne.Check
 import Ariadne.Shallow.Denote
+import Ariadne.Shallow.Declarations
 
 namespace Ariadne.Shallow.Elaborate
 open Core
@@ -37,12 +38,20 @@ def collectionKey (ty : Ariadne.Ty) (span : Span) : Checked Core.Key :=
   | .boolean => .ok .bool
   | _ => refusal "A5102" "collection keys require a scalar value representation" span
 
-def type (p : Program) (ty : Ariadne.Ty) (span : Span) : Checked Core.Ty := do
-  let ty ← Check.resolve 100 p ty
+def type (p : Program) (ty : Ariadne.Ty) (span : Span) : Checked Core.Ty :=
   convert 100 ty
 where
   convert : Nat → Ariadne.Ty → Checked Core.Ty
     | 0, _ => refusal "A5101" "type nesting budget exhausted" span
+    | n + 1, .named name => do
+      let some source := p.aliases.lookup name | refusal "A5102" "unknown type alias" span
+      match source with
+      | .record _ => return .named (← Declarations.info p name span).declaration
+      | .union a b =>
+        if a != .undefined && b != .undefined then
+          return .named (← Declarations.info p name span).declaration
+        convert n source
+      | _ => convert n source
     | _ + 1, .void | _ + 1, .undefined => .ok .unit
     | _ + 1, .bigint => .ok .int
     | _ + 1, .number => .ok .number
@@ -53,8 +62,8 @@ where
     | n + 1, .readonly t | n + 1, .fieldReadonly t => convert n t
     | n + 1, .array t | n + 1, .iterator t => return .list (← convert n t)
     | n + 1, .tuple [a, b] => return .pair (← convert n a) (← convert n b)
-    | n + 1, .map k v => return .map (← collectionKey k span) (← convert n v)
-    | _ + 1, .set k => return .set (← collectionKey k span)
+    | n + 1, .map k v => return .map (← collectionKey (← Check.resolve 100 p k) span) (← convert n v)
+    | _ + 1, .set k => return .set (← collectionKey (← Check.resolve 100 p k) span)
     | _, _ => refusal "A5102" "this type does not yet have an extraction representation" span
 
 def lookup : (ctx : Context) → String → Option ((t : Core.Ty) × Var (Types ctx) t)
@@ -80,6 +89,8 @@ def sourceType : Core.Ty → Ariadne.Ty
   | .map k v => .map (keySourceType k) (sourceType v)
   | .set k => .set (keySourceType k)
   | .pair a b => .tuple [sourceType a, sourceType b]
+  | .sum a b => .union (sourceType a) (sourceType b)
+  | .named declaration => .named declaration.name
   | .fn a b => .function [sourceType a] (sourceType b)
   | .step .. | .exit .. => .void -- Internal control types are never source bindings.
 
@@ -91,12 +102,18 @@ def callbackResult (p : Program) (fuel : Nat) (ctx : Context) (fn : Expr) : Chec
   let .lambda params body span := fn | refusal "A5104" "expected a literal callback" fn.span
   let bindings ← (params.mapM fun param => do
     return ({ name := param.name, ty := ← Check.resolve 100 p param.ty, mutable := true } : Check.Binding))
-  let captured := ctx.map fun b => ({ name := b.name, ty := sourceType b.ty, declared := some (sourceType b.declared), mutable := true } : Check.Binding)
+  let captured ← ctx.mapM fun b => do
+    let ty ← Check.resolve 100 p (sourceType b.ty)
+    let declared ← Check.resolve 100 p (sourceType b.declared)
+    pure ({ name := b.name, ty, declared := some declared, mutable := true } : Check.Binding)
   let result ← Check.inferCallback fuel { program := p, bindings := bindings ++ captured } body
   type p result span
 
 def expressionResult (p : Program) (fuel : Nat) (ctx : Context) (expr : Expr) : Checked Core.Ty := do
-  let bindings := ctx.map fun b => ({ name := b.name, ty := sourceType b.ty, declared := some (sourceType b.declared), mutable := true } : Check.Binding)
+  let bindings ← ctx.mapM fun b => do
+    let ty ← Check.resolve 100 p (sourceType b.ty)
+    let declared ← Check.resolve 100 p (sourceType b.declared)
+    pure ({ name := b.name, ty, declared := some declared, mutable := true } : Check.Binding)
   type p (← Check.infer fuel { program := p, bindings } expr) expr.span
 
 def cast (t : Core.Ty) (value : Typed ctx) (span : Span) : Checked (Term (Types ctx) t) :=
@@ -117,6 +134,15 @@ def iterable (value : Typed ctx) (span : Span) : Checked (Typed ctx) :=
   | ⟨.map k v, m⟩ => .ok ⟨.list (.pair k.type v), .unary .mapEntries m⟩
   | ⟨.set k, s⟩ => .ok ⟨.list k.type, .unary .setValues s⟩
   | _ => refusal "A5102" "this value has no iterable representation" span
+
+def recordField (name : String) (span : Span) : List (String × Ariadne.Ty) → Typed ctx → Checked (Typed ctx)
+  | (field, source) :: fields, ⟨.pair a b, value⟩ =>
+    if name == field then
+      match Declarations.fixedString source with
+      | some literal => .ok ⟨.string, .string literal⟩
+      | none => .ok ⟨a, .fst value⟩
+    else recordField name span fields ⟨b, .snd value⟩
+  | _, _ => refusal "A5102" "unknown field or invalid named record shape" span
 
 def arithmetic (op : String) (a b : Typed ctx) (span : Span) : Checked (Typed ctx) := do
   match a with
@@ -288,16 +314,23 @@ mutual
             pure t
           | _ => (expression p n ctx first).map Sigma.fst
         return ⟨.list element, ← elements p n ctx element xs⟩
-      | .member object "length" span =>
+      | .member object field span =>
         match ← expression p n ctx object with
-        | ⟨.list _, xs⟩ => return ⟨.number, .unary .length xs⟩
-        | ⟨.pair _ _, _⟩ => return ⟨.number, .number 2 0⟩
-        | _ => refusal "A5104" "this length operation has no lowering" span
-      | .member object "size" span =>
-        match ← expression p n ctx object with
-        | ⟨.map _ _, m⟩ => return ⟨.number, .unary .mapSize m⟩
-        | ⟨.set _, s⟩ => return ⟨.number, .unary .setSize s⟩
-        | _ => refusal "A5102" "size requires a Map or Set" span
+        | ⟨.named declaration, value⟩ =>
+          recordField field span (← Declarations.record p declaration span) ⟨_, .unpack value⟩
+        | ⟨.list _, xs⟩ =>
+          if field == "length" then return ⟨.number, .unary .length xs⟩
+          refusal "A5104" "this array property has no lowering" span
+        | ⟨.pair _ _, _⟩ =>
+          if field == "length" then return ⟨.number, .number 2 0⟩
+          refusal "A5104" "this tuple property has no lowering" span
+        | ⟨.map _ _, m⟩ =>
+          if field == "size" then return ⟨.number, .unary .mapSize m⟩
+          refusal "A5104" "this Map property has no lowering" span
+        | ⟨.set _, s⟩ =>
+          if field == "size" then return ⟨.number, .unary .setSize s⟩
+          refusal "A5104" "this Set property has no lowering" span
+        | _ => refusal "A5104" "this property has no shallow lowering" span
       | .index object index span =>
         match ← expression p n ctx object with
         | ⟨.list t, xs⟩ => return ⟨.option t, .binary .get xs (← asType p n ctx index .number)⟩
@@ -378,9 +411,32 @@ mutual
     | 0, _, _ => refusal "A5101" "expression nesting budget exhausted" expr.span
     | n + 1, t, .conditional c a b _ => do
       condition p n ctx c [.return_ a a.span] [.return_ b b.span] t
+    | n + 1, .named declaration, .record fields span => do
+      let target ← Declarations.record p declaration span
+      for (name, value) in fields do
+        if name == "" then refusal "A5102" "named record spread is not lowered yet" span
+        -- Every initializer must be in the total extraction fragment, including
+        -- extra source fields and fixed literal tags that carry no native data.
+        let _ ← expression p n ctx value
+      let fields := fields.foldl (fun out (name, value) =>
+        (out.filter (·.1 != name)) ++ [(name, value)]) []
+      return .pack declaration (← cast (Core.shapeType declaration.shape)
+        (← recordValue p n ctx fields target span) span)
     | n + 1, .list element, .array xs _ => elements p n ctx element xs
     | n + 1, .pair a b, .array [x, y] _ => do return .pair (← asType p n ctx x a) (← asType p n ctx y b)
     | n + 1, t, expr => do coerce t (← expression p n ctx expr) expr.span
+  def recordValue (p : Program) : Nat → (ctx : Context) → List (String × Expr) →
+      List (String × Ariadne.Ty) → Span → Checked (Typed ctx)
+    | 0, _, _, _, span => refusal "A5101" "record construction nesting budget exhausted" span
+    | _ + 1, _, _, [], _ => .ok ⟨.unit, .unit⟩
+    | n + 1, ctx, values, (name, source) :: fields, span => do
+      let ⟨tailType, tail⟩ ← recordValue p n ctx values fields span
+      let value := (values.lookup name).getD (.literal .undefined span)
+      if (Declarations.fixedString source).isSome then
+        return ⟨.pair .unit tailType, .pair .unit tail⟩
+      let fieldType := Core.shapeType (← Declarations.shape span 100 source)
+      return ⟨.pair fieldType tailType, .pair (← asType p n ctx value fieldType) tail⟩
+
   def tupleArgs (p : Program) (fuel : Nat) (ctx : Context) (t : Core.Ty) (args : List Expr)
       (span : Span) : Checked (Term (Types ctx) t) :=
     match fuel with

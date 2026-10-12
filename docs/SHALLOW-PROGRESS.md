@@ -73,7 +73,7 @@ Branch continuations are shared through typed tuple arguments. Array `for…of`,
 counted bigint loops, scalar switches, and nested break/continue/return lower to
 typed `Step`/`Exit` combinators. Maps and Sets have scalar keys, insertion-ordered
 iteration, reads, and locally owned updates. Owned array `push` becomes append.
-Named types, mutation through borrowed parameters, classes, number-valued counted
+Named records have lawful native representations. Tagged unions, mutation through borrowed parameters, classes, number-valued counted
 loops, and Int53 refinement are explicitly refused.
 This is an incremental M2 slice, not the M2 reference-program exit gate.
 
@@ -131,3 +131,14 @@ and preservation of readonly input heaps. The emitted histogram has universal
 fold, count, membership and permutation/lookup-equivalence proofs. Entry spreads
 copy fresh tuples with immutable members; copying nested mutable owners remains
 rejected. Shallow certificates are built serially to bound CI memory use.
+
+Named record extraction emits Lean structures, constructor/destructor functions,
+and both inverse laws. Named declarations include their canonical shape, and Core
+denotation plus the renaming/substitution theorems work for every lawful
+interpretation. Record extraction supports optional fields, fixed literal tags,
+callbacks over records, and lists of records. It preserves last-initializer-wins
+behavior and safely renames Lean-reserved field names. The new 19-case differential
+suite compares declared-field observations and checks that input heaps are
+preserved. Native proofs cover field preservation, update composition, sum
+permutation invariance, and first-match membership/floor properties. These remain
+native properties, without a shallow source-transfer claim.

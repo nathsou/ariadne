@@ -42,4 +42,5 @@ fi
 "$js" scripts/shallow-arrays.mjs
 "$js" scripts/shallow-loops.mjs
 "$js" scripts/shallow-collections.mjs
+"$js" scripts/shallow-records.mjs
 "$js" scripts/builtins.mjs

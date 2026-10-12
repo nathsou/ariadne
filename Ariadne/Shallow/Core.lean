@@ -1,7 +1,7 @@
 import Ariadne.Value
 import Ariadne.Shallow.Prelude.Loop
 import Ariadne.Shallow.Prelude.Array
-import Ariadne.Shallow.Key
+import Ariadne.Shallow.Named
 
 namespace Ariadne.Shallow.Core
 
@@ -14,6 +14,8 @@ inductive Ty where
   | map (key : Key) (value : Ty)
   | set (key : Key)
   | pair (left right : Ty)
+  | sum (left right : Ty)
+  | named (declaration : Named.Declaration)
   | fn (argument result : Ty)
   | step (state result : Ty)
   | exit (state result : Ty)
@@ -25,33 +27,54 @@ abbrev Key.type : Key → Ty
   | .string => .string
   | .bool => .bool
 
-abbrev Ty.denote : Ty → Type
+abbrev Ty.denote (t : Ty) (interp : Named.Interp := Named.canonical) : Type :=
+  match t with
   | .unit => Unit
   | .bool => Bool
   | .int => Int
   | .number => Float.Model
   | .string => JSString
-  | .option t => Option t.denote
-  | .list t => List t.denote
-  | .map k v => k.Map v.denote
+  | .option t => Option (t.denote interp)
+  | .list t => List (t.denote interp)
+  | .map k v => k.Map (v.denote interp)
   | .set k => k.Set
-  | .pair a b => a.denote × b.denote
-  | .fn a b => a.denote → b.denote
-  | .step s r => Step s.denote r.denote
-  | .exit s r => Exit s.denote r.denote
+  | .pair a b => a.denote interp × b.denote interp
+  | .sum a b => Sum (a.denote interp) (b.denote interp)
+  | .named declaration => (interp declaration).Native
+  | .fn a b => a.denote interp → b.denote interp
+  | .step s r => Step (s.denote interp) (r.denote interp)
+  | .exit s r => Exit (s.denote interp) (r.denote interp)
 
-abbrev Env : List Ty → Type
+abbrev Env (types : List Ty) (interp : Named.Interp := Named.canonical) : Type :=
+  match types with
   | [] => Unit
-  | t :: ts => t.denote × Env ts
+  | t :: ts => t.denote interp × Env ts interp
+
+def shapeType : Named.Shape → Ty
+  | .unit => .unit
+  | .bool => .bool
+  | .int => .int
+  | .number => .number
+  | .string => .string
+  | .option t => .option (shapeType t)
+  | .list t => .list (shapeType t)
+  | .map k v => .map k (shapeType v)
+  | .set k => .set k
+  | .pair a b => .pair (shapeType a) (shapeType b)
+  | .sum a b => .sum (shapeType a) (shapeType b)
+
+theorem shape_denote (shape : Named.Shape) (interp : Named.Interp) :
+    (shapeType shape).denote interp = shape.denote := by
+  induction shape <;> simp_all [shapeType, Ty.denote, Named.Shape.denote]
 
 inductive Var : List Ty → Ty → Type where
   | here : Var (t :: ts) t
   | there : Var ts t → Var (s :: ts) t
   deriving Repr
 
-def Var.get : Var ts t → Env ts → t.denote
+def Var.get {interp : Named.Interp} : Var ts t → Env ts interp → t.denote interp
   | .here, env => env.1
-  | .there v, env => v.get env.2
+  | .there v, env => v.get (interp := interp) env.2
 
 inductive Unary : Ty → Ty → Type where
   | not : Unary .bool .bool
@@ -123,6 +146,11 @@ inductive Term : List Ty → Ty → Type where
   | pair : Term Γ a → Term Γ b → Term Γ (.pair a b)
   | fst : Term Γ (.pair a b) → Term Γ a
   | snd : Term Γ (.pair a b) → Term Γ b
+  | inl : Term Γ a → Term Γ (.sum a b)
+  | inr : Term Γ b → Term Γ (.sum a b)
+  | sumCase : Term Γ (.sum a b) → Term (a :: Γ) c → Term (b :: Γ) c → Term Γ c
+  | pack (declaration : Named.Declaration) : Term Γ (shapeType declaration.shape) → Term Γ (.named declaration)
+  | unpack : Term Γ (.named declaration) → Term Γ (shapeType declaration.shape)
   | lam : String → Term (a :: Γ) b → Term Γ (.fn a b)
   | app : Term Γ (.fn a b) → Term Γ a → Term Γ b
   | closed : Term [] t → Term Γ t
@@ -169,6 +197,11 @@ def Term.rename (r : Renaming Γ Δ) : Term Γ t → Term Δ t
   | .pair a b => .pair (a.rename r) (b.rename r)
   | .fst a => .fst (a.rename r)
   | .snd a => .snd (a.rename r)
+  | .inl a => .inl (a.rename r)
+  | .inr a => .inr (a.rename r)
+  | .unpack a => .unpack (a.rename r)
+  | .sumCase a b c => .sumCase (a.rename r) (b.rename r.lift) (c.rename r.lift)
+  | .pack d a => .pack d (a.rename r)
   | .lam name body => .lam name (body.rename r.lift)
   | .app f a => .app (f.rename r) (a.rename r)
   | .closed body => .closed body
@@ -214,6 +247,11 @@ def Term.substitute (s : Substitution Γ Δ) : Term Γ t → Term Δ t
   | .pair a b => .pair (a.substitute s) (b.substitute s)
   | .fst a => .fst (a.substitute s)
   | .snd a => .snd (a.substitute s)
+  | .inl a => .inl (a.substitute s)
+  | .inr a => .inr (a.substitute s)
+  | .unpack a => .unpack (a.substitute s)
+  | .sumCase a b c => .sumCase (a.substitute s) (b.substitute s.lift) (c.substitute s.lift)
+  | .pack d a => .pack d (a.substitute s)
   | .lam name body => .lam name (body.substitute s.lift)
   | .app f a => .app (f.substitute s) (a.substitute s)
   | .closed body => .closed body

@@ -1512,6 +1512,10 @@ namespace Extracted_collections.Shallow
 open Ariadne Ariadne.Shallow
 set_option linter.unusedSimpArgs false
 
+def Interpretation.value : Named.Interp := Named.canonical
+
+theorem Interpretation.lawful : Named.Lawful Interpretation.value := Named.lawful _
+
 def JoinCore.«histogram#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (Ariadne.Shallow.Core.Ty.string)
   (Ariadne.Shallow.Core.Ty.fn
@@ -1535,7 +1539,7 @@ def JoinCore.«histogram#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (let «_counts#5» : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) := (_root_.Ariadne.Shallow.JSMap.set («_state#1»).1 «_x#0» ((_root_.Option.elim (_root_.Ariadne.Shallow.JSMap.get («_state#1»).1 «_x#0») (0 : _root_.Int) (fun «value#5» => «value#5»)) + (1 : _root_.Int)));
   («_#joinNext509#3» («_counts#5», (((«_state#1»).2).1, ())))))))))
 
-theorem JoinChecks.«histogram#0» : Denote.term JoinCore.«histogram#0» () = JoinNative.«histogram#0» := by
+theorem JoinChecks.«histogram#0» : Denote.term (interp := Interpretation.value) JoinCore.«histogram#0» () = JoinNative.«histogram#0» := by
   unfold Extracted_collections.Shallow.JoinNative.«histogram#0»
   simp only [JoinCore.«histogram#0», Denote.term, Core.Var.get] <;> rfl
 
@@ -1550,7 +1554,7 @@ def JoinCore.«histogram#1» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
 @[simp] def JoinNative.«histogram#1» : (((_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) × ((_root_.List _root_.Ariadne.JSString) × _root_.Unit)) → (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int)) :=
   (fun «_state#0» : ((_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) × ((_root_.List _root_.Ariadne.JSString) × _root_.Unit)) => («_state#0»).1)
 
-theorem JoinChecks.«histogram#1» : Denote.term JoinCore.«histogram#1» () = JoinNative.«histogram#1» := by
+theorem JoinChecks.«histogram#1» : Denote.term (interp := Interpretation.value) JoinCore.«histogram#1» () = JoinNative.«histogram#1» := by
   unfold Extracted_collections.Shallow.JoinNative.«histogram#1»
   simp only [JoinCore.«histogram#1», Denote.term, Core.Var.get, JoinChecks.«histogram#0»] <;> rfl
 
@@ -1559,13 +1563,13 @@ def CoreArtifacts.«histogram» : Core.Function := { params := [Ariadne.Shallow.
 theorem ElaborationChecks.«histogram» :
     Elaborate.function _root_.Extracted_collections.program "histogram" = .ok CoreArtifacts.«histogram» := by kernel_rfl
 
-def «histogram» («xs#arg» : (_root_.List _root_.Ariadne.JSString)) : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) :=
+def «histogram» («_xs#arg» : (_root_.List _root_.Ariadne.JSString)) : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) :=
   (let «_counts#0» : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) := _root_.Ariadne.Shallow.JSMap.empty;
-  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «xs#arg» («_counts#0», («xs#arg», ())) JoinNative.«histogram#0») JoinNative.«histogram#1» (fun «_result#1» : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) => «_result#1»)))
+  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «_xs#arg» («_counts#0», («_xs#arg», ())) JoinNative.«histogram#0») JoinNative.«histogram#1» (fun «_result#1» : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) => «_result#1»)))
 
 theorem DenotationChecks.«histogram» :
-    (fun env : Core.Env CoreArtifacts.«histogram».params => «histogram» (env.1)) =
-      Denote.function CoreArtifacts.«histogram» := by
+    (fun env : Core.Env CoreArtifacts.«histogram».params Interpretation.value => «histogram» (env.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«histogram» := by
   unfold Extracted_collections.Shallow.«histogram»
   simp only [Denote.function, CoreArtifacts.«histogram», Denote.term, Core.Var.get, JoinChecks.«histogram#0», JoinChecks.«histogram#1»] <;> rfl
 
@@ -1592,7 +1596,7 @@ def JoinCore.«ordered#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (let «_values#5» : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) := (_root_.Ariadne.Shallow.JSMap.set («_state#1»).1 «_x#0» (1 : _root_.Int));
   («_#joinNext509#3» («_values#5», (((«_state#1»).2).1, ())))))))))
 
-theorem JoinChecks.«ordered#0» : Denote.term JoinCore.«ordered#0» () = JoinNative.«ordered#0» := by
+theorem JoinChecks.«ordered#0» : Denote.term (interp := Interpretation.value) JoinCore.«ordered#0» () = JoinNative.«ordered#0» := by
   unfold Extracted_collections.Shallow.JoinNative.«ordered#0»
   simp only [JoinCore.«ordered#0», Denote.term, Core.Var.get] <;> rfl
 
@@ -1609,7 +1613,7 @@ def JoinCore.«ordered#1» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (let «_values#2» : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) := (_root_.Ariadne.Shallow.JSMap.set «_values#1» ([114, 101, 109, 111, 118, 101] : _root_.Ariadne.JSString) (2 : _root_.Int));
   ((_root_.Ariadne.Shallow.JSMap.keys «_values#2») ++ []))))
 
-theorem JoinChecks.«ordered#1» : Denote.term JoinCore.«ordered#1» () = JoinNative.«ordered#1» := by
+theorem JoinChecks.«ordered#1» : Denote.term (interp := Interpretation.value) JoinCore.«ordered#1» () = JoinNative.«ordered#1» := by
   unfold Extracted_collections.Shallow.JoinNative.«ordered#1»
   simp only [JoinCore.«ordered#1», Denote.term, Core.Var.get, JoinChecks.«ordered#0»] <;> rfl
 
@@ -1618,13 +1622,13 @@ def CoreArtifacts.«ordered» : Core.Function := { params := [Ariadne.Shallow.Co
 theorem ElaborationChecks.«ordered» :
     Elaborate.function _root_.Extracted_collections.program "ordered" = .ok CoreArtifacts.«ordered» := by kernel_rfl
 
-def «ordered» («xs#arg» : (_root_.List _root_.Ariadne.JSString)) : (_root_.List _root_.Ariadne.JSString) :=
+def «ordered» («_xs#arg» : (_root_.List _root_.Ariadne.JSString)) : (_root_.List _root_.Ariadne.JSString) :=
   (let «_values#0» : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) := _root_.Ariadne.Shallow.JSMap.empty;
-  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «xs#arg» («_values#0», («xs#arg», ())) JoinNative.«ordered#0») JoinNative.«ordered#1» (fun «_result#1» : (_root_.List _root_.Ariadne.JSString) => «_result#1»)))
+  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «_xs#arg» («_values#0», («_xs#arg», ())) JoinNative.«ordered#0») JoinNative.«ordered#1» (fun «_result#1» : (_root_.List _root_.Ariadne.JSString) => «_result#1»)))
 
 theorem DenotationChecks.«ordered» :
-    (fun env : Core.Env CoreArtifacts.«ordered».params => «ordered» (env.1)) =
-      Denote.function CoreArtifacts.«ordered» := by
+    (fun env : Core.Env CoreArtifacts.«ordered».params Interpretation.value => «ordered» (env.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«ordered» := by
   unfold Extracted_collections.Shallow.«ordered»
   simp only [Denote.function, CoreArtifacts.«ordered», Denote.term, Core.Var.get, JoinChecks.«ordered#0», JoinChecks.«ordered#1»] <;> rfl
 
@@ -1651,7 +1655,7 @@ def JoinCore.«numericSet#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (let «_values#5» : _root_.Ariadne.Shallow.NumberSet := (_root_.Ariadne.Shallow.NumberSet.add («_state#1»).1 «_x#0»);
   («_#joinNext509#3» («_values#5», (((«_state#1»).2).1, ())))))))))
 
-theorem JoinChecks.«numericSet#0» : Denote.term JoinCore.«numericSet#0» () = JoinNative.«numericSet#0» := by
+theorem JoinChecks.«numericSet#0» : Denote.term (interp := Interpretation.value) JoinCore.«numericSet#0» () = JoinNative.«numericSet#0» := by
   unfold Extracted_collections.Shallow.JoinNative.«numericSet#0»
   simp only [JoinCore.«numericSet#0», Denote.term, Core.Var.get] <;> rfl
 
@@ -1666,7 +1670,7 @@ def JoinCore.«numericSet#1» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
 @[simp] def JoinNative.«numericSet#1» : ((_root_.Ariadne.Shallow.NumberSet × ((_root_.List _root_.Float.Model) × _root_.Unit)) → (_root_.List _root_.Float.Model)) :=
   (fun «_state#0» : (_root_.Ariadne.Shallow.NumberSet × ((_root_.List _root_.Float.Model) × _root_.Unit)) => ((_root_.Ariadne.Shallow.NumberSet.values («_state#0»).1) ++ []))
 
-theorem JoinChecks.«numericSet#1» : Denote.term JoinCore.«numericSet#1» () = JoinNative.«numericSet#1» := by
+theorem JoinChecks.«numericSet#1» : Denote.term (interp := Interpretation.value) JoinCore.«numericSet#1» () = JoinNative.«numericSet#1» := by
   unfold Extracted_collections.Shallow.JoinNative.«numericSet#1»
   simp only [JoinCore.«numericSet#1», Denote.term, Core.Var.get, JoinChecks.«numericSet#0»] <;> rfl
 
@@ -1675,13 +1679,13 @@ def CoreArtifacts.«numericSet» : Core.Function := { params := [Ariadne.Shallow
 theorem ElaborationChecks.«numericSet» :
     Elaborate.function _root_.Extracted_collections.program "numericSet" = .ok CoreArtifacts.«numericSet» := by kernel_rfl
 
-def «numericSet» («xs#arg» : (_root_.List _root_.Float.Model)) : (_root_.List _root_.Float.Model) :=
+def «numericSet» («_xs#arg» : (_root_.List _root_.Float.Model)) : (_root_.List _root_.Float.Model) :=
   (let «_values#0» : _root_.Ariadne.Shallow.NumberSet := _root_.Ariadne.Shallow.NumberSet.empty;
-  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «xs#arg» («_values#0», («xs#arg», ())) JoinNative.«numericSet#0») JoinNative.«numericSet#1» (fun «_result#1» : (_root_.List _root_.Float.Model) => «_result#1»)))
+  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «_xs#arg» («_values#0», («_xs#arg», ())) JoinNative.«numericSet#0») JoinNative.«numericSet#1» (fun «_result#1» : (_root_.List _root_.Float.Model) => «_result#1»)))
 
 theorem DenotationChecks.«numericSet» :
-    (fun env : Core.Env CoreArtifacts.«numericSet».params => «numericSet» (env.1)) =
-      Denote.function CoreArtifacts.«numericSet» := by
+    (fun env : Core.Env CoreArtifacts.«numericSet».params Interpretation.value => «numericSet» (env.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«numericSet» := by
   unfold Extracted_collections.Shallow.«numericSet»
   simp only [Denote.function, CoreArtifacts.«numericSet», Denote.term, Core.Var.get, JoinChecks.«numericSet#0», JoinChecks.«numericSet#1»] <;> rfl
 
@@ -1708,7 +1712,7 @@ def JoinCore.«numericMap#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (let «_values#5» : (_root_.Ariadne.Shallow.NumberMap _root_.Int) := (_root_.Ariadne.Shallow.NumberMap.set («_state#1»).1 «_x#0» ((_root_.Option.elim (_root_.Ariadne.Shallow.NumberMap.get («_state#1»).1 «_x#0») (0 : _root_.Int) (fun «value#5» => «value#5»)) + (1 : _root_.Int)));
   («_#joinNext509#3» («_values#5», (((«_state#1»).2).1, ())))))))))
 
-theorem JoinChecks.«numericMap#0» : Denote.term JoinCore.«numericMap#0» () = JoinNative.«numericMap#0» := by
+theorem JoinChecks.«numericMap#0» : Denote.term (interp := Interpretation.value) JoinCore.«numericMap#0» () = JoinNative.«numericMap#0» := by
   unfold Extracted_collections.Shallow.JoinNative.«numericMap#0»
   simp only [JoinCore.«numericMap#0», Denote.term, Core.Var.get] <;> rfl
 
@@ -1723,7 +1727,7 @@ def JoinCore.«numericMap#1» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
 @[simp] def JoinNative.«numericMap#1» : (((_root_.Ariadne.Shallow.NumberMap _root_.Int) × ((_root_.List _root_.Float.Model) × _root_.Unit)) → (_root_.Ariadne.Shallow.NumberMap _root_.Int)) :=
   (fun «_state#0» : ((_root_.Ariadne.Shallow.NumberMap _root_.Int) × ((_root_.List _root_.Float.Model) × _root_.Unit)) => («_state#0»).1)
 
-theorem JoinChecks.«numericMap#1» : Denote.term JoinCore.«numericMap#1» () = JoinNative.«numericMap#1» := by
+theorem JoinChecks.«numericMap#1» : Denote.term (interp := Interpretation.value) JoinCore.«numericMap#1» () = JoinNative.«numericMap#1» := by
   unfold Extracted_collections.Shallow.JoinNative.«numericMap#1»
   simp only [JoinCore.«numericMap#1», Denote.term, Core.Var.get, JoinChecks.«numericMap#0»] <;> rfl
 
@@ -1732,13 +1736,13 @@ def CoreArtifacts.«numericMap» : Core.Function := { params := [Ariadne.Shallow
 theorem ElaborationChecks.«numericMap» :
     Elaborate.function _root_.Extracted_collections.program "numericMap" = .ok CoreArtifacts.«numericMap» := by kernel_rfl
 
-def «numericMap» («xs#arg» : (_root_.List _root_.Float.Model)) : (_root_.Ariadne.Shallow.NumberMap _root_.Int) :=
+def «numericMap» («_xs#arg» : (_root_.List _root_.Float.Model)) : (_root_.Ariadne.Shallow.NumberMap _root_.Int) :=
   (let «_values#0» : (_root_.Ariadne.Shallow.NumberMap _root_.Int) := _root_.Ariadne.Shallow.NumberMap.empty;
-  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «xs#arg» («_values#0», («xs#arg», ())) JoinNative.«numericMap#0») JoinNative.«numericMap#1» (fun «_result#1» : (_root_.Ariadne.Shallow.NumberMap _root_.Int) => «_result#1»)))
+  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «_xs#arg» («_values#0», («_xs#arg», ())) JoinNative.«numericMap#0») JoinNative.«numericMap#1» (fun «_result#1» : (_root_.Ariadne.Shallow.NumberMap _root_.Int) => «_result#1»)))
 
 theorem DenotationChecks.«numericMap» :
-    (fun env : Core.Env CoreArtifacts.«numericMap».params => «numericMap» (env.1)) =
-      Denote.function CoreArtifacts.«numericMap» := by
+    (fun env : Core.Env CoreArtifacts.«numericMap».params Interpretation.value => «numericMap» (env.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«numericMap» := by
   unfold Extracted_collections.Shallow.«numericMap»
   simp only [Denote.function, CoreArtifacts.«numericMap», Denote.term, Core.Var.get, JoinChecks.«numericMap#0», JoinChecks.«numericMap#1»] <;> rfl
 
@@ -1765,7 +1769,7 @@ def JoinCore.«flags#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (let «_values#5» : (_root_.Ariadne.Shallow.JSMap _root_.Bool _root_.Int) := (_root_.Ariadne.Shallow.JSMap.set («_state#1»).1 «_x#0» ((_root_.Option.elim (_root_.Ariadne.Shallow.JSMap.get («_state#1»).1 «_x#0») (0 : _root_.Int) (fun «value#5» => «value#5»)) + (1 : _root_.Int)));
   («_#joinNext509#3» («_values#5», (((«_state#1»).2).1, ())))))))))
 
-theorem JoinChecks.«flags#0» : Denote.term JoinCore.«flags#0» () = JoinNative.«flags#0» := by
+theorem JoinChecks.«flags#0» : Denote.term (interp := Interpretation.value) JoinCore.«flags#0» () = JoinNative.«flags#0» := by
   unfold Extracted_collections.Shallow.JoinNative.«flags#0»
   simp only [JoinCore.«flags#0», Denote.term, Core.Var.get] <;> rfl
 
@@ -1780,7 +1784,7 @@ def JoinCore.«flags#1» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
 @[simp] def JoinNative.«flags#1» : (((_root_.Ariadne.Shallow.JSMap _root_.Bool _root_.Int) × ((_root_.List _root_.Bool) × _root_.Unit)) → _root_.Int) :=
   (fun «_state#0» : ((_root_.Ariadne.Shallow.JSMap _root_.Bool _root_.Int) × ((_root_.List _root_.Bool) × _root_.Unit)) => (_root_.Option.elim (_root_.Ariadne.Shallow.JSMap.get («_state#0»).1 true) (0 : _root_.Int) (fun «value#1» => «value#1»)))
 
-theorem JoinChecks.«flags#1» : Denote.term JoinCore.«flags#1» () = JoinNative.«flags#1» := by
+theorem JoinChecks.«flags#1» : Denote.term (interp := Interpretation.value) JoinCore.«flags#1» () = JoinNative.«flags#1» := by
   unfold Extracted_collections.Shallow.JoinNative.«flags#1»
   simp only [JoinCore.«flags#1», Denote.term, Core.Var.get, JoinChecks.«flags#0»] <;> rfl
 
@@ -1789,13 +1793,13 @@ def CoreArtifacts.«flags» : Core.Function := { params := [Ariadne.Shallow.Core
 theorem ElaborationChecks.«flags» :
     Elaborate.function _root_.Extracted_collections.program "flags" = .ok CoreArtifacts.«flags» := by kernel_rfl
 
-def «flags» («xs#arg» : (_root_.List _root_.Bool)) : _root_.Int :=
+def «flags» («_xs#arg» : (_root_.List _root_.Bool)) : _root_.Int :=
   (let «_values#0» : (_root_.Ariadne.Shallow.JSMap _root_.Bool _root_.Int) := _root_.Ariadne.Shallow.JSMap.empty;
-  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «xs#arg» («_values#0», («xs#arg», ())) JoinNative.«flags#0») JoinNative.«flags#1» (fun «_result#1» : _root_.Int => «_result#1»)))
+  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «_xs#arg» («_values#0», («_xs#arg», ())) JoinNative.«flags#0») JoinNative.«flags#1» (fun «_result#1» : _root_.Int => «_result#1»)))
 
 theorem DenotationChecks.«flags» :
-    (fun env : Core.Env CoreArtifacts.«flags».params => «flags» (env.1)) =
-      Denote.function CoreArtifacts.«flags» := by
+    (fun env : Core.Env CoreArtifacts.«flags».params Interpretation.value => «flags» (env.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«flags» := by
   unfold Extracted_collections.Shallow.«flags»
   simp only [Denote.function, CoreArtifacts.«flags», Denote.term, Core.Var.get, JoinChecks.«flags#0», JoinChecks.«flags#1»] <;> rfl
 
@@ -1822,7 +1826,7 @@ def JoinCore.«unique#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (let «_values#5» : (_root_.Ariadne.Shallow.JSSet _root_.Int) := (_root_.Ariadne.Shallow.JSSet.add («_state#1»).1 «_x#0»);
   («_#joinNext509#3» («_values#5», (((«_state#1»).2).1, ((((«_state#1»).2).2).1, ()))))))))))
 
-theorem JoinChecks.«unique#0» : Denote.term JoinCore.«unique#0» () = JoinNative.«unique#0» := by
+theorem JoinChecks.«unique#0» : Denote.term (interp := Interpretation.value) JoinCore.«unique#0» () = JoinNative.«unique#0» := by
   unfold Extracted_collections.Shallow.JoinNative.«unique#0»
   simp only [JoinCore.«unique#0», Denote.term, Core.Var.get] <;> rfl
 
@@ -1838,7 +1842,7 @@ def JoinCore.«unique#1» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (fun «_state#0» : ((_root_.Ariadne.Shallow.JSSet _root_.Int) × ((_root_.List _root_.Int) × (_root_.Int × _root_.Unit))) => (let «_values#1» : (_root_.Ariadne.Shallow.JSSet _root_.Int) := (_root_.Ariadne.Shallow.JSSet.delete («_state#0»).1 (((«_state#0»).2).2).1);
   ((_root_.Ariadne.Shallow.JSSet.values «_values#1») ++ [])))
 
-theorem JoinChecks.«unique#1» : Denote.term JoinCore.«unique#1» () = JoinNative.«unique#1» := by
+theorem JoinChecks.«unique#1» : Denote.term (interp := Interpretation.value) JoinCore.«unique#1» () = JoinNative.«unique#1» := by
   unfold Extracted_collections.Shallow.JoinNative.«unique#1»
   simp only [JoinCore.«unique#1», Denote.term, Core.Var.get, JoinChecks.«unique#0»] <;> rfl
 
@@ -1847,13 +1851,13 @@ def CoreArtifacts.«unique» : Core.Function := { params := [Ariadne.Shallow.Cor
 theorem ElaborationChecks.«unique» :
     Elaborate.function _root_.Extracted_collections.program "unique" = .ok CoreArtifacts.«unique» := by kernel_rfl
 
-def «unique» («xs#arg» : (_root_.List _root_.Int)) («remove#arg» : _root_.Int) : (_root_.List _root_.Int) :=
+def «unique» («_xs#arg» : (_root_.List _root_.Int)) («_remove#arg» : _root_.Int) : (_root_.List _root_.Int) :=
   (let «_values#0» : (_root_.Ariadne.Shallow.JSSet _root_.Int) := _root_.Ariadne.Shallow.JSSet.empty;
-  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «xs#arg» («_values#0», («xs#arg», («remove#arg», ()))) JoinNative.«unique#0») JoinNative.«unique#1» (fun «_result#1» : (_root_.List _root_.Int) => «_result#1»)))
+  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «_xs#arg» («_values#0», («_xs#arg», («_remove#arg», ()))) JoinNative.«unique#0») JoinNative.«unique#1» (fun «_result#1» : (_root_.List _root_.Int) => «_result#1»)))
 
 theorem DenotationChecks.«unique» :
-    (fun env : Core.Env CoreArtifacts.«unique».params => «unique» (env.1) (env.2.1)) =
-      Denote.function CoreArtifacts.«unique» := by
+    (fun env : Core.Env CoreArtifacts.«unique».params Interpretation.value => «unique» (env.1) (env.2.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«unique» := by
   unfold Extracted_collections.Shallow.«unique»
   simp only [Denote.function, CoreArtifacts.«unique», Denote.term, Core.Var.get, JoinChecks.«unique#0», JoinChecks.«unique#1»] <;> rfl
 
@@ -1880,7 +1884,7 @@ def JoinCore.«entries#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (let «_values#5» : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) := (_root_.Ariadne.Shallow.JSMap.set («_state#1»).1 «_x#0» ((_root_.Option.elim (_root_.Ariadne.Shallow.JSMap.get («_state#1»).1 «_x#0») (0 : _root_.Int) (fun «value#5» => «value#5»)) + (1 : _root_.Int)));
   («_#joinNext509#3» («_values#5», (((«_state#1»).2).1, ())))))))))
 
-theorem JoinChecks.«entries#0» : Denote.term JoinCore.«entries#0» () = JoinNative.«entries#0» := by
+theorem JoinChecks.«entries#0» : Denote.term (interp := Interpretation.value) JoinCore.«entries#0» () = JoinNative.«entries#0» := by
   unfold Extracted_collections.Shallow.JoinNative.«entries#0»
   simp only [JoinCore.«entries#0», Denote.term, Core.Var.get] <;> rfl
 
@@ -1955,7 +1959,7 @@ def JoinCore.«entries#1» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
 @[simp] def JoinNative.«entries#1» : ((((_root_.Int × ((_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) × ((_root_.List _root_.Ariadne.JSString) × _root_.Unit))) → (_root_.Ariadne.Shallow.Step (_root_.Int × ((_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) × ((_root_.List _root_.Ariadne.JSString) × _root_.Unit))) _root_.Int)) × (((_root_.Int × ((_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) × ((_root_.List _root_.Ariadne.JSString) × _root_.Unit))) → (_root_.Ariadne.Shallow.Step (_root_.Int × ((_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) × ((_root_.List _root_.Ariadne.JSString) × _root_.Unit))) _root_.Int)) × ((_root_.Int → (_root_.Ariadne.Shallow.Step (_root_.Int × ((_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) × ((_root_.List _root_.Ariadne.JSString) × _root_.Unit))) _root_.Int)) × ((_root_.Ariadne.JSString × _root_.Int) × (_root_.Int × ((_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) × ((_root_.List _root_.Ariadne.JSString) × _root_.Unit))))))) → (_root_.Ariadne.Shallow.Step (_root_.Int × ((_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) × ((_root_.List _root_.Ariadne.JSString) × _root_.Unit))) _root_.Int)) :=
   (fun «_state#0» : (((_root_.Int × ((_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) × ((_root_.List _root_.Ariadne.JSString) × _root_.Unit))) → (_root_.Ariadne.Shallow.Step (_root_.Int × ((_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) × ((_root_.List _root_.Ariadne.JSString) × _root_.Unit))) _root_.Int)) × (((_root_.Int × ((_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) × ((_root_.List _root_.Ariadne.JSString) × _root_.Unit))) → (_root_.Ariadne.Shallow.Step (_root_.Int × ((_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) × ((_root_.List _root_.Ariadne.JSString) × _root_.Unit))) _root_.Int)) × ((_root_.Int → (_root_.Ariadne.Shallow.Step (_root_.Int × ((_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) × ((_root_.List _root_.Ariadne.JSString) × _root_.Unit))) _root_.Int)) × ((_root_.Ariadne.JSString × _root_.Int) × (_root_.Int × ((_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) × ((_root_.List _root_.Ariadne.JSString) × _root_.Unit))))))) => (((«_state#0»).2).1 ((((((«_state#0»).2).2).2).2).1, (((((((«_state#0»).2).2).2).2).2).1, ((((((((«_state#0»).2).2).2).2).2).2).1, ())))))
 
-theorem JoinChecks.«entries#1» : Denote.term JoinCore.«entries#1» () = JoinNative.«entries#1» := by
+theorem JoinChecks.«entries#1» : Denote.term (interp := Interpretation.value) JoinCore.«entries#1» () = JoinNative.«entries#1» := by
   unfold Extracted_collections.Shallow.JoinNative.«entries#1»
   simp only [JoinCore.«entries#1», Denote.term, Core.Var.get, JoinChecks.«entries#0»] <;> rfl
 
@@ -1990,7 +1994,7 @@ def JoinCore.«entries#2» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   else
   («_join#5» («_#joinStop507#4», («_#joinNext507#3», («_#internalReturn507#2», («_entry#0», ((«_state#1»).1, (((«_state#1»).2).1, ((((«_state#1»).2).2).1, ())))))))))))))))
 
-theorem JoinChecks.«entries#2» : Denote.term JoinCore.«entries#2» () = JoinNative.«entries#2» := by
+theorem JoinChecks.«entries#2» : Denote.term (interp := Interpretation.value) JoinCore.«entries#2» () = JoinNative.«entries#2» := by
   unfold Extracted_collections.Shallow.JoinNative.«entries#2»
   simp only [JoinCore.«entries#2», Denote.term, Core.Var.get, JoinChecks.«entries#0», JoinChecks.«entries#1»] <;> rfl
 
@@ -2007,7 +2011,7 @@ def JoinCore.«entries#3» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
 @[simp] def JoinNative.«entries#3» : ((_root_.Int × ((_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) × ((_root_.List _root_.Ariadne.JSString) × _root_.Unit))) → _root_.Int) :=
   (fun «_state#0» : (_root_.Int × ((_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) × ((_root_.List _root_.Ariadne.JSString) × _root_.Unit))) => («_state#0»).1)
 
-theorem JoinChecks.«entries#3» : Denote.term JoinCore.«entries#3» () = JoinNative.«entries#3» := by
+theorem JoinChecks.«entries#3» : Denote.term (interp := Interpretation.value) JoinCore.«entries#3» () = JoinNative.«entries#3» := by
   unfold Extracted_collections.Shallow.JoinNative.«entries#3»
   simp only [JoinCore.«entries#3», Denote.term, Core.Var.get, JoinChecks.«entries#0», JoinChecks.«entries#1», JoinChecks.«entries#2»] <;> rfl
 
@@ -2023,7 +2027,7 @@ def JoinCore.«entries#4» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (fun «_state#0» : ((_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) × ((_root_.List _root_.Ariadne.JSString) × _root_.Unit)) => (let «_total#1» : _root_.Int := (0 : _root_.Int);
   (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each (_root_.Ariadne.Shallow.JSMap.entries («_state#0»).1) («_total#1», ((«_state#0»).1, (((«_state#0»).2).1, ()))) JoinNative.«entries#2») JoinNative.«entries#3» (fun «_result#2» : _root_.Int => «_result#2»))))
 
-theorem JoinChecks.«entries#4» : Denote.term JoinCore.«entries#4» () = JoinNative.«entries#4» := by
+theorem JoinChecks.«entries#4» : Denote.term (interp := Interpretation.value) JoinCore.«entries#4» () = JoinNative.«entries#4» := by
   unfold Extracted_collections.Shallow.JoinNative.«entries#4»
   simp only [JoinCore.«entries#4», Denote.term, Core.Var.get, JoinChecks.«entries#0», JoinChecks.«entries#1», JoinChecks.«entries#2», JoinChecks.«entries#3»] <;> rfl
 
@@ -2032,13 +2036,13 @@ def CoreArtifacts.«entries» : Core.Function := { params := [Ariadne.Shallow.Co
 theorem ElaborationChecks.«entries» :
     Elaborate.function _root_.Extracted_collections.program "entries" = .ok CoreArtifacts.«entries» := by kernel_rfl
 
-def «entries» («xs#arg» : (_root_.List _root_.Ariadne.JSString)) : _root_.Int :=
+def «entries» («_xs#arg» : (_root_.List _root_.Ariadne.JSString)) : _root_.Int :=
   (let «_values#0» : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) := _root_.Ariadne.Shallow.JSMap.empty;
-  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «xs#arg» («_values#0», («xs#arg», ())) JoinNative.«entries#0») JoinNative.«entries#4» (fun «_result#1» : _root_.Int => «_result#1»)))
+  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «_xs#arg» («_values#0», («_xs#arg», ())) JoinNative.«entries#0») JoinNative.«entries#4» (fun «_result#1» : _root_.Int => «_result#1»)))
 
 theorem DenotationChecks.«entries» :
-    (fun env : Core.Env CoreArtifacts.«entries».params => «entries» (env.1)) =
-      Denote.function CoreArtifacts.«entries» := by
+    (fun env : Core.Env CoreArtifacts.«entries».params Interpretation.value => «entries» (env.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«entries» := by
   unfold Extracted_collections.Shallow.«entries»
   simp only [Denote.function, CoreArtifacts.«entries», Denote.term, Core.Var.get, JoinChecks.«entries#0», JoinChecks.«entries#1», JoinChecks.«entries#2», JoinChecks.«entries#3», JoinChecks.«entries#4»] <;> rfl
 
@@ -2065,7 +2069,7 @@ def JoinCore.«setEntries#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (let «_values#5» : (_root_.Ariadne.Shallow.JSSet _root_.Int) := (_root_.Ariadne.Shallow.JSSet.add («_state#1»).1 «_x#0»);
   («_#joinNext509#3» («_values#5», (((«_state#1»).2).1, ())))))))))
 
-theorem JoinChecks.«setEntries#0» : Denote.term JoinCore.«setEntries#0» () = JoinNative.«setEntries#0» := by
+theorem JoinChecks.«setEntries#0» : Denote.term (interp := Interpretation.value) JoinCore.«setEntries#0» () = JoinNative.«setEntries#0» := by
   unfold Extracted_collections.Shallow.JoinNative.«setEntries#0»
   simp only [JoinCore.«setEntries#0», Denote.term, Core.Var.get] <;> rfl
 
@@ -2096,7 +2100,7 @@ def JoinCore.«setEntries#1» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (let «_total#5» : _root_.Int := ((«_state#1»).1 + ((«_entry#0»).1 + («_entry#0»).2));
   («_#joinNext507#3» («_total#5», (((«_state#1»).2).1, ((((«_state#1»).2).2).1, ()))))))))))
 
-theorem JoinChecks.«setEntries#1» : Denote.term JoinCore.«setEntries#1» () = JoinNative.«setEntries#1» := by
+theorem JoinChecks.«setEntries#1» : Denote.term (interp := Interpretation.value) JoinCore.«setEntries#1» () = JoinNative.«setEntries#1» := by
   unfold Extracted_collections.Shallow.JoinNative.«setEntries#1»
   simp only [JoinCore.«setEntries#1», Denote.term, Core.Var.get, JoinChecks.«setEntries#0»] <;> rfl
 
@@ -2113,7 +2117,7 @@ def JoinCore.«setEntries#2» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
 @[simp] def JoinNative.«setEntries#2» : ((_root_.Int × ((_root_.Ariadne.Shallow.JSSet _root_.Int) × ((_root_.List _root_.Int) × _root_.Unit))) → _root_.Int) :=
   (fun «_state#0» : (_root_.Int × ((_root_.Ariadne.Shallow.JSSet _root_.Int) × ((_root_.List _root_.Int) × _root_.Unit))) => («_state#0»).1)
 
-theorem JoinChecks.«setEntries#2» : Denote.term JoinCore.«setEntries#2» () = JoinNative.«setEntries#2» := by
+theorem JoinChecks.«setEntries#2» : Denote.term (interp := Interpretation.value) JoinCore.«setEntries#2» () = JoinNative.«setEntries#2» := by
   unfold Extracted_collections.Shallow.JoinNative.«setEntries#2»
   simp only [JoinCore.«setEntries#2», Denote.term, Core.Var.get, JoinChecks.«setEntries#0», JoinChecks.«setEntries#1»] <;> rfl
 
@@ -2129,7 +2133,7 @@ def JoinCore.«setEntries#3» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (fun «_state#0» : ((_root_.Ariadne.Shallow.JSSet _root_.Int) × ((_root_.List _root_.Int) × _root_.Unit)) => (let «_total#1» : _root_.Int := (0 : _root_.Int);
   (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each (_root_.Ariadne.Shallow.JSSet.entries («_state#0»).1) («_total#1», ((«_state#0»).1, (((«_state#0»).2).1, ()))) JoinNative.«setEntries#1») JoinNative.«setEntries#2» (fun «_result#2» : _root_.Int => «_result#2»))))
 
-theorem JoinChecks.«setEntries#3» : Denote.term JoinCore.«setEntries#3» () = JoinNative.«setEntries#3» := by
+theorem JoinChecks.«setEntries#3» : Denote.term (interp := Interpretation.value) JoinCore.«setEntries#3» () = JoinNative.«setEntries#3» := by
   unfold Extracted_collections.Shallow.JoinNative.«setEntries#3»
   simp only [JoinCore.«setEntries#3», Denote.term, Core.Var.get, JoinChecks.«setEntries#0», JoinChecks.«setEntries#1», JoinChecks.«setEntries#2»] <;> rfl
 
@@ -2138,13 +2142,13 @@ def CoreArtifacts.«setEntries» : Core.Function := { params := [Ariadne.Shallow
 theorem ElaborationChecks.«setEntries» :
     Elaborate.function _root_.Extracted_collections.program "setEntries" = .ok CoreArtifacts.«setEntries» := by kernel_rfl
 
-def «setEntries» («xs#arg» : (_root_.List _root_.Int)) : _root_.Int :=
+def «setEntries» («_xs#arg» : (_root_.List _root_.Int)) : _root_.Int :=
   (let «_values#0» : (_root_.Ariadne.Shallow.JSSet _root_.Int) := _root_.Ariadne.Shallow.JSSet.empty;
-  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «xs#arg» («_values#0», («xs#arg», ())) JoinNative.«setEntries#0») JoinNative.«setEntries#3» (fun «_result#1» : _root_.Int => «_result#1»)))
+  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «_xs#arg» («_values#0», («_xs#arg», ())) JoinNative.«setEntries#0») JoinNative.«setEntries#3» (fun «_result#1» : _root_.Int => «_result#1»)))
 
 theorem DenotationChecks.«setEntries» :
-    (fun env : Core.Env CoreArtifacts.«setEntries».params => «setEntries» (env.1)) =
-      Denote.function CoreArtifacts.«setEntries» := by
+    (fun env : Core.Env CoreArtifacts.«setEntries».params Interpretation.value => «setEntries» (env.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«setEntries» := by
   unfold Extracted_collections.Shallow.«setEntries»
   simp only [Denote.function, CoreArtifacts.«setEntries», Denote.term, Core.Var.get, JoinChecks.«setEntries#0», JoinChecks.«setEntries#1», JoinChecks.«setEntries#2», JoinChecks.«setEntries#3»] <;> rfl
 
@@ -2174,7 +2178,7 @@ def JoinCore.«collect#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (let «_out#5» : (_root_.List _root_.Int) := ((«_state#1»).1 ++ ((«_x#0» + (1 : _root_.Int)) :: []));
   («_#joinNext509#3» («_out#5», (((«_state#1»).2).1, ()))))))))))
 
-theorem JoinChecks.«collect#0» : Denote.term JoinCore.«collect#0» () = JoinNative.«collect#0» := by
+theorem JoinChecks.«collect#0» : Denote.term (interp := Interpretation.value) JoinCore.«collect#0» () = JoinNative.«collect#0» := by
   unfold Extracted_collections.Shallow.JoinNative.«collect#0»
   simp only [JoinCore.«collect#0», Denote.term, Core.Var.get] <;> rfl
 
@@ -2189,7 +2193,7 @@ def JoinCore.«collect#1» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
 @[simp] def JoinNative.«collect#1» : (((_root_.List _root_.Int) × ((_root_.List _root_.Int) × _root_.Unit)) → (_root_.List _root_.Int)) :=
   (fun «_state#0» : ((_root_.List _root_.Int) × ((_root_.List _root_.Int) × _root_.Unit)) => («_state#0»).1)
 
-theorem JoinChecks.«collect#1» : Denote.term JoinCore.«collect#1» () = JoinNative.«collect#1» := by
+theorem JoinChecks.«collect#1» : Denote.term (interp := Interpretation.value) JoinCore.«collect#1» () = JoinNative.«collect#1» := by
   unfold Extracted_collections.Shallow.JoinNative.«collect#1»
   simp only [JoinCore.«collect#1», Denote.term, Core.Var.get, JoinChecks.«collect#0»] <;> rfl
 
@@ -2198,13 +2202,13 @@ def CoreArtifacts.«collect» : Core.Function := { params := [Ariadne.Shallow.Co
 theorem ElaborationChecks.«collect» :
     Elaborate.function _root_.Extracted_collections.program "collect" = .ok CoreArtifacts.«collect» := by kernel_rfl
 
-def «collect» («xs#arg» : (_root_.List _root_.Int)) : (_root_.List _root_.Int) :=
+def «collect» («_xs#arg» : (_root_.List _root_.Int)) : (_root_.List _root_.Int) :=
   (let «_out#0» : (_root_.List _root_.Int) := [];
-  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «xs#arg» («_out#0», («xs#arg», ())) JoinNative.«collect#0») JoinNative.«collect#1» (fun «_result#1» : (_root_.List _root_.Int) => «_result#1»)))
+  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «_xs#arg» («_out#0», («_xs#arg», ())) JoinNative.«collect#0») JoinNative.«collect#1» (fun «_result#1» : (_root_.List _root_.Int) => «_result#1»)))
 
 theorem DenotationChecks.«collect» :
-    (fun env : Core.Env CoreArtifacts.«collect».params => «collect» (env.1)) =
-      Denote.function CoreArtifacts.«collect» := by
+    (fun env : Core.Env CoreArtifacts.«collect».params Interpretation.value => «collect» (env.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«collect» := by
   unfold Extracted_collections.Shallow.«collect»
   simp only [Denote.function, CoreArtifacts.«collect», Denote.term, Core.Var.get, JoinChecks.«collect#0», JoinChecks.«collect#1»] <;> rfl
 
@@ -2236,7 +2240,7 @@ def JoinCore.«clear#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (let «_seen#6» : (_root_.Ariadne.Shallow.JSSet _root_.Ariadne.JSString) := (_root_.Ariadne.Shallow.JSSet.add («_state#1»).1 «_x#0»);
   («_#joinNext508#3» («_seen#6», («_values#5», ((((«_state#1»).2).2).1, (((((«_state#1»).2).2).2).1, ()))))))))))))
 
-theorem JoinChecks.«clear#0» : Denote.term JoinCore.«clear#0» () = JoinNative.«clear#0» := by
+theorem JoinChecks.«clear#0» : Denote.term (interp := Interpretation.value) JoinCore.«clear#0» () = JoinNative.«clear#0» := by
   unfold Extracted_collections.Shallow.JoinNative.«clear#0»
   simp only [JoinCore.«clear#0», Denote.term, Core.Var.get] <;> rfl
 
@@ -2253,7 +2257,7 @@ def JoinCore.«clear#1» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
 @[simp] def JoinNative.«clear#1» : (((_root_.Ariadne.Shallow.JSSet _root_.Ariadne.JSString) × ((_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) × ((_root_.List _root_.Ariadne.JSString) × (_root_.Bool × _root_.Unit)))) → _root_.Float.Model) :=
   (fun «_state#0» : ((_root_.Ariadne.Shallow.JSSet _root_.Ariadne.JSString) × ((_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) × ((_root_.List _root_.Ariadne.JSString) × (_root_.Bool × _root_.Unit)))) => ((_root_.Float.Model.ofNat (_root_.Ariadne.Shallow.JSMap.size ((«_state#0»).2).1)) + (_root_.Float.Model.ofNat (_root_.Ariadne.Shallow.JSSet.size («_state#0»).1))))
 
-theorem JoinChecks.«clear#1» : Denote.term JoinCore.«clear#1» () = JoinNative.«clear#1» := by
+theorem JoinChecks.«clear#1» : Denote.term (interp := Interpretation.value) JoinCore.«clear#1» () = JoinNative.«clear#1» := by
   unfold Extracted_collections.Shallow.JoinNative.«clear#1»
   simp only [JoinCore.«clear#1», Denote.term, Core.Var.get, JoinChecks.«clear#0»] <;> rfl
 
@@ -2276,7 +2280,7 @@ def JoinCore.«clear#2» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   else
   («_join#1» ((«_state#0»).1, (((«_state#0»).2).1, ((((«_state#0»).2).2).1, (((((«_state#0»).2).2).2).1, ()))))))))
 
-theorem JoinChecks.«clear#2» : Denote.term JoinCore.«clear#2» () = JoinNative.«clear#2» := by
+theorem JoinChecks.«clear#2» : Denote.term (interp := Interpretation.value) JoinCore.«clear#2» () = JoinNative.«clear#2» := by
   unfold Extracted_collections.Shallow.JoinNative.«clear#2»
   simp only [JoinCore.«clear#2», Denote.term, Core.Var.get, JoinChecks.«clear#0», JoinChecks.«clear#1»] <;> rfl
 
@@ -2285,14 +2289,14 @@ def CoreArtifacts.«clear» : Core.Function := { params := [Ariadne.Shallow.Core
 theorem ElaborationChecks.«clear» :
     Elaborate.function _root_.Extracted_collections.program "clear" = .ok CoreArtifacts.«clear» := by kernel_rfl
 
-def «clear» («xs#arg» : (_root_.List _root_.Ariadne.JSString)) («reset#arg» : _root_.Bool) : _root_.Float.Model :=
+def «clear» («_xs#arg» : (_root_.List _root_.Ariadne.JSString)) («_reset#arg» : _root_.Bool) : _root_.Float.Model :=
   (let «_values#0» : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) := _root_.Ariadne.Shallow.JSMap.empty;
   (let «_seen#1» : (_root_.Ariadne.Shallow.JSSet _root_.Ariadne.JSString) := _root_.Ariadne.Shallow.JSSet.empty;
-  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «xs#arg» («_seen#1», («_values#0», («xs#arg», («reset#arg», ())))) JoinNative.«clear#0») JoinNative.«clear#2» (fun «_result#2» : _root_.Float.Model => «_result#2»))))
+  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «_xs#arg» («_seen#1», («_values#0», («_xs#arg», («_reset#arg», ())))) JoinNative.«clear#0») JoinNative.«clear#2» (fun «_result#2» : _root_.Float.Model => «_result#2»))))
 
 theorem DenotationChecks.«clear» :
-    (fun env : Core.Env CoreArtifacts.«clear».params => «clear» (env.1) (env.2.1)) =
-      Denote.function CoreArtifacts.«clear» := by
+    (fun env : Core.Env CoreArtifacts.«clear».params Interpretation.value => «clear» (env.1) (env.2.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«clear» := by
   unfold Extracted_collections.Shallow.«clear»
   simp only [Denote.function, CoreArtifacts.«clear», Denote.term, Core.Var.get, JoinChecks.«clear#0», JoinChecks.«clear#1», JoinChecks.«clear#2»] <;> rfl
 
@@ -2301,12 +2305,12 @@ def CoreArtifacts.«read» : Core.Function := { params := [Ariadne.Shallow.Core.
 theorem ElaborationChecks.«read» :
     Elaborate.function _root_.Extracted_collections.program "read" = .ok CoreArtifacts.«read» := by kernel_rfl
 
-def «read» («values#arg» : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int)) («key#arg» : _root_.Ariadne.JSString) : (_root_.Option _root_.Int) :=
-  (_root_.Ariadne.Shallow.JSMap.get «values#arg» «key#arg»)
+def «read» («_values#arg» : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int)) («_key#arg» : _root_.Ariadne.JSString) : (_root_.Option _root_.Int) :=
+  (_root_.Ariadne.Shallow.JSMap.get «_values#arg» «_key#arg»)
 
 theorem DenotationChecks.«read» :
-    (fun env : Core.Env CoreArtifacts.«read».params => «read» (env.1) (env.2.1)) =
-      Denote.function CoreArtifacts.«read» := by
+    (fun env : Core.Env CoreArtifacts.«read».params Interpretation.value => «read» (env.1) (env.2.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«read» := by
   unfold Extracted_collections.Shallow.«read»
   simp only [Denote.function, CoreArtifacts.«read», Denote.term, Core.Var.get] <;> rfl
 
@@ -2319,7 +2323,7 @@ def JoinCore.«readDefault#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
 @[simp] def JoinNative.«readDefault#0» : ((_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) → (_root_.Ariadne.JSString → (_root_.Option _root_.Int))) :=
   (fun «_values#0» : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) => (fun «_key#1» : _root_.Ariadne.JSString => (_root_.Ariadne.Shallow.JSMap.get «_values#0» «_key#1»)))
 
-theorem JoinChecks.«readDefault#0» : Denote.term JoinCore.«readDefault#0» () = JoinNative.«readDefault#0» := by
+theorem JoinChecks.«readDefault#0» : Denote.term (interp := Interpretation.value) JoinCore.«readDefault#0» () = JoinNative.«readDefault#0» := by
   unfold Extracted_collections.Shallow.JoinNative.«readDefault#0»
   simp only [JoinCore.«readDefault#0», Denote.term, Core.Var.get] <;> rfl
 
@@ -2328,12 +2332,12 @@ def CoreArtifacts.«readDefault» : Core.Function := { params := [Ariadne.Shallo
 theorem ElaborationChecks.«readDefault» :
     Elaborate.function _root_.Extracted_collections.program "readDefault" = .ok CoreArtifacts.«readDefault» := by kernel_rfl
 
-def «readDefault» («values#arg» : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int)) («key#arg» : _root_.Ariadne.JSString) : _root_.Int :=
-  (_root_.Option.elim ((JoinNative.«readDefault#0» «values#arg») «key#arg») (9 : _root_.Int) (fun «value#0» => «value#0»))
+def «readDefault» («_values#arg» : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int)) («_key#arg» : _root_.Ariadne.JSString) : _root_.Int :=
+  (_root_.Option.elim ((JoinNative.«readDefault#0» «_values#arg») «_key#arg») (9 : _root_.Int) (fun «value#0» => «value#0»))
 
 theorem DenotationChecks.«readDefault» :
-    (fun env : Core.Env CoreArtifacts.«readDefault».params => «readDefault» (env.1) (env.2.1)) =
-      Denote.function CoreArtifacts.«readDefault» := by
+    (fun env : Core.Env CoreArtifacts.«readDefault».params Interpretation.value => «readDefault» (env.1) (env.2.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«readDefault» := by
   unfold Extracted_collections.Shallow.«readDefault»
   simp only [Denote.function, CoreArtifacts.«readDefault», Denote.term, Core.Var.get, JoinChecks.«readDefault#0»] <;> rfl
 
@@ -2364,7 +2368,7 @@ def JoinCore.«numericHas#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (let «_values#5» : _root_.Ariadne.Shallow.NumberSet := (_root_.Ariadne.Shallow.NumberSet.add («_state#1»).1 «_x#0»);
   («_#joinNext509#3» («_values#5», (((«_state#1»).2).1, ((((«_state#1»).2).2).1, (((((«_state#1»).2).2).2).1, ())))))))))))
 
-theorem JoinChecks.«numericHas#0» : Denote.term JoinCore.«numericHas#0» () = JoinNative.«numericHas#0» := by
+theorem JoinChecks.«numericHas#0» : Denote.term (interp := Interpretation.value) JoinCore.«numericHas#0» () = JoinNative.«numericHas#0» := by
   unfold Extracted_collections.Shallow.JoinNative.«numericHas#0»
   simp only [JoinCore.«numericHas#0», Denote.term, Core.Var.get] <;> rfl
 
@@ -2382,7 +2386,7 @@ def JoinCore.«numericHas#1» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (fun «_state#0» : (_root_.Ariadne.Shallow.NumberSet × ((_root_.List _root_.Float.Model) × (_root_.Float.Model × (_root_.Float.Model × _root_.Unit)))) => (let «_values#1» : _root_.Ariadne.Shallow.NumberSet := (_root_.Ariadne.Shallow.NumberSet.delete («_state#0»).1 (((«_state#0»).2).2).1);
   (_root_.Ariadne.Shallow.NumberSet.has «_values#1» ((((«_state#0»).2).2).2).1)))
 
-theorem JoinChecks.«numericHas#1» : Denote.term JoinCore.«numericHas#1» () = JoinNative.«numericHas#1» := by
+theorem JoinChecks.«numericHas#1» : Denote.term (interp := Interpretation.value) JoinCore.«numericHas#1» () = JoinNative.«numericHas#1» := by
   unfold Extracted_collections.Shallow.JoinNative.«numericHas#1»
   simp only [JoinCore.«numericHas#1», Denote.term, Core.Var.get, JoinChecks.«numericHas#0»] <;> rfl
 
@@ -2391,13 +2395,13 @@ def CoreArtifacts.«numericHas» : Core.Function := { params := [Ariadne.Shallow
 theorem ElaborationChecks.«numericHas» :
     Elaborate.function _root_.Extracted_collections.program "numericHas" = .ok CoreArtifacts.«numericHas» := by kernel_rfl
 
-def «numericHas» («xs#arg» : (_root_.List _root_.Float.Model)) («remove#arg» : _root_.Float.Model) («query#arg» : _root_.Float.Model) : _root_.Bool :=
+def «numericHas» («_xs#arg» : (_root_.List _root_.Float.Model)) («_remove#arg» : _root_.Float.Model) («_query#arg» : _root_.Float.Model) : _root_.Bool :=
   (let «_values#0» : _root_.Ariadne.Shallow.NumberSet := _root_.Ariadne.Shallow.NumberSet.empty;
-  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «xs#arg» («_values#0», («xs#arg», («remove#arg», («query#arg», ())))) JoinNative.«numericHas#0») JoinNative.«numericHas#1» (fun «_result#1» : _root_.Bool => «_result#1»)))
+  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «_xs#arg» («_values#0», («_xs#arg», («_remove#arg», («_query#arg», ())))) JoinNative.«numericHas#0») JoinNative.«numericHas#1» (fun «_result#1» : _root_.Bool => «_result#1»)))
 
 theorem DenotationChecks.«numericHas» :
-    (fun env : Core.Env CoreArtifacts.«numericHas».params => «numericHas» (env.1) (env.2.1) (env.2.2.1)) =
-      Denote.function CoreArtifacts.«numericHas» := by
+    (fun env : Core.Env CoreArtifacts.«numericHas».params Interpretation.value => «numericHas» (env.1) (env.2.1) (env.2.2.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«numericHas» := by
   unfold Extracted_collections.Shallow.«numericHas»
   simp only [Denote.function, CoreArtifacts.«numericHas», Denote.term, Core.Var.get, JoinChecks.«numericHas#0», JoinChecks.«numericHas#1»] <;> rfl
 
@@ -2424,7 +2428,7 @@ def JoinCore.«numericDelete#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (let «_values#5» : (_root_.Ariadne.Shallow.NumberMap _root_.Int) := (_root_.Ariadne.Shallow.NumberMap.set («_state#1»).1 «_x#0» (1 : _root_.Int));
   («_#joinNext509#3» («_values#5», (((«_state#1»).2).1, ((((«_state#1»).2).2).1, ()))))))))))
 
-theorem JoinChecks.«numericDelete#0» : Denote.term JoinCore.«numericDelete#0» () = JoinNative.«numericDelete#0» := by
+theorem JoinChecks.«numericDelete#0» : Denote.term (interp := Interpretation.value) JoinCore.«numericDelete#0» () = JoinNative.«numericDelete#0» := by
   unfold Extracted_collections.Shallow.JoinNative.«numericDelete#0»
   simp only [JoinCore.«numericDelete#0», Denote.term, Core.Var.get] <;> rfl
 
@@ -2440,7 +2444,7 @@ def JoinCore.«numericDelete#1» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (fun «_state#0» : ((_root_.Ariadne.Shallow.NumberMap _root_.Int) × ((_root_.List _root_.Float.Model) × (_root_.Float.Model × _root_.Unit))) => (let «_values#1» : (_root_.Ariadne.Shallow.NumberMap _root_.Int) := (_root_.Ariadne.Shallow.NumberMap.delete («_state#0»).1 (((«_state#0»).2).2).1);
   ((_root_.Ariadne.Shallow.NumberMap.keys «_values#1») ++ [])))
 
-theorem JoinChecks.«numericDelete#1» : Denote.term JoinCore.«numericDelete#1» () = JoinNative.«numericDelete#1» := by
+theorem JoinChecks.«numericDelete#1» : Denote.term (interp := Interpretation.value) JoinCore.«numericDelete#1» () = JoinNative.«numericDelete#1» := by
   unfold Extracted_collections.Shallow.JoinNative.«numericDelete#1»
   simp only [JoinCore.«numericDelete#1», Denote.term, Core.Var.get, JoinChecks.«numericDelete#0»] <;> rfl
 
@@ -2449,13 +2453,13 @@ def CoreArtifacts.«numericDelete» : Core.Function := { params := [Ariadne.Shal
 theorem ElaborationChecks.«numericDelete» :
     Elaborate.function _root_.Extracted_collections.program "numericDelete" = .ok CoreArtifacts.«numericDelete» := by kernel_rfl
 
-def «numericDelete» («xs#arg» : (_root_.List _root_.Float.Model)) («remove#arg» : _root_.Float.Model) : (_root_.List _root_.Float.Model) :=
+def «numericDelete» («_xs#arg» : (_root_.List _root_.Float.Model)) («_remove#arg» : _root_.Float.Model) : (_root_.List _root_.Float.Model) :=
   (let «_values#0» : (_root_.Ariadne.Shallow.NumberMap _root_.Int) := _root_.Ariadne.Shallow.NumberMap.empty;
-  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «xs#arg» («_values#0», («xs#arg», («remove#arg», ()))) JoinNative.«numericDelete#0») JoinNative.«numericDelete#1» (fun «_result#1» : (_root_.List _root_.Float.Model) => «_result#1»)))
+  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «_xs#arg» («_values#0», («_xs#arg», («_remove#arg», ()))) JoinNative.«numericDelete#0») JoinNative.«numericDelete#1» (fun «_result#1» : (_root_.List _root_.Float.Model) => «_result#1»)))
 
 theorem DenotationChecks.«numericDelete» :
-    (fun env : Core.Env CoreArtifacts.«numericDelete».params => «numericDelete» (env.1) (env.2.1)) =
-      Denote.function CoreArtifacts.«numericDelete» := by
+    (fun env : Core.Env CoreArtifacts.«numericDelete».params Interpretation.value => «numericDelete» (env.1) (env.2.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«numericDelete» := by
   unfold Extracted_collections.Shallow.«numericDelete»
   simp only [Denote.function, CoreArtifacts.«numericDelete», Denote.term, Core.Var.get, JoinChecks.«numericDelete#0», JoinChecks.«numericDelete#1»] <;> rfl
 
@@ -2464,15 +2468,15 @@ def CoreArtifacts.«nestedValues» : Core.Function := { params := [Ariadne.Shall
 theorem ElaborationChecks.«nestedValues» :
     Elaborate.function _root_.Extracted_collections.program "nestedValues" = .ok CoreArtifacts.«nestedValues» := by kernel_rfl
 
-def «nestedValues» («key#arg» : _root_.Ariadne.JSString) : (_root_.List _root_.Int) :=
+def «nestedValues» («_key#arg» : _root_.Ariadne.JSString) : (_root_.List _root_.Int) :=
   (let «_values#0» : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString (_root_.List _root_.Int)) := _root_.Ariadne.Shallow.JSMap.empty;
   (let «_values#1» : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString (_root_.List _root_.Int)) := (_root_.Ariadne.Shallow.JSMap.set «_values#0» ([97] : _root_.Ariadne.JSString) ((1 : _root_.Int) :: ((2 : _root_.Int) :: [])));
-  (let «_found#2» : (_root_.Option (_root_.List _root_.Int)) := (_root_.Ariadne.Shallow.JSMap.get «_values#1» «key#arg»);
+  (let «_found#2» : (_root_.Option (_root_.List _root_.Int)) := (_root_.Ariadne.Shallow.JSMap.get «_values#1» «_key#arg»);
   (_root_.Option.elim «_found#2» [] (fun «value#3» => «value#3»)))))
 
 theorem DenotationChecks.«nestedValues» :
-    (fun env : Core.Env CoreArtifacts.«nestedValues».params => «nestedValues» (env.1)) =
-      Denote.function CoreArtifacts.«nestedValues» := by
+    (fun env : Core.Env CoreArtifacts.«nestedValues».params Interpretation.value => «nestedValues» (env.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«nestedValues» := by
   unfold Extracted_collections.Shallow.«nestedValues»
   simp only [Denote.function, CoreArtifacts.«nestedValues», Denote.term, Core.Var.get] <;> rfl
 
@@ -2499,7 +2503,7 @@ def JoinCore.«entryValues#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (let «_values#5» : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) := (_root_.Ariadne.Shallow.JSMap.set («_state#1»).1 «_x#0» ((_root_.Option.elim (_root_.Ariadne.Shallow.JSMap.get («_state#1»).1 «_x#0») (0 : _root_.Int) (fun «value#5» => «value#5»)) + (1 : _root_.Int)));
   («_#joinNext509#3» («_values#5», (((«_state#1»).2).1, ())))))))))
 
-theorem JoinChecks.«entryValues#0» : Denote.term JoinCore.«entryValues#0» () = JoinNative.«entryValues#0» := by
+theorem JoinChecks.«entryValues#0» : Denote.term (interp := Interpretation.value) JoinCore.«entryValues#0» () = JoinNative.«entryValues#0» := by
   unfold Extracted_collections.Shallow.JoinNative.«entryValues#0»
   simp only [JoinCore.«entryValues#0», Denote.term, Core.Var.get] <;> rfl
 
@@ -2514,7 +2518,7 @@ def JoinCore.«entryValues#1» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
 @[simp] def JoinNative.«entryValues#1» : (((_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) × ((_root_.List _root_.Ariadne.JSString) × _root_.Unit)) → (_root_.List _root_.Int)) :=
   (fun «_state#0» : ((_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) × ((_root_.List _root_.Ariadne.JSString) × _root_.Unit)) => (_root_.Ariadne.Shallow.JSArray.map (fun «_entry#1» : (_root_.Ariadne.JSString × _root_.Int) => (fun «_#unused0#2» : _root_.Float.Model => («_entry#1»).2)) ((_root_.Ariadne.Shallow.JSMap.entries («_state#0»).1) ++ [])))
 
-theorem JoinChecks.«entryValues#1» : Denote.term JoinCore.«entryValues#1» () = JoinNative.«entryValues#1» := by
+theorem JoinChecks.«entryValues#1» : Denote.term (interp := Interpretation.value) JoinCore.«entryValues#1» () = JoinNative.«entryValues#1» := by
   unfold Extracted_collections.Shallow.JoinNative.«entryValues#1»
   simp only [JoinCore.«entryValues#1», Denote.term, Core.Var.get, JoinChecks.«entryValues#0»] <;> rfl
 
@@ -2523,13 +2527,13 @@ def CoreArtifacts.«entryValues» : Core.Function := { params := [Ariadne.Shallo
 theorem ElaborationChecks.«entryValues» :
     Elaborate.function _root_.Extracted_collections.program "entryValues" = .ok CoreArtifacts.«entryValues» := by kernel_rfl
 
-def «entryValues» («xs#arg» : (_root_.List _root_.Ariadne.JSString)) : (_root_.List _root_.Int) :=
+def «entryValues» («_xs#arg» : (_root_.List _root_.Ariadne.JSString)) : (_root_.List _root_.Int) :=
   (let «_values#0» : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) := _root_.Ariadne.Shallow.JSMap.empty;
-  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «xs#arg» («_values#0», («xs#arg», ())) JoinNative.«entryValues#0») JoinNative.«entryValues#1» (fun «_result#1» : (_root_.List _root_.Int) => «_result#1»)))
+  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «_xs#arg» («_values#0», («_xs#arg», ())) JoinNative.«entryValues#0») JoinNative.«entryValues#1» (fun «_result#1» : (_root_.List _root_.Int) => «_result#1»)))
 
 theorem DenotationChecks.«entryValues» :
-    (fun env : Core.Env CoreArtifacts.«entryValues».params => «entryValues» (env.1)) =
-      Denote.function CoreArtifacts.«entryValues» := by
+    (fun env : Core.Env CoreArtifacts.«entryValues».params Interpretation.value => «entryValues» (env.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«entryValues» := by
   unfold Extracted_collections.Shallow.«entryValues»
   simp only [Denote.function, CoreArtifacts.«entryValues», Denote.term, Core.Var.get, JoinChecks.«entryValues#0», JoinChecks.«entryValues#1»] <;> rfl
 
@@ -2556,7 +2560,7 @@ def JoinCore.«entrySizes#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (let «_values#5» : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) := (_root_.Ariadne.Shallow.JSMap.set («_state#1»).1 «_x#0» (1 : _root_.Int));
   («_#joinNext509#3» («_values#5», (((«_state#1»).2).1, ())))))))))
 
-theorem JoinChecks.«entrySizes#0» : Denote.term JoinCore.«entrySizes#0» () = JoinNative.«entrySizes#0» := by
+theorem JoinChecks.«entrySizes#0» : Denote.term (interp := Interpretation.value) JoinCore.«entrySizes#0» () = JoinNative.«entrySizes#0» := by
   unfold Extracted_collections.Shallow.JoinNative.«entrySizes#0»
   simp only [JoinCore.«entrySizes#0», Denote.term, Core.Var.get] <;> rfl
 
@@ -2571,7 +2575,7 @@ def JoinCore.«entrySizes#1» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
 @[simp] def JoinNative.«entrySizes#1» : (((_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) × ((_root_.List _root_.Ariadne.JSString) × _root_.Unit)) → (_root_.List _root_.Float.Model)) :=
   (fun «_state#0» : ((_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) × ((_root_.List _root_.Ariadne.JSString) × _root_.Unit)) => (_root_.Ariadne.Shallow.JSArray.map (fun «_entry#1» : (_root_.Ariadne.JSString × _root_.Int) => (fun «_#unused0#2» : _root_.Float.Model => (_root_.Float.Model.ofScientific 2 (0)))) ((_root_.Ariadne.Shallow.JSMap.entries («_state#0»).1) ++ [])))
 
-theorem JoinChecks.«entrySizes#1» : Denote.term JoinCore.«entrySizes#1» () = JoinNative.«entrySizes#1» := by
+theorem JoinChecks.«entrySizes#1» : Denote.term (interp := Interpretation.value) JoinCore.«entrySizes#1» () = JoinNative.«entrySizes#1» := by
   unfold Extracted_collections.Shallow.JoinNative.«entrySizes#1»
   simp only [JoinCore.«entrySizes#1», Denote.term, Core.Var.get, JoinChecks.«entrySizes#0»] <;> rfl
 
@@ -2580,13 +2584,13 @@ def CoreArtifacts.«entrySizes» : Core.Function := { params := [Ariadne.Shallow
 theorem ElaborationChecks.«entrySizes» :
     Elaborate.function _root_.Extracted_collections.program "entrySizes" = .ok CoreArtifacts.«entrySizes» := by kernel_rfl
 
-def «entrySizes» («xs#arg» : (_root_.List _root_.Ariadne.JSString)) : (_root_.List _root_.Float.Model) :=
+def «entrySizes» («_xs#arg» : (_root_.List _root_.Ariadne.JSString)) : (_root_.List _root_.Float.Model) :=
   (let «_values#0» : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString _root_.Int) := _root_.Ariadne.Shallow.JSMap.empty;
-  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «xs#arg» («_values#0», («xs#arg», ())) JoinNative.«entrySizes#0») JoinNative.«entrySizes#1» (fun «_result#1» : (_root_.List _root_.Float.Model) => «_result#1»)))
+  (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «_xs#arg» («_values#0», («_xs#arg», ())) JoinNative.«entrySizes#0») JoinNative.«entrySizes#1» (fun «_result#1» : (_root_.List _root_.Float.Model) => «_result#1»)))
 
 theorem DenotationChecks.«entrySizes» :
-    (fun env : Core.Env CoreArtifacts.«entrySizes».params => «entrySizes» (env.1)) =
-      Denote.function CoreArtifacts.«entrySizes» := by
+    (fun env : Core.Env CoreArtifacts.«entrySizes».params Interpretation.value => «entrySizes» (env.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«entrySizes» := by
   unfold Extracted_collections.Shallow.«entrySizes»
   simp only [Denote.function, CoreArtifacts.«entrySizes», Denote.term, Core.Var.get, JoinChecks.«entrySizes#0», JoinChecks.«entrySizes#1»] <;> rfl
 
@@ -2600,8 +2604,8 @@ def «tupleSize» : _root_.Float.Model :=
   (_root_.Float.Model.ofScientific 2 (0)))
 
 theorem DenotationChecks.«tupleSize» :
-    (fun _env : Core.Env CoreArtifacts.«tupleSize».params => «tupleSize») =
-      Denote.function CoreArtifacts.«tupleSize» := by
+    (fun _env : Core.Env CoreArtifacts.«tupleSize».params Interpretation.value => «tupleSize») =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«tupleSize» := by
   unfold Extracted_collections.Shallow.«tupleSize»
   simp only [Denote.function, CoreArtifacts.«tupleSize», Denote.term, Core.Var.get] <;> rfl
 

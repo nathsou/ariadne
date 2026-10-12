@@ -3,7 +3,7 @@ import Ariadne.Shallow.Core
 namespace Ariadne.Shallow
 open Core
 
-def Denote.unary : Unary a b → a.denote → b.denote
+def Denote.unary {interp : Named.Interp} : Unary a b → a.denote interp → b.denote interp
   | .not, a => !a
   | .intNeg, a => -a
   | .numNeg, a => -a
@@ -32,7 +32,7 @@ def Denote.unary : Unary a b → a.denote → b.denote
     | .number => NumberSet.entries value
     | .int | .string | .bool => JSSet.entries value
 
-def Denote.binary : Binary a b c → a.denote → b.denote → c.denote
+def Denote.binary {interp : Named.Interp} : Binary a b c → a.denote interp → b.denote interp → c.denote interp
   | .intAdd, a, b => a + b
   | .intSub, a, b => a - b
   | .intMul, a, b => a * b
@@ -76,52 +76,61 @@ def Denote.binary : Binary a b c → a.denote → b.denote → c.denote
     | .number => NumberSet.delete value key
     | .int | .string | .bool => JSSet.delete value key
 
-def Denote.mapSet (k : Key) {v : Core.Ty} :
-    (Core.Ty.map k v).denote → k.type.denote → v.denote → (Core.Ty.map k v).denote :=
+def Denote.mapSet {interp : Named.Interp} (k : Key) {v : Core.Ty} :
+    (Core.Ty.map k v).denote interp → k.type.denote interp → v.denote interp → (Core.Ty.map k v).denote interp :=
   match k with
   | .number => NumberMap.set
   | .int | .string | .bool => JSMap.set
 
 /-- Structural interpretation into native Lean values. -/
-def Denote.term : Term Γ t → Core.Env Γ → t.denote
-  | .var v, env => v.get env
+def Denote.term {interp : Named.Interp} : Term Γ t → Core.Env Γ interp → t.denote interp
+  | .var v, env => v.get (interp := interp) env
   | .unit, _ => ()
   | .bool b, _ => b
   | .int n, _ => n
   | .number m e, _ => Float.Model.ofScientific m e
   | .string s, _ => s
-  | .unary op a, env => unary op (term a env)
-  | .binary op a b, env => binary op (term a env) (term b env)
-  | .let_ _ a b, env => term b (term a env, env)
-  | .ite c a b, env => if term c env then term a env else term b env
+  | .unary op a, env => unary (interp := interp) op (term (interp := interp) a env)
+  | .binary op a b, env => binary (interp := interp) op (term (interp := interp) a env) (term (interp := interp) b env)
+  | .let_ _ a b, env => term (interp := interp) b (term (interp := interp) a env, env)
+  | .ite c a b, env => if term (interp := interp) c env then term (interp := interp) a env else term (interp := interp) b env
   | .none, _ => none
-  | .some a, env => some (term a env)
-  | .optionCase a b c, env => (term a env).elim (term b env) (fun x => term c (x, env))
+  | .some a, env => some (term (interp := interp) a env)
+  | .optionCase a b c, env => (term (interp := interp) a env).elim (term (interp := interp) b env) (fun x => term (interp := interp) c (x, env))
   | .nil, _ => []
-  | .cons a b, env => term a env :: term b env
-  | .pair a b, env => (term a env, term b env)
-  | .fst a, env => (term a env).1
-  | .snd a, env => (term a env).2
-  | .lam _ body, env => fun x => term body (x, env)
-  | .app f a, env => term f env (term a env)
-  | .closed body, _ => term body ()
-  | .listMap f xs, env => JSArray.map (term f env) (term xs env)
-  | .listFilter f xs, env => JSArray.filter (term f env) (term xs env)
-  | .listReduce f a xs, env => JSArray.reduce (term f env) (term a env) (term xs env)
-  | .listSome f xs, env => JSArray.some (term f env) (term xs env)
-  | .listEvery f xs, env => JSArray.every (term f env) (term xs env)
-  | .listFind f xs, env => JSArray.find (term f env) (term xs env)
-  | .listFindIndex f xs, env => JSArray.findIndex (term f env) (term xs env)
-  | .listSlice xs a b, env => JSArray.slice (term xs env) (term a env) (term b env)
+  | .cons a b, env => term (interp := interp) a env :: term (interp := interp) b env
+  | .pair a b, env => (term (interp := interp) a env, term (interp := interp) b env)
+  | .fst a, env => (term (interp := interp) a env).1
+  | .snd a, env => (term (interp := interp) a env).2
+  | .inl a, env => .inl (term (interp := interp) a env)
+  | .inr b, env => .inr (term (interp := interp) b env)
+  | .sumCase value left right, env => Sum.elim
+      (fun a => term (interp := interp) left (a, env))
+      (fun b => term (interp := interp) right (b, env)) (term (interp := interp) value env)
+  | .pack declaration value, env => (interp declaration).construct
+      (cast (shape_denote declaration.shape interp) (term (interp := interp) value env))
+  | @Term.unpack _ declaration value, env => cast (shape_denote declaration.shape interp).symm
+      ((interp declaration).destruct (term (interp := interp) value env))
+  | .lam _ body, env => fun x => term (interp := interp) body (x, env)
+  | .app f a, env => term (interp := interp) f env (term (interp := interp) a env)
+  | .closed body, _ => term (interp := interp) body ()
+  | .listMap f xs, env => JSArray.map (term (interp := interp) f env) (term (interp := interp) xs env)
+  | .listFilter f xs, env => JSArray.filter (term (interp := interp) f env) (term (interp := interp) xs env)
+  | .listReduce f a xs, env => JSArray.reduce (term (interp := interp) f env) (term (interp := interp) a env) (term (interp := interp) xs env)
+  | .listSome f xs, env => JSArray.some (term (interp := interp) f env) (term (interp := interp) xs env)
+  | .listEvery f xs, env => JSArray.every (term (interp := interp) f env) (term (interp := interp) xs env)
+  | .listFind f xs, env => JSArray.find (term (interp := interp) f env) (term (interp := interp) xs env)
+  | .listFindIndex f xs, env => JSArray.findIndex (term (interp := interp) f env) (term (interp := interp) xs env)
+  | .listSlice xs a b, env => JSArray.slice (term (interp := interp) xs env) (term (interp := interp) a env) (term (interp := interp) b env)
   | @Term.mapEmpty _ k _, _ => Key.mapEmpty k
   | @Term.setEmpty _ k, _ => Key.setEmpty k
-  | @Term.mapSet _ k _ m key value, env => mapSet k (term m env) (term key env) (term value env)
-  | .next a, env => .next (term a env)
-  | .stop a, env => .stop (term a env)
-  | .ret a, env => .ret (term a env)
-  | .each xs init body, env => Loop.each (term xs env) (term init env) (term body env)
-  | .exitCase e done ret, env => Exit.elim (term e env) (term done env) (term ret env)
+  | @Term.mapSet _ k _ m key value, env => mapSet (interp := interp) k (term (interp := interp) m env) (term (interp := interp) key env) (term (interp := interp) value env)
+  | .next a, env => .next (term (interp := interp) a env)
+  | .stop a, env => .stop (term (interp := interp) a env)
+  | .ret a, env => .ret (term (interp := interp) a env)
+  | .each xs init body, env => Loop.each (term (interp := interp) xs env) (term (interp := interp) init env) (term (interp := interp) body env)
+  | .exitCase e done ret, env => Exit.elim (term (interp := interp) e env) (term (interp := interp) done env) (term (interp := interp) ret env)
 
-def Denote.function (f : Core.Function) : Core.Env f.params → f.result.denote := term f.body
+def Denote.function {interp : Named.Interp} (f : Core.Function) : Core.Env f.params interp → f.result.denote interp := term (interp := interp) f.body
 
 end Ariadne.Shallow

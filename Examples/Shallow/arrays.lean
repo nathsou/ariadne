@@ -830,17 +830,21 @@ namespace Extracted_arrays.Shallow
 open Ariadne Ariadne.Shallow
 set_option linter.unusedSimpArgs false
 
+def Interpretation.value : Named.Interp := Named.canonical
+
+theorem Interpretation.lawful : Named.Lawful Interpretation.value := Named.lawful _
+
 def CoreArtifacts.«transform» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int), Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int), body := (Core.Term.listMap (Core.Term.lam "x" (Core.Term.lam "#unused0" (Core.Term.binary (Ariadne.Shallow.Core.Binary.intAdd) (Core.Term.binary (Ariadne.Shallow.Core.Binary.intMul) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.int (2))) (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))))) (Core.Term.listFilter (Core.Term.lam "x" (Core.Term.lam "#unused0" (Core.Term.binary (Ariadne.Shallow.Core.Binary.intLe) (Core.Term.int (0)) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))) (Core.Term.var (Ariadne.Shallow.Core.Var.here)))) }
 
 theorem ElaborationChecks.«transform» :
     Elaborate.function _root_.Extracted_arrays.program "transform" = .ok CoreArtifacts.«transform» := by kernel_rfl
 
-def «transform» («xs#arg» : (_root_.List _root_.Int)) («delta#arg» : _root_.Int) : (_root_.List _root_.Int) :=
-  (_root_.Ariadne.Shallow.JSArray.map (fun «_x#0» : _root_.Int => (fun «_#unused0#1» : _root_.Float.Model => ((«_x#0» * (2 : _root_.Int)) + «delta#arg»))) (_root_.Ariadne.Shallow.JSArray.filter (fun «_x#0» : _root_.Int => (fun «_#unused0#1» : _root_.Float.Model => (decide ((0 : _root_.Int) ≤ «_x#0»)))) «xs#arg»))
+def «transform» («_xs#arg» : (_root_.List _root_.Int)) («_delta#arg» : _root_.Int) : (_root_.List _root_.Int) :=
+  (_root_.Ariadne.Shallow.JSArray.map (fun «_x#0» : _root_.Int => (fun «_#unused0#1» : _root_.Float.Model => ((«_x#0» * (2 : _root_.Int)) + «_delta#arg»))) (_root_.Ariadne.Shallow.JSArray.filter (fun «_x#0» : _root_.Int => (fun «_#unused0#1» : _root_.Float.Model => (decide ((0 : _root_.Int) ≤ «_x#0»)))) «_xs#arg»))
 
 theorem DenotationChecks.«transform» :
-    (fun env : Core.Env CoreArtifacts.«transform».params => «transform» (env.1) (env.2.1)) =
-      Denote.function CoreArtifacts.«transform» := by
+    (fun env : Core.Env CoreArtifacts.«transform».params Interpretation.value => «transform» (env.1) (env.2.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«transform» := by
   unfold Extracted_arrays.Shallow.«transform»
   simp only [Denote.function, CoreArtifacts.«transform», Denote.term, Core.Var.get] <;> rfl
 
@@ -849,12 +853,12 @@ def CoreArtifacts.«sum» : Core.Function := { params := [Ariadne.Shallow.Core.T
 theorem ElaborationChecks.«sum» :
     Elaborate.function _root_.Extracted_arrays.program "sum" = .ok CoreArtifacts.«sum» := by kernel_rfl
 
-def «sum» («xs#arg» : (_root_.List _root_.Int)) : _root_.Int :=
-  (_root_.Ariadne.Shallow.JSArray.reduce (fun «_acc#0» : _root_.Int => (fun «_x#1» : _root_.Int => (fun «_#unused0#2» : _root_.Float.Model => («_acc#0» + «_x#1»)))) (0 : _root_.Int) «xs#arg»)
+def «sum» («_xs#arg» : (_root_.List _root_.Int)) : _root_.Int :=
+  (_root_.Ariadne.Shallow.JSArray.reduce (fun «_acc#0» : _root_.Int => (fun «_x#1» : _root_.Int => (fun «_#unused0#2» : _root_.Float.Model => («_acc#0» + «_x#1»)))) (0 : _root_.Int) «_xs#arg»)
 
 theorem DenotationChecks.«sum» :
-    (fun env : Core.Env CoreArtifacts.«sum».params => «sum» (env.1)) =
-      Denote.function CoreArtifacts.«sum» := by
+    (fun env : Core.Env CoreArtifacts.«sum».params Interpretation.value => «sum» (env.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«sum» := by
   unfold Extracted_arrays.Shallow.«sum»
   simp only [Denote.function, CoreArtifacts.«sum», Denote.term, Core.Var.get] <;> rfl
 
@@ -863,12 +867,12 @@ def CoreArtifacts.«indexed» : Core.Function := { params := [Ariadne.Shallow.Co
 theorem ElaborationChecks.«indexed» :
     Elaborate.function _root_.Extracted_arrays.program "indexed" = .ok CoreArtifacts.«indexed» := by kernel_rfl
 
-def «indexed» («xs#arg» : (_root_.List _root_.Float.Model)) : _root_.Float.Model :=
-  (_root_.Ariadne.Shallow.JSArray.reduce (fun «_acc#0» : _root_.Float.Model => (fun «_x#1» : _root_.Float.Model => (fun «_i#2» : _root_.Float.Model => («_acc#0» + («_x#1» * «_i#2»))))) (_root_.Float.Model.ofScientific 0 (0)) «xs#arg»)
+def «indexed» («_xs#arg» : (_root_.List _root_.Float.Model)) : _root_.Float.Model :=
+  (_root_.Ariadne.Shallow.JSArray.reduce (fun «_acc#0» : _root_.Float.Model => (fun «_x#1» : _root_.Float.Model => (fun «_i#2» : _root_.Float.Model => («_acc#0» + («_x#1» * «_i#2»))))) (_root_.Float.Model.ofScientific 0 (0)) «_xs#arg»)
 
 theorem DenotationChecks.«indexed» :
-    (fun env : Core.Env CoreArtifacts.«indexed».params => «indexed» (env.1)) =
-      Denote.function CoreArtifacts.«indexed» := by
+    (fun env : Core.Env CoreArtifacts.«indexed».params Interpretation.value => «indexed» (env.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«indexed» := by
   unfold Extracted_arrays.Shallow.«indexed»
   simp only [Denote.function, CoreArtifacts.«indexed», Denote.term, Core.Var.get] <;> rfl
 
@@ -877,12 +881,12 @@ def CoreArtifacts.«find» : Core.Function := { params := [Ariadne.Shallow.Core.
 theorem ElaborationChecks.«find» :
     Elaborate.function _root_.Extracted_arrays.program "find" = .ok CoreArtifacts.«find» := by kernel_rfl
 
-def «find» («xs#arg» : (_root_.List _root_.Int)) («floor#arg» : _root_.Int) : (_root_.Option _root_.Int) :=
-  (_root_.Ariadne.Shallow.JSArray.find (fun «_x#0» : _root_.Int => (fun «_#unused0#1» : _root_.Float.Model => (decide («floor#arg» ≤ «_x#0»)))) «xs#arg»)
+def «find» («_xs#arg» : (_root_.List _root_.Int)) («_floor#arg» : _root_.Int) : (_root_.Option _root_.Int) :=
+  (_root_.Ariadne.Shallow.JSArray.find (fun «_x#0» : _root_.Int => (fun «_#unused0#1» : _root_.Float.Model => (decide («_floor#arg» ≤ «_x#0»)))) «_xs#arg»)
 
 theorem DenotationChecks.«find» :
-    (fun env : Core.Env CoreArtifacts.«find».params => «find» (env.1) (env.2.1)) =
-      Denote.function CoreArtifacts.«find» := by
+    (fun env : Core.Env CoreArtifacts.«find».params Interpretation.value => «find» (env.1) (env.2.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«find» := by
   unfold Extracted_arrays.Shallow.«find»
   simp only [Denote.function, CoreArtifacts.«find», Denote.term, Core.Var.get] <;> rfl
 
@@ -891,12 +895,12 @@ def CoreArtifacts.«findIndex» : Core.Function := { params := [Ariadne.Shallow.
 theorem ElaborationChecks.«findIndex» :
     Elaborate.function _root_.Extracted_arrays.program "findIndex" = .ok CoreArtifacts.«findIndex» := by kernel_rfl
 
-def «findIndex» («xs#arg» : (_root_.List _root_.Int)) («floor#arg» : _root_.Int) : _root_.Float.Model :=
-  (_root_.Ariadne.Shallow.JSArray.findIndex (fun «_x#0» : _root_.Int => (fun «_#unused0#1» : _root_.Float.Model => (decide («floor#arg» ≤ «_x#0»)))) «xs#arg»)
+def «findIndex» («_xs#arg» : (_root_.List _root_.Int)) («_floor#arg» : _root_.Int) : _root_.Float.Model :=
+  (_root_.Ariadne.Shallow.JSArray.findIndex (fun «_x#0» : _root_.Int => (fun «_#unused0#1» : _root_.Float.Model => (decide («_floor#arg» ≤ «_x#0»)))) «_xs#arg»)
 
 theorem DenotationChecks.«findIndex» :
-    (fun env : Core.Env CoreArtifacts.«findIndex».params => «findIndex» (env.1) (env.2.1)) =
-      Denote.function CoreArtifacts.«findIndex» := by
+    (fun env : Core.Env CoreArtifacts.«findIndex».params Interpretation.value => «findIndex» (env.1) (env.2.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«findIndex» := by
   unfold Extracted_arrays.Shallow.«findIndex»
   simp only [Denote.function, CoreArtifacts.«findIndex», Denote.term, Core.Var.get] <;> rfl
 
@@ -905,12 +909,12 @@ def CoreArtifacts.«allPositive» : Core.Function := { params := [Ariadne.Shallo
 theorem ElaborationChecks.«allPositive» :
     Elaborate.function _root_.Extracted_arrays.program "allPositive" = .ok CoreArtifacts.«allPositive» := by kernel_rfl
 
-def «allPositive» («xs#arg» : (_root_.List _root_.Int)) : _root_.Bool :=
-  (_root_.Ariadne.Shallow.JSArray.every (fun «_x#0» : _root_.Int => (fun «_#unused0#1» : _root_.Float.Model => (decide ((0 : _root_.Int) < «_x#0»)))) «xs#arg»)
+def «allPositive» («_xs#arg» : (_root_.List _root_.Int)) : _root_.Bool :=
+  (_root_.Ariadne.Shallow.JSArray.every (fun «_x#0» : _root_.Int => (fun «_#unused0#1» : _root_.Float.Model => (decide ((0 : _root_.Int) < «_x#0»)))) «_xs#arg»)
 
 theorem DenotationChecks.«allPositive» :
-    (fun env : Core.Env CoreArtifacts.«allPositive».params => «allPositive» (env.1)) =
-      Denote.function CoreArtifacts.«allPositive» := by
+    (fun env : Core.Env CoreArtifacts.«allPositive».params Interpretation.value => «allPositive» (env.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«allPositive» := by
   unfold Extracted_arrays.Shallow.«allPositive»
   simp only [Denote.function, CoreArtifacts.«allPositive», Denote.term, Core.Var.get] <;> rfl
 
@@ -919,12 +923,12 @@ def CoreArtifacts.«anyPositive» : Core.Function := { params := [Ariadne.Shallo
 theorem ElaborationChecks.«anyPositive» :
     Elaborate.function _root_.Extracted_arrays.program "anyPositive" = .ok CoreArtifacts.«anyPositive» := by kernel_rfl
 
-def «anyPositive» («xs#arg» : (_root_.List _root_.Int)) : _root_.Bool :=
-  (_root_.Ariadne.Shallow.JSArray.some (fun «_x#0» : _root_.Int => (fun «_#unused0#1» : _root_.Float.Model => (decide ((0 : _root_.Int) < «_x#0»)))) «xs#arg»)
+def «anyPositive» («_xs#arg» : (_root_.List _root_.Int)) : _root_.Bool :=
+  (_root_.Ariadne.Shallow.JSArray.some (fun «_x#0» : _root_.Int => (fun «_#unused0#1» : _root_.Float.Model => (decide ((0 : _root_.Int) < «_x#0»)))) «_xs#arg»)
 
 theorem DenotationChecks.«anyPositive» :
-    (fun env : Core.Env CoreArtifacts.«anyPositive».params => «anyPositive» (env.1)) =
-      Denote.function CoreArtifacts.«anyPositive» := by
+    (fun env : Core.Env CoreArtifacts.«anyPositive».params Interpretation.value => «anyPositive» (env.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«anyPositive» := by
   unfold Extracted_arrays.Shallow.«anyPositive»
   simp only [Denote.function, CoreArtifacts.«anyPositive», Denote.term, Core.Var.get] <;> rfl
 
@@ -933,12 +937,12 @@ def CoreArtifacts.«lookup» : Core.Function := { params := [Ariadne.Shallow.Cor
 theorem ElaborationChecks.«lookup» :
     Elaborate.function _root_.Extracted_arrays.program "lookup" = .ok CoreArtifacts.«lookup» := by kernel_rfl
 
-def «lookup» («xs#arg» : (_root_.List _root_.Int)) («index#arg» : _root_.Float.Model) : (_root_.Option _root_.Int) :=
-  (_root_.Ariadne.Shallow.JSArray.get «xs#arg» «index#arg»)
+def «lookup» («_xs#arg» : (_root_.List _root_.Int)) («_index#arg» : _root_.Float.Model) : (_root_.Option _root_.Int) :=
+  (_root_.Ariadne.Shallow.JSArray.get «_xs#arg» «_index#arg»)
 
 theorem DenotationChecks.«lookup» :
-    (fun env : Core.Env CoreArtifacts.«lookup».params => «lookup» (env.1) (env.2.1)) =
-      Denote.function CoreArtifacts.«lookup» := by
+    (fun env : Core.Env CoreArtifacts.«lookup».params Interpretation.value => «lookup» (env.1) (env.2.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«lookup» := by
   unfold Extracted_arrays.Shallow.«lookup»
   simp only [Denote.function, CoreArtifacts.«lookup», Denote.term, Core.Var.get] <;> rfl
 
@@ -947,12 +951,12 @@ def CoreArtifacts.«sliced» : Core.Function := { params := [Ariadne.Shallow.Cor
 theorem ElaborationChecks.«sliced» :
     Elaborate.function _root_.Extracted_arrays.program "sliced" = .ok CoreArtifacts.«sliced» := by kernel_rfl
 
-def «sliced» («xs#arg» : (_root_.List _root_.Int)) («start#arg» : _root_.Float.Model) («stop#arg» : _root_.Float.Model) : (_root_.List _root_.Int) :=
-  ((_root_.Ariadne.Shallow.JSArray.slice «xs#arg» «start#arg» «stop#arg»)).reverse
+def «sliced» («_xs#arg» : (_root_.List _root_.Int)) («_start#arg» : _root_.Float.Model) («_stop#arg» : _root_.Float.Model) : (_root_.List _root_.Int) :=
+  ((_root_.Ariadne.Shallow.JSArray.slice «_xs#arg» «_start#arg» «_stop#arg»)).reverse
 
 theorem DenotationChecks.«sliced» :
-    (fun env : Core.Env CoreArtifacts.«sliced».params => «sliced» (env.1) (env.2.1) (env.2.2.1)) =
-      Denote.function CoreArtifacts.«sliced» := by
+    (fun env : Core.Env CoreArtifacts.«sliced».params Interpretation.value => «sliced» (env.1) (env.2.1) (env.2.2.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«sliced» := by
   unfold Extracted_arrays.Shallow.«sliced»
   simp only [Denote.function, CoreArtifacts.«sliced», Denote.term, Core.Var.get] <;> rfl
 
@@ -961,12 +965,12 @@ def CoreArtifacts.«copy» : Core.Function := { params := [Ariadne.Shallow.Core.
 theorem ElaborationChecks.«copy» :
     Elaborate.function _root_.Extracted_arrays.program "copy" = .ok CoreArtifacts.«copy» := by kernel_rfl
 
-def «copy» («xs#arg» : (_root_.List _root_.Int)) : (_root_.List _root_.Int) :=
-  «xs#arg»
+def «copy» («_xs#arg» : (_root_.List _root_.Int)) : (_root_.List _root_.Int) :=
+  «_xs#arg»
 
 theorem DenotationChecks.«copy» :
-    (fun env : Core.Env CoreArtifacts.«copy».params => «copy» (env.1)) =
-      Denote.function CoreArtifacts.«copy» := by
+    (fun env : Core.Env CoreArtifacts.«copy».params Interpretation.value => «copy» (env.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«copy» := by
   unfold Extracted_arrays.Shallow.«copy»
   simp only [Denote.function, CoreArtifacts.«copy», Denote.term, Core.Var.get] <;> rfl
 
@@ -975,12 +979,12 @@ def CoreArtifacts.«combined» : Core.Function := { params := [Ariadne.Shallow.C
 theorem ElaborationChecks.«combined» :
     Elaborate.function _root_.Extracted_arrays.program "combined" = .ok CoreArtifacts.«combined» := by kernel_rfl
 
-def «combined» («xs#arg» : (_root_.List _root_.Int)) : (_root_.List _root_.Int) :=
-  ((((1 : _root_.Int) :: («xs#arg» ++ ((2 : _root_.Int) :: []))) ++ ((3 : _root_.Int) :: [])) ++ ((4 : _root_.Int) :: []))
+def «combined» («_xs#arg» : (_root_.List _root_.Int)) : (_root_.List _root_.Int) :=
+  ((((1 : _root_.Int) :: («_xs#arg» ++ ((2 : _root_.Int) :: []))) ++ ((3 : _root_.Int) :: [])) ++ ((4 : _root_.Int) :: []))
 
 theorem DenotationChecks.«combined» :
-    (fun env : Core.Env CoreArtifacts.«combined».params => «combined» (env.1)) =
-      Denote.function CoreArtifacts.«combined» := by
+    (fun env : Core.Env CoreArtifacts.«combined».params Interpretation.value => «combined» (env.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«combined» := by
   unfold Extracted_arrays.Shallow.«combined»
   simp only [Denote.function, CoreArtifacts.«combined», Denote.term, Core.Var.get] <;> rfl
 
@@ -989,12 +993,12 @@ def CoreArtifacts.«constantMap» : Core.Function := { params := [Ariadne.Shallo
 theorem ElaborationChecks.«constantMap» :
     Elaborate.function _root_.Extracted_arrays.program "constantMap" = .ok CoreArtifacts.«constantMap» := by kernel_rfl
 
-def «constantMap» («xs#arg» : (_root_.List _root_.Int)) : (_root_.List _root_.Int) :=
-  (_root_.Ariadne.Shallow.JSArray.map (fun «_#unused1#0» : _root_.Int => (fun «_#unused0#1» : _root_.Float.Model => (7 : _root_.Int))) «xs#arg»)
+def «constantMap» («_xs#arg» : (_root_.List _root_.Int)) : (_root_.List _root_.Int) :=
+  (_root_.Ariadne.Shallow.JSArray.map (fun «_#unused1#0» : _root_.Int => (fun «_#unused0#1» : _root_.Float.Model => (7 : _root_.Int))) «_xs#arg»)
 
 theorem DenotationChecks.«constantMap» :
-    (fun env : Core.Env CoreArtifacts.«constantMap».params => «constantMap» (env.1)) =
-      Denote.function CoreArtifacts.«constantMap» := by
+    (fun env : Core.Env CoreArtifacts.«constantMap».params Interpretation.value => «constantMap» (env.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«constantMap» := by
   unfold Extracted_arrays.Shallow.«constantMap»
   simp only [Denote.function, CoreArtifacts.«constantMap», Denote.term, Core.Var.get] <;> rfl
 
@@ -1003,12 +1007,12 @@ def CoreArtifacts.«count» : Core.Function := { params := [Ariadne.Shallow.Core
 theorem ElaborationChecks.«count» :
     Elaborate.function _root_.Extracted_arrays.program "count" = .ok CoreArtifacts.«count» := by kernel_rfl
 
-def «count» («xs#arg» : (_root_.List _root_.Int)) : _root_.Float.Model :=
-  (_root_.Float.Model.ofNat («xs#arg»).length)
+def «count» («_xs#arg» : (_root_.List _root_.Int)) : _root_.Float.Model :=
+  (_root_.Float.Model.ofNat («_xs#arg»).length)
 
 theorem DenotationChecks.«count» :
-    (fun env : Core.Env CoreArtifacts.«count».params => «count» (env.1)) =
-      Denote.function CoreArtifacts.«count» := by
+    (fun env : Core.Env CoreArtifacts.«count».params Interpretation.value => «count» (env.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«count» := by
   unfold Extracted_arrays.Shallow.«count»
   simp only [Denote.function, CoreArtifacts.«count», Denote.term, Core.Var.get] <;> rfl
 
@@ -1017,7 +1021,7 @@ def JoinCore.«score#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn (Ariadne.Sha
 @[simp] def JoinNative.«score#0» : ((_root_.List _root_.Int) → _root_.Int) :=
   (fun «_xs#0» : (_root_.List _root_.Int) => (_root_.Ariadne.Shallow.JSArray.reduce (fun «_acc#1» : _root_.Int => (fun «_x#2» : _root_.Int => (fun «_#unused0#3» : _root_.Float.Model => («_acc#1» + «_x#2»)))) (0 : _root_.Int) «_xs#0»))
 
-theorem JoinChecks.«score#0» : Denote.term JoinCore.«score#0» () = JoinNative.«score#0» := by
+theorem JoinChecks.«score#0» : Denote.term (interp := Interpretation.value) JoinCore.«score#0» () = JoinNative.«score#0» := by
   unfold Extracted_arrays.Shallow.JoinNative.«score#0»
   simp only [JoinCore.«score#0», Denote.term, Core.Var.get] <;> rfl
 
@@ -1026,12 +1030,12 @@ def CoreArtifacts.«score» : Core.Function := { params := [Ariadne.Shallow.Core
 theorem ElaborationChecks.«score» :
     Elaborate.function _root_.Extracted_arrays.program "score" = .ok CoreArtifacts.«score» := by kernel_rfl
 
-def «score» («xs#arg» : (_root_.List _root_.Int)) : _root_.Int :=
-  ((JoinNative.«score#0» «xs#arg») + (1 : _root_.Int))
+def «score» («_xs#arg» : (_root_.List _root_.Int)) : _root_.Int :=
+  ((JoinNative.«score#0» «_xs#arg») + (1 : _root_.Int))
 
 theorem DenotationChecks.«score» :
-    (fun env : Core.Env CoreArtifacts.«score».params => «score» (env.1)) =
-      Denote.function CoreArtifacts.«score» := by
+    (fun env : Core.Env CoreArtifacts.«score».params Interpretation.value => «score» (env.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«score» := by
   unfold Extracted_arrays.Shallow.«score»
   simp only [Denote.function, CoreArtifacts.«score», Denote.term, Core.Var.get, JoinChecks.«score#0»] <;> rfl
 
@@ -1045,8 +1049,8 @@ def «empty» : (_root_.List _root_.Int) :=
   «_values#0»)
 
 theorem DenotationChecks.«empty» :
-    (fun _env : Core.Env CoreArtifacts.«empty».params => «empty») =
-      Denote.function CoreArtifacts.«empty» := by
+    (fun _env : Core.Env CoreArtifacts.«empty».params Interpretation.value => «empty») =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«empty» := by
   unfold Extracted_arrays.Shallow.«empty»
   simp only [Denote.function, CoreArtifacts.«empty», Denote.term, Core.Var.get] <;> rfl
 
@@ -1055,12 +1059,12 @@ def CoreArtifacts.«program» : Core.Function := { params := [Ariadne.Shallow.Co
 theorem ElaborationChecks.«program» :
     Elaborate.function _root_.Extracted_arrays.program "program" = .ok CoreArtifacts.«program» := by kernel_rfl
 
-def «program» («Bool#arg» : _root_.Int) : _root_.Int :=
-  («Bool#arg» + (1 : _root_.Int))
+def «program» («_Bool#arg» : _root_.Int) : _root_.Int :=
+  («_Bool#arg» + (1 : _root_.Int))
 
 theorem DenotationChecks.«program» :
-    (fun env : Core.Env CoreArtifacts.«program».params => «program» (env.1)) =
-      Denote.function CoreArtifacts.«program» := by
+    (fun env : Core.Env CoreArtifacts.«program».params Interpretation.value => «program» (env.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«program» := by
   unfold Extracted_arrays.Shallow.«program»
   simp only [Denote.function, CoreArtifacts.«program», Denote.term, Core.Var.get] <;> rfl
 
@@ -1069,12 +1073,12 @@ def CoreArtifacts.«Int» : Core.Function := { params := [Ariadne.Shallow.Core.T
 theorem ElaborationChecks.«Int» :
     Elaborate.function _root_.Extracted_arrays.program "Int" = .ok CoreArtifacts.«Int» := by kernel_rfl
 
-def «Int» («JSArray#arg» : (_root_.List _root_.Int)) : (_root_.List _root_.Int) :=
-  (_root_.Ariadne.Shallow.JSArray.map (fun «_#unused1#0» : _root_.Int => (fun «_#unused0#1» : _root_.Float.Model => (1 : _root_.Int))) «JSArray#arg»)
+def «Int» («_JSArray#arg» : (_root_.List _root_.Int)) : (_root_.List _root_.Int) :=
+  (_root_.Ariadne.Shallow.JSArray.map (fun «_#unused1#0» : _root_.Int => (fun «_#unused0#1» : _root_.Float.Model => (1 : _root_.Int))) «_JSArray#arg»)
 
 theorem DenotationChecks.«Int» :
-    (fun env : Core.Env CoreArtifacts.«Int».params => «Int» (env.1)) =
-      Denote.function CoreArtifacts.«Int» := by
+    (fun env : Core.Env CoreArtifacts.«Int».params Interpretation.value => «Int» (env.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«Int» := by
   unfold Extracted_arrays.Shallow.«Int»
   simp only [Denote.function, CoreArtifacts.«Int», Denote.term, Core.Var.get] <;> rfl
 
@@ -1083,7 +1087,7 @@ def JoinCore.«afterNames#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn (Ariadn
 @[simp] def JoinNative.«afterNames#0» : ((_root_.List _root_.Int) → _root_.Int) :=
   (fun «_xs#0» : (_root_.List _root_.Int) => (_root_.Ariadne.Shallow.JSArray.reduce (fun «_acc#1» : _root_.Int => (fun «_x#2» : _root_.Int => (fun «_#unused0#3» : _root_.Float.Model => («_acc#1» + «_x#2»)))) (0 : _root_.Int) «_xs#0»))
 
-theorem JoinChecks.«afterNames#0» : Denote.term JoinCore.«afterNames#0» () = JoinNative.«afterNames#0» := by
+theorem JoinChecks.«afterNames#0» : Denote.term (interp := Interpretation.value) JoinCore.«afterNames#0» () = JoinNative.«afterNames#0» := by
   unfold Extracted_arrays.Shallow.JoinNative.«afterNames#0»
   simp only [JoinCore.«afterNames#0», Denote.term, Core.Var.get] <;> rfl
 
@@ -1092,7 +1096,7 @@ def JoinCore.«afterNames#1» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn (Ariadn
 @[simp] def JoinNative.«afterNames#1» : (_root_.Int → _root_.Int) :=
   (fun «_Bool#0» : _root_.Int => («_Bool#0» + (1 : _root_.Int)))
 
-theorem JoinChecks.«afterNames#1» : Denote.term JoinCore.«afterNames#1» () = JoinNative.«afterNames#1» := by
+theorem JoinChecks.«afterNames#1» : Denote.term (interp := Interpretation.value) JoinCore.«afterNames#1» () = JoinNative.«afterNames#1» := by
   unfold Extracted_arrays.Shallow.JoinNative.«afterNames#1»
   simp only [JoinCore.«afterNames#1», Denote.term, Core.Var.get, JoinChecks.«afterNames#0»] <;> rfl
 
@@ -1101,12 +1105,12 @@ def CoreArtifacts.«afterNames» : Core.Function := { params := [Ariadne.Shallow
 theorem ElaborationChecks.«afterNames» :
     Elaborate.function _root_.Extracted_arrays.program "afterNames" = .ok CoreArtifacts.«afterNames» := by kernel_rfl
 
-def «afterNames» («values#arg» : (_root_.List _root_.Int)) : _root_.Int :=
-  ((JoinNative.«afterNames#0» «values#arg») + (JoinNative.«afterNames#1» (1 : _root_.Int)))
+def «afterNames» («_values#arg» : (_root_.List _root_.Int)) : _root_.Int :=
+  ((JoinNative.«afterNames#0» «_values#arg») + (JoinNative.«afterNames#1» (1 : _root_.Int)))
 
 theorem DenotationChecks.«afterNames» :
-    (fun env : Core.Env CoreArtifacts.«afterNames».params => «afterNames» (env.1)) =
-      Denote.function CoreArtifacts.«afterNames» := by
+    (fun env : Core.Env CoreArtifacts.«afterNames».params Interpretation.value => «afterNames» (env.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«afterNames» := by
   unfold Extracted_arrays.Shallow.«afterNames»
   simp only [Denote.function, CoreArtifacts.«afterNames», Denote.term, Core.Var.get, JoinChecks.«afterNames#0», JoinChecks.«afterNames#1»] <;> rfl
 
