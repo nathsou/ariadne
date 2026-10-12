@@ -347,7 +347,236 @@ theorem child_parent_agree {s : State} (reachable : Reachable s) (node parent : 
     node ∈ «Tree#childList» s parent ↔ «Tree#parent» s node = some parent := by
   rw [childList_eq, parent_eq]
   exact reachable_consistent reachable node parent
+
+private theorem mem_keys_set (m : JSMap JSString α) (k q : JSString) (v : α)
+    (known : q ∈ m.keys) : q ∈ (m.set k v).keys := by
+  rw [JSMap.keys_set]
+  split <;> simp_all
+
+private theorem add_keys (s : State) (node q : JSString) (known : q ∈ s.children.keys) :
+    q ∈ (add s node).children.keys := by
+  unfold add
+  split
+  · exact known
+  · exact mem_keys_set _ _ _ _ known
+
+private theorem mem_keys_of_get (m : JSMap JSString α) (k : JSString) (v : α) (h : m.get k = some v) :
+    k ∈ m.keys := by
+  have : MapEntries.get m.entries k = some v := h
+  change k ∈ m.entries.map Prod.fst
+  generalize m.entries = entries at this ⊢
+  induction entries with
+  | nil => simp [MapEntries.get] at this
+  | cons x xs ih =>
+    rcases x with ⟨key, value⟩
+    by_cases eq : key = k
+    · simp [eq]
+    · simp [MapEntries.get, eq] at this
+      exact List.mem_cons_of_mem key (ih this)
+
+private theorem add_known (s : State) (node : JSString) : node ∈ (add s node).children.keys := by
+  unfold add
+  split
+  · rename_i present
+    cases h : s.children.get node with
+    | none => simp [JSMap.has, h] at present
+    | some xs => exact mem_keys_of_get _ _ _ h
+  · rw [JSMap.keys_set]; split
+    · rename_i present
+      cases h : s.children.get node with
+      | none => simp [JSMap.has, h] at present
+      | some xs => exact mem_keys_of_get _ _ _ h
+    · simp
+
+private theorem detached_keys (s : State) (node q : JSString) (known : q ∈ s.children.keys) :
+    q ∈ (detached s node).children.keys := by
+  cases h : s.parents.get node
+  · simpa [detached, h] using known
+  · simpa [detached, h] using mem_keys_set s.children _ q _ known
+
+private theorem add_closed (s : State) (closed : Closed s) (node : JSString) : Closed (add s node) := by
+  intro x p h
+  have old : s.parents.get x = some p := by
+    unfold add at h
+    split at h <;> exact h
+  exact ⟨add_keys s node x (closed x p old).1, add_keys s node p (closed x p old).2⟩
+
+private theorem detached_closed (s : State) (closed : Closed s) (node : JSString) : Closed (detached s node) := by
+  intro x p h
+  have old : s.parents.get x = some p := by
+    have hh : node ≠ x ∧ s.parents.get x = some p := by simpa [detached, JSMap.get_delete] using h
+    exact hh.2
+  exact ⟨detached_keys s node x (closed x p old).1, detached_keys s node p (closed x p old).2⟩
+
+private theorem attached_closed (s : State) (closed : Closed s) (node parent : JSString)
+    (hn : node ∈ s.children.keys) (hp : parent ∈ s.children.keys) : Closed (attached s node parent) := by
+  intro x p h
+  by_cases eq : node = x
+  · subst x
+    have : parent = p := by simpa [attached] using h
+    subst p
+    exact ⟨mem_keys_set _ _ _ _ hn, mem_keys_set _ _ _ _ hp⟩
+  · have old : s.parents.get x = some p := by simpa [attached, JSMap.get_set, eq] using h
+    exact ⟨mem_keys_set _ _ _ _ (closed x p old).1, mem_keys_set _ _ _ _ (closed x p old).2⟩
+
+inductive Reaches (s : State) : JSString → JSString → Prop where
+  | refl (node : JSString) : Reaches s node node
+  | step {node parent target : JSString} (edge : s.parents.get node = some parent)
+      (rest : Reaches s parent target) : Reaches s node target
+
+private theorem chain_stable (s : State) (rank : JSString → Nat) (ranked : Ranked s rank)
+    (n : Nat) (node : JSString) (enough : rank node < n) (m : Nat)
+    (bound : (chain s n node).length ≤ m) : chain s m node = chain s n node := by
+  induction n generalizing node m with
+  | zero => omega
+  | succ n ih =>
+    cases m with
+    | zero => simp [chain] at bound
+    | succ m =>
+      cases h : s.parents.get node with
+      | none => simp [chain, h]
+      | some p =>
+        have := ranked node p h
+        simp only [chain, h, List.length_cons] at bound ⊢
+        rw [ih p (by omega) m (by omega)]
+
+private theorem reaches_chain (s : State) (rank : JSString → Nat) (ranked : Ranked s rank)
+    (n : Nat) (node target : JSString) (enough : rank node < n) (reach : Reaches s node target) :
+    target ∈ chain s n node := by
+  induction n generalizing node with
+  | zero => omega
+  | succ n ih =>
+    cases reach with
+    | refl => simp [chain]
+    | step edge rest =>
+      have := ranked _ _ edge
+      simp only [chain, edge, List.mem_cons]
+      exact Or.inr (ih _ (by omega) rest)
+
+private theorem hits_none (s : State) (node : JSString) (n : Nat) : hits s node n none = false := by
+  cases n <;> rfl
+
+private theorem hits_chain (s : State) (node : JSString) (n : Nat) (cursor : JSString) :
+    hits s node n (some cursor) = true ↔ node ∈ chain s n cursor := by
+  induction n generalizing cursor with
+  | zero => simp [hits, chain]
+  | succ n ih =>
+    by_cases eq : cursor = node
+    · subst cursor; simp [hits, chain]
+    · cases h : s.parents.get cursor <;> simp [hits, chain, h, eq, Ne.symm eq, hits_none, ih]
+
+private theorem missed_unreachable (s : State) (rank : JSString → Nat) (ranked : Ranked s rank)
+    (closed : Closed s) (node parent : JSString) (known : parent ∈ s.children.keys)
+    (missed : hits s node s.children.size (some parent) = false) : ¬ Reaches s parent node := by
+  intro reach
+  have member := reaches_chain s rank ranked (rank parent + 1) parent node (by omega) reach
+  have bound : (chain s (rank parent + 1) parent).length ≤ s.children.size := by
+    have h := (chain_nodup s rank ranked (rank parent + 1) parent).length_le_of_subset
+      (chain_subset s closed (rank parent + 1) parent known)
+    simpa [JSMap.keys, JSMap.size] using h
+  rw [← chain_stable s rank ranked (rank parent + 1) parent (by omega) s.children.size bound] at member
+  have hit := (hits_chain s node s.children.size parent).mpr member
+  simp [missed] at hit
+
+private theorem reaches_edge (s : State) (x p target : JSString)
+    (edge : s.parents.get x = some p) (different : x ≠ target) :
+    Reaches s x target ↔ Reaches s p target := by
+  constructor
+  · intro reach
+    cases reach with
+    | refl => exact False.elim (different rfl)
+    | step other rest =>
+      have same := Option.some.inj (edge.symm.trans other)
+      subst p
+      exact rest
+  · exact Reaches.step edge
+
+private theorem add_ranked (s : State) (rank : JSString → Nat) (ranked : Ranked s rank) (node : JSString) :
+    Ranked (add s node) rank := by
+  unfold add
+  split <;> exact ranked
+
+private theorem detached_ranked (s : State) (rank : JSString → Nat) (ranked : Ranked s rank) (node : JSString) :
+    Ranked (detached s node) rank := by
+  intro x p edge
+  have old : node ≠ x ∧ s.parents.get x = some p := by simpa [detached, JSMap.get_delete] using edge
+  exact ranked x p old.2
+
+private theorem attached_ranked (s : State) (rank : JSString → Nat) (ranked : Ranked s rank)
+    (node parent : JSString) (unreachable : ¬ Reaches s parent node) :
+    ∃ nextRank, Ranked (attached s node parent) nextRank := by
+  classical
+  refine ⟨fun x => if Reaches s x node then rank x + rank parent + 1 else rank x, ?_⟩
+  intro x p edge
+  by_cases same : node = x
+  · subst x
+    have same : parent = p := by simpa [attached] using edge
+    subst p
+    simp only [Reaches.refl, ↓reduceIte, unreachable]
+    omega
+  · have old : s.parents.get x = some p := by simpa [attached, JSMap.get_set, same] using edge
+    have smaller := ranked x p old
+    have equiv := reaches_edge s x p node old (Ne.symm same)
+    by_cases affected : Reaches s x node
+    · have hp := equiv.mp affected
+      simp only [affected, hp, ↓reduceIte]
+      omega
+    · have hp : ¬ Reaches s p node := fun h => affected (equiv.mpr h)
+      simp only [affected, hp, ↓reduceIte]
+      exact smaller
+
+def Forest (s : State) : Prop := Closed s ∧ ∃ rank, Ranked s rank
+
+private theorem add_forest (s : State) (forest : Forest s) (node : JSString) : Forest (add s node) := by
+  rcases forest with ⟨closed, rank, ranked⟩
+  exact ⟨add_closed s closed node, rank, add_ranked s rank ranked node⟩
+
+private theorem move_forest (s : State) (forest : Forest s) (node : JSString) (parent : Option JSString) :
+    Forest (move s node parent) := by
+  let a := parent.elim (add s node) (add (add s node))
+  have fa : Forest a := by
+    cases parent with
+    | none => exact add_forest s forest node
+    | some p => exact add_forest _ (add_forest s forest node) p
+  have kn : node ∈ a.children.keys := by
+    cases parent with
+    | none => exact add_known s node
+    | some p => exact add_keys _ p node (add_known s node)
+  rcases fa with ⟨closed, rank, ranked⟩
+  let d := detached a node
+  have cd : Closed d := detached_closed a closed node
+  have rd : Ranked d rank := detached_ranked a rank ranked node
+  have nd : node ∈ d.children.keys := detached_keys a node node kn
+  change Forest (if hits d node d.children.size parent then d else after d node parent)
+  split
+  · exact ⟨cd, rank, rd⟩
+  · rename_i missed
+    have missed : hits d node d.children.size parent = false := Bool.eq_false_iff.mpr missed
+    cases parent with
+    | none => exact ⟨cd, rank, rd⟩
+    | some p =>
+      have kp : p ∈ a.children.keys := add_known _ p
+      have pd := detached_keys a node p kp
+      exact ⟨attached_closed d cd node p nd pd,
+        attached_ranked d rank rd node p (missed_unreachable d rank rd cd node p pd missed)⟩
+
+theorem reachable_forest {s : State} (reachable : Reachable s) : Forest s := by
+  induction reachable with
+  | fresh =>
+    constructor
+    · intro x p h; simp [«Tree##new»] at h
+    · refine ⟨fun _ => 0, ?_⟩
+      intro x p h; simp [«Tree##new»] at h
+  | add before node ih => rw [add_eq]; exact add_forest _ ih node
+  | move before node parent ih => rw [move_eq]; exact move_forest _ ih node parent
+
+theorem reachable_root {s : State} (reachable : Reachable s) (node : JSString) :
+    «Tree#parent» s («Tree#root» s node) = none := by
+  rcases reachable_forest reachable with ⟨closed, rank, ranked⟩
+  exact root_reached s rank ranked closed node
 end Examples.Proofs.ReferenceTree
+
+
 
 
 

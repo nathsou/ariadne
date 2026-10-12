@@ -8,7 +8,7 @@ when their exit criteria pass; finite native tests are not universal proofs.
 | M0 | Complete | Reference sources and historical diagnostics; pinned CI downloads; reserved extraction diagnostics; output preservation tests |
 | M1 | Complete | All reference programs check and certify; grammar, ownership checks, operational semantics and the builtin table have differential coverage. Conservative dialect limits are listed below. |
 | M2 | In progress | Typed Core, scalar/list/Map/Set extraction, owned local updates, structural loops, pure calls, structural denotation, three-way differential and tamper tests. Lawful named records/unions and direct borrowed-state calls are implemented; class states, Int53 guards and original reference extraction are implemented; the full integration regression gate is pending. |
-| M3 | In progress | The original decision extraction has universal membership, floor and permutation proofs. Register convergence and idempotence are proved against the emitted methods. Tree proofs and general Int53 exactness lemmas remain pending. |
+| M3 | In progress | The original decision extraction has universal membership, floor and permutation proofs. Register convergence and idempotence are proved against the emitted methods. All three original reference proofs are complete over emitted definitions; general Int53 exactness and remaining library lemmas are pending. |
 | M4 | Pending | Fundamental lemma, footprint preservation, adequacy and source transfer |
 | M5 | Pending | Measures, larger ownership, polymorphism, exceptions and scalar backend integration |
 
@@ -235,4 +235,8 @@ The original tree extraction has a universal child/parent agreement theorem for
 all states reachable through the emitted constructor, `add` and `move` methods.
 Its emitted root walk reaches a parentless node within the node count for closed,
 acyclic parent graphs (acyclicity is expressed by a decreasing natural rank).
-Preservation of those root-walk hypotheses by every reachable move is pending.
+Every reachable move preserves closure and acyclicity. A missed bounded search
+excludes reachability of the moved node from the target; attaching the new edge
+then admits an explicit decreasing rank. `reachable_root` therefore applies to
+every reachable state, including detach-on-cycle moves. These remain native
+proofs until M4 supplies source transfer.
