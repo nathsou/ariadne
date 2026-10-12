@@ -1,7 +1,7 @@
 import Ariadne.Check
 import Ariadne.Shallow.Denote
 import Ariadne.Shallow.Unions
-import Ariadne.Shallow.StatePlan
+import Ariadne.Shallow.ClassPlan
 
 namespace Ariadne.Shallow.Elaborate
 open Core
@@ -47,6 +47,7 @@ where
   convert : Nat → Ariadne.Ty → Checked Core.Ty
     | 0, _ => refusal "A5101" "type nesting budget exhausted" span
     | n + 1, .named name => do
+      let name := if p.classes.any (·.name == name) then ClassPlan.stateName name else name
       let some source := p.aliases.lookup name | refusal "A5102" "unknown type alias" span
       match Check.unreadonly source with
       | .record _ => return .named (← Declarations.info p name span).declaration
@@ -97,6 +98,17 @@ def lookup : (ctx : Context) → String → Option ((t : Core.Ty) × Var (Types 
   | b :: ctx, wanted =>
     if b.name == wanted then some ⟨b.ty, .here⟩
     else (lookup ctx wanted).map fun ⟨t, v⟩ => ⟨t, .there v⟩
+
+def lowerClassCall (p : Program) (ctx : Context) (expr : Expr) : Option Expr := do
+  match expr with
+  | .newClass name args span =>
+    return .call (.var (ClassPlan.methodName name "#new") span) args span
+  | .call (.member (.var owner ownerSpan) method _) args span =>
+    let ⟨.named declaration, _⟩ ← lookup ctx owner | none
+    let c ← p.classes.find? (fun c => ClassPlan.stateName c.name == declaration.name)
+    if !(c.methods.any (·.name == method)) then none else
+      return .call (.var (ClassPlan.methodName c.name method) span) (.var owner ownerSpan :: args) span
+  | _ => none
 
 def keySourceType : Core.Key → Ariadne.Ty
   | .int => .bigint
@@ -182,6 +194,24 @@ def recordField (name : String) (span : Span) : List (String × Ariadne.Ty) → 
     else recordField name span fields ⟨b, .snd value⟩
   | _, _ => refusal "A5102" "unknown field or invalid named record shape" span
 
+
+def replaceRecordField (name : String) (span : Span) (replacement : Typed ctx) :
+    List (String × Ariadne.Ty) → (payload : Typed ctx) → Checked (Term (Types ctx) payload.1)
+  | (field, source) :: fields, ⟨.pair a b, value⟩ => do
+    if name == field then
+      if (Declarations.fixedString source).isSome then
+        refusal "A5102" "literal fields cannot be updated" span
+      return .pair (← cast a replacement span) (.snd value)
+    return .pair (.fst value) (← replaceRecordField name span replacement fields ⟨b, .snd value⟩)
+  | _, _ => refusal "A5102" "unknown field or invalid record update" span
+termination_by structural fields _ => fields
+
+def replaceField (p : Program) (ctx : Context) (owner field : String) (value : Typed ctx) (span : Span) : Checked (Typed ctx) := do
+  let some ⟨.named declaration, index⟩ := lookup ctx owner
+    | refusal "A5102" "field updates require a named record owner" span
+  let fields ← Declarations.record p declaration span
+  let updated ← replaceRecordField field span value fields ⟨_, .unpack (.var index)⟩
+  return ⟨.named declaration, .pack declaration updated⟩
 
 def packSubstitution (Γ : List Core.Ty) (child : Named.Declaration) :
     Core.Substitution (.named child :: Γ) (shapeType child.shape :: Γ) :=
@@ -332,6 +362,8 @@ mutual
     match fuel with
     | 0 => refusal "A5101" "expression nesting budget exhausted" expr.span
     | n + 1 =>
+      if let some lowered := lowerClassCall p ctx expr then
+        return ← expression p n ctx lowered
       match expr with
       | .literal (.bigint v) _ => return ⟨.int, .int v⟩
       | .literal (.number m e) _ => return ⟨.number, .number m e⟩
@@ -622,12 +654,25 @@ mutual
           let some target := ctx.find? (·.name == name) | refusal "A5102" "unknown restored owner" span
           if !target.owned then refusal "A5102" "call mutation needs an exclusive owner" span
           return some (name, ⟨target.ty, ← asType p n ctx value target.ty⟩)
-      let .call (.member (.var name _) method _) args span := expr | return none
-      if !["set", "add", "delete", "clear", "push", "pop"].contains method then return none
+      if let .call (.var "#field" _) [.member (.var owner _) field _, value] span := expr then
+        let some target := ctx.find? (·.name == owner) | refusal "A5102" "unknown field owner" span
+        if !target.owned then refusal "A5102" "field update needs exclusive ownership" span
+        let expected ← expression p n ctx (.member (.var owner span) field span)
+        let value ← asType p n ctx value expected.1
+        return some (owner, ← replaceField p ctx owner field ⟨expected.1, value⟩ span)
+      let .call (.member receiver method _) args span := expr | return none
+      if !StatePlan.mutator method then return none
+      let (name, field) ← match receiver with
+        | .var name _ => pure (name, none)
+        | .member (.var name _) field _ => pure (name, some field)
+        | _ => refusal "A5102" "nested collection mutation requires backward functions" span
       let some target := ctx.find? (·.name == name) | refusal "A5102" "unknown mutation target" span
       if !target.owned then refusal "A5102" "mutating a borrowed parameter requires a returned state component" span
       let some ⟨ty, index⟩ := lookup ctx name | refusal "A5102" "unknown mutation target" span
-      let updated ← match (⟨ty, .var index⟩ : Typed ctx), method, args with
+      let collection ← match field with
+        | none => pure (⟨ty, .var index⟩ : Typed ctx)
+        | some field => expression p n ctx (.member (.var name span) field span)
+      let updated ← match collection, method, args with
         | ⟨.map k v, collection⟩, "set", [key, value] => do
           pure ⟨.map k v, .mapSet collection (← asType p n ctx key k.type) (← asType p n ctx value v)⟩
         | ⟨.map k v, collection⟩, "delete", [key] => do
@@ -641,6 +686,9 @@ mutual
         | ⟨.list a, collection⟩, "push", [value] => do
           pure ⟨.list a, .binary .append collection (.cons (← asType p n ctx value a) .nil)⟩
         | _, _, _ => refusal "A5104" "this mutation has no native state operation" span
+      let updated ← match field with
+        | none => pure updated
+        | some field => replaceField p ctx name field updated span
       return some (name, updated)
 
   /-- Mutable locals become shadowed pure lets. Branches share their continuations.
@@ -651,6 +699,18 @@ mutual
     | _ + 1, _, [], .unit => .ok .unit
     | _ + 1, _, [], _ => refusal "A5101" "extraction requires a return on every path" {}
     | n + 1, ctx, stmt :: rest, t => do
+      let sourceValue := match stmt with
+        | .let_ _ _ _ value _ | .expr value _ | .return_ value _ => some value
+        | .assign (.var ..) value _ => some value
+        | _ => none
+      if let some lowered := sourceValue.bind (lowerClassCall p ctx) then
+        let stmt := match stmt with
+          | .let_ m name ty _ span => .let_ m name ty lowered span
+          | .expr _ span => .expr lowered span
+          | .return_ _ span => .return_ lowered span
+          | .assign target _ span => .assign target lowered span
+          | other => other
+        return ← statements p n ctx (stmt :: rest) t
       let value := match stmt with
         | .let_ _ _ _ value _ | .expr value _ | .return_ value _ => some value
         | .assign (.var ..) value _ => some value
@@ -709,6 +769,8 @@ mutual
             let value ← asType p n ctx value a
             pure ⟨a, value⟩
         return .let_ name value (← statements p n (binding name a owns :: ctx) rest t)
+      | .assign (.member (.var owner _) field _) value span =>
+        statements p n ctx (.expr (.call (.var "#field" span) [.member (.var owner span) field span, value] span) span :: rest) t
       | .assign (.var name _) value span =>
         let some target := ctx.find? (·.name == name) | refusal "A5102" "unknown assignment target" span
         if target.loan.isSome then
@@ -835,6 +897,7 @@ end
 def function (p : Program) (name : String) : Checked Core.Function := do
   if p.aliases.any (·.1 == "Int53") then
     refusal "A5104" "Int53 extraction requires range obligations, which are not implemented yet" {}
+  let p ← ClassPlan.lower p
   let p ← Declarations.withVariants p
   let some f := p.functions.find? (·.name == name)
     | refusal "A5101" "unknown extraction entry point" {}

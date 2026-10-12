@@ -7,7 +7,7 @@ when their exit criteria pass; finite native tests are not universal proofs.
 | --- | --- | --- |
 | M0 | Complete | Reference sources and historical diagnostics; pinned CI downloads; reserved extraction diagnostics; output preservation tests |
 | M1 | Complete | All reference programs check and certify; grammar, ownership checks, operational semantics and the builtin table have differential coverage. Conservative dialect limits are listed below. |
-| M2 | In progress | Typed Core, scalar/list/Map/Set extraction, owned local updates, structural loops, pure calls, structural denotation, three-way differential and tamper tests. Lawful named records/unions and direct borrowed-state calls are implemented; classes, Int53 safety and reference extraction remain pending. |
+| M2 | In progress | Typed Core, scalar/list/Map/Set extraction, owned local updates, structural loops, pure calls, structural denotation, three-way differential and tamper tests. Lawful named records/unions and direct borrowed-state calls are implemented; class states and direct method calls are implemented; Int53 safety and reference extraction remain pending. |
 | M3 | Pending | Loop invariant/fold lemmas and scalar native proofs are seeded; the universal proofs of the three emitted references remain pending. |
 | M4 | Pending | Fundamental lemma, footprint preservation, adequacy and source transfer |
 | M5 | Pending | Measures, larger ownership, polymorphism, exceptions and scalar backend integration |
@@ -75,8 +75,8 @@ typed `Step`/`Exit` combinators. Maps and Sets have scalar keys, insertion-order
 iteration, reads, and locally owned updates. Owned array `push` becomes append.
 Named records and tagged unions have lawful native representations. Mutated
 borrowed parameters are returned as state components and rebound at direct calls.
-Classes, number-valued counted
-loops, and Int53 refinement are explicitly refused.
+Classes lower to named field records with explicit receiver state and constructors.
+Number-valued counted loops and Int53 refinement are explicitly refused.
 This is an incremental M2 slice, not the M2 reference-program exit gate.
 
 The extraction checkpoint passes the complete `scripts/check.sh` suite: 1,559
@@ -165,3 +165,23 @@ heaps for Maps, Sets and arrays. Native proofs cover increments, preservation of
 other keys, repeated calls, transfers, fresh results and array append. Reassigning
 a mutated borrowed parameter, nested borrowed arguments, and effectful calls
 inside larger expressions still have explicit extraction refusals.
+
+## Class extraction checkpoint
+
+Class fields become a named native record. Constructors initialize fresh state;
+methods that mutate the receiver return its updated state. Direct method calls,
+scalar field assignment, and owned collection-field updates share the existing
+state-threading path. Calls between methods and calls on borrowed class parameters
+are supported. Generated constructor/initializer names cannot collide with source
+method names.
+
+Ten three-way constructor/method traces observe intermediate states, including
+early returns and UTF-16 keys. Native proofs cover initialization, update/frame
+laws, method composition, and borrowed calls. Method bodies with readonly array
+parameters are tested through the operational evaluator; the frontend still
+rejects reference arguments at class-method call sites. Nested receiver expressions
+and nested collection loans remain outside this extraction slice.
+
+The preceding borrowed-state checkpoint passed the complete suite with 2,981
+audited theorems and green CI. The class checkpoint's full regression gate is
+pending. Operational adequacy remains the separate M4 gate.

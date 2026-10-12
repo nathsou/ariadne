@@ -301,16 +301,16 @@ private def emitDeclaration (program : Program) (declaration : Named.Declaration
     s!"    | {rc} value => exact congrArg NativeTypes.{name}.{rc} (NativeRepresentations.{rightName}.construct_destruct value)\n\n"
 
 def emit (source : String) (program : Program) (namespace_ : String) : Checked String := do
-  if !program.classes.isEmpty then
-    Elaborate.refusal "A5102" "class extraction is not implemented yet" program.classes.head!.span
+  let original := program
+  let program ← ClassPlan.lower program
   if program.functions.isEmpty then
     Elaborate.refusal "A5101" "there are no functions to extract" {}
-  let compiled ← program.functions.mapM fun f => do return (f, ← Elaborate.function program f.name)
+  let compiled ← program.functions.mapM fun f => do return (f, ← Elaborate.function original f.name)
   let expanded ← Declarations.withVariants program
   let roots := (compiled.flatMap fun (_, core) =>
     core.params.flatMap typeDeclarations ++ termDeclarations core.body).eraseDups
   let declarations := (← roots.mapM (declarationOrder expanded 100)).flatten.eraseDups
-  let mut out := (Ariadne.emit source program namespace_).replace
+  let mut out := (Ariadne.emit source original namespace_).replace
     "import Ariadne.Certificate\n" "import Ariadne.Certificate\nimport Ariadne.Shallow.Elaborate\n"
   out := out ++ "\n-- Shallow denotation certificates. Operational adequacy is not yet proved.\n" ++
     s!"namespace {namespace_}.Shallow\nopen Ariadne Ariadne.Shallow\nset_option linter.unusedSimpArgs false\n\n"

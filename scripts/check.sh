@@ -45,4 +45,5 @@ fi
 "$js" scripts/shallow-records.mjs
 "$js" scripts/shallow-unions.mjs
 "$js" scripts/shallow-state.mjs
+"$js" scripts/shallow-classes.mjs
 "$js" scripts/builtins.mjs

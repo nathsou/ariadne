@@ -45,3 +45,6 @@ import Examples.Proofs.ShallowCollections
 import Examples.Proofs.ShallowRecords
 import Examples.Proofs.ShallowUnions
 import Examples.Proofs.ShallowState
+
+import Examples.Shallow.classes
+import Examples.Proofs.ShallowClasses

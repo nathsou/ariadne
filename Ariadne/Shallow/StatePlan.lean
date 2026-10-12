@@ -30,7 +30,11 @@ mutual
           if writes.contains param.name then Check.root arg else none)
       | .call (.member receiver method _) args _ =>
         let nested := (← expressionEffects p n receiver) ++ (← args.mapM (expressionEffects p n)).flatten
-        return nested ++ if mutator method then (Check.root receiver).toList else []
+        let mut writes := mutator method
+        for c in (match receiver with | .var .. => p.classes | _ => []) do
+          if let some f := p.functions.find? (·.name == c.name ++ "#" ++ method) then
+            if (← effects p n f).contains "this" then writes := true
+        return nested ++ if writes then (Check.root receiver).toList else []
       | .call callee args _ =>
         return (← expressionEffects p n callee) ++ (← args.mapM (expressionEffects p n)).flatten
       | .binary _ a b _ | .index a b _ =>

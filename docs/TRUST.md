@@ -57,7 +57,9 @@ Core denotation, renaming and substitution are parameterized by a lawful named
 interpretation. Record fields are observed by their declared types; absent optional
 fields and explicit `undefined` both read as `none`. Property enumeration and
 own-property tests are not admitted. Tagged unions become native inductives with
-lawful variant representations. Classes are still pending.
+lawful variant representations. Classes use the same lawful record representation;
+constructors and explicit receiver functions are included in the kernel-checked
+elaboration equation. Mutating methods return updated receiver state.
 Its
 `ElaborationChecks` and `DenotationChecks` namespaces certify the new links.
 Those checks do **not** establish adequacy: an elaborator bug could still choose
