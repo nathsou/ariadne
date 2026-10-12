@@ -9,7 +9,7 @@ when their exit criteria pass; finite native tests are not universal proofs.
 | M1 | Complete | All reference programs check and certify; grammar, ownership checks, operational semantics and the builtin table have differential coverage. Conservative dialect limits are listed below. |
 | M2 | Complete | Typed Core, scalar/list/Map/Set extraction, owned local updates, structural loops, pure calls, structural denotation, three-way differential and tamper tests. Lawful named records/unions and direct borrowed-state calls are implemented; class states, Int53 guards and original reference extraction are implemented; the full integration regression gate passed. |
 | M3 | In progress | The original decision extraction has universal membership, floor and permutation proofs. Register convergence and idempotence are proved against the emitted methods. All three original reference proofs are complete over emitted definitions; general Int53 exactness and remaining library lemmas are pending. |
-| M4 | Pending | Fundamental lemma, footprint preservation, adequacy and source transfer |
+| M4 | In progress | Heap framing, compositional data relations and external-heap source predicates are proved. The fundamental lemma and generated source transfer remain pending. |
 | M5 | Pending | Measures, larger ownership, polymorphism, exceptions and scalar backend integration |
 
 ## Reference specifications
@@ -285,3 +285,34 @@ theorems before adding these safety examples.
 Division is now proved exact when the mathematical quotient is integral, including
 its floor/truncation wrappers and the canonical-zero condition. Nonintegral
 quotient rounding remains the numeric proof still in progress.
+
+## Operational adequacy foundations
+
+`Heap.lean` proves that allocation preserves existing observations and that writes
+inside an owned footprint preserve disjoint, allocated footprints.
+`Shallow/Represents.lean` composes these laws for scalar values (including canonical
+Int53 zero), options, arrays, maps, sets, source-named record fields, unions and
+class state. Runtime layouts are explicit: a Core pair does not by itself say
+whether the source stored a tuple or record, nor retain its field names. Owned
+children have disjoint footprints and exclude their root address; numeric
+collections additionally require normalized keys. Named representations work
+for every lawful interpretation. Allocation and framing theorems are proved.
+
+`SourceFrom.lean` adds budget-independent calls from existing states, retaining
+final states for class traces, and `SourceReturnsFrom` for external input heaps.
+Execution is defined using the existing evaluator and `Converges`. Determinism,
+eventual agreement, certificate transfer and compatibility with `SourceReturns`
+on the empty heap are proved. Input representation remains an adequacy premise,
+not a claim made by the raw execution predicate. These are foundations: no
+generated function has an operational adequacy theorem yet.
+
+CI #58 passed the complete suite after the NaN harness correction. The subsequent
+integral quotient and emitted safety proof checkpoint built and audited 4,133
+theorems. Nonintegral quotient rounding remains open; its explicit primitive
+bit-equality guard remains in generated safety predicates.
+
+The foundation checkpoint builds `Ariadne` and `Examples` and passes the axiom
+audit (4,206 theorems). `Convergence.lean` proves compositional evaluation rules
+for strict scalar operations, conditionals, short-circuit boolean operators and
+member/index reads. These rules preserve source evaluation order and combine
+finite witnesses through the existing fuel monotonicity theorem.

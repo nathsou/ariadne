@@ -9,3 +9,6 @@ import Ariadne.Shallow.Prelude.String
 import Ariadne.Shallow.Lemmas.Prelude
 import Ariadne.Shallow.Prelude.Sort
 import Ariadne.Shallow.Prelude.Int53Exact
+import Ariadne.Shallow.Represents
+import Ariadne.SourceFrom
+import Ariadne.Convergence
