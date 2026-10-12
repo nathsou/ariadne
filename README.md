@@ -9,7 +9,8 @@ and the optional host bootstrap.
 operational translation. The frontend accepts functions, local mutation, `while`/`for`, native dense arrays and Maps, typed callbacks,
 `number`, `bigint`, UTF-16 strings, booleans, optional values, records, and tuples.
 `compile` emits proved-correct Lean function combinators for a smaller scalar
-fragment; `translate`/`certify` emit the larger operational model. The compiler still
+fragment, including named calls and direct/mutual recursion; `translate`/`certify`
+emit the larger operational model. The compiler still
 uses explicit cells and fuel. Read [the proof boundary](docs/TRUST.md) before using
 its theorems as claims about a deployed JavaScript program.
 
@@ -54,7 +55,11 @@ The printer and native translator executable are outside this correctness chain.
 The scalar compiler carries semantic equality proofs for every successful result.
 Its emitted function is kernel-checked against that compiler result. The
 [compiled multiplication proof](Examples/Proofs/Compiled.lean) covers arbitrary
-integers, an explicit termination bound, and every larger fuel budget.
+integers, an explicit termination bound, and every larger fuel budget. The
+[recursive countdown proof](Examples/Proofs/Recursion.lean) provides the same
+guarantees for every integer input and proves independence from the linker’s
+reference-call compatibility branch. A separate [divergence proof](Examples/Proofs/Divergence.lean)
+covers every budget for an infinite recursive function.
 
 The proof library also proves fuel stability and deterministic completed outcomes
 for the full evaluator, a general loop-invariant rule, Map lookup/update laws,
@@ -67,7 +72,7 @@ callbacks, and Unicode operations, including final collection contents.
 
 This does **not** prove that the handwritten grammar is the ECMAScript specification,
 that the checker is sound for all accepted programs, or that a JavaScript engine
-implements the model. Fuel exhaustion is inconclusive. Dynamic array bounds and
+implements the model. A single fuel exhaustion is inconclusive. Dynamic array bounds and
 incoming heap/realm assumptions remain explicit obligations.
 
 ## Documentation

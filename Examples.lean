@@ -26,3 +26,16 @@ import Examples.Compiled.reverse
 import Examples.Compiled.triangular
 import Examples.Proofs.Compiled
 import Examples.Proofs.ScalarExecutions
+import Examples.Recursive.ackermann
+import Examples.Recursive.argumentOrder
+import Examples.Recursive.collatz
+import Examples.Recursive.countdown
+import Examples.Recursive.fibonacci
+import Examples.Recursive.forever
+import Examples.Recursive.localFrames
+import Examples.Recursive.parity
+import Examples.Recursive.scalars
+import Examples.Recursive.shortCircuit
+import Examples.Proofs.Recursion
+import Examples.Proofs.Divergence
+import Examples.Proofs.RecursiveExecutions

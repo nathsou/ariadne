@@ -13,3 +13,9 @@ for source in examples/scalar/*.ts; do
   .lake/build/bin/ariadne compile "$source" "$stem" \
     --out "Examples/Compiled/${stem}.lean" --namespace "Compiled_${stem}"
 done
+mkdir -p Examples/Recursive
+for source in examples/recursive/*.ts; do
+  stem=$(basename "$source" .ts)
+  .lake/build/bin/ariadne compile "$source" "$stem" \
+    --out "Examples/Recursive/${stem}.lean" --namespace "Recursive_${stem}"
+done

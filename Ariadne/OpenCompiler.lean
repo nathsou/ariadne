@@ -91,7 +91,7 @@ mutual
         correct := by rw [f.correct, a.correct]; funext fuel s; cases fuel <;> rfl
         causal := fun limit left right h => Target.call_congr h
           (f.causal limit left right h) (a.causal limit left right h)
-        text := app "call" ["runtime", f.text, a.text] }
+        text := app "call" ["_runtime", f.text, a.text] }
     | _ + 1, e@(.array ..) => .error (unsupported e.span "array allocation")
     | _ + 1, e@(.record ..) => .error (unsupported e.span "record allocation")
     | _ + 1, e@(.newMap ..) => .error (unsupported e.span "Map allocation")

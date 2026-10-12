@@ -38,7 +38,11 @@ suite. No broad native-program speedup/slowdown percentage is claimed.
 The scalar backend now specializes source syntax into proved-correct Lean function
 combinators. It retains the list-based cells and dynamic scalar representation, so
 removing AST dispatch does not establish an asymptotic or measured speedup. Its
-correctness proofs are erased during native execution.
+correctness proofs are erased during native execution. Linked functions use a
+list-based definition lookup and allocate explicit call frames; the model heap
+retains these cells after returns. Native TypeScript retains its ordinary runtime
+allocation and garbage collection behavior. The recursive backend adds no new
+restriction on native scalar algorithms beyond the documented subset contract.
 
 Future work should profile parser sharing, use certificates with smaller replay
 steps, and prove a transition from cells to specialized typed state tuples. Measure these separately from native runtime

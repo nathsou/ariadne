@@ -72,7 +72,6 @@ theorem link_correct (p : Program) (table : Table p) (depth : Nat) :
           simp [Target.link, apply, ht, sourceNone]
         | some f =>
           have member := List.mem_of_find?_eq_some ht
-          have bodies := f.body
           have same := table.causal f member depth _ _ ih
           cases hs : p.functions.find? (fun f => f.name == name) with
           | none => simp [ht, hs] at correspondence
@@ -124,7 +123,7 @@ def definitions (p : Program) : (fs : List Function) → Checked (TableFor p fs)
         | head => exact body.causal
         | tail _ h => exact rest.causal entry h
       texts := ("{ name := " ++ reprStr f.name ++ ", params := (" ++ reprStr f.params ++
-        "), body := fun runtime =>\n  " ++ body.text.replace "\n" "\n  " ++ " }") :: rest.texts }
+        "), body := fun _runtime =>\n  " ++ body.text.replace "\n" "\n  " ++ " }") :: rest.texts }
 
 /-- The closed recursive compiler preserves the same public result type as the
 call-free compiler. Its proof covers every fuel and input value list. -/
