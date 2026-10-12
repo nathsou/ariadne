@@ -14,7 +14,8 @@ theorem copyIfValid_spec (candidate : Candidate) :
     copyIfValid candidate = match candidate with | .valid _ => some candidate | .rejected _ => none := by
   cases candidate <;> rfl
 
-theorem fallback_present (candidate : Candidate) : fallback (some candidate) = candidate := rfl
+theorem fallback_present (candidate : Candidate) : fallback (some candidate) = candidate := by
+  cases candidate <;> rfl
 
 theorem eventValue_changed (value : Int) : eventValue (changed value) = value := rfl
 

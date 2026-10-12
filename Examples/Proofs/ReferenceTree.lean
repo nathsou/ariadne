@@ -247,7 +247,7 @@ private theorem move_body (s : State) (node : JSString) (parent cursor old : Opt
 
 private theorem move_finish (s : State) (node : JSString) (parent cursor old : Option JSString)
     (prior : Unit × State × Unit) :
-    JoinNative.«Tree#move#6» (moveEnv s node parent cursor old prior) = ((), after s node parent, ()) := by
+    JoinNative.«Tree#move#5» (moveEnv s node parent cursor old prior) = ((), after s node parent, ()) := by
   cases parent with
   | none => rfl
   | some p => cases h : s.children.get p <;> simp [moveEnv, after, attached, h]
@@ -255,7 +255,7 @@ private theorem move_finish (s : State) (node : JSString) (parent cursor old : O
 private theorem move_loop (xs : List Int) (s : State) (node : JSString)
     (parent cursor old : Option JSString) (prior : Unit × State × Unit) :
     (Exit.elim (Loop.each xs (moveEnv s node parent cursor old prior) JoinNative.«Tree#move#3»)
-      JoinNative.«Tree#move#6» id).2.1 =
+      JoinNative.«Tree#move#5» id).2.1 =
       if hits s node xs.length cursor then s else after s node parent := by
   induction xs generalizing cursor with
   | nil => simp only [List.length_nil, Loop.each, Exit.elim, move_finish, hits, Bool.false_eq_true, ↓reduceIte]
@@ -269,32 +269,32 @@ private theorem move_loop (xs : List Int) (s : State) (node : JSString)
       · simp only [h, ↓reduceIte, hits, List.length_cons]
         exact ih _
 
-private theorem move_join7 (s : State) (node : JSString) (parent old : Option JSString)
+private theorem move_detach_parent (s : State) (node : JSString) (parent old : Option JSString)
     (prior : Unit × State × Unit) :
-    (JoinNative.«Tree#move#7» (old, ((), (s, (s, (prior, (JoinNative.«Tree#move#0», (node, (parent, ()))))))))).2.1 =
+    (JoinNative.«Tree#move#6» (old, ((), (s, (s, (prior, (JoinNative.«Tree#move#0», (node, (parent, ()))))))))).2.1 =
       let detached := { s with parents := s.parents.delete node }
       if hits detached node detached.children.size parent then detached else after detached node parent := by
   change (Exit.elim (Loop.each (Loop.integers 0 (Int.ofNat s.children.size))
     (moveEnv { s with parents := s.parents.delete node } node parent parent old prior) JoinNative.«Tree#move#3»)
-    JoinNative.«Tree#move#6» id).2.1 = _
+    JoinNative.«Tree#move#5» id).2.1 = _
   rw [move_loop]
   simp
 
-private theorem move_join9 (s : State) (node : JSString) (parent : Option JSString)
+private theorem move_detach (s : State) (node : JSString) (parent : Option JSString)
     (prior : Unit × State × Unit) :
-    (JoinNative.«Tree#move#9» ((), (s, (s, (prior, (JoinNative.«Tree#move#0», (node, (parent, ())))))))).2.1 =
+    (JoinNative.«Tree#move#7» ((), (s, (s, (prior, (JoinNative.«Tree#move#0», (node, (parent, ())))))))).2.1 =
       let d := detached s node
       if hits d node d.children.size parent then d else after d node parent := by
   cases h : s.parents.get node with
   | none =>
-    simpa only [JoinNative.«Tree#move#9», NativeDestruct.«Tree#state», h, Option.elim_none, detached]
-      using move_join7 s node parent none prior
+    simpa only [JoinNative.«Tree#move#7», NativeDestruct.«Tree#state», h, Option.elim_none, detached]
+      using move_detach_parent s node parent none prior
   | some old =>
     cases children : s.children.get old
-    all_goals simpa only [JoinNative.«Tree#move#9», JoinNative.«Tree#move#8», NativeDestruct.«Tree#state»,
+    all_goals simpa only [JoinNative.«Tree#move#7», NativeDestruct.«Tree#state»,
       NativeConstruct.«Tree#state», h, children, Option.elim_some, Option.elim_none, Option.getD_some,
       Option.getD_none, detached, JSArray.filter_unindexed, bne]
-      using (move_join7 { s with children := s.children.set old ((s.children.get old).getD [] |>.filter (· != node)) }
+      using (move_detach_parent { s with children := s.children.set old ((s.children.get old).getD [] |>.filter (· != node)) }
         node parent (some old) prior)
 
 private theorem move_add (s : State) (node : JSString) :
@@ -312,8 +312,8 @@ def move (s : State) (node : JSString) (parent : Option JSString) : State :=
 theorem move_eq (s : State) (node : JSString) (parent : Option JSString) :
     («Tree#move» s node parent).2.1 = move s node parent := by
   cases parent with
-  | none => simp only [«Tree#move», move_add, Option.elim_none, move_join9, move] <;> rfl
-  | some p => simp only [«Tree#move», move_add, Option.elim_some, move_join9, move] <;> rfl
+  | none => simp only [«Tree#move», move_add, Option.elim_none, move_detach, move] <;> rfl
+  | some p => simp only [«Tree#move», move_add, Option.elim_some, move_detach, move] <;> rfl
 
 theorem move_consistent (s : State) (consistent : Consistent s) (node : JSString) (parent : Option JSString) :
     Consistent (move s node parent) := by
