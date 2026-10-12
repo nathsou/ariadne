@@ -342,6 +342,9 @@ def reserved (name : String) : Bool :=
   ["#templateString", "NaN", "Infinity", "Math", "Number", "BigInt", "Map", "Set", "Array", "Object", "Reflect",
     "eval", "Function", "globalThis", "__proto__", "constructor", "prototype"].contains name
 
+def shadowsCallable (program : Program) (name : String) : Bool :=
+  program.functions.any (·.name == name) || program.classes.any (·.name == name)
+
 def join (a b : Ty) : Ty := if a == b then a else
   if (a == .int53 && b == .number) || (a == .number && b == .int53) then .number else .union a b
 
@@ -509,7 +512,7 @@ mutual
         if (params.map Param.name).eraseDups.length != params.length then
           error "A2005" "duplicate callback parameter" span
         for param in params do
-          if reserved param.name || ctx.program.functions.any (fun f => f.name == param.name) then
+          if reserved param.name || shadowsCallable ctx.program param.name then
             error "A3004" s!"cannot shadow reserved name '{param.name}'" param.span
           if ctx.bindings.any (fun b => b.name == param.name) then
             error "A2005" "callback parameter shadowing is not supported" param.span
@@ -772,7 +775,7 @@ mutual
         let _ ← checkBlock n ctx stmts
         return invalidate ctx (writes n stmt)
       | .let_ mutable name annotation value span =>
-        if reserved name || ctx.program.functions.any (fun f => f.name == name) then error "A3004" s!"cannot shadow reserved intrinsic '{name}'" span
+        if reserved name || shadowsCallable ctx.program name then error "A3004" s!"cannot shadow reserved intrinsic '{name}'" span
         if ctx.bindings.any (fun b => b.name == name) then error "A2005" s!"shadowing or duplicate declaration of '{name}' is not supported" span
         let t ← match annotation with
           | some ty =>
@@ -847,6 +850,8 @@ mutual
         if ty != .number && ty != .int53 && ty != .bigint then error "A2002" "a measure must have a numeric type" measure.span
         checkStmt n ctx body
       | .forOf mutable name collection body span =>
+        if shadowsCallable ctx.program name then
+          error "A3004" s!"cannot shadow function '{name}'" span
         if reserved name || ctx.bindings.any (·.name == name) then error "A2005" "duplicate or reserved loop binding" span
         let ty := unreadonly (← infer n ctx collection)
         let t ← match ty with
@@ -929,7 +934,7 @@ def program (p : Program) : Checked Unit := do
     if (f.params.map Param.name).eraseDups.length != f.params.length then
       error "A2005" "duplicate parameter" f.span
     let bindings ← f.params.mapM fun param => do
-      if reserved param.name || p.functions.any (fun f => f.name == param.name) then error "A3004" s!"cannot shadow intrinsic '{param.name}'" param.span
+      if reserved param.name || shadowsCallable p param.name then error "A3004" s!"cannot shadow intrinsic '{param.name}'" param.span
       let t ← resolve 100 p param.ty
       requireSupportedType t param.span
       return { name := param.name, ty := t, mutable := true, borrowed := referenceType t, span := param.span : Binding }
@@ -962,6 +967,8 @@ def program (p : Program) : Checked Unit := do
         error "A3001" "field initializer must be fresh" field.span
     for method in c.constructor_.toList ++ c.methods do
       let bindings ← method.params.mapM fun param => do
+        if shadowsCallable p param.name then
+          error "A3004" s!"cannot shadow function '{param.name}'" param.span
         let ty ← resolve 100 p param.ty
         requireSupportedType ty param.span
         return { name := param.name, ty, mutable := true, borrowed := referenceType ty, span := param.span : Binding }
