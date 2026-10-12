@@ -230,3 +230,9 @@ from any initial state. Equal encoded keys and stamps must identify equal values
 The conclusions include both emitted read accessors and preserve the distinction
 between absent counter entries and stored values. The string prelude proves
 composite-key injectivity when the first components exclude the delimiter.
+
+The original tree extraction has a universal child/parent agreement theorem for
+all states reachable through the emitted constructor, `add` and `move` methods.
+Its emitted root walk reaches a parentless node within the node count for closed,
+acyclic parent graphs (acyclicity is expressed by a decreasing natural rank).
+Preservation of those root-walk hypotheses by every reachable move is pending.
