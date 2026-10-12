@@ -87,7 +87,13 @@ mutual
         | "undefined" => pure Ty.undefined | "null" => pure Ty.null
         | "void" => pure Ty.void
         | "|" => parseTy n
-        | "readonly" => return .readonly (← parseTy n)
+        | "readonly" => do
+          let ty ← parseTy n
+          match ty with
+          | .array _ | .tuple _ => pure (.readonly ty)
+          | .union (.array a) b => pure (.union (.readonly (.array a)) b)
+          | .union (.tuple a) b => pure (.union (.readonly (.tuple a)) b)
+          | _ => fail "A1000" "readonly type modifiers require an array or tuple" t
         | "<string>" => pure (.stringLiteral (t.stringValue.getD []))
         | "Set" | "ReadonlySet" => do
           let _ ← expect "<"

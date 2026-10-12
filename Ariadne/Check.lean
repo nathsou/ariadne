@@ -359,6 +359,8 @@ mutual
           let ty ← resolve 100 ctx.program param.ty
           checkExpr n ctx arg ty
           if referenceType ty then
+            if immutable ty && !fresh arg then
+              if !immutable (← infer n ctx arg) then error "A3001" "a mutable owner cannot be shared with a constructor" arg.span
             if !immutable ty then checkWrite ctx arg
             if let some r := root arg then
               if roots.contains r then error "A3001" "overlapping constructor arguments" arg.span

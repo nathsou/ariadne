@@ -7,6 +7,12 @@ for source in examples/*.ts; do
   namespace="Example_${stem}"
   .lake/build/bin/ariadne translate "$source" --out "Examples/Generated/${stem}.lean" --namespace "$namespace"
 done
+mkdir -p Examples/Shallow
+for source in examples/shallow/*.ts; do
+  stem=$(basename "$source" .ts)
+  .lake/build/bin/ariadne extract "$source" \
+    --out "Examples/Shallow/${stem}.lean" --namespace "Extracted_${stem}"
+done
 mkdir -p Examples/OperationalReference
 for source in examples/reference/*.ts; do
   stem=$(basename "$source" .ts)

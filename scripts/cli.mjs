@@ -14,11 +14,13 @@ try {
   assert.equal(cli(['eval', source, 'demo', 'bad']).status, 2);
   assert.equal(cli(['eval', source, 'missing']).status, 2);
   await writeFile(artifact, 'preserve existing output\n');
+  await writeFile(source, 'export function demo(): bigint { while (true) { } return 0n; }\n');
   const extract = cli(['extract', source, '--out', artifact, '--json']);
   assert.equal(extract.status, 1, extract.stdout + extract.stderr);
-  assert.equal(JSON.parse(extract.stdout).code, 'A5000');
+  assert.equal(JSON.parse(extract.stdout).code, 'A5101');
   assert.equal(await readFile(artifact, 'utf8'), 'preserve existing output\n');
   assert.equal(cli(['extract', source, '--out', artifact, '--json', '--json']).status, 2);
+  await writeFile(source, 'export function demo(): bigint { return 2n + 3n; }\n');
   assert.equal(cli(['translate', source, '--out', artifact, '--bogus', 'x']).status, 2);
   const alias = resolve(dir, 'Alias.lean');
   await symlink(source, alias);

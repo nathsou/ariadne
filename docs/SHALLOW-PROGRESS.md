@@ -7,8 +7,8 @@ when their exit criteria pass; finite native tests are not universal proofs.
 | --- | --- | --- |
 | M0 | Complete | Reference sources and historical diagnostics; pinned CI downloads; reserved extraction diagnostics; output preservation tests |
 | M1 | In progress | All reference programs check and certify; classes, unions, interfaces, readonly/optional fields, narrowing, loops, switch, spread, Sets, escapes, templates and measure syntax implemented. Remaining builtin coverage is tracked below. |
-| M2 | Pending | Typed Core, interpretations, elaboration, denotation, extraction and three-way differential tests |
-| M3 | Pending | Prelude lemmas and universal proofs of the emitted references |
+| M2 | In progress | Typed scalar Core, structural denotation, checked extraction, three-way differential and tamper tests. Named types, collections, loops, calls, Int53 safety and reference extraction remain pending. |
+| M3 | Pending | Loop invariant/fold lemmas and scalar native proofs are seeded; the universal proofs of the three emitted references remain pending. |
 | M4 | Pending | Fundamental lemma, footprint preservation, adequacy and source transfer |
 | M5 | Pending | Measures, larger ownership, polymorphism, exceptions and scalar backend integration |
 
@@ -52,3 +52,25 @@ Frontend checkpoint: the complete `scripts/check.sh` suite passes with 1,217
 audited theorems, 42 native entry points, 64 generated programs, 51 scalar
 comparisons, 37 negative fixtures, and 21 reference inputs/traces. All three
 reference operational certificates build in CI. This is not M2–M5 completion.
+
+## Initial extraction fragment
+
+`extract` now accepts pure scalar functions with local reassignment, branches,
+bigint addition/subtraction/multiplication and comparisons, binary64 arithmetic,
+UTF-16 string operations, and optional scalar values. Branch continuations are
+shared through typed tuple arguments. Function calls, loops, named types,
+collections, classes, and Int53 refinement are explicitly refused. This is an
+incremental M2 slice, not the M2 reference-program exit gate.
+
+The extraction checkpoint passes the complete `scripts/check.sh` suite: 1,559
+audited theorems, 39 negative fixtures, and 38 additional three-way scalar
+comparisons. A 20-branch stress case checks continuation sharing and closed
+results in the kernel. Each shared continuation has its own denotation lemma;
+the function certificate composes these lemmas without expanding all paths.
+
+Generated modules contain an intrinsically typed Core term, an elaboration
+equation checked by the kernel, native definitions, and per-function denotation
+equations. Extraction checks a temporary candidate before replacing output.
+The current denotation remains a trust boundary until M4. The scalar proof
+examples prove properties of emitted definitions only and do not claim source
+transfer.

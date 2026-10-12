@@ -14,6 +14,7 @@ run_cmd do
         "Example_numbers", "Example_optionals", "Example_pipelines", "Example_power",
         "Example_records", "Example_search", "Example_sorting", "Example_strings", "Tests"].contains root.toString ||
         root.toString.startsWith "Example_" || root.toString.startsWith "Reference_" ||
+        root.toString.startsWith "Extracted_" ||
         root.toString.startsWith "Compiled_" then
       if info.isTheorem then
         count := count + 1

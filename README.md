@@ -27,6 +27,8 @@ lake build ariadne
   --out work/Fibonacci.lean --namespace Fibonacci
 .lake/build/bin/ariadne compile examples/scalar/multiply.ts multiply \
   --out work/Multiply.lean --namespace Multiply
+.lake/build/bin/ariadne extract examples/shallow/scalars.ts \
+  --out work/Shallow.lean --namespace Shallow
 ```
 
 Run commands from this repository's root. `compile` and `certify` need `lake` on
@@ -43,6 +45,12 @@ scripts/check.sh
 The script builds certificates serially to bound peak memory, checks generated files
 against their sources, audits theorem dependencies, and runs native comparisons.
 No JavaScript engine is needed to build the translator or check Lean proofs.
+
+The initial `extract` backend emits native Lean scalar definitions with
+kernel-checked Core elaboration and denotation equations. It supports branches,
+local reassignment, binary64 arithmetic, bigint arithmetic without division,
+UTF-16 strings, and options. It does not yet prove operational adequacy or extract
+the three reference programs. See [milestone status](docs/SHALLOW-PROGRESS.md).
 
 ## What is proved
 

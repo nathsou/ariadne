@@ -121,11 +121,6 @@ private def process (args : List String) : IO UInt32 := do
     if (← IO.FS.realPath outputPath) == (← IO.FS.realPath path) then
       IO.eprintln "Refusing to overwrite the TypeScript source"
       return 2
-  if command == "extract" then
-    let d : Diagnostic := { code := "A5000", message := "shallow extraction is not implemented yet" }
-    if args.contains "--json" then IO.println ((d.toJson source).compress)
-    else IO.eprint (d.render source)
-    return 1
   let artifact ← if command == "compile" then
     match emitCompiled text program args[2]! namespace_ with
     | .ok artifact => pure artifact
@@ -133,7 +128,29 @@ private def process (args : List String) : IO UInt32 := do
       if args.contains "--json" then IO.println ((d.toJson source).compress)
       else IO.eprint (d.render source)
       return 1
+    else if command == "extract" then
+      match Shallow.emit text program namespace_ with
+      | .ok artifact => pure artifact
+      | .error d =>
+        if args.contains "--json" then IO.println ((d.toJson source).compress)
+        else IO.eprint (d.render source)
+        return 1
     else pure (emit text program namespace_)
+  if command == "extract" then
+    -- Check a temporary candidate before touching an existing output file.
+    let result ← IO.FS.withTempDir fun dir => do
+      let candidate := dir / "Extracted.lean"
+      IO.FS.writeFile candidate artifact
+      IO.Process.output { cmd := "lake", args := #["env", "lean", candidate.toString] }
+    if result.exitCode != 0 then
+      IO.eprintln "error[A4001]: generated shallow artifact failed kernel checking"
+      IO.eprint result.stdout
+      IO.eprint result.stderr
+      return 1
+    if let some parent := outputPath.parent then IO.FS.createDirAll parent
+    IO.FS.writeFile outputPath artifact
+    IO.println s!"Certified shallow denotation: {out}. Operational adequacy is not yet proved."
+    return 0
   if let some parent := outputPath.parent then IO.FS.createDirAll parent
   IO.FS.writeFile outputPath artifact
   if command == "translate" then

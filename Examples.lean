@@ -30,3 +30,5 @@ import Examples.Proofs.ScalarExecutions
 import Examples.OperationalReference.decision
 import Examples.OperationalReference.registers
 import Examples.OperationalReference.tree
+import Examples.Shallow.scalars
+import Examples.Proofs.ShallowScalars

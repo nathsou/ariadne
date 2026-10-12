@@ -66,8 +66,10 @@ These errors leave an existing output file untouched. A generated artifact that
 fails kernel checking reports `A4001` and remains an uncertified candidate.
 ## Shallow extraction
 
-`extract` reserves `A5xxx`. `A5000` reports an unavailable extraction backend;
-`A5101` a totality refusal; `A5102` an ownership refusal; `A5103` an impure
-callback; and `A5104` a builtin without a shallow model. Frontend errors retain
-their original codes. Refusal leaves existing output untouched.
+`extract` uses `A5xxx`. `A5000` is reserved for an unavailable backend;
+`A5101` reports unsupported totality/control flow or exhausted elaboration bounds;
+`A5102` reports missing type or ownership lowering; `A5103` is reserved for impure
+callbacks; and `A5104` reports an operation without a shallow model. Frontend
+errors retain their original codes. Refusal and failed kernel checking leave
+existing output untouched.
 
