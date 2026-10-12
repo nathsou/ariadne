@@ -381,3 +381,26 @@ from range, nonzero-divisor and signed-zero premises for arbitrary inputs.
 Together with the existing native reference and prelude proofs, this closes M3.
 M4 remains partial: the general stateful/data correspondence and reference
 source transfers are still required. M5 has not been completed.
+
+## Scalar statement source transfer
+
+The correspondence witness now covers fresh local declarations, nested blocks
+that return, conditional early returns and unreachable suffixes. The proof uses
+compositional convergence rules for the original `exec`/`execBlock`, accounts
+for allocated binding cells, and restores lexical scopes and caller frames.
+Generated witnesses refer to the actual source statement list and typed Core
+body. Reassignment, shadowing and shared continuations still need a richer
+environment relation; the emitter does not claim transfer for them.
+
+The source fixture now contains fourteen universal emitted theorems. Native
+facts about local arithmetic, early returns and nested branches transfer for
+arbitrary inputs and initial heaps. Five kernel tamper tests cover primitive
+rules, input bindings, function identity, local names and branch conditions.
+The targeted source proof build and all five tamper checks pass.
+
+Record access now has a borrowed-footprint correspondence theorem, with
+compositional field projections. `defaultField` handles both absent optional
+fields and explicit `undefined`; class fields retain the required-field layout
+because the operational model interprets absent class members as methods.
+Replacing an owned root preserves disjoint child observations and framed heap
+objects. These primitive laws do not establish whole-record/class adequacy.

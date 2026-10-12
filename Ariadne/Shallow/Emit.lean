@@ -104,6 +104,31 @@ private def scalarProof (names : List String) : Expr → Term Γ t → Option St
   | _, _ => none
 termination_by structural _ term => term
 
+private def freshProof : Nat → String
+  | 0 => "cases v"
+  | n + 1 => "cases v with | here => decide | there v => " ++ freshProof n
+
+private def statementsProof : Nat → (names : List String) → List Stmt → Term Γ t → Option String
+  | 0, _, _, _ => none
+  | fuel + 1, names, statements, term =>
+    match statements, term with
+    | .return_ expression _ :: _, term => do
+      return s!".return_ ({← scalarProof names expression term}) _ _"
+    | .block [] _ :: rest, term => do
+      return s!".emptyBlock ({← statementsProof fuel names rest term}) _"
+    | .block inner _ :: _, term => do
+      return s!".block ({← statementsProof fuel names inner term}) _ _"
+    | .let_ _ name _ expression _ :: rest, .let_ coreName value body => do
+      if name != coreName || names.contains name then none else
+        return s!".let_ {reprStr name} ({← scalarProof names expression value}) " ++
+          s!"(by intro t v; {freshProof names.length}) " ++
+          s!"({← statementsProof fuel (name :: names) rest body}) _ _ _"
+    | .if_ condition yes no _ :: rest, .ite test a b => do
+      return s!".if_ ({← scalarProof names condition test}) " ++
+        s!"({← statementsProof fuel names (yes :: rest) a}) " ++
+        s!"({← statementsProof fuel names (no :: rest) b}) _"
+    | _, _ => none
+
 private def inputProof (count : Nat) : String :=
   let rec casesFor (remaining : Nat) (indent : String) : String :=
     match remaining with
@@ -117,9 +142,9 @@ private def inputProof (count : Nat) : String :=
 
 private def sourceTheorem (namespace_ : String) (f : Ariadne.Function) (core : Core.Function)
     (params : String) (names : List String) (safeEnv : String) (publicAlias : Bool) : Option String := do
-  let .block [.return_ expression returnSpan] blockSpan := f.body | none
+  let .block statements blockSpan := f.body | none
   let kind ← scalarKind core.result
-  let proof ← scalarProof (f.params.map Param.name) expression core.body
+  let proof ← statementsProof 1024 (f.params.map Param.name) statements core.body
   let args ← (core.params.zip names).mapM fun (ty, name) => scalarValue ty name
   let encoded ← scalarValue core.result s!"({ident f.name}{String.join (names.map (" " ++ ·))})"
   let args := "[" ++ String.intercalate ", " args ++ "]"
@@ -127,20 +152,20 @@ private def sourceTheorem (namespace_ : String) (f : Ariadne.Function) (core : C
   let theoremName := if publicAlias then ident (f.name ++ "_source") else s!"{checkName}.source"
   let coreName := s!"CoreArtifacts.{ident f.name}"
   let functionData := (reprStr f).replace "\n" " "
-  let exprData := (reprStr expression).replace "\n" " "
+  let statementData := (reprStr statements).replace "\n" " "
   return s!"def {checkName}.function : Ariadne.Function := {functionData}\n\n" ++
     s!"def {checkName}.names : Adequacy.Names {coreName}.params :=\n" ++
     s!"  Adequacy.Names.fromList {reprStr (f.params.map Param.name)}\n\n" ++
     s!"theorem {checkName}.translated :\n" ++
-    s!"    Adequacy.ScalarExpr {checkName}.names {kind} ({exprData}) {coreName}.body := by\n" ++
+    s!"    Adequacy.ScalarStatements {checkName}.names {kind} ({statementData}) {coreName}.body := by\n" ++
     s!"  exact {proof}\n\n" ++
     s!"theorem {theoremName}{params} (heap : Heap) :\n" ++
     s!"    SourceReturnsFrom _root_.{namespace_}.source {reprStr f.name} heap {args} {encoded} := by\n" ++
     s!"  have inputs : Adequacy.Environment {checkName}.names\n" ++
     s!"      (Adequacy.bindArguments \u007b heap \u007d {checkName}.function.params {args})\n" ++
     s!"      (interp := Interpretation.value) {safeEnv} := by\n" ++ inputProof core.params.length ++
-    s!"  exact Adequacy.scalar_source _root_.{namespace_}.certificate {checkName}.function {checkName}.names {kind} {coreName}.body\n" ++
-    s!"    ({exprData}) ({reprStr returnSpan}) ({reprStr blockSpan})\n" ++
+    s!"  exact Adequacy.scalar_statements_source _root_.{namespace_}.certificate {checkName}.function {checkName}.names {kind} {coreName}.body\n" ++
+    s!"    ({statementData}) ({reprStr blockSpan})\n" ++
     s!"    (by kernel_rfl) (by kernel_rfl) {checkName}.translated Interpretation.value {safeEnv} heap {args} inputs\n\n"
 
 private def unaryText : Unary a b → String → String
@@ -431,7 +456,7 @@ def emit (source : String) (program : Program) (namespace_ : String) : Checked S
     core.params.flatMap typeDeclarations ++ termDeclarations core.body).eraseDups
   let declarations := (← roots.mapM (declarationOrder expanded 100)).flatten.eraseDups
   let mut out := (Ariadne.emit source original namespace_).replace
-    "import Ariadne.Certificate\n" "import Ariadne.Certificate\nimport Ariadne.Shallow.Elaborate\nimport Ariadne.Shallow.Safety\nimport Ariadne.Shallow.Adequacy.Function\n"
+    "import Ariadne.Certificate\n" "import Ariadne.Certificate\nimport Ariadne.Shallow.Elaborate\nimport Ariadne.Shallow.Safety\nimport Ariadne.Shallow.Adequacy.Statements\n"
   out := out ++ "\n-- Shallow denotation certificates. Source transfer is emitted for proved fragments.\n" ++
     s!"namespace {namespace_}.Shallow\nopen Ariadne Ariadne.Shallow\nset_option linter.unusedSimpArgs false\n\n"
   let mut interpretation := "Named.canonical"

@@ -2,7 +2,7 @@
 import Ariadne.Certificate
 import Ariadne.Shallow.Elaborate
 import Ariadne.Shallow.Safety
-import Ariadne.Shallow.Adequacy.Function
+import Ariadne.Shallow.Adequacy.Statements
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
@@ -777,6 +777,31 @@ theorem DenotationChecks.«abs» :
   unfold Extracted_scalars.Shallow.«abs»
   simp only [Denote.function, CoreArtifacts.«abs», Denote.term, Core.Var.get] <;> rfl
 
+def SourceChecks.«abs».function : Ariadne.Function := { name := "abs",   params := [{ name := "x", ty := Ariadne.Ty.bigint, span := { start := 20, stop := 21 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.if_                (Ariadne.Expr.binary                  "<"                  (Ariadne.Expr.var "x" { start := 45, stop := 46 })                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 49, stop := 51 })                  { start := 45, stop := 51 })                (Ariadne.Stmt.block                  [Ariadne.Stmt.return_                     (Ariadne.Expr.unary                       "-"                       (Ariadne.Expr.var "x" { start := 63, stop := 64 })                       { start := 62, stop := 63 })                     { start := 55, stop := 61 }]                  { start := 53, stop := 67 })                (Ariadne.Stmt.block [] { start := 41, stop := 43 })                { start := 41, stop := 43 },              Ariadne.Stmt.return_ (Ariadne.Expr.var "x" { start := 75, stop := 76 }) { start := 68, stop := 74 }]             { start := 39, stop := 79 },   exported := true,   decreases := none,   span := { start := 7, stop := 15 } }
+
+def SourceChecks.«abs».names : Adequacy.Names CoreArtifacts.«abs».params :=
+  Adequacy.Names.fromList ["x"]
+
+theorem SourceChecks.«abs».translated :
+    Adequacy.ScalarStatements SourceChecks.«abs».names .int ([Ariadne.Stmt.if_    (Ariadne.Expr.binary      "<"      (Ariadne.Expr.var "x" { start := 45, stop := 46 })      (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 49, stop := 51 })      { start := 45, stop := 51 })    (Ariadne.Stmt.block      [Ariadne.Stmt.return_         (Ariadne.Expr.unary "-" (Ariadne.Expr.var "x" { start := 63, stop := 64 }) { start := 62, stop := 63 })         { start := 55, stop := 61 }]      { start := 53, stop := 67 })    (Ariadne.Stmt.block [] { start := 41, stop := 43 })    { start := 41, stop := 43 },  Ariadne.Stmt.return_ (Ariadne.Expr.var "x" { start := 75, stop := 76 }) { start := 68, stop := 74 }]) CoreArtifacts.«abs».body := by
+  exact .if_ (.binary .intLt (.var .int (Ariadne.Shallow.Core.Var.here) _) (.int _ _) _) (.block (.return_ (.unary .intNeg (.var .int (Ariadne.Shallow.Core.Var.here) _) _) _ _) _ _) (.emptyBlock (.return_ (.var .int (Ariadne.Shallow.Core.Var.here) _) _ _) _) _
+
+theorem «abs_source» («_x#arg» : _root_.Int) (heap : Heap) :
+    SourceReturnsFrom _root_.Extracted_scalars.source "abs" heap [(Value.bigint «_x#arg»)] (Value.bigint («abs» «_x#arg»)) := by
+  have inputs : Adequacy.Environment SourceChecks.«abs».names
+      (Adequacy.bindArguments { heap } SourceChecks.«abs».function.params [(Value.bigint «_x#arg»)])
+      (interp := Interpretation.value) («_x#arg», ()) := by
+    intro t v scalar
+    cases v with
+    | here =>
+      cases scalar
+      exact Adequacy.lookup_declare_self _ _ _
+    | there v =>
+      cases v
+  exact Adequacy.scalar_statements_source _root_.Extracted_scalars.certificate SourceChecks.«abs».function SourceChecks.«abs».names .int CoreArtifacts.«abs».body
+    ([Ariadne.Stmt.if_    (Ariadne.Expr.binary      "<"      (Ariadne.Expr.var "x" { start := 45, stop := 46 })      (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 49, stop := 51 })      { start := 45, stop := 51 })    (Ariadne.Stmt.block      [Ariadne.Stmt.return_         (Ariadne.Expr.unary "-" (Ariadne.Expr.var "x" { start := 63, stop := 64 }) { start := 62, stop := 63 })         { start := 55, stop := 61 }]      { start := 53, stop := 67 })    (Ariadne.Stmt.block [] { start := 41, stop := 43 })    { start := 41, stop := 43 },  Ariadne.Stmt.return_ (Ariadne.Expr.var "x" { start := 75, stop := 76 }) { start := 68, stop := 74 }]) ({ start := 39, stop := 79 })
+    (by kernel_rfl) (by kernel_rfl) SourceChecks.«abs».translated Interpretation.value («_x#arg», ()) heap [(Value.bigint «_x#arg»)] inputs
+
 def JoinCore.«update#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (Ariadne.Shallow.Core.Ty.pair
     (Ariadne.Shallow.Core.Ty.int)
@@ -858,8 +883,8 @@ def SourceChecks.«decimal».names : Adequacy.Names CoreArtifacts.«decimal».pa
   Adequacy.Names.fromList ["x", "y"]
 
 theorem SourceChecks.«decimal».translated :
-    Adequacy.ScalarExpr SourceChecks.«decimal».names .number (Ariadne.Expr.binary   "/"   (Ariadne.Expr.binary     "*"     (Ariadne.Expr.var "x" { start := 373, stop := 374 })     (Ariadne.Expr.var "y" { start := 377, stop := 378 })     { start := 373, stop := 378 })   (Ariadne.Expr.binary     "+"     (Ariadne.Expr.var "x" { start := 383, stop := 384 })     (Ariadne.Expr.var "y" { start := 387, stop := 388 })     { start := 383, stop := 388 })   { start := 373, stop := 388 }) CoreArtifacts.«decimal».body := by
-  exact .binary .numDiv (.binary .numMul (.var .number (Ariadne.Shallow.Core.Var.here) _) (.var .number (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) _) (.binary .numAdd (.var .number (Ariadne.Shallow.Core.Var.here) _) (.var .number (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) _) _
+    Adequacy.ScalarStatements SourceChecks.«decimal».names .number ([Ariadne.Stmt.return_    (Ariadne.Expr.binary      "/"      (Ariadne.Expr.binary        "*"        (Ariadne.Expr.var "x" { start := 373, stop := 374 })        (Ariadne.Expr.var "y" { start := 377, stop := 378 })        { start := 373, stop := 378 })      (Ariadne.Expr.binary        "+"        (Ariadne.Expr.var "x" { start := 383, stop := 384 })        (Ariadne.Expr.var "y" { start := 387, stop := 388 })        { start := 383, stop := 388 })      { start := 373, stop := 388 })    { start := 365, stop := 371 }]) CoreArtifacts.«decimal».body := by
+  exact .return_ (.binary .numDiv (.binary .numMul (.var .number (Ariadne.Shallow.Core.Var.here) _) (.var .number (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) _) (.binary .numAdd (.var .number (Ariadne.Shallow.Core.Var.here) _) (.var .number (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) _) _) _ _
 
 theorem «decimal_source» («_x#arg» : _root_.Float.Model) («_y#arg» : _root_.Float.Model) (heap : Heap) :
     SourceReturnsFrom _root_.Extracted_scalars.source "decimal" heap [(Value.number «_x#arg»), (Value.number «_y#arg»)] (Value.number («decimal» «_x#arg» «_y#arg»)) := by
@@ -879,8 +904,8 @@ theorem «decimal_source» («_x#arg» : _root_.Float.Model) («_y#arg» : _root
         exact Adequacy.lookup_declare_self _ _ _
       | there v =>
         cases v
-  exact Adequacy.scalar_source _root_.Extracted_scalars.certificate SourceChecks.«decimal».function SourceChecks.«decimal».names .number CoreArtifacts.«decimal».body
-    (Ariadne.Expr.binary   "/"   (Ariadne.Expr.binary     "*"     (Ariadne.Expr.var "x" { start := 373, stop := 374 })     (Ariadne.Expr.var "y" { start := 377, stop := 378 })     { start := 373, stop := 378 })   (Ariadne.Expr.binary     "+"     (Ariadne.Expr.var "x" { start := 383, stop := 384 })     (Ariadne.Expr.var "y" { start := 387, stop := 388 })     { start := 383, stop := 388 })   { start := 373, stop := 388 }) ({ start := 365, stop := 371 }) ({ start := 363, stop := 392 })
+  exact Adequacy.scalar_statements_source _root_.Extracted_scalars.certificate SourceChecks.«decimal».function SourceChecks.«decimal».names .number CoreArtifacts.«decimal».body
+    ([Ariadne.Stmt.return_    (Ariadne.Expr.binary      "/"      (Ariadne.Expr.binary        "*"        (Ariadne.Expr.var "x" { start := 373, stop := 374 })        (Ariadne.Expr.var "y" { start := 377, stop := 378 })        { start := 373, stop := 378 })      (Ariadne.Expr.binary        "+"        (Ariadne.Expr.var "x" { start := 383, stop := 384 })        (Ariadne.Expr.var "y" { start := 387, stop := 388 })        { start := 383, stop := 388 })      { start := 373, stop := 388 })    { start := 365, stop := 371 }]) ({ start := 363, stop := 392 })
     (by kernel_rfl) (by kernel_rfl) SourceChecks.«decimal».translated Interpretation.value («_x#arg», («_y#arg», ())) heap [(Value.number «_x#arg»), (Value.number «_y#arg»)] inputs
 
 def CoreArtifacts.«hello» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.string], result := Ariadne.Shallow.Core.Ty.string, body := (Core.Term.binary (Ariadne.Shallow.Core.Binary.strAppend) (Core.Term.string [104, 101, 108, 108, 111, 32]) (Core.Term.var (Ariadne.Shallow.Core.Var.here))) }
@@ -906,8 +931,8 @@ def SourceChecks.«hello».names : Adequacy.Names CoreArtifacts.«hello».params
   Adequacy.Names.fromList ["name"]
 
 theorem SourceChecks.«hello».translated :
-    Adequacy.ScalarExpr SourceChecks.«hello».names .string (Ariadne.Expr.binary   "+"   (Ariadne.Expr.literal (Ariadne.Literal.string [104, 101, 108, 108, 111, 32]) { start := 446, stop := 454 })   (Ariadne.Expr.var "name" { start := 457, stop := 461 })   { start := 446, stop := 461 }) CoreArtifacts.«hello».body := by
-  exact .binary .strAppend (.string _ _) (.var .string (Ariadne.Shallow.Core.Var.here) _) _
+    Adequacy.ScalarStatements SourceChecks.«hello».names .string ([Ariadne.Stmt.return_    (Ariadne.Expr.binary      "+"      (Ariadne.Expr.literal (Ariadne.Literal.string [104, 101, 108, 108, 111, 32]) { start := 446, stop := 454 })      (Ariadne.Expr.var "name" { start := 457, stop := 461 })      { start := 446, stop := 461 })    { start := 439, stop := 445 }]) CoreArtifacts.«hello».body := by
+  exact .return_ (.binary .strAppend (.string _ _) (.var .string (Ariadne.Shallow.Core.Var.here) _) _) _ _
 
 theorem «hello_source» («_name#arg» : _root_.Ariadne.JSString) (heap : Heap) :
     SourceReturnsFrom _root_.Extracted_scalars.source "hello" heap [(Value.string «_name#arg»)] (Value.string («hello» «_name#arg»)) := by
@@ -921,8 +946,8 @@ theorem «hello_source» («_name#arg» : _root_.Ariadne.JSString) (heap : Heap)
       exact Adequacy.lookup_declare_self _ _ _
     | there v =>
       cases v
-  exact Adequacy.scalar_source _root_.Extracted_scalars.certificate SourceChecks.«hello».function SourceChecks.«hello».names .string CoreArtifacts.«hello».body
-    (Ariadne.Expr.binary   "+"   (Ariadne.Expr.literal (Ariadne.Literal.string [104, 101, 108, 108, 111, 32]) { start := 446, stop := 454 })   (Ariadne.Expr.var "name" { start := 457, stop := 461 })   { start := 446, stop := 461 }) ({ start := 439, stop := 445 }) ({ start := 437, stop := 464 })
+  exact Adequacy.scalar_statements_source _root_.Extracted_scalars.certificate SourceChecks.«hello».function SourceChecks.«hello».names .string CoreArtifacts.«hello».body
+    ([Ariadne.Stmt.return_    (Ariadne.Expr.binary      "+"      (Ariadne.Expr.literal (Ariadne.Literal.string [104, 101, 108, 108, 111, 32]) { start := 446, stop := 454 })      (Ariadne.Expr.var "name" { start := 457, stop := 461 })      { start := 446, stop := 461 })    { start := 439, stop := 445 }]) ({ start := 437, stop := 464 })
     (by kernel_rfl) (by kernel_rfl) SourceChecks.«hello».translated Interpretation.value («_name#arg», ()) heap [(Value.string «_name#arg»)] inputs
 
 def CoreArtifacts.«optional» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.bool, Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int), body := (Core.Term.ite (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.some (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) Core.Term.none) }
@@ -968,8 +993,8 @@ def SourceChecks.«textBefore».names : Adequacy.Names CoreArtifacts.«textBefor
   Adequacy.Names.fromList ["a", "b"]
 
 theorem SourceChecks.«textBefore».translated :
-    Adequacy.ScalarExpr SourceChecks.«textBefore».names .bool (Ariadne.Expr.binary   "<"   (Ariadne.Expr.var "a" { start := 661, stop := 662 })   (Ariadne.Expr.var "b" { start := 665, stop := 666 })   { start := 661, stop := 666 }) CoreArtifacts.«textBefore».body := by
-  exact .binary .strLt (.var .string (Ariadne.Shallow.Core.Var.here) _) (.var .string (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) _
+    Adequacy.ScalarStatements SourceChecks.«textBefore».names .bool ([Ariadne.Stmt.return_    (Ariadne.Expr.binary      "<"      (Ariadne.Expr.var "a" { start := 661, stop := 662 })      (Ariadne.Expr.var "b" { start := 665, stop := 666 })      { start := 661, stop := 666 })    { start := 654, stop := 660 }]) CoreArtifacts.«textBefore».body := by
+  exact .return_ (.binary .strLt (.var .string (Ariadne.Shallow.Core.Var.here) _) (.var .string (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) _) _ _
 
 theorem «textBefore_source» («_a#arg» : _root_.Ariadne.JSString) («_b#arg» : _root_.Ariadne.JSString) (heap : Heap) :
     SourceReturnsFrom _root_.Extracted_scalars.source "textBefore" heap [(Value.string «_a#arg»), (Value.string «_b#arg»)] (Value.boolean («textBefore» «_a#arg» «_b#arg»)) := by
@@ -989,8 +1014,8 @@ theorem «textBefore_source» («_a#arg» : _root_.Ariadne.JSString) («_b#arg»
         exact Adequacy.lookup_declare_self _ _ _
       | there v =>
         cases v
-  exact Adequacy.scalar_source _root_.Extracted_scalars.certificate SourceChecks.«textBefore».function SourceChecks.«textBefore».names .bool CoreArtifacts.«textBefore».body
-    (Ariadne.Expr.binary   "<"   (Ariadne.Expr.var "a" { start := 661, stop := 662 })   (Ariadne.Expr.var "b" { start := 665, stop := 666 })   { start := 661, stop := 666 }) ({ start := 654, stop := 660 }) ({ start := 652, stop := 669 })
+  exact Adequacy.scalar_statements_source _root_.Extracted_scalars.certificate SourceChecks.«textBefore».function SourceChecks.«textBefore».names .bool CoreArtifacts.«textBefore».body
+    ([Ariadne.Stmt.return_    (Ariadne.Expr.binary      "<"      (Ariadne.Expr.var "a" { start := 661, stop := 662 })      (Ariadne.Expr.var "b" { start := 665, stop := 666 })      { start := 661, stop := 666 })    { start := 654, stop := 660 }]) ({ start := 652, stop := 669 })
     (by kernel_rfl) (by kernel_rfl) SourceChecks.«textBefore».translated Interpretation.value («_a#arg», («_b#arg», ())) heap [(Value.string «_a#arg»), (Value.string «_b#arg»)] inputs
 
 def CoreArtifacts.«remainder» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.number, Ariadne.Shallow.Core.Ty.number], result := Ariadne.Shallow.Core.Ty.number, body := (Core.Term.binary (Ariadne.Shallow.Core.Binary.numMod) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) }
@@ -1016,8 +1041,8 @@ def SourceChecks.«remainder».names : Adequacy.Names CoreArtifacts.«remainder�
   Adequacy.Names.fromList ["a", "b"]
 
 theorem SourceChecks.«remainder».translated :
-    Adequacy.ScalarExpr SourceChecks.«remainder».names .number (Ariadne.Expr.binary   "%"   (Ariadne.Expr.var "a" { start := 735, stop := 736 })   (Ariadne.Expr.var "b" { start := 739, stop := 740 })   { start := 735, stop := 740 }) CoreArtifacts.«remainder».body := by
-  exact .binary .numMod (.var .number (Ariadne.Shallow.Core.Var.here) _) (.var .number (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) _
+    Adequacy.ScalarStatements SourceChecks.«remainder».names .number ([Ariadne.Stmt.return_    (Ariadne.Expr.binary      "%"      (Ariadne.Expr.var "a" { start := 735, stop := 736 })      (Ariadne.Expr.var "b" { start := 739, stop := 740 })      { start := 735, stop := 740 })    { start := 728, stop := 734 }]) CoreArtifacts.«remainder».body := by
+  exact .return_ (.binary .numMod (.var .number (Ariadne.Shallow.Core.Var.here) _) (.var .number (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) _) _ _
 
 theorem «remainder_source» («_a#arg» : _root_.Float.Model) («_b#arg» : _root_.Float.Model) (heap : Heap) :
     SourceReturnsFrom _root_.Extracted_scalars.source "remainder" heap [(Value.number «_a#arg»), (Value.number «_b#arg»)] (Value.number («remainder» «_a#arg» «_b#arg»)) := by
@@ -1037,8 +1062,8 @@ theorem «remainder_source» («_a#arg» : _root_.Float.Model) («_b#arg» : _ro
         exact Adequacy.lookup_declare_self _ _ _
       | there v =>
         cases v
-  exact Adequacy.scalar_source _root_.Extracted_scalars.certificate SourceChecks.«remainder».function SourceChecks.«remainder».names .number CoreArtifacts.«remainder».body
-    (Ariadne.Expr.binary   "%"   (Ariadne.Expr.var "a" { start := 735, stop := 736 })   (Ariadne.Expr.var "b" { start := 739, stop := 740 })   { start := 735, stop := 740 }) ({ start := 728, stop := 734 }) ({ start := 726, stop := 743 })
+  exact Adequacy.scalar_statements_source _root_.Extracted_scalars.certificate SourceChecks.«remainder».function SourceChecks.«remainder».names .number CoreArtifacts.«remainder».body
+    ([Ariadne.Stmt.return_    (Ariadne.Expr.binary      "%"      (Ariadne.Expr.var "a" { start := 735, stop := 736 })      (Ariadne.Expr.var "b" { start := 739, stop := 740 })      { start := 735, stop := 740 })    { start := 728, stop := 734 }]) ({ start := 726, stop := 743 })
     (by kernel_rfl) (by kernel_rfl) SourceChecks.«remainder».translated Interpretation.value («_a#arg», («_b#arg», ())) heap [(Value.number «_a#arg»), (Value.number «_b#arg»)] inputs
 
 def JoinCore.«scoped#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
@@ -1096,8 +1121,8 @@ def SourceChecks.«abs_denotes».names : Adequacy.Names CoreArtifacts.«abs_deno
   Adequacy.Names.fromList []
 
 theorem SourceChecks.«abs_denotes».translated :
-    Adequacy.ScalarExpr SourceChecks.«abs_denotes».names .int (Ariadne.Expr.literal (Ariadne.Literal.bigint 3) { start := 933, stop := 935 }) CoreArtifacts.«abs_denotes».body := by
-  exact .int _ _
+    Adequacy.ScalarStatements SourceChecks.«abs_denotes».names .int ([Ariadne.Stmt.return_    (Ariadne.Expr.literal (Ariadne.Literal.bigint 3) { start := 933, stop := 935 })    { start := 926, stop := 932 }]) CoreArtifacts.«abs_denotes».body := by
+  exact .return_ (.int _ _) _ _
 
 theorem «abs_denotes_source» (heap : Heap) :
     SourceReturnsFrom _root_.Extracted_scalars.source "abs_denotes" heap [] (Value.bigint («abs_denotes»)) := by
@@ -1106,8 +1131,8 @@ theorem «abs_denotes_source» (heap : Heap) :
       (interp := Interpretation.value) () := by
     intro t v scalar
     cases v
-  exact Adequacy.scalar_source _root_.Extracted_scalars.certificate SourceChecks.«abs_denotes».function SourceChecks.«abs_denotes».names .int CoreArtifacts.«abs_denotes».body
-    (Ariadne.Expr.literal (Ariadne.Literal.bigint 3) { start := 933, stop := 935 }) ({ start := 926, stop := 932 }) ({ start := 924, stop := 938 })
+  exact Adequacy.scalar_statements_source _root_.Extracted_scalars.certificate SourceChecks.«abs_denotes».function SourceChecks.«abs_denotes».names .int CoreArtifacts.«abs_denotes».body
+    ([Ariadne.Stmt.return_    (Ariadne.Expr.literal (Ariadne.Literal.bigint 3) { start := 933, stop := 935 })    { start := 926, stop := 932 }]) ({ start := 924, stop := 938 })
     (by kernel_rfl) (by kernel_rfl) SourceChecks.«abs_denotes».translated Interpretation.value () heap [] inputs
 
 def CoreArtifacts.«CoreArtifacts» : Core.Function := { params := [], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.int (4)) }
@@ -1133,8 +1158,8 @@ def SourceChecks.«CoreArtifacts».names : Adequacy.Names CoreArtifacts.«CoreAr
   Adequacy.Names.fromList []
 
 theorem SourceChecks.«CoreArtifacts».translated :
-    Adequacy.ScalarExpr SourceChecks.«CoreArtifacts».names .int (Ariadne.Expr.literal (Ariadne.Literal.bigint 4) { start := 988, stop := 990 }) CoreArtifacts.«CoreArtifacts».body := by
-  exact .int _ _
+    Adequacy.ScalarStatements SourceChecks.«CoreArtifacts».names .int ([Ariadne.Stmt.return_    (Ariadne.Expr.literal (Ariadne.Literal.bigint 4) { start := 988, stop := 990 })    { start := 981, stop := 987 }]) CoreArtifacts.«CoreArtifacts».body := by
+  exact .return_ (.int _ _) _ _
 
 theorem «CoreArtifacts_source» (heap : Heap) :
     SourceReturnsFrom _root_.Extracted_scalars.source "CoreArtifacts" heap [] (Value.bigint («CoreArtifacts»)) := by
@@ -1143,8 +1168,8 @@ theorem «CoreArtifacts_source» (heap : Heap) :
       (interp := Interpretation.value) () := by
     intro t v scalar
     cases v
-  exact Adequacy.scalar_source _root_.Extracted_scalars.certificate SourceChecks.«CoreArtifacts».function SourceChecks.«CoreArtifacts».names .int CoreArtifacts.«CoreArtifacts».body
-    (Ariadne.Expr.literal (Ariadne.Literal.bigint 4) { start := 988, stop := 990 }) ({ start := 981, stop := 987 }) ({ start := 979, stop := 993 })
+  exact Adequacy.scalar_statements_source _root_.Extracted_scalars.certificate SourceChecks.«CoreArtifacts».function SourceChecks.«CoreArtifacts».names .int CoreArtifacts.«CoreArtifacts».body
+    ([Ariadne.Stmt.return_    (Ariadne.Expr.literal (Ariadne.Literal.bigint 4) { start := 988, stop := 990 })    { start := 981, stop := 987 }]) ({ start := 979, stop := 993 })
     (by kernel_rfl) (by kernel_rfl) SourceChecks.«CoreArtifacts».translated Interpretation.value () heap [] inputs
 
 def CoreArtifacts.«guarded» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int), Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.optionCase (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.unit) "x" Core.Term.unit (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) (Core.Term.binary (Ariadne.Shallow.Core.Binary.intAdd) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.int (1)))) }

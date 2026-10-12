@@ -9,3 +9,31 @@ export function compare(x: bigint, y: bigint): boolean { return x <= y; }
 export function equal(x: string, y: string): boolean { return x === y; }
 export function text(name: string): string { return 'hello ' + name; }
 export function unit(): void { return; }
+
+export function local(a: bigint, b: bigint): bigint {
+  const sum = a + b;
+  const doubled = sum * 2n;
+  return doubled;
+}
+
+export function early(value: bigint): bigint {
+  if (value < 0n) { return -value; }
+  return value;
+}
+
+export function branchLocal(flag: boolean, a: bigint, b: bigint): bigint {
+  if (flag) {
+    const sum = a + b;
+    return sum;
+  }
+  const difference = a - b;
+  return difference;
+}
+
+export function nested(flag: boolean, other: boolean, value: bigint): bigint {
+  if (flag) {
+    if (other) { return value; }
+    return -value;
+  }
+  return 0n;
+}

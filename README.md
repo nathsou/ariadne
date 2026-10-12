@@ -51,9 +51,13 @@ kernel-checked Core elaboration and denotation equations. It supports branches,
 local reassignment, binary64 arithmetic, bigint arithmetic without division,
 UTF-16 strings, options, readonly array operations, indexed pure callbacks,
 array/Map/Set iteration, locally owned collection updates, counted bigint loops,
-scalar switches, and calls with scalar or immutable parameters. It does not yet
-prove operational adequacy or extract
-the three reference programs. See [milestone status](docs/SHALLOW-PROGRESS.md).
+scalar switches, and calls with scalar or immutable parameters. It also extracts
+named records, tagged unions, borrowed state, classes and Int53 arithmetic. All
+three reference programs extract and have universal native proofs. Generated
+source-transfer theorems currently cover supported scalar expressions, fresh
+local bindings and conditional early returns. Full data/state/class adequacy
+and the M5 extensions remain in progress. See
+[milestone status](docs/SHALLOW-PROGRESS.md).
 
 ## What is proved
 

@@ -2,7 +2,7 @@
 import Ariadne.Certificate
 import Ariadne.Shallow.Elaborate
 import Ariadne.Shallow.Safety
-import Ariadne.Shallow.Adequacy.Function
+import Ariadne.Shallow.Adequacy.Statements
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
@@ -10,7 +10,7 @@ set_option maxHeartbeats 0
 namespace Extracted_source
 open Ariadne
 
-def source : String := "export function arithmetic(x: bigint, y: bigint): bigint { return -(x + y) * (x - y); }\nexport function quotient(x: number, y: number): number { return (x * y) / (x + y); }\nexport function choice(flag: boolean, x: bigint, y: bigint): bigint { return flag ? x : y; }\n// This user name must not collide with the generated source theorem for choice.\nexport function choice_source(): bigint { return 7n; }\nexport function conjunction(a: boolean, b: boolean): boolean { return a && !b; }\nexport function disjunction(a: boolean, b: boolean): boolean { return a || !b; }\nexport function compare(x: bigint, y: bigint): boolean { return x <= y; }\nexport function equal(x: string, y: string): boolean { return x === y; }\nexport function text(name: string): string { return 'hello ' + name; }\nexport function unit(): void { return; }\n"
+def source : String := "export function arithmetic(x: bigint, y: bigint): bigint { return -(x + y) * (x - y); }\nexport function quotient(x: number, y: number): number { return (x * y) / (x + y); }\nexport function choice(flag: boolean, x: bigint, y: bigint): bigint { return flag ? x : y; }\n// This user name must not collide with the generated source theorem for choice.\nexport function choice_source(): bigint { return 7n; }\nexport function conjunction(a: boolean, b: boolean): boolean { return a && !b; }\nexport function disjunction(a: boolean, b: boolean): boolean { return a || !b; }\nexport function compare(x: bigint, y: bigint): boolean { return x <= y; }\nexport function equal(x: string, y: string): boolean { return x === y; }\nexport function text(name: string): string { return 'hello ' + name; }\nexport function unit(): void { return; }\n\nexport function local(a: bigint, b: bigint): bigint {\n  const sum = a + b;\n  const doubled = sum * 2n;\n  return doubled;\n}\n\nexport function early(value: bigint): bigint {\n  if (value < 0n) { return -value; }\n  return value;\n}\n\nexport function branchLocal(flag: boolean, a: bigint, b: bigint): bigint {\n  if (flag) {\n    const sum = a + b;\n    return sum;\n  }\n  const difference = a - b;\n  return difference;\n}\n\nexport function nested(flag: boolean, other: boolean, value: bigint): bigint {\n  if (flag) {\n    if (other) { return value; }\n    return -value;\n  }\n  return 0n;\n}\n"
 
 def characters : List Char :=
 ['e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'a', 'r', 'i', 't', 'h', 'm', 'e', 't',
@@ -47,7 +47,32 @@ def characters : List Char :=
  'e', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ')', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ' ', '{', ' ', 'r', 'e', 't',
  'u', 'r', 'n', ' ', '\'', 'h', 'e', 'l', 'l', 'o', ' ', '\'', ' ', '+', ' ', 'n', 'a', 'm', 'e', ';', ' ', '}', '\n',
  'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'u', 'n', 'i', 't', '(', ')', ':', ' ',
- 'v', 'o', 'i', 'd', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ';', ' ', '}', '\n']
+ 'v', 'o', 'i', 'd', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ';', ' ', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r',
+ 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'l', 'o', 'c', 'a', 'l', '(', 'a', ':', ' ', 'b', 'i', 'g', 'i',
+ 'n', 't', ',', ' ', 'b', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{',
+ '\n', ' ', ' ', 'c', 'o', 'n', 's', 't', ' ', 's', 'u', 'm', ' ', '=', ' ', 'a', ' ', '+', ' ', 'b', ';', '\n', ' ',
+ ' ', 'c', 'o', 'n', 's', 't', ' ', 'd', 'o', 'u', 'b', 'l', 'e', 'd', ' ', '=', ' ', 's', 'u', 'm', ' ', '*', ' ', '2',
+ 'n', ';', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'd', 'o', 'u', 'b', 'l', 'e', 'd', ';', '\n', '}', '\n',
+ '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'e', 'a', 'r', 'l', 'y', '(',
+ 'v', 'a', 'l', 'u', 'e', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{',
+ '\n', ' ', ' ', 'i', 'f', ' ', '(', 'v', 'a', 'l', 'u', 'e', ' ', '<', ' ', '0', 'n', ')', ' ', '{', ' ', 'r', 'e',
+ 't', 'u', 'r', 'n', ' ', '-', 'v', 'a', 'l', 'u', 'e', ';', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n',
+ ' ', 'v', 'a', 'l', 'u', 'e', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't',
+ 'i', 'o', 'n', ' ', 'b', 'r', 'a', 'n', 'c', 'h', 'L', 'o', 'c', 'a', 'l', '(', 'f', 'l', 'a', 'g', ':', ' ', 'b', 'o',
+ 'o', 'l', 'e', 'a', 'n', ',', ' ', 'a', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ',', ' ', 'b', ':', ' ', 'b', 'i', 'g',
+ 'i', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'f', 'l',
+ 'a', 'g', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', 'c', 'o', 'n', 's', 't', ' ', 's', 'u', 'm', ' ', '=', ' ', 'a',
+ ' ', '+', ' ', 'b', ';', '\n', ' ', ' ', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 's', 'u', 'm', ';', '\n', ' ',
+ ' ', '}', '\n', ' ', ' ', 'c', 'o', 'n', 's', 't', ' ', 'd', 'i', 'f', 'f', 'e', 'r', 'e', 'n', 'c', 'e', ' ', '=',
+ ' ', 'a', ' ', '-', ' ', 'b', ';', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'd', 'i', 'f', 'f', 'e', 'r',
+ 'e', 'n', 'c', 'e', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o',
+ 'n', ' ', 'n', 'e', 's', 't', 'e', 'd', '(', 'f', 'l', 'a', 'g', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ',', ' ',
+ 'o', 't', 'h', 'e', 'r', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ',', ' ', 'v', 'a', 'l', 'u', 'e', ':', ' ', 'b',
+ 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(',
+ 'f', 'l', 'a', 'g', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', 'i', 'f', ' ', '(', 'o', 't', 'h', 'e', 'r', ')', ' ',
+ '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'v', 'a', 'l', 'u', 'e', ';', ' ', '}', '\n', ' ', ' ', ' ', ' ', 'r',
+ 'e', 't', 'u', 'r', 'n', ' ', '-', 'v', 'a', 'l', 'u', 'e', ';', '\n', ' ', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't',
+ 'u', 'r', 'n', ' ', '0', 'n', ';', '\n', '}', '\n']
 
 theorem characters_encoded : String.ofList characters = source := by kernel_rfl
 
@@ -270,7 +295,155 @@ def tokens : Array Token :=
   { text := "return", span := { start := 813, stop := 819 }, lineBreak := false, stringValue := none },
   { text := ";", span := { start := 819, stop := 820 }, lineBreak := false, stringValue := none },
   { text := "}", span := { start := 821, stop := 822 }, lineBreak := false, stringValue := none },
-  { text := "<eof>", span := { start := 823, stop := 823 }, lineBreak := true, stringValue := none }]
+  { text := "export", span := { start := 824, stop := 830 }, lineBreak := true, stringValue := none },
+  { text := "function", span := { start := 831, stop := 839 }, lineBreak := false, stringValue := none },
+  { text := "local", span := { start := 840, stop := 845 }, lineBreak := false, stringValue := none },
+  { text := "(", span := { start := 845, stop := 846 }, lineBreak := false, stringValue := none },
+  { text := "a", span := { start := 846, stop := 847 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 847, stop := 848 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 849, stop := 855 }, lineBreak := false, stringValue := none },
+  { text := ",", span := { start := 855, stop := 856 }, lineBreak := false, stringValue := none },
+  { text := "b", span := { start := 857, stop := 858 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 858, stop := 859 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 860, stop := 866 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 866, stop := 867 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 867, stop := 868 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 869, stop := 875 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 876, stop := 877 }, lineBreak := false, stringValue := none },
+  { text := "const", span := { start := 880, stop := 885 }, lineBreak := true, stringValue := none },
+  { text := "sum", span := { start := 886, stop := 889 }, lineBreak := false, stringValue := none },
+  { text := "=", span := { start := 890, stop := 891 }, lineBreak := false, stringValue := none },
+  { text := "a", span := { start := 892, stop := 893 }, lineBreak := false, stringValue := none },
+  { text := "+", span := { start := 894, stop := 895 }, lineBreak := false, stringValue := none },
+  { text := "b", span := { start := 896, stop := 897 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 897, stop := 898 }, lineBreak := false, stringValue := none },
+  { text := "const", span := { start := 901, stop := 906 }, lineBreak := true, stringValue := none },
+  { text := "doubled", span := { start := 907, stop := 914 }, lineBreak := false, stringValue := none },
+  { text := "=", span := { start := 915, stop := 916 }, lineBreak := false, stringValue := none },
+  { text := "sum", span := { start := 917, stop := 920 }, lineBreak := false, stringValue := none },
+  { text := "*", span := { start := 921, stop := 922 }, lineBreak := false, stringValue := none },
+  { text := "2n", span := { start := 923, stop := 925 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 925, stop := 926 }, lineBreak := false, stringValue := none },
+  { text := "return", span := { start := 929, stop := 935 }, lineBreak := true, stringValue := none },
+  { text := "doubled", span := { start := 936, stop := 943 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 943, stop := 944 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 945, stop := 946 }, lineBreak := true, stringValue := none },
+  { text := "export", span := { start := 948, stop := 954 }, lineBreak := true, stringValue := none },
+  { text := "function", span := { start := 955, stop := 963 }, lineBreak := false, stringValue := none },
+  { text := "early", span := { start := 964, stop := 969 }, lineBreak := false, stringValue := none },
+  { text := "(", span := { start := 969, stop := 970 }, lineBreak := false, stringValue := none },
+  { text := "value", span := { start := 970, stop := 975 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 975, stop := 976 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 977, stop := 983 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 983, stop := 984 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 984, stop := 985 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 986, stop := 992 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 993, stop := 994 }, lineBreak := false, stringValue := none },
+  { text := "if", span := { start := 997, stop := 999 }, lineBreak := true, stringValue := none },
+  { text := "(", span := { start := 1000, stop := 1001 }, lineBreak := false, stringValue := none },
+  { text := "value", span := { start := 1001, stop := 1006 }, lineBreak := false, stringValue := none },
+  { text := "<", span := { start := 1007, stop := 1008 }, lineBreak := false, stringValue := none },
+  { text := "0n", span := { start := 1009, stop := 1011 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 1011, stop := 1012 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 1013, stop := 1014 }, lineBreak := false, stringValue := none },
+  { text := "return", span := { start := 1015, stop := 1021 }, lineBreak := false, stringValue := none },
+  { text := "-", span := { start := 1022, stop := 1023 }, lineBreak := false, stringValue := none },
+  { text := "value", span := { start := 1023, stop := 1028 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 1028, stop := 1029 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 1030, stop := 1031 }, lineBreak := false, stringValue := none },
+  { text := "return", span := { start := 1034, stop := 1040 }, lineBreak := true, stringValue := none },
+  { text := "value", span := { start := 1041, stop := 1046 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 1046, stop := 1047 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 1048, stop := 1049 }, lineBreak := true, stringValue := none },
+  { text := "export", span := { start := 1051, stop := 1057 }, lineBreak := true, stringValue := none },
+  { text := "function", span := { start := 1058, stop := 1066 }, lineBreak := false, stringValue := none },
+  { text := "branchLocal", span := { start := 1067, stop := 1078 }, lineBreak := false, stringValue := none },
+  { text := "(", span := { start := 1078, stop := 1079 }, lineBreak := false, stringValue := none },
+  { text := "flag", span := { start := 1079, stop := 1083 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1083, stop := 1084 }, lineBreak := false, stringValue := none },
+  { text := "boolean", span := { start := 1085, stop := 1092 }, lineBreak := false, stringValue := none },
+  { text := ",", span := { start := 1092, stop := 1093 }, lineBreak := false, stringValue := none },
+  { text := "a", span := { start := 1094, stop := 1095 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1095, stop := 1096 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 1097, stop := 1103 }, lineBreak := false, stringValue := none },
+  { text := ",", span := { start := 1103, stop := 1104 }, lineBreak := false, stringValue := none },
+  { text := "b", span := { start := 1105, stop := 1106 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1106, stop := 1107 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 1108, stop := 1114 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 1114, stop := 1115 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1115, stop := 1116 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 1117, stop := 1123 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 1124, stop := 1125 }, lineBreak := false, stringValue := none },
+  { text := "if", span := { start := 1128, stop := 1130 }, lineBreak := true, stringValue := none },
+  { text := "(", span := { start := 1131, stop := 1132 }, lineBreak := false, stringValue := none },
+  { text := "flag", span := { start := 1132, stop := 1136 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 1136, stop := 1137 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 1138, stop := 1139 }, lineBreak := false, stringValue := none },
+  { text := "const", span := { start := 1144, stop := 1149 }, lineBreak := true, stringValue := none },
+  { text := "sum", span := { start := 1150, stop := 1153 }, lineBreak := false, stringValue := none },
+  { text := "=", span := { start := 1154, stop := 1155 }, lineBreak := false, stringValue := none },
+  { text := "a", span := { start := 1156, stop := 1157 }, lineBreak := false, stringValue := none },
+  { text := "+", span := { start := 1158, stop := 1159 }, lineBreak := false, stringValue := none },
+  { text := "b", span := { start := 1160, stop := 1161 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 1161, stop := 1162 }, lineBreak := false, stringValue := none },
+  { text := "return", span := { start := 1167, stop := 1173 }, lineBreak := true, stringValue := none },
+  { text := "sum", span := { start := 1174, stop := 1177 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 1177, stop := 1178 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 1181, stop := 1182 }, lineBreak := true, stringValue := none },
+  { text := "const", span := { start := 1185, stop := 1190 }, lineBreak := true, stringValue := none },
+  { text := "difference", span := { start := 1191, stop := 1201 }, lineBreak := false, stringValue := none },
+  { text := "=", span := { start := 1202, stop := 1203 }, lineBreak := false, stringValue := none },
+  { text := "a", span := { start := 1204, stop := 1205 }, lineBreak := false, stringValue := none },
+  { text := "-", span := { start := 1206, stop := 1207 }, lineBreak := false, stringValue := none },
+  { text := "b", span := { start := 1208, stop := 1209 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 1209, stop := 1210 }, lineBreak := false, stringValue := none },
+  { text := "return", span := { start := 1213, stop := 1219 }, lineBreak := true, stringValue := none },
+  { text := "difference", span := { start := 1220, stop := 1230 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 1230, stop := 1231 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 1232, stop := 1233 }, lineBreak := true, stringValue := none },
+  { text := "export", span := { start := 1235, stop := 1241 }, lineBreak := true, stringValue := none },
+  { text := "function", span := { start := 1242, stop := 1250 }, lineBreak := false, stringValue := none },
+  { text := "nested", span := { start := 1251, stop := 1257 }, lineBreak := false, stringValue := none },
+  { text := "(", span := { start := 1257, stop := 1258 }, lineBreak := false, stringValue := none },
+  { text := "flag", span := { start := 1258, stop := 1262 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1262, stop := 1263 }, lineBreak := false, stringValue := none },
+  { text := "boolean", span := { start := 1264, stop := 1271 }, lineBreak := false, stringValue := none },
+  { text := ",", span := { start := 1271, stop := 1272 }, lineBreak := false, stringValue := none },
+  { text := "other", span := { start := 1273, stop := 1278 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1278, stop := 1279 }, lineBreak := false, stringValue := none },
+  { text := "boolean", span := { start := 1280, stop := 1287 }, lineBreak := false, stringValue := none },
+  { text := ",", span := { start := 1287, stop := 1288 }, lineBreak := false, stringValue := none },
+  { text := "value", span := { start := 1289, stop := 1294 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1294, stop := 1295 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 1296, stop := 1302 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 1302, stop := 1303 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1303, stop := 1304 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 1305, stop := 1311 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 1312, stop := 1313 }, lineBreak := false, stringValue := none },
+  { text := "if", span := { start := 1316, stop := 1318 }, lineBreak := true, stringValue := none },
+  { text := "(", span := { start := 1319, stop := 1320 }, lineBreak := false, stringValue := none },
+  { text := "flag", span := { start := 1320, stop := 1324 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 1324, stop := 1325 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 1326, stop := 1327 }, lineBreak := false, stringValue := none },
+  { text := "if", span := { start := 1332, stop := 1334 }, lineBreak := true, stringValue := none },
+  { text := "(", span := { start := 1335, stop := 1336 }, lineBreak := false, stringValue := none },
+  { text := "other", span := { start := 1336, stop := 1341 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 1341, stop := 1342 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 1343, stop := 1344 }, lineBreak := false, stringValue := none },
+  { text := "return", span := { start := 1345, stop := 1351 }, lineBreak := false, stringValue := none },
+  { text := "value", span := { start := 1352, stop := 1357 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 1357, stop := 1358 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 1359, stop := 1360 }, lineBreak := false, stringValue := none },
+  { text := "return", span := { start := 1365, stop := 1371 }, lineBreak := true, stringValue := none },
+  { text := "-", span := { start := 1372, stop := 1373 }, lineBreak := false, stringValue := none },
+  { text := "value", span := { start := 1373, stop := 1378 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 1378, stop := 1379 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 1382, stop := 1383 }, lineBreak := true, stringValue := none },
+  { text := "return", span := { start := 1386, stop := 1392 }, lineBreak := true, stringValue := none },
+  { text := "0n", span := { start := 1393, stop := 1395 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 1395, stop := 1396 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 1397, stop := 1398 }, lineBreak := true, stringValue := none },
+  { text := "<eof>", span := { start := 1399, stop := 1399 }, lineBreak := true, stringValue := none }]
 
 theorem lex_checked : lex source = .ok tokens := by
   unfold lex
@@ -278,7 +451,7 @@ theorem lex_checked : lex source = .ok tokens := by
   kernel_rfl
 
 def program : Program :=
-{ functions := [{ name := "arithmetic",                   params := [{ name := "x", ty := Ariadne.Ty.bigint, span := { start := 27, stop := 28 } },                              { name := "y", ty := Ariadne.Ty.bigint, span := { start := 38, stop := 39 } }],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "*"                                  (Ariadne.Expr.unary                                    "-"                                    (Ariadne.Expr.binary                                      "+"                                      (Ariadne.Expr.var "x" { start := 68, stop := 69 })                                      (Ariadne.Expr.var "y" { start := 72, stop := 73 })                                      { start := 68, stop := 73 })                                    { start := 66, stop := 67 })                                  (Ariadne.Expr.binary                                    "-"                                    (Ariadne.Expr.var "x" { start := 78, stop := 79 })                                    (Ariadne.Expr.var "y" { start := 82, stop := 83 })                                    { start := 78, stop := 83 })                                  { start := 66, stop := 83 })                                { start := 59, stop := 65 }]                             { start := 57, stop := 87 },                   exported := true,                   decreases := none,                   span := { start := 7, stop := 15 } },                 { name := "quotient",                   params := [{ name := "x", ty := Ariadne.Ty.number, span := { start := 113, stop := 114 } },                              { name := "y", ty := Ariadne.Ty.number, span := { start := 124, stop := 125 } }],                   result := Ariadne.Ty.number,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "/"                                  (Ariadne.Expr.binary                                    "*"                                    (Ariadne.Expr.var "x" { start := 153, stop := 154 })                                    (Ariadne.Expr.var "y" { start := 157, stop := 158 })                                    { start := 153, stop := 158 })                                  (Ariadne.Expr.binary                                    "+"                                    (Ariadne.Expr.var "x" { start := 163, stop := 164 })                                    (Ariadne.Expr.var "y" { start := 167, stop := 168 })                                    { start := 163, stop := 168 })                                  { start := 153, stop := 168 })                                { start := 145, stop := 151 }]                             { start := 143, stop := 172 },                   exported := true,                   decreases := none,                   span := { start := 95, stop := 103 } },                 { name := "choice",                   params := [{ name := "flag", ty := Ariadne.Ty.boolean, span := { start := 196, stop := 200 } },                              { name := "x", ty := Ariadne.Ty.bigint, span := { start := 211, stop := 212 } },                              { name := "y", ty := Ariadne.Ty.bigint, span := { start := 222, stop := 223 } }],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.conditional                                  (Ariadne.Expr.var "flag" { start := 250, stop := 254 })                                  (Ariadne.Expr.var "x" { start := 257, stop := 258 })                                  (Ariadne.Expr.var "y" { start := 261, stop := 262 })                                  { start := 250, stop := 254 })                                { start := 243, stop := 249 }]                             { start := 241, stop := 265 },                   exported := true,                   decreases := none,                   span := { start := 180, stop := 188 } },                 { name := "choice_source",                   params := [],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.literal (Ariadne.Literal.bigint 7) { start := 396, stop := 398 })                                { start := 389, stop := 395 }]                             { start := 387, stop := 401 },                   exported := true,                   decreases := none,                   span := { start := 354, stop := 362 } },                 { name := "conjunction",                   params := [{ name := "a", ty := Ariadne.Ty.boolean, span := { start := 430, stop := 431 } },                              { name := "b", ty := Ariadne.Ty.boolean, span := { start := 442, stop := 443 } }],                   result := Ariadne.Ty.boolean,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "&&"                                  (Ariadne.Expr.var "a" { start := 472, stop := 473 })                                  (Ariadne.Expr.unary                                    "!"                                    (Ariadne.Expr.var "b" { start := 478, stop := 479 })                                    { start := 477, stop := 478 })                                  { start := 472, stop := 478 })                                { start := 465, stop := 471 }]                             { start := 463, stop := 482 },                   exported := true,                   decreases := none,                   span := { start := 409, stop := 417 } },                 { name := "disjunction",                   params := [{ name := "a", ty := Ariadne.Ty.boolean, span := { start := 511, stop := 512 } },                              { name := "b", ty := Ariadne.Ty.boolean, span := { start := 523, stop := 524 } }],                   result := Ariadne.Ty.boolean,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "||"                                  (Ariadne.Expr.var "a" { start := 553, stop := 554 })                                  (Ariadne.Expr.unary                                    "!"                                    (Ariadne.Expr.var "b" { start := 559, stop := 560 })                                    { start := 558, stop := 559 })                                  { start := 553, stop := 559 })                                { start := 546, stop := 552 }]                             { start := 544, stop := 563 },                   exported := true,                   decreases := none,                   span := { start := 490, stop := 498 } },                 { name := "compare",                   params := [{ name := "x", ty := Ariadne.Ty.bigint, span := { start := 588, stop := 589 } },                              { name := "y", ty := Ariadne.Ty.bigint, span := { start := 599, stop := 600 } }],                   result := Ariadne.Ty.boolean,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "<="                                  (Ariadne.Expr.var "x" { start := 628, stop := 629 })                                  (Ariadne.Expr.var "y" { start := 633, stop := 634 })                                  { start := 628, stop := 634 })                                { start := 621, stop := 627 }]                             { start := 619, stop := 637 },                   exported := true,                   decreases := none,                   span := { start := 571, stop := 579 } },                 { name := "equal",                   params := [{ name := "x", ty := Ariadne.Ty.string, span := { start := 660, stop := 661 } },                              { name := "y", ty := Ariadne.Ty.string, span := { start := 671, stop := 672 } }],                   result := Ariadne.Ty.boolean,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "==="                                  (Ariadne.Expr.var "x" { start := 700, stop := 701 })                                  (Ariadne.Expr.var "y" { start := 706, stop := 707 })                                  { start := 700, stop := 707 })                                { start := 693, stop := 699 }]                             { start := 691, stop := 710 },                   exported := true,                   decreases := none,                   span := { start := 645, stop := 653 } },                 { name := "text",                   params := [{ name := "name", ty := Ariadne.Ty.string, span := { start := 732, stop := 736 } }],                   result := Ariadne.Ty.string,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "+"                                  (Ariadne.Expr.literal                                    (Ariadne.Literal.string [104, 101, 108, 108, 111, 32])                                    { start := 763, stop := 771 })                                  (Ariadne.Expr.var "name" { start := 774, stop := 778 })                                  { start := 763, stop := 778 })                                { start := 756, stop := 762 }]                             { start := 754, stop := 781 },                   exported := true,                   decreases := none,                   span := { start := 718, stop := 726 } },                 { name := "unit",                   params := [],                   result := Ariadne.Ty.void,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 813, stop := 819 })                                { start := 813, stop := 819 }]                             { start := 811, stop := 822 },                   exported := true,                   decreases := none,                   span := { start := 789, stop := 797 } }],   aliases := [],   classes := [] }
+{ functions := [{ name := "arithmetic",                   params := [{ name := "x", ty := Ariadne.Ty.bigint, span := { start := 27, stop := 28 } },                              { name := "y", ty := Ariadne.Ty.bigint, span := { start := 38, stop := 39 } }],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "*"                                  (Ariadne.Expr.unary                                    "-"                                    (Ariadne.Expr.binary                                      "+"                                      (Ariadne.Expr.var "x" { start := 68, stop := 69 })                                      (Ariadne.Expr.var "y" { start := 72, stop := 73 })                                      { start := 68, stop := 73 })                                    { start := 66, stop := 67 })                                  (Ariadne.Expr.binary                                    "-"                                    (Ariadne.Expr.var "x" { start := 78, stop := 79 })                                    (Ariadne.Expr.var "y" { start := 82, stop := 83 })                                    { start := 78, stop := 83 })                                  { start := 66, stop := 83 })                                { start := 59, stop := 65 }]                             { start := 57, stop := 87 },                   exported := true,                   decreases := none,                   span := { start := 7, stop := 15 } },                 { name := "quotient",                   params := [{ name := "x", ty := Ariadne.Ty.number, span := { start := 113, stop := 114 } },                              { name := "y", ty := Ariadne.Ty.number, span := { start := 124, stop := 125 } }],                   result := Ariadne.Ty.number,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "/"                                  (Ariadne.Expr.binary                                    "*"                                    (Ariadne.Expr.var "x" { start := 153, stop := 154 })                                    (Ariadne.Expr.var "y" { start := 157, stop := 158 })                                    { start := 153, stop := 158 })                                  (Ariadne.Expr.binary                                    "+"                                    (Ariadne.Expr.var "x" { start := 163, stop := 164 })                                    (Ariadne.Expr.var "y" { start := 167, stop := 168 })                                    { start := 163, stop := 168 })                                  { start := 153, stop := 168 })                                { start := 145, stop := 151 }]                             { start := 143, stop := 172 },                   exported := true,                   decreases := none,                   span := { start := 95, stop := 103 } },                 { name := "choice",                   params := [{ name := "flag", ty := Ariadne.Ty.boolean, span := { start := 196, stop := 200 } },                              { name := "x", ty := Ariadne.Ty.bigint, span := { start := 211, stop := 212 } },                              { name := "y", ty := Ariadne.Ty.bigint, span := { start := 222, stop := 223 } }],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.conditional                                  (Ariadne.Expr.var "flag" { start := 250, stop := 254 })                                  (Ariadne.Expr.var "x" { start := 257, stop := 258 })                                  (Ariadne.Expr.var "y" { start := 261, stop := 262 })                                  { start := 250, stop := 254 })                                { start := 243, stop := 249 }]                             { start := 241, stop := 265 },                   exported := true,                   decreases := none,                   span := { start := 180, stop := 188 } },                 { name := "choice_source",                   params := [],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.literal (Ariadne.Literal.bigint 7) { start := 396, stop := 398 })                                { start := 389, stop := 395 }]                             { start := 387, stop := 401 },                   exported := true,                   decreases := none,                   span := { start := 354, stop := 362 } },                 { name := "conjunction",                   params := [{ name := "a", ty := Ariadne.Ty.boolean, span := { start := 430, stop := 431 } },                              { name := "b", ty := Ariadne.Ty.boolean, span := { start := 442, stop := 443 } }],                   result := Ariadne.Ty.boolean,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "&&"                                  (Ariadne.Expr.var "a" { start := 472, stop := 473 })                                  (Ariadne.Expr.unary                                    "!"                                    (Ariadne.Expr.var "b" { start := 478, stop := 479 })                                    { start := 477, stop := 478 })                                  { start := 472, stop := 478 })                                { start := 465, stop := 471 }]                             { start := 463, stop := 482 },                   exported := true,                   decreases := none,                   span := { start := 409, stop := 417 } },                 { name := "disjunction",                   params := [{ name := "a", ty := Ariadne.Ty.boolean, span := { start := 511, stop := 512 } },                              { name := "b", ty := Ariadne.Ty.boolean, span := { start := 523, stop := 524 } }],                   result := Ariadne.Ty.boolean,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "||"                                  (Ariadne.Expr.var "a" { start := 553, stop := 554 })                                  (Ariadne.Expr.unary                                    "!"                                    (Ariadne.Expr.var "b" { start := 559, stop := 560 })                                    { start := 558, stop := 559 })                                  { start := 553, stop := 559 })                                { start := 546, stop := 552 }]                             { start := 544, stop := 563 },                   exported := true,                   decreases := none,                   span := { start := 490, stop := 498 } },                 { name := "compare",                   params := [{ name := "x", ty := Ariadne.Ty.bigint, span := { start := 588, stop := 589 } },                              { name := "y", ty := Ariadne.Ty.bigint, span := { start := 599, stop := 600 } }],                   result := Ariadne.Ty.boolean,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "<="                                  (Ariadne.Expr.var "x" { start := 628, stop := 629 })                                  (Ariadne.Expr.var "y" { start := 633, stop := 634 })                                  { start := 628, stop := 634 })                                { start := 621, stop := 627 }]                             { start := 619, stop := 637 },                   exported := true,                   decreases := none,                   span := { start := 571, stop := 579 } },                 { name := "equal",                   params := [{ name := "x", ty := Ariadne.Ty.string, span := { start := 660, stop := 661 } },                              { name := "y", ty := Ariadne.Ty.string, span := { start := 671, stop := 672 } }],                   result := Ariadne.Ty.boolean,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "==="                                  (Ariadne.Expr.var "x" { start := 700, stop := 701 })                                  (Ariadne.Expr.var "y" { start := 706, stop := 707 })                                  { start := 700, stop := 707 })                                { start := 693, stop := 699 }]                             { start := 691, stop := 710 },                   exported := true,                   decreases := none,                   span := { start := 645, stop := 653 } },                 { name := "text",                   params := [{ name := "name", ty := Ariadne.Ty.string, span := { start := 732, stop := 736 } }],                   result := Ariadne.Ty.string,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.binary                                  "+"                                  (Ariadne.Expr.literal                                    (Ariadne.Literal.string [104, 101, 108, 108, 111, 32])                                    { start := 763, stop := 771 })                                  (Ariadne.Expr.var "name" { start := 774, stop := 778 })                                  { start := 763, stop := 778 })                                { start := 756, stop := 762 }]                             { start := 754, stop := 781 },                   exported := true,                   decreases := none,                   span := { start := 718, stop := 726 } },                 { name := "unit",                   params := [],                   result := Ariadne.Ty.void,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 813, stop := 819 })                                { start := 813, stop := 819 }]                             { start := 811, stop := 822 },                   exported := true,                   decreases := none,                   span := { start := 789, stop := 797 } },                 { name := "local",                   params := [{ name := "a", ty := Ariadne.Ty.bigint, span := { start := 846, stop := 847 } },                              { name := "b", ty := Ariadne.Ty.bigint, span := { start := 857, stop := 858 } }],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.let_                                false                                "sum"                                none                                (Ariadne.Expr.binary                                  "+"                                  (Ariadne.Expr.var "a" { start := 892, stop := 893 })                                  (Ariadne.Expr.var "b" { start := 896, stop := 897 })                                  { start := 892, stop := 897 })                                { start := 880, stop := 885 },                              Ariadne.Stmt.let_                                false                                "doubled"                                none                                (Ariadne.Expr.binary                                  "*"                                  (Ariadne.Expr.var "sum" { start := 917, stop := 920 })                                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 2) { start := 923, stop := 925 })                                  { start := 917, stop := 925 })                                { start := 901, stop := 906 },                              Ariadne.Stmt.return_                                (Ariadne.Expr.var "doubled" { start := 936, stop := 943 })                                { start := 929, stop := 935 }]                             { start := 876, stop := 946 },                   exported := true,                   decreases := none,                   span := { start := 831, stop := 839 } },                 { name := "early",                   params := [{ name := "value", ty := Ariadne.Ty.bigint, span := { start := 970, stop := 975 } }],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.if_                                (Ariadne.Expr.binary                                  "<"                                  (Ariadne.Expr.var "value" { start := 1001, stop := 1006 })                                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 1009, stop := 1011 })                                  { start := 1001, stop := 1011 })                                (Ariadne.Stmt.block                                  [Ariadne.Stmt.return_                                     (Ariadne.Expr.unary                                       "-"                                       (Ariadne.Expr.var "value" { start := 1023, stop := 1028 })                                       { start := 1022, stop := 1023 })                                     { start := 1015, stop := 1021 }]                                  { start := 1013, stop := 1031 })                                (Ariadne.Stmt.block [] { start := 997, stop := 999 })                                { start := 997, stop := 999 },                              Ariadne.Stmt.return_                                (Ariadne.Expr.var "value" { start := 1041, stop := 1046 })                                { start := 1034, stop := 1040 }]                             { start := 993, stop := 1049 },                   exported := true,                   decreases := none,                   span := { start := 955, stop := 963 } },                 { name := "branchLocal",                   params := [{ name := "flag", ty := Ariadne.Ty.boolean, span := { start := 1079, stop := 1083 } },                              { name := "a", ty := Ariadne.Ty.bigint, span := { start := 1094, stop := 1095 } },                              { name := "b", ty := Ariadne.Ty.bigint, span := { start := 1105, stop := 1106 } }],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.if_                                (Ariadne.Expr.var "flag" { start := 1132, stop := 1136 })                                (Ariadne.Stmt.block                                  [Ariadne.Stmt.let_                                     false                                     "sum"                                     none                                     (Ariadne.Expr.binary                                       "+"                                       (Ariadne.Expr.var "a" { start := 1156, stop := 1157 })                                       (Ariadne.Expr.var "b" { start := 1160, stop := 1161 })                                       { start := 1156, stop := 1161 })                                     { start := 1144, stop := 1149 },                                   Ariadne.Stmt.return_                                     (Ariadne.Expr.var "sum" { start := 1174, stop := 1177 })                                     { start := 1167, stop := 1173 }]                                  { start := 1138, stop := 1182 })                                (Ariadne.Stmt.block [] { start := 1128, stop := 1130 })                                { start := 1128, stop := 1130 },                              Ariadne.Stmt.let_                                false                                "difference"                                none                                (Ariadne.Expr.binary                                  "-"                                  (Ariadne.Expr.var "a" { start := 1204, stop := 1205 })                                  (Ariadne.Expr.var "b" { start := 1208, stop := 1209 })                                  { start := 1204, stop := 1209 })                                { start := 1185, stop := 1190 },                              Ariadne.Stmt.return_                                (Ariadne.Expr.var "difference" { start := 1220, stop := 1230 })                                { start := 1213, stop := 1219 }]                             { start := 1124, stop := 1233 },                   exported := true,                   decreases := none,                   span := { start := 1058, stop := 1066 } },                 { name := "nested",                   params := [{ name := "flag", ty := Ariadne.Ty.boolean, span := { start := 1258, stop := 1262 } },                              { name := "other", ty := Ariadne.Ty.boolean, span := { start := 1273, stop := 1278 } },                              { name := "value", ty := Ariadne.Ty.bigint, span := { start := 1289, stop := 1294 } }],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.if_                                (Ariadne.Expr.var "flag" { start := 1320, stop := 1324 })                                (Ariadne.Stmt.block                                  [Ariadne.Stmt.if_                                     (Ariadne.Expr.var "other" { start := 1336, stop := 1341 })                                     (Ariadne.Stmt.block                                       [Ariadne.Stmt.return_                                          (Ariadne.Expr.var "value" { start := 1352, stop := 1357 })                                          { start := 1345, stop := 1351 }]                                       { start := 1343, stop := 1360 })                                     (Ariadne.Stmt.block [] { start := 1332, stop := 1334 })                                     { start := 1332, stop := 1334 },                                   Ariadne.Stmt.return_                                     (Ariadne.Expr.unary                                       "-"                                       (Ariadne.Expr.var "value" { start := 1373, stop := 1378 })                                       { start := 1372, stop := 1373 })                                     { start := 1365, stop := 1371 }]                                  { start := 1326, stop := 1383 })                                (Ariadne.Stmt.block [] { start := 1316, stop := 1318 })                                { start := 1316, stop := 1318 },                              Ariadne.Stmt.return_                                (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 1393, stop := 1395 })                                { start := 1386, stop := 1392 }]                             { start := 1312, stop := 1398 },                   exported := true,                   decreases := none,                   span := { start := 1242, stop := 1250 } }],   aliases := [],   classes := [] }
 
 theorem parse_checked : parse source = .ok program := by
   unfold parse
@@ -372,6 +545,38 @@ theorem ts_unit_source {fuel : Nat} {args : List Value} {value : Value}
     (h : ts_unit fuel args = .ok value) : SourceReturns source "unit" args value :=
   certificate.transfer_at h
 
+/-- Executable, fuel-indexed model of TypeScript `local`. -/
+def ts_local (fuel : Nat) (args : List Value) : Result Value :=
+  run program "local" fuel args
+
+theorem ts_local_source {fuel : Nat} {args : List Value} {value : Value}
+    (h : ts_local fuel args = .ok value) : SourceReturns source "local" args value :=
+  certificate.transfer_at h
+
+/-- Executable, fuel-indexed model of TypeScript `early`. -/
+def ts_early (fuel : Nat) (args : List Value) : Result Value :=
+  run program "early" fuel args
+
+theorem ts_early_source {fuel : Nat} {args : List Value} {value : Value}
+    (h : ts_early fuel args = .ok value) : SourceReturns source "early" args value :=
+  certificate.transfer_at h
+
+/-- Executable, fuel-indexed model of TypeScript `branchLocal`. -/
+def ts_branchLocal (fuel : Nat) (args : List Value) : Result Value :=
+  run program "branchLocal" fuel args
+
+theorem ts_branchLocal_source {fuel : Nat} {args : List Value} {value : Value}
+    (h : ts_branchLocal fuel args = .ok value) : SourceReturns source "branchLocal" args value :=
+  certificate.transfer_at h
+
+/-- Executable, fuel-indexed model of TypeScript `nested`. -/
+def ts_nested (fuel : Nat) (args : List Value) : Result Value :=
+  run program "nested" fuel args
+
+theorem ts_nested_source {fuel : Nat} {args : List Value} {value : Value}
+    (h : ts_nested fuel args = .ok value) : SourceReturns source "nested" args value :=
+  certificate.transfer_at h
+
 end Extracted_source
 
 -- Shallow denotation certificates. Source transfer is emitted for proved fragments.
@@ -406,8 +611,8 @@ def SourceChecks.«arithmetic».names : Adequacy.Names CoreArtifacts.«arithmeti
   Adequacy.Names.fromList ["x", "y"]
 
 theorem SourceChecks.«arithmetic».translated :
-    Adequacy.ScalarExpr SourceChecks.«arithmetic».names .int (Ariadne.Expr.binary   "*"   (Ariadne.Expr.unary     "-"     (Ariadne.Expr.binary       "+"       (Ariadne.Expr.var "x" { start := 68, stop := 69 })       (Ariadne.Expr.var "y" { start := 72, stop := 73 })       { start := 68, stop := 73 })     { start := 66, stop := 67 })   (Ariadne.Expr.binary     "-"     (Ariadne.Expr.var "x" { start := 78, stop := 79 })     (Ariadne.Expr.var "y" { start := 82, stop := 83 })     { start := 78, stop := 83 })   { start := 66, stop := 83 }) CoreArtifacts.«arithmetic».body := by
-  exact .binary .intMul (.unary .intNeg (.binary .intAdd (.var .int (Ariadne.Shallow.Core.Var.here) _) (.var .int (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) _) _) (.binary .intSub (.var .int (Ariadne.Shallow.Core.Var.here) _) (.var .int (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) _) _
+    Adequacy.ScalarStatements SourceChecks.«arithmetic».names .int ([Ariadne.Stmt.return_    (Ariadne.Expr.binary      "*"      (Ariadne.Expr.unary        "-"        (Ariadne.Expr.binary          "+"          (Ariadne.Expr.var "x" { start := 68, stop := 69 })          (Ariadne.Expr.var "y" { start := 72, stop := 73 })          { start := 68, stop := 73 })        { start := 66, stop := 67 })      (Ariadne.Expr.binary        "-"        (Ariadne.Expr.var "x" { start := 78, stop := 79 })        (Ariadne.Expr.var "y" { start := 82, stop := 83 })        { start := 78, stop := 83 })      { start := 66, stop := 83 })    { start := 59, stop := 65 }]) CoreArtifacts.«arithmetic».body := by
+  exact .return_ (.binary .intMul (.unary .intNeg (.binary .intAdd (.var .int (Ariadne.Shallow.Core.Var.here) _) (.var .int (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) _) _) (.binary .intSub (.var .int (Ariadne.Shallow.Core.Var.here) _) (.var .int (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) _) _) _ _
 
 theorem «arithmetic_source» («_x#arg» : _root_.Int) («_y#arg» : _root_.Int) (heap : Heap) :
     SourceReturnsFrom _root_.Extracted_source.source "arithmetic" heap [(Value.bigint «_x#arg»), (Value.bigint «_y#arg»)] (Value.bigint («arithmetic» «_x#arg» «_y#arg»)) := by
@@ -427,8 +632,8 @@ theorem «arithmetic_source» («_x#arg» : _root_.Int) («_y#arg» : _root_.Int
         exact Adequacy.lookup_declare_self _ _ _
       | there v =>
         cases v
-  exact Adequacy.scalar_source _root_.Extracted_source.certificate SourceChecks.«arithmetic».function SourceChecks.«arithmetic».names .int CoreArtifacts.«arithmetic».body
-    (Ariadne.Expr.binary   "*"   (Ariadne.Expr.unary     "-"     (Ariadne.Expr.binary       "+"       (Ariadne.Expr.var "x" { start := 68, stop := 69 })       (Ariadne.Expr.var "y" { start := 72, stop := 73 })       { start := 68, stop := 73 })     { start := 66, stop := 67 })   (Ariadne.Expr.binary     "-"     (Ariadne.Expr.var "x" { start := 78, stop := 79 })     (Ariadne.Expr.var "y" { start := 82, stop := 83 })     { start := 78, stop := 83 })   { start := 66, stop := 83 }) ({ start := 59, stop := 65 }) ({ start := 57, stop := 87 })
+  exact Adequacy.scalar_statements_source _root_.Extracted_source.certificate SourceChecks.«arithmetic».function SourceChecks.«arithmetic».names .int CoreArtifacts.«arithmetic».body
+    ([Ariadne.Stmt.return_    (Ariadne.Expr.binary      "*"      (Ariadne.Expr.unary        "-"        (Ariadne.Expr.binary          "+"          (Ariadne.Expr.var "x" { start := 68, stop := 69 })          (Ariadne.Expr.var "y" { start := 72, stop := 73 })          { start := 68, stop := 73 })        { start := 66, stop := 67 })      (Ariadne.Expr.binary        "-"        (Ariadne.Expr.var "x" { start := 78, stop := 79 })        (Ariadne.Expr.var "y" { start := 82, stop := 83 })        { start := 78, stop := 83 })      { start := 66, stop := 83 })    { start := 59, stop := 65 }]) ({ start := 57, stop := 87 })
     (by kernel_rfl) (by kernel_rfl) SourceChecks.«arithmetic».translated Interpretation.value («_x#arg», («_y#arg», ())) heap [(Value.bigint «_x#arg»), (Value.bigint «_y#arg»)] inputs
 
 def CoreArtifacts.«quotient» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.number, Ariadne.Shallow.Core.Ty.number], result := Ariadne.Shallow.Core.Ty.number, body := (Core.Term.binary (Ariadne.Shallow.Core.Binary.numDiv) (Core.Term.binary (Ariadne.Shallow.Core.Binary.numMul) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) (Core.Term.binary (Ariadne.Shallow.Core.Binary.numAdd) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) }
@@ -454,8 +659,8 @@ def SourceChecks.«quotient».names : Adequacy.Names CoreArtifacts.«quotient».
   Adequacy.Names.fromList ["x", "y"]
 
 theorem SourceChecks.«quotient».translated :
-    Adequacy.ScalarExpr SourceChecks.«quotient».names .number (Ariadne.Expr.binary   "/"   (Ariadne.Expr.binary     "*"     (Ariadne.Expr.var "x" { start := 153, stop := 154 })     (Ariadne.Expr.var "y" { start := 157, stop := 158 })     { start := 153, stop := 158 })   (Ariadne.Expr.binary     "+"     (Ariadne.Expr.var "x" { start := 163, stop := 164 })     (Ariadne.Expr.var "y" { start := 167, stop := 168 })     { start := 163, stop := 168 })   { start := 153, stop := 168 }) CoreArtifacts.«quotient».body := by
-  exact .binary .numDiv (.binary .numMul (.var .number (Ariadne.Shallow.Core.Var.here) _) (.var .number (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) _) (.binary .numAdd (.var .number (Ariadne.Shallow.Core.Var.here) _) (.var .number (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) _) _
+    Adequacy.ScalarStatements SourceChecks.«quotient».names .number ([Ariadne.Stmt.return_    (Ariadne.Expr.binary      "/"      (Ariadne.Expr.binary        "*"        (Ariadne.Expr.var "x" { start := 153, stop := 154 })        (Ariadne.Expr.var "y" { start := 157, stop := 158 })        { start := 153, stop := 158 })      (Ariadne.Expr.binary        "+"        (Ariadne.Expr.var "x" { start := 163, stop := 164 })        (Ariadne.Expr.var "y" { start := 167, stop := 168 })        { start := 163, stop := 168 })      { start := 153, stop := 168 })    { start := 145, stop := 151 }]) CoreArtifacts.«quotient».body := by
+  exact .return_ (.binary .numDiv (.binary .numMul (.var .number (Ariadne.Shallow.Core.Var.here) _) (.var .number (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) _) (.binary .numAdd (.var .number (Ariadne.Shallow.Core.Var.here) _) (.var .number (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) _) _) _ _
 
 theorem «quotient_source» («_x#arg» : _root_.Float.Model) («_y#arg» : _root_.Float.Model) (heap : Heap) :
     SourceReturnsFrom _root_.Extracted_source.source "quotient" heap [(Value.number «_x#arg»), (Value.number «_y#arg»)] (Value.number («quotient» «_x#arg» «_y#arg»)) := by
@@ -475,8 +680,8 @@ theorem «quotient_source» («_x#arg» : _root_.Float.Model) («_y#arg» : _roo
         exact Adequacy.lookup_declare_self _ _ _
       | there v =>
         cases v
-  exact Adequacy.scalar_source _root_.Extracted_source.certificate SourceChecks.«quotient».function SourceChecks.«quotient».names .number CoreArtifacts.«quotient».body
-    (Ariadne.Expr.binary   "/"   (Ariadne.Expr.binary     "*"     (Ariadne.Expr.var "x" { start := 153, stop := 154 })     (Ariadne.Expr.var "y" { start := 157, stop := 158 })     { start := 153, stop := 158 })   (Ariadne.Expr.binary     "+"     (Ariadne.Expr.var "x" { start := 163, stop := 164 })     (Ariadne.Expr.var "y" { start := 167, stop := 168 })     { start := 163, stop := 168 })   { start := 153, stop := 168 }) ({ start := 145, stop := 151 }) ({ start := 143, stop := 172 })
+  exact Adequacy.scalar_statements_source _root_.Extracted_source.certificate SourceChecks.«quotient».function SourceChecks.«quotient».names .number CoreArtifacts.«quotient».body
+    ([Ariadne.Stmt.return_    (Ariadne.Expr.binary      "/"      (Ariadne.Expr.binary        "*"        (Ariadne.Expr.var "x" { start := 153, stop := 154 })        (Ariadne.Expr.var "y" { start := 157, stop := 158 })        { start := 153, stop := 158 })      (Ariadne.Expr.binary        "+"        (Ariadne.Expr.var "x" { start := 163, stop := 164 })        (Ariadne.Expr.var "y" { start := 167, stop := 168 })        { start := 163, stop := 168 })      { start := 153, stop := 168 })    { start := 145, stop := 151 }]) ({ start := 143, stop := 172 })
     (by kernel_rfl) (by kernel_rfl) SourceChecks.«quotient».translated Interpretation.value («_x#arg», («_y#arg», ())) heap [(Value.number «_x#arg»), (Value.number «_y#arg»)] inputs
 
 def CoreArtifacts.«choice» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.bool, Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.ite (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) }
@@ -505,8 +710,8 @@ def SourceChecks.«choice».names : Adequacy.Names CoreArtifacts.«choice».para
   Adequacy.Names.fromList ["flag", "x", "y"]
 
 theorem SourceChecks.«choice».translated :
-    Adequacy.ScalarExpr SourceChecks.«choice».names .int (Ariadne.Expr.conditional   (Ariadne.Expr.var "flag" { start := 250, stop := 254 })   (Ariadne.Expr.var "x" { start := 257, stop := 258 })   (Ariadne.Expr.var "y" { start := 261, stop := 262 })   { start := 250, stop := 254 }) CoreArtifacts.«choice».body := by
-  exact .conditional (.var .bool (Ariadne.Shallow.Core.Var.here) _) (.var .int (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) (.var .int (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) _) _
+    Adequacy.ScalarStatements SourceChecks.«choice».names .int ([Ariadne.Stmt.return_    (Ariadne.Expr.conditional      (Ariadne.Expr.var "flag" { start := 250, stop := 254 })      (Ariadne.Expr.var "x" { start := 257, stop := 258 })      (Ariadne.Expr.var "y" { start := 261, stop := 262 })      { start := 250, stop := 254 })    { start := 243, stop := 249 }]) CoreArtifacts.«choice».body := by
+  exact .return_ (.conditional (.var .bool (Ariadne.Shallow.Core.Var.here) _) (.var .int (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) (.var .int (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) _) _) _ _
 
 theorem SourceChecks.«choice».source («_flag#arg» : _root_.Bool) («_x#arg» : _root_.Int) («_y#arg» : _root_.Int) (heap : Heap) :
     SourceReturnsFrom _root_.Extracted_source.source "choice" heap [(Value.boolean «_flag#arg»), (Value.bigint «_x#arg»), (Value.bigint «_y#arg»)] (Value.bigint («choice» «_flag#arg» «_x#arg» «_y#arg»)) := by
@@ -533,8 +738,8 @@ theorem SourceChecks.«choice».source («_flag#arg» : _root_.Bool) («_x#arg»
           exact Adequacy.lookup_declare_self _ _ _
         | there v =>
           cases v
-  exact Adequacy.scalar_source _root_.Extracted_source.certificate SourceChecks.«choice».function SourceChecks.«choice».names .int CoreArtifacts.«choice».body
-    (Ariadne.Expr.conditional   (Ariadne.Expr.var "flag" { start := 250, stop := 254 })   (Ariadne.Expr.var "x" { start := 257, stop := 258 })   (Ariadne.Expr.var "y" { start := 261, stop := 262 })   { start := 250, stop := 254 }) ({ start := 243, stop := 249 }) ({ start := 241, stop := 265 })
+  exact Adequacy.scalar_statements_source _root_.Extracted_source.certificate SourceChecks.«choice».function SourceChecks.«choice».names .int CoreArtifacts.«choice».body
+    ([Ariadne.Stmt.return_    (Ariadne.Expr.conditional      (Ariadne.Expr.var "flag" { start := 250, stop := 254 })      (Ariadne.Expr.var "x" { start := 257, stop := 258 })      (Ariadne.Expr.var "y" { start := 261, stop := 262 })      { start := 250, stop := 254 })    { start := 243, stop := 249 }]) ({ start := 241, stop := 265 })
     (by kernel_rfl) (by kernel_rfl) SourceChecks.«choice».translated Interpretation.value («_flag#arg», («_x#arg», («_y#arg», ()))) heap [(Value.boolean «_flag#arg»), (Value.bigint «_x#arg»), (Value.bigint «_y#arg»)] inputs
 
 def CoreArtifacts.«choice_source» : Core.Function := { params := [], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.int (7)) }
@@ -560,8 +765,8 @@ def SourceChecks.«choice_source».names : Adequacy.Names CoreArtifacts.«choice
   Adequacy.Names.fromList []
 
 theorem SourceChecks.«choice_source».translated :
-    Adequacy.ScalarExpr SourceChecks.«choice_source».names .int (Ariadne.Expr.literal (Ariadne.Literal.bigint 7) { start := 396, stop := 398 }) CoreArtifacts.«choice_source».body := by
-  exact .int _ _
+    Adequacy.ScalarStatements SourceChecks.«choice_source».names .int ([Ariadne.Stmt.return_    (Ariadne.Expr.literal (Ariadne.Literal.bigint 7) { start := 396, stop := 398 })    { start := 389, stop := 395 }]) CoreArtifacts.«choice_source».body := by
+  exact .return_ (.int _ _) _ _
 
 theorem «choice_source_source» (heap : Heap) :
     SourceReturnsFrom _root_.Extracted_source.source "choice_source" heap [] (Value.bigint («choice_source»)) := by
@@ -570,8 +775,8 @@ theorem «choice_source_source» (heap : Heap) :
       (interp := Interpretation.value) () := by
     intro t v scalar
     cases v
-  exact Adequacy.scalar_source _root_.Extracted_source.certificate SourceChecks.«choice_source».function SourceChecks.«choice_source».names .int CoreArtifacts.«choice_source».body
-    (Ariadne.Expr.literal (Ariadne.Literal.bigint 7) { start := 396, stop := 398 }) ({ start := 389, stop := 395 }) ({ start := 387, stop := 401 })
+  exact Adequacy.scalar_statements_source _root_.Extracted_source.certificate SourceChecks.«choice_source».function SourceChecks.«choice_source».names .int CoreArtifacts.«choice_source».body
+    ([Ariadne.Stmt.return_    (Ariadne.Expr.literal (Ariadne.Literal.bigint 7) { start := 396, stop := 398 })    { start := 389, stop := 395 }]) ({ start := 387, stop := 401 })
     (by kernel_rfl) (by kernel_rfl) SourceChecks.«choice_source».translated Interpretation.value () heap [] inputs
 
 def CoreArtifacts.«conjunction» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.bool, Ariadne.Shallow.Core.Ty.bool], result := Ariadne.Shallow.Core.Ty.bool, body := (Core.Term.ite (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.ite (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.bool false) (Core.Term.bool true)) (Core.Term.bool false)) }
@@ -603,8 +808,8 @@ def SourceChecks.«conjunction».names : Adequacy.Names CoreArtifacts.«conjunct
   Adequacy.Names.fromList ["a", "b"]
 
 theorem SourceChecks.«conjunction».translated :
-    Adequacy.ScalarExpr SourceChecks.«conjunction».names .bool (Ariadne.Expr.binary   "&&"   (Ariadne.Expr.var "a" { start := 472, stop := 473 })   (Ariadne.Expr.unary "!" (Ariadne.Expr.var "b" { start := 478, stop := 479 }) { start := 477, stop := 478 })   { start := 472, stop := 478 }) CoreArtifacts.«conjunction».body := by
-  exact .and (.var .bool (Ariadne.Shallow.Core.Var.here) _) (.notIte (.var .bool (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) _) _
+    Adequacy.ScalarStatements SourceChecks.«conjunction».names .bool ([Ariadne.Stmt.return_    (Ariadne.Expr.binary      "&&"      (Ariadne.Expr.var "a" { start := 472, stop := 473 })      (Ariadne.Expr.unary "!" (Ariadne.Expr.var "b" { start := 478, stop := 479 }) { start := 477, stop := 478 })      { start := 472, stop := 478 })    { start := 465, stop := 471 }]) CoreArtifacts.«conjunction».body := by
+  exact .return_ (.and (.var .bool (Ariadne.Shallow.Core.Var.here) _) (.notIte (.var .bool (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) _) _) _ _
 
 theorem «conjunction_source» («_a#arg» : _root_.Bool) («_b#arg» : _root_.Bool) (heap : Heap) :
     SourceReturnsFrom _root_.Extracted_source.source "conjunction" heap [(Value.boolean «_a#arg»), (Value.boolean «_b#arg»)] (Value.boolean («conjunction» «_a#arg» «_b#arg»)) := by
@@ -624,8 +829,8 @@ theorem «conjunction_source» («_a#arg» : _root_.Bool) («_b#arg» : _root_.B
         exact Adequacy.lookup_declare_self _ _ _
       | there v =>
         cases v
-  exact Adequacy.scalar_source _root_.Extracted_source.certificate SourceChecks.«conjunction».function SourceChecks.«conjunction».names .bool CoreArtifacts.«conjunction».body
-    (Ariadne.Expr.binary   "&&"   (Ariadne.Expr.var "a" { start := 472, stop := 473 })   (Ariadne.Expr.unary "!" (Ariadne.Expr.var "b" { start := 478, stop := 479 }) { start := 477, stop := 478 })   { start := 472, stop := 478 }) ({ start := 465, stop := 471 }) ({ start := 463, stop := 482 })
+  exact Adequacy.scalar_statements_source _root_.Extracted_source.certificate SourceChecks.«conjunction».function SourceChecks.«conjunction».names .bool CoreArtifacts.«conjunction».body
+    ([Ariadne.Stmt.return_    (Ariadne.Expr.binary      "&&"      (Ariadne.Expr.var "a" { start := 472, stop := 473 })      (Ariadne.Expr.unary "!" (Ariadne.Expr.var "b" { start := 478, stop := 479 }) { start := 477, stop := 478 })      { start := 472, stop := 478 })    { start := 465, stop := 471 }]) ({ start := 463, stop := 482 })
     (by kernel_rfl) (by kernel_rfl) SourceChecks.«conjunction».translated Interpretation.value («_a#arg», («_b#arg», ())) heap [(Value.boolean «_a#arg»), (Value.boolean «_b#arg»)] inputs
 
 def CoreArtifacts.«disjunction» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.bool, Ariadne.Shallow.Core.Ty.bool], result := Ariadne.Shallow.Core.Ty.bool, body := (Core.Term.ite (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.bool true) (Core.Term.ite (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.bool false) (Core.Term.bool true))) }
@@ -657,8 +862,8 @@ def SourceChecks.«disjunction».names : Adequacy.Names CoreArtifacts.«disjunct
   Adequacy.Names.fromList ["a", "b"]
 
 theorem SourceChecks.«disjunction».translated :
-    Adequacy.ScalarExpr SourceChecks.«disjunction».names .bool (Ariadne.Expr.binary   "||"   (Ariadne.Expr.var "a" { start := 553, stop := 554 })   (Ariadne.Expr.unary "!" (Ariadne.Expr.var "b" { start := 559, stop := 560 }) { start := 558, stop := 559 })   { start := 553, stop := 559 }) CoreArtifacts.«disjunction».body := by
-  exact .or (.var .bool (Ariadne.Shallow.Core.Var.here) _) (.notIte (.var .bool (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) _) _
+    Adequacy.ScalarStatements SourceChecks.«disjunction».names .bool ([Ariadne.Stmt.return_    (Ariadne.Expr.binary      "||"      (Ariadne.Expr.var "a" { start := 553, stop := 554 })      (Ariadne.Expr.unary "!" (Ariadne.Expr.var "b" { start := 559, stop := 560 }) { start := 558, stop := 559 })      { start := 553, stop := 559 })    { start := 546, stop := 552 }]) CoreArtifacts.«disjunction».body := by
+  exact .return_ (.or (.var .bool (Ariadne.Shallow.Core.Var.here) _) (.notIte (.var .bool (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) _) _) _ _
 
 theorem «disjunction_source» («_a#arg» : _root_.Bool) («_b#arg» : _root_.Bool) (heap : Heap) :
     SourceReturnsFrom _root_.Extracted_source.source "disjunction" heap [(Value.boolean «_a#arg»), (Value.boolean «_b#arg»)] (Value.boolean («disjunction» «_a#arg» «_b#arg»)) := by
@@ -678,8 +883,8 @@ theorem «disjunction_source» («_a#arg» : _root_.Bool) («_b#arg» : _root_.B
         exact Adequacy.lookup_declare_self _ _ _
       | there v =>
         cases v
-  exact Adequacy.scalar_source _root_.Extracted_source.certificate SourceChecks.«disjunction».function SourceChecks.«disjunction».names .bool CoreArtifacts.«disjunction».body
-    (Ariadne.Expr.binary   "||"   (Ariadne.Expr.var "a" { start := 553, stop := 554 })   (Ariadne.Expr.unary "!" (Ariadne.Expr.var "b" { start := 559, stop := 560 }) { start := 558, stop := 559 })   { start := 553, stop := 559 }) ({ start := 546, stop := 552 }) ({ start := 544, stop := 563 })
+  exact Adequacy.scalar_statements_source _root_.Extracted_source.certificate SourceChecks.«disjunction».function SourceChecks.«disjunction».names .bool CoreArtifacts.«disjunction».body
+    ([Ariadne.Stmt.return_    (Ariadne.Expr.binary      "||"      (Ariadne.Expr.var "a" { start := 553, stop := 554 })      (Ariadne.Expr.unary "!" (Ariadne.Expr.var "b" { start := 559, stop := 560 }) { start := 558, stop := 559 })      { start := 553, stop := 559 })    { start := 546, stop := 552 }]) ({ start := 544, stop := 563 })
     (by kernel_rfl) (by kernel_rfl) SourceChecks.«disjunction».translated Interpretation.value («_a#arg», («_b#arg», ())) heap [(Value.boolean «_a#arg»), (Value.boolean «_b#arg»)] inputs
 
 def CoreArtifacts.«compare» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.bool, body := (Core.Term.binary (Ariadne.Shallow.Core.Binary.intLe) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) }
@@ -705,8 +910,8 @@ def SourceChecks.«compare».names : Adequacy.Names CoreArtifacts.«compare».pa
   Adequacy.Names.fromList ["x", "y"]
 
 theorem SourceChecks.«compare».translated :
-    Adequacy.ScalarExpr SourceChecks.«compare».names .bool (Ariadne.Expr.binary   "<="   (Ariadne.Expr.var "x" { start := 628, stop := 629 })   (Ariadne.Expr.var "y" { start := 633, stop := 634 })   { start := 628, stop := 634 }) CoreArtifacts.«compare».body := by
-  exact .binary .intLe (.var .int (Ariadne.Shallow.Core.Var.here) _) (.var .int (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) _
+    Adequacy.ScalarStatements SourceChecks.«compare».names .bool ([Ariadne.Stmt.return_    (Ariadne.Expr.binary      "<="      (Ariadne.Expr.var "x" { start := 628, stop := 629 })      (Ariadne.Expr.var "y" { start := 633, stop := 634 })      { start := 628, stop := 634 })    { start := 621, stop := 627 }]) CoreArtifacts.«compare».body := by
+  exact .return_ (.binary .intLe (.var .int (Ariadne.Shallow.Core.Var.here) _) (.var .int (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) _) _ _
 
 theorem «compare_source» («_x#arg» : _root_.Int) («_y#arg» : _root_.Int) (heap : Heap) :
     SourceReturnsFrom _root_.Extracted_source.source "compare" heap [(Value.bigint «_x#arg»), (Value.bigint «_y#arg»)] (Value.boolean («compare» «_x#arg» «_y#arg»)) := by
@@ -726,8 +931,8 @@ theorem «compare_source» («_x#arg» : _root_.Int) («_y#arg» : _root_.Int) (
         exact Adequacy.lookup_declare_self _ _ _
       | there v =>
         cases v
-  exact Adequacy.scalar_source _root_.Extracted_source.certificate SourceChecks.«compare».function SourceChecks.«compare».names .bool CoreArtifacts.«compare».body
-    (Ariadne.Expr.binary   "<="   (Ariadne.Expr.var "x" { start := 628, stop := 629 })   (Ariadne.Expr.var "y" { start := 633, stop := 634 })   { start := 628, stop := 634 }) ({ start := 621, stop := 627 }) ({ start := 619, stop := 637 })
+  exact Adequacy.scalar_statements_source _root_.Extracted_source.certificate SourceChecks.«compare».function SourceChecks.«compare».names .bool CoreArtifacts.«compare».body
+    ([Ariadne.Stmt.return_    (Ariadne.Expr.binary      "<="      (Ariadne.Expr.var "x" { start := 628, stop := 629 })      (Ariadne.Expr.var "y" { start := 633, stop := 634 })      { start := 628, stop := 634 })    { start := 621, stop := 627 }]) ({ start := 619, stop := 637 })
     (by kernel_rfl) (by kernel_rfl) SourceChecks.«compare».translated Interpretation.value («_x#arg», («_y#arg», ())) heap [(Value.bigint «_x#arg»), (Value.bigint «_y#arg»)] inputs
 
 def CoreArtifacts.«equal» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.string, Ariadne.Shallow.Core.Ty.string], result := Ariadne.Shallow.Core.Ty.bool, body := (Core.Term.binary (Ariadne.Shallow.Core.Binary.strEq) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) }
@@ -753,8 +958,8 @@ def SourceChecks.«equal».names : Adequacy.Names CoreArtifacts.«equal».params
   Adequacy.Names.fromList ["x", "y"]
 
 theorem SourceChecks.«equal».translated :
-    Adequacy.ScalarExpr SourceChecks.«equal».names .bool (Ariadne.Expr.binary   "==="   (Ariadne.Expr.var "x" { start := 700, stop := 701 })   (Ariadne.Expr.var "y" { start := 706, stop := 707 })   { start := 700, stop := 707 }) CoreArtifacts.«equal».body := by
-  exact .binary .strEq (.var .string (Ariadne.Shallow.Core.Var.here) _) (.var .string (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) _
+    Adequacy.ScalarStatements SourceChecks.«equal».names .bool ([Ariadne.Stmt.return_    (Ariadne.Expr.binary      "==="      (Ariadne.Expr.var "x" { start := 700, stop := 701 })      (Ariadne.Expr.var "y" { start := 706, stop := 707 })      { start := 700, stop := 707 })    { start := 693, stop := 699 }]) CoreArtifacts.«equal».body := by
+  exact .return_ (.binary .strEq (.var .string (Ariadne.Shallow.Core.Var.here) _) (.var .string (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) _) _ _
 
 theorem «equal_source» («_x#arg» : _root_.Ariadne.JSString) («_y#arg» : _root_.Ariadne.JSString) (heap : Heap) :
     SourceReturnsFrom _root_.Extracted_source.source "equal" heap [(Value.string «_x#arg»), (Value.string «_y#arg»)] (Value.boolean («equal» «_x#arg» «_y#arg»)) := by
@@ -774,8 +979,8 @@ theorem «equal_source» («_x#arg» : _root_.Ariadne.JSString) («_y#arg» : _r
         exact Adequacy.lookup_declare_self _ _ _
       | there v =>
         cases v
-  exact Adequacy.scalar_source _root_.Extracted_source.certificate SourceChecks.«equal».function SourceChecks.«equal».names .bool CoreArtifacts.«equal».body
-    (Ariadne.Expr.binary   "==="   (Ariadne.Expr.var "x" { start := 700, stop := 701 })   (Ariadne.Expr.var "y" { start := 706, stop := 707 })   { start := 700, stop := 707 }) ({ start := 693, stop := 699 }) ({ start := 691, stop := 710 })
+  exact Adequacy.scalar_statements_source _root_.Extracted_source.certificate SourceChecks.«equal».function SourceChecks.«equal».names .bool CoreArtifacts.«equal».body
+    ([Ariadne.Stmt.return_    (Ariadne.Expr.binary      "==="      (Ariadne.Expr.var "x" { start := 700, stop := 701 })      (Ariadne.Expr.var "y" { start := 706, stop := 707 })      { start := 700, stop := 707 })    { start := 693, stop := 699 }]) ({ start := 691, stop := 710 })
     (by kernel_rfl) (by kernel_rfl) SourceChecks.«equal».translated Interpretation.value («_x#arg», («_y#arg», ())) heap [(Value.string «_x#arg»), (Value.string «_y#arg»)] inputs
 
 def CoreArtifacts.«text» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.string], result := Ariadne.Shallow.Core.Ty.string, body := (Core.Term.binary (Ariadne.Shallow.Core.Binary.strAppend) (Core.Term.string [104, 101, 108, 108, 111, 32]) (Core.Term.var (Ariadne.Shallow.Core.Var.here))) }
@@ -801,8 +1006,8 @@ def SourceChecks.«text».names : Adequacy.Names CoreArtifacts.«text».params :
   Adequacy.Names.fromList ["name"]
 
 theorem SourceChecks.«text».translated :
-    Adequacy.ScalarExpr SourceChecks.«text».names .string (Ariadne.Expr.binary   "+"   (Ariadne.Expr.literal (Ariadne.Literal.string [104, 101, 108, 108, 111, 32]) { start := 763, stop := 771 })   (Ariadne.Expr.var "name" { start := 774, stop := 778 })   { start := 763, stop := 778 }) CoreArtifacts.«text».body := by
-  exact .binary .strAppend (.string _ _) (.var .string (Ariadne.Shallow.Core.Var.here) _) _
+    Adequacy.ScalarStatements SourceChecks.«text».names .string ([Ariadne.Stmt.return_    (Ariadne.Expr.binary      "+"      (Ariadne.Expr.literal (Ariadne.Literal.string [104, 101, 108, 108, 111, 32]) { start := 763, stop := 771 })      (Ariadne.Expr.var "name" { start := 774, stop := 778 })      { start := 763, stop := 778 })    { start := 756, stop := 762 }]) CoreArtifacts.«text».body := by
+  exact .return_ (.binary .strAppend (.string _ _) (.var .string (Ariadne.Shallow.Core.Var.here) _) _) _ _
 
 theorem «text_source» («_name#arg» : _root_.Ariadne.JSString) (heap : Heap) :
     SourceReturnsFrom _root_.Extracted_source.source "text" heap [(Value.string «_name#arg»)] (Value.string («text» «_name#arg»)) := by
@@ -816,8 +1021,8 @@ theorem «text_source» («_name#arg» : _root_.Ariadne.JSString) (heap : Heap) 
       exact Adequacy.lookup_declare_self _ _ _
     | there v =>
       cases v
-  exact Adequacy.scalar_source _root_.Extracted_source.certificate SourceChecks.«text».function SourceChecks.«text».names .string CoreArtifacts.«text».body
-    (Ariadne.Expr.binary   "+"   (Ariadne.Expr.literal (Ariadne.Literal.string [104, 101, 108, 108, 111, 32]) { start := 763, stop := 771 })   (Ariadne.Expr.var "name" { start := 774, stop := 778 })   { start := 763, stop := 778 }) ({ start := 756, stop := 762 }) ({ start := 754, stop := 781 })
+  exact Adequacy.scalar_statements_source _root_.Extracted_source.certificate SourceChecks.«text».function SourceChecks.«text».names .string CoreArtifacts.«text».body
+    ([Ariadne.Stmt.return_    (Ariadne.Expr.binary      "+"      (Ariadne.Expr.literal (Ariadne.Literal.string [104, 101, 108, 108, 111, 32]) { start := 763, stop := 771 })      (Ariadne.Expr.var "name" { start := 774, stop := 778 })      { start := 763, stop := 778 })    { start := 756, stop := 762 }]) ({ start := 754, stop := 781 })
     (by kernel_rfl) (by kernel_rfl) SourceChecks.«text».translated Interpretation.value («_name#arg», ()) heap [(Value.string «_name#arg»)] inputs
 
 def CoreArtifacts.«unit» : Core.Function := { params := [], result := Ariadne.Shallow.Core.Ty.unit, body := Core.Term.unit }
@@ -843,8 +1048,8 @@ def SourceChecks.«unit».names : Adequacy.Names CoreArtifacts.«unit».params :
   Adequacy.Names.fromList []
 
 theorem SourceChecks.«unit».translated :
-    Adequacy.ScalarExpr SourceChecks.«unit».names .unit (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 813, stop := 819 }) CoreArtifacts.«unit».body := by
-  exact .unit _
+    Adequacy.ScalarStatements SourceChecks.«unit».names .unit ([Ariadne.Stmt.return_    (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 813, stop := 819 })    { start := 813, stop := 819 }]) CoreArtifacts.«unit».body := by
+  exact .return_ (.unit _) _ _
 
 theorem «unit_source» (heap : Heap) :
     SourceReturnsFrom _root_.Extracted_source.source "unit" heap [] Value.undefined := by
@@ -853,8 +1058,224 @@ theorem «unit_source» (heap : Heap) :
       (interp := Interpretation.value) () := by
     intro t v scalar
     cases v
-  exact Adequacy.scalar_source _root_.Extracted_source.certificate SourceChecks.«unit».function SourceChecks.«unit».names .unit CoreArtifacts.«unit».body
-    (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 813, stop := 819 }) ({ start := 813, stop := 819 }) ({ start := 811, stop := 822 })
+  exact Adequacy.scalar_statements_source _root_.Extracted_source.certificate SourceChecks.«unit».function SourceChecks.«unit».names .unit CoreArtifacts.«unit».body
+    ([Ariadne.Stmt.return_    (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 813, stop := 819 })    { start := 813, stop := 819 }]) ({ start := 811, stop := 822 })
     (by kernel_rfl) (by kernel_rfl) SourceChecks.«unit».translated Interpretation.value () heap [] inputs
+
+def CoreArtifacts.«local» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.int) "sum" (Core.Term.binary (Ariadne.Shallow.Core.Binary.intAdd) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.int) "doubled" (Core.Term.binary (Ariadne.Shallow.Core.Binary.intMul) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.int (2))) (Core.Term.var (Ariadne.Shallow.Core.Var.here)))) }
+
+theorem ElaborationChecks.«local» :
+    Elaborate.function _root_.Extracted_source.program "local" = .ok CoreArtifacts.«local» := by kernel_rfl
+
+def «local» («_a#arg» : _root_.Int) («_b#arg» : _root_.Int) : _root_.Int :=
+  (let «_sum#0» : _root_.Int := («_a#arg» + «_b#arg»);
+  (let «_doubled#1» : _root_.Int := («_sum#0» * (2 : _root_.Int));
+  «_doubled#1»))
+
+abbrev «local».safe («_a#arg» : _root_.Int) («_b#arg» : _root_.Int) : Prop :=
+  Safety.function (interp := Interpretation.value) CoreArtifacts.«local» (by decide) («_a#arg», («_b#arg», ()))
+
+theorem DenotationChecks.«local» :
+    (fun env : Core.Env CoreArtifacts.«local».params Interpretation.value => «local» (env.1) (env.2.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«local» := by
+  unfold Extracted_source.Shallow.«local»
+  simp only [Denote.function, CoreArtifacts.«local», Denote.term, Core.Var.get] <;> rfl
+
+def SourceChecks.«local».function : Ariadne.Function := { name := "local",   params := [{ name := "a", ty := Ariadne.Ty.bigint, span := { start := 846, stop := 847 } },              { name := "b", ty := Ariadne.Ty.bigint, span := { start := 857, stop := 858 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.let_                false                "sum"                none                (Ariadne.Expr.binary                  "+"                  (Ariadne.Expr.var "a" { start := 892, stop := 893 })                  (Ariadne.Expr.var "b" { start := 896, stop := 897 })                  { start := 892, stop := 897 })                { start := 880, stop := 885 },              Ariadne.Stmt.let_                false                "doubled"                none                (Ariadne.Expr.binary                  "*"                  (Ariadne.Expr.var "sum" { start := 917, stop := 920 })                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 2) { start := 923, stop := 925 })                  { start := 917, stop := 925 })                { start := 901, stop := 906 },              Ariadne.Stmt.return_                (Ariadne.Expr.var "doubled" { start := 936, stop := 943 })                { start := 929, stop := 935 }]             { start := 876, stop := 946 },   exported := true,   decreases := none,   span := { start := 831, stop := 839 } }
+
+def SourceChecks.«local».names : Adequacy.Names CoreArtifacts.«local».params :=
+  Adequacy.Names.fromList ["a", "b"]
+
+theorem SourceChecks.«local».translated :
+    Adequacy.ScalarStatements SourceChecks.«local».names .int ([Ariadne.Stmt.let_    false    "sum"    none    (Ariadne.Expr.binary      "+"      (Ariadne.Expr.var "a" { start := 892, stop := 893 })      (Ariadne.Expr.var "b" { start := 896, stop := 897 })      { start := 892, stop := 897 })    { start := 880, stop := 885 },  Ariadne.Stmt.let_    false    "doubled"    none    (Ariadne.Expr.binary      "*"      (Ariadne.Expr.var "sum" { start := 917, stop := 920 })      (Ariadne.Expr.literal (Ariadne.Literal.bigint 2) { start := 923, stop := 925 })      { start := 917, stop := 925 })    { start := 901, stop := 906 },  Ariadne.Stmt.return_ (Ariadne.Expr.var "doubled" { start := 936, stop := 943 }) { start := 929, stop := 935 }]) CoreArtifacts.«local».body := by
+  exact .let_ "sum" (.binary .intAdd (.var .int (Ariadne.Shallow.Core.Var.here) _) (.var .int (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) _) (by intro t v; cases v with | here => decide | there v => cases v with | here => decide | there v => cases v) (.let_ "doubled" (.binary .intMul (.var .int (Ariadne.Shallow.Core.Var.here) _) (.int _ _) _) (by intro t v; cases v with | here => decide | there v => cases v with | here => decide | there v => cases v with | here => decide | there v => cases v) (.return_ (.var .int (Ariadne.Shallow.Core.Var.here) _) _ _) _ _ _) _ _ _
+
+theorem «local_source» («_a#arg» : _root_.Int) («_b#arg» : _root_.Int) (heap : Heap) :
+    SourceReturnsFrom _root_.Extracted_source.source "local" heap [(Value.bigint «_a#arg»), (Value.bigint «_b#arg»)] (Value.bigint («local» «_a#arg» «_b#arg»)) := by
+  have inputs : Adequacy.Environment SourceChecks.«local».names
+      (Adequacy.bindArguments { heap } SourceChecks.«local».function.params [(Value.bigint «_a#arg»), (Value.bigint «_b#arg»)])
+      (interp := Interpretation.value) («_a#arg», («_b#arg», ())) := by
+    intro t v scalar
+    cases v with
+    | here =>
+      cases scalar
+      apply Adequacy.lookup_declare_other (by decide)
+      exact Adequacy.lookup_declare_self _ _ _
+    | there v =>
+      cases v with
+      | here =>
+        cases scalar
+        exact Adequacy.lookup_declare_self _ _ _
+      | there v =>
+        cases v
+  exact Adequacy.scalar_statements_source _root_.Extracted_source.certificate SourceChecks.«local».function SourceChecks.«local».names .int CoreArtifacts.«local».body
+    ([Ariadne.Stmt.let_    false    "sum"    none    (Ariadne.Expr.binary      "+"      (Ariadne.Expr.var "a" { start := 892, stop := 893 })      (Ariadne.Expr.var "b" { start := 896, stop := 897 })      { start := 892, stop := 897 })    { start := 880, stop := 885 },  Ariadne.Stmt.let_    false    "doubled"    none    (Ariadne.Expr.binary      "*"      (Ariadne.Expr.var "sum" { start := 917, stop := 920 })      (Ariadne.Expr.literal (Ariadne.Literal.bigint 2) { start := 923, stop := 925 })      { start := 917, stop := 925 })    { start := 901, stop := 906 },  Ariadne.Stmt.return_ (Ariadne.Expr.var "doubled" { start := 936, stop := 943 }) { start := 929, stop := 935 }]) ({ start := 876, stop := 946 })
+    (by kernel_rfl) (by kernel_rfl) SourceChecks.«local».translated Interpretation.value («_a#arg», («_b#arg», ())) heap [(Value.bigint «_a#arg»), (Value.bigint «_b#arg»)] inputs
+
+def CoreArtifacts.«early» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.ite (Core.Term.binary (Ariadne.Shallow.Core.Binary.intLt) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.int (0))) (Core.Term.unary (Ariadne.Shallow.Core.Unary.intNeg) (Core.Term.var (Ariadne.Shallow.Core.Var.here))) (Core.Term.var (Ariadne.Shallow.Core.Var.here))) }
+
+theorem ElaborationChecks.«early» :
+    Elaborate.function _root_.Extracted_source.program "early" = .ok CoreArtifacts.«early» := by kernel_rfl
+
+def «early» («_value#arg» : _root_.Int) : _root_.Int :=
+  (if (decide («_value#arg» < (0 : _root_.Int))) then
+  (-«_value#arg»)
+  else
+  «_value#arg»)
+
+abbrev «early».safe («_value#arg» : _root_.Int) : Prop :=
+  Safety.function (interp := Interpretation.value) CoreArtifacts.«early» (by decide) («_value#arg», ())
+
+theorem DenotationChecks.«early» :
+    (fun env : Core.Env CoreArtifacts.«early».params Interpretation.value => «early» (env.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«early» := by
+  unfold Extracted_source.Shallow.«early»
+  simp only [Denote.function, CoreArtifacts.«early», Denote.term, Core.Var.get] <;> rfl
+
+def SourceChecks.«early».function : Ariadne.Function := { name := "early",   params := [{ name := "value", ty := Ariadne.Ty.bigint, span := { start := 970, stop := 975 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.if_                (Ariadne.Expr.binary                  "<"                  (Ariadne.Expr.var "value" { start := 1001, stop := 1006 })                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 1009, stop := 1011 })                  { start := 1001, stop := 1011 })                (Ariadne.Stmt.block                  [Ariadne.Stmt.return_                     (Ariadne.Expr.unary                       "-"                       (Ariadne.Expr.var "value" { start := 1023, stop := 1028 })                       { start := 1022, stop := 1023 })                     { start := 1015, stop := 1021 }]                  { start := 1013, stop := 1031 })                (Ariadne.Stmt.block [] { start := 997, stop := 999 })                { start := 997, stop := 999 },              Ariadne.Stmt.return_                (Ariadne.Expr.var "value" { start := 1041, stop := 1046 })                { start := 1034, stop := 1040 }]             { start := 993, stop := 1049 },   exported := true,   decreases := none,   span := { start := 955, stop := 963 } }
+
+def SourceChecks.«early».names : Adequacy.Names CoreArtifacts.«early».params :=
+  Adequacy.Names.fromList ["value"]
+
+theorem SourceChecks.«early».translated :
+    Adequacy.ScalarStatements SourceChecks.«early».names .int ([Ariadne.Stmt.if_    (Ariadne.Expr.binary      "<"      (Ariadne.Expr.var "value" { start := 1001, stop := 1006 })      (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 1009, stop := 1011 })      { start := 1001, stop := 1011 })    (Ariadne.Stmt.block      [Ariadne.Stmt.return_         (Ariadne.Expr.unary           "-"           (Ariadne.Expr.var "value" { start := 1023, stop := 1028 })           { start := 1022, stop := 1023 })         { start := 1015, stop := 1021 }]      { start := 1013, stop := 1031 })    (Ariadne.Stmt.block [] { start := 997, stop := 999 })    { start := 997, stop := 999 },  Ariadne.Stmt.return_ (Ariadne.Expr.var "value" { start := 1041, stop := 1046 }) { start := 1034, stop := 1040 }]) CoreArtifacts.«early».body := by
+  exact .if_ (.binary .intLt (.var .int (Ariadne.Shallow.Core.Var.here) _) (.int _ _) _) (.block (.return_ (.unary .intNeg (.var .int (Ariadne.Shallow.Core.Var.here) _) _) _ _) _ _) (.emptyBlock (.return_ (.var .int (Ariadne.Shallow.Core.Var.here) _) _ _) _) _
+
+theorem «early_source» («_value#arg» : _root_.Int) (heap : Heap) :
+    SourceReturnsFrom _root_.Extracted_source.source "early" heap [(Value.bigint «_value#arg»)] (Value.bigint («early» «_value#arg»)) := by
+  have inputs : Adequacy.Environment SourceChecks.«early».names
+      (Adequacy.bindArguments { heap } SourceChecks.«early».function.params [(Value.bigint «_value#arg»)])
+      (interp := Interpretation.value) («_value#arg», ()) := by
+    intro t v scalar
+    cases v with
+    | here =>
+      cases scalar
+      exact Adequacy.lookup_declare_self _ _ _
+    | there v =>
+      cases v
+  exact Adequacy.scalar_statements_source _root_.Extracted_source.certificate SourceChecks.«early».function SourceChecks.«early».names .int CoreArtifacts.«early».body
+    ([Ariadne.Stmt.if_    (Ariadne.Expr.binary      "<"      (Ariadne.Expr.var "value" { start := 1001, stop := 1006 })      (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 1009, stop := 1011 })      { start := 1001, stop := 1011 })    (Ariadne.Stmt.block      [Ariadne.Stmt.return_         (Ariadne.Expr.unary           "-"           (Ariadne.Expr.var "value" { start := 1023, stop := 1028 })           { start := 1022, stop := 1023 })         { start := 1015, stop := 1021 }]      { start := 1013, stop := 1031 })    (Ariadne.Stmt.block [] { start := 997, stop := 999 })    { start := 997, stop := 999 },  Ariadne.Stmt.return_ (Ariadne.Expr.var "value" { start := 1041, stop := 1046 }) { start := 1034, stop := 1040 }]) ({ start := 993, stop := 1049 })
+    (by kernel_rfl) (by kernel_rfl) SourceChecks.«early».translated Interpretation.value («_value#arg», ()) heap [(Value.bigint «_value#arg»)] inputs
+
+def CoreArtifacts.«branchLocal» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.bool, Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.ite (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.int) "sum" (Core.Term.binary (Ariadne.Shallow.Core.Binary.intAdd) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) (Core.Term.var (Ariadne.Shallow.Core.Var.here))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.int) "difference" (Core.Term.binary (Ariadne.Shallow.Core.Binary.intSub) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) (Core.Term.var (Ariadne.Shallow.Core.Var.here)))) }
+
+theorem ElaborationChecks.«branchLocal» :
+    Elaborate.function _root_.Extracted_source.program "branchLocal" = .ok CoreArtifacts.«branchLocal» := by kernel_rfl
+
+def «branchLocal» («_flag#arg» : _root_.Bool) («_a#arg» : _root_.Int) («_b#arg» : _root_.Int) : _root_.Int :=
+  (if «_flag#arg» then
+  (let «_sum#0» : _root_.Int := («_a#arg» + «_b#arg»);
+  «_sum#0»)
+  else
+  (let «_difference#0» : _root_.Int := («_a#arg» - «_b#arg»);
+  «_difference#0»))
+
+abbrev «branchLocal».safe («_flag#arg» : _root_.Bool) («_a#arg» : _root_.Int) («_b#arg» : _root_.Int) : Prop :=
+  Safety.function (interp := Interpretation.value) CoreArtifacts.«branchLocal» (by decide) («_flag#arg», («_a#arg», («_b#arg», ())))
+
+theorem DenotationChecks.«branchLocal» :
+    (fun env : Core.Env CoreArtifacts.«branchLocal».params Interpretation.value => «branchLocal» (env.1) (env.2.1) (env.2.2.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«branchLocal» := by
+  unfold Extracted_source.Shallow.«branchLocal»
+  simp only [Denote.function, CoreArtifacts.«branchLocal», Denote.term, Core.Var.get] <;> rfl
+
+def SourceChecks.«branchLocal».function : Ariadne.Function := { name := "branchLocal",   params := [{ name := "flag", ty := Ariadne.Ty.boolean, span := { start := 1079, stop := 1083 } },              { name := "a", ty := Ariadne.Ty.bigint, span := { start := 1094, stop := 1095 } },              { name := "b", ty := Ariadne.Ty.bigint, span := { start := 1105, stop := 1106 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.if_                (Ariadne.Expr.var "flag" { start := 1132, stop := 1136 })                (Ariadne.Stmt.block                  [Ariadne.Stmt.let_                     false                     "sum"                     none                     (Ariadne.Expr.binary                       "+"                       (Ariadne.Expr.var "a" { start := 1156, stop := 1157 })                       (Ariadne.Expr.var "b" { start := 1160, stop := 1161 })                       { start := 1156, stop := 1161 })                     { start := 1144, stop := 1149 },                   Ariadne.Stmt.return_                     (Ariadne.Expr.var "sum" { start := 1174, stop := 1177 })                     { start := 1167, stop := 1173 }]                  { start := 1138, stop := 1182 })                (Ariadne.Stmt.block [] { start := 1128, stop := 1130 })                { start := 1128, stop := 1130 },              Ariadne.Stmt.let_                false                "difference"                none                (Ariadne.Expr.binary                  "-"                  (Ariadne.Expr.var "a" { start := 1204, stop := 1205 })                  (Ariadne.Expr.var "b" { start := 1208, stop := 1209 })                  { start := 1204, stop := 1209 })                { start := 1185, stop := 1190 },              Ariadne.Stmt.return_                (Ariadne.Expr.var "difference" { start := 1220, stop := 1230 })                { start := 1213, stop := 1219 }]             { start := 1124, stop := 1233 },   exported := true,   decreases := none,   span := { start := 1058, stop := 1066 } }
+
+def SourceChecks.«branchLocal».names : Adequacy.Names CoreArtifacts.«branchLocal».params :=
+  Adequacy.Names.fromList ["flag", "a", "b"]
+
+theorem SourceChecks.«branchLocal».translated :
+    Adequacy.ScalarStatements SourceChecks.«branchLocal».names .int ([Ariadne.Stmt.if_    (Ariadne.Expr.var "flag" { start := 1132, stop := 1136 })    (Ariadne.Stmt.block      [Ariadne.Stmt.let_         false         "sum"         none         (Ariadne.Expr.binary           "+"           (Ariadne.Expr.var "a" { start := 1156, stop := 1157 })           (Ariadne.Expr.var "b" { start := 1160, stop := 1161 })           { start := 1156, stop := 1161 })         { start := 1144, stop := 1149 },       Ariadne.Stmt.return_ (Ariadne.Expr.var "sum" { start := 1174, stop := 1177 }) { start := 1167, stop := 1173 }]      { start := 1138, stop := 1182 })    (Ariadne.Stmt.block [] { start := 1128, stop := 1130 })    { start := 1128, stop := 1130 },  Ariadne.Stmt.let_    false    "difference"    none    (Ariadne.Expr.binary      "-"      (Ariadne.Expr.var "a" { start := 1204, stop := 1205 })      (Ariadne.Expr.var "b" { start := 1208, stop := 1209 })      { start := 1204, stop := 1209 })    { start := 1185, stop := 1190 },  Ariadne.Stmt.return_ (Ariadne.Expr.var "difference" { start := 1220, stop := 1230 }) { start := 1213, stop := 1219 }]) CoreArtifacts.«branchLocal».body := by
+  exact .if_ (.var .bool (Ariadne.Shallow.Core.Var.here) _) (.block (.let_ "sum" (.binary .intAdd (.var .int (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) (.var .int (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) _) _) (by intro t v; cases v with | here => decide | there v => cases v with | here => decide | there v => cases v with | here => decide | there v => cases v) (.return_ (.var .int (Ariadne.Shallow.Core.Var.here) _) _ _) _ _ _) _ _) (.emptyBlock (.let_ "difference" (.binary .intSub (.var .int (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) (.var .int (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) _) _) (by intro t v; cases v with | here => decide | there v => cases v with | here => decide | there v => cases v with | here => decide | there v => cases v) (.return_ (.var .int (Ariadne.Shallow.Core.Var.here) _) _ _) _ _ _) _) _
+
+theorem «branchLocal_source» («_flag#arg» : _root_.Bool) («_a#arg» : _root_.Int) («_b#arg» : _root_.Int) (heap : Heap) :
+    SourceReturnsFrom _root_.Extracted_source.source "branchLocal" heap [(Value.boolean «_flag#arg»), (Value.bigint «_a#arg»), (Value.bigint «_b#arg»)] (Value.bigint («branchLocal» «_flag#arg» «_a#arg» «_b#arg»)) := by
+  have inputs : Adequacy.Environment SourceChecks.«branchLocal».names
+      (Adequacy.bindArguments { heap } SourceChecks.«branchLocal».function.params [(Value.boolean «_flag#arg»), (Value.bigint «_a#arg»), (Value.bigint «_b#arg»)])
+      (interp := Interpretation.value) («_flag#arg», («_a#arg», («_b#arg», ()))) := by
+    intro t v scalar
+    cases v with
+    | here =>
+      cases scalar
+      apply Adequacy.lookup_declare_other (by decide)
+      apply Adequacy.lookup_declare_other (by decide)
+      exact Adequacy.lookup_declare_self _ _ _
+    | there v =>
+      cases v with
+      | here =>
+        cases scalar
+        apply Adequacy.lookup_declare_other (by decide)
+        exact Adequacy.lookup_declare_self _ _ _
+      | there v =>
+        cases v with
+        | here =>
+          cases scalar
+          exact Adequacy.lookup_declare_self _ _ _
+        | there v =>
+          cases v
+  exact Adequacy.scalar_statements_source _root_.Extracted_source.certificate SourceChecks.«branchLocal».function SourceChecks.«branchLocal».names .int CoreArtifacts.«branchLocal».body
+    ([Ariadne.Stmt.if_    (Ariadne.Expr.var "flag" { start := 1132, stop := 1136 })    (Ariadne.Stmt.block      [Ariadne.Stmt.let_         false         "sum"         none         (Ariadne.Expr.binary           "+"           (Ariadne.Expr.var "a" { start := 1156, stop := 1157 })           (Ariadne.Expr.var "b" { start := 1160, stop := 1161 })           { start := 1156, stop := 1161 })         { start := 1144, stop := 1149 },       Ariadne.Stmt.return_ (Ariadne.Expr.var "sum" { start := 1174, stop := 1177 }) { start := 1167, stop := 1173 }]      { start := 1138, stop := 1182 })    (Ariadne.Stmt.block [] { start := 1128, stop := 1130 })    { start := 1128, stop := 1130 },  Ariadne.Stmt.let_    false    "difference"    none    (Ariadne.Expr.binary      "-"      (Ariadne.Expr.var "a" { start := 1204, stop := 1205 })      (Ariadne.Expr.var "b" { start := 1208, stop := 1209 })      { start := 1204, stop := 1209 })    { start := 1185, stop := 1190 },  Ariadne.Stmt.return_ (Ariadne.Expr.var "difference" { start := 1220, stop := 1230 }) { start := 1213, stop := 1219 }]) ({ start := 1124, stop := 1233 })
+    (by kernel_rfl) (by kernel_rfl) SourceChecks.«branchLocal».translated Interpretation.value («_flag#arg», («_a#arg», («_b#arg», ()))) heap [(Value.boolean «_flag#arg»), (Value.bigint «_a#arg»), (Value.bigint «_b#arg»)] inputs
+
+def CoreArtifacts.«nested» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.bool, Ariadne.Shallow.Core.Ty.bool, Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.ite (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.ite (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) (Core.Term.unary (Ariadne.Shallow.Core.Unary.intNeg) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))) (Core.Term.int (0))) }
+
+theorem ElaborationChecks.«nested» :
+    Elaborate.function _root_.Extracted_source.program "nested" = .ok CoreArtifacts.«nested» := by kernel_rfl
+
+def «nested» («_flag#arg» : _root_.Bool) («_other#arg» : _root_.Bool) («_value#arg» : _root_.Int) : _root_.Int :=
+  (if «_flag#arg» then
+  (if «_other#arg» then
+  «_value#arg»
+  else
+  (-«_value#arg»))
+  else
+  (0 : _root_.Int))
+
+abbrev «nested».safe («_flag#arg» : _root_.Bool) («_other#arg» : _root_.Bool) («_value#arg» : _root_.Int) : Prop :=
+  Safety.function (interp := Interpretation.value) CoreArtifacts.«nested» (by decide) («_flag#arg», («_other#arg», («_value#arg», ())))
+
+theorem DenotationChecks.«nested» :
+    (fun env : Core.Env CoreArtifacts.«nested».params Interpretation.value => «nested» (env.1) (env.2.1) (env.2.2.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«nested» := by
+  unfold Extracted_source.Shallow.«nested»
+  simp only [Denote.function, CoreArtifacts.«nested», Denote.term, Core.Var.get] <;> rfl
+
+def SourceChecks.«nested».function : Ariadne.Function := { name := "nested",   params := [{ name := "flag", ty := Ariadne.Ty.boolean, span := { start := 1258, stop := 1262 } },              { name := "other", ty := Ariadne.Ty.boolean, span := { start := 1273, stop := 1278 } },              { name := "value", ty := Ariadne.Ty.bigint, span := { start := 1289, stop := 1294 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.if_                (Ariadne.Expr.var "flag" { start := 1320, stop := 1324 })                (Ariadne.Stmt.block                  [Ariadne.Stmt.if_                     (Ariadne.Expr.var "other" { start := 1336, stop := 1341 })                     (Ariadne.Stmt.block                       [Ariadne.Stmt.return_                          (Ariadne.Expr.var "value" { start := 1352, stop := 1357 })                          { start := 1345, stop := 1351 }]                       { start := 1343, stop := 1360 })                     (Ariadne.Stmt.block [] { start := 1332, stop := 1334 })                     { start := 1332, stop := 1334 },                   Ariadne.Stmt.return_                     (Ariadne.Expr.unary                       "-"                       (Ariadne.Expr.var "value" { start := 1373, stop := 1378 })                       { start := 1372, stop := 1373 })                     { start := 1365, stop := 1371 }]                  { start := 1326, stop := 1383 })                (Ariadne.Stmt.block [] { start := 1316, stop := 1318 })                { start := 1316, stop := 1318 },              Ariadne.Stmt.return_                (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 1393, stop := 1395 })                { start := 1386, stop := 1392 }]             { start := 1312, stop := 1398 },   exported := true,   decreases := none,   span := { start := 1242, stop := 1250 } }
+
+def SourceChecks.«nested».names : Adequacy.Names CoreArtifacts.«nested».params :=
+  Adequacy.Names.fromList ["flag", "other", "value"]
+
+theorem SourceChecks.«nested».translated :
+    Adequacy.ScalarStatements SourceChecks.«nested».names .int ([Ariadne.Stmt.if_    (Ariadne.Expr.var "flag" { start := 1320, stop := 1324 })    (Ariadne.Stmt.block      [Ariadne.Stmt.if_         (Ariadne.Expr.var "other" { start := 1336, stop := 1341 })         (Ariadne.Stmt.block           [Ariadne.Stmt.return_              (Ariadne.Expr.var "value" { start := 1352, stop := 1357 })              { start := 1345, stop := 1351 }]           { start := 1343, stop := 1360 })         (Ariadne.Stmt.block [] { start := 1332, stop := 1334 })         { start := 1332, stop := 1334 },       Ariadne.Stmt.return_         (Ariadne.Expr.unary           "-"           (Ariadne.Expr.var "value" { start := 1373, stop := 1378 })           { start := 1372, stop := 1373 })         { start := 1365, stop := 1371 }]      { start := 1326, stop := 1383 })    (Ariadne.Stmt.block [] { start := 1316, stop := 1318 })    { start := 1316, stop := 1318 },  Ariadne.Stmt.return_    (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 1393, stop := 1395 })    { start := 1386, stop := 1392 }]) CoreArtifacts.«nested».body := by
+  exact .if_ (.var .bool (Ariadne.Shallow.Core.Var.here) _) (.block (.if_ (.var .bool (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _) (.block (.return_ (.var .int (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) _) _ _) _ _) (.emptyBlock (.return_ (.unary .intNeg (.var .int (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) _) _) _ _) _) _) _ _) (.emptyBlock (.return_ (.int _ _) _ _) _) _
+
+theorem «nested_source» («_flag#arg» : _root_.Bool) («_other#arg» : _root_.Bool) («_value#arg» : _root_.Int) (heap : Heap) :
+    SourceReturnsFrom _root_.Extracted_source.source "nested" heap [(Value.boolean «_flag#arg»), (Value.boolean «_other#arg»), (Value.bigint «_value#arg»)] (Value.bigint («nested» «_flag#arg» «_other#arg» «_value#arg»)) := by
+  have inputs : Adequacy.Environment SourceChecks.«nested».names
+      (Adequacy.bindArguments { heap } SourceChecks.«nested».function.params [(Value.boolean «_flag#arg»), (Value.boolean «_other#arg»), (Value.bigint «_value#arg»)])
+      (interp := Interpretation.value) («_flag#arg», («_other#arg», («_value#arg», ()))) := by
+    intro t v scalar
+    cases v with
+    | here =>
+      cases scalar
+      apply Adequacy.lookup_declare_other (by decide)
+      apply Adequacy.lookup_declare_other (by decide)
+      exact Adequacy.lookup_declare_self _ _ _
+    | there v =>
+      cases v with
+      | here =>
+        cases scalar
+        apply Adequacy.lookup_declare_other (by decide)
+        exact Adequacy.lookup_declare_self _ _ _
+      | there v =>
+        cases v with
+        | here =>
+          cases scalar
+          exact Adequacy.lookup_declare_self _ _ _
+        | there v =>
+          cases v
+  exact Adequacy.scalar_statements_source _root_.Extracted_source.certificate SourceChecks.«nested».function SourceChecks.«nested».names .int CoreArtifacts.«nested».body
+    ([Ariadne.Stmt.if_    (Ariadne.Expr.var "flag" { start := 1320, stop := 1324 })    (Ariadne.Stmt.block      [Ariadne.Stmt.if_         (Ariadne.Expr.var "other" { start := 1336, stop := 1341 })         (Ariadne.Stmt.block           [Ariadne.Stmt.return_              (Ariadne.Expr.var "value" { start := 1352, stop := 1357 })              { start := 1345, stop := 1351 }]           { start := 1343, stop := 1360 })         (Ariadne.Stmt.block [] { start := 1332, stop := 1334 })         { start := 1332, stop := 1334 },       Ariadne.Stmt.return_         (Ariadne.Expr.unary           "-"           (Ariadne.Expr.var "value" { start := 1373, stop := 1378 })           { start := 1372, stop := 1373 })         { start := 1365, stop := 1371 }]      { start := 1326, stop := 1383 })    (Ariadne.Stmt.block [] { start := 1316, stop := 1318 })    { start := 1316, stop := 1318 },  Ariadne.Stmt.return_    (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 1393, stop := 1395 })    { start := 1386, stop := 1392 }]) ({ start := 1312, stop := 1398 })
+    (by kernel_rfl) (by kernel_rfl) SourceChecks.«nested».translated Interpretation.value («_flag#arg», («_other#arg», («_value#arg», ()))) heap [(Value.boolean «_flag#arg»), (Value.boolean «_other#arg»), (Value.bigint «_value#arg»)] inputs
 
 end Extracted_source.Shallow
