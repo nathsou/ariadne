@@ -9,7 +9,7 @@ model. No plugin-provided axiom or native decision procedure discharges those eq
 | Lexer/parser | Total Lean definitions; exact per-file source → tokens → AST equations | No independent ECMAScript grammar or universal grammar-equivalence proof |
 | Checker | Exact per-file acceptance equation; conservative type/ownership restrictions | No universal preservation/progress or ownership-soundness theorem |
 | Emission | Incorrect source/AST/compiled-code substitution fails kernel checking; source certificates are unique | The printer is untrusted; certification must finish successfully |
-| Shallow extraction | Intrinsically typed scalar Core, kernel-checked elaboration equation and emitted-definition/denotation equality | Until M4, the denotation is the meaning of extracted code; no general equality with the operational model or shallow source-transfer theorem is claimed |
+| Shallow extraction | Intrinsically typed Core, kernel-checked elaboration equation and emitted-definition/denotation equality | Until M4, the denotation is the meaning of extracted code; no general equality with the operational model or shallow source-transfer theorem is claimed |
 | Scalar compiler | Proof-carrying compilation and general equality with the evaluator at every fuel/input | Smaller fragment; explicit cells, no calls/collections or typed state optimization yet |
 | Fuel | All evaluator entry points preserve non-timeout outcomes at larger budgets; convergence and source returns are deterministic | Convergence is defined from evaluator approximations, not an independent ECMAScript semantics |
 | Scalars | Explicit binary64 logical model from Lean core, UTF-16 code units, signed unbounded integers | Conformance of these definitions to an actual JS engine is assumed and differentially tested |
@@ -45,9 +45,10 @@ For native execution, the JavaScript engine, TypeScript erasure, initial realm,
 and input-shape/ownership assumptions are additional boundaries. CI tools are
 not part of the proof chain.
 
-The initial `extract` fragment is pure scalar code with branches and local
-reassignment. Its generated `Shallow` namespace contains definitions over `Int`,
-`Bool`, UTF-16 `JSString`, binary64 `Float.Model`, and `Option`. Its
+The initial `extract` fragment has scalars, readonly array operations, pure
+callbacks/calls, branches and local reassignment. Its generated `Shallow`
+namespace contains definitions over `Int`, `Bool`, UTF-16 `JSString`, binary64
+`Float.Model`, `Option`, and `List`. Its
 `ElaborationChecks` and `DenotationChecks` namespaces certify the new links.
 Those checks do **not** establish adequacy: an elaborator bug could still choose
 the wrong Core, and a denotation bug could still give it the wrong source meaning.

@@ -46,10 +46,11 @@ The script builds certificates serially to bound peak memory, checks generated f
 against their sources, audits theorem dependencies, and runs native comparisons.
 No JavaScript engine is needed to build the translator or check Lean proofs.
 
-The initial `extract` backend emits native Lean scalar definitions with
+The initial `extract` backend emits native Lean definitions with
 kernel-checked Core elaboration and denotation equations. It supports branches,
 local reassignment, binary64 arithmetic, bigint arithmetic without division,
-UTF-16 strings, and options. It does not yet prove operational adequacy or extract
+UTF-16 strings, options, readonly array operations, indexed pure callbacks, and
+calls with scalar or immutable parameters. It does not yet prove operational adequacy or extract
 the three reference programs. See [milestone status](docs/SHALLOW-PROGRESS.md).
 
 ## What is proved

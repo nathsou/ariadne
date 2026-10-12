@@ -1,5 +1,7 @@
 import Ariadne.Value
 import Ariadne.Shallow.Prelude.Loop
+import Ariadne.Shallow.Prelude.Array
+import Ariadne.Shallow.Prelude.Set
 
 namespace Ariadne.Shallow.Core
 
@@ -42,6 +44,8 @@ inductive Unary : Ty → Ty → Type where
   | intNeg : Unary .int .int
   | numNeg : Unary .number .number
   | isSome : Unary (.option t) .bool
+  | length : Unary (.list t) .number
+  | reverse : Unary (.list t) (.list t)
   deriving Repr
 
 inductive Binary : Ty → Ty → Ty → Type where
@@ -66,6 +70,8 @@ inductive Binary : Ty → Ty → Ty → Type where
   | boolEq : Binary .bool .bool .bool
   | and : Binary .bool .bool .bool
   | or : Binary .bool .bool .bool
+  | append : Binary (.list t) (.list t) (.list t)
+  | get : Binary (.list t) .number (.option t)
   deriving Repr
 
 /-- Every term is well typed by construction. There are no dynamic value tags,
@@ -92,6 +98,14 @@ inductive Term : List Ty → Ty → Type where
   | lam : String → Term (a :: Γ) b → Term Γ (.fn a b)
   | app : Term Γ (.fn a b) → Term Γ a → Term Γ b
   | closed : Term [] t → Term Γ t
+  | listMap : Term Γ (.fn a (.fn .number b)) → Term Γ (.list a) → Term Γ (.list b)
+  | listFilter : Term Γ (.fn a (.fn .number .bool)) → Term Γ (.list a) → Term Γ (.list a)
+  | listReduce : Term Γ (.fn b (.fn a (.fn .number b))) → Term Γ b → Term Γ (.list a) → Term Γ b
+  | listSome : Term Γ (.fn a (.fn .number .bool)) → Term Γ (.list a) → Term Γ .bool
+  | listEvery : Term Γ (.fn a (.fn .number .bool)) → Term Γ (.list a) → Term Γ .bool
+  | listFind : Term Γ (.fn a (.fn .number .bool)) → Term Γ (.list a) → Term Γ (.option a)
+  | listFindIndex : Term Γ (.fn a (.fn .number .bool)) → Term Γ (.list a) → Term Γ .number
+  | listSlice : Term Γ (.list a) → Term Γ .number → Term Γ .number → Term Γ (.list a)
   deriving Repr
 
 abbrev Renaming (Γ Δ : List Ty) := ∀ {t}, Var Γ t → Var Δ t
@@ -122,6 +136,14 @@ def Term.rename (r : Renaming Γ Δ) : Term Γ t → Term Δ t
   | .lam name body => .lam name (body.rename r.lift)
   | .app f a => .app (f.rename r) (a.rename r)
   | .closed body => .closed body
+  | .listMap f xs => .listMap (f.rename r) (xs.rename r)
+  | .listFilter f xs => .listFilter (f.rename r) (xs.rename r)
+  | .listReduce f a xs => .listReduce (f.rename r) (a.rename r) (xs.rename r)
+  | .listSome f xs => .listSome (f.rename r) (xs.rename r)
+  | .listEvery f xs => .listEvery (f.rename r) (xs.rename r)
+  | .listFind f xs => .listFind (f.rename r) (xs.rename r)
+  | .listFindIndex f xs => .listFindIndex (f.rename r) (xs.rename r)
+  | .listSlice xs a b => .listSlice (xs.rename r) (a.rename r) (b.rename r)
 
 abbrev Substitution (Γ Δ : List Ty) := ∀ {t}, Var Γ t → Term Δ t
 
@@ -151,6 +173,14 @@ def Term.substitute (s : Substitution Γ Δ) : Term Γ t → Term Δ t
   | .lam name body => .lam name (body.substitute s.lift)
   | .app f a => .app (f.substitute s) (a.substitute s)
   | .closed body => .closed body
+  | .listMap f xs => .listMap (f.substitute s) (xs.substitute s)
+  | .listFilter f xs => .listFilter (f.substitute s) (xs.substitute s)
+  | .listReduce f a xs => .listReduce (f.substitute s) (a.substitute s) (xs.substitute s)
+  | .listSome f xs => .listSome (f.substitute s) (xs.substitute s)
+  | .listEvery f xs => .listEvery (f.substitute s) (xs.substitute s)
+  | .listFind f xs => .listFind (f.substitute s) (xs.substitute s)
+  | .listFindIndex f xs => .listFindIndex (f.substitute s) (xs.substitute s)
+  | .listSlice xs a b => .listSlice (xs.substitute s) (a.substitute s) (b.substitute s)
 
 def environmentType : List Ty → Ty
   | [] => .unit

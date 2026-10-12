@@ -7,13 +7,13 @@ open Core
 private def ident (name : String) : String := "«" ++ name ++ "»"
 
 private def typeText : Core.Ty → String
-  | .unit => "Unit"
-  | .bool => "Bool"
-  | .int => "Int"
-  | .number => "Float.Model"
-  | .string => "JSString"
-  | .option t => s!"(Option {typeText t})"
-  | .list t => s!"(List {typeText t})"
+  | .unit => "_root_.Unit"
+  | .bool => "_root_.Bool"
+  | .int => "_root_.Int"
+  | .number => "_root_.Float.Model"
+  | .string => "_root_.Ariadne.JSString"
+  | .option t => s!"(_root_.Option {typeText t})"
+  | .list t => s!"(_root_.List {typeText t})"
   | .pair a b => s!"({typeText a} × {typeText b})"
   | .fn a b => s!"({typeText a} → {typeText b})"
 
@@ -26,13 +26,15 @@ private def unaryText : Unary a b → String → String
   | .intNeg, a => s!"(-{a})"
   | .numNeg, a => s!"(-{a})"
   | .isSome, a => s!"({a}).isSome"
+  | .length, xs => s!"(_root_.Float.Model.ofNat ({xs}).length)"
+  | .reverse, xs => s!"({xs}).reverse"
 
 private def binaryText : Binary a b c → String → String → String
   | .intAdd, a, b | .numAdd, a, b => s!"({a} + {b})"
   | .intSub, a, b | .numSub, a, b => s!"({a} - {b})"
   | .intMul, a, b | .numMul, a, b => s!"({a} * {b})"
   | .numDiv, a, b => s!"({a} / {b})"
-  | .numMod, a, b => s!"(numberRemainder {a} {b})"
+  | .numMod, a, b => s!"(_root_.Ariadne.numberRemainder {a} {b})"
   | .intEq, a, b | .numEq, a, b | .strEq, a, b | .boolEq, a, b => s!"({a} == {b})"
   | .intLt, a, b | .numLt, a, b => s!"(decide ({a} < {b}))"
   | .intLe, a, b | .numLe, a, b => s!"(decide ({a} ≤ {b}))"
@@ -41,12 +43,17 @@ private def binaryText : Binary a b c → String → String → String
   | .strLe, a, b => s!"(compare {a} {b} != Ordering.gt)"
   | .and, a, b => s!"({a} && {b})"
   | .or, a, b => s!"({a} || {b})"
+  | .append, a, b => s!"({a} ++ {b})"
+  | .get, xs, i => s!"(_root_.Ariadne.Shallow.JSArray.get {xs} {i})"
 
 private def closedTerms : Term Γ t → List ((t : Core.Ty) × Term [] t)
   | .closed body => closedTerms body ++ [⟨_, body⟩]
   | .unary _ a | .some a | .fst a | .snd a | .lam _ a => closedTerms a
   | .binary _ a b | .let_ _ a b | .cons a b | .pair a b | .app a b => closedTerms a ++ closedTerms b
   | .ite a b c | .optionCase a b c => closedTerms a ++ closedTerms b ++ closedTerms c
+  | .listMap a b | .listFilter a b | .listSome a b | .listEvery a b |
+      .listFind a b | .listFindIndex a b => closedTerms a ++ closedTerms b
+  | .listReduce a b c | .listSlice a b c => closedTerms a ++ closedTerms b ++ closedTerms c
   | _ => []
 
 private def closedKey (body : Term [] t) : String := reprStr t ++ reprStr body
@@ -76,26 +83,34 @@ private def coreText (label : String) (keys : List String) : Term Γ t → Strin
   | .snd a => s!"(Core.Term.snd {coreText label keys a})"
   | .lam name body => s!"(Core.Term.lam {reprStr name} {coreText label keys body})"
   | .app f a => s!"(Core.Term.app {coreText label keys f} {coreText label keys a})"
+  | .listMap f xs => s!"(Core.Term.listMap {coreText label keys f} {coreText label keys xs})"
+  | .listFilter f xs => s!"(Core.Term.listFilter {coreText label keys f} {coreText label keys xs})"
+  | .listReduce f a xs => s!"(Core.Term.listReduce {coreText label keys f} {coreText label keys a} {coreText label keys xs})"
+  | .listSome f xs => s!"(Core.Term.listSome {coreText label keys f} {coreText label keys xs})"
+  | .listEvery f xs => s!"(Core.Term.listEvery {coreText label keys f} {coreText label keys xs})"
+  | .listFind f xs => s!"(Core.Term.listFind {coreText label keys f} {coreText label keys xs})"
+  | .listFindIndex f xs => s!"(Core.Term.listFindIndex {coreText label keys f} {coreText label keys xs})"
+  | .listSlice xs a b => s!"(Core.Term.listSlice {coreText label keys xs} {coreText label keys a} {coreText label keys b})"
 
 private def termText (label : String) (keys : List String) (term : Term Γ t) (names : List String) (depth : Nat := 0) : String :=
   match term with
   | .var v => names[index v]?.getD "invalid_variable"
   | .unit => "()"
   | .bool b => toString b
-  | .int n => s!"({n} : Int)"
-  | .number m e => s!"(Float.Model.ofScientific {m} ({e}))"
-  | .string s => s!"({reprStr s} : JSString)"
+  | .int n => s!"({n} : _root_.Int)"
+  | .number m e => s!"(_root_.Float.Model.ofScientific {m} ({e}))"
+  | .string s => s!"({reprStr s} : _root_.Ariadne.JSString)"
   | .unary op a => unaryText op (termText label keys a names depth)
   | .binary op a b => binaryText op (termText label keys a names depth) (termText label keys b names depth)
   | .let_ name a b =>
     let name := ident s!"{name}#{depth}"
     s!"(let {name} := {termText label keys a names depth};\n{termText label keys b (name :: names) (depth + 1)})"
   | .ite c a b => s!"(if {termText label keys c names depth} then\n{termText label keys a names depth}\nelse\n{termText label keys b names depth})"
-  | .none => "none"
-  | .some a => s!"(some {termText label keys a names depth})"
+  | .none => "_root_.Option.none"
+  | .some a => s!"(_root_.Option.some {termText label keys a names depth})"
   | .optionCase a b c =>
     let name := ident s!"value#{depth}"
-    s!"(Option.elim {termText label keys a names depth} {termText label keys b names depth} (fun {name} => {termText label keys c (name :: names) (depth + 1)}))"
+    s!"(_root_.Option.elim {termText label keys a names depth} {termText label keys b names depth} (fun {name} => {termText label keys c (name :: names) (depth + 1)}))"
   | .nil => "[]"
   | .cons a b => s!"({termText label keys a names depth} :: {termText label keys b names depth})"
   | .pair a b => s!"({termText label keys a names depth}, {termText label keys b names depth})"
@@ -106,6 +121,14 @@ private def termText (label : String) (keys : List String) (term : Term Γ t) (n
     s!"(fun {name} : {typeText a} => {termText label keys body (name :: names) (depth + 1)})"
   | .app f a => s!"({termText label keys f names depth} {termText label keys a names depth})"
   | .closed body => s!"JoinNative.{joinName label keys body}"
+  | .listMap f xs => s!"(_root_.Ariadne.Shallow.JSArray.map {termText label keys f names depth} {termText label keys xs names depth})"
+  | .listFilter f xs => s!"(_root_.Ariadne.Shallow.JSArray.filter {termText label keys f names depth} {termText label keys xs names depth})"
+  | .listReduce f a xs => s!"(_root_.Ariadne.Shallow.JSArray.reduce {termText label keys f names depth} {termText label keys a names depth} {termText label keys xs names depth})"
+  | .listSome f xs => s!"(_root_.Ariadne.Shallow.JSArray.some {termText label keys f names depth} {termText label keys xs names depth})"
+  | .listEvery f xs => s!"(_root_.Ariadne.Shallow.JSArray.every {termText label keys f names depth} {termText label keys xs names depth})"
+  | .listFind f xs => s!"(_root_.Ariadne.Shallow.JSArray.find {termText label keys f names depth} {termText label keys xs names depth})"
+  | .listFindIndex f xs => s!"(_root_.Ariadne.Shallow.JSArray.findIndex {termText label keys f names depth} {termText label keys xs names depth})"
+  | .listSlice xs a b => s!"(_root_.Ariadne.Shallow.JSArray.slice {termText label keys xs names depth} {termText label keys a names depth} {termText label keys b names depth})"
 
 def emit (source : String) (program : Program) (namespace_ : String) : Checked String := do
   if !program.classes.isEmpty then
@@ -120,7 +143,7 @@ def emit (source : String) (program : Program) (namespace_ : String) : Checked S
     let core ← Elaborate.function program f.name
     let coreName := "CoreArtifacts." ++ ident f.name
     let functionName := ident f.name
-    let names := f.params.map (ident ∘ Param.name)
+    let names := f.params.map (fun param => ident s!"{param.name}#arg")
     let params := String.join ((names.zip core.params).map fun (name, t) => s!" ({name} : {typeText t})")
     let joins := (closedTerms core.body).foldl (fun acc entry =>
       if acc.any (fun other => closedKey other.2 == closedKey entry.2) then acc else acc ++ [entry]) []
@@ -139,10 +162,12 @@ def emit (source : String) (program : Program) (namespace_ : String) : Checked S
       checks := checks ++ [s!"JoinChecks.{j}"]
     let body := (termText f.name keys core.body names).replace "\n" "\n  "
     let data := (coreText f.name keys core.body).replace "\n" " "
+    let paramData := (reprStr core.params).replace "\n" " "
+    let resultData := (reprStr core.result).replace "\n" " "
     out := out ++ s!"def {coreName} : Core.Function := " ++
-      s!"\u007b params := {reprStr core.params}, result := {reprStr core.result}, body := {data} \u007d\n\n"
+      s!"\u007b params := {paramData}, result := {resultData}, body := {data} \u007d\n\n"
     out := out ++ s!"theorem {"ElaborationChecks." ++ ident f.name} :\n" ++
-      s!"    Elaborate.function program {reprStr f.name} = .ok {coreName} := by kernel_rfl\n\n"
+      s!"    Elaborate.function _root_.{namespace_}.program {reprStr f.name} = .ok {coreName} := by kernel_rfl\n\n"
     out := out ++ s!"def {functionName}{params} : {typeText core.result} :=\n  {body}\n\n"
     let envName := if core.params.isEmpty then "_env" else "env"
     let args := String.join ((List.range core.params.length).map fun i =>

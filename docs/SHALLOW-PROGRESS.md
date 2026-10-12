@@ -7,7 +7,7 @@ when their exit criteria pass; finite native tests are not universal proofs.
 | --- | --- | --- |
 | M0 | Complete | Reference sources and historical diagnostics; pinned CI downloads; reserved extraction diagnostics; output preservation tests |
 | M1 | Complete | All reference programs check and certify; grammar, ownership checks, operational semantics and the builtin table have differential coverage. Conservative dialect limits are listed below. |
-| M2 | In progress | Typed scalar Core, structural denotation, checked extraction, three-way differential and tamper tests. Named types, collections, loops, calls, Int53 safety and reference extraction remain pending. |
+| M2 | In progress | Typed Core, scalar/list extraction, pure calls, structural denotation, three-way differential and tamper tests. Map/Set prelude laws are implemented. Named types, collection mutation, loops, Int53 safety and reference extraction remain pending. |
 | M3 | Pending | Loop invariant/fold lemmas and scalar native proofs are seeded; the universal proofs of the three emitted references remain pending. |
 | M4 | Pending | Fundamental lemma, footprint preservation, adequacy and source transfer |
 | M5 | Pending | Measures, larger ownership, polymorphism, exceptions and scalar backend integration |
@@ -66,10 +66,12 @@ includes the new search, merge and sort evaluator clauses.
 
 `extract` now accepts pure scalar functions with local reassignment, branches,
 bigint addition/subtraction/multiplication and comparisons, binary64 arithmetic,
-UTF-16 string operations, and optional scalar values. Branch continuations are
-shared through typed tuple arguments. Function calls, loops, named types,
-collections, classes, and Int53 refinement are explicitly refused. This is an
-incremental M2 slice, not the M2 reference-program exit gate.
+UTF-16 string operations, and optional scalar values. Arrays lower to lists, with
+indexed pure callbacks, map/filter/reduce/search, indexing, slicing, reversal,
+concatenation and spread. Calls with scalar or immutable parameters are accepted.
+Branch continuations are shared through typed tuple arguments. Loops, named
+types, collection mutation, classes, and Int53 refinement are explicitly refused.
+This is an incremental M2 slice, not the M2 reference-program exit gate.
 
 The extraction checkpoint passes the complete `scripts/check.sh` suite: 1,559
 audited theorems, 39 negative fixtures, and 38 additional three-way scalar
@@ -83,3 +85,15 @@ equations. Extraction checks a temporary candidate before replacing output.
 The current denotation remains a trust boundary until M4. The scalar proof
 examples prove properties of emitted definitions only and do not claim source
 transfer.
+
+The collection prelude has insertion-ordered Map/Set representations carrying
+key-uniqueness proofs, lookup and update laws, insertion-order/size lemmas, and
+lookup equivalence. Map/Set source lowering is still pending. Array proof examples
+establish a fold specification and permutation invariance of a sum, a transform's
+nonnegativity, and a pure call's result directly over emitted definitions.
+
+The array checkpoint passes the full suite, including 51 new three-way cases
+and readonly input preservation. Core renaming and substitution preservation are
+also proved and included in the axiom audit (1,878 theorems after adding these
+lemmas). Emitter tests cover source names that overlap generated metadata and Lean
+type/helper names. These checks still do not establish operational adequacy.

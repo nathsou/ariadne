@@ -35,4 +35,5 @@ fi
 "$js" scripts/reference.mjs
 "$js" scripts/reference-operational.mjs
 "$js" scripts/shallow.mjs
+"$js" scripts/shallow-arrays.mjs
 "$js" scripts/builtins.mjs

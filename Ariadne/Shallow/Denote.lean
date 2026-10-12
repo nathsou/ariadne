@@ -8,6 +8,8 @@ def Denote.unary : Unary a b → a.denote → b.denote
   | .intNeg, a => -a
   | .numNeg, a => -a
   | .isSome, a => a.isSome
+  | .length, xs => Float.Model.ofNat xs.length
+  | .reverse, xs => xs.reverse
 
 def Denote.binary : Binary a b c → a.denote → b.denote → c.denote
   | .intAdd, a, b => a + b
@@ -31,6 +33,8 @@ def Denote.binary : Binary a b c → a.denote → b.denote → c.denote
   | .boolEq, a, b => a == b
   | .and, a, b => a && b
   | .or, a, b => a || b
+  | .append, a, b => a ++ b
+  | .get, xs, i => JSArray.get xs i
 
 /-- Structural interpretation into native Lean values. -/
 def Denote.term : Term Γ t → Core.Env Γ → t.denote
@@ -55,6 +59,14 @@ def Denote.term : Term Γ t → Core.Env Γ → t.denote
   | .lam _ body, env => fun x => term body (x, env)
   | .app f a, env => term f env (term a env)
   | .closed body, _ => term body ()
+  | .listMap f xs, env => JSArray.map (term f env) (term xs env)
+  | .listFilter f xs, env => JSArray.filter (term f env) (term xs env)
+  | .listReduce f a xs, env => JSArray.reduce (term f env) (term a env) (term xs env)
+  | .listSome f xs, env => JSArray.some (term f env) (term xs env)
+  | .listEvery f xs, env => JSArray.every (term f env) (term xs env)
+  | .listFind f xs, env => JSArray.find (term f env) (term xs env)
+  | .listFindIndex f xs, env => JSArray.findIndex (term f env) (term xs env)
+  | .listSlice xs a b, env => JSArray.slice (term xs env) (term a env) (term b env)
 
 def Denote.function (f : Core.Function) : Core.Env f.params → f.result.denote := term f.body
 

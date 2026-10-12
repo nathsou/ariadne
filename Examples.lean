@@ -32,4 +32,6 @@ import Examples.OperationalReference.decision
 import Examples.OperationalReference.registers
 import Examples.OperationalReference.tree
 import Examples.Shallow.scalars
+import Examples.Shallow.arrays
 import Examples.Proofs.ShallowScalars
+import Examples.Proofs.ShallowArrays

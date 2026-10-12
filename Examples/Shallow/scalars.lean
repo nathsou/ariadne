@@ -457,8 +457,8 @@ def JoinCore.«abs#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.int) (Ariadne.Shallow.Core.Ty.unit))
   (Ariadne.Shallow.Core.Ty.int)) := (Core.Term.lam "state" (Core.Term.fst (Core.Term.var (Ariadne.Shallow.Core.Var.here))))
 
-@[simp] def JoinNative.«abs#0» : ((Int × Unit) → Int) :=
-  (fun «_state#0» : (Int × Unit) => («_state#0»).1)
+@[simp] def JoinNative.«abs#0» : ((_root_.Int × _root_.Unit) → _root_.Int) :=
+  (fun «_state#0» : (_root_.Int × _root_.Unit) => («_state#0»).1)
 
 theorem JoinChecks.«abs#0» : Denote.term JoinCore.«abs#0» () = JoinNative.«abs#0» := by
   unfold Extracted_scalars.Shallow.JoinNative.«abs#0»
@@ -467,14 +467,14 @@ theorem JoinChecks.«abs#0» : Denote.term JoinCore.«abs#0» () = JoinNative.«
 def CoreArtifacts.«abs» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.let_ "join" (Core.Term.closed JoinCore.«abs#0») (Core.Term.ite (Core.Term.binary (Ariadne.Shallow.Core.Binary.intLt) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.int (0))) (Core.Term.unary (Ariadne.Shallow.Core.Unary.intNeg) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) (Core.Term.app (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) Core.Term.unit)))) }
 
 theorem ElaborationChecks.«abs» :
-    Elaborate.function program "abs" = .ok CoreArtifacts.«abs» := by kernel_rfl
+    Elaborate.function _root_.Extracted_scalars.program "abs" = .ok CoreArtifacts.«abs» := by kernel_rfl
 
-def «abs» («x» : Int) : Int :=
+def «abs» («x#arg» : _root_.Int) : _root_.Int :=
   (let «join#0» := JoinNative.«abs#0»;
-  (if (decide («x» < (0 : Int))) then
-  (-«x»)
+  (if (decide («x#arg» < (0 : _root_.Int))) then
+  (-«x#arg»)
   else
-  («join#0» («x», ()))))
+  («join#0» («x#arg», ()))))
 
 theorem DenotationChecks.«abs» :
     (fun env : Core.Env CoreArtifacts.«abs».params => «abs» (env.1)) =
@@ -492,8 +492,8 @@ def JoinCore.«update#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
         (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.bool) (Ariadne.Shallow.Core.Ty.unit)))))
   (Ariadne.Shallow.Core.Ty.int)) := (Core.Term.lam "state" (Core.Term.binary (Ariadne.Shallow.Core.Binary.intMul) (Core.Term.fst (Core.Term.var (Ariadne.Shallow.Core.Var.here))) (Core.Term.int (2))))
 
-@[simp] def JoinNative.«update#0» : ((Int × (Int × (Int × (Bool × Unit)))) → Int) :=
-  (fun «_state#0» : (Int × (Int × (Int × (Bool × Unit)))) => ((«_state#0»).1 * (2 : Int)))
+@[simp] def JoinNative.«update#0» : ((_root_.Int × (_root_.Int × (_root_.Int × (_root_.Bool × _root_.Unit)))) → _root_.Int) :=
+  (fun «_state#0» : (_root_.Int × (_root_.Int × (_root_.Int × (_root_.Bool × _root_.Unit)))) => ((«_state#0»).1 * (2 : _root_.Int)))
 
 theorem JoinChecks.«update#0» : Denote.term JoinCore.«update#0» () = JoinNative.«update#0» := by
   unfold Extracted_scalars.Shallow.JoinNative.«update#0»
@@ -502,17 +502,17 @@ theorem JoinChecks.«update#0» : Denote.term JoinCore.«update#0» () = JoinNat
 def CoreArtifacts.«update» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.bool], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.let_ "total" (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.let_ "join" (Core.Term.closed JoinCore.«update#0») (Core.Term.ite (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there     (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))) (Core.Term.let_ "total" (Core.Term.binary (Ariadne.Shallow.Core.Binary.intAdd) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))) (Core.Term.app (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there     (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there     (Ariadne.Shallow.Core.Var.there       (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))))) Core.Term.unit)))))) (Core.Term.let_ "total" (Core.Term.binary (Ariadne.Shallow.Core.Binary.intSub) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))) (Core.Term.app (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there     (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there     (Ariadne.Shallow.Core.Var.there       (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))))) Core.Term.unit))))))))) }
 
 theorem ElaborationChecks.«update» :
-    Elaborate.function program "update" = .ok CoreArtifacts.«update» := by kernel_rfl
+    Elaborate.function _root_.Extracted_scalars.program "update" = .ok CoreArtifacts.«update» := by kernel_rfl
 
-def «update» («x» : Int) («y» : Int) («flag» : Bool) : Int :=
-  (let «total#0» := «x»;
+def «update» («x#arg» : _root_.Int) («y#arg» : _root_.Int) («flag#arg» : _root_.Bool) : _root_.Int :=
+  (let «total#0» := «x#arg»;
   (let «join#1» := JoinNative.«update#0»;
-  (if «flag» then
-  (let «total#2» := («total#0» + «y»);
-  («join#1» («total#2», («x», («y», («flag», ()))))))
+  (if «flag#arg» then
+  (let «total#2» := («total#0» + «y#arg»);
+  («join#1» («total#2», («x#arg», («y#arg», («flag#arg», ()))))))
   else
-  (let «total#2» := («total#0» - «y»);
-  («join#1» («total#2», («x», («y», («flag», ())))))))))
+  (let «total#2» := («total#0» - «y#arg»);
+  («join#1» («total#2», («x#arg», («y#arg», («flag#arg», ())))))))))
 
 theorem DenotationChecks.«update» :
     (fun env : Core.Env CoreArtifacts.«update».params => «update» (env.1) (env.2.1) (env.2.2.1)) =
@@ -523,10 +523,10 @@ theorem DenotationChecks.«update» :
 def CoreArtifacts.«fallback» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int)], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.optionCase (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.int (9)) (Core.Term.var (Ariadne.Shallow.Core.Var.here))) }
 
 theorem ElaborationChecks.«fallback» :
-    Elaborate.function program "fallback" = .ok CoreArtifacts.«fallback» := by kernel_rfl
+    Elaborate.function _root_.Extracted_scalars.program "fallback" = .ok CoreArtifacts.«fallback» := by kernel_rfl
 
-def «fallback» («x» : (Option Int)) : Int :=
-  (Option.elim «x» (9 : Int) (fun «value#0» => «value#0»))
+def «fallback» («x#arg» : (_root_.Option _root_.Int)) : _root_.Int :=
+  (_root_.Option.elim «x#arg» (9 : _root_.Int) (fun «value#0» => «value#0»))
 
 theorem DenotationChecks.«fallback» :
     (fun env : Core.Env CoreArtifacts.«fallback».params => «fallback» (env.1)) =
@@ -537,10 +537,10 @@ theorem DenotationChecks.«fallback» :
 def CoreArtifacts.«decimal» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.number, Ariadne.Shallow.Core.Ty.number], result := Ariadne.Shallow.Core.Ty.number, body := (Core.Term.binary (Ariadne.Shallow.Core.Binary.numDiv) (Core.Term.binary (Ariadne.Shallow.Core.Binary.numMul) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) (Core.Term.binary (Ariadne.Shallow.Core.Binary.numAdd) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) }
 
 theorem ElaborationChecks.«decimal» :
-    Elaborate.function program "decimal" = .ok CoreArtifacts.«decimal» := by kernel_rfl
+    Elaborate.function _root_.Extracted_scalars.program "decimal" = .ok CoreArtifacts.«decimal» := by kernel_rfl
 
-def «decimal» («x» : Float.Model) («y» : Float.Model) : Float.Model :=
-  ((«x» * «y») / («x» + «y»))
+def «decimal» («x#arg» : _root_.Float.Model) («y#arg» : _root_.Float.Model) : _root_.Float.Model :=
+  ((«x#arg» * «y#arg») / («x#arg» + «y#arg»))
 
 theorem DenotationChecks.«decimal» :
     (fun env : Core.Env CoreArtifacts.«decimal».params => «decimal» (env.1) (env.2.1)) =
@@ -551,10 +551,10 @@ theorem DenotationChecks.«decimal» :
 def CoreArtifacts.«hello» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.string], result := Ariadne.Shallow.Core.Ty.string, body := (Core.Term.binary (Ariadne.Shallow.Core.Binary.strAppend) (Core.Term.string [104, 101, 108, 108, 111, 32]) (Core.Term.var (Ariadne.Shallow.Core.Var.here))) }
 
 theorem ElaborationChecks.«hello» :
-    Elaborate.function program "hello" = .ok CoreArtifacts.«hello» := by kernel_rfl
+    Elaborate.function _root_.Extracted_scalars.program "hello" = .ok CoreArtifacts.«hello» := by kernel_rfl
 
-def «hello» («name» : JSString) : JSString :=
-  (([104, 101, 108, 108, 111, 32] : JSString) ++ «name»)
+def «hello» («name#arg» : _root_.Ariadne.JSString) : _root_.Ariadne.JSString :=
+  (([104, 101, 108, 108, 111, 32] : _root_.Ariadne.JSString) ++ «name#arg»)
 
 theorem DenotationChecks.«hello» :
     (fun env : Core.Env CoreArtifacts.«hello».params => «hello» (env.1)) =
@@ -568,8 +568,8 @@ def JoinCore.«optional#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
     (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.int) (Ariadne.Shallow.Core.Ty.unit)))
   (Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int))) := (Core.Term.lam "state" Core.Term.none)
 
-@[simp] def JoinNative.«optional#0» : ((Bool × (Int × Unit)) → (Option Int)) :=
-  (fun «_state#0» : (Bool × (Int × Unit)) => none)
+@[simp] def JoinNative.«optional#0» : ((_root_.Bool × (_root_.Int × _root_.Unit)) → (_root_.Option _root_.Int)) :=
+  (fun «_state#0» : (_root_.Bool × (_root_.Int × _root_.Unit)) => _root_.Option.none)
 
 theorem JoinChecks.«optional#0» : Denote.term JoinCore.«optional#0» () = JoinNative.«optional#0» := by
   unfold Extracted_scalars.Shallow.JoinNative.«optional#0»
@@ -578,14 +578,14 @@ theorem JoinChecks.«optional#0» : Denote.term JoinCore.«optional#0» () = Joi
 def CoreArtifacts.«optional» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.bool, Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int), body := (Core.Term.let_ "join" (Core.Term.closed JoinCore.«optional#0») (Core.Term.ite (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.some (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) (Core.Term.app (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) Core.Term.unit))))) }
 
 theorem ElaborationChecks.«optional» :
-    Elaborate.function program "optional" = .ok CoreArtifacts.«optional» := by kernel_rfl
+    Elaborate.function _root_.Extracted_scalars.program "optional" = .ok CoreArtifacts.«optional» := by kernel_rfl
 
-def «optional» («flag» : Bool) («value» : Int) : (Option Int) :=
+def «optional» («flag#arg» : _root_.Bool) («value#arg» : _root_.Int) : (_root_.Option _root_.Int) :=
   (let «join#0» := JoinNative.«optional#0»;
-  (if «flag» then
-  (some «value»)
+  (if «flag#arg» then
+  (_root_.Option.some «value#arg»)
   else
-  («join#0» («flag», («value», ())))))
+  («join#0» («flag#arg», («value#arg», ())))))
 
 theorem DenotationChecks.«optional» :
     (fun env : Core.Env CoreArtifacts.«optional».params => «optional» (env.1) (env.2.1)) =
@@ -596,10 +596,10 @@ theorem DenotationChecks.«optional» :
 def CoreArtifacts.«textBefore» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.string, Ariadne.Shallow.Core.Ty.string], result := Ariadne.Shallow.Core.Ty.bool, body := (Core.Term.binary (Ariadne.Shallow.Core.Binary.strLt) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) }
 
 theorem ElaborationChecks.«textBefore» :
-    Elaborate.function program "textBefore" = .ok CoreArtifacts.«textBefore» := by kernel_rfl
+    Elaborate.function _root_.Extracted_scalars.program "textBefore" = .ok CoreArtifacts.«textBefore» := by kernel_rfl
 
-def «textBefore» («a» : JSString) («b» : JSString) : Bool :=
-  (compare «a» «b» == Ordering.lt)
+def «textBefore» («a#arg» : _root_.Ariadne.JSString) («b#arg» : _root_.Ariadne.JSString) : _root_.Bool :=
+  (compare «a#arg» «b#arg» == Ordering.lt)
 
 theorem DenotationChecks.«textBefore» :
     (fun env : Core.Env CoreArtifacts.«textBefore».params => «textBefore» (env.1) (env.2.1)) =
@@ -610,10 +610,10 @@ theorem DenotationChecks.«textBefore» :
 def CoreArtifacts.«remainder» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.number, Ariadne.Shallow.Core.Ty.number], result := Ariadne.Shallow.Core.Ty.number, body := (Core.Term.binary (Ariadne.Shallow.Core.Binary.numMod) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) }
 
 theorem ElaborationChecks.«remainder» :
-    Elaborate.function program "remainder" = .ok CoreArtifacts.«remainder» := by kernel_rfl
+    Elaborate.function _root_.Extracted_scalars.program "remainder" = .ok CoreArtifacts.«remainder» := by kernel_rfl
 
-def «remainder» («a» : Float.Model) («b» : Float.Model) : Float.Model :=
-  (numberRemainder «a» «b»)
+def «remainder» («a#arg» : _root_.Float.Model) («b#arg» : _root_.Float.Model) : _root_.Float.Model :=
+  (_root_.Ariadne.numberRemainder «a#arg» «b#arg»)
 
 theorem DenotationChecks.«remainder» :
     (fun env : Core.Env CoreArtifacts.«remainder».params => «remainder» (env.1) (env.2.1)) =
@@ -624,12 +624,12 @@ theorem DenotationChecks.«remainder» :
 def CoreArtifacts.«scoped» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.let_ "temporary" (Core.Term.binary (Ariadne.Shallow.Core.Binary.intAdd) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.int (1))) (Core.Term.let_ "x" (Core.Term.binary (Ariadne.Shallow.Core.Binary.intMul) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.int (2))) (Core.Term.let_ "temporary" (Core.Term.binary (Ariadne.Shallow.Core.Binary.intSub) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.int (3))) (Core.Term.var (Ariadne.Shallow.Core.Var.here))))) }
 
 theorem ElaborationChecks.«scoped» :
-    Elaborate.function program "scoped" = .ok CoreArtifacts.«scoped» := by kernel_rfl
+    Elaborate.function _root_.Extracted_scalars.program "scoped" = .ok CoreArtifacts.«scoped» := by kernel_rfl
 
-def «scoped» («x» : Int) : Int :=
-  (let «temporary#0» := («x» + (1 : Int));
-  (let «x#1» := («temporary#0» * (2 : Int));
-  (let «temporary#2» := («x#1» - (3 : Int));
+def «scoped» («x#arg» : _root_.Int) : _root_.Int :=
+  (let «temporary#0» := («x#arg» + (1 : _root_.Int));
+  (let «x#1» := («temporary#0» * (2 : _root_.Int));
+  (let «temporary#2» := («x#1» - (3 : _root_.Int));
   «temporary#2»)))
 
 theorem DenotationChecks.«scoped» :
@@ -641,10 +641,10 @@ theorem DenotationChecks.«scoped» :
 def CoreArtifacts.«abs_denotes» : Core.Function := { params := [], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.int (3)) }
 
 theorem ElaborationChecks.«abs_denotes» :
-    Elaborate.function program "abs_denotes" = .ok CoreArtifacts.«abs_denotes» := by kernel_rfl
+    Elaborate.function _root_.Extracted_scalars.program "abs_denotes" = .ok CoreArtifacts.«abs_denotes» := by kernel_rfl
 
-def «abs_denotes» : Int :=
-  (3 : Int)
+def «abs_denotes» : _root_.Int :=
+  (3 : _root_.Int)
 
 theorem DenotationChecks.«abs_denotes» :
     (fun _env : Core.Env CoreArtifacts.«abs_denotes».params => «abs_denotes») =
@@ -655,10 +655,10 @@ theorem DenotationChecks.«abs_denotes» :
 def CoreArtifacts.«CoreArtifacts» : Core.Function := { params := [], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.int (4)) }
 
 theorem ElaborationChecks.«CoreArtifacts» :
-    Elaborate.function program "CoreArtifacts" = .ok CoreArtifacts.«CoreArtifacts» := by kernel_rfl
+    Elaborate.function _root_.Extracted_scalars.program "CoreArtifacts" = .ok CoreArtifacts.«CoreArtifacts» := by kernel_rfl
 
-def «CoreArtifacts» : Int :=
-  (4 : Int)
+def «CoreArtifacts» : _root_.Int :=
+  (4 : _root_.Int)
 
 theorem DenotationChecks.«CoreArtifacts» :
     (fun _env : Core.Env CoreArtifacts.«CoreArtifacts».params => «CoreArtifacts») =

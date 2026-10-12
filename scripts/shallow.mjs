@@ -82,7 +82,8 @@ try {
   assert.equal(checkedJoins.status, 0, checkedJoins.stdout + checkedJoins.stderr);
   for (const [text, code] of [
     ['function f(): bigint { while (true) {} return 0n; }', 'A5101'],
-    ['function f(xs: number[]): number { return xs.length; }', 'A5102'],
+    ['function f(x: { value: number }): number { return x.value; }', 'A5102'],
+    ['function copy(xs: number[]): number[] { return xs.slice(); } function f(xs: number[]): number[] { return copy(xs); }', 'A5102'],
     ['function f(x: bigint): bigint { return x / 2n; }', 'A5104'],
     ['type Int53 = number; function f(x: Int53): Int53 { return x; }', 'A5104'],
   ]) {
@@ -100,7 +101,7 @@ try {
   for (const bad of [
     good.replace('return 3n;', 'return 4n;'),
     good.replace('Core.Term.int (3)', 'Core.Term.int (4)'),
-    good.replace('(3 : Int)', '(4 : Int)'),
+    good.replace('(3 : _root_.Int)', '(4 : _root_.Int)'),
   ]) {
     assert.notEqual(bad, good);
     await writeFile(artifact, bad);

@@ -2,6 +2,7 @@ import Examples
 import Tests
 import Ariadne.Hoare
 import Ariadne.Collections
+import Ariadne.Shallow.Lemmas.Core
 
 open Lean in
 run_cmd do
