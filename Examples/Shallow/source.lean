@@ -6,6 +6,7 @@ import Ariadne.Shallow.Adequacy.Statements
 import Ariadne.Shallow.Adequacy.GuardedStatements
 import Ariadne.Shallow.Adequacy.JoinsContext
 import Ariadne.Shallow.Adequacy.GuardedJoinsContext
+import Ariadne.Ownership.Source
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
@@ -751,6 +752,111 @@ theorem ts_reassignString_source {fuel : Nat} {args : List Value} {value : Value
 
 end Extracted_source
 
+namespace Extracted_source.Wrapper
+open Ariadne
+
+def source : String := "// Generated ownership entry wrappers. Requires the Ariadne pristine realm contract.\nexport function arithmetic(x: bigint, y: bigint): bigint { return -(x + y) * (x - y); }\nexport function quotient(x: number, y: number): number { return (x * y) / (x + y); }\nexport function choice(flag: boolean, x: bigint, y: bigint): bigint { return flag ? x : y; }\n// This user name must not collide with the generated source theorem for choice.\nexport function choice_source(): bigint { return 7n; }\nexport function conjunction(a: boolean, b: boolean): boolean { return a && !b; }\nexport function disjunction(a: boolean, b: boolean): boolean { return a || !b; }\nexport function compare(x: bigint, y: bigint): boolean { return x <= y; }\nexport function equal(x: string, y: string): boolean { return x === y; }\nexport function text(name: string): string { return 'hello ' + name; }\nexport function unit(): void { return; }\n\nexport function local(a: bigint, b: bigint): bigint {\n  const sum = a + b;\n  const doubled = sum * 2n;\n  return doubled;\n}\n\nexport function early(value: bigint): bigint {\n  if (value < 0n) { return -value; }\n  return value;\n}\n\nexport function branchLocal(flag: boolean, a: bigint, b: bigint): bigint {\n  if (flag) {\n    const sum = a + b;\n    return sum;\n  }\n  const difference = a - b;\n  return difference;\n}\n\nexport function nested(flag: boolean, other: boolean, value: bigint): bigint {\n  if (flag) {\n    if (other) { return value; }\n    return -value;\n  }\n  return 0n;\n}\n\nexport function reassign(value: bigint, delta: bigint): bigint {\n  value = value + delta;\n  value = value * 2n;\n  return value;\n}\n\nexport function preserveOther(value: bigint): bigint {\n  const saved = value;\n  value = value + 1n;\n  return saved + value;\n}\n\nexport function branchAssign(value: bigint): bigint {\n  if (value < 0n) {\n    value = -value;\n    return value;\n  }\n  return value;\n}\n\nexport function reassignString(value: string, suffix: string): string {\n  value = value + suffix;\n  return value;\n}\n"
+
+def characters : List Char := ['/', '/', ' ', 'G', 'e', 'n', 'e', 'r', 'a', 't', 'e', 'd', ' ', 'o', 'w', 'n', 'e', 'r', 's', 'h', 'i', 'p', ' ', 'e',
+ 'n', 't', 'r', 'y', ' ', 'w', 'r', 'a', 'p', 'p', 'e', 'r', 's', '.', ' ', 'R', 'e', 'q', 'u', 'i', 'r', 'e', 's', ' ',
+ 't', 'h', 'e', ' ', 'A', 'r', 'i', 'a', 'd', 'n', 'e', ' ', 'p', 'r', 'i', 's', 't', 'i', 'n', 'e', ' ', 'r', 'e', 'a',
+ 'l', 'm', ' ', 'c', 'o', 'n', 't', 'r', 'a', 'c', 't', '.', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n',
+ 'c', 't', 'i', 'o', 'n', ' ', 'a', 'r', 'i', 't', 'h', 'm', 'e', 't', 'i', 'c', '(', 'x', ':', ' ', 'b', 'i', 'g', 'i',
+ 'n', 't', ',', ' ', 'y', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{',
+ ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '-', '(', 'x', ' ', '+', ' ', 'y', ')', ' ', '*', ' ', '(', 'x', ' ', '-', ' ',
+ 'y', ')', ';', ' ', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'q',
+ 'u', 'o', 't', 'i', 'e', 'n', 't', '(', 'x', ':', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ',', ' ', 'y', ':', ' ', 'n', 'u',
+ 'm', 'b', 'e', 'r', ')', ':', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '(',
+ 'x', ' ', '*', ' ', 'y', ')', ' ', '/', ' ', '(', 'x', ' ', '+', ' ', 'y', ')', ';', ' ', '}', '\n', 'e', 'x', 'p',
+ 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'c', 'h', 'o', 'i', 'c', 'e', '(', 'f', 'l', 'a', 'g',
+ ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ',', ' ', 'x', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ',', ' ', 'y', ':',
+ ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r',
+ 'n', ' ', 'f', 'l', 'a', 'g', ' ', '?', ' ', 'x', ' ', ':', ' ', 'y', ';', ' ', '}', '\n', '/', '/', ' ', 'T', 'h',
+ 'i', 's', ' ', 'u', 's', 'e', 'r', ' ', 'n', 'a', 'm', 'e', ' ', 'm', 'u', 's', 't', ' ', 'n', 'o', 't', ' ', 'c', 'o',
+ 'l', 'l', 'i', 'd', 'e', ' ', 'w', 'i', 't', 'h', ' ', 't', 'h', 'e', ' ', 'g', 'e', 'n', 'e', 'r', 'a', 't', 'e', 'd',
+ ' ', 's', 'o', 'u', 'r', 'c', 'e', ' ', 't', 'h', 'e', 'o', 'r', 'e', 'm', ' ', 'f', 'o', 'r', ' ', 'c', 'h', 'o', 'i',
+ 'c', 'e', '.', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'c', 'h', 'o',
+ 'i', 'c', 'e', '_', 's', 'o', 'u', 'r', 'c', 'e', '(', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', ' ', 'r',
+ 'e', 't', 'u', 'r', 'n', ' ', '7', 'n', ';', ' ', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c',
+ 't', 'i', 'o', 'n', ' ', 'c', 'o', 'n', 'j', 'u', 'n', 'c', 't', 'i', 'o', 'n', '(', 'a', ':', ' ', 'b', 'o', 'o', 'l',
+ 'e', 'a', 'n', ',', ' ', 'b', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ')', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a',
+ 'n', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'a', ' ', '&', '&', ' ', '!', 'b', ';', ' ', '}', '\n', 'e',
+ 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'd', 'i', 's', 'j', 'u', 'n', 'c', 't', 'i',
+ 'o', 'n', '(', 'a', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ',', ' ', 'b', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a',
+ 'n', ')', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'a', ' ', '|',
+ '|', ' ', '!', 'b', ';', ' ', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n',
+ ' ', 'c', 'o', 'm', 'p', 'a', 'r', 'e', '(', 'x', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ',', ' ', 'y', ':', ' ', 'b',
+ 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n',
+ ' ', 'x', ' ', '<', '=', ' ', 'y', ';', ' ', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't',
+ 'i', 'o', 'n', ' ', 'e', 'q', 'u', 'a', 'l', '(', 'x', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ',', ' ', 'y', ':', ' ',
+ 's', 't', 'r', 'i', 'n', 'g', ')', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r',
+ 'n', ' ', 'x', ' ', '=', '=', '=', ' ', 'y', ';', ' ', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n',
+ 'c', 't', 'i', 'o', 'n', ' ', 't', 'e', 'x', 't', '(', 'n', 'a', 'm', 'e', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ')',
+ ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '\'', 'h', 'e', 'l', 'l',
+ 'o', ' ', '\'', ' ', '+', ' ', 'n', 'a', 'm', 'e', ';', ' ', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u',
+ 'n', 'c', 't', 'i', 'o', 'n', ' ', 'u', 'n', 'i', 't', '(', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{', ' ', 'r', 'e',
+ 't', 'u', 'r', 'n', ';', ' ', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o',
+ 'n', ' ', 'l', 'o', 'c', 'a', 'l', '(', 'a', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ',', ' ', 'b', ':', ' ', 'b', 'i',
+ 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'c', 'o', 'n', 's', 't',
+ ' ', 's', 'u', 'm', ' ', '=', ' ', 'a', ' ', '+', ' ', 'b', ';', '\n', ' ', ' ', 'c', 'o', 'n', 's', 't', ' ', 'd',
+ 'o', 'u', 'b', 'l', 'e', 'd', ' ', '=', ' ', 's', 'u', 'm', ' ', '*', ' ', '2', 'n', ';', '\n', ' ', ' ', 'r', 'e',
+ 't', 'u', 'r', 'n', ' ', 'd', 'o', 'u', 'b', 'l', 'e', 'd', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't',
+ ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'e', 'a', 'r', 'l', 'y', '(', 'v', 'a', 'l', 'u', 'e', ':', ' ', 'b',
+ 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(',
+ 'v', 'a', 'l', 'u', 'e', ' ', '<', ' ', '0', 'n', ')', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '-', 'v', 'a',
+ 'l', 'u', 'e', ';', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'v', 'a', 'l', 'u', 'e', ';', '\n',
+ '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'b', 'r', 'a', 'n',
+ 'c', 'h', 'L', 'o', 'c', 'a', 'l', '(', 'f', 'l', 'a', 'g', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ',', ' ', 'a',
+ ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ',', ' ', 'b', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'i',
+ 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'f', 'l', 'a', 'g', ')', ' ', '{', '\n', ' ', ' ',
+ ' ', ' ', 'c', 'o', 'n', 's', 't', ' ', 's', 'u', 'm', ' ', '=', ' ', 'a', ' ', '+', ' ', 'b', ';', '\n', ' ', ' ',
+ ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 's', 'u', 'm', ';', '\n', ' ', ' ', '}', '\n', ' ', ' ', 'c', 'o', 'n',
+ 's', 't', ' ', 'd', 'i', 'f', 'f', 'e', 'r', 'e', 'n', 'c', 'e', ' ', '=', ' ', 'a', ' ', '-', ' ', 'b', ';', '\n',
+ ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'd', 'i', 'f', 'f', 'e', 'r', 'e', 'n', 'c', 'e', ';', '\n', '}', '\n',
+ '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'n', 'e', 's', 't', 'e', 'd',
+ '(', 'f', 'l', 'a', 'g', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n', ',', ' ', 'o', 't', 'h', 'e', 'r', ':', ' ', 'b',
+ 'o', 'o', 'l', 'e', 'a', 'n', ',', ' ', 'v', 'a', 'l', 'u', 'e', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ',
+ 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'f', 'l', 'a', 'g', ')', ' ', '{', '\n',
+ ' ', ' ', ' ', ' ', 'i', 'f', ' ', '(', 'o', 't', 'h', 'e', 'r', ')', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ',
+ 'v', 'a', 'l', 'u', 'e', ';', ' ', '}', '\n', ' ', ' ', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '-', 'v', 'a',
+ 'l', 'u', 'e', ';', '\n', ' ', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '0', 'n', ';', '\n', '}',
+ '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'r', 'e', 'a', 's', 's',
+ 'i', 'g', 'n', '(', 'v', 'a', 'l', 'u', 'e', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ',', ' ', 'd', 'e', 'l', 't', 'a',
+ ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'v',
+ 'a', 'l', 'u', 'e', ' ', '=', ' ', 'v', 'a', 'l', 'u', 'e', ' ', '+', ' ', 'd', 'e', 'l', 't', 'a', ';', '\n', ' ',
+ ' ', 'v', 'a', 'l', 'u', 'e', ' ', '=', ' ', 'v', 'a', 'l', 'u', 'e', ' ', '*', ' ', '2', 'n', ';', '\n', ' ', ' ',
+ 'r', 'e', 't', 'u', 'r', 'n', ' ', 'v', 'a', 'l', 'u', 'e', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't',
+ ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'p', 'r', 'e', 's', 'e', 'r', 'v', 'e', 'O', 't', 'h', 'e', 'r', '(',
+ 'v', 'a', 'l', 'u', 'e', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{',
+ '\n', ' ', ' ', 'c', 'o', 'n', 's', 't', ' ', 's', 'a', 'v', 'e', 'd', ' ', '=', ' ', 'v', 'a', 'l', 'u', 'e', ';',
+ '\n', ' ', ' ', 'v', 'a', 'l', 'u', 'e', ' ', '=', ' ', 'v', 'a', 'l', 'u', 'e', ' ', '+', ' ', '1', 'n', ';', '\n',
+ ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 's', 'a', 'v', 'e', 'd', ' ', '+', ' ', 'v', 'a', 'l', 'u', 'e', ';',
+ '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'b', 'r', 'a',
+ 'n', 'c', 'h', 'A', 's', 's', 'i', 'g', 'n', '(', 'v', 'a', 'l', 'u', 'e', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')',
+ ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'v', 'a', 'l', 'u', 'e', ' ',
+ '<', ' ', '0', 'n', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', 'v', 'a', 'l', 'u', 'e', ' ', '=', ' ', '-', 'v', 'a',
+ 'l', 'u', 'e', ';', '\n', ' ', ' ', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'v', 'a', 'l', 'u', 'e', ';', '\n',
+ ' ', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'v', 'a', 'l', 'u', 'e', ';', '\n', '}', '\n', '\n',
+ 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'r', 'e', 'a', 's', 's', 'i', 'g', 'n',
+ 'S', 't', 'r', 'i', 'n', 'g', '(', 'v', 'a', 'l', 'u', 'e', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ',', ' ', 's', 'u',
+ 'f', 'f', 'i', 'x', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ')', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ' ', '{',
+ '\n', ' ', ' ', 'v', 'a', 'l', 'u', 'e', ' ', '=', ' ', 'v', 'a', 'l', 'u', 'e', ' ', '+', ' ', 's', 'u', 'f', 'f',
+ 'i', 'x', ';', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'v', 'a', 'l', 'u', 'e', ';', '\n', '}', '\n']
+
+theorem characters_encoded : String.ofList characters = source := by kernel_rfl
+
+theorem rendered : Ownership.Wrap.emitCharacterData
+    _root_.Extracted_source.characters _root_.Extracted_source.tokens.toList _root_.Extracted_source.program = .ok characters := by kernel_rfl
+
+theorem checked : Ownership.Wrap.emit _root_.Extracted_source.source _root_.Extracted_source.program = .ok source :=
+  (Ownership.Wrap.emit_checked _root_.Extracted_source.characters_checked _root_.Extracted_source.lex_checked rendered).trans
+    (congrArg Except.ok characters_encoded)
+
+def certificate : Ownership.WrapperCertificate _root_.Extracted_source.source :=
+  ⟨_root_.Extracted_source.certificate, source, checked⟩
+
+end Extracted_source.Wrapper
+
 -- Shallow denotation certificates. Source transfer is emitted for proved fragments.
 namespace Extracted_source.Shallow
 open Ariadne Ariadne.Shallow
@@ -770,6 +876,21 @@ def «arithmetic» («_x#arg» : _root_.Int) («_y#arg» : _root_.Int) : _root_.
 
 abbrev «arithmetic».safe («_x#arg» : _root_.Int) («_y#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«arithmetic» (by decide) («_x#arg», («_y#arg», ()))
+
+def EntryGuards.«arithmetic».function : Ariadne.Function := { name := "arithmetic",   params := [{ name := "x", ty := Ariadne.Ty.bigint, span := { start := 27, stop := 28 } },              { name := "y", ty := Ariadne.Ty.bigint, span := { start := 38, stop := 39 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "*"                  (Ariadne.Expr.unary                    "-"                    (Ariadne.Expr.binary                      "+"                      (Ariadne.Expr.var "x" { start := 68, stop := 69 })                      (Ariadne.Expr.var "y" { start := 72, stop := 73 })                      { start := 68, stop := 73 })                    { start := 66, stop := 67 })                  (Ariadne.Expr.binary                    "-"                    (Ariadne.Expr.var "x" { start := 78, stop := 79 })                    (Ariadne.Expr.var "y" { start := 82, stop := 83 })                    { start := 78, stop := 83 })                  { start := 66, stop := 83 })                { start := 59, stop := 65 }]             { start := 57, stop := 87 },   exported := true,   decreases := none,   span := { start := 7, stop := 15 } }
+
+def EntryGuards.«arithmetic».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«arithmetic».planned : Ownership.entryPlan _root_.Extracted_source.program EntryGuards.«arithmetic».function = .ok EntryGuards.«arithmetic».plan := by kernel_rfl
+
+def EntryGuards.«arithmetic».certificate : Ownership.EntryCertificate _root_.Extracted_source.Wrapper.certificate "arithmetic" :=
+  ⟨EntryGuards.«arithmetic».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«arithmetic».plan, EntryGuards.«arithmetic».planned⟩
+
+def «arithmetic».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_source.program EntryGuards.«arithmetic».plan heap args
+
+def «arithmetic».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_source.program EntryGuards.«arithmetic».plan fuel state "arithmetic" args
 
 theorem DenotationChecks.«arithmetic» :
     (fun env : Core.Env CoreArtifacts.«arithmetic».params Interpretation.value => «arithmetic» (env.1) (env.2.1)) =
@@ -818,6 +939,21 @@ def «quotient» («_x#arg» : _root_.Float.Model) («_y#arg» : _root_.Float.Mo
 
 abbrev «quotient».safe («_x#arg» : _root_.Float.Model) («_y#arg» : _root_.Float.Model) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«quotient» (by decide) («_x#arg», («_y#arg», ()))
+
+def EntryGuards.«quotient».function : Ariadne.Function := { name := "quotient",   params := [{ name := "x", ty := Ariadne.Ty.number, span := { start := 113, stop := 114 } },              { name := "y", ty := Ariadne.Ty.number, span := { start := 124, stop := 125 } }],   result := Ariadne.Ty.number,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "/"                  (Ariadne.Expr.binary                    "*"                    (Ariadne.Expr.var "x" { start := 153, stop := 154 })                    (Ariadne.Expr.var "y" { start := 157, stop := 158 })                    { start := 153, stop := 158 })                  (Ariadne.Expr.binary                    "+"                    (Ariadne.Expr.var "x" { start := 163, stop := 164 })                    (Ariadne.Expr.var "y" { start := 167, stop := 168 })                    { start := 163, stop := 168 })                  { start := 153, stop := 168 })                { start := 145, stop := 151 }]             { start := 143, stop := 172 },   exported := true,   decreases := none,   span := { start := 95, stop := 103 } }
+
+def EntryGuards.«quotient».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«quotient».planned : Ownership.entryPlan _root_.Extracted_source.program EntryGuards.«quotient».function = .ok EntryGuards.«quotient».plan := by kernel_rfl
+
+def EntryGuards.«quotient».certificate : Ownership.EntryCertificate _root_.Extracted_source.Wrapper.certificate "quotient" :=
+  ⟨EntryGuards.«quotient».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«quotient».plan, EntryGuards.«quotient».planned⟩
+
+def «quotient».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_source.program EntryGuards.«quotient».plan heap args
+
+def «quotient».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_source.program EntryGuards.«quotient».plan fuel state "quotient" args
 
 theorem DenotationChecks.«quotient» :
     (fun env : Core.Env CoreArtifacts.«quotient».params Interpretation.value => «quotient» (env.1) (env.2.1)) =
@@ -869,6 +1005,21 @@ def «choice» («_flag#arg» : _root_.Bool) («_x#arg» : _root_.Int) («_y#arg
 
 abbrev «choice».safe («_flag#arg» : _root_.Bool) («_x#arg» : _root_.Int) («_y#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«choice» (by decide) («_flag#arg», («_x#arg», («_y#arg», ())))
+
+def EntryGuards.«choice».function : Ariadne.Function := { name := "choice",   params := [{ name := "flag", ty := Ariadne.Ty.boolean, span := { start := 196, stop := 200 } },              { name := "x", ty := Ariadne.Ty.bigint, span := { start := 211, stop := 212 } },              { name := "y", ty := Ariadne.Ty.bigint, span := { start := 222, stop := 223 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.conditional                  (Ariadne.Expr.var "flag" { start := 250, stop := 254 })                  (Ariadne.Expr.var "x" { start := 257, stop := 258 })                  (Ariadne.Expr.var "y" { start := 261, stop := 262 })                  { start := 250, stop := 254 })                { start := 243, stop := 249 }]             { start := 241, stop := 265 },   exported := true,   decreases := none,   span := { start := 180, stop := 188 } }
+
+def EntryGuards.«choice».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«choice».planned : Ownership.entryPlan _root_.Extracted_source.program EntryGuards.«choice».function = .ok EntryGuards.«choice».plan := by kernel_rfl
+
+def EntryGuards.«choice».certificate : Ownership.EntryCertificate _root_.Extracted_source.Wrapper.certificate "choice" :=
+  ⟨EntryGuards.«choice».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«choice».plan, EntryGuards.«choice».planned⟩
+
+def «choice».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_source.program EntryGuards.«choice».plan heap args
+
+def «choice».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_source.program EntryGuards.«choice».plan fuel state "choice" args
 
 theorem DenotationChecks.«choice» :
     (fun env : Core.Env CoreArtifacts.«choice».params Interpretation.value => «choice» (env.1) (env.2.1) (env.2.2.1)) =
@@ -925,6 +1076,21 @@ def «choice_source» : _root_.Int :=
 abbrev «choice_source».safe : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«choice_source» (by decide) ()
 
+def EntryGuards.«choice_source».function : Ariadne.Function := { name := "choice_source",   params := [],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.literal (Ariadne.Literal.bigint 7) { start := 396, stop := 398 })                { start := 389, stop := 395 }]             { start := 387, stop := 401 },   exported := true,   decreases := none,   span := { start := 354, stop := 362 } }
+
+def EntryGuards.«choice_source».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«choice_source».planned : Ownership.entryPlan _root_.Extracted_source.program EntryGuards.«choice_source».function = .ok EntryGuards.«choice_source».plan := by kernel_rfl
+
+def EntryGuards.«choice_source».certificate : Ownership.EntryCertificate _root_.Extracted_source.Wrapper.certificate "choice_source" :=
+  ⟨EntryGuards.«choice_source».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«choice_source».plan, EntryGuards.«choice_source».planned⟩
+
+def «choice_source».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_source.program EntryGuards.«choice_source».plan heap args
+
+def «choice_source».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_source.program EntryGuards.«choice_source».plan fuel state "choice_source" args
+
 theorem DenotationChecks.«choice_source» :
     (fun _env : Core.Env CoreArtifacts.«choice_source».params Interpretation.value => «choice_source») =
       Denote.function (interp := Interpretation.value) CoreArtifacts.«choice_source» := by
@@ -967,6 +1133,21 @@ def «conjunction» («_a#arg» : _root_.Bool) («_b#arg» : _root_.Bool) : _roo
 
 abbrev «conjunction».safe («_a#arg» : _root_.Bool) («_b#arg» : _root_.Bool) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«conjunction» (by decide) («_a#arg», («_b#arg», ()))
+
+def EntryGuards.«conjunction».function : Ariadne.Function := { name := "conjunction",   params := [{ name := "a", ty := Ariadne.Ty.boolean, span := { start := 430, stop := 431 } },              { name := "b", ty := Ariadne.Ty.boolean, span := { start := 442, stop := 443 } }],   result := Ariadne.Ty.boolean,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "&&"                  (Ariadne.Expr.var "a" { start := 472, stop := 473 })                  (Ariadne.Expr.unary                    "!"                    (Ariadne.Expr.var "b" { start := 478, stop := 479 })                    { start := 477, stop := 478 })                  { start := 472, stop := 478 })                { start := 465, stop := 471 }]             { start := 463, stop := 482 },   exported := true,   decreases := none,   span := { start := 409, stop := 417 } }
+
+def EntryGuards.«conjunction».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«conjunction».planned : Ownership.entryPlan _root_.Extracted_source.program EntryGuards.«conjunction».function = .ok EntryGuards.«conjunction».plan := by kernel_rfl
+
+def EntryGuards.«conjunction».certificate : Ownership.EntryCertificate _root_.Extracted_source.Wrapper.certificate "conjunction" :=
+  ⟨EntryGuards.«conjunction».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«conjunction».plan, EntryGuards.«conjunction».planned⟩
+
+def «conjunction».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_source.program EntryGuards.«conjunction».plan heap args
+
+def «conjunction».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_source.program EntryGuards.«conjunction».plan fuel state "conjunction" args
 
 theorem DenotationChecks.«conjunction» :
     (fun env : Core.Env CoreArtifacts.«conjunction».params Interpretation.value => «conjunction» (env.1) (env.2.1)) =
@@ -1022,6 +1203,21 @@ def «disjunction» («_a#arg» : _root_.Bool) («_b#arg» : _root_.Bool) : _roo
 abbrev «disjunction».safe («_a#arg» : _root_.Bool) («_b#arg» : _root_.Bool) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«disjunction» (by decide) («_a#arg», («_b#arg», ()))
 
+def EntryGuards.«disjunction».function : Ariadne.Function := { name := "disjunction",   params := [{ name := "a", ty := Ariadne.Ty.boolean, span := { start := 511, stop := 512 } },              { name := "b", ty := Ariadne.Ty.boolean, span := { start := 523, stop := 524 } }],   result := Ariadne.Ty.boolean,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "||"                  (Ariadne.Expr.var "a" { start := 553, stop := 554 })                  (Ariadne.Expr.unary                    "!"                    (Ariadne.Expr.var "b" { start := 559, stop := 560 })                    { start := 558, stop := 559 })                  { start := 553, stop := 559 })                { start := 546, stop := 552 }]             { start := 544, stop := 563 },   exported := true,   decreases := none,   span := { start := 490, stop := 498 } }
+
+def EntryGuards.«disjunction».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«disjunction».planned : Ownership.entryPlan _root_.Extracted_source.program EntryGuards.«disjunction».function = .ok EntryGuards.«disjunction».plan := by kernel_rfl
+
+def EntryGuards.«disjunction».certificate : Ownership.EntryCertificate _root_.Extracted_source.Wrapper.certificate "disjunction" :=
+  ⟨EntryGuards.«disjunction».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«disjunction».plan, EntryGuards.«disjunction».planned⟩
+
+def «disjunction».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_source.program EntryGuards.«disjunction».plan heap args
+
+def «disjunction».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_source.program EntryGuards.«disjunction».plan fuel state "disjunction" args
+
 theorem DenotationChecks.«disjunction» :
     (fun env : Core.Env CoreArtifacts.«disjunction».params Interpretation.value => «disjunction» (env.1) (env.2.1)) =
       Denote.function (interp := Interpretation.value) CoreArtifacts.«disjunction» := by
@@ -1069,6 +1265,21 @@ def «compare» («_x#arg» : _root_.Int) («_y#arg» : _root_.Int) : _root_.Boo
 
 abbrev «compare».safe («_x#arg» : _root_.Int) («_y#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«compare» (by decide) («_x#arg», («_y#arg», ()))
+
+def EntryGuards.«compare».function : Ariadne.Function := { name := "compare",   params := [{ name := "x", ty := Ariadne.Ty.bigint, span := { start := 588, stop := 589 } },              { name := "y", ty := Ariadne.Ty.bigint, span := { start := 599, stop := 600 } }],   result := Ariadne.Ty.boolean,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "<="                  (Ariadne.Expr.var "x" { start := 628, stop := 629 })                  (Ariadne.Expr.var "y" { start := 633, stop := 634 })                  { start := 628, stop := 634 })                { start := 621, stop := 627 }]             { start := 619, stop := 637 },   exported := true,   decreases := none,   span := { start := 571, stop := 579 } }
+
+def EntryGuards.«compare».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«compare».planned : Ownership.entryPlan _root_.Extracted_source.program EntryGuards.«compare».function = .ok EntryGuards.«compare».plan := by kernel_rfl
+
+def EntryGuards.«compare».certificate : Ownership.EntryCertificate _root_.Extracted_source.Wrapper.certificate "compare" :=
+  ⟨EntryGuards.«compare».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«compare».plan, EntryGuards.«compare».planned⟩
+
+def «compare».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_source.program EntryGuards.«compare».plan heap args
+
+def «compare».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_source.program EntryGuards.«compare».plan fuel state "compare" args
 
 theorem DenotationChecks.«compare» :
     (fun env : Core.Env CoreArtifacts.«compare».params Interpretation.value => «compare» (env.1) (env.2.1)) =
@@ -1118,6 +1329,21 @@ def «equal» («_x#arg» : _root_.Ariadne.JSString) («_y#arg» : _root_.Ariadn
 abbrev «equal».safe («_x#arg» : _root_.Ariadne.JSString) («_y#arg» : _root_.Ariadne.JSString) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«equal» (by decide) («_x#arg», («_y#arg», ()))
 
+def EntryGuards.«equal».function : Ariadne.Function := { name := "equal",   params := [{ name := "x", ty := Ariadne.Ty.string, span := { start := 660, stop := 661 } },              { name := "y", ty := Ariadne.Ty.string, span := { start := 671, stop := 672 } }],   result := Ariadne.Ty.boolean,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "==="                  (Ariadne.Expr.var "x" { start := 700, stop := 701 })                  (Ariadne.Expr.var "y" { start := 706, stop := 707 })                  { start := 700, stop := 707 })                { start := 693, stop := 699 }]             { start := 691, stop := 710 },   exported := true,   decreases := none,   span := { start := 645, stop := 653 } }
+
+def EntryGuards.«equal».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«equal».planned : Ownership.entryPlan _root_.Extracted_source.program EntryGuards.«equal».function = .ok EntryGuards.«equal».plan := by kernel_rfl
+
+def EntryGuards.«equal».certificate : Ownership.EntryCertificate _root_.Extracted_source.Wrapper.certificate "equal" :=
+  ⟨EntryGuards.«equal».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«equal».plan, EntryGuards.«equal».planned⟩
+
+def «equal».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_source.program EntryGuards.«equal».plan heap args
+
+def «equal».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_source.program EntryGuards.«equal».plan fuel state "equal" args
+
 theorem DenotationChecks.«equal» :
     (fun env : Core.Env CoreArtifacts.«equal».params Interpretation.value => «equal» (env.1) (env.2.1)) =
       Denote.function (interp := Interpretation.value) CoreArtifacts.«equal» := by
@@ -1166,6 +1392,21 @@ def «text» («_name#arg» : _root_.Ariadne.JSString) : _root_.Ariadne.JSString
 abbrev «text».safe («_name#arg» : _root_.Ariadne.JSString) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«text» (by decide) («_name#arg», ())
 
+def EntryGuards.«text».function : Ariadne.Function := { name := "text",   params := [{ name := "name", ty := Ariadne.Ty.string, span := { start := 732, stop := 736 } }],   result := Ariadne.Ty.string,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "+"                  (Ariadne.Expr.literal                    (Ariadne.Literal.string [104, 101, 108, 108, 111, 32])                    { start := 763, stop := 771 })                  (Ariadne.Expr.var "name" { start := 774, stop := 778 })                  { start := 763, stop := 778 })                { start := 756, stop := 762 }]             { start := 754, stop := 781 },   exported := true,   decreases := none,   span := { start := 718, stop := 726 } }
+
+def EntryGuards.«text».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«text».planned : Ownership.entryPlan _root_.Extracted_source.program EntryGuards.«text».function = .ok EntryGuards.«text».plan := by kernel_rfl
+
+def EntryGuards.«text».certificate : Ownership.EntryCertificate _root_.Extracted_source.Wrapper.certificate "text" :=
+  ⟨EntryGuards.«text».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«text».plan, EntryGuards.«text».planned⟩
+
+def «text».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_source.program EntryGuards.«text».plan heap args
+
+def «text».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_source.program EntryGuards.«text».plan fuel state "text" args
+
 theorem DenotationChecks.«text» :
     (fun env : Core.Env CoreArtifacts.«text».params Interpretation.value => «text» (env.1)) =
       Denote.function (interp := Interpretation.value) CoreArtifacts.«text» := by
@@ -1208,6 +1449,21 @@ def «unit» : _root_.Unit :=
 abbrev «unit».safe : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«unit» (by decide) ()
 
+def EntryGuards.«unit».function : Ariadne.Function := { name := "unit",   params := [],   result := Ariadne.Ty.void,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 813, stop := 819 })                { start := 813, stop := 819 }]             { start := 811, stop := 822 },   exported := true,   decreases := none,   span := { start := 789, stop := 797 } }
+
+def EntryGuards.«unit».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«unit».planned : Ownership.entryPlan _root_.Extracted_source.program EntryGuards.«unit».function = .ok EntryGuards.«unit».plan := by kernel_rfl
+
+def EntryGuards.«unit».certificate : Ownership.EntryCertificate _root_.Extracted_source.Wrapper.certificate "unit" :=
+  ⟨EntryGuards.«unit».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«unit».plan, EntryGuards.«unit».planned⟩
+
+def «unit».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_source.program EntryGuards.«unit».plan heap args
+
+def «unit».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_source.program EntryGuards.«unit».plan fuel state "unit" args
+
 theorem DenotationChecks.«unit» :
     (fun _env : Core.Env CoreArtifacts.«unit».params Interpretation.value => «unit») =
       Denote.function (interp := Interpretation.value) CoreArtifacts.«unit» := by
@@ -1246,6 +1502,21 @@ def «local» («_a#arg» : _root_.Int) («_b#arg» : _root_.Int) : _root_.Int :
 
 abbrev «local».safe («_a#arg» : _root_.Int) («_b#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«local» (by decide) («_a#arg», («_b#arg», ()))
+
+def EntryGuards.«local».function : Ariadne.Function := { name := "local",   params := [{ name := "a", ty := Ariadne.Ty.bigint, span := { start := 846, stop := 847 } },              { name := "b", ty := Ariadne.Ty.bigint, span := { start := 857, stop := 858 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.let_                false                "sum"                none                (Ariadne.Expr.binary                  "+"                  (Ariadne.Expr.var "a" { start := 892, stop := 893 })                  (Ariadne.Expr.var "b" { start := 896, stop := 897 })                  { start := 892, stop := 897 })                { start := 880, stop := 885 },              Ariadne.Stmt.let_                false                "doubled"                none                (Ariadne.Expr.binary                  "*"                  (Ariadne.Expr.var "sum" { start := 917, stop := 920 })                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 2) { start := 923, stop := 925 })                  { start := 917, stop := 925 })                { start := 901, stop := 906 },              Ariadne.Stmt.return_                (Ariadne.Expr.var "doubled" { start := 936, stop := 943 })                { start := 929, stop := 935 }]             { start := 876, stop := 946 },   exported := true,   decreases := none,   span := { start := 831, stop := 839 } }
+
+def EntryGuards.«local».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«local».planned : Ownership.entryPlan _root_.Extracted_source.program EntryGuards.«local».function = .ok EntryGuards.«local».plan := by kernel_rfl
+
+def EntryGuards.«local».certificate : Ownership.EntryCertificate _root_.Extracted_source.Wrapper.certificate "local" :=
+  ⟨EntryGuards.«local».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«local».plan, EntryGuards.«local».planned⟩
+
+def «local».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_source.program EntryGuards.«local».plan heap args
+
+def «local».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_source.program EntryGuards.«local».plan fuel state "local" args
 
 theorem DenotationChecks.«local» :
     (fun env : Core.Env CoreArtifacts.«local».params Interpretation.value => «local» (env.1) (env.2.1)) =
@@ -1298,6 +1569,21 @@ def «early» («_value#arg» : _root_.Int) : _root_.Int :=
 abbrev «early».safe («_value#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«early» (by decide) («_value#arg», ())
 
+def EntryGuards.«early».function : Ariadne.Function := { name := "early",   params := [{ name := "value", ty := Ariadne.Ty.bigint, span := { start := 970, stop := 975 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.if_                (Ariadne.Expr.binary                  "<"                  (Ariadne.Expr.var "value" { start := 1001, stop := 1006 })                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 1009, stop := 1011 })                  { start := 1001, stop := 1011 })                (Ariadne.Stmt.block                  [Ariadne.Stmt.return_                     (Ariadne.Expr.unary                       "-"                       (Ariadne.Expr.var "value" { start := 1023, stop := 1028 })                       { start := 1022, stop := 1023 })                     { start := 1015, stop := 1021 }]                  { start := 1013, stop := 1031 })                (Ariadne.Stmt.block [] { start := 997, stop := 999 })                { start := 997, stop := 999 },              Ariadne.Stmt.return_                (Ariadne.Expr.var "value" { start := 1041, stop := 1046 })                { start := 1034, stop := 1040 }]             { start := 993, stop := 1049 },   exported := true,   decreases := none,   span := { start := 955, stop := 963 } }
+
+def EntryGuards.«early».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«early».planned : Ownership.entryPlan _root_.Extracted_source.program EntryGuards.«early».function = .ok EntryGuards.«early».plan := by kernel_rfl
+
+def EntryGuards.«early».certificate : Ownership.EntryCertificate _root_.Extracted_source.Wrapper.certificate "early" :=
+  ⟨EntryGuards.«early».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«early».plan, EntryGuards.«early».planned⟩
+
+def «early».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_source.program EntryGuards.«early».plan heap args
+
+def «early».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_source.program EntryGuards.«early».plan fuel state "early" args
+
 theorem DenotationChecks.«early» :
     (fun env : Core.Env CoreArtifacts.«early».params Interpretation.value => «early» (env.1)) =
       Denote.function (interp := Interpretation.value) CoreArtifacts.«early» := by
@@ -1344,6 +1630,21 @@ def «branchLocal» («_flag#arg» : _root_.Bool) («_a#arg» : _root_.Int) («_
 
 abbrev «branchLocal».safe («_flag#arg» : _root_.Bool) («_a#arg» : _root_.Int) («_b#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«branchLocal» (by decide) («_flag#arg», («_a#arg», («_b#arg», ())))
+
+def EntryGuards.«branchLocal».function : Ariadne.Function := { name := "branchLocal",   params := [{ name := "flag", ty := Ariadne.Ty.boolean, span := { start := 1079, stop := 1083 } },              { name := "a", ty := Ariadne.Ty.bigint, span := { start := 1094, stop := 1095 } },              { name := "b", ty := Ariadne.Ty.bigint, span := { start := 1105, stop := 1106 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.if_                (Ariadne.Expr.var "flag" { start := 1132, stop := 1136 })                (Ariadne.Stmt.block                  [Ariadne.Stmt.let_                     false                     "sum"                     none                     (Ariadne.Expr.binary                       "+"                       (Ariadne.Expr.var "a" { start := 1156, stop := 1157 })                       (Ariadne.Expr.var "b" { start := 1160, stop := 1161 })                       { start := 1156, stop := 1161 })                     { start := 1144, stop := 1149 },                   Ariadne.Stmt.return_                     (Ariadne.Expr.var "sum" { start := 1174, stop := 1177 })                     { start := 1167, stop := 1173 }]                  { start := 1138, stop := 1182 })                (Ariadne.Stmt.block [] { start := 1128, stop := 1130 })                { start := 1128, stop := 1130 },              Ariadne.Stmt.let_                false                "difference"                none                (Ariadne.Expr.binary                  "-"                  (Ariadne.Expr.var "a" { start := 1204, stop := 1205 })                  (Ariadne.Expr.var "b" { start := 1208, stop := 1209 })                  { start := 1204, stop := 1209 })                { start := 1185, stop := 1190 },              Ariadne.Stmt.return_                (Ariadne.Expr.var "difference" { start := 1220, stop := 1230 })                { start := 1213, stop := 1219 }]             { start := 1124, stop := 1233 },   exported := true,   decreases := none,   span := { start := 1058, stop := 1066 } }
+
+def EntryGuards.«branchLocal».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«branchLocal».planned : Ownership.entryPlan _root_.Extracted_source.program EntryGuards.«branchLocal».function = .ok EntryGuards.«branchLocal».plan := by kernel_rfl
+
+def EntryGuards.«branchLocal».certificate : Ownership.EntryCertificate _root_.Extracted_source.Wrapper.certificate "branchLocal" :=
+  ⟨EntryGuards.«branchLocal».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«branchLocal».plan, EntryGuards.«branchLocal».planned⟩
+
+def «branchLocal».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_source.program EntryGuards.«branchLocal».plan heap args
+
+def «branchLocal».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_source.program EntryGuards.«branchLocal».plan fuel state "branchLocal" args
 
 theorem DenotationChecks.«branchLocal» :
     (fun env : Core.Env CoreArtifacts.«branchLocal».params Interpretation.value => «branchLocal» (env.1) (env.2.1) (env.2.2.1)) =
@@ -1406,6 +1707,21 @@ def «nested» («_flag#arg» : _root_.Bool) («_other#arg» : _root_.Bool) («_
 abbrev «nested».safe («_flag#arg» : _root_.Bool) («_other#arg» : _root_.Bool) («_value#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«nested» (by decide) («_flag#arg», («_other#arg», («_value#arg», ())))
 
+def EntryGuards.«nested».function : Ariadne.Function := { name := "nested",   params := [{ name := "flag", ty := Ariadne.Ty.boolean, span := { start := 1258, stop := 1262 } },              { name := "other", ty := Ariadne.Ty.boolean, span := { start := 1273, stop := 1278 } },              { name := "value", ty := Ariadne.Ty.bigint, span := { start := 1289, stop := 1294 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.if_                (Ariadne.Expr.var "flag" { start := 1320, stop := 1324 })                (Ariadne.Stmt.block                  [Ariadne.Stmt.if_                     (Ariadne.Expr.var "other" { start := 1336, stop := 1341 })                     (Ariadne.Stmt.block                       [Ariadne.Stmt.return_                          (Ariadne.Expr.var "value" { start := 1352, stop := 1357 })                          { start := 1345, stop := 1351 }]                       { start := 1343, stop := 1360 })                     (Ariadne.Stmt.block [] { start := 1332, stop := 1334 })                     { start := 1332, stop := 1334 },                   Ariadne.Stmt.return_                     (Ariadne.Expr.unary                       "-"                       (Ariadne.Expr.var "value" { start := 1373, stop := 1378 })                       { start := 1372, stop := 1373 })                     { start := 1365, stop := 1371 }]                  { start := 1326, stop := 1383 })                (Ariadne.Stmt.block [] { start := 1316, stop := 1318 })                { start := 1316, stop := 1318 },              Ariadne.Stmt.return_                (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 1393, stop := 1395 })                { start := 1386, stop := 1392 }]             { start := 1312, stop := 1398 },   exported := true,   decreases := none,   span := { start := 1242, stop := 1250 } }
+
+def EntryGuards.«nested».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«nested».planned : Ownership.entryPlan _root_.Extracted_source.program EntryGuards.«nested».function = .ok EntryGuards.«nested».plan := by kernel_rfl
+
+def EntryGuards.«nested».certificate : Ownership.EntryCertificate _root_.Extracted_source.Wrapper.certificate "nested" :=
+  ⟨EntryGuards.«nested».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«nested».plan, EntryGuards.«nested».planned⟩
+
+def «nested».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_source.program EntryGuards.«nested».plan heap args
+
+def «nested».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_source.program EntryGuards.«nested».plan fuel state "nested" args
+
 theorem DenotationChecks.«nested» :
     (fun env : Core.Env CoreArtifacts.«nested».params Interpretation.value => «nested» (env.1) (env.2.1) (env.2.2.1)) =
       Denote.function (interp := Interpretation.value) CoreArtifacts.«nested» := by
@@ -1463,6 +1779,21 @@ def «reassign» («_value#arg» : _root_.Int) («_delta#arg» : _root_.Int) : _
 abbrev «reassign».safe («_value#arg» : _root_.Int) («_delta#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«reassign» (by decide) («_value#arg», («_delta#arg», ()))
 
+def EntryGuards.«reassign».function : Ariadne.Function := { name := "reassign",   params := [{ name := "value", ty := Ariadne.Ty.bigint, span := { start := 1425, stop := 1430 } },              { name := "delta", ty := Ariadne.Ty.bigint, span := { start := 1440, stop := 1445 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.assign                (Ariadne.Expr.var "value" { start := 1467, stop := 1472 })                (Ariadne.Expr.binary                  "+"                  (Ariadne.Expr.var "value" { start := 1475, stop := 1480 })                  (Ariadne.Expr.var "delta" { start := 1483, stop := 1488 })                  { start := 1475, stop := 1488 })                { start := 1467, stop := 1472 },              Ariadne.Stmt.assign                (Ariadne.Expr.var "value" { start := 1492, stop := 1497 })                (Ariadne.Expr.binary                  "*"                  (Ariadne.Expr.var "value" { start := 1500, stop := 1505 })                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 2) { start := 1508, stop := 1510 })                  { start := 1500, stop := 1510 })                { start := 1492, stop := 1497 },              Ariadne.Stmt.return_                (Ariadne.Expr.var "value" { start := 1521, stop := 1526 })                { start := 1514, stop := 1520 }]             { start := 1463, stop := 1529 },   exported := true,   decreases := none,   span := { start := 1407, stop := 1415 } }
+
+def EntryGuards.«reassign».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«reassign».planned : Ownership.entryPlan _root_.Extracted_source.program EntryGuards.«reassign».function = .ok EntryGuards.«reassign».plan := by kernel_rfl
+
+def EntryGuards.«reassign».certificate : Ownership.EntryCertificate _root_.Extracted_source.Wrapper.certificate "reassign" :=
+  ⟨EntryGuards.«reassign».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«reassign».plan, EntryGuards.«reassign».planned⟩
+
+def «reassign».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_source.program EntryGuards.«reassign».plan heap args
+
+def «reassign».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_source.program EntryGuards.«reassign».plan fuel state "reassign" args
+
 theorem DenotationChecks.«reassign» :
     (fun env : Core.Env CoreArtifacts.«reassign».params Interpretation.value => «reassign» (env.1) (env.2.1)) =
       Denote.function (interp := Interpretation.value) CoreArtifacts.«reassign» := by
@@ -1513,6 +1844,21 @@ def «preserveOther» («_value#arg» : _root_.Int) : _root_.Int :=
 abbrev «preserveOther».safe («_value#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«preserveOther» (by decide) («_value#arg», ())
 
+def EntryGuards.«preserveOther».function : Ariadne.Function := { name := "preserveOther",   params := [{ name := "value", ty := Ariadne.Ty.bigint, span := { start := 1561, stop := 1566 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.let_                false                "saved"                none                (Ariadne.Expr.var "value" { start := 1602, stop := 1607 })                { start := 1588, stop := 1593 },              Ariadne.Stmt.assign                (Ariadne.Expr.var "value" { start := 1611, stop := 1616 })                (Ariadne.Expr.binary                  "+"                  (Ariadne.Expr.var "value" { start := 1619, stop := 1624 })                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 1627, stop := 1629 })                  { start := 1619, stop := 1629 })                { start := 1611, stop := 1616 },              Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "+"                  (Ariadne.Expr.var "saved" { start := 1640, stop := 1645 })                  (Ariadne.Expr.var "value" { start := 1648, stop := 1653 })                  { start := 1640, stop := 1653 })                { start := 1633, stop := 1639 }]             { start := 1584, stop := 1656 },   exported := true,   decreases := none,   span := { start := 1538, stop := 1546 } }
+
+def EntryGuards.«preserveOther».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«preserveOther».planned : Ownership.entryPlan _root_.Extracted_source.program EntryGuards.«preserveOther».function = .ok EntryGuards.«preserveOther».plan := by kernel_rfl
+
+def EntryGuards.«preserveOther».certificate : Ownership.EntryCertificate _root_.Extracted_source.Wrapper.certificate "preserveOther" :=
+  ⟨EntryGuards.«preserveOther».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«preserveOther».plan, EntryGuards.«preserveOther».planned⟩
+
+def «preserveOther».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_source.program EntryGuards.«preserveOther».plan heap args
+
+def «preserveOther».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_source.program EntryGuards.«preserveOther».plan fuel state "preserveOther" args
+
 theorem DenotationChecks.«preserveOther» :
     (fun env : Core.Env CoreArtifacts.«preserveOther».params Interpretation.value => «preserveOther» (env.1)) =
       Denote.function (interp := Interpretation.value) CoreArtifacts.«preserveOther» := by
@@ -1559,6 +1905,21 @@ def «branchAssign» («_value#arg» : _root_.Int) : _root_.Int :=
 abbrev «branchAssign».safe («_value#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«branchAssign» (by decide) («_value#arg», ())
 
+def EntryGuards.«branchAssign».function : Ariadne.Function := { name := "branchAssign",   params := [{ name := "value", ty := Ariadne.Ty.bigint, span := { start := 1687, stop := 1692 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.if_                (Ariadne.Expr.binary                  "<"                  (Ariadne.Expr.var "value" { start := 1718, stop := 1723 })                  (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 1726, stop := 1728 })                  { start := 1718, stop := 1728 })                (Ariadne.Stmt.block                  [Ariadne.Stmt.assign                     (Ariadne.Expr.var "value" { start := 1736, stop := 1741 })                     (Ariadne.Expr.unary                       "-"                       (Ariadne.Expr.var "value" { start := 1745, stop := 1750 })                       { start := 1744, stop := 1745 })                     { start := 1736, stop := 1741 },                   Ariadne.Stmt.return_                     (Ariadne.Expr.var "value" { start := 1763, stop := 1768 })                     { start := 1756, stop := 1762 }]                  { start := 1730, stop := 1773 })                (Ariadne.Stmt.block [] { start := 1714, stop := 1716 })                { start := 1714, stop := 1716 },              Ariadne.Stmt.return_                (Ariadne.Expr.var "value" { start := 1783, stop := 1788 })                { start := 1776, stop := 1782 }]             { start := 1710, stop := 1791 },   exported := true,   decreases := none,   span := { start := 1665, stop := 1673 } }
+
+def EntryGuards.«branchAssign».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«branchAssign».planned : Ownership.entryPlan _root_.Extracted_source.program EntryGuards.«branchAssign».function = .ok EntryGuards.«branchAssign».plan := by kernel_rfl
+
+def EntryGuards.«branchAssign».certificate : Ownership.EntryCertificate _root_.Extracted_source.Wrapper.certificate "branchAssign" :=
+  ⟨EntryGuards.«branchAssign».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«branchAssign».plan, EntryGuards.«branchAssign».planned⟩
+
+def «branchAssign».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_source.program EntryGuards.«branchAssign».plan heap args
+
+def «branchAssign».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_source.program EntryGuards.«branchAssign».plan fuel state "branchAssign" args
+
 theorem DenotationChecks.«branchAssign» :
     (fun env : Core.Env CoreArtifacts.«branchAssign».params Interpretation.value => «branchAssign» (env.1)) =
       Denote.function (interp := Interpretation.value) CoreArtifacts.«branchAssign» := by
@@ -1601,6 +1962,21 @@ def «reassignString» («_value#arg» : _root_.Ariadne.JSString) («_suffix#arg
 
 abbrev «reassignString».safe («_value#arg» : _root_.Ariadne.JSString) («_suffix#arg» : _root_.Ariadne.JSString) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«reassignString» (by decide) («_value#arg», («_suffix#arg», ()))
+
+def EntryGuards.«reassignString».function : Ariadne.Function := { name := "reassignString",   params := [{ name := "value", ty := Ariadne.Ty.string, span := { start := 1824, stop := 1829 } },              { name := "suffix", ty := Ariadne.Ty.string, span := { start := 1839, stop := 1845 } }],   result := Ariadne.Ty.string,   body := Ariadne.Stmt.block             [Ariadne.Stmt.assign                (Ariadne.Expr.var "value" { start := 1867, stop := 1872 })                (Ariadne.Expr.binary                  "+"                  (Ariadne.Expr.var "value" { start := 1875, stop := 1880 })                  (Ariadne.Expr.var "suffix" { start := 1883, stop := 1889 })                  { start := 1875, stop := 1889 })                { start := 1867, stop := 1872 },              Ariadne.Stmt.return_                (Ariadne.Expr.var "value" { start := 1900, stop := 1905 })                { start := 1893, stop := 1899 }]             { start := 1863, stop := 1908 },   exported := true,   decreases := none,   span := { start := 1800, stop := 1808 } }
+
+def EntryGuards.«reassignString».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«reassignString».planned : Ownership.entryPlan _root_.Extracted_source.program EntryGuards.«reassignString».function = .ok EntryGuards.«reassignString».plan := by kernel_rfl
+
+def EntryGuards.«reassignString».certificate : Ownership.EntryCertificate _root_.Extracted_source.Wrapper.certificate "reassignString" :=
+  ⟨EntryGuards.«reassignString».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«reassignString».plan, EntryGuards.«reassignString».planned⟩
+
+def «reassignString».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_source.program EntryGuards.«reassignString».plan heap args
+
+def «reassignString».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_source.program EntryGuards.«reassignString».plan fuel state "reassignString" args
 
 theorem DenotationChecks.«reassignString» :
     (fun env : Core.Env CoreArtifacts.«reassignString».params Interpretation.value => «reassignString» (env.1) (env.2.1)) =

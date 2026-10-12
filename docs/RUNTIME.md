@@ -14,10 +14,17 @@ A claim about native TypeScript needs the following host assumptions:
    or instances of the declared classes
    of the declared shapes. They are not subclasses, proxies, accessors, sparse arrays,
    or objects with own method overrides. Mutable nested values have disjoint owned
-   footprints; shared readonly values are never written. Class method definitions
+   footprints; shared readonly values are never written. Class instances come
+   from the checked constructors and retain their encapsulation. Class method definitions
    and their prototypes remain fixed. Map and Set keys are scalar values.
-3. Reference parameters are mutually disjoint and exclusively borrowed for the call.
-   The outside host must not retain an active alias that mutates during execution.
+3. Reference parameters are exclusively borrowed for the call. Use the generated
+   `.runtime.ts` entry wrappers: they throw `TypeError` on overlapping argument
+   pairs involving a mutated argument before running the implementation. Flat
+   arguments use root identity; possible containment in either direction uses
+   a deep reference search. Encapsulated private fields are not traversed.
+   Calls to the original unwrapped source must establish argument separation
+   themselves. The outside host must not retain an active alias that mutates
+   during execution. The checks do not detect proxies or replace assumptions 1–2.
 4. Array writes use nonnegative integer indices no larger than the current length,
    within the native array-index limit. A successful model execution establishes
    this for that execution. Static acceptance alone does not.

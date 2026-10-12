@@ -138,9 +138,21 @@ private def process (args : List String) : IO UInt32 := do
         return 1
     else pure (emit text program namespace_)
   if command == "extract" then
+    let runtime ← match Ownership.Wrap.emit text program with
+      | .ok runtime => pure runtime
+      | .error d =>
+        if args.contains "--json" then IO.println ((d.toJson source).compress)
+        else IO.eprint (d.render source)
+        return 1
+    let runtimePath := outputPath.withExtension "runtime.ts"
+    if ← runtimePath.pathExists then
+      if (← IO.FS.realPath runtimePath) == (← IO.FS.realPath path) then
+        IO.eprintln "Refusing to overwrite the TypeScript source with an entry wrapper"
+        return 2
     if args.contains "--no-check" then
       if let some parent := outputPath.parent then IO.FS.createDirAll parent
       IO.FS.writeFile outputPath artifact
+      IO.FS.writeFile runtimePath runtime
       IO.println s!"Wrote {out}. This shallow candidate has not been kernel-checked."
       return 0
     -- Check a temporary candidate before touching an existing output file.
@@ -155,7 +167,8 @@ private def process (args : List String) : IO UInt32 := do
       return 1
     if let some parent := outputPath.parent then IO.FS.createDirAll parent
     IO.FS.writeFile outputPath artifact
-    IO.println s!"Certified shallow denotation: {out}. Source-transfer theorems are included for proved fragments."
+    IO.FS.writeFile runtimePath runtime
+    IO.println s!"Certified shallow denotation: {out}. Entry wrapper: {runtimePath}. Source-transfer theorems are included for proved fragments."
     return 0
   if let some parent := outputPath.parent then IO.FS.createDirAll parent
   IO.FS.writeFile outputPath artifact

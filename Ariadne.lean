@@ -32,3 +32,4 @@ import Ariadne.Shallow.Adequacy.GuardedJoinsContext
 import Ariadne.Shallow.Safety.Structural
 import Ariadne.Shallow.Adequacy.ReadExpr
 import Ariadne.Shallow.Adequacy.Ownership
+import Ariadne.Ownership.Sound

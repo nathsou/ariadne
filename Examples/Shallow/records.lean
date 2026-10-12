@@ -6,6 +6,7 @@ import Ariadne.Shallow.Adequacy.Statements
 import Ariadne.Shallow.Adequacy.GuardedStatements
 import Ariadne.Shallow.Adequacy.JoinsContext
 import Ariadne.Shallow.Adequacy.GuardedJoinsContext
+import Ariadne.Ownership.Source
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
@@ -524,6 +525,84 @@ theorem ts_empty_source {fuel : Nat} {args : List Value} {value : Value}
 
 end Extracted_records
 
+namespace Extracted_records.Wrapper
+open Ariadne
+
+def source : String := "// Generated ownership entry wrappers. Requires the Ariadne pristine realm contract.\ntype Point = {\n  readonly x: bigint;\n  readonly label: string;\n  readonly weight?: bigint;\n};\n\ntype Tagged = { readonly kind: 'ok'; readonly payload: bigint };\ntype Weird = { readonly length: bigint; readonly size: string; readonly rec: bigint };\ntype Empty = {};\n\nexport function make(x: bigint, label: string): Point {\n  return { x: x, label: label, weight: undefined };\n}\n\nexport function sum(points: readonly Point[]): bigint {\n  let total = 0n;\n  for (const point of points) { total += point.x + (point.weight ?? 0n); }\n  return total;\n}\n\nexport function find(points: readonly Point[], floor: bigint): Point | undefined {\n  return points.find((point: Point) => point.x >= floor);\n}\n\nexport function relabel(point: Point, label: string): Point {\n  return { x: point.x, label: label, weight: point.weight };\n}\n\nexport function tagged(value: bigint): Tagged { return { kind: 'ok', payload: value }; }\nexport function tagName(value: Tagged): string { return value.kind; }\n\nexport function weird(length: bigint): Weird { return { length: length, size: 'abc', rec: 2n }; }\nexport function fields(value: Weird): bigint { return value.length + value.rec; }\n\nexport function duplicate(): Point { return { x: 1n, x: 2n, label: 'last' }; }\nexport function empty(): Empty { return {}; }\n"
+
+def characters : List Char := ['/', '/', ' ', 'G', 'e', 'n', 'e', 'r', 'a', 't', 'e', 'd', ' ', 'o', 'w', 'n', 'e', 'r', 's', 'h', 'i', 'p', ' ', 'e',
+ 'n', 't', 'r', 'y', ' ', 'w', 'r', 'a', 'p', 'p', 'e', 'r', 's', '.', ' ', 'R', 'e', 'q', 'u', 'i', 'r', 'e', 's', ' ',
+ 't', 'h', 'e', ' ', 'A', 'r', 'i', 'a', 'd', 'n', 'e', ' ', 'p', 'r', 'i', 's', 't', 'i', 'n', 'e', ' ', 'r', 'e', 'a',
+ 'l', 'm', ' ', 'c', 'o', 'n', 't', 'r', 'a', 'c', 't', '.', '\n', 't', 'y', 'p', 'e', ' ', 'P', 'o', 'i', 'n', 't',
+ ' ', '=', ' ', '{', '\n', ' ', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'x', ':', ' ', 'b', 'i', 'g', 'i',
+ 'n', 't', ';', '\n', ' ', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'l', 'a', 'b', 'e', 'l', ':', ' ', 's',
+ 't', 'r', 'i', 'n', 'g', ';', '\n', ' ', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'w', 'e', 'i', 'g', 'h',
+ 't', '?', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ';', '\n', '}', ';', '\n', '\n', 't', 'y', 'p', 'e', ' ', 'T', 'a',
+ 'g', 'g', 'e', 'd', ' ', '=', ' ', '{', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'k', 'i', 'n', 'd', ':', ' ',
+ '\'', 'o', 'k', '\'', ';', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'p', 'a', 'y', 'l', 'o', 'a', 'd', ':',
+ ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '}', ';', '\n', 't', 'y', 'p', 'e', ' ', 'W', 'e', 'i', 'r', 'd', ' ', '=',
+ ' ', '{', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'l', 'e', 'n', 'g', 't', 'h', ':', ' ', 'b', 'i', 'g', 'i',
+ 'n', 't', ';', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 's', 'i', 'z', 'e', ':', ' ', 's', 't', 'r', 'i', 'n',
+ 'g', ';', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'r', 'e', 'c', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ',
+ '}', ';', '\n', 't', 'y', 'p', 'e', ' ', 'E', 'm', 'p', 't', 'y', ' ', '=', ' ', '{', '}', ';', '\n', '\n', 'e', 'x',
+ 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'm', 'a', 'k', 'e', '(', 'x', ':', ' ', 'b', 'i',
+ 'g', 'i', 'n', 't', ',', ' ', 'l', 'a', 'b', 'e', 'l', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ')', ':', ' ', 'P', 'o',
+ 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '{', ' ', 'x', ':', ' ', 'x', ',', ' ',
+ 'l', 'a', 'b', 'e', 'l', ':', ' ', 'l', 'a', 'b', 'e', 'l', ',', ' ', 'w', 'e', 'i', 'g', 'h', 't', ':', ' ', 'u', 'n',
+ 'd', 'e', 'f', 'i', 'n', 'e', 'd', ' ', '}', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u',
+ 'n', 'c', 't', 'i', 'o', 'n', ' ', 's', 'u', 'm', '(', 'p', 'o', 'i', 'n', 't', 's', ':', ' ', 'r', 'e', 'a', 'd', 'o',
+ 'n', 'l', 'y', ' ', 'P', 'o', 'i', 'n', 't', '[', ']', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n',
+ ' ', ' ', 'l', 'e', 't', ' ', 't', 'o', 't', 'a', 'l', ' ', '=', ' ', '0', 'n', ';', '\n', ' ', ' ', 'f', 'o', 'r',
+ ' ', '(', 'c', 'o', 'n', 's', 't', ' ', 'p', 'o', 'i', 'n', 't', ' ', 'o', 'f', ' ', 'p', 'o', 'i', 'n', 't', 's', ')',
+ ' ', '{', ' ', 't', 'o', 't', 'a', 'l', ' ', '+', '=', ' ', 'p', 'o', 'i', 'n', 't', '.', 'x', ' ', '+', ' ', '(', 'p',
+ 'o', 'i', 'n', 't', '.', 'w', 'e', 'i', 'g', 'h', 't', ' ', '?', '?', ' ', '0', 'n', ')', ';', ' ', '}', '\n', ' ',
+ ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 't', 'o', 't', 'a', 'l', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r',
+ 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'f', 'i', 'n', 'd', '(', 'p', 'o', 'i', 'n', 't', 's', ':', ' ',
+ 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'P', 'o', 'i', 'n', 't', '[', ']', ',', ' ', 'f', 'l', 'o', 'o', 'r', ':',
+ ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'P', 'o', 'i', 'n', 't', ' ', '|', ' ', 'u', 'n', 'd', 'e', 'f', 'i',
+ 'n', 'e', 'd', ' ', '{', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'p', 'o', 'i', 'n', 't', 's', '.', 'f',
+ 'i', 'n', 'd', '(', '(', 'p', 'o', 'i', 'n', 't', ':', ' ', 'P', 'o', 'i', 'n', 't', ')', ' ', '=', '>', ' ', 'p', 'o',
+ 'i', 'n', 't', '.', 'x', ' ', '>', '=', ' ', 'f', 'l', 'o', 'o', 'r', ')', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p',
+ 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'r', 'e', 'l', 'a', 'b', 'e', 'l', '(', 'p', 'o', 'i',
+ 'n', 't', ':', ' ', 'P', 'o', 'i', 'n', 't', ',', ' ', 'l', 'a', 'b', 'e', 'l', ':', ' ', 's', 't', 'r', 'i', 'n', 'g',
+ ')', ':', ' ', 'P', 'o', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '{', ' ', 'x',
+ ':', ' ', 'p', 'o', 'i', 'n', 't', '.', 'x', ',', ' ', 'l', 'a', 'b', 'e', 'l', ':', ' ', 'l', 'a', 'b', 'e', 'l', ',',
+ ' ', 'w', 'e', 'i', 'g', 'h', 't', ':', ' ', 'p', 'o', 'i', 'n', 't', '.', 'w', 'e', 'i', 'g', 'h', 't', ' ', '}', ';',
+ '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 't', 'a', 'g',
+ 'g', 'e', 'd', '(', 'v', 'a', 'l', 'u', 'e', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'T', 'a', 'g', 'g',
+ 'e', 'd', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '{', ' ', 'k', 'i', 'n', 'd', ':', ' ', '\'', 'o', 'k',
+ '\'', ',', ' ', 'p', 'a', 'y', 'l', 'o', 'a', 'd', ':', ' ', 'v', 'a', 'l', 'u', 'e', ' ', '}', ';', ' ', '}', '\n',
+ 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 't', 'a', 'g', 'N', 'a', 'm', 'e', '(',
+ 'v', 'a', 'l', 'u', 'e', ':', ' ', 'T', 'a', 'g', 'g', 'e', 'd', ')', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ' ', '{',
+ ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'v', 'a', 'l', 'u', 'e', '.', 'k', 'i', 'n', 'd', ';', ' ', '}', '\n', '\n',
+ 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'w', 'e', 'i', 'r', 'd', '(', 'l', 'e',
+ 'n', 'g', 't', 'h', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'W', 'e', 'i', 'r', 'd', ' ', '{', ' ', 'r',
+ 'e', 't', 'u', 'r', 'n', ' ', '{', ' ', 'l', 'e', 'n', 'g', 't', 'h', ':', ' ', 'l', 'e', 'n', 'g', 't', 'h', ',', ' ',
+ 's', 'i', 'z', 'e', ':', ' ', '\'', 'a', 'b', 'c', '\'', ',', ' ', 'r', 'e', 'c', ':', ' ', '2', 'n', ' ', '}', ';',
+ ' ', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'f', 'i', 'e', 'l',
+ 'd', 's', '(', 'v', 'a', 'l', 'u', 'e', ':', ' ', 'W', 'e', 'i', 'r', 'd', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't',
+ ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'v', 'a', 'l', 'u', 'e', '.', 'l', 'e', 'n', 'g', 't', 'h', ' ', '+',
+ ' ', 'v', 'a', 'l', 'u', 'e', '.', 'r', 'e', 'c', ';', ' ', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f',
+ 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'd', 'u', 'p', 'l', 'i', 'c', 'a', 't', 'e', '(', ')', ':', ' ', 'P', 'o', 'i',
+ 'n', 't', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '{', ' ', 'x', ':', ' ', '1', 'n', ',', ' ', 'x', ':', ' ',
+ '2', 'n', ',', ' ', 'l', 'a', 'b', 'e', 'l', ':', ' ', '\'', 'l', 'a', 's', 't', '\'', ' ', '}', ';', ' ', '}', '\n',
+ 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'e', 'm', 'p', 't', 'y', '(', ')', ':',
+ ' ', 'E', 'm', 'p', 't', 'y', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '{', '}', ';', ' ', '}', '\n']
+
+theorem characters_encoded : String.ofList characters = source := by kernel_rfl
+
+theorem rendered : Ownership.Wrap.emitCharacterData
+    _root_.Extracted_records.characters _root_.Extracted_records.tokens.toList _root_.Extracted_records.program = .ok characters := by kernel_rfl
+
+theorem checked : Ownership.Wrap.emit _root_.Extracted_records.source _root_.Extracted_records.program = .ok source :=
+  (Ownership.Wrap.emit_checked _root_.Extracted_records.characters_checked _root_.Extracted_records.lex_checked rendered).trans
+    (congrArg Except.ok characters_encoded)
+
+def certificate : Ownership.WrapperCertificate _root_.Extracted_records.source :=
+  ⟨_root_.Extracted_records.certificate, source, checked⟩
+
+end Extracted_records.Wrapper
+
 -- Shallow denotation certificates. Source transfer is emitted for proved fragments.
 namespace Extracted_records.Shallow
 open Ariadne Ariadne.Shallow
@@ -636,6 +715,21 @@ def «make» («_x#arg» : _root_.Int) («_label#arg» : _root_.Ariadne.JSString
 abbrev «make».safe («_x#arg» : _root_.Int) («_label#arg» : _root_.Ariadne.JSString) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«make» (by decide) («_x#arg», («_label#arg», ()))
 
+def EntryGuards.«make».function : Ariadne.Function := { name := "make",   params := [{ name := "x", ty := Ariadne.Ty.bigint, span := { start := 286, stop := 287 } },              { name := "label", ty := Ariadne.Ty.string, span := { start := 297, stop := 302 } }],   result := Ariadne.Ty.named "Point",   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.record                  [("x", Ariadne.Expr.var "x" { start := 335, stop := 336 }),                   ("label", Ariadne.Expr.var "label" { start := 345, stop := 350 }),                   ("weight", Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 360, stop := 369 })]                  { start := 330, stop := 371 })                { start := 323, stop := 329 }]             { start := 319, stop := 374 },   exported := true,   decreases := none,   span := { start := 272, stop := 280 } }
+
+def EntryGuards.«make».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«make».planned : Ownership.entryPlan _root_.Extracted_records.program EntryGuards.«make».function = .ok EntryGuards.«make».plan := by kernel_rfl
+
+def EntryGuards.«make».certificate : Ownership.EntryCertificate _root_.Extracted_records.Wrapper.certificate "make" :=
+  ⟨EntryGuards.«make».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«make».plan, EntryGuards.«make».planned⟩
+
+def «make».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_records.program EntryGuards.«make».plan heap args
+
+def «make».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_records.program EntryGuards.«make».plan fuel state "make" args
+
 theorem DenotationChecks.«make» :
     (fun env : Core.Env CoreArtifacts.«make».params Interpretation.value => «make» (env.1) (env.2.1)) =
       Denote.function (interp := Interpretation.value) CoreArtifacts.«make» := by
@@ -731,6 +825,21 @@ def «sum» («_points#arg» : (_root_.List NativeTypes.«Point»)) : _root_.Int
 abbrev «sum».safe («_points#arg» : (_root_.List NativeTypes.«Point»)) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«sum» (by decide) («_points#arg», ())
 
+def EntryGuards.«sum».function : Ariadne.Function := { name := "sum",   params := [{ name := "points",                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.named "Point")),                span := { start := 396, stop := 402 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.let_                true                "total"                none                (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 446, stop := 448 })                { start := 434, stop := 437 },              Ariadne.Stmt.forOf                false                "point"                (Ariadne.Expr.var "points" { start := 472, stop := 478 })                (Ariadne.Stmt.block                  [Ariadne.Stmt.assign                     (Ariadne.Expr.var "total" { start := 482, stop := 487 })                     (Ariadne.Expr.binary                       "+"                       (Ariadne.Expr.var "total" { start := 482, stop := 487 })                       (Ariadne.Expr.binary                         "+"                         (Ariadne.Expr.member                           (Ariadne.Expr.var "point" { start := 491, stop := 496 })                           "x"                           { start := 491, stop := 498 })                         (Ariadne.Expr.binary                           "??"                           (Ariadne.Expr.member                             (Ariadne.Expr.var "point" { start := 502, stop := 507 })                             "weight"                             { start := 502, stop := 514 })                           (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 518, stop := 520 })                           { start := 502, stop := 520 })                         { start := 491, stop := 520 })                       { start := 488, stop := 490 })                     { start := 482, stop := 487 }]                  { start := 480, stop := 524 })                { start := 452, stop := 455 },              Ariadne.Stmt.return_                (Ariadne.Expr.var "total" { start := 534, stop := 539 })                { start := 527, stop := 533 }]             { start := 430, stop := 542 },   exported := true,   decreases := none,   span := { start := 383, stop := 391 } }
+
+def EntryGuards.«sum».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«sum».planned : Ownership.entryPlan _root_.Extracted_records.program EntryGuards.«sum».function = .ok EntryGuards.«sum».plan := by kernel_rfl
+
+def EntryGuards.«sum».certificate : Ownership.EntryCertificate _root_.Extracted_records.Wrapper.certificate "sum" :=
+  ⟨EntryGuards.«sum».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«sum».plan, EntryGuards.«sum».planned⟩
+
+def «sum».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_records.program EntryGuards.«sum».plan heap args
+
+def «sum».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_records.program EntryGuards.«sum».plan fuel state "sum" args
+
 theorem DenotationChecks.«sum» :
     (fun env : Core.Env CoreArtifacts.«sum».params Interpretation.value => «sum» (env.1)) =
       Denote.function (interp := Interpretation.value) CoreArtifacts.«sum» := by
@@ -747,6 +856,21 @@ def «find» («_points#arg» : (_root_.List NativeTypes.«Point»)) («_floor#a
 
 abbrev «find».safe («_points#arg» : (_root_.List NativeTypes.«Point»)) («_floor#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«find» (by decide) («_points#arg», («_floor#arg», ()))
+
+def EntryGuards.«find».function : Ariadne.Function := { name := "find",   params := [{ name := "points",                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.named "Point")),                span := { start := 565, stop := 571 } },              { name := "floor", ty := Ariadne.Ty.bigint, span := { start := 591, stop := 596 } }],   result := Ariadne.Ty.union (Ariadne.Ty.named "Point") (Ariadne.Ty.undefined),   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.call                  (Ariadne.Expr.member                    (Ariadne.Expr.var "points" { start := 636, stop := 642 })                    "find"                    { start := 636, stop := 647 })                  [Ariadne.Expr.lambda                     [{ name := "point", ty := Ariadne.Ty.named "Point", span := { start := 649, stop := 654 } }]                     (Ariadne.Stmt.return_                       (Ariadne.Expr.binary                         ">="                         (Ariadne.Expr.member                           (Ariadne.Expr.var "point" { start := 666, stop := 671 })                           "x"                           { start := 666, stop := 673 })                         (Ariadne.Expr.var "floor" { start := 677, stop := 682 })                         { start := 666, stop := 682 })                       { start := 666, stop := 682 })                     { start := 648, stop := 649 }]                  { start := 636, stop := 683 })                { start := 629, stop := 635 }]             { start := 625, stop := 686 },   exported := true,   decreases := none,   span := { start := 551, stop := 559 } }
+
+def EntryGuards.«find».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«find».planned : Ownership.entryPlan _root_.Extracted_records.program EntryGuards.«find».function = .ok EntryGuards.«find».plan := by kernel_rfl
+
+def EntryGuards.«find».certificate : Ownership.EntryCertificate _root_.Extracted_records.Wrapper.certificate "find" :=
+  ⟨EntryGuards.«find».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«find».plan, EntryGuards.«find».planned⟩
+
+def «find».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_records.program EntryGuards.«find».plan heap args
+
+def «find».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_records.program EntryGuards.«find».plan fuel state "find" args
 
 theorem DenotationChecks.«find» :
     (fun env : Core.Env CoreArtifacts.«find».params Interpretation.value => «find» (env.1) (env.2.1)) =
@@ -765,6 +889,21 @@ def «relabel» («_point#arg» : NativeTypes.«Point») («_label#arg» : _root
 abbrev «relabel».safe («_point#arg» : NativeTypes.«Point») («_label#arg» : _root_.Ariadne.JSString) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«relabel» (by decide) («_point#arg», («_label#arg», ()))
 
+def EntryGuards.«relabel».function : Ariadne.Function := { name := "relabel",   params := [{ name := "point", ty := Ariadne.Ty.named "Point", span := { start := 712, stop := 717 } },              { name := "label", ty := Ariadne.Ty.string, span := { start := 726, stop := 731 } }],   result := Ariadne.Ty.named "Point",   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.record                  [("x",                    Ariadne.Expr.member                      (Ariadne.Expr.var "point" { start := 764, stop := 769 })                      "x"                      { start := 764, stop := 771 }),                   ("label", Ariadne.Expr.var "label" { start := 780, stop := 785 }),                   ("weight",                    Ariadne.Expr.member                      (Ariadne.Expr.var "point" { start := 795, stop := 800 })                      "weight"                      { start := 795, stop := 807 })]                  { start := 759, stop := 809 })                { start := 752, stop := 758 }]             { start := 748, stop := 812 },   exported := true,   decreases := none,   span := { start := 695, stop := 703 } }
+
+def EntryGuards.«relabel».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«relabel».planned : Ownership.entryPlan _root_.Extracted_records.program EntryGuards.«relabel».function = .ok EntryGuards.«relabel».plan := by kernel_rfl
+
+def EntryGuards.«relabel».certificate : Ownership.EntryCertificate _root_.Extracted_records.Wrapper.certificate "relabel" :=
+  ⟨EntryGuards.«relabel».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«relabel».plan, EntryGuards.«relabel».planned⟩
+
+def «relabel».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_records.program EntryGuards.«relabel».plan heap args
+
+def «relabel».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_records.program EntryGuards.«relabel».plan fuel state "relabel" args
+
 theorem DenotationChecks.«relabel» :
     (fun env : Core.Env CoreArtifacts.«relabel».params Interpretation.value => «relabel» (env.1) (env.2.1)) =
       Denote.function (interp := Interpretation.value) CoreArtifacts.«relabel» := by
@@ -781,6 +920,21 @@ def «tagged» («_value#arg» : _root_.Int) : NativeTypes.«Tagged» :=
 
 abbrev «tagged».safe («_value#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«tagged» (by decide) («_value#arg», ())
+
+def EntryGuards.«tagged».function : Ariadne.Function := { name := "tagged",   params := [{ name := "value", ty := Ariadne.Ty.bigint, span := { start := 837, stop := 842 } }],   result := Ariadne.Ty.named "Tagged",   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.record                  [("kind", Ariadne.Expr.literal (Ariadne.Literal.string [111, 107]) { start := 877, stop := 881 }),                   ("payload", Ariadne.Expr.var "value" { start := 892, stop := 897 })]                  { start := 869, stop := 899 })                { start := 862, stop := 868 }]             { start := 860, stop := 902 },   exported := true,   decreases := none,   span := { start := 821, stop := 829 } }
+
+def EntryGuards.«tagged».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«tagged».planned : Ownership.entryPlan _root_.Extracted_records.program EntryGuards.«tagged».function = .ok EntryGuards.«tagged».plan := by kernel_rfl
+
+def EntryGuards.«tagged».certificate : Ownership.EntryCertificate _root_.Extracted_records.Wrapper.certificate "tagged" :=
+  ⟨EntryGuards.«tagged».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«tagged».plan, EntryGuards.«tagged».planned⟩
+
+def «tagged».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_records.program EntryGuards.«tagged».plan heap args
+
+def «tagged».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_records.program EntryGuards.«tagged».plan fuel state "tagged" args
 
 theorem DenotationChecks.«tagged» :
     (fun env : Core.Env CoreArtifacts.«tagged».params Interpretation.value => «tagged» (env.1)) =
@@ -799,6 +953,21 @@ def «tagName» («_value#arg» : NativeTypes.«Tagged») : _root_.Ariadne.JSStr
 abbrev «tagName».safe («_value#arg» : NativeTypes.«Tagged») : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«tagName» (by decide) («_value#arg», ())
 
+def EntryGuards.«tagName».function : Ariadne.Function := { name := "tagName",   params := [{ name := "value", ty := Ariadne.Ty.named "Tagged", span := { start := 927, stop := 932 } }],   result := Ariadne.Ty.string,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.member                  (Ariadne.Expr.var "value" { start := 959, stop := 964 })                  "kind"                  { start := 959, stop := 969 })                { start := 952, stop := 958 }]             { start := 950, stop := 972 },   exported := true,   decreases := none,   span := { start := 910, stop := 918 } }
+
+def EntryGuards.«tagName».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«tagName».planned : Ownership.entryPlan _root_.Extracted_records.program EntryGuards.«tagName».function = .ok EntryGuards.«tagName».plan := by kernel_rfl
+
+def EntryGuards.«tagName».certificate : Ownership.EntryCertificate _root_.Extracted_records.Wrapper.certificate "tagName" :=
+  ⟨EntryGuards.«tagName».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«tagName».plan, EntryGuards.«tagName».planned⟩
+
+def «tagName».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_records.program EntryGuards.«tagName».plan heap args
+
+def «tagName».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_records.program EntryGuards.«tagName».plan fuel state "tagName" args
+
 theorem DenotationChecks.«tagName» :
     (fun env : Core.Env CoreArtifacts.«tagName».params Interpretation.value => «tagName» (env.1)) =
       Denote.function (interp := Interpretation.value) CoreArtifacts.«tagName» := by
@@ -816,6 +985,21 @@ def «weird» («_length#arg» : _root_.Int) : NativeTypes.«Weird» :=
 abbrev «weird».safe («_length#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«weird» (by decide) («_length#arg», ())
 
+def EntryGuards.«weird».function : Ariadne.Function := { name := "weird",   params := [{ name := "length", ty := Ariadne.Ty.bigint, span := { start := 996, stop := 1002 } }],   result := Ariadne.Ty.named "Weird",   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.record                  [("length", Ariadne.Expr.var "length" { start := 1038, stop := 1044 }),                   ("size", Ariadne.Expr.literal (Ariadne.Literal.string [97, 98, 99]) { start := 1052, stop := 1057 }),                   ("rec", Ariadne.Expr.literal (Ariadne.Literal.bigint 2) { start := 1064, stop := 1066 })]                  { start := 1028, stop := 1068 })                { start := 1021, stop := 1027 }]             { start := 1019, stop := 1071 },   exported := true,   decreases := none,   span := { start := 981, stop := 989 } }
+
+def EntryGuards.«weird».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«weird».planned : Ownership.entryPlan _root_.Extracted_records.program EntryGuards.«weird».function = .ok EntryGuards.«weird».plan := by kernel_rfl
+
+def EntryGuards.«weird».certificate : Ownership.EntryCertificate _root_.Extracted_records.Wrapper.certificate "weird" :=
+  ⟨EntryGuards.«weird».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«weird».plan, EntryGuards.«weird».planned⟩
+
+def «weird».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_records.program EntryGuards.«weird».plan heap args
+
+def «weird».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_records.program EntryGuards.«weird».plan fuel state "weird" args
+
 theorem DenotationChecks.«weird» :
     (fun env : Core.Env CoreArtifacts.«weird».params Interpretation.value => «weird» (env.1)) =
       Denote.function (interp := Interpretation.value) CoreArtifacts.«weird» := by
@@ -832,6 +1016,21 @@ def «fields» («_value#arg» : NativeTypes.«Weird») : _root_.Int :=
 
 abbrev «fields».safe («_value#arg» : NativeTypes.«Weird») : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«fields» (by decide) («_value#arg», ())
+
+def EntryGuards.«fields».function : Ariadne.Function := { name := "fields",   params := [{ name := "value", ty := Ariadne.Ty.named "Weird", span := { start := 1095, stop := 1100 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "+"                  (Ariadne.Expr.member                    (Ariadne.Expr.var "value" { start := 1126, stop := 1131 })                    "length"                    { start := 1126, stop := 1138 })                  (Ariadne.Expr.member                    (Ariadne.Expr.var "value" { start := 1141, stop := 1146 })                    "rec"                    { start := 1141, stop := 1150 })                  { start := 1126, stop := 1150 })                { start := 1119, stop := 1125 }]             { start := 1117, stop := 1153 },   exported := true,   decreases := none,   span := { start := 1079, stop := 1087 } }
+
+def EntryGuards.«fields».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«fields».planned : Ownership.entryPlan _root_.Extracted_records.program EntryGuards.«fields».function = .ok EntryGuards.«fields».plan := by kernel_rfl
+
+def EntryGuards.«fields».certificate : Ownership.EntryCertificate _root_.Extracted_records.Wrapper.certificate "fields" :=
+  ⟨EntryGuards.«fields».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«fields».plan, EntryGuards.«fields».planned⟩
+
+def «fields».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_records.program EntryGuards.«fields».plan heap args
+
+def «fields».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_records.program EntryGuards.«fields».plan fuel state "fields" args
 
 theorem DenotationChecks.«fields» :
     (fun env : Core.Env CoreArtifacts.«fields».params Interpretation.value => «fields» (env.1)) =
@@ -851,6 +1050,21 @@ def «duplicate» : NativeTypes.«Point» :=
 abbrev «duplicate».safe : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«duplicate» (by decide) ()
 
+def EntryGuards.«duplicate».function : Ariadne.Function := { name := "duplicate",   params := [],   result := Ariadne.Ty.named "Point",   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.record                  [("x", Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 1204, stop := 1206 }),                   ("x", Ariadne.Expr.literal (Ariadne.Literal.bigint 2) { start := 1211, stop := 1213 }),                   ("label",                    Ariadne.Expr.literal (Ariadne.Literal.string [108, 97, 115, 116]) { start := 1222, stop := 1228 })]                  { start := 1199, stop := 1230 })                { start := 1192, stop := 1198 }]             { start := 1190, stop := 1233 },   exported := true,   decreases := none,   span := { start := 1162, stop := 1170 } }
+
+def EntryGuards.«duplicate».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«duplicate».planned : Ownership.entryPlan _root_.Extracted_records.program EntryGuards.«duplicate».function = .ok EntryGuards.«duplicate».plan := by kernel_rfl
+
+def EntryGuards.«duplicate».certificate : Ownership.EntryCertificate _root_.Extracted_records.Wrapper.certificate "duplicate" :=
+  ⟨EntryGuards.«duplicate».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«duplicate».plan, EntryGuards.«duplicate».planned⟩
+
+def «duplicate».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_records.program EntryGuards.«duplicate».plan heap args
+
+def «duplicate».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_records.program EntryGuards.«duplicate».plan fuel state "duplicate" args
+
 theorem DenotationChecks.«duplicate» :
     (fun _env : Core.Env CoreArtifacts.«duplicate».params Interpretation.value => «duplicate») =
       Denote.function (interp := Interpretation.value) CoreArtifacts.«duplicate» := by
@@ -867,6 +1081,21 @@ def «empty» : NativeTypes.«Empty» :=
 
 abbrev «empty».safe : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«empty» (by decide) ()
+
+def EntryGuards.«empty».function : Ariadne.Function := { name := "empty",   params := [],   result := Ariadne.Ty.named "Empty",   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.record [] { start := 1274, stop := 1276 })                { start := 1267, stop := 1273 }]             { start := 1265, stop := 1279 },   exported := true,   decreases := none,   span := { start := 1241, stop := 1249 } }
+
+def EntryGuards.«empty».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«empty».planned : Ownership.entryPlan _root_.Extracted_records.program EntryGuards.«empty».function = .ok EntryGuards.«empty».plan := by kernel_rfl
+
+def EntryGuards.«empty».certificate : Ownership.EntryCertificate _root_.Extracted_records.Wrapper.certificate "empty" :=
+  ⟨EntryGuards.«empty».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«empty».plan, EntryGuards.«empty».planned⟩
+
+def «empty».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_records.program EntryGuards.«empty».plan heap args
+
+def «empty».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_records.program EntryGuards.«empty».plan fuel state "empty" args
 
 theorem DenotationChecks.«empty» :
     (fun _env : Core.Env CoreArtifacts.«empty».params Interpretation.value => «empty») =

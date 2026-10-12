@@ -46,6 +46,12 @@ The script builds certificates serially to bound peak memory, checks generated f
 against their sources, audits theorem dependencies, and runs native comparisons.
 No JavaScript engine is needed to build the translator or check Lean proofs.
 
+The `extract` backend also writes a sibling `.runtime.ts` module. Its exported
+entry wrappers reject overlapping borrowed arguments before mutation. The Lean
+artifact kernel-checks the wrapper bytes and type-directed guard plans; use the
+runtime module when calling translated exports from a host program. Heap shape,
+encapsulation and pristine-realm assumptions remain in [the runtime contract](docs/RUNTIME.md).
+
 The initial `extract` backend emits native Lean definitions with
 kernel-checked Core elaboration and denotation equations. It supports branches,
 local reassignment, binary64 arithmetic, bigint arithmetic without division,

@@ -62,6 +62,23 @@ laws are kernel checked. This relation is currently conservative about shared
 immutable descendants inside writable owners; its integration into general
 stateful source transfer and the checker soundness theorem is still pending.
 
+Export guard checkpoint: extraction emits a sibling TypeScript runtime module,
+kernel-bound wrapper text, and per-export checked guard plans, `entrySafe` and
+fuel-indexed wrapper models. Plans use effects after class lowering and original
+types for containment; private class fields are opaque. Containment is checked
+in both directions, including a readonly argument nested inside a mutated one.
+The operational guard throws before the implementation on overlap. Its success
+is equivalent to guard success followed by the original invocation. A proved
+ownership-tree/public-path rule derives footprint separation from a passing
+guard and structural `EntryShape` facts, without assuming input disjointness.
+Deriving those facts from checker soundness and integrating write/read footprint
+permissions into general stateful transfer remain M4 obligations. This does not
+complete adequacy, projections or M5.
+
+CI #96 on `5e31ceb` passes in 11m23s, compared with baseline CI #82's 21m18s.
+Its logged source-transfer and Int53 tamper phases take 17s and 7s respectively,
+compared with the baseline 1m51s and 1m29s. The axiom audit covers 5,435 theorems.
+
 Frontend checkpoint: the complete `scripts/check.sh` suite passes with 1,217
 audited theorems, 42 native entry points, 64 generated programs, 51 scalar
 comparisons, 37 negative fixtures, and 21 reference inputs/traces. All three

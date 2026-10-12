@@ -86,6 +86,7 @@ run_verify() {
   timed scripts/negative.mjs "$js" scripts/negative.mjs
   timed scripts/realm.mjs "$js" scripts/realm.mjs
   timed scripts/cli.mjs "$js" scripts/cli.mjs
+  timed scripts/entry-guards.mjs "$js" scripts/entry-guards.mjs
   timed scripts/compiler.mjs "$js" scripts/compiler.mjs
   timed scripts/reference.mjs "$js" scripts/reference.mjs
   timed scripts/reference-operational.mjs "$js" scripts/reference-operational.mjs

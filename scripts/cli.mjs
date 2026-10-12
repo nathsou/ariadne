@@ -7,6 +7,7 @@ await mkdir('work', { recursive: true });
 const dir = await mkdtemp(resolve('work/cli-'));
 const source = resolve(dir, 'input.ts');
 const artifact = resolve(dir, 'Model.lean');
+const runtime = resolve(dir, 'Model.runtime.ts');
 const run = (command, args) => spawnSync(command, args, { encoding: 'utf8', timeout: 60000 });
 const cli = args => run('.lake/build/bin/ariadne', args);
 try {
@@ -14,11 +15,13 @@ try {
   assert.equal(cli(['eval', source, 'demo', 'bad']).status, 2);
   assert.equal(cli(['eval', source, 'missing']).status, 2);
   await writeFile(artifact, 'preserve existing output\n');
+  await writeFile(runtime, 'preserve existing runtime\n');
   await writeFile(source, 'export function demo(): bigint { while (true) { } return 0n; }\n');
   const extract = cli(['extract', source, '--out', artifact, '--json']);
   assert.equal(extract.status, 1, extract.stdout + extract.stderr);
   assert.equal(JSON.parse(extract.stdout).code, 'A5101');
   assert.equal(await readFile(artifact, 'utf8'), 'preserve existing output\n');
+  assert.equal(await readFile(runtime, 'utf8'), 'preserve existing runtime\n');
   assert.equal(cli(['extract', source, '--out', artifact, '--json', '--json']).status, 2);
   assert.equal(cli(['extract', source, '--out', artifact, '--no-check', '--no-check']).status, 2);
   const refusedUnchecked = cli(['extract', source, '--out', artifact, '--json', '--no-check']);
@@ -32,6 +35,9 @@ try {
   assert.equal(extracted.status, 0, extracted.stdout + extracted.stderr);
   assert.ok(extracted.stdout.includes('Certified shallow denotation'));
   const checkedCandidate = await readFile(artifact, 'utf8');
+  const checkedRuntime = await readFile(runtime, 'utf8');
+  assert.ok(checkedCandidate.includes('Ownership.WrapperCertificate'));
+  assert.ok(checkedRuntime.includes('export function demo()'));
   // Simulate a failed kernel checker: default extraction preserves the output,
   // while regeneration's explicit flag writes exactly the same candidate.
   const bin = resolve(dir, 'bin');
@@ -43,15 +49,28 @@ try {
     encoding: 'utf8', timeout: 60000, env: { ...process.env, PATH: `${bin}:${process.env.PATH}` },
   });
   await writeFile(artifact, 'preserve existing output\n');
+  await writeFile(runtime, 'preserve existing runtime\n');
   const failedCheck = withoutChecker(['extract', source, '--out', artifact, '--namespace', 'CliExtract']);
   assert.equal(failedCheck.status, 1, failedCheck.stdout + failedCheck.stderr);
   assert.ok(failedCheck.stderr.includes('A4001'));
   assert.equal(await readFile(artifact, 'utf8'), 'preserve existing output\n');
+  assert.equal(await readFile(runtime, 'utf8'), 'preserve existing runtime\n');
   const unchecked = withoutChecker(['extract', source, '--out', artifact, '--namespace', 'CliExtract', '--no-check']);
   assert.equal(unchecked.status, 0, unchecked.stdout + unchecked.stderr);
   assert.ok(unchecked.stdout.includes('has not been kernel-checked'));
   assert.ok(!unchecked.stdout.includes('Certified'));
   assert.equal(await readFile(artifact, 'utf8'), checkedCandidate);
+  assert.equal(await readFile(runtime, 'utf8'), checkedRuntime);
+  const runtimeAlias = resolve(dir, 'RuntimeAlias.runtime.ts');
+  await symlink(source, runtimeAlias);
+  const beforeAlias = await readFile(source, 'utf8');
+  assert.equal(cli(['extract', source, '--out', resolve(dir, 'RuntimeAlias.lean')]).status, 2);
+  assert.equal(await readFile(source, 'utf8'), beforeAlias);
+  const tamperedWrapper = resolve(dir, 'TamperedWrapper.lean');
+  await writeFile(tamperedWrapper, checkedCandidate.replace(
+    'Generated ownership entry wrappers', 'Modified ownership entry wrappers'));
+  const rejectedWrapper = run('lake', ['env', 'lean', tamperedWrapper]);
+  assert.notEqual(rejectedWrapper.status, 0, 'modified wrapper bytes must invalidate their certificate');
   const alias = resolve(dir, 'Alias.lean');
   await symlink(source, alias);
   assert.equal(cli(['translate', source, '--out', alias]).status, 2);

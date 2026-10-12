@@ -334,6 +334,14 @@ def checkWrite (ctx : Context) (target : Expr) (rebinding : Bool := false) : Che
         help := some "Move the mutation outside the traversal, or use a separate owned collection."
       }
 
+/-- Container observations cannot acquire write permission by becoming a
+callee's parameter. Statement projections introduce an explicit exclusive
+path; ordinary calls require an owner or a fresh argument. -/
+def checkBorrowOwner (ctx : Context) (value : Expr) : Checked Unit := do
+  if sharedRead value || ((root value).isNone && !fresh value) then
+    error "A3001" "a mutable borrow requires an owner; container projections need a checked exclusive statement path" value.span
+  checkWrite ctx value
+
 def int53Enabled (p : Program) : Bool := p.aliases.lookup "Int53" == some .number
 
 def integerType (p : Program) : Ty := if int53Enabled p then .int53 else .number
@@ -489,7 +497,7 @@ mutual
                 error "A3001" "mutable constructor arguments must preserve writable types" arg.span
             if immutable ty && !fresh arg then
               if !immutable (← infer n ctx arg) then error "A3001" "a mutable owner cannot be shared with a constructor" arg.span
-            if !immutable ty then checkWrite ctx arg
+            if !immutable ty then checkBorrowOwner ctx arg
             if let some r := root arg then
               if roots.contains r then error "A3001" "overlapping constructor arguments" arg.span
               roots := r :: roots
@@ -572,8 +580,8 @@ mutual
               if immutable expected && !fresh arg then
                 if !immutable (← infer n ctx arg) then
                   error "A3001" "a mutable owner cannot be shared as an immutable argument" arg.span
+              if !immutable expected then checkBorrowOwner ctx arg
               if let some r := root arg then
-                if !immutable expected then checkWrite ctx arg
                 if roots.contains r then error "A3001" s!"'{r}' is passed through overlapping mutable arguments" arg.span
                 roots := r :: roots
           resolve 100 ctx.program f.result
@@ -675,7 +683,7 @@ mutual
         if let .readonly _ := raw then error "A3001" "cannot mutate a readonly collection" span
       if let .class_ className := ty then
         if ctx.inCallback then error "A3003" "class method calls require effect summaries in callbacks" span
-        checkWrite ctx object
+        checkBorrowOwner ctx object
         let some c := ctx.program.classes.find? (·.name == className) | error "A2001" "unknown class" span
         let some method := c.methods.find? (·.name == name) | error "A2006" "unknown method" span
         if args.length != method.params.length then error "A2007" "method argument count mismatch" span

@@ -6,6 +6,7 @@ import Ariadne.Shallow.Adequacy.Statements
 import Ariadne.Shallow.Adequacy.GuardedStatements
 import Ariadne.Shallow.Adequacy.JoinsContext
 import Ariadne.Shallow.Adequacy.GuardedJoinsContext
+import Ariadne.Ownership.Source
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
@@ -506,6 +507,89 @@ theorem source_checked : frontend source = .ok program :=
 def certificate : Certificate source := ⟨program, source_checked⟩
 
 end Extracted_reference_tree
+
+namespace Extracted_reference_tree.Wrapper
+open Ariadne
+
+def source : String := "// Generated ownership entry wrappers. Requires the Ariadne pristine realm contract.\ntype Int53 = number;\n\nexport class Tree {\n  private readonly parents = new Map<string, string>();\n  private readonly children = new Map<string, string[]>();\n\n  add(node: string): void {\n    if (!this.children.has(node)) { this.children.set(node, []); }\n  }\n\n  parent(node: string): string | undefined { return this.parents.get(node); }\n\n  childList(node: string): string[] { return (this.children.get(node) ?? []).slice(); }\n\n  move(node: string, parent: string | undefined): void {\n    this.add(node);\n    if (parent !== undefined) { this.add(parent); }\n    const old = this.parents.get(node);\n    if (old !== undefined) {\n      this.children.set(old, (this.children.get(old) ?? []).filter((child: string) => child !== node));\n    }\n    this.parents.delete(node);\n    let cursor = parent;\n    for (let i = 0; i < this.children.size; i++) {\n      if (cursor === node) { return; }\n      if (cursor === undefined) { break; }\n      cursor = this.parents.get(cursor);\n    }\n    if (parent !== undefined) {\n      this.parents.set(node, parent);\n      this.children.set(parent, [...(this.children.get(parent) ?? []), node]);\n    }\n  }\n\n  root(node: string): string {\n    let cursor = node;\n    for (let i = 0; i < this.children.size; i++) {\n      const parent = this.parents.get(cursor);\n      if (parent === undefined) { return cursor; }\n      cursor = parent;\n    }\n    return cursor;\n  }\n}\n"
+
+def characters : List Char := ['/', '/', ' ', 'G', 'e', 'n', 'e', 'r', 'a', 't', 'e', 'd', ' ', 'o', 'w', 'n', 'e', 'r', 's', 'h', 'i', 'p', ' ', 'e',
+ 'n', 't', 'r', 'y', ' ', 'w', 'r', 'a', 'p', 'p', 'e', 'r', 's', '.', ' ', 'R', 'e', 'q', 'u', 'i', 'r', 'e', 's', ' ',
+ 't', 'h', 'e', ' ', 'A', 'r', 'i', 'a', 'd', 'n', 'e', ' ', 'p', 'r', 'i', 's', 't', 'i', 'n', 'e', ' ', 'r', 'e', 'a',
+ 'l', 'm', ' ', 'c', 'o', 'n', 't', 'r', 'a', 'c', 't', '.', '\n', 't', 'y', 'p', 'e', ' ', 'I', 'n', 't', '5', '3',
+ ' ', '=', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ';', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'c', 'l', 'a', 's',
+ 's', ' ', 'T', 'r', 'e', 'e', ' ', '{', '\n', ' ', ' ', 'p', 'r', 'i', 'v', 'a', 't', 'e', ' ', 'r', 'e', 'a', 'd',
+ 'o', 'n', 'l', 'y', ' ', 'p', 'a', 'r', 'e', 'n', 't', 's', ' ', '=', ' ', 'n', 'e', 'w', ' ', 'M', 'a', 'p', '<', 's',
+ 't', 'r', 'i', 'n', 'g', ',', ' ', 's', 't', 'r', 'i', 'n', 'g', '>', '(', ')', ';', '\n', ' ', ' ', 'p', 'r', 'i',
+ 'v', 'a', 't', 'e', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'c', 'h', 'i', 'l', 'd', 'r', 'e', 'n', ' ', '=',
+ ' ', 'n', 'e', 'w', ' ', 'M', 'a', 'p', '<', 's', 't', 'r', 'i', 'n', 'g', ',', ' ', 's', 't', 'r', 'i', 'n', 'g', '[',
+ ']', '>', '(', ')', ';', '\n', '\n', ' ', ' ', 'a', 'd', 'd', '(', 'n', 'o', 'd', 'e', ':', ' ', 's', 't', 'r', 'i',
+ 'n', 'g', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{', '\n', ' ', ' ', ' ', ' ', 'i', 'f', ' ', '(', '!', 't', 'h',
+ 'i', 's', '.', 'c', 'h', 'i', 'l', 'd', 'r', 'e', 'n', '.', 'h', 'a', 's', '(', 'n', 'o', 'd', 'e', ')', ')', ' ', '{',
+ ' ', 't', 'h', 'i', 's', '.', 'c', 'h', 'i', 'l', 'd', 'r', 'e', 'n', '.', 's', 'e', 't', '(', 'n', 'o', 'd', 'e', ',',
+ ' ', '[', ']', ')', ';', ' ', '}', '\n', ' ', ' ', '}', '\n', '\n', ' ', ' ', 'p', 'a', 'r', 'e', 'n', 't', '(', 'n',
+ 'o', 'd', 'e', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ')', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ' ', '|', ' ', 'u',
+ 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 't', 'h', 'i', 's', '.', 'p',
+ 'a', 'r', 'e', 'n', 't', 's', '.', 'g', 'e', 't', '(', 'n', 'o', 'd', 'e', ')', ';', ' ', '}', '\n', '\n', ' ', ' ',
+ 'c', 'h', 'i', 'l', 'd', 'L', 'i', 's', 't', '(', 'n', 'o', 'd', 'e', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ')', ':',
+ ' ', 's', 't', 'r', 'i', 'n', 'g', '[', ']', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '(', 't', 'h', 'i', 's',
+ '.', 'c', 'h', 'i', 'l', 'd', 'r', 'e', 'n', '.', 'g', 'e', 't', '(', 'n', 'o', 'd', 'e', ')', ' ', '?', '?', ' ', '[',
+ ']', ')', '.', 's', 'l', 'i', 'c', 'e', '(', ')', ';', ' ', '}', '\n', '\n', ' ', ' ', 'm', 'o', 'v', 'e', '(', 'n',
+ 'o', 'd', 'e', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ',', ' ', 'p', 'a', 'r', 'e', 'n', 't', ':', ' ', 's', 't', 'r',
+ 'i', 'n', 'g', ' ', '|', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{',
+ '\n', ' ', ' ', ' ', ' ', 't', 'h', 'i', 's', '.', 'a', 'd', 'd', '(', 'n', 'o', 'd', 'e', ')', ';', '\n', ' ', ' ',
+ ' ', ' ', 'i', 'f', ' ', '(', 'p', 'a', 'r', 'e', 'n', 't', ' ', '!', '=', '=', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n',
+ 'e', 'd', ')', ' ', '{', ' ', 't', 'h', 'i', 's', '.', 'a', 'd', 'd', '(', 'p', 'a', 'r', 'e', 'n', 't', ')', ';', ' ',
+ '}', '\n', ' ', ' ', ' ', ' ', 'c', 'o', 'n', 's', 't', ' ', 'o', 'l', 'd', ' ', '=', ' ', 't', 'h', 'i', 's', '.',
+ 'p', 'a', 'r', 'e', 'n', 't', 's', '.', 'g', 'e', 't', '(', 'n', 'o', 'd', 'e', ')', ';', '\n', ' ', ' ', ' ', ' ',
+ 'i', 'f', ' ', '(', 'o', 'l', 'd', ' ', '!', '=', '=', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ')', ' ', '{',
+ '\n', ' ', ' ', ' ', ' ', ' ', ' ', 't', 'h', 'i', 's', '.', 'c', 'h', 'i', 'l', 'd', 'r', 'e', 'n', '.', 's', 'e',
+ 't', '(', 'o', 'l', 'd', ',', ' ', '(', 't', 'h', 'i', 's', '.', 'c', 'h', 'i', 'l', 'd', 'r', 'e', 'n', '.', 'g', 'e',
+ 't', '(', 'o', 'l', 'd', ')', ' ', '?', '?', ' ', '[', ']', ')', '.', 'f', 'i', 'l', 't', 'e', 'r', '(', '(', 'c', 'h',
+ 'i', 'l', 'd', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ')', ' ', '=', '>', ' ', 'c', 'h', 'i', 'l', 'd', ' ', '!', '=',
+ '=', ' ', 'n', 'o', 'd', 'e', ')', ')', ';', '\n', ' ', ' ', ' ', ' ', '}', '\n', ' ', ' ', ' ', ' ', 't', 'h', 'i',
+ 's', '.', 'p', 'a', 'r', 'e', 'n', 't', 's', '.', 'd', 'e', 'l', 'e', 't', 'e', '(', 'n', 'o', 'd', 'e', ')', ';',
+ '\n', ' ', ' ', ' ', ' ', 'l', 'e', 't', ' ', 'c', 'u', 'r', 's', 'o', 'r', ' ', '=', ' ', 'p', 'a', 'r', 'e', 'n',
+ 't', ';', '\n', ' ', ' ', ' ', ' ', 'f', 'o', 'r', ' ', '(', 'l', 'e', 't', ' ', 'i', ' ', '=', ' ', '0', ';', ' ',
+ 'i', ' ', '<', ' ', 't', 'h', 'i', 's', '.', 'c', 'h', 'i', 'l', 'd', 'r', 'e', 'n', '.', 's', 'i', 'z', 'e', ';', ' ',
+ 'i', '+', '+', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', ' ', ' ', 'i', 'f', ' ', '(', 'c', 'u', 'r', 's', 'o', 'r',
+ ' ', '=', '=', '=', ' ', 'n', 'o', 'd', 'e', ')', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ';', ' ', '}', '\n',
+ ' ', ' ', ' ', ' ', ' ', ' ', 'i', 'f', ' ', '(', 'c', 'u', 'r', 's', 'o', 'r', ' ', '=', '=', '=', ' ', 'u', 'n', 'd',
+ 'e', 'f', 'i', 'n', 'e', 'd', ')', ' ', '{', ' ', 'b', 'r', 'e', 'a', 'k', ';', ' ', '}', '\n', ' ', ' ', ' ', ' ',
+ ' ', ' ', 'c', 'u', 'r', 's', 'o', 'r', ' ', '=', ' ', 't', 'h', 'i', 's', '.', 'p', 'a', 'r', 'e', 'n', 't', 's', '.',
+ 'g', 'e', 't', '(', 'c', 'u', 'r', 's', 'o', 'r', ')', ';', '\n', ' ', ' ', ' ', ' ', '}', '\n', ' ', ' ', ' ', ' ',
+ 'i', 'f', ' ', '(', 'p', 'a', 'r', 'e', 'n', 't', ' ', '!', '=', '=', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd',
+ ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', ' ', ' ', 't', 'h', 'i', 's', '.', 'p', 'a', 'r', 'e', 'n', 't', 's', '.',
+ 's', 'e', 't', '(', 'n', 'o', 'd', 'e', ',', ' ', 'p', 'a', 'r', 'e', 'n', 't', ')', ';', '\n', ' ', ' ', ' ', ' ',
+ ' ', ' ', 't', 'h', 'i', 's', '.', 'c', 'h', 'i', 'l', 'd', 'r', 'e', 'n', '.', 's', 'e', 't', '(', 'p', 'a', 'r', 'e',
+ 'n', 't', ',', ' ', '[', '.', '.', '.', '(', 't', 'h', 'i', 's', '.', 'c', 'h', 'i', 'l', 'd', 'r', 'e', 'n', '.', 'g',
+ 'e', 't', '(', 'p', 'a', 'r', 'e', 'n', 't', ')', ' ', '?', '?', ' ', '[', ']', ')', ',', ' ', 'n', 'o', 'd', 'e', ']',
+ ')', ';', '\n', ' ', ' ', ' ', ' ', '}', '\n', ' ', ' ', '}', '\n', '\n', ' ', ' ', 'r', 'o', 'o', 't', '(', 'n', 'o',
+ 'd', 'e', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ')', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ' ', '{', '\n', ' ',
+ ' ', ' ', ' ', 'l', 'e', 't', ' ', 'c', 'u', 'r', 's', 'o', 'r', ' ', '=', ' ', 'n', 'o', 'd', 'e', ';', '\n', ' ',
+ ' ', ' ', ' ', 'f', 'o', 'r', ' ', '(', 'l', 'e', 't', ' ', 'i', ' ', '=', ' ', '0', ';', ' ', 'i', ' ', '<', ' ', 't',
+ 'h', 'i', 's', '.', 'c', 'h', 'i', 'l', 'd', 'r', 'e', 'n', '.', 's', 'i', 'z', 'e', ';', ' ', 'i', '+', '+', ')', ' ',
+ '{', '\n', ' ', ' ', ' ', ' ', ' ', ' ', 'c', 'o', 'n', 's', 't', ' ', 'p', 'a', 'r', 'e', 'n', 't', ' ', '=', ' ',
+ 't', 'h', 'i', 's', '.', 'p', 'a', 'r', 'e', 'n', 't', 's', '.', 'g', 'e', 't', '(', 'c', 'u', 'r', 's', 'o', 'r', ')',
+ ';', '\n', ' ', ' ', ' ', ' ', ' ', ' ', 'i', 'f', ' ', '(', 'p', 'a', 'r', 'e', 'n', 't', ' ', '=', '=', '=', ' ',
+ 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ')', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'c', 'u', 'r', 's',
+ 'o', 'r', ';', ' ', '}', '\n', ' ', ' ', ' ', ' ', ' ', ' ', 'c', 'u', 'r', 's', 'o', 'r', ' ', '=', ' ', 'p', 'a',
+ 'r', 'e', 'n', 't', ';', '\n', ' ', ' ', ' ', ' ', '}', '\n', ' ', ' ', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ',
+ 'c', 'u', 'r', 's', 'o', 'r', ';', '\n', ' ', ' ', '}', '\n', '}', '\n']
+
+theorem characters_encoded : String.ofList characters = source := by kernel_rfl
+
+theorem rendered : Ownership.Wrap.emitCharacterData
+    _root_.Extracted_reference_tree.characters _root_.Extracted_reference_tree.tokens.toList _root_.Extracted_reference_tree.program = .ok characters := by kernel_rfl
+
+theorem checked : Ownership.Wrap.emit _root_.Extracted_reference_tree.source _root_.Extracted_reference_tree.program = .ok source :=
+  (Ownership.Wrap.emit_checked _root_.Extracted_reference_tree.characters_checked _root_.Extracted_reference_tree.lex_checked rendered).trans
+    (congrArg Except.ok characters_encoded)
+
+def certificate : Ownership.WrapperCertificate _root_.Extracted_reference_tree.source :=
+  ⟨_root_.Extracted_reference_tree.certificate, source, checked⟩
+
+end Extracted_reference_tree.Wrapper
 
 -- Shallow denotation certificates. Source transfer is emitted for proved fragments.
 namespace Extracted_reference_tree.Shallow

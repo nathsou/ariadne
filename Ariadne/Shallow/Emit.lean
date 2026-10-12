@@ -3,6 +3,7 @@ import Ariadne.Shallow.Elaborate
 import Ariadne.Shallow.Safety
 import Ariadne.Shallow.EmitJoins
 import Ariadne.Shallow.EmitGuardedJoins
+import Ariadne.Ownership.Source
 
 namespace Ariadne.Shallow
 open Core
@@ -584,6 +585,7 @@ private def emitDeclaration (program : Program) (declaration : Named.Declaration
 
 def emit (source : String) (program : Program) (namespace_ : String) : Checked String := do
   let original := program
+  let wrapper ← Ownership.Wrap.emit source original
   let program ← ClassPlan.lower program
   if program.functions.isEmpty then
     Elaborate.refusal "A5101" "there are no functions to extract" {}
@@ -593,7 +595,19 @@ def emit (source : String) (program : Program) (namespace_ : String) : Checked S
     core.params.flatMap typeDeclarations ++ termDeclarations core.body).eraseDups
   let declarations := (← roots.mapM (declarationOrder expanded 100)).flatten.eraseDups
   let mut out := (Ariadne.emit source original namespace_).replace
-    "import Ariadne.Certificate\n" "import Ariadne.Certificate\nimport Ariadne.Shallow.Elaborate\nimport Ariadne.Shallow.Safety\nimport Ariadne.Shallow.Adequacy.Statements\nimport Ariadne.Shallow.Adequacy.GuardedStatements\nimport Ariadne.Shallow.Adequacy.JoinsContext\nimport Ariadne.Shallow.Adequacy.GuardedJoinsContext\n"
+    "import Ariadne.Certificate\n" "import Ariadne.Certificate\nimport Ariadne.Shallow.Elaborate\nimport Ariadne.Shallow.Safety\nimport Ariadne.Shallow.Adequacy.Statements\nimport Ariadne.Shallow.Adequacy.GuardedStatements\nimport Ariadne.Shallow.Adequacy.JoinsContext\nimport Ariadne.Shallow.Adequacy.GuardedJoinsContext\nimport Ariadne.Ownership.Source\n"
+  out := out ++ s!"\nnamespace {namespace_}.Wrapper\nopen Ariadne\n\n" ++
+    s!"def source : String := {reprStr wrapper}\n\n" ++
+    s!"def characters : List Char := {reprStr wrapper.toList}\n\n" ++
+    "theorem characters_encoded : String.ofList characters = source := by kernel_rfl\n\n" ++
+    "theorem rendered : Ownership.Wrap.emitCharacterData\n" ++
+    s!"    _root_.{namespace_}.characters _root_.{namespace_}.tokens.toList _root_.{namespace_}.program = .ok characters := by kernel_rfl\n\n" ++
+    s!"theorem checked : Ownership.Wrap.emit _root_.{namespace_}.source _root_.{namespace_}.program = .ok source :=\n" ++
+    s!"  (Ownership.Wrap.emit_checked _root_.{namespace_}.characters_checked _root_.{namespace_}.lex_checked rendered).trans\n" ++
+    "    (congrArg Except.ok characters_encoded)\n\n" ++
+    s!"def certificate : Ownership.WrapperCertificate _root_.{namespace_}.source :=\n" ++
+    s!"  ⟨_root_.{namespace_}.certificate, source, checked⟩\n\n" ++
+    s!"end {namespace_}.Wrapper\n"
   out := out ++ "\n-- Shallow denotation certificates. Source transfer is emitted for proved fragments.\n" ++
     s!"namespace {namespace_}.Shallow\nopen Ariadne Ariadne.Shallow\nset_option linter.unusedSimpArgs false\n\n"
   let mut interpretation := "Named.canonical"
@@ -635,6 +649,18 @@ def emit (source : String) (program : Program) (namespace_ : String) : Checked S
     let safeEnv := names.foldr (fun name rest => s!"({name}, {rest})") "()"
     out := out ++ s!"abbrev {functionName}.safe{params} : Prop :=\n" ++
       s!"  Safety.function (interp := Interpretation.value) {coreName} (by decide) {safeEnv}\n\n"
+    if f.exported && original.functions.any (·.name == f.name) then
+      let plan ← Ownership.entryPlan original f
+      let entry := "EntryGuards." ++ ident f.name
+      out := out ++ s!"def {entry}.function : Ariadne.Function := {(reprStr f).replace "\n" " "}\n\n" ++
+        s!"def {entry}.plan : List Ownership.ArgumentCheck := {(reprStr plan).replace "\n" " "}\n\n" ++
+        s!"theorem {entry}.planned : Ownership.entryPlan _root_.{namespace_}.program {entry}.function = .ok {entry}.plan := by kernel_rfl\n\n" ++
+        s!"def {entry}.certificate : Ownership.EntryCertificate _root_.{namespace_}.Wrapper.certificate {reprStr f.name} :=\n" ++
+        s!"  ⟨{entry}.function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), {entry}.plan, {entry}.planned⟩\n\n" ++
+        s!"def {functionName}.entrySafe (heap : Heap) (args : List Value) : Bool :=\n" ++
+        s!"  Ownership.entrySafe _root_.{namespace_}.program {entry}.plan heap args\n\n" ++
+        s!"def {functionName}.wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=\n" ++
+        s!"  Ownership.checkedApply _root_.{namespace_}.program {entry}.plan fuel state {reprStr f.name} args\n\n"
     let envName := if core.params.isEmpty then "_env" else "env"
     let args := String.join ((List.range core.params.length).map fun i =>
       " (" ++ envName ++ String.join (List.replicate i ".2") ++ ".1)")

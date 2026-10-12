@@ -6,6 +6,7 @@ import Ariadne.Shallow.Adequacy.Statements
 import Ariadne.Shallow.Adequacy.GuardedStatements
 import Ariadne.Shallow.Adequacy.JoinsContext
 import Ariadne.Shallow.Adequacy.GuardedJoinsContext
+import Ariadne.Ownership.Source
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
@@ -344,6 +345,77 @@ theorem source_checked : frontend source = .ok program :=
 def certificate : Certificate source := ⟨program, source_checked⟩
 
 end Extracted_reference_registers
+
+namespace Extracted_reference_registers.Wrapper
+open Ariadne
+
+def source : String := "// Generated ownership entry wrappers. Requires the Ariadne pristine realm contract.\ntype Int53 = number;\n\n// A stamp identifies an operation: replaying it must use the same value.\n// Components of a composite key must not contain NUL.\nexport class Registers {\n  private readonly values = new Map<string, Int53>();\n  private readonly stamps = new Map<string, string>();\n  private readonly counters = new Map<string, Int53>();\n\n  write(a: string, b: string, value: Int53, stamp: string): void {\n    const key = a + '\\0' + b;\n    const seen = this.stamps.get(key);\n    if (seen !== undefined && seen >= stamp) { return; }\n    this.values.set(key, value);\n    this.stamps.set(key, stamp);\n  }\n\n  read(a: string, b: string): Int53 | undefined {\n    return this.values.get(a + '\\0' + b);\n  }\n\n  // Per-replica monotone counter components merge by maximum.\n  count(key: string, replica: string, value: Int53): void {\n    const component = key + '\\0' + replica;\n    const seen = this.counters.get(component) ?? 0;\n    if (value > seen) { this.counters.set(component, value); }\n  }\n\n  counter(key: string, replica: string): Int53 {\n    return this.counters.get(key + '\\0' + replica) ?? 0;\n  }\n}\n"
+
+def characters : List Char := ['/', '/', ' ', 'G', 'e', 'n', 'e', 'r', 'a', 't', 'e', 'd', ' ', 'o', 'w', 'n', 'e', 'r', 's', 'h', 'i', 'p', ' ', 'e',
+ 'n', 't', 'r', 'y', ' ', 'w', 'r', 'a', 'p', 'p', 'e', 'r', 's', '.', ' ', 'R', 'e', 'q', 'u', 'i', 'r', 'e', 's', ' ',
+ 't', 'h', 'e', ' ', 'A', 'r', 'i', 'a', 'd', 'n', 'e', ' ', 'p', 'r', 'i', 's', 't', 'i', 'n', 'e', ' ', 'r', 'e', 'a',
+ 'l', 'm', ' ', 'c', 'o', 'n', 't', 'r', 'a', 'c', 't', '.', '\n', 't', 'y', 'p', 'e', ' ', 'I', 'n', 't', '5', '3',
+ ' ', '=', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ';', '\n', '\n', '/', '/', ' ', 'A', ' ', 's', 't', 'a', 'm', 'p', ' ',
+ 'i', 'd', 'e', 'n', 't', 'i', 'f', 'i', 'e', 's', ' ', 'a', 'n', ' ', 'o', 'p', 'e', 'r', 'a', 't', 'i', 'o', 'n', ':',
+ ' ', 'r', 'e', 'p', 'l', 'a', 'y', 'i', 'n', 'g', ' ', 'i', 't', ' ', 'm', 'u', 's', 't', ' ', 'u', 's', 'e', ' ', 't',
+ 'h', 'e', ' ', 's', 'a', 'm', 'e', ' ', 'v', 'a', 'l', 'u', 'e', '.', '\n', '/', '/', ' ', 'C', 'o', 'm', 'p', 'o',
+ 'n', 'e', 'n', 't', 's', ' ', 'o', 'f', ' ', 'a', ' ', 'c', 'o', 'm', 'p', 'o', 's', 'i', 't', 'e', ' ', 'k', 'e', 'y',
+ ' ', 'm', 'u', 's', 't', ' ', 'n', 'o', 't', ' ', 'c', 'o', 'n', 't', 'a', 'i', 'n', ' ', 'N', 'U', 'L', '.', '\n',
+ 'e', 'x', 'p', 'o', 'r', 't', ' ', 'c', 'l', 'a', 's', 's', ' ', 'R', 'e', 'g', 'i', 's', 't', 'e', 'r', 's', ' ', '{',
+ '\n', ' ', ' ', 'p', 'r', 'i', 'v', 'a', 't', 'e', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'v', 'a', 'l',
+ 'u', 'e', 's', ' ', '=', ' ', 'n', 'e', 'w', ' ', 'M', 'a', 'p', '<', 's', 't', 'r', 'i', 'n', 'g', ',', ' ', 'I', 'n',
+ 't', '5', '3', '>', '(', ')', ';', '\n', ' ', ' ', 'p', 'r', 'i', 'v', 'a', 't', 'e', ' ', 'r', 'e', 'a', 'd', 'o',
+ 'n', 'l', 'y', ' ', 's', 't', 'a', 'm', 'p', 's', ' ', '=', ' ', 'n', 'e', 'w', ' ', 'M', 'a', 'p', '<', 's', 't', 'r',
+ 'i', 'n', 'g', ',', ' ', 's', 't', 'r', 'i', 'n', 'g', '>', '(', ')', ';', '\n', ' ', ' ', 'p', 'r', 'i', 'v', 'a',
+ 't', 'e', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'c', 'o', 'u', 'n', 't', 'e', 'r', 's', ' ', '=', ' ', 'n',
+ 'e', 'w', ' ', 'M', 'a', 'p', '<', 's', 't', 'r', 'i', 'n', 'g', ',', ' ', 'I', 'n', 't', '5', '3', '>', '(', ')', ';',
+ '\n', '\n', ' ', ' ', 'w', 'r', 'i', 't', 'e', '(', 'a', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ',', ' ', 'b', ':',
+ ' ', 's', 't', 'r', 'i', 'n', 'g', ',', ' ', 'v', 'a', 'l', 'u', 'e', ':', ' ', 'I', 'n', 't', '5', '3', ',', ' ', 's',
+ 't', 'a', 'm', 'p', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{', '\n', ' ',
+ ' ', ' ', ' ', 'c', 'o', 'n', 's', 't', ' ', 'k', 'e', 'y', ' ', '=', ' ', 'a', ' ', '+', ' ', '\'', '\\', '0', '\'',
+ ' ', '+', ' ', 'b', ';', '\n', ' ', ' ', ' ', ' ', 'c', 'o', 'n', 's', 't', ' ', 's', 'e', 'e', 'n', ' ', '=', ' ',
+ 't', 'h', 'i', 's', '.', 's', 't', 'a', 'm', 'p', 's', '.', 'g', 'e', 't', '(', 'k', 'e', 'y', ')', ';', '\n', ' ',
+ ' ', ' ', ' ', 'i', 'f', ' ', '(', 's', 'e', 'e', 'n', ' ', '!', '=', '=', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e',
+ 'd', ' ', '&', '&', ' ', 's', 'e', 'e', 'n', ' ', '>', '=', ' ', 's', 't', 'a', 'm', 'p', ')', ' ', '{', ' ', 'r', 'e',
+ 't', 'u', 'r', 'n', ';', ' ', '}', '\n', ' ', ' ', ' ', ' ', 't', 'h', 'i', 's', '.', 'v', 'a', 'l', 'u', 'e', 's',
+ '.', 's', 'e', 't', '(', 'k', 'e', 'y', ',', ' ', 'v', 'a', 'l', 'u', 'e', ')', ';', '\n', ' ', ' ', ' ', ' ', 't',
+ 'h', 'i', 's', '.', 's', 't', 'a', 'm', 'p', 's', '.', 's', 'e', 't', '(', 'k', 'e', 'y', ',', ' ', 's', 't', 'a', 'm',
+ 'p', ')', ';', '\n', ' ', ' ', '}', '\n', '\n', ' ', ' ', 'r', 'e', 'a', 'd', '(', 'a', ':', ' ', 's', 't', 'r', 'i',
+ 'n', 'g', ',', ' ', 'b', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ')', ':', ' ', 'I', 'n', 't', '5', '3', ' ', '|', ' ',
+ 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ' ', '{', '\n', ' ', ' ', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ',
+ 't', 'h', 'i', 's', '.', 'v', 'a', 'l', 'u', 'e', 's', '.', 'g', 'e', 't', '(', 'a', ' ', '+', ' ', '\'', '\\', '0',
+ '\'', ' ', '+', ' ', 'b', ')', ';', '\n', ' ', ' ', '}', '\n', '\n', ' ', ' ', '/', '/', ' ', 'P', 'e', 'r', '-', 'r',
+ 'e', 'p', 'l', 'i', 'c', 'a', ' ', 'm', 'o', 'n', 'o', 't', 'o', 'n', 'e', ' ', 'c', 'o', 'u', 'n', 't', 'e', 'r', ' ',
+ 'c', 'o', 'm', 'p', 'o', 'n', 'e', 'n', 't', 's', ' ', 'm', 'e', 'r', 'g', 'e', ' ', 'b', 'y', ' ', 'm', 'a', 'x', 'i',
+ 'm', 'u', 'm', '.', '\n', ' ', ' ', 'c', 'o', 'u', 'n', 't', '(', 'k', 'e', 'y', ':', ' ', 's', 't', 'r', 'i', 'n',
+ 'g', ',', ' ', 'r', 'e', 'p', 'l', 'i', 'c', 'a', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ',', ' ', 'v', 'a', 'l', 'u',
+ 'e', ':', ' ', 'I', 'n', 't', '5', '3', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{', '\n', ' ', ' ', ' ', ' ', 'c',
+ 'o', 'n', 's', 't', ' ', 'c', 'o', 'm', 'p', 'o', 'n', 'e', 'n', 't', ' ', '=', ' ', 'k', 'e', 'y', ' ', '+', ' ',
+ '\'', '\\', '0', '\'', ' ', '+', ' ', 'r', 'e', 'p', 'l', 'i', 'c', 'a', ';', '\n', ' ', ' ', ' ', ' ', 'c', 'o', 'n',
+ 's', 't', ' ', 's', 'e', 'e', 'n', ' ', '=', ' ', 't', 'h', 'i', 's', '.', 'c', 'o', 'u', 'n', 't', 'e', 'r', 's', '.',
+ 'g', 'e', 't', '(', 'c', 'o', 'm', 'p', 'o', 'n', 'e', 'n', 't', ')', ' ', '?', '?', ' ', '0', ';', '\n', ' ', ' ',
+ ' ', ' ', 'i', 'f', ' ', '(', 'v', 'a', 'l', 'u', 'e', ' ', '>', ' ', 's', 'e', 'e', 'n', ')', ' ', '{', ' ', 't', 'h',
+ 'i', 's', '.', 'c', 'o', 'u', 'n', 't', 'e', 'r', 's', '.', 's', 'e', 't', '(', 'c', 'o', 'm', 'p', 'o', 'n', 'e', 'n',
+ 't', ',', ' ', 'v', 'a', 'l', 'u', 'e', ')', ';', ' ', '}', '\n', ' ', ' ', '}', '\n', '\n', ' ', ' ', 'c', 'o', 'u',
+ 'n', 't', 'e', 'r', '(', 'k', 'e', 'y', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ',', ' ', 'r', 'e', 'p', 'l', 'i', 'c',
+ 'a', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ')', ':', ' ', 'I', 'n', 't', '5', '3', ' ', '{', '\n', ' ', ' ', ' ',
+ ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 't', 'h', 'i', 's', '.', 'c', 'o', 'u', 'n', 't', 'e', 'r', 's', '.', 'g', 'e',
+ 't', '(', 'k', 'e', 'y', ' ', '+', ' ', '\'', '\\', '0', '\'', ' ', '+', ' ', 'r', 'e', 'p', 'l', 'i', 'c', 'a', ')',
+ ' ', '?', '?', ' ', '0', ';', '\n', ' ', ' ', '}', '\n', '}', '\n']
+
+theorem characters_encoded : String.ofList characters = source := by kernel_rfl
+
+theorem rendered : Ownership.Wrap.emitCharacterData
+    _root_.Extracted_reference_registers.characters _root_.Extracted_reference_registers.tokens.toList _root_.Extracted_reference_registers.program = .ok characters := by kernel_rfl
+
+theorem checked : Ownership.Wrap.emit _root_.Extracted_reference_registers.source _root_.Extracted_reference_registers.program = .ok source :=
+  (Ownership.Wrap.emit_checked _root_.Extracted_reference_registers.characters_checked _root_.Extracted_reference_registers.lex_checked rendered).trans
+    (congrArg Except.ok characters_encoded)
+
+def certificate : Ownership.WrapperCertificate _root_.Extracted_reference_registers.source :=
+  ⟨_root_.Extracted_reference_registers.certificate, source, checked⟩
+
+end Extracted_reference_registers.Wrapper
 
 -- Shallow denotation certificates. Source transfer is emitted for proved fragments.
 namespace Extracted_reference_registers.Shallow

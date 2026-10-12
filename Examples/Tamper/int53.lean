@@ -6,6 +6,7 @@ import Ariadne.Shallow.Adequacy.Statements
 import Ariadne.Shallow.Adequacy.GuardedStatements
 import Ariadne.Shallow.Adequacy.JoinsContext
 import Ariadne.Shallow.Adequacy.GuardedJoinsContext
+import Ariadne.Ownership.Source
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
@@ -128,6 +129,43 @@ theorem ts_add_source {fuel : Nat} {args : List Value} {value : Value}
 
 end Extracted_tamper_int53
 
+namespace Extracted_tamper_int53.Wrapper
+open Ariadne
+
+def source : String := "// Generated ownership entry wrappers. Requires the Ariadne pristine realm contract.\ntype Int53 = number;\n// Keep Math correspondence, integer correspondence and computed-guard checks\n// independent of the larger Int53 regression artifact.\nexport function floorDivide(a: Int53, b: Int53): Int53 { return Math.floor(a / b); }\nexport function add(a: Int53, b: Int53): Int53 { return a + b; }\n"
+
+def characters : List Char := ['/', '/', ' ', 'G', 'e', 'n', 'e', 'r', 'a', 't', 'e', 'd', ' ', 'o', 'w', 'n', 'e', 'r', 's', 'h', 'i', 'p', ' ', 'e',
+ 'n', 't', 'r', 'y', ' ', 'w', 'r', 'a', 'p', 'p', 'e', 'r', 's', '.', ' ', 'R', 'e', 'q', 'u', 'i', 'r', 'e', 's', ' ',
+ 't', 'h', 'e', ' ', 'A', 'r', 'i', 'a', 'd', 'n', 'e', ' ', 'p', 'r', 'i', 's', 't', 'i', 'n', 'e', ' ', 'r', 'e', 'a',
+ 'l', 'm', ' ', 'c', 'o', 'n', 't', 'r', 'a', 'c', 't', '.', '\n', 't', 'y', 'p', 'e', ' ', 'I', 'n', 't', '5', '3',
+ ' ', '=', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ';', '\n', '/', '/', ' ', 'K', 'e', 'e', 'p', ' ', 'M', 'a', 't', 'h',
+ ' ', 'c', 'o', 'r', 'r', 'e', 's', 'p', 'o', 'n', 'd', 'e', 'n', 'c', 'e', ',', ' ', 'i', 'n', 't', 'e', 'g', 'e', 'r',
+ ' ', 'c', 'o', 'r', 'r', 'e', 's', 'p', 'o', 'n', 'd', 'e', 'n', 'c', 'e', ' ', 'a', 'n', 'd', ' ', 'c', 'o', 'm', 'p',
+ 'u', 't', 'e', 'd', '-', 'g', 'u', 'a', 'r', 'd', ' ', 'c', 'h', 'e', 'c', 'k', 's', '\n', '/', '/', ' ', 'i', 'n',
+ 'd', 'e', 'p', 'e', 'n', 'd', 'e', 'n', 't', ' ', 'o', 'f', ' ', 't', 'h', 'e', ' ', 'l', 'a', 'r', 'g', 'e', 'r', ' ',
+ 'I', 'n', 't', '5', '3', ' ', 'r', 'e', 'g', 'r', 'e', 's', 's', 'i', 'o', 'n', ' ', 'a', 'r', 't', 'i', 'f', 'a', 'c',
+ 't', '.', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'f', 'l', 'o', 'o',
+ 'r', 'D', 'i', 'v', 'i', 'd', 'e', '(', 'a', ':', ' ', 'I', 'n', 't', '5', '3', ',', ' ', 'b', ':', ' ', 'I', 'n', 't',
+ '5', '3', ')', ':', ' ', 'I', 'n', 't', '5', '3', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'M', 'a', 't', 'h',
+ '.', 'f', 'l', 'o', 'o', 'r', '(', 'a', ' ', '/', ' ', 'b', ')', ';', ' ', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't',
+ ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'a', 'd', 'd', '(', 'a', ':', ' ', 'I', 'n', 't', '5', '3', ',', ' ',
+ 'b', ':', ' ', 'I', 'n', 't', '5', '3', ')', ':', ' ', 'I', 'n', 't', '5', '3', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r',
+ 'n', ' ', 'a', ' ', '+', ' ', 'b', ';', ' ', '}', '\n']
+
+theorem characters_encoded : String.ofList characters = source := by kernel_rfl
+
+theorem rendered : Ownership.Wrap.emitCharacterData
+    _root_.Extracted_tamper_int53.characters _root_.Extracted_tamper_int53.tokens.toList _root_.Extracted_tamper_int53.program = .ok characters := by kernel_rfl
+
+theorem checked : Ownership.Wrap.emit _root_.Extracted_tamper_int53.source _root_.Extracted_tamper_int53.program = .ok source :=
+  (Ownership.Wrap.emit_checked _root_.Extracted_tamper_int53.characters_checked _root_.Extracted_tamper_int53.lex_checked rendered).trans
+    (congrArg Except.ok characters_encoded)
+
+def certificate : Ownership.WrapperCertificate _root_.Extracted_tamper_int53.source :=
+  ⟨_root_.Extracted_tamper_int53.certificate, source, checked⟩
+
+end Extracted_tamper_int53.Wrapper
+
 -- Shallow denotation certificates. Source transfer is emitted for proved fragments.
 namespace Extracted_tamper_int53.Shallow
 open Ariadne Ariadne.Shallow
@@ -147,6 +185,21 @@ def «floorDivide» («_a#arg» : _root_.Int) («_b#arg» : _root_.Int) : _root_
 
 abbrev «floorDivide».safe («_a#arg» : _root_.Int) («_b#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«floorDivide» (by decide) («_a#arg», («_b#arg», ()))
+
+def EntryGuards.«floorDivide».function : Ariadne.Function := { name := "floorDivide",   params := [{ name := "a", ty := Ariadne.Ty.named "Int53", span := { start := 183, stop := 184 } },              { name := "b", ty := Ariadne.Ty.named "Int53", span := { start := 193, stop := 194 } }],   result := Ariadne.Ty.named "Int53",   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.call                  (Ariadne.Expr.member                    (Ariadne.Expr.var "Math" { start := 219, stop := 223 })                    "floor"                    { start := 219, stop := 229 })                  [Ariadne.Expr.binary                     "/"                     (Ariadne.Expr.var "a" { start := 230, stop := 231 })                     (Ariadne.Expr.var "b" { start := 234, stop := 235 })                     { start := 230, stop := 235 }]                  { start := 219, stop := 236 })                { start := 212, stop := 218 }]             { start := 210, stop := 239 },   exported := true,   decreases := none,   span := { start := 162, stop := 170 } }
+
+def EntryGuards.«floorDivide».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«floorDivide».planned : Ownership.entryPlan _root_.Extracted_tamper_int53.program EntryGuards.«floorDivide».function = .ok EntryGuards.«floorDivide».plan := by kernel_rfl
+
+def EntryGuards.«floorDivide».certificate : Ownership.EntryCertificate _root_.Extracted_tamper_int53.Wrapper.certificate "floorDivide" :=
+  ⟨EntryGuards.«floorDivide».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«floorDivide».plan, EntryGuards.«floorDivide».planned⟩
+
+def «floorDivide».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_tamper_int53.program EntryGuards.«floorDivide».plan heap args
+
+def «floorDivide».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_tamper_int53.program EntryGuards.«floorDivide».plan fuel state "floorDivide" args
 
 theorem DenotationChecks.«floorDivide» :
     (fun env : Core.Env CoreArtifacts.«floorDivide».params Interpretation.value => «floorDivide» (env.1) (env.2.1)) =
@@ -195,6 +248,21 @@ def «add» («_a#arg» : _root_.Int) («_b#arg» : _root_.Int) : _root_.Int :=
 
 abbrev «add».safe («_a#arg» : _root_.Int) («_b#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«add» (by decide) («_a#arg», («_b#arg», ()))
+
+def EntryGuards.«add».function : Ariadne.Function := { name := "add",   params := [{ name := "a", ty := Ariadne.Ty.named "Int53", span := { start := 260, stop := 261 } },              { name := "b", ty := Ariadne.Ty.named "Int53", span := { start := 270, stop := 271 } }],   result := Ariadne.Ty.named "Int53",   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "+"                  (Ariadne.Expr.var "a" { start := 296, stop := 297 })                  (Ariadne.Expr.var "b" { start := 300, stop := 301 })                  { start := 296, stop := 301 })                { start := 289, stop := 295 }]             { start := 287, stop := 304 },   exported := true,   decreases := none,   span := { start := 247, stop := 255 } }
+
+def EntryGuards.«add».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«add».planned : Ownership.entryPlan _root_.Extracted_tamper_int53.program EntryGuards.«add».function = .ok EntryGuards.«add».plan := by kernel_rfl
+
+def EntryGuards.«add».certificate : Ownership.EntryCertificate _root_.Extracted_tamper_int53.Wrapper.certificate "add" :=
+  ⟨EntryGuards.«add».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«add».plan, EntryGuards.«add».planned⟩
+
+def «add».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_tamper_int53.program EntryGuards.«add».plan heap args
+
+def «add».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_tamper_int53.program EntryGuards.«add».plan fuel state "add" args
 
 theorem DenotationChecks.«add» :
     (fun env : Core.Env CoreArtifacts.«add».params Interpretation.value => «add» (env.1) (env.2.1)) =

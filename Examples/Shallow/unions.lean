@@ -6,6 +6,7 @@ import Ariadne.Shallow.Adequacy.Statements
 import Ariadne.Shallow.Adequacy.GuardedStatements
 import Ariadne.Shallow.Adequacy.JoinsContext
 import Ariadne.Shallow.Adequacy.GuardedJoinsContext
+import Ariadne.Ownership.Source
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
@@ -936,6 +937,148 @@ theorem ts_changed_source {fuel : Nat} {args : List Value} {value : Value}
 
 end Extracted_unions
 
+namespace Extracted_unions.Wrapper
+open Ariadne
+
+def source : String := "// Generated ownership entry wrappers. Requires the Ariadne pristine realm contract.\ntype Candidate =\n  | { readonly kind: 'valid'; readonly version: bigint; readonly id: string }\n  | { readonly kind: 'rejected'; readonly reason: string };\n\nexport function valid(version: bigint, id: string): Candidate {\n  return { kind: 'valid', version: version, id: id };\n}\nexport function rejected(reason: string): Candidate { return { kind: 'rejected', reason: reason }; }\nexport function kind(candidate: Candidate): string { return candidate.kind; }\nexport function getVersion(candidate: Candidate): bigint | undefined {\n  if (candidate.kind !== 'valid') { return undefined; }\n  return candidate.version;\n}\nexport function choose(candidates: readonly Candidate[], floor: bigint): Candidate | undefined {\n  let best: Candidate | undefined = undefined;\n  for (const candidate of candidates) {\n    switch (candidate.kind) {\n      case 'valid':\n        if (candidate.version >= floor) {\n          if (best === undefined || best.kind !== 'valid' ||\n              candidate.version > best.version ||\n              (candidate.version === best.version && candidate.id > best.id)) {\n            best = candidate;\n          }\n        }\n        break;\n      case 'rejected':\n        break;\n    }\n  }\n  return best;\n}\n\nexport function copyIfValid(candidate: Candidate): Candidate | undefined {\n  if (candidate.kind === 'valid') {\n    return { kind: 'valid', version: candidate.version, id: candidate.id };\n  }\n  return undefined;\n}\n\nfunction copy(candidate: Candidate): Candidate {\n  if (candidate.kind === 'valid') {\n    return { kind: 'valid', version: candidate.version, id: candidate.id };\n  }\n  return { kind: 'rejected', reason: candidate.reason };\n}\n\nexport function fallback(candidate: Candidate | undefined): Candidate {\n  if (candidate === undefined) { return { kind: 'rejected', reason: 'missing' }; }\n  return copy(candidate);\n}\n\nexport function replace(candidate: Candidate): Candidate {\n  let result: Candidate = copy(candidate);\n  if (result.kind === 'valid') { result = rejected('replaced'); }\n  return result;\n}\n\nexport function filtered(candidates: readonly Candidate[], floor: bigint): Candidate[] {\n  return candidates.filter((candidate: Candidate) => candidate.kind === 'valid' && candidate.version >= floor);\n}\n\ntype Event =\n  | { readonly kind: 'created'; readonly id: string }\n  | { readonly kind: 'changed'; readonly value: bigint }\n  | { readonly kind: 'deleted'; readonly id: string };\n\nexport function eventValue(event: Event): bigint {\n  switch (event.kind) {\n    case 'created': return 0n;\n    case 'changed': return event.value;\n    default: return -1n;\n  }\n}\n\nexport function eventTag(event: Event): string { return event.kind; }\n\nexport function changed(value: bigint): Event { return { kind: 'changed', value: value }; }\n"
+
+def characters : List Char := ['/', '/', ' ', 'G', 'e', 'n', 'e', 'r', 'a', 't', 'e', 'd', ' ', 'o', 'w', 'n', 'e', 'r', 's', 'h', 'i', 'p', ' ', 'e',
+ 'n', 't', 'r', 'y', ' ', 'w', 'r', 'a', 'p', 'p', 'e', 'r', 's', '.', ' ', 'R', 'e', 'q', 'u', 'i', 'r', 'e', 's', ' ',
+ 't', 'h', 'e', ' ', 'A', 'r', 'i', 'a', 'd', 'n', 'e', ' ', 'p', 'r', 'i', 's', 't', 'i', 'n', 'e', ' ', 'r', 'e', 'a',
+ 'l', 'm', ' ', 'c', 'o', 'n', 't', 'r', 'a', 'c', 't', '.', '\n', 't', 'y', 'p', 'e', ' ', 'C', 'a', 'n', 'd', 'i',
+ 'd', 'a', 't', 'e', ' ', '=', '\n', ' ', ' ', '|', ' ', '{', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'k',
+ 'i', 'n', 'd', ':', ' ', '\'', 'v', 'a', 'l', 'i', 'd', '\'', ';', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ',
+ 'v', 'e', 'r', 's', 'i', 'o', 'n', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ';', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l',
+ 'y', ' ', 'i', 'd', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ' ', '}', '\n', ' ', ' ', '|', ' ', '{', ' ', 'r', 'e',
+ 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'k', 'i', 'n', 'd', ':', ' ', '\'', 'r', 'e', 'j', 'e', 'c', 't', 'e', 'd', '\'',
+ ';', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'r', 'e', 'a', 's', 'o', 'n', ':', ' ', 's', 't', 'r', 'i', 'n',
+ 'g', ' ', '}', ';', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'v',
+ 'a', 'l', 'i', 'd', '(', 'v', 'e', 'r', 's', 'i', 'o', 'n', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ',', ' ', 'i', 'd',
+ ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ')', ':', ' ', 'C', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', ' ', '{', '\n',
+ ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '{', ' ', 'k', 'i', 'n', 'd', ':', ' ', '\'', 'v', 'a', 'l', 'i', 'd',
+ '\'', ',', ' ', 'v', 'e', 'r', 's', 'i', 'o', 'n', ':', ' ', 'v', 'e', 'r', 's', 'i', 'o', 'n', ',', ' ', 'i', 'd',
+ ':', ' ', 'i', 'd', ' ', '}', ';', '\n', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i',
+ 'o', 'n', ' ', 'r', 'e', 'j', 'e', 'c', 't', 'e', 'd', '(', 'r', 'e', 'a', 's', 'o', 'n', ':', ' ', 's', 't', 'r', 'i',
+ 'n', 'g', ')', ':', ' ', 'C', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ',
+ '{', ' ', 'k', 'i', 'n', 'd', ':', ' ', '\'', 'r', 'e', 'j', 'e', 'c', 't', 'e', 'd', '\'', ',', ' ', 'r', 'e', 'a',
+ 's', 'o', 'n', ':', ' ', 'r', 'e', 'a', 's', 'o', 'n', ' ', '}', ';', ' ', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't',
+ ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'k', 'i', 'n', 'd', '(', 'c', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e',
+ ':', ' ', 'C', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', ')', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ' ', '{', ' ', 'r',
+ 'e', 't', 'u', 'r', 'n', ' ', 'c', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', '.', 'k', 'i', 'n', 'd', ';', ' ', '}',
+ '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'g', 'e', 't', 'V', 'e', 'r',
+ 's', 'i', 'o', 'n', '(', 'c', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', ':', ' ', 'C', 'a', 'n', 'd', 'i', 'd', 'a', 't',
+ 'e', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '|', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ' ', '{',
+ '\n', ' ', ' ', 'i', 'f', ' ', '(', 'c', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', '.', 'k', 'i', 'n', 'd', ' ', '!',
+ '=', '=', ' ', '\'', 'v', 'a', 'l', 'i', 'd', '\'', ')', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'u', 'n',
+ 'd', 'e', 'f', 'i', 'n', 'e', 'd', ';', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'c', 'a', 'n',
+ 'd', 'i', 'd', 'a', 't', 'e', '.', 'v', 'e', 'r', 's', 'i', 'o', 'n', ';', '\n', '}', '\n', 'e', 'x', 'p', 'o', 'r',
+ 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'c', 'h', 'o', 'o', 's', 'e', '(', 'c', 'a', 'n', 'd', 'i', 'd',
+ 'a', 't', 'e', 's', ':', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'C', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e',
+ '[', ']', ',', ' ', 'f', 'l', 'o', 'o', 'r', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'C', 'a', 'n', 'd',
+ 'i', 'd', 'a', 't', 'e', ' ', '|', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ' ', '{', '\n', ' ', ' ', 'l',
+ 'e', 't', ' ', 'b', 'e', 's', 't', ':', ' ', 'C', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', ' ', '|', ' ', 'u', 'n', 'd',
+ 'e', 'f', 'i', 'n', 'e', 'd', ' ', '=', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ';', '\n', ' ', ' ', 'f',
+ 'o', 'r', ' ', '(', 'c', 'o', 'n', 's', 't', ' ', 'c', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', ' ', 'o', 'f', ' ', 'c',
+ 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', 's', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', 's', 'w', 'i', 't', 'c', 'h',
+ ' ', '(', 'c', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', '.', 'k', 'i', 'n', 'd', ')', ' ', '{', '\n', ' ', ' ', ' ',
+ ' ', ' ', ' ', 'c', 'a', 's', 'e', ' ', '\'', 'v', 'a', 'l', 'i', 'd', '\'', ':', '\n', ' ', ' ', ' ', ' ', ' ', ' ',
+ ' ', ' ', 'i', 'f', ' ', '(', 'c', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', '.', 'v', 'e', 'r', 's', 'i', 'o', 'n', ' ',
+ '>', '=', ' ', 'f', 'l', 'o', 'o', 'r', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'i',
+ 'f', ' ', '(', 'b', 'e', 's', 't', ' ', '=', '=', '=', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ' ', '|', '|',
+ ' ', 'b', 'e', 's', 't', '.', 'k', 'i', 'n', 'd', ' ', '!', '=', '=', ' ', '\'', 'v', 'a', 'l', 'i', 'd', '\'', ' ',
+ '|', '|', '\n', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'c', 'a', 'n', 'd', 'i', 'd',
+ 'a', 't', 'e', '.', 'v', 'e', 'r', 's', 'i', 'o', 'n', ' ', '>', ' ', 'b', 'e', 's', 't', '.', 'v', 'e', 'r', 's', 'i',
+ 'o', 'n', ' ', '|', '|', '\n', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '(', 'c', 'a',
+ 'n', 'd', 'i', 'd', 'a', 't', 'e', '.', 'v', 'e', 'r', 's', 'i', 'o', 'n', ' ', '=', '=', '=', ' ', 'b', 'e', 's', 't',
+ '.', 'v', 'e', 'r', 's', 'i', 'o', 'n', ' ', '&', '&', ' ', 'c', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', '.', 'i', 'd',
+ ' ', '>', ' ', 'b', 'e', 's', 't', '.', 'i', 'd', ')', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+ ' ', ' ', ' ', ' ', 'b', 'e', 's', 't', ' ', '=', ' ', 'c', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', ';', '\n', ' ',
+ ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '}', '\n', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '}', '\n', ' ', ' ',
+ ' ', ' ', ' ', ' ', ' ', ' ', 'b', 'r', 'e', 'a', 'k', ';', '\n', ' ', ' ', ' ', ' ', ' ', ' ', 'c', 'a', 's', 'e',
+ ' ', '\'', 'r', 'e', 'j', 'e', 'c', 't', 'e', 'd', '\'', ':', '\n', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'b', 'r',
+ 'e', 'a', 'k', ';', '\n', ' ', ' ', ' ', ' ', '}', '\n', ' ', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n',
+ ' ', 'b', 'e', 's', 't', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i',
+ 'o', 'n', ' ', 'c', 'o', 'p', 'y', 'I', 'f', 'V', 'a', 'l', 'i', 'd', '(', 'c', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e',
+ ':', ' ', 'C', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', ')', ':', ' ', 'C', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', ' ',
+ '|', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'c', 'a', 'n',
+ 'd', 'i', 'd', 'a', 't', 'e', '.', 'k', 'i', 'n', 'd', ' ', '=', '=', '=', ' ', '\'', 'v', 'a', 'l', 'i', 'd', '\'',
+ ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '{', ' ', 'k', 'i', 'n', 'd', ':', ' ',
+ '\'', 'v', 'a', 'l', 'i', 'd', '\'', ',', ' ', 'v', 'e', 'r', 's', 'i', 'o', 'n', ':', ' ', 'c', 'a', 'n', 'd', 'i',
+ 'd', 'a', 't', 'e', '.', 'v', 'e', 'r', 's', 'i', 'o', 'n', ',', ' ', 'i', 'd', ':', ' ', 'c', 'a', 'n', 'd', 'i', 'd',
+ 'a', 't', 'e', '.', 'i', 'd', ' ', '}', ';', '\n', ' ', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ',
+ 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ';', '\n', '}', '\n', '\n', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ',
+ 'c', 'o', 'p', 'y', '(', 'c', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', ':', ' ', 'C', 'a', 'n', 'd', 'i', 'd', 'a', 't',
+ 'e', ')', ':', ' ', 'C', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'c',
+ 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', '.', 'k', 'i', 'n', 'd', ' ', '=', '=', '=', ' ', '\'', 'v', 'a', 'l', 'i',
+ 'd', '\'', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '{', ' ', 'k', 'i', 'n', 'd',
+ ':', ' ', '\'', 'v', 'a', 'l', 'i', 'd', '\'', ',', ' ', 'v', 'e', 'r', 's', 'i', 'o', 'n', ':', ' ', 'c', 'a', 'n',
+ 'd', 'i', 'd', 'a', 't', 'e', '.', 'v', 'e', 'r', 's', 'i', 'o', 'n', ',', ' ', 'i', 'd', ':', ' ', 'c', 'a', 'n', 'd',
+ 'i', 'd', 'a', 't', 'e', '.', 'i', 'd', ' ', '}', ';', '\n', ' ', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r',
+ 'n', ' ', '{', ' ', 'k', 'i', 'n', 'd', ':', ' ', '\'', 'r', 'e', 'j', 'e', 'c', 't', 'e', 'd', '\'', ',', ' ', 'r',
+ 'e', 'a', 's', 'o', 'n', ':', ' ', 'c', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', '.', 'r', 'e', 'a', 's', 'o', 'n', ' ',
+ '}', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'f',
+ 'a', 'l', 'l', 'b', 'a', 'c', 'k', '(', 'c', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', ':', ' ', 'C', 'a', 'n', 'd', 'i',
+ 'd', 'a', 't', 'e', ' ', '|', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ')', ':', ' ', 'C', 'a', 'n', 'd', 'i',
+ 'd', 'a', 't', 'e', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'c', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', ' ',
+ '=', '=', '=', ' ', 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', ')', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ',
+ '{', ' ', 'k', 'i', 'n', 'd', ':', ' ', '\'', 'r', 'e', 'j', 'e', 'c', 't', 'e', 'd', '\'', ',', ' ', 'r', 'e', 'a',
+ 's', 'o', 'n', ':', ' ', '\'', 'm', 'i', 's', 's', 'i', 'n', 'g', '\'', ' ', '}', ';', ' ', '}', '\n', ' ', ' ', 'r',
+ 'e', 't', 'u', 'r', 'n', ' ', 'c', 'o', 'p', 'y', '(', 'c', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', ')', ';', '\n',
+ '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'r', 'e', 'p', 'l',
+ 'a', 'c', 'e', '(', 'c', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', ':', ' ', 'C', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e',
+ ')', ':', ' ', 'C', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', ' ', '{', '\n', ' ', ' ', 'l', 'e', 't', ' ', 'r', 'e',
+ 's', 'u', 'l', 't', ':', ' ', 'C', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', ' ', '=', ' ', 'c', 'o', 'p', 'y', '(', 'c',
+ 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', ')', ';', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'r', 'e', 's', 'u', 'l', 't',
+ '.', 'k', 'i', 'n', 'd', ' ', '=', '=', '=', ' ', '\'', 'v', 'a', 'l', 'i', 'd', '\'', ')', ' ', '{', ' ', 'r', 'e',
+ 's', 'u', 'l', 't', ' ', '=', ' ', 'r', 'e', 'j', 'e', 'c', 't', 'e', 'd', '(', '\'', 'r', 'e', 'p', 'l', 'a', 'c',
+ 'e', 'd', '\'', ')', ';', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'r', 'e', 's', 'u', 'l', 't',
+ ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'f', 'i',
+ 'l', 't', 'e', 'r', 'e', 'd', '(', 'c', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', 's', ':', ' ', 'r', 'e', 'a', 'd', 'o',
+ 'n', 'l', 'y', ' ', 'C', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', '[', ']', ',', ' ', 'f', 'l', 'o', 'o', 'r', ':', ' ',
+ 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'C', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', '[', ']', ' ', '{', '\n',
+ ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'c', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', 's', '.', 'f', 'i', 'l', 't',
+ 'e', 'r', '(', '(', 'c', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', ':', ' ', 'C', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e',
+ ')', ' ', '=', '>', ' ', 'c', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', '.', 'k', 'i', 'n', 'd', ' ', '=', '=', '=', ' ',
+ '\'', 'v', 'a', 'l', 'i', 'd', '\'', ' ', '&', '&', ' ', 'c', 'a', 'n', 'd', 'i', 'd', 'a', 't', 'e', '.', 'v', 'e',
+ 'r', 's', 'i', 'o', 'n', ' ', '>', '=', ' ', 'f', 'l', 'o', 'o', 'r', ')', ';', '\n', '}', '\n', '\n', 't', 'y', 'p',
+ 'e', ' ', 'E', 'v', 'e', 'n', 't', ' ', '=', '\n', ' ', ' ', '|', ' ', '{', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l',
+ 'y', ' ', 'k', 'i', 'n', 'd', ':', ' ', '\'', 'c', 'r', 'e', 'a', 't', 'e', 'd', '\'', ';', ' ', 'r', 'e', 'a', 'd',
+ 'o', 'n', 'l', 'y', ' ', 'i', 'd', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ' ', '}', '\n', ' ', ' ', '|', ' ', '{',
+ ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'k', 'i', 'n', 'd', ':', ' ', '\'', 'c', 'h', 'a', 'n', 'g', 'e',
+ 'd', '\'', ';', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'v', 'a', 'l', 'u', 'e', ':', ' ', 'b', 'i', 'g',
+ 'i', 'n', 't', ' ', '}', '\n', ' ', ' ', '|', ' ', '{', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'k', 'i',
+ 'n', 'd', ':', ' ', '\'', 'd', 'e', 'l', 'e', 't', 'e', 'd', '\'', ';', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y',
+ ' ', 'i', 'd', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ' ', '}', ';', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ',
+ 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'e', 'v', 'e', 'n', 't', 'V', 'a', 'l', 'u', 'e', '(', 'e', 'v', 'e', 'n',
+ 't', ':', ' ', 'E', 'v', 'e', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 's',
+ 'w', 'i', 't', 'c', 'h', ' ', '(', 'e', 'v', 'e', 'n', 't', '.', 'k', 'i', 'n', 'd', ')', ' ', '{', '\n', ' ', ' ',
+ ' ', ' ', 'c', 'a', 's', 'e', ' ', '\'', 'c', 'r', 'e', 'a', 't', 'e', 'd', '\'', ':', ' ', 'r', 'e', 't', 'u', 'r',
+ 'n', ' ', '0', 'n', ';', '\n', ' ', ' ', ' ', ' ', 'c', 'a', 's', 'e', ' ', '\'', 'c', 'h', 'a', 'n', 'g', 'e', 'd',
+ '\'', ':', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'e', 'v', 'e', 'n', 't', '.', 'v', 'a', 'l', 'u', 'e', ';', '\n',
+ ' ', ' ', ' ', ' ', 'd', 'e', 'f', 'a', 'u', 'l', 't', ':', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '-', '1', 'n', ';',
+ '\n', ' ', ' ', '}', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n',
+ ' ', 'e', 'v', 'e', 'n', 't', 'T', 'a', 'g', '(', 'e', 'v', 'e', 'n', 't', ':', ' ', 'E', 'v', 'e', 'n', 't', ')', ':',
+ ' ', 's', 't', 'r', 'i', 'n', 'g', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'e', 'v', 'e', 'n', 't', '.', 'k',
+ 'i', 'n', 'd', ';', ' ', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n',
+ ' ', 'c', 'h', 'a', 'n', 'g', 'e', 'd', '(', 'v', 'a', 'l', 'u', 'e', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':',
+ ' ', 'E', 'v', 'e', 'n', 't', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '{', ' ', 'k', 'i', 'n', 'd', ':', ' ',
+ '\'', 'c', 'h', 'a', 'n', 'g', 'e', 'd', '\'', ',', ' ', 'v', 'a', 'l', 'u', 'e', ':', ' ', 'v', 'a', 'l', 'u', 'e',
+ ' ', '}', ';', ' ', '}', '\n']
+
+theorem characters_encoded : String.ofList characters = source := by kernel_rfl
+
+theorem rendered : Ownership.Wrap.emitCharacterData
+    _root_.Extracted_unions.characters _root_.Extracted_unions.tokens.toList _root_.Extracted_unions.program = .ok characters := by kernel_rfl
+
+theorem checked : Ownership.Wrap.emit _root_.Extracted_unions.source _root_.Extracted_unions.program = .ok source :=
+  (Ownership.Wrap.emit_checked _root_.Extracted_unions.characters_checked _root_.Extracted_unions.lex_checked rendered).trans
+    (congrArg Except.ok characters_encoded)
+
+def certificate : Ownership.WrapperCertificate _root_.Extracted_unions.source :=
+  ⟨_root_.Extracted_unions.certificate, source, checked⟩
+
+end Extracted_unions.Wrapper
+
 -- Shallow denotation certificates. Source transfer is emitted for proved fragments.
 namespace Extracted_unions.Shallow
 open Ariadne Ariadne.Shallow
@@ -1151,6 +1294,21 @@ def «valid» («_version#arg» : _root_.Int) («_id#arg» : _root_.Ariadne.JSSt
 abbrev «valid».safe («_version#arg» : _root_.Int) («_id#arg» : _root_.Ariadne.JSString) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«valid» (by decide) («_version#arg», («_id#arg», ()))
 
+def EntryGuards.«valid».function : Ariadne.Function := { name := "valid",   params := [{ name := "version", ty := Ariadne.Ty.bigint, span := { start := 178, stop := 185 } },              { name := "id", ty := Ariadne.Ty.string, span := { start := 195, stop := 197 } }],   result := Ariadne.Ty.named "Candidate",   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.record                  [("kind",                    Ariadne.Expr.literal                      (Ariadne.Literal.string [118, 97, 108, 105, 100])                      { start := 237, stop := 244 }),                   ("version", Ariadne.Expr.var "version" { start := 255, stop := 262 }),                   ("id", Ariadne.Expr.var "id" { start := 268, stop := 270 })]                  { start := 229, stop := 272 })                { start := 222, stop := 228 }]             { start := 218, stop := 275 },   exported := true,   decreases := none,   span := { start := 163, stop := 171 } }
+
+def EntryGuards.«valid».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«valid».planned : Ownership.entryPlan _root_.Extracted_unions.program EntryGuards.«valid».function = .ok EntryGuards.«valid».plan := by kernel_rfl
+
+def EntryGuards.«valid».certificate : Ownership.EntryCertificate _root_.Extracted_unions.Wrapper.certificate "valid" :=
+  ⟨EntryGuards.«valid».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«valid».plan, EntryGuards.«valid».planned⟩
+
+def «valid».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_unions.program EntryGuards.«valid».plan heap args
+
+def «valid».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_unions.program EntryGuards.«valid».plan fuel state "valid" args
+
 theorem DenotationChecks.«valid» :
     (fun env : Core.Env CoreArtifacts.«valid».params Interpretation.value => «valid» (env.1) (env.2.1)) =
       Denote.function (interp := Interpretation.value) CoreArtifacts.«valid» := by
@@ -1167,6 +1325,21 @@ def «rejected» («_reason#arg» : _root_.Ariadne.JSString) : NativeTypes.«Can
 
 abbrev «rejected».safe («_reason#arg» : _root_.Ariadne.JSString) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«rejected» (by decide) («_reason#arg», ())
+
+def EntryGuards.«rejected».function : Ariadne.Function := { name := "rejected",   params := [{ name := "reason", ty := Ariadne.Ty.string, span := { start := 301, stop := 307 } }],   result := Ariadne.Ty.named "Candidate",   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.record                  [("kind",                    Ariadne.Expr.literal                      (Ariadne.Literal.string [114, 101, 106, 101, 99, 116, 101, 100])                      { start := 345, stop := 355 }),                   ("reason", Ariadne.Expr.var "reason" { start := 365, stop := 371 })]                  { start := 337, stop := 373 })                { start := 330, stop := 336 }]             { start := 328, stop := 376 },   exported := true,   decreases := none,   span := { start := 283, stop := 291 } }
+
+def EntryGuards.«rejected».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«rejected».planned : Ownership.entryPlan _root_.Extracted_unions.program EntryGuards.«rejected».function = .ok EntryGuards.«rejected».plan := by kernel_rfl
+
+def EntryGuards.«rejected».certificate : Ownership.EntryCertificate _root_.Extracted_unions.Wrapper.certificate "rejected" :=
+  ⟨EntryGuards.«rejected».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«rejected».plan, EntryGuards.«rejected».planned⟩
+
+def «rejected».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_unions.program EntryGuards.«rejected».plan heap args
+
+def «rejected».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_unions.program EntryGuards.«rejected».plan fuel state "rejected" args
 
 theorem DenotationChecks.«rejected» :
     (fun env : Core.Env CoreArtifacts.«rejected».params Interpretation.value => «rejected» (env.1)) =
@@ -1185,6 +1358,21 @@ def «kind» («_candidate#arg» : NativeTypes.«Candidate») : _root_.Ariadne.J
 abbrev «kind».safe («_candidate#arg» : NativeTypes.«Candidate») : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«kind» (by decide) («_candidate#arg», ())
 
+def EntryGuards.«kind».function : Ariadne.Function := { name := "kind",   params := [{ name := "candidate", ty := Ariadne.Ty.named "Candidate", span := { start := 398, stop := 407 } }],   result := Ariadne.Ty.string,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.member                  (Ariadne.Expr.var "candidate" { start := 437, stop := 446 })                  "kind"                  { start := 437, stop := 451 })                { start := 430, stop := 436 }]             { start := 428, stop := 454 },   exported := true,   decreases := none,   span := { start := 384, stop := 392 } }
+
+def EntryGuards.«kind».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«kind».planned : Ownership.entryPlan _root_.Extracted_unions.program EntryGuards.«kind».function = .ok EntryGuards.«kind».plan := by kernel_rfl
+
+def EntryGuards.«kind».certificate : Ownership.EntryCertificate _root_.Extracted_unions.Wrapper.certificate "kind" :=
+  ⟨EntryGuards.«kind».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«kind».plan, EntryGuards.«kind».planned⟩
+
+def «kind».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_unions.program EntryGuards.«kind».plan heap args
+
+def «kind».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_unions.program EntryGuards.«kind».plan fuel state "kind" args
+
 theorem DenotationChecks.«kind» :
     (fun env : Core.Env CoreArtifacts.«kind».params Interpretation.value => «kind» (env.1)) =
       Denote.function (interp := Interpretation.value) CoreArtifacts.«kind» := by
@@ -1202,6 +1390,21 @@ def «getVersion» («_candidate#arg» : NativeTypes.«Candidate») : (_root_.Op
 
 abbrev «getVersion».safe («_candidate#arg» : NativeTypes.«Candidate») : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«getVersion» (by decide) («_candidate#arg», ())
+
+def EntryGuards.«getVersion».function : Ariadne.Function := { name := "getVersion",   params := [{ name := "candidate", ty := Ariadne.Ty.named "Candidate", span := { start := 482, stop := 491 } }],   result := Ariadne.Ty.union (Ariadne.Ty.bigint) (Ariadne.Ty.undefined),   body := Ariadne.Stmt.block             [Ariadne.Stmt.if_                (Ariadne.Expr.binary                  "!=="                  (Ariadne.Expr.member                    (Ariadne.Expr.var "candidate" { start := 532, stop := 541 })                    "kind"                    { start := 532, stop := 546 })                  (Ariadne.Expr.literal (Ariadne.Literal.string [118, 97, 108, 105, 100]) { start := 551, stop := 558 })                  { start := 532, stop := 558 })                (Ariadne.Stmt.block                  [Ariadne.Stmt.return_                     (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 569, stop := 578 })                     { start := 562, stop := 568 }]                  { start := 560, stop := 581 })                (Ariadne.Stmt.block [] { start := 528, stop := 530 })                { start := 528, stop := 530 },              Ariadne.Stmt.return_                (Ariadne.Expr.member                  (Ariadne.Expr.var "candidate" { start := 591, stop := 600 })                  "version"                  { start := 591, stop := 608 })                { start := 584, stop := 590 }]             { start := 524, stop := 611 },   exported := true,   decreases := none,   span := { start := 462, stop := 470 } }
+
+def EntryGuards.«getVersion».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«getVersion».planned : Ownership.entryPlan _root_.Extracted_unions.program EntryGuards.«getVersion».function = .ok EntryGuards.«getVersion».plan := by kernel_rfl
+
+def EntryGuards.«getVersion».certificate : Ownership.EntryCertificate _root_.Extracted_unions.Wrapper.certificate "getVersion" :=
+  ⟨EntryGuards.«getVersion».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«getVersion».plan, EntryGuards.«getVersion».planned⟩
+
+def «getVersion».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_unions.program EntryGuards.«getVersion».plan heap args
+
+def «getVersion».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_unions.program EntryGuards.«getVersion».plan fuel state "getVersion" args
 
 theorem DenotationChecks.«getVersion» :
     (fun env : Core.Env CoreArtifacts.«getVersion».params Interpretation.value => «getVersion» (env.1)) =
@@ -3893,6 +4096,21 @@ def «choose» («_candidates#arg» : (_root_.List NativeTypes.«Candidate»)) (
 abbrev «choose».safe («_candidates#arg» : (_root_.List NativeTypes.«Candidate»)) («_floor#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«choose» (by decide) («_candidates#arg», («_floor#arg», ()))
 
+def EntryGuards.«choose».function : Ariadne.Function := { name := "choose",   params := [{ name := "candidates",                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.named "Candidate")),                span := { start := 635, stop := 645 } },              { name := "floor", ty := Ariadne.Ty.bigint, span := { start := 669, stop := 674 } }],   result := Ariadne.Ty.union (Ariadne.Ty.named "Candidate") (Ariadne.Ty.undefined),   body := Ariadne.Stmt.block             [Ariadne.Stmt.let_                true                "best"                (some (Ariadne.Ty.union (Ariadne.Ty.named "Candidate") (Ariadne.Ty.undefined)))                (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 745, stop := 754 })                { start := 711, stop := 714 },              Ariadne.Stmt.forOf                false                "candidate"                (Ariadne.Expr.var "candidates" { start := 782, stop := 792 })                (Ariadne.Stmt.block                  [Ariadne.Stmt.switch_                     (Ariadne.Expr.member                       (Ariadne.Expr.var "candidate" { start := 808, stop := 817 })                       "kind"                       { start := 808, stop := 822 })                     [(some (Ariadne.Expr.literal                         (Ariadne.Literal.string [118, 97, 108, 105, 100])                         { start := 837, stop := 844 }),                       [Ariadne.Stmt.if_                          (Ariadne.Expr.binary                            ">="                            (Ariadne.Expr.member                              (Ariadne.Expr.var "candidate" { start := 858, stop := 867 })                              "version"                              { start := 858, stop := 875 })                            (Ariadne.Expr.var "floor" { start := 879, stop := 884 })                            { start := 858, stop := 884 })                          (Ariadne.Stmt.block                            [Ariadne.Stmt.if_                               (Ariadne.Expr.binary                                 "||"                                 (Ariadne.Expr.binary                                   "||"                                   (Ariadne.Expr.binary                                     "||"                                     (Ariadne.Expr.binary                                       "==="                                       (Ariadne.Expr.var "best" { start := 902, stop := 906 })                                       (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 911, stop := 920 })                                       { start := 902, stop := 920 })                                     (Ariadne.Expr.binary                                       "!=="                                       (Ariadne.Expr.member                                         (Ariadne.Expr.var "best" { start := 924, stop := 928 })                                         "kind"                                         { start := 924, stop := 933 })                                       (Ariadne.Expr.literal                                         (Ariadne.Literal.string [118, 97, 108, 105, 100])                                         { start := 938, stop := 945 })                                       { start := 924, stop := 945 })                                     { start := 902, stop := 945 })                                   (Ariadne.Expr.binary                                     ">"                                     (Ariadne.Expr.member                                       (Ariadne.Expr.var "candidate" { start := 963, stop := 972 })                                       "version"                                       { start := 963, stop := 980 })                                     (Ariadne.Expr.member                                       (Ariadne.Expr.var "best" { start := 983, stop := 987 })                                       "version"                                       { start := 983, stop := 995 })                                     { start := 963, stop := 995 })                                   { start := 902, stop := 995 })                                 (Ariadne.Expr.binary                                   "&&"                                   (Ariadne.Expr.binary                                     "==="                                     (Ariadne.Expr.member                                       (Ariadne.Expr.var "candidate" { start := 1014, stop := 1023 })                                       "version"                                       { start := 1014, stop := 1031 })                                     (Ariadne.Expr.member                                       (Ariadne.Expr.var "best" { start := 1036, stop := 1040 })                                       "version"                                       { start := 1036, stop := 1048 })                                     { start := 1014, stop := 1048 })                                   (Ariadne.Expr.binary                                     ">"                                     (Ariadne.Expr.member                                       (Ariadne.Expr.var "candidate" { start := 1052, stop := 1061 })                                       "id"                                       { start := 1052, stop := 1064 })                                     (Ariadne.Expr.member                                       (Ariadne.Expr.var "best" { start := 1067, stop := 1071 })                                       "id"                                       { start := 1067, stop := 1074 })                                     { start := 1052, stop := 1074 })                                   { start := 1014, stop := 1074 })                                 { start := 902, stop := 1074 })                               (Ariadne.Stmt.block                                 [Ariadne.Stmt.assign                                    (Ariadne.Expr.var "best" { start := 1091, stop := 1095 })                                    (Ariadne.Expr.var "candidate" { start := 1098, stop := 1107 })                                    { start := 1091, stop := 1095 }]                                 { start := 1077, stop := 1120 })                               (Ariadne.Stmt.block [] { start := 898, stop := 900 })                               { start := 898, stop := 900 }]                            { start := 886, stop := 1130 })                          (Ariadne.Stmt.block [] { start := 854, stop := 856 })                          { start := 854, stop := 856 },                        Ariadne.Stmt.break_ { start := 1139, stop := 1144 }]),                      (some (Ariadne.Expr.literal                         (Ariadne.Literal.string [114, 101, 106, 101, 99, 116, 101, 100])                         { start := 1157, stop := 1167 }),                       [Ariadne.Stmt.break_ { start := 1177, stop := 1182 }])]                     { start := 800, stop := 806 }]                  { start := 794, stop := 1193 })                { start := 758, stop := 761 },              Ariadne.Stmt.return_                (Ariadne.Expr.var "best" { start := 1203, stop := 1207 })                { start := 1196, stop := 1202 }]             { start := 707, stop := 1210 },   exported := true,   decreases := none,   span := { start := 619, stop := 627 } }
+
+def EntryGuards.«choose».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«choose».planned : Ownership.entryPlan _root_.Extracted_unions.program EntryGuards.«choose».function = .ok EntryGuards.«choose».plan := by kernel_rfl
+
+def EntryGuards.«choose».certificate : Ownership.EntryCertificate _root_.Extracted_unions.Wrapper.certificate "choose" :=
+  ⟨EntryGuards.«choose».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«choose».plan, EntryGuards.«choose».planned⟩
+
+def «choose».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_unions.program EntryGuards.«choose».plan heap args
+
+def «choose».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_unions.program EntryGuards.«choose».plan fuel state "choose" args
+
 theorem DenotationChecks.«choose» :
     (fun env : Core.Env CoreArtifacts.«choose».params Interpretation.value => «choose» (env.1) (env.2.1)) =
       Denote.function (interp := Interpretation.value) CoreArtifacts.«choose» := by
@@ -3910,6 +4128,21 @@ def «copyIfValid» («_candidate#arg» : NativeTypes.«Candidate») : (_root_.O
 
 abbrev «copyIfValid».safe («_candidate#arg» : NativeTypes.«Candidate») : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«copyIfValid» (by decide) («_candidate#arg», ())
+
+def EntryGuards.«copyIfValid».function : Ariadne.Function := { name := "copyIfValid",   params := [{ name := "candidate", ty := Ariadne.Ty.named "Candidate", span := { start := 1240, stop := 1249 } }],   result := Ariadne.Ty.union (Ariadne.Ty.named "Candidate") (Ariadne.Ty.undefined),   body := Ariadne.Stmt.block             [Ariadne.Stmt.if_                (Ariadne.Expr.binary                  "==="                  (Ariadne.Expr.member                    (Ariadne.Expr.var "candidate" { start := 1293, stop := 1302 })                    "kind"                    { start := 1293, stop := 1307 })                  (Ariadne.Expr.literal                    (Ariadne.Literal.string [118, 97, 108, 105, 100])                    { start := 1312, stop := 1319 })                  { start := 1293, stop := 1319 })                (Ariadne.Stmt.block                  [Ariadne.Stmt.return_                     (Ariadne.Expr.record                       [("kind",                         Ariadne.Expr.literal                           (Ariadne.Literal.string [118, 97, 108, 105, 100])                           { start := 1342, stop := 1349 }),                        ("version",                         Ariadne.Expr.member                           (Ariadne.Expr.var "candidate" { start := 1360, stop := 1369 })                           "version"                           { start := 1360, stop := 1377 }),                        ("id",                         Ariadne.Expr.member                           (Ariadne.Expr.var "candidate" { start := 1383, stop := 1392 })                           "id"                           { start := 1383, stop := 1395 })]                       { start := 1334, stop := 1397 })                     { start := 1327, stop := 1333 }]                  { start := 1321, stop := 1402 })                (Ariadne.Stmt.block [] { start := 1289, stop := 1291 })                { start := 1289, stop := 1291 },              Ariadne.Stmt.return_                (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 1412, stop := 1421 })                { start := 1405, stop := 1411 }]             { start := 1285, stop := 1424 },   exported := true,   decreases := none,   span := { start := 1219, stop := 1227 } }
+
+def EntryGuards.«copyIfValid».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«copyIfValid».planned : Ownership.entryPlan _root_.Extracted_unions.program EntryGuards.«copyIfValid».function = .ok EntryGuards.«copyIfValid».plan := by kernel_rfl
+
+def EntryGuards.«copyIfValid».certificate : Ownership.EntryCertificate _root_.Extracted_unions.Wrapper.certificate "copyIfValid" :=
+  ⟨EntryGuards.«copyIfValid».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«copyIfValid».plan, EntryGuards.«copyIfValid».planned⟩
+
+def «copyIfValid».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_unions.program EntryGuards.«copyIfValid».plan heap args
+
+def «copyIfValid».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_unions.program EntryGuards.«copyIfValid».plan fuel state "copyIfValid" args
 
 theorem DenotationChecks.«copyIfValid» :
     (fun env : Core.Env CoreArtifacts.«copyIfValid».params Interpretation.value => «copyIfValid» (env.1)) =
@@ -3984,6 +4217,21 @@ def «fallback» («_candidate#arg» : (_root_.Option NativeTypes.«Candidate»)
 
 abbrev «fallback».safe («_candidate#arg» : (_root_.Option NativeTypes.«Candidate»)) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«fallback» (by decide) («_candidate#arg», ())
+
+def EntryGuards.«fallback».function : Ariadne.Function := { name := "fallback",   params := [{ name := "candidate",                ty := Ariadne.Ty.union (Ariadne.Ty.named "Candidate") (Ariadne.Ty.undefined),                span := { start := 1676, stop := 1685 } }],   result := Ariadne.Ty.named "Candidate",   body := Ariadne.Stmt.block             [Ariadne.Stmt.if_                (Ariadne.Expr.binary                  "==="                  (Ariadne.Expr.var "candidate" { start := 1729, stop := 1738 })                  (Ariadne.Expr.literal (Ariadne.Literal.undefined) { start := 1743, stop := 1752 })                  { start := 1729, stop := 1752 })                (Ariadne.Stmt.block                  [Ariadne.Stmt.return_                     (Ariadne.Expr.record                       [("kind",                         Ariadne.Expr.literal                           (Ariadne.Literal.string [114, 101, 106, 101, 99, 116, 101, 100])                           { start := 1771, stop := 1781 }),                        ("reason",                         Ariadne.Expr.literal                           (Ariadne.Literal.string [109, 105, 115, 115, 105, 110, 103])                           { start := 1791, stop := 1800 })]                       { start := 1763, stop := 1802 })                     { start := 1756, stop := 1762 }]                  { start := 1754, stop := 1805 })                (Ariadne.Stmt.block [] { start := 1725, stop := 1727 })                { start := 1725, stop := 1727 },              Ariadne.Stmt.return_                (Ariadne.Expr.call                  (Ariadne.Expr.var "copy" { start := 1815, stop := 1819 })                  [Ariadne.Expr.var "candidate" { start := 1820, stop := 1829 }]                  { start := 1815, stop := 1830 })                { start := 1808, stop := 1814 }]             { start := 1721, stop := 1833 },   exported := true,   decreases := none,   span := { start := 1658, stop := 1666 } }
+
+def EntryGuards.«fallback».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«fallback».planned : Ownership.entryPlan _root_.Extracted_unions.program EntryGuards.«fallback».function = .ok EntryGuards.«fallback».plan := by kernel_rfl
+
+def EntryGuards.«fallback».certificate : Ownership.EntryCertificate _root_.Extracted_unions.Wrapper.certificate "fallback" :=
+  ⟨EntryGuards.«fallback».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«fallback».plan, EntryGuards.«fallback».planned⟩
+
+def «fallback».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_unions.program EntryGuards.«fallback».plan heap args
+
+def «fallback».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_unions.program EntryGuards.«fallback».plan fuel state "fallback" args
 
 theorem DenotationChecks.«fallback» :
     (fun env : Core.Env CoreArtifacts.«fallback».params Interpretation.value => «fallback» (env.1)) =
@@ -4126,6 +4374,21 @@ def «replace» («_candidate#arg» : NativeTypes.«Candidate») : NativeTypes.�
 abbrev «replace».safe («_candidate#arg» : NativeTypes.«Candidate») : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«replace» (by decide) («_candidate#arg», ())
 
+def EntryGuards.«replace».function : Ariadne.Function := { name := "replace",   params := [{ name := "candidate", ty := Ariadne.Ty.named "Candidate", span := { start := 1859, stop := 1868 } }],   result := Ariadne.Ty.named "Candidate",   body := Ariadne.Stmt.block             [Ariadne.Stmt.let_                true                "result"                (some (Ariadne.Ty.named "Candidate"))                (Ariadne.Expr.call                  (Ariadne.Expr.var "copy" { start := 1920, stop := 1924 })                  [Ariadne.Expr.var "candidate" { start := 1925, stop := 1934 }]                  { start := 1920, stop := 1935 })                { start := 1896, stop := 1899 },              Ariadne.Stmt.if_                (Ariadne.Expr.binary                  "==="                  (Ariadne.Expr.member                    (Ariadne.Expr.var "result" { start := 1943, stop := 1949 })                    "kind"                    { start := 1943, stop := 1954 })                  (Ariadne.Expr.literal                    (Ariadne.Literal.string [118, 97, 108, 105, 100])                    { start := 1959, stop := 1966 })                  { start := 1943, stop := 1966 })                (Ariadne.Stmt.block                  [Ariadne.Stmt.assign                     (Ariadne.Expr.var "result" { start := 1970, stop := 1976 })                     (Ariadne.Expr.call                       (Ariadne.Expr.var "rejected" { start := 1979, stop := 1987 })                       [Ariadne.Expr.literal                          (Ariadne.Literal.string [114, 101, 112, 108, 97, 99, 101, 100])                          { start := 1988, stop := 1998 }]                       { start := 1979, stop := 1999 })                     { start := 1970, stop := 1976 }]                  { start := 1968, stop := 2002 })                (Ariadne.Stmt.block [] { start := 1939, stop := 1941 })                { start := 1939, stop := 1941 },              Ariadne.Stmt.return_                (Ariadne.Expr.var "result" { start := 2012, stop := 2018 })                { start := 2005, stop := 2011 }]             { start := 1892, stop := 2021 },   exported := true,   decreases := none,   span := { start := 1842, stop := 1850 } }
+
+def EntryGuards.«replace».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«replace».planned : Ownership.entryPlan _root_.Extracted_unions.program EntryGuards.«replace».function = .ok EntryGuards.«replace».plan := by kernel_rfl
+
+def EntryGuards.«replace».certificate : Ownership.EntryCertificate _root_.Extracted_unions.Wrapper.certificate "replace" :=
+  ⟨EntryGuards.«replace».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«replace».plan, EntryGuards.«replace».planned⟩
+
+def «replace».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_unions.program EntryGuards.«replace».plan heap args
+
+def «replace».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_unions.program EntryGuards.«replace».plan fuel state "replace" args
+
 theorem DenotationChecks.«replace» :
     (fun env : Core.Env CoreArtifacts.«replace».params Interpretation.value => «replace» (env.1)) =
       Denote.function (interp := Interpretation.value) CoreArtifacts.«replace» := by
@@ -4146,6 +4409,21 @@ def «filtered» («_candidates#arg» : (_root_.List NativeTypes.«Candidate»))
 abbrev «filtered».safe («_candidates#arg» : (_root_.List NativeTypes.«Candidate»)) («_floor#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«filtered» (by decide) («_candidates#arg», («_floor#arg», ()))
 
+def EntryGuards.«filtered».function : Ariadne.Function := { name := "filtered",   params := [{ name := "candidates",                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.named "Candidate")),                span := { start := 2048, stop := 2058 } },              { name := "floor", ty := Ariadne.Ty.bigint, span := { start := 2082, stop := 2087 } }],   result := Ariadne.Ty.array (Ariadne.Ty.named "Candidate"),   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.call                  (Ariadne.Expr.member                    (Ariadne.Expr.var "candidates" { start := 2121, stop := 2131 })                    "filter"                    { start := 2121, stop := 2138 })                  [Ariadne.Expr.lambda                     [{ name := "candidate",                        ty := Ariadne.Ty.named "Candidate",                        span := { start := 2140, stop := 2149 } }]                     (Ariadne.Stmt.return_                       (Ariadne.Expr.binary                         "&&"                         (Ariadne.Expr.binary                           "==="                           (Ariadne.Expr.member                             (Ariadne.Expr.var "candidate" { start := 2165, stop := 2174 })                             "kind"                             { start := 2165, stop := 2179 })                           (Ariadne.Expr.literal                             (Ariadne.Literal.string [118, 97, 108, 105, 100])                             { start := 2184, stop := 2191 })                           { start := 2165, stop := 2191 })                         (Ariadne.Expr.binary                           ">="                           (Ariadne.Expr.member                             (Ariadne.Expr.var "candidate" { start := 2195, stop := 2204 })                             "version"                             { start := 2195, stop := 2212 })                           (Ariadne.Expr.var "floor" { start := 2216, stop := 2221 })                           { start := 2195, stop := 2221 })                         { start := 2165, stop := 2221 })                       { start := 2165, stop := 2221 })                     { start := 2139, stop := 2140 }]                  { start := 2121, stop := 2222 })                { start := 2114, stop := 2120 }]             { start := 2110, stop := 2225 },   exported := true,   decreases := none,   span := { start := 2030, stop := 2038 } }
+
+def EntryGuards.«filtered».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«filtered».planned : Ownership.entryPlan _root_.Extracted_unions.program EntryGuards.«filtered».function = .ok EntryGuards.«filtered».plan := by kernel_rfl
+
+def EntryGuards.«filtered».certificate : Ownership.EntryCertificate _root_.Extracted_unions.Wrapper.certificate "filtered" :=
+  ⟨EntryGuards.«filtered».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«filtered».plan, EntryGuards.«filtered».planned⟩
+
+def «filtered».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_unions.program EntryGuards.«filtered».plan heap args
+
+def «filtered».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_unions.program EntryGuards.«filtered».plan fuel state "filtered" args
+
 theorem DenotationChecks.«filtered» :
     (fun env : Core.Env CoreArtifacts.«filtered».params Interpretation.value => «filtered» (env.1) (env.2.1)) =
       Denote.function (interp := Interpretation.value) CoreArtifacts.«filtered» := by
@@ -4162,6 +4440,21 @@ def «eventValue» («_event#arg» : NativeTypes.«Event») : _root_.Int :=
 
 abbrev «eventValue».safe («_event#arg» : NativeTypes.«Event») : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«eventValue» (by decide) («_event#arg», ())
+
+def EntryGuards.«eventValue».function : Ariadne.Function := { name := "eventValue",   params := [{ name := "event", ty := Ariadne.Ty.named "Event", span := { start := 2434, stop := 2439 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.switch_                (Ariadne.Expr.member                  (Ariadne.Expr.var "event" { start := 2468, stop := 2473 })                  "kind"                  { start := 2468, stop := 2478 })                [(some (Ariadne.Expr.literal                    (Ariadne.Literal.string [99, 114, 101, 97, 116, 101, 100])                    { start := 2491, stop := 2500 }),                  [Ariadne.Stmt.return_                     (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 2509, stop := 2511 })                     { start := 2502, stop := 2508 }]),                 (some (Ariadne.Expr.literal                    (Ariadne.Literal.string [99, 104, 97, 110, 103, 101, 100])                    { start := 2522, stop := 2531 }),                  [Ariadne.Stmt.return_                     (Ariadne.Expr.member                       (Ariadne.Expr.var "event" { start := 2540, stop := 2545 })                       "value"                       { start := 2540, stop := 2551 })                     { start := 2533, stop := 2539 }]),                 (none,                  [Ariadne.Stmt.return_                     (Ariadne.Expr.unary                       "-"                       (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 2574, stop := 2576 })                       { start := 2573, stop := 2574 })                     { start := 2566, stop := 2572 }])]                { start := 2460, stop := 2466 }]             { start := 2456, stop := 2583 },   exported := true,   decreases := none,   span := { start := 2414, stop := 2422 } }
+
+def EntryGuards.«eventValue».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«eventValue».planned : Ownership.entryPlan _root_.Extracted_unions.program EntryGuards.«eventValue».function = .ok EntryGuards.«eventValue».plan := by kernel_rfl
+
+def EntryGuards.«eventValue».certificate : Ownership.EntryCertificate _root_.Extracted_unions.Wrapper.certificate "eventValue" :=
+  ⟨EntryGuards.«eventValue».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«eventValue».plan, EntryGuards.«eventValue».planned⟩
+
+def «eventValue».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_unions.program EntryGuards.«eventValue».plan heap args
+
+def «eventValue».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_unions.program EntryGuards.«eventValue».plan fuel state "eventValue" args
 
 theorem DenotationChecks.«eventValue» :
     (fun env : Core.Env CoreArtifacts.«eventValue».params Interpretation.value => «eventValue» (env.1)) =
@@ -4180,6 +4473,21 @@ def «eventTag» («_event#arg» : NativeTypes.«Event») : _root_.Ariadne.JSStr
 abbrev «eventTag».safe («_event#arg» : NativeTypes.«Event») : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«eventTag» (by decide) («_event#arg», ())
 
+def EntryGuards.«eventTag».function : Ariadne.Function := { name := "eventTag",   params := [{ name := "event", ty := Ariadne.Ty.named "Event", span := { start := 2610, stop := 2615 } }],   result := Ariadne.Ty.string,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.member                  (Ariadne.Expr.var "event" { start := 2641, stop := 2646 })                  "kind"                  { start := 2641, stop := 2651 })                { start := 2634, stop := 2640 }]             { start := 2632, stop := 2654 },   exported := true,   decreases := none,   span := { start := 2592, stop := 2600 } }
+
+def EntryGuards.«eventTag».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«eventTag».planned : Ownership.entryPlan _root_.Extracted_unions.program EntryGuards.«eventTag».function = .ok EntryGuards.«eventTag».plan := by kernel_rfl
+
+def EntryGuards.«eventTag».certificate : Ownership.EntryCertificate _root_.Extracted_unions.Wrapper.certificate "eventTag" :=
+  ⟨EntryGuards.«eventTag».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«eventTag».plan, EntryGuards.«eventTag».planned⟩
+
+def «eventTag».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_unions.program EntryGuards.«eventTag».plan heap args
+
+def «eventTag».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_unions.program EntryGuards.«eventTag».plan fuel state "eventTag" args
+
 theorem DenotationChecks.«eventTag» :
     (fun env : Core.Env CoreArtifacts.«eventTag».params Interpretation.value => «eventTag» (env.1)) =
       Denote.function (interp := Interpretation.value) CoreArtifacts.«eventTag» := by
@@ -4196,6 +4504,21 @@ def «changed» («_value#arg» : _root_.Int) : NativeTypes.«Event» :=
 
 abbrev «changed».safe («_value#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«changed» (by decide) («_value#arg», ())
+
+def EntryGuards.«changed».function : Ariadne.Function := { name := "changed",   params := [{ name := "value", ty := Ariadne.Ty.bigint, span := { start := 2680, stop := 2685 } }],   result := Ariadne.Ty.named "Event",   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.record                  [("kind",                    Ariadne.Expr.literal                      (Ariadne.Literal.string [99, 104, 97, 110, 103, 101, 100])                      { start := 2719, stop := 2728 }),                   ("value", Ariadne.Expr.var "value" { start := 2737, stop := 2742 })]                  { start := 2711, stop := 2744 })                { start := 2704, stop := 2710 }]             { start := 2702, stop := 2747 },   exported := true,   decreases := none,   span := { start := 2663, stop := 2671 } }
+
+def EntryGuards.«changed».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«changed».planned : Ownership.entryPlan _root_.Extracted_unions.program EntryGuards.«changed».function = .ok EntryGuards.«changed».plan := by kernel_rfl
+
+def EntryGuards.«changed».certificate : Ownership.EntryCertificate _root_.Extracted_unions.Wrapper.certificate "changed" :=
+  ⟨EntryGuards.«changed».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«changed».plan, EntryGuards.«changed».planned⟩
+
+def «changed».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_unions.program EntryGuards.«changed».plan heap args
+
+def «changed».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_unions.program EntryGuards.«changed».plan fuel state "changed" args
 
 theorem DenotationChecks.«changed» :
     (fun env : Core.Env CoreArtifacts.«changed».params Interpretation.value => «changed» (env.1)) =

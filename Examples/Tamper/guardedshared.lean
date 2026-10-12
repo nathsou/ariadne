@@ -6,6 +6,7 @@ import Ariadne.Shallow.Adequacy.Statements
 import Ariadne.Shallow.Adequacy.GuardedStatements
 import Ariadne.Shallow.Adequacy.JoinsContext
 import Ariadne.Shallow.Adequacy.GuardedJoinsContext
+import Ariadne.Ownership.Source
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
@@ -116,6 +117,37 @@ theorem ts_nested_source {fuel : Nat} {args : List Value} {value : Value}
 
 end Extracted_tamper_guardedshared
 
+namespace Extracted_tamper_guardedshared.Wrapper
+open Ariadne
+
+def source : String := "// Generated ownership entry wrappers. Requires the Ariadne pristine realm contract.\ntype Int53 = number;\nexport function nested(flag: boolean, x: Int53): Int53 {\n  if (flag) { { const y = x + 1; x = y * 2; } }\n  else { x -= 1; }\n  return x * 3;\n}\n"
+
+def characters : List Char := ['/', '/', ' ', 'G', 'e', 'n', 'e', 'r', 'a', 't', 'e', 'd', ' ', 'o', 'w', 'n', 'e', 'r', 's', 'h', 'i', 'p', ' ', 'e',
+ 'n', 't', 'r', 'y', ' ', 'w', 'r', 'a', 'p', 'p', 'e', 'r', 's', '.', ' ', 'R', 'e', 'q', 'u', 'i', 'r', 'e', 's', ' ',
+ 't', 'h', 'e', ' ', 'A', 'r', 'i', 'a', 'd', 'n', 'e', ' ', 'p', 'r', 'i', 's', 't', 'i', 'n', 'e', ' ', 'r', 'e', 'a',
+ 'l', 'm', ' ', 'c', 'o', 'n', 't', 'r', 'a', 'c', 't', '.', '\n', 't', 'y', 'p', 'e', ' ', 'I', 'n', 't', '5', '3',
+ ' ', '=', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ';', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't',
+ 'i', 'o', 'n', ' ', 'n', 'e', 's', 't', 'e', 'd', '(', 'f', 'l', 'a', 'g', ':', ' ', 'b', 'o', 'o', 'l', 'e', 'a', 'n',
+ ',', ' ', 'x', ':', ' ', 'I', 'n', 't', '5', '3', ')', ':', ' ', 'I', 'n', 't', '5', '3', ' ', '{', '\n', ' ', ' ',
+ 'i', 'f', ' ', '(', 'f', 'l', 'a', 'g', ')', ' ', '{', ' ', '{', ' ', 'c', 'o', 'n', 's', 't', ' ', 'y', ' ', '=', ' ',
+ 'x', ' ', '+', ' ', '1', ';', ' ', 'x', ' ', '=', ' ', 'y', ' ', '*', ' ', '2', ';', ' ', '}', ' ', '}', '\n', ' ',
+ ' ', 'e', 'l', 's', 'e', ' ', '{', ' ', 'x', ' ', '-', '=', ' ', '1', ';', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't',
+ 'u', 'r', 'n', ' ', 'x', ' ', '*', ' ', '3', ';', '\n', '}', '\n']
+
+theorem characters_encoded : String.ofList characters = source := by kernel_rfl
+
+theorem rendered : Ownership.Wrap.emitCharacterData
+    _root_.Extracted_tamper_guardedshared.characters _root_.Extracted_tamper_guardedshared.tokens.toList _root_.Extracted_tamper_guardedshared.program = .ok characters := by kernel_rfl
+
+theorem checked : Ownership.Wrap.emit _root_.Extracted_tamper_guardedshared.source _root_.Extracted_tamper_guardedshared.program = .ok source :=
+  (Ownership.Wrap.emit_checked _root_.Extracted_tamper_guardedshared.characters_checked _root_.Extracted_tamper_guardedshared.lex_checked rendered).trans
+    (congrArg Except.ok characters_encoded)
+
+def certificate : Ownership.WrapperCertificate _root_.Extracted_tamper_guardedshared.source :=
+  ⟨_root_.Extracted_tamper_guardedshared.certificate, source, checked⟩
+
+end Extracted_tamper_guardedshared.Wrapper
+
 -- Shallow denotation certificates. Source transfer is emitted for proved fragments.
 namespace Extracted_tamper_guardedshared.Shallow
 open Ariadne Ariadne.Shallow
@@ -175,6 +207,21 @@ def «nested» («_flag#arg» : _root_.Bool) («_x#arg» : _root_.Int) : _root_.
 
 abbrev «nested».safe («_flag#arg» : _root_.Bool) («_x#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«nested» (by decide) («_flag#arg», («_x#arg», ()))
+
+def EntryGuards.«nested».function : Ariadne.Function := { name := "nested",   params := [{ name := "flag", ty := Ariadne.Ty.boolean, span := { start := 44, stop := 48 } },              { name := "x", ty := Ariadne.Ty.named "Int53", span := { start := 59, stop := 60 } }],   result := Ariadne.Ty.named "Int53",   body := Ariadne.Stmt.block             [Ariadne.Stmt.if_                (Ariadne.Expr.var "flag" { start := 84, stop := 88 })                (Ariadne.Stmt.block                  [Ariadne.Stmt.block                     [Ariadne.Stmt.let_                        false                        "y"                        none                        (Ariadne.Expr.binary                          "+"                          (Ariadne.Expr.var "x" { start := 104, stop := 105 })                          (Ariadne.Expr.literal (Ariadne.Literal.number 1 0) { start := 108, stop := 109 })                          { start := 104, stop := 109 })                        { start := 94, stop := 99 },                      Ariadne.Stmt.assign                        (Ariadne.Expr.var "x" { start := 111, stop := 112 })                        (Ariadne.Expr.binary                          "*"                          (Ariadne.Expr.var "y" { start := 115, stop := 116 })                          (Ariadne.Expr.literal (Ariadne.Literal.number 2 0) { start := 119, stop := 120 })                          { start := 115, stop := 120 })                        { start := 111, stop := 112 }]                     { start := 92, stop := 123 }]                  { start := 90, stop := 125 })                (Ariadne.Stmt.block                  [Ariadne.Stmt.assign                     (Ariadne.Expr.var "x" { start := 135, stop := 136 })                     (Ariadne.Expr.binary                       "-"                       (Ariadne.Expr.var "x" { start := 135, stop := 136 })                       (Ariadne.Expr.literal (Ariadne.Literal.number 1 0) { start := 140, stop := 141 })                       { start := 137, stop := 139 })                     { start := 135, stop := 136 }]                  { start := 133, stop := 144 })                { start := 80, stop := 82 },              Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "*"                  (Ariadne.Expr.var "x" { start := 154, stop := 155 })                  (Ariadne.Expr.literal (Ariadne.Literal.number 3 0) { start := 158, stop := 159 })                  { start := 154, stop := 159 })                { start := 147, stop := 153 }]             { start := 76, stop := 162 },   exported := true,   decreases := none,   span := { start := 28, stop := 36 } }
+
+def EntryGuards.«nested».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«nested».planned : Ownership.entryPlan _root_.Extracted_tamper_guardedshared.program EntryGuards.«nested».function = .ok EntryGuards.«nested».plan := by kernel_rfl
+
+def EntryGuards.«nested».certificate : Ownership.EntryCertificate _root_.Extracted_tamper_guardedshared.Wrapper.certificate "nested" :=
+  ⟨EntryGuards.«nested».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«nested».plan, EntryGuards.«nested».planned⟩
+
+def «nested».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_tamper_guardedshared.program EntryGuards.«nested».plan heap args
+
+def «nested».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_tamper_guardedshared.program EntryGuards.«nested».plan fuel state "nested" args
 
 theorem DenotationChecks.«nested» :
     (fun env : Core.Env CoreArtifacts.«nested».params Interpretation.value => «nested» (env.1) (env.2.1)) =

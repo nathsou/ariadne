@@ -6,6 +6,7 @@ import Ariadne.Shallow.Adequacy.Statements
 import Ariadne.Shallow.Adequacy.GuardedStatements
 import Ariadne.Shallow.Adequacy.JoinsContext
 import Ariadne.Shallow.Adequacy.GuardedJoinsContext
+import Ariadne.Ownership.Source
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
@@ -526,6 +527,102 @@ theorem ts_addBorrowed_source {fuel : Nat} {args : List Value} {value : Value}
 
 end Extracted_classes
 
+namespace Extracted_classes.Wrapper
+open Ariadne
+
+def source : String := "// Generated ownership entry wrappers. Requires the Ariadne pristine realm contract.\nexport class Counter {\n  private value = 0n;\n  private readonly counts = new Map<string, bigint>();\n  read(): bigint { return this.value; }\n  add(amount: bigint): void { this.value = this.value + amount; }\n  bump(key: string): bigint {\n    const next = (this.counts.get(key) ?? 0n) + 1n;\n    this.counts.set(key, next);\n    return next;\n  }\n  count(key: string): bigint { return this.counts.get(key) ?? 0n; }\n  twice(amount: bigint): bigint {\n    this.add(amount);\n    this.add(amount);\n    return this.read();\n  }\n  until(keys: readonly string[], stop: string): void {\n  if (this !== null && typeof this === 'object' && keys !== null && typeof keys === 'object' && ((this as object) === (keys as object))) {\n    throw new TypeError('overlapping borrowed arguments');\n  }\n  const __ariadne0_implementation = () => {\n    for (const key of keys) {\n      if (key === stop) { return; }\n      this.bump(key);\n    }\n  };\n  return __ariadne0_implementation();\n}\n}\nexport class Seeded {\n  private value = 0n;\n  constructor(initial: bigint) { this.value = initial; }\n  add(amount: bigint): void { this.value = this.value + amount; }\n  read(): bigint { return this.value; }\n}\nexport function useCounter(key: string): bigint {\n  const counter = new Counter();\n  counter.add(3n);\n  counter.bump(key);\n  counter.twice(2n);\n  return counter.read() + counter.count(key);\n}\nexport function useSeeded(value: bigint): bigint {\n  const counter = new Seeded(value);\n  counter.add(2n);\n  return counter.read();\n}\nexport function bumpBorrowed(counter: Counter, key: string): bigint {\n  return counter.bump(key);\n}\nexport function addBorrowed(counter: Seeded, amount: bigint): void {\n  counter.add(amount);\n}\n"
+
+def characters : List Char := ['/', '/', ' ', 'G', 'e', 'n', 'e', 'r', 'a', 't', 'e', 'd', ' ', 'o', 'w', 'n', 'e', 'r', 's', 'h', 'i', 'p', ' ', 'e',
+ 'n', 't', 'r', 'y', ' ', 'w', 'r', 'a', 'p', 'p', 'e', 'r', 's', '.', ' ', 'R', 'e', 'q', 'u', 'i', 'r', 'e', 's', ' ',
+ 't', 'h', 'e', ' ', 'A', 'r', 'i', 'a', 'd', 'n', 'e', ' ', 'p', 'r', 'i', 's', 't', 'i', 'n', 'e', ' ', 'r', 'e', 'a',
+ 'l', 'm', ' ', 'c', 'o', 'n', 't', 'r', 'a', 'c', 't', '.', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'c', 'l', 'a',
+ 's', 's', ' ', 'C', 'o', 'u', 'n', 't', 'e', 'r', ' ', '{', '\n', ' ', ' ', 'p', 'r', 'i', 'v', 'a', 't', 'e', ' ',
+ 'v', 'a', 'l', 'u', 'e', ' ', '=', ' ', '0', 'n', ';', '\n', ' ', ' ', 'p', 'r', 'i', 'v', 'a', 't', 'e', ' ', 'r',
+ 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'c', 'o', 'u', 'n', 't', 's', ' ', '=', ' ', 'n', 'e', 'w', ' ', 'M', 'a', 'p',
+ '<', 's', 't', 'r', 'i', 'n', 'g', ',', ' ', 'b', 'i', 'g', 'i', 'n', 't', '>', '(', ')', ';', '\n', ' ', ' ', 'r',
+ 'e', 'a', 'd', '(', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 't',
+ 'h', 'i', 's', '.', 'v', 'a', 'l', 'u', 'e', ';', ' ', '}', '\n', ' ', ' ', 'a', 'd', 'd', '(', 'a', 'm', 'o', 'u',
+ 'n', 't', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{', ' ', 't', 'h', 'i', 's',
+ '.', 'v', 'a', 'l', 'u', 'e', ' ', '=', ' ', 't', 'h', 'i', 's', '.', 'v', 'a', 'l', 'u', 'e', ' ', '+', ' ', 'a', 'm',
+ 'o', 'u', 'n', 't', ';', ' ', '}', '\n', ' ', ' ', 'b', 'u', 'm', 'p', '(', 'k', 'e', 'y', ':', ' ', 's', 't', 'r',
+ 'i', 'n', 'g', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', ' ', ' ', 'c', 'o', 'n', 's',
+ 't', ' ', 'n', 'e', 'x', 't', ' ', '=', ' ', '(', 't', 'h', 'i', 's', '.', 'c', 'o', 'u', 'n', 't', 's', '.', 'g', 'e',
+ 't', '(', 'k', 'e', 'y', ')', ' ', '?', '?', ' ', '0', 'n', ')', ' ', '+', ' ', '1', 'n', ';', '\n', ' ', ' ', ' ',
+ ' ', 't', 'h', 'i', 's', '.', 'c', 'o', 'u', 'n', 't', 's', '.', 's', 'e', 't', '(', 'k', 'e', 'y', ',', ' ', 'n', 'e',
+ 'x', 't', ')', ';', '\n', ' ', ' ', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'n', 'e', 'x', 't', ';', '\n', ' ',
+ ' ', '}', '\n', ' ', ' ', 'c', 'o', 'u', 'n', 't', '(', 'k', 'e', 'y', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ')',
+ ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 't', 'h', 'i', 's', '.', 'c',
+ 'o', 'u', 'n', 't', 's', '.', 'g', 'e', 't', '(', 'k', 'e', 'y', ')', ' ', '?', '?', ' ', '0', 'n', ';', ' ', '}',
+ '\n', ' ', ' ', 't', 'w', 'i', 'c', 'e', '(', 'a', 'm', 'o', 'u', 'n', 't', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't',
+ ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', ' ', ' ', 't', 'h', 'i', 's', '.', 'a', 'd',
+ 'd', '(', 'a', 'm', 'o', 'u', 'n', 't', ')', ';', '\n', ' ', ' ', ' ', ' ', 't', 'h', 'i', 's', '.', 'a', 'd', 'd',
+ '(', 'a', 'm', 'o', 'u', 'n', 't', ')', ';', '\n', ' ', ' ', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 't', 'h',
+ 'i', 's', '.', 'r', 'e', 'a', 'd', '(', ')', ';', '\n', ' ', ' ', '}', '\n', ' ', ' ', 'u', 'n', 't', 'i', 'l', '(',
+ 'k', 'e', 'y', 's', ':', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 's', 't', 'r', 'i', 'n', 'g', '[', ']', ',',
+ ' ', 's', 't', 'o', 'p', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{', '\n',
+ ' ', ' ', 'i', 'f', ' ', '(', 't', 'h', 'i', 's', ' ', '!', '=', '=', ' ', 'n', 'u', 'l', 'l', ' ', '&', '&', ' ', 't',
+ 'y', 'p', 'e', 'o', 'f', ' ', 't', 'h', 'i', 's', ' ', '=', '=', '=', ' ', '\'', 'o', 'b', 'j', 'e', 'c', 't', '\'',
+ ' ', '&', '&', ' ', 'k', 'e', 'y', 's', ' ', '!', '=', '=', ' ', 'n', 'u', 'l', 'l', ' ', '&', '&', ' ', 't', 'y', 'p',
+ 'e', 'o', 'f', ' ', 'k', 'e', 'y', 's', ' ', '=', '=', '=', ' ', '\'', 'o', 'b', 'j', 'e', 'c', 't', '\'', ' ', '&',
+ '&', ' ', '(', '(', 't', 'h', 'i', 's', ' ', 'a', 's', ' ', 'o', 'b', 'j', 'e', 'c', 't', ')', ' ', '=', '=', '=', ' ',
+ '(', 'k', 'e', 'y', 's', ' ', 'a', 's', ' ', 'o', 'b', 'j', 'e', 'c', 't', ')', ')', ')', ' ', '{', '\n', ' ', ' ',
+ ' ', ' ', 't', 'h', 'r', 'o', 'w', ' ', 'n', 'e', 'w', ' ', 'T', 'y', 'p', 'e', 'E', 'r', 'r', 'o', 'r', '(', '\'',
+ 'o', 'v', 'e', 'r', 'l', 'a', 'p', 'p', 'i', 'n', 'g', ' ', 'b', 'o', 'r', 'r', 'o', 'w', 'e', 'd', ' ', 'a', 'r', 'g',
+ 'u', 'm', 'e', 'n', 't', 's', '\'', ')', ';', '\n', ' ', ' ', '}', '\n', ' ', ' ', 'c', 'o', 'n', 's', 't', ' ', '_',
+ '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '0', '_', 'i', 'm', 'p', 'l', 'e', 'm', 'e', 'n', 't', 'a', 't', 'i', 'o', 'n',
+ ' ', '=', ' ', '(', ')', ' ', '=', '>', ' ', '{', '\n', ' ', ' ', ' ', ' ', 'f', 'o', 'r', ' ', '(', 'c', 'o', 'n',
+ 's', 't', ' ', 'k', 'e', 'y', ' ', 'o', 'f', ' ', 'k', 'e', 'y', 's', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', ' ',
+ ' ', 'i', 'f', ' ', '(', 'k', 'e', 'y', ' ', '=', '=', '=', ' ', 's', 't', 'o', 'p', ')', ' ', '{', ' ', 'r', 'e', 't',
+ 'u', 'r', 'n', ';', ' ', '}', '\n', ' ', ' ', ' ', ' ', ' ', ' ', 't', 'h', 'i', 's', '.', 'b', 'u', 'm', 'p', '(',
+ 'k', 'e', 'y', ')', ';', '\n', ' ', ' ', ' ', ' ', '}', '\n', ' ', ' ', '}', ';', '\n', ' ', ' ', 'r', 'e', 't', 'u',
+ 'r', 'n', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '0', '_', 'i', 'm', 'p', 'l', 'e', 'm', 'e', 'n', 't', 'a',
+ 't', 'i', 'o', 'n', '(', ')', ';', '\n', '}', '\n', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'c', 'l', 'a', 's',
+ 's', ' ', 'S', 'e', 'e', 'd', 'e', 'd', ' ', '{', '\n', ' ', ' ', 'p', 'r', 'i', 'v', 'a', 't', 'e', ' ', 'v', 'a',
+ 'l', 'u', 'e', ' ', '=', ' ', '0', 'n', ';', '\n', ' ', ' ', 'c', 'o', 'n', 's', 't', 'r', 'u', 'c', 't', 'o', 'r',
+ '(', 'i', 'n', 'i', 't', 'i', 'a', 'l', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ' ', '{', ' ', 't', 'h', 'i', 's',
+ '.', 'v', 'a', 'l', 'u', 'e', ' ', '=', ' ', 'i', 'n', 'i', 't', 'i', 'a', 'l', ';', ' ', '}', '\n', ' ', ' ', 'a',
+ 'd', 'd', '(', 'a', 'm', 'o', 'u', 'n', 't', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'v', 'o', 'i', 'd',
+ ' ', '{', ' ', 't', 'h', 'i', 's', '.', 'v', 'a', 'l', 'u', 'e', ' ', '=', ' ', 't', 'h', 'i', 's', '.', 'v', 'a', 'l',
+ 'u', 'e', ' ', '+', ' ', 'a', 'm', 'o', 'u', 'n', 't', ';', ' ', '}', '\n', ' ', ' ', 'r', 'e', 'a', 'd', '(', ')',
+ ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 't', 'h', 'i', 's', '.', 'v',
+ 'a', 'l', 'u', 'e', ';', ' ', '}', '\n', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i',
+ 'o', 'n', ' ', 'u', 's', 'e', 'C', 'o', 'u', 'n', 't', 'e', 'r', '(', 'k', 'e', 'y', ':', ' ', 's', 't', 'r', 'i', 'n',
+ 'g', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'c', 'o', 'n', 's', 't', ' ', 'c', 'o',
+ 'u', 'n', 't', 'e', 'r', ' ', '=', ' ', 'n', 'e', 'w', ' ', 'C', 'o', 'u', 'n', 't', 'e', 'r', '(', ')', ';', '\n',
+ ' ', ' ', 'c', 'o', 'u', 'n', 't', 'e', 'r', '.', 'a', 'd', 'd', '(', '3', 'n', ')', ';', '\n', ' ', ' ', 'c', 'o',
+ 'u', 'n', 't', 'e', 'r', '.', 'b', 'u', 'm', 'p', '(', 'k', 'e', 'y', ')', ';', '\n', ' ', ' ', 'c', 'o', 'u', 'n',
+ 't', 'e', 'r', '.', 't', 'w', 'i', 'c', 'e', '(', '2', 'n', ')', ';', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n',
+ ' ', 'c', 'o', 'u', 'n', 't', 'e', 'r', '.', 'r', 'e', 'a', 'd', '(', ')', ' ', '+', ' ', 'c', 'o', 'u', 'n', 't', 'e',
+ 'r', '.', 'c', 'o', 'u', 'n', 't', '(', 'k', 'e', 'y', ')', ';', '\n', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ',
+ 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'u', 's', 'e', 'S', 'e', 'e', 'd', 'e', 'd', '(', 'v', 'a', 'l', 'u', 'e',
+ ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'c',
+ 'o', 'n', 's', 't', ' ', 'c', 'o', 'u', 'n', 't', 'e', 'r', ' ', '=', ' ', 'n', 'e', 'w', ' ', 'S', 'e', 'e', 'd', 'e',
+ 'd', '(', 'v', 'a', 'l', 'u', 'e', ')', ';', '\n', ' ', ' ', 'c', 'o', 'u', 'n', 't', 'e', 'r', '.', 'a', 'd', 'd',
+ '(', '2', 'n', ')', ';', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'c', 'o', 'u', 'n', 't', 'e', 'r', '.',
+ 'r', 'e', 'a', 'd', '(', ')', ';', '\n', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i',
+ 'o', 'n', ' ', 'b', 'u', 'm', 'p', 'B', 'o', 'r', 'r', 'o', 'w', 'e', 'd', '(', 'c', 'o', 'u', 'n', 't', 'e', 'r', ':',
+ ' ', 'C', 'o', 'u', 'n', 't', 'e', 'r', ',', ' ', 'k', 'e', 'y', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ')', ':', ' ',
+ 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'c', 'o', 'u', 'n', 't',
+ 'e', 'r', '.', 'b', 'u', 'm', 'p', '(', 'k', 'e', 'y', ')', ';', '\n', '}', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ',
+ 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'a', 'd', 'd', 'B', 'o', 'r', 'r', 'o', 'w', 'e', 'd', '(', 'c', 'o', 'u',
+ 'n', 't', 'e', 'r', ':', ' ', 'S', 'e', 'e', 'd', 'e', 'd', ',', ' ', 'a', 'm', 'o', 'u', 'n', 't', ':', ' ', 'b', 'i',
+ 'g', 'i', 'n', 't', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{', '\n', ' ', ' ', 'c', 'o', 'u', 'n', 't', 'e', 'r',
+ '.', 'a', 'd', 'd', '(', 'a', 'm', 'o', 'u', 'n', 't', ')', ';', '\n', '}', '\n']
+
+theorem characters_encoded : String.ofList characters = source := by kernel_rfl
+
+theorem rendered : Ownership.Wrap.emitCharacterData
+    _root_.Extracted_classes.characters _root_.Extracted_classes.tokens.toList _root_.Extracted_classes.program = .ok characters := by kernel_rfl
+
+theorem checked : Ownership.Wrap.emit _root_.Extracted_classes.source _root_.Extracted_classes.program = .ok source :=
+  (Ownership.Wrap.emit_checked _root_.Extracted_classes.characters_checked _root_.Extracted_classes.lex_checked rendered).trans
+    (congrArg Except.ok characters_encoded)
+
+def certificate : Ownership.WrapperCertificate _root_.Extracted_classes.source :=
+  ⟨_root_.Extracted_classes.certificate, source, checked⟩
+
+end Extracted_classes.Wrapper
+
 -- Shallow denotation certificates. Source transfer is emitted for proved fragments.
 namespace Extracted_classes.Shallow
 open Ariadne Ariadne.Shallow
@@ -768,6 +865,21 @@ def «useCounter» («_key#arg» : _root_.Ariadne.JSString) : _root_.Int :=
 abbrev «useCounter».safe («_key#arg» : _root_.Ariadne.JSString) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«useCounter» (by decide) («_key#arg», ())
 
+def EntryGuards.«useCounter».function : Ariadne.Function := { name := "useCounter",   params := [{ name := "key", ty := Ariadne.Ty.string, span := { start := 906, stop := 909 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.let_                false                "counter"                none                (Ariadne.Expr.newClass "Counter" [] { start := 951, stop := 958 })                { start := 931, stop := 936 },              Ariadne.Stmt.expr                (Ariadne.Expr.call                  (Ariadne.Expr.member                    (Ariadne.Expr.var "counter" { start := 964, stop := 971 })                    "add"                    { start := 964, stop := 975 })                  [Ariadne.Expr.literal (Ariadne.Literal.bigint 3) { start := 976, stop := 978 }]                  { start := 964, stop := 979 })                { start := 964, stop := 979 },              Ariadne.Stmt.expr                (Ariadne.Expr.call                  (Ariadne.Expr.member                    (Ariadne.Expr.var "counter" { start := 983, stop := 990 })                    "bump"                    { start := 983, stop := 995 })                  [Ariadne.Expr.var "key" { start := 996, stop := 999 }]                  { start := 983, stop := 1000 })                { start := 983, stop := 1000 },              Ariadne.Stmt.expr                (Ariadne.Expr.call                  (Ariadne.Expr.member                    (Ariadne.Expr.var "counter" { start := 1004, stop := 1011 })                    "twice"                    { start := 1004, stop := 1017 })                  [Ariadne.Expr.literal (Ariadne.Literal.bigint 2) { start := 1018, stop := 1020 }]                  { start := 1004, stop := 1021 })                { start := 1004, stop := 1021 },              Ariadne.Stmt.return_                (Ariadne.Expr.binary                  "+"                  (Ariadne.Expr.call                    (Ariadne.Expr.member                      (Ariadne.Expr.var "counter" { start := 1032, stop := 1039 })                      "read"                      { start := 1032, stop := 1044 })                    []                    { start := 1032, stop := 1046 })                  (Ariadne.Expr.call                    (Ariadne.Expr.member                      (Ariadne.Expr.var "counter" { start := 1049, stop := 1056 })                      "count"                      { start := 1049, stop := 1062 })                    [Ariadne.Expr.var "key" { start := 1063, stop := 1066 }]                    { start := 1049, stop := 1067 })                  { start := 1032, stop := 1067 })                { start := 1025, stop := 1031 }]             { start := 927, stop := 1070 },   exported := true,   decreases := none,   span := { start := 886, stop := 894 } }
+
+def EntryGuards.«useCounter».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«useCounter».planned : Ownership.entryPlan _root_.Extracted_classes.program EntryGuards.«useCounter».function = .ok EntryGuards.«useCounter».plan := by kernel_rfl
+
+def EntryGuards.«useCounter».certificate : Ownership.EntryCertificate _root_.Extracted_classes.Wrapper.certificate "useCounter" :=
+  ⟨EntryGuards.«useCounter».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«useCounter».plan, EntryGuards.«useCounter».planned⟩
+
+def «useCounter».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_classes.program EntryGuards.«useCounter».plan heap args
+
+def «useCounter».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_classes.program EntryGuards.«useCounter».plan fuel state "useCounter" args
+
 theorem DenotationChecks.«useCounter» :
     (fun env : Core.Env CoreArtifacts.«useCounter».params Interpretation.value => «useCounter» (env.1)) =
       Denote.function (interp := Interpretation.value) CoreArtifacts.«useCounter» := by
@@ -877,6 +989,21 @@ def «useSeeded» («_value#arg» : _root_.Int) : _root_.Int :=
 abbrev «useSeeded».safe («_value#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«useSeeded» (by decide) («_value#arg», ())
 
+def EntryGuards.«useSeeded».function : Ariadne.Function := { name := "useSeeded",   params := [{ name := "value", ty := Ariadne.Ty.bigint, span := { start := 1097, stop := 1102 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.let_                false                "counter"                none                (Ariadne.Expr.newClass                  "Seeded"                  [Ariadne.Expr.var "value" { start := 1151, stop := 1156 }]                  { start := 1144, stop := 1150 })                { start := 1124, stop := 1129 },              Ariadne.Stmt.expr                (Ariadne.Expr.call                  (Ariadne.Expr.member                    (Ariadne.Expr.var "counter" { start := 1161, stop := 1168 })                    "add"                    { start := 1161, stop := 1172 })                  [Ariadne.Expr.literal (Ariadne.Literal.bigint 2) { start := 1173, stop := 1175 }]                  { start := 1161, stop := 1176 })                { start := 1161, stop := 1176 },              Ariadne.Stmt.return_                (Ariadne.Expr.call                  (Ariadne.Expr.member                    (Ariadne.Expr.var "counter" { start := 1187, stop := 1194 })                    "read"                    { start := 1187, stop := 1199 })                  []                  { start := 1187, stop := 1201 })                { start := 1180, stop := 1186 }]             { start := 1120, stop := 1204 },   exported := true,   decreases := none,   span := { start := 1078, stop := 1086 } }
+
+def EntryGuards.«useSeeded».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«useSeeded».planned : Ownership.entryPlan _root_.Extracted_classes.program EntryGuards.«useSeeded».function = .ok EntryGuards.«useSeeded».plan := by kernel_rfl
+
+def EntryGuards.«useSeeded».certificate : Ownership.EntryCertificate _root_.Extracted_classes.Wrapper.certificate "useSeeded" :=
+  ⟨EntryGuards.«useSeeded».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«useSeeded».plan, EntryGuards.«useSeeded».planned⟩
+
+def «useSeeded».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_classes.program EntryGuards.«useSeeded».plan heap args
+
+def «useSeeded».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_classes.program EntryGuards.«useSeeded».plan fuel state "useSeeded" args
+
 theorem DenotationChecks.«useSeeded» :
     (fun env : Core.Env CoreArtifacts.«useSeeded».params Interpretation.value => «useSeeded» (env.1)) =
       Denote.function (interp := Interpretation.value) CoreArtifacts.«useSeeded» := by
@@ -937,6 +1064,21 @@ def «bumpBorrowed» («_counter#arg» : NativeTypes.«Counter#state») («_key#
 abbrev «bumpBorrowed».safe («_counter#arg» : NativeTypes.«Counter#state») («_key#arg» : _root_.Ariadne.JSString) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«bumpBorrowed» (by decide) («_counter#arg», («_key#arg», ()))
 
+def EntryGuards.«bumpBorrowed».function : Ariadne.Function := { name := "bumpBorrowed",   params := [{ name := "counter", ty := Ariadne.Ty.named "Counter", span := { start := 1234, stop := 1241 } },              { name := "key", ty := Ariadne.Ty.string, span := { start := 1252, stop := 1255 } }],   result := Ariadne.Ty.bigint,   body := Ariadne.Stmt.block             [Ariadne.Stmt.return_                (Ariadne.Expr.call                  (Ariadne.Expr.member                    (Ariadne.Expr.var "counter" { start := 1284, stop := 1291 })                    "bump"                    { start := 1284, stop := 1296 })                  [Ariadne.Expr.var "key" { start := 1297, stop := 1300 }]                  { start := 1284, stop := 1301 })                { start := 1277, stop := 1283 }]             { start := 1273, stop := 1304 },   exported := true,   decreases := none,   span := { start := 1212, stop := 1220 } }
+
+def EntryGuards.«bumpBorrowed».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«bumpBorrowed».planned : Ownership.entryPlan _root_.Extracted_classes.program EntryGuards.«bumpBorrowed».function = .ok EntryGuards.«bumpBorrowed».plan := by kernel_rfl
+
+def EntryGuards.«bumpBorrowed».certificate : Ownership.EntryCertificate _root_.Extracted_classes.Wrapper.certificate "bumpBorrowed" :=
+  ⟨EntryGuards.«bumpBorrowed».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«bumpBorrowed».plan, EntryGuards.«bumpBorrowed».planned⟩
+
+def «bumpBorrowed».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_classes.program EntryGuards.«bumpBorrowed».plan heap args
+
+def «bumpBorrowed».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_classes.program EntryGuards.«bumpBorrowed».plan fuel state "bumpBorrowed" args
+
 theorem DenotationChecks.«bumpBorrowed» :
     (fun env : Core.Env CoreArtifacts.«bumpBorrowed».params Interpretation.value => «bumpBorrowed» (env.1) (env.2.1)) =
       Denote.function (interp := Interpretation.value) CoreArtifacts.«bumpBorrowed» := by
@@ -988,6 +1130,21 @@ def «addBorrowed» («_counter#arg» : NativeTypes.«Seeded#state») («_amount
 
 abbrev «addBorrowed».safe («_counter#arg» : NativeTypes.«Seeded#state») («_amount#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«addBorrowed» (by decide) («_counter#arg», («_amount#arg», ()))
+
+def EntryGuards.«addBorrowed».function : Ariadne.Function := { name := "addBorrowed",   params := [{ name := "counter", ty := Ariadne.Ty.named "Seeded", span := { start := 1333, stop := 1340 } },              { name := "amount", ty := Ariadne.Ty.bigint, span := { start := 1350, stop := 1356 } }],   result := Ariadne.Ty.void,   body := Ariadne.Stmt.block             [Ariadne.Stmt.expr                (Ariadne.Expr.call                  (Ariadne.Expr.member                    (Ariadne.Expr.var "counter" { start := 1376, stop := 1383 })                    "add"                    { start := 1376, stop := 1387 })                  [Ariadne.Expr.var "amount" { start := 1388, stop := 1394 }]                  { start := 1376, stop := 1395 })                { start := 1376, stop := 1395 }]             { start := 1372, stop := 1398 },   exported := true,   decreases := none,   span := { start := 1312, stop := 1320 } }
+
+def EntryGuards.«addBorrowed».plan : List Ownership.ArgumentCheck := []
+
+theorem EntryGuards.«addBorrowed».planned : Ownership.entryPlan _root_.Extracted_classes.program EntryGuards.«addBorrowed».function = .ok EntryGuards.«addBorrowed».plan := by kernel_rfl
+
+def EntryGuards.«addBorrowed».certificate : Ownership.EntryCertificate _root_.Extracted_classes.Wrapper.certificate "addBorrowed" :=
+  ⟨EntryGuards.«addBorrowed».function, (by kernel_rfl), (by kernel_rfl), (by kernel_rfl), EntryGuards.«addBorrowed».plan, EntryGuards.«addBorrowed».planned⟩
+
+def «addBorrowed».entrySafe (heap : Heap) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_classes.program EntryGuards.«addBorrowed».plan heap args
+
+def «addBorrowed».wrapper (fuel : Nat) (state : State) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedApply _root_.Extracted_classes.program EntryGuards.«addBorrowed».plan fuel state "addBorrowed" args
 
 theorem DenotationChecks.«addBorrowed» :
     (fun env : Core.Env CoreArtifacts.«addBorrowed».params Interpretation.value => «addBorrowed» (env.1) (env.2.1)) =
