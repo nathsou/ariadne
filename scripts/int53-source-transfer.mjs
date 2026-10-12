@@ -5,13 +5,14 @@ import { mkdir, mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 
-const good = await readFile('Examples/Shallow/int53.lean', 'utf8');
+const coverage = await readFile('Examples/Shallow/int53.lean', 'utf8');
 const names = ['add', 'multiply', 'negate', 'remainder', 'floorDivide', 'truncDivide',
   'absolute', 'widen', 'chooseBranch', 'less', 'equal', 'atMost', 'incrementTwice', 'localAbsolute'];
 for (const name of names) {
-  assert.ok(good.includes(`theorem «${name}_source»`), `missing guarded source theorem: ${name}`);
-  assert.ok(good.includes(`(safe : «${name}».safe`), `missing computed guard: ${name}`);
+  assert.ok(coverage.includes(`theorem «${name}_source»`), `missing guarded source theorem: ${name}`);
+  assert.ok(coverage.includes(`(safe : «${name}».safe`), `missing computed guard: ${name}`);
 }
+const good = await readFile('Examples/Tamper/int53.lean', 'utf8');
 await mkdir('work', {recursive: true});
 const dir = await mkdtemp(resolve('work/int53-source-'));
 try {
@@ -25,7 +26,7 @@ try {
   const badSafety = good.replace('inputs (by constructor <;> rfl) (by decide) safe.2',
     'inputs (by constructor <;> rfl) (by decide) (by rfl)');
   for (const [label, bad] of [['Math primitive', badMath], ['integer operation', badInteger], ['safety premise', badSafety]]) {
-    assert.notEqual(bad, good, `tamper did not match: ${label}`);
+    assert.ok(bad !== good, `tamper did not match: ${label}`);
     await writeFile(path, bad);
     const checked = spawnSync('lake', ['env', 'lean', path], {encoding: 'utf8', timeout: 180000, maxBuffer: 8e6});
     assert.notEqual(checked.status, 0, `kernel accepted modified ${label}`);

@@ -61,3 +61,5 @@ import Examples.Proofs.Int53Safety
 import Examples.Shallow.source
 import Examples.Proofs.SourceTransfer
 import Examples.Proofs.Int53Source
+import Examples.Tamper.source
+import Examples.Tamper.int53

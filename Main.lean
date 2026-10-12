@@ -8,7 +8,7 @@ private def usage : String :=
   "  ariadne translate FILE --out FILE.lean [--namespace NAME]\n" ++
   "  ariadne certify FILE --out FILE.lean [--namespace NAME]\n" ++
   "  ariadne compile FILE FUNCTION --out FILE.lean [--namespace NAME] [--json]\n" ++
-  "  ariadne extract FILE --out FILE.lean [--namespace NAME] [--json]\n" ++
+  "  ariadne extract FILE --out FILE.lean [--namespace NAME] [--json] [--no-check]\n" ++
   "  ariadne eval FILE FUNCTION [FUEL]\n" ++
   "  ariadne explain CODE\n\n" ++
   "eval invokes a zero-argument function. Fuel exhaustion is inconclusive.\n" ++
@@ -80,8 +80,9 @@ private def process (args : List String) : IO UInt32 := do
   if command == "extract" then
     let options := args.drop 2
     if (options.filter (· == "--json")).length > 1 ||
-        !validOutputOptions (options.filter (· != "--json")) then
-      IO.eprintln "Expected extract FILE --out FILE.lean [--namespace NAME] [--json]"
+        (options.filter (· == "--no-check")).length > 1 ||
+        !validOutputOptions (options.filter (fun flag => flag != "--json" && flag != "--no-check")) then
+      IO.eprintln "Expected extract FILE --out FILE.lean [--namespace NAME] [--json] [--no-check]"
       return 2
   let text ← IO.FS.readFile (System.FilePath.mk path)
   let source : Source := { path, text }
@@ -137,6 +138,11 @@ private def process (args : List String) : IO UInt32 := do
         return 1
     else pure (emit text program namespace_)
   if command == "extract" then
+    if args.contains "--no-check" then
+      if let some parent := outputPath.parent then IO.FS.createDirAll parent
+      IO.FS.writeFile outputPath artifact
+      IO.println s!"Wrote {out}. This shallow candidate has not been kernel-checked."
+      return 0
     -- Check a temporary candidate before touching an existing output file.
     let result ← IO.FS.withTempDir fun dir => do
       let candidate := dir / "Extracted.lean"

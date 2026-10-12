@@ -5,14 +5,15 @@ import { mkdir, mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 
-const good = await readFile('Examples/Shallow/source.lean', 'utf8');
+const coverage = await readFile('Examples/Shallow/source.lean', 'utf8');
 for (const name of ['arithmetic', 'quotient', 'choice_source', 'conjunction',
   'disjunction', 'compare', 'equal', 'text', 'unit', 'local', 'early', 'branchLocal', 'nested', 'reassign', 'preserveOther', 'branchAssign', 'reassignString']) {
-  assert.ok(good.includes(`theorem «${name}_source»`), `missing universal source theorem: ${name}`);
+  assert.ok(coverage.includes(`theorem «${name}_source»`), `missing universal source theorem: ${name}`);
 }
-assert.ok(good.includes('theorem SourceChecks.«choice».source'));
-assert.ok(good.includes('def «choice_source»'));
-assert.ok(good.includes('theorem ts_choice.source'));
+assert.ok(coverage.includes('theorem SourceChecks.«choice».source'));
+assert.ok(coverage.includes('def «choice_source»'));
+assert.ok(coverage.includes('theorem ts_choice.source'));
+const good = await readFile('Examples/Tamper/source.lean', 'utf8');
 
 await mkdir('work', { recursive: true });
 const dir = await mkdtemp(resolve('work/source-transfer-'));
@@ -27,16 +28,16 @@ try {
     /(def SourceChecks\.«arithmetic»\.function[^\n]*name := )"arithmetic"/,
     '$1"notTheSourceFunction"');
   const badDeclaration = good.replace(
-    /(theorem SourceChecks\.«local»\.translated[\s\S]*?exact[^\n]*?\.let_ )"sum"/,
+    /(theorem SourceChecks\.«flow»\.translated[\s\S]*?exact[^\n]*?\.let_ )"sum"/,
     '$1"differentName"');
   const badBranch = good.replace(
-    /(theorem SourceChecks\.«early»\.translated[\s\S]*?exact[^\n]*?)\.intLt/,
+    /(theorem SourceChecks\.«flow»\.translated[\s\S]*?exact[^\n]*?)\.intLt/,
     '$1.intLe');
   const badAssignment = good.replace(
-    /(theorem SourceChecks\.«reassign»\.translated[\s\S]*?exact \.assign \()Core.Var.here/,
-    '$1(Core.Var.there Core.Var.here)');
+    /(theorem SourceChecks\.«flow»\.translated[\s\S]*?\.assign \()\(Core.Var.there Core.Var.here\)/,
+    '$1Core.Var.here');
   for (const [label, bad] of [['primitive rule', badRules], ['parameter names', badNames], ['source function', badFunction], ['local declaration', badDeclaration], ['branch condition', badBranch], ['assignment target', badAssignment]]) {
-    assert.notEqual(bad, good, `tamper did not match: ${label}`);
+    assert.ok(bad !== good, `tamper did not match: ${label}`);
     await writeFile(path, bad);
     const rejected = spawnSync('lake', ['env', 'lean', path], {
       encoding: 'utf8', timeout: 120000, maxBuffer: 8e6,

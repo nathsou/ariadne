@@ -73,3 +73,16 @@ There are no package dependencies. CI installs the pinned Lean toolchain and Bun
 as tools. Native tests also run on Node 24+ without transpiler packages. Generated
 artifacts include source text directly, so review can check which program a theorem
 actually describes. The axiom audit traverses project theorems transitively.
+
+CI runs the same `scripts/check.sh` gates in four phases. `prepare` builds the
+library and checks regeneration; `operational` and `shallow` build certificates
+serially on separate runners; `verify` restores both sets of checked modules,
+builds the user proofs, audits axioms and runs every native regression. The final
+job fails if either certificate job fails. Local `scripts/check.sh` runs all four
+phases in sequence.
+
+Regeneration uses `extract --no-check` to write candidates for the subsequent
+serial kernel builds. Normal `extract` still checks its output before replacing
+an existing file. The CLI regression covers both paths. Source-transfer tamper
+tests use small, regenerated fixtures in `Examples/Tamper`; the complete shallow
+artifacts remain in the build, theorem-coverage checks and axiom audit.
