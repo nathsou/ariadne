@@ -1,6 +1,8 @@
 import Ariadne.Emit
 import Ariadne.Shallow.Elaborate
 import Ariadne.Shallow.Safety
+import Ariadne.Shallow.EmitJoins
+import Ariadne.Shallow.EmitGuardedJoins
 
 namespace Ariadne.Shallow
 open Core
@@ -73,6 +75,12 @@ private def binaryRuleText : Binary a b c → String → Option String
   | .strLt, "<" => some ".strLt" | .strLe, "<=" => some ".strLe" | .boolEq, "===" => some ".boolEq"
   | _, _ => none
 
+private def swappedRuleText : Binary a b c → String → Option String
+  | .intLt, ">" => some ".intGt" | .intLe, ">=" => some ".intGe"
+  | .numLt, ">" => some ".numGt" | .numLe, ">=" => some ".numGe"
+  | .strLt, ">" => some ".strGt" | .strLe, ">=" => some ".strGe"
+  | _, _ => none
+
 /-- Print correspondence witnesses only for rules with a proved operational
 interpretation. The Lean kernel checks the witness against the source AST and
 the emitted Core term, so this printer is not a semantic oracle. -/
@@ -89,8 +97,10 @@ private def scalarProof (names : List String) : Expr → Term Γ t → Option St
     let rule ← unaryRuleText op source
     return s!".unary {rule} ({← scalarProof names arg value}) _"
   | .binary source lhs rhs _, .binary op a b => do
-    let rule ← binaryRuleText op source
-    return s!".binary {rule} ({← scalarProof names lhs a}) ({← scalarProof names rhs b}) _"
+    if let some rule := binaryRuleText op source then
+      return s!".binary {rule} ({← scalarProof names lhs a}) ({← scalarProof names rhs b}) _"
+    let rule ← swappedRuleText op source
+    return s!".binarySwap {rule} ({← scalarProof names lhs b}) ({← scalarProof names rhs a}) _"
   | .conditional condition yes no _, .ite c a b => do
     return s!".conditional ({← scalarProof names condition c}) ({← scalarProof names yes a}) ({← scalarProof names no b}) _"
   | .binary "&&" lhs rhs _, .ite a b (.bool false) => do
@@ -583,7 +593,7 @@ def emit (source : String) (program : Program) (namespace_ : String) : Checked S
     core.params.flatMap typeDeclarations ++ termDeclarations core.body).eraseDups
   let declarations := (← roots.mapM (declarationOrder expanded 100)).flatten.eraseDups
   let mut out := (Ariadne.emit source original namespace_).replace
-    "import Ariadne.Certificate\n" "import Ariadne.Certificate\nimport Ariadne.Shallow.Elaborate\nimport Ariadne.Shallow.Safety\nimport Ariadne.Shallow.Adequacy.Statements\nimport Ariadne.Shallow.Adequacy.GuardedStatements\n"
+    "import Ariadne.Certificate\n" "import Ariadne.Certificate\nimport Ariadne.Shallow.Elaborate\nimport Ariadne.Shallow.Safety\nimport Ariadne.Shallow.Adequacy.Statements\nimport Ariadne.Shallow.Adequacy.GuardedStatements\nimport Ariadne.Shallow.Adequacy.JoinsContext\nimport Ariadne.Shallow.Adequacy.GuardedJoinsContext\n"
   out := out ++ "\n-- Shallow denotation certificates. Source transfer is emitted for proved fragments.\n" ++
     s!"namespace {namespace_}.Shallow\nopen Ariadne Ariadne.Shallow\nset_option linter.unusedSimpArgs false\n\n"
   let mut interpretation := "Named.canonical"
@@ -635,10 +645,12 @@ def emit (source : String) (program : Program) (namespace_ : String) : Checked S
       s!"  simp only [Denote.function, {coreName}, Denote.term, Core.Var.get" ++
       String.join (checks.map (", " ++ ·)) ++ "] <;> rfl\n\n"
     if original.functions.any (·.name == f.name) then
-      if let some theoremText := (sourceTheorem namespace_ f core params names safeEnv
-          (!(program.functions.any (·.name == f.name ++ "_source")))).orElse (fun _ =>
-            guardedSourceTheorem namespace_ f core params names safeEnv
-              (!(program.functions.any (·.name == f.name ++ "_source")))) then
+      let publicAlias := !(program.functions.any (·.name == f.name ++ "_source"))
+      let theoremText := (sourceTheorem namespace_ f core params names safeEnv publicAlias).orElse (fun _ =>
+        (guardedSourceTheorem namespace_ f core params names safeEnv publicAlias).orElse (fun _ =>
+          (JoinEmit.sourceTheorem program namespace_ f core params names safeEnv publicAlias).orElse (fun _ =>
+            GuardedJoinEmit.sourceTheorem program namespace_ f core params names safeEnv publicAlias)))
+      if let some theoremText := theoremText then
         out := out ++ theoremText
   return out ++ s!"end {namespace_}.Shallow\n"
 

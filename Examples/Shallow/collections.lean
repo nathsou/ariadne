@@ -4,6 +4,8 @@ import Ariadne.Shallow.Elaborate
 import Ariadne.Shallow.Safety
 import Ariadne.Shallow.Adequacy.Statements
 import Ariadne.Shallow.Adequacy.GuardedStatements
+import Ariadne.Shallow.Adequacy.JoinsContext
+import Ariadne.Shallow.Adequacy.GuardedJoinsContext
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0

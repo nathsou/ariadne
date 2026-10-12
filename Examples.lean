@@ -63,3 +63,6 @@ import Examples.Proofs.SourceTransfer
 import Examples.Proofs.Int53Source
 import Examples.Tamper.source
 import Examples.Tamper.int53
+import Examples.Proofs.SharedSource
+import Examples.Shallow.guardedshared
+import Examples.Tamper.guardedshared

@@ -4,6 +4,8 @@ import Ariadne.Shallow.Elaborate
 import Ariadne.Shallow.Safety
 import Ariadne.Shallow.Adequacy.Statements
 import Ariadne.Shallow.Adequacy.GuardedStatements
+import Ariadne.Shallow.Adequacy.JoinsContext
+import Ariadne.Shallow.Adequacy.GuardedJoinsContext
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
@@ -844,6 +846,119 @@ theorem DenotationChecks.«update» :
   unfold Extracted_scalars.Shallow.«update»
   simp only [Denote.function, CoreArtifacts.«update», Denote.term, Core.Var.get, JoinChecks.«update#0»] <;> rfl
 
+def SourceChecks.«update».function : Ariadne.Function := { name := "update", params := [{ name := "x", ty := Ariadne.Ty.bigint, span := { start := 103, stop := 104 } }, { name := "y", ty := Ariadne.Ty.bigint, span := { start := 114, stop := 115 } }, { name := "flag", ty := Ariadne.Ty.boolean, span := { start := 125, stop := 129 } }], result := Ariadne.Ty.bigint, body := Ariadne.Stmt.block [Ariadne.Stmt.let_ true "total" none (Ariadne.Expr.var "x" { start := 162, stop := 163 }) { start := 150, stop := 153 }, Ariadne.Stmt.if_ (Ariadne.Expr.var "flag" { start := 169, stop := 173 }) (Ariadne.Stmt.block [Ariadne.Stmt.assign (Ariadne.Expr.var "total" { start := 177, stop := 182 }) (Ariadne.Expr.binary "+" (Ariadne.Expr.var "total" { start := 177, stop := 182 }) (Ariadne.Expr.var "y" { start := 186, stop := 187 }) { start := 183, stop := 185 }) { start := 177, stop := 182 }] { start := 175, stop := 190 }) (Ariadne.Stmt.block [Ariadne.Stmt.assign (Ariadne.Expr.var "total" { start := 198, stop := 203 }) (Ariadne.Expr.binary "-" (Ariadne.Expr.var "total" { start := 198, stop := 203 }) (Ariadne.Expr.var "y" { start := 207, stop := 208 }) { start := 204, stop := 206 }) { start := 198, stop := 203 }] { start := 196, stop := 211 }) { start := 165, stop := 167 }, Ariadne.Stmt.return_ (Ariadne.Expr.binary "*" (Ariadne.Expr.var "total" { start := 219, stop := 224 }) (Ariadne.Expr.literal (Ariadne.Literal.bigint 2) { start := 227, stop := 229 }) { start := 219, stop := 229 }) { start := 212, stop := 218 }] { start := 148, stop := 232 }, exported := true, decreases := none, span := { start := 87, stop := 95 } }
+
+def SourceChecks.«update».statements : List Stmt := match SourceChecks.«update».function.body with | .block body _ => body | _ => []
+
+def SourceChecks.«update».names : Adequacy.Names CoreArtifacts.«update».params :=
+  Adequacy.Names.fromList ["x", "y", "flag"]
+
+def SourceJoinChecks.«update#names0» : Adequacy.Names ([Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.bool]) := Adequacy.Names.fromList (["total", "x", "y", "flag"])
+
+def SourceJoinChecks.«update#ghosts1» : Adequacy.Ghosts ([Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.bool]) := (Adequacy.Ghosts.skip (Adequacy.Ghosts.skip (Adequacy.Ghosts.skip (Adequacy.Ghosts.skip Adequacy.Ghosts.empty))))
+
+def SourceJoinChecks.«update#continuation2» : Core.Term ([Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.bool]) (Ariadne.Shallow.Core.Ty.int) := (Core.Term.binary (Ariadne.Shallow.Core.Binary.intMul) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.int (2)))
+
+theorem SourceJoinChecks.«update#suffix3» :
+    Adequacy.ScalarJoins Interpretation.value .int (Adequacy.JoinContext (SourceJoinChecks.«update#names0») (SourceJoinChecks.«update#ghosts1») (["total", "flag", "y", "x"]) []) (fun _ _ => False) ((SourceChecks.«update».statements.drop 2)) SourceJoinChecks.«update#continuation2» := by
+  exact (Adequacy.ScalarJoins.contextReturn (.binary .intMul (.var .int (Ariadne.Shallow.Core.Var.here) _ (by decide)) (.int _ _) _) _ _)
+
+def SourceJoinChecks.«update#select5» : Core.Renaming ([Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.bool]) ([Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.fn (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.int) (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.int) (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.int) (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.bool) (Ariadne.Shallow.Core.Ty.unit))))) (Ariadne.Shallow.Core.Ty.int), Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.bool])
+  | _, .here => Core.Var.here
+  | _, (.there .here) => (Core.Var.there (Core.Var.there (Core.Var.there Core.Var.here)))
+  | _, (.there (.there .here)) => (Core.Var.there (Core.Var.there (Core.Var.there (Core.Var.there Core.Var.here))))
+  | _, (.there (.there (.there .here))) => (Core.Var.there (Core.Var.there (Core.Var.there (Core.Var.there (Core.Var.there Core.Var.here)))))
+
+theorem SourceJoinChecks.«update#capture6» : Adequacy.Captures (((((((SourceChecks.«update».names).cons "total")).cons "#joinProof3")).cons "total")) ((Adequacy.Ghosts.skip ((Adequacy.Ghosts.bind SourceJoinChecks.«update#continuation2».abstract ((Adequacy.Ghosts.skip (Adequacy.Ghosts.empty)))))))
+    (SourceJoinChecks.«update#names0») (SourceJoinChecks.«update#ghosts1») SourceJoinChecks.«update#select5» := by
+  constructor
+  · intro t v repr visible
+    cases v with
+    | here => first | exact ⟨rfl, rfl⟩ | (solve | cases visible) | (solve | cases repr)
+    | there v =>
+      cases v with
+      | here => first | exact ⟨rfl, rfl⟩ | (solve | cases visible) | (solve | cases repr)
+      | there v =>
+        cases v with
+        | here => first | exact ⟨rfl, rfl⟩ | (solve | cases visible) | (solve | cases repr)
+        | there v =>
+          cases v with
+          | here => first | exact ⟨rfl, rfl⟩ | (solve | cases visible) | (solve | cases repr)
+          | there v =>
+            cases v
+  · intro t v value found
+    cases v with
+    | here => first | exact found | cases found
+    | there v =>
+      cases v with
+      | here => first | exact found | cases found
+      | there v =>
+        cases v with
+        | here => first | exact found | cases found
+        | there v =>
+          cases v with
+          | here => first | exact found | cases found
+          | there v =>
+            cases v
+
+theorem SourceJoinChecks.«update#outside7» {t} (v : Core.Var ([Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.bool]) t) (repr : Adequacy.Scalar t)
+    (visible : (SourceJoinChecks.«update#names0»).visible v = true) : (SourceJoinChecks.«update#names0»).get v ∈ (["total", "flag", "y", "x"]) := by
+  cases v with
+  | here => first | exact (show "total" ∈ (["total", "flag", "y", "x"]) from by decide) | (solve | cases visible) | (solve | cases repr)
+  | there v =>
+    cases v with
+    | here => first | exact (show "x" ∈ (["total", "flag", "y", "x"]) from by decide) | (solve | cases visible) | (solve | cases repr)
+    | there v =>
+      cases v with
+      | here => first | exact (show "y" ∈ (["total", "flag", "y", "x"]) from by decide) | (solve | cases visible) | (solve | cases repr)
+      | there v =>
+        cases v with
+        | here => first | exact (show "flag" ∈ (["total", "flag", "y", "x"]) from by decide) | (solve | cases visible) | (solve | cases repr)
+        | there v =>
+          cases v
+
+theorem SourceChecks.«update».translated :
+    Adequacy.ScalarJoins Interpretation.value .int (Adequacy.JoinContext (SourceChecks.«update».names) (Adequacy.Ghosts.empty) (["flag", "y", "x"]) []) (fun _ _ => False) (SourceChecks.«update».statements) CoreArtifacts.«update».body := by
+  exact (Adequacy.ScalarJoins.contextLet "total" (.var .int (Ariadne.Shallow.Core.Var.here) _ (by decide)) (by simp) (Adequacy.ScalarJoins.contextShared (leading := [Ariadne.Stmt.if_ (Ariadne.Expr.var "flag" { start := 169, stop := 173 }) (Ariadne.Stmt.block [Ariadne.Stmt.assign (Ariadne.Expr.var "total" { start := 177, stop := 182 }) (Ariadne.Expr.binary "+" (Ariadne.Expr.var "total" { start := 177, stop := 182 }) (Ariadne.Expr.var "y" { start := 186, stop := 187 }) { start := 183, stop := 185 }) { start := 177, stop := 182 }] { start := 175, stop := 190 }) (Ariadne.Stmt.block [Ariadne.Stmt.assign (Ariadne.Expr.var "total" { start := 198, stop := 203 }) (Ariadne.Expr.binary "-" (Ariadne.Expr.var "total" { start := 198, stop := 203 }) (Ariadne.Expr.var "y" { start := 207, stop := 208 }) { start := 204, stop := 206 }) { start := 198, stop := 203 }] { start := 196, stop := 211 }) { start := 165, stop := 167 }]) (continuation := SourceJoinChecks.«update#continuation2»)
+  (suffixPre := (Adequacy.JoinContext (SourceJoinChecks.«update#names0») (SourceJoinChecks.«update#ghosts1») (["total", "flag", "y", "x"]) [])) "#joinProof3" (SourceJoinChecks.«update#suffix3») (Adequacy.ScalarJoins.contextIf (.var .bool (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) _ (by decide)) (Adequacy.ScalarJoins.contextBlock (fun _scope4 => (Adequacy.ScalarJoins.contextAssign ((Core.Var.there Core.Var.here)) (by decide) (.binary .intAdd (.var .int (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _ (by decide)) (.var .int (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) _ (by decide)) _) (Adequacy.ScalarJoins.contextJump (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) (by rfl) SourceJoinChecks.«update#select5» (fun state => { state with env := _scope4 }) (by
+  intro state env h
+  exact ((h.capture SourceJoinChecks.«update#capture6»).restore (fun v repr visible => SourceJoinChecks.«update#outside7» v repr visible)))) _ _)) _) (Adequacy.ScalarJoins.contextBlock (fun _scope8 => (Adequacy.ScalarJoins.contextAssign ((Core.Var.there Core.Var.here)) (by decide) (.binary .intSub (.var .int (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _ (by decide)) (.var .int (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) _ (by decide)) _) (Adequacy.ScalarJoins.contextJump (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) (by rfl) SourceJoinChecks.«update#select5» (fun state => { state with env := _scope8 }) (by
+  intro state env h
+  exact ((h.capture SourceJoinChecks.«update#capture6»).restore (fun v repr visible => SourceJoinChecks.«update#outside7» v repr visible)))) _ _)) _) _)) _ _ _)
+
+theorem «update_source» («_x#arg» : _root_.Int) («_y#arg» : _root_.Int) («_flag#arg» : _root_.Bool) (heap : Heap) :
+    SourceReturnsFrom _root_.Extracted_scalars.source "update" heap [(Value.bigint «_x#arg»), (Value.bigint «_y#arg»), (Value.boolean «_flag#arg»)] (Value.bigint («update» «_x#arg» «_y#arg» «_flag#arg»)) := by
+  have inputs : Adequacy.Environment SourceChecks.«update».names
+      (Adequacy.bindArguments { heap } SourceChecks.«update».function.params [(Value.bigint «_x#arg»), (Value.bigint «_y#arg»), (Value.boolean «_flag#arg»)])
+      (interp := Interpretation.value) («_x#arg», («_y#arg», («_flag#arg», ()))) := by
+    intro t v scalar _visible
+    cases v with
+    | here =>
+      cases scalar
+      apply Adequacy.lookup_declare_other (by decide)
+      apply Adequacy.lookup_declare_other (by decide)
+      exact Adequacy.lookup_declare_self _ _ _
+    | there v =>
+      cases v with
+      | here =>
+        cases scalar
+        apply Adequacy.lookup_declare_other (by decide)
+        exact Adequacy.lookup_declare_self _ _ _
+      | there v =>
+        cases v with
+        | here =>
+          cases scalar
+          exact Adequacy.lookup_declare_self _ _ _
+        | there v =>
+          cases v
+  have resultEq : «update» «_x#arg» «_y#arg» «_flag#arg» = Denote.term CoreArtifacts.«update».body («_x#arg», («_y#arg», («_flag#arg», ()))) :=
+    congrFun DenotationChecks.«update» («_x#arg», («_y#arg», («_flag#arg», ())))
+  rw [resultEq]
+  exact Adequacy.scalar_joins_source _root_.Extracted_scalars.certificate SourceChecks.«update».function .int CoreArtifacts.«update».body
+    (SourceChecks.«update».statements) ({ start := 148, stop := 232 })
+    (by kernel_rfl) (by kernel_rfl) Interpretation.value (Adequacy.JoinContext (SourceChecks.«update».names) (Adequacy.Ghosts.empty) (["flag", "y", "x"]) []) SourceChecks.«update».translated («_x#arg», («_y#arg», («_flag#arg», ()))) heap [(Value.bigint «_x#arg»), (Value.bigint «_y#arg»), (Value.boolean «_flag#arg»)]
+    (Adequacy.JoinContext.initial inputs (Adequacy.bindArguments_valid _ _ _) rfl)
+
 def CoreArtifacts.«fallback» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int)], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.optionCase (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.int (9)) (Core.Term.var (Ariadne.Shallow.Core.Var.here))) }
 
 theorem ElaborationChecks.«fallback» :
@@ -951,7 +1066,7 @@ theorem «hello_source» («_name#arg» : _root_.Ariadne.JSString) (heap : Heap)
     ([Ariadne.Stmt.return_    (Ariadne.Expr.binary      "+"      (Ariadne.Expr.literal (Ariadne.Literal.string [104, 101, 108, 108, 111, 32]) { start := 446, stop := 454 })      (Ariadne.Expr.var "name" { start := 457, stop := 461 })      { start := 446, stop := 461 })    { start := 439, stop := 445 }]) ({ start := 437, stop := 464 })
     (by kernel_rfl) (by kernel_rfl) SourceChecks.«hello».translated Interpretation.value («_name#arg», ()) heap [(Value.string «_name#arg»)] inputs
 
-def CoreArtifacts.«optional» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.bool, Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int), body := (Core.Term.ite (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.some (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) Core.Term.none) }
+def CoreArtifacts.«optional» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.bool, Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int), body := (Core.Term.ite (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.some (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.unit) "undefined" Core.Term.unit Core.Term.none)) }
 
 theorem ElaborationChecks.«optional» :
     Elaborate.function _root_.Extracted_scalars.program "optional" = .ok CoreArtifacts.«optional» := by kernel_rfl
@@ -960,7 +1075,8 @@ def «optional» («_flag#arg» : _root_.Bool) («_value#arg» : _root_.Int) : (
   (if «_flag#arg» then
   (_root_.Option.some «_value#arg»)
   else
-  _root_.Option.none)
+  (let «_undefined#0» : _root_.Unit := ();
+  _root_.Option.none))
 
 abbrev «optional».safe («_flag#arg» : _root_.Bool) («_value#arg» : _root_.Int) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«optional» (by decide) («_flag#arg», («_value#arg», ()))
@@ -1098,6 +1214,74 @@ theorem DenotationChecks.«scoped» :
       Denote.function (interp := Interpretation.value) CoreArtifacts.«scoped» := by
   unfold Extracted_scalars.Shallow.«scoped»
   simp only [Denote.function, CoreArtifacts.«scoped», Denote.term, Core.Var.get, JoinChecks.«scoped#0»] <;> rfl
+
+def SourceChecks.«scoped».function : Ariadne.Function := { name := "scoped", params := [{ name := "x", ty := Ariadne.Ty.bigint, span := { start := 767, stop := 768 } }], result := Ariadne.Ty.bigint, body := Ariadne.Stmt.block [Ariadne.Stmt.block [Ariadne.Stmt.let_ true "temporary" none (Ariadne.Expr.binary "+" (Ariadne.Expr.var "x" { start := 808, stop := 809 }) (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 812, stop := 814 }) { start := 808, stop := 814 }) { start := 792, stop := 795 }, Ariadne.Stmt.assign (Ariadne.Expr.var "x" { start := 816, stop := 817 }) (Ariadne.Expr.binary "*" (Ariadne.Expr.var "temporary" { start := 820, stop := 829 }) (Ariadne.Expr.literal (Ariadne.Literal.bigint 2) { start := 832, stop := 834 }) { start := 820, stop := 834 }) { start := 816, stop := 817 }] { start := 790, stop := 837 }, Ariadne.Stmt.let_ true "temporary" none (Ariadne.Expr.binary "-" (Ariadne.Expr.var "x" { start := 856, stop := 857 }) (Ariadne.Expr.literal (Ariadne.Literal.bigint 3) { start := 860, stop := 862 }) { start := 856, stop := 862 }) { start := 840, stop := 843 }, Ariadne.Stmt.return_ (Ariadne.Expr.var "temporary" { start := 873, stop := 882 }) { start := 866, stop := 872 }] { start := 786, stop := 885 }, exported := true, decreases := none, span := { start := 751, stop := 759 } }
+
+def SourceChecks.«scoped».statements : List Stmt := match SourceChecks.«scoped».function.body with | .block body _ => body | _ => []
+
+def SourceChecks.«scoped».names : Adequacy.Names CoreArtifacts.«scoped».params :=
+  Adequacy.Names.fromList ["x"]
+
+def SourceJoinChecks.«scoped#names0» : Adequacy.Names ([Ariadne.Shallow.Core.Ty.int]) := Adequacy.Names.fromList (["x"])
+
+def SourceJoinChecks.«scoped#ghosts1» : Adequacy.Ghosts ([Ariadne.Shallow.Core.Ty.int]) := (Adequacy.Ghosts.skip Adequacy.Ghosts.empty)
+
+def SourceJoinChecks.«scoped#continuation2» : Core.Term ([Ariadne.Shallow.Core.Ty.int]) (Ariadne.Shallow.Core.Ty.int) := (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.int) "temporary" (Core.Term.binary (Ariadne.Shallow.Core.Binary.intSub) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.int (3))) (Core.Term.var (Ariadne.Shallow.Core.Var.here)))
+
+theorem SourceJoinChecks.«scoped#suffix3» :
+    Adequacy.ScalarJoins Interpretation.value .int (Adequacy.JoinContext (SourceJoinChecks.«scoped#names0») (SourceJoinChecks.«scoped#ghosts1») (["x"]) []) (fun _ _ => False) ((SourceChecks.«scoped».statements.drop 1)) SourceJoinChecks.«scoped#continuation2» := by
+  exact (Adequacy.ScalarJoins.contextLet "temporary" (.binary .intSub (.var .int (Ariadne.Shallow.Core.Var.here) _ (by decide)) (.int _ _) _) (by simp) (Adequacy.ScalarJoins.contextReturn (.var .int (Ariadne.Shallow.Core.Var.here) _ (by decide)) _ _) _ _ _)
+
+def SourceJoinChecks.«scoped#select5» : Core.Renaming ([Ariadne.Shallow.Core.Ty.int]) ([Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.fn (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.int) (Ariadne.Shallow.Core.Ty.unit)) (Ariadne.Shallow.Core.Ty.int), Ariadne.Shallow.Core.Ty.int])
+  | _, .here => Core.Var.here
+
+theorem SourceJoinChecks.«scoped#capture6» : Adequacy.Captures (((((((SourceChecks.«scoped».names).cons "#joinProof3")).cons "temporary")).cons "x")) ((Adequacy.Ghosts.skip ((Adequacy.Ghosts.skip ((Adequacy.Ghosts.bind SourceJoinChecks.«scoped#continuation2».abstract (Adequacy.Ghosts.empty)))))))
+    (SourceJoinChecks.«scoped#names0») (SourceJoinChecks.«scoped#ghosts1») SourceJoinChecks.«scoped#select5» := by
+  constructor
+  · intro t v repr visible
+    cases v with
+    | here => first | exact ⟨rfl, rfl⟩ | (solve | cases visible) | (solve | cases repr)
+    | there v =>
+      cases v
+  · intro t v value found
+    cases v with
+    | here => first | exact found | cases found
+    | there v =>
+      cases v
+
+theorem SourceJoinChecks.«scoped#outside7» {t} (v : Core.Var ([Ariadne.Shallow.Core.Ty.int]) t) (repr : Adequacy.Scalar t)
+    (visible : (SourceJoinChecks.«scoped#names0»).visible v = true) : (SourceJoinChecks.«scoped#names0»).get v ∈ (["x"]) := by
+  cases v with
+  | here => first | exact (show "x" ∈ (["x"]) from by decide) | (solve | cases visible) | (solve | cases repr)
+  | there v =>
+    cases v
+
+theorem SourceChecks.«scoped».translated :
+    Adequacy.ScalarJoins Interpretation.value .int (Adequacy.JoinContext (SourceChecks.«scoped».names) (Adequacy.Ghosts.empty) (["x"]) []) (fun _ _ => False) (SourceChecks.«scoped».statements) CoreArtifacts.«scoped».body := by
+  exact (Adequacy.ScalarJoins.contextShared (leading := [Ariadne.Stmt.block [Ariadne.Stmt.let_ true "temporary" none (Ariadne.Expr.binary "+" (Ariadne.Expr.var "x" { start := 808, stop := 809 }) (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 812, stop := 814 }) { start := 808, stop := 814 }) { start := 792, stop := 795 }, Ariadne.Stmt.assign (Ariadne.Expr.var "x" { start := 816, stop := 817 }) (Ariadne.Expr.binary "*" (Ariadne.Expr.var "temporary" { start := 820, stop := 829 }) (Ariadne.Expr.literal (Ariadne.Literal.bigint 2) { start := 832, stop := 834 }) { start := 820, stop := 834 }) { start := 816, stop := 817 }] { start := 790, stop := 837 }]) (continuation := SourceJoinChecks.«scoped#continuation2»)
+  (suffixPre := (Adequacy.JoinContext (SourceJoinChecks.«scoped#names0») (SourceJoinChecks.«scoped#ghosts1») (["x"]) [])) "#joinProof3" (SourceJoinChecks.«scoped#suffix3») (Adequacy.ScalarJoins.contextBlock (fun _scope4 => (Adequacy.ScalarJoins.contextLet "temporary" (.binary .intAdd (.var .int (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _ (by decide)) (.int _ _) _) (by simp) (Adequacy.ScalarJoins.contextAssign ((Core.Var.there (Core.Var.there Core.Var.here))) (by decide) (.binary .intMul (.var .int (Ariadne.Shallow.Core.Var.here) _ (by decide)) (.int _ _) _) (Adequacy.ScalarJoins.contextJump (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (by rfl) SourceJoinChecks.«scoped#select5» (fun state => { state with env := _scope4 }) (by
+  intro state env h
+  exact ((h.capture SourceJoinChecks.«scoped#capture6»).restore (fun v repr visible => SourceJoinChecks.«scoped#outside7» v repr visible)))) _ _) _ _ _)) _))
+
+theorem «scoped_source» («_x#arg» : _root_.Int) (heap : Heap) :
+    SourceReturnsFrom _root_.Extracted_scalars.source "scoped" heap [(Value.bigint «_x#arg»)] (Value.bigint («scoped» «_x#arg»)) := by
+  have inputs : Adequacy.Environment SourceChecks.«scoped».names
+      (Adequacy.bindArguments { heap } SourceChecks.«scoped».function.params [(Value.bigint «_x#arg»)])
+      (interp := Interpretation.value) («_x#arg», ()) := by
+    intro t v scalar _visible
+    cases v with
+    | here =>
+      cases scalar
+      exact Adequacy.lookup_declare_self _ _ _
+    | there v =>
+      cases v
+  have resultEq : «scoped» «_x#arg» = Denote.term CoreArtifacts.«scoped».body («_x#arg», ()) :=
+    congrFun DenotationChecks.«scoped» («_x#arg», ())
+  rw [resultEq]
+  exact Adequacy.scalar_joins_source _root_.Extracted_scalars.certificate SourceChecks.«scoped».function .int CoreArtifacts.«scoped».body
+    (SourceChecks.«scoped».statements) ({ start := 786, stop := 885 })
+    (by kernel_rfl) (by kernel_rfl) Interpretation.value (Adequacy.JoinContext (SourceChecks.«scoped».names) (Adequacy.Ghosts.empty) (["x"]) []) SourceChecks.«scoped».translated («_x#arg», ()) heap [(Value.bigint «_x#arg»)]
+    (Adequacy.JoinContext.initial inputs (Adequacy.bindArguments_valid _ _ _) rfl)
 
 def CoreArtifacts.«abs_denotes» : Core.Function := { params := [], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.int (3)) }
 
@@ -1283,7 +1467,7 @@ theorem JoinChecks.«forget#1» : Denote.term (interp := Interpretation.value) J
   unfold Extracted_scalars.Shallow.JoinNative.«forget#1»
   simp only [JoinCore.«forget#1», Denote.term, Core.Var.get, JoinChecks.«forget#0»] <;> rfl
 
-def CoreArtifacts.«forget» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int), Ariadne.Shallow.Core.Ty.bool], result := Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int), body := (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.fn   (Ariadne.Shallow.Core.Ty.pair     (Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int))     (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.bool) (Ariadne.Shallow.Core.Ty.unit)))   (Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int))) "join" (Core.Term.closed JoinCore.«forget#0») (Core.Term.optionCase (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.unit) "x" Core.Term.unit (Core.Term.app (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair Core.Term.none (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) Core.Term.unit)))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.fn   (Ariadne.Shallow.Core.Ty.pair     (Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int))     (Ariadne.Shallow.Core.Ty.pair       (Ariadne.Shallow.Core.Ty.fn         (Ariadne.Shallow.Core.Ty.pair           (Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int))           (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.bool) (Ariadne.Shallow.Core.Ty.unit)))         (Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int)))       (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.bool) (Ariadne.Shallow.Core.Ty.unit))))   (Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int))) "join" (Core.Term.closed JoinCore.«forget#1») (Core.Term.ite (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there     (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int)) "x" Core.Term.none (Core.Term.app (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there     (Ariadne.Shallow.Core.Var.there       (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))))) Core.Term.unit))))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int)) "x" (Core.Term.some (Core.Term.binary (Ariadne.Shallow.Core.Binary.intAdd) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.int (1)))) (Core.Term.app (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there     (Ariadne.Shallow.Core.Var.there       (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))))) Core.Term.unit))))))))) }
+def CoreArtifacts.«forget» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int), Ariadne.Shallow.Core.Ty.bool], result := Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int), body := (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.fn   (Ariadne.Shallow.Core.Ty.pair     (Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int))     (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.bool) (Ariadne.Shallow.Core.Ty.unit)))   (Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int))) "join" (Core.Term.closed JoinCore.«forget#0») (Core.Term.optionCase (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.unit) "x" Core.Term.unit (Core.Term.app (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.unit) "undefined" (Core.Term.var (Ariadne.Shallow.Core.Var.here)) Core.Term.none) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) Core.Term.unit)))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.fn   (Ariadne.Shallow.Core.Ty.pair     (Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int))     (Ariadne.Shallow.Core.Ty.pair       (Ariadne.Shallow.Core.Ty.fn         (Ariadne.Shallow.Core.Ty.pair           (Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int))           (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.bool) (Ariadne.Shallow.Core.Ty.unit)))         (Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int)))       (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.bool) (Ariadne.Shallow.Core.Ty.unit))))   (Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int))) "join" (Core.Term.closed JoinCore.«forget#1») (Core.Term.ite (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there     (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int)) "x" (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.unit) "undefined" Core.Term.unit Core.Term.none) (Core.Term.app (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there     (Ariadne.Shallow.Core.Var.there       (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))))) Core.Term.unit))))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int)) "x" (Core.Term.some (Core.Term.binary (Ariadne.Shallow.Core.Binary.intAdd) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.int (1)))) (Core.Term.app (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there     (Ariadne.Shallow.Core.Var.there       (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))))) Core.Term.unit))))))))) }
 
 theorem ElaborationChecks.«forget» :
     Elaborate.function _root_.Extracted_scalars.program "forget" = .ok CoreArtifacts.«forget» := by kernel_rfl
@@ -1291,9 +1475,11 @@ theorem ElaborationChecks.«forget» :
 def «forget» («_x#arg» : (_root_.Option _root_.Int)) («_clear#arg» : _root_.Bool) : (_root_.Option _root_.Int) :=
   (let «_join#0» : (((_root_.Option _root_.Int) × (_root_.Bool × _root_.Unit)) → (_root_.Option _root_.Int)) := JoinNative.«forget#0»;
   (_root_.Option.elim «_x#arg» (let «_x#1» : _root_.Unit := ();
-  («_join#0» (_root_.Option.none, («_clear#arg», ())))) (fun «value#1» => (let «_join#2» : (((_root_.Option _root_.Int) × ((((_root_.Option _root_.Int) × (_root_.Bool × _root_.Unit)) → (_root_.Option _root_.Int)) × (_root_.Bool × _root_.Unit))) → (_root_.Option _root_.Int)) := JoinNative.«forget#1»;
+  («_join#0» ((let «_undefined#2» : _root_.Unit := «_x#1»;
+  _root_.Option.none), («_clear#arg», ())))) (fun «value#1» => (let «_join#2» : (((_root_.Option _root_.Int) × ((((_root_.Option _root_.Int) × (_root_.Bool × _root_.Unit)) → (_root_.Option _root_.Int)) × (_root_.Bool × _root_.Unit))) → (_root_.Option _root_.Int)) := JoinNative.«forget#1»;
   (if «_clear#arg» then
-  (let «_x#3» : (_root_.Option _root_.Int) := _root_.Option.none;
+  (let «_x#3» : (_root_.Option _root_.Int) := (let «_undefined#3» : _root_.Unit := ();
+  _root_.Option.none);
   («_join#2» («_x#3», («_join#0», («_clear#arg», ())))))
   else
   (let «_x#3» : (_root_.Option _root_.Int) := (_root_.Option.some («value#1» + (1 : _root_.Int)));
@@ -1357,5 +1543,146 @@ theorem DenotationChecks.«scopedTypes» :
       Denote.function (interp := Interpretation.value) CoreArtifacts.«scopedTypes» := by
   unfold Extracted_scalars.Shallow.«scopedTypes»
   simp only [Denote.function, CoreArtifacts.«scopedTypes», Denote.term, Core.Var.get, JoinChecks.«scopedTypes#0», JoinChecks.«scopedTypes#1»] <;> rfl
+
+def SourceChecks.«scopedTypes».function : Ariadne.Function := { name := "scopedTypes", params := [{ name := "x", ty := Ariadne.Ty.bigint, span := { start := 1675, stop := 1676 } }], result := Ariadne.Ty.bigint, body := Ariadne.Stmt.block [Ariadne.Stmt.block [Ariadne.Stmt.let_ false "temporary" (some (Ariadne.Ty.string)) (Ariadne.Expr.literal (Ariadne.Literal.string [105, 110, 110, 101, 114]) { start := 1726, stop := 1733 }) { start := 1700, stop := 1705 }, Ariadne.Stmt.let_ false "unused" none (Ariadne.Expr.binary "+" (Ariadne.Expr.var "temporary" { start := 1750, stop := 1759 }) (Ariadne.Expr.literal (Ariadne.Literal.string [33]) { start := 1762, stop := 1765 }) { start := 1750, stop := 1765 }) { start := 1735, stop := 1740 }] { start := 1698, stop := 1768 }, Ariadne.Stmt.let_ true "temporary" (some (Ariadne.Ty.bigint)) (Ariadne.Expr.var "x" { start := 1795, stop := 1796 }) { start := 1771, stop := 1774 }, Ariadne.Stmt.if_ (Ariadne.Expr.binary ">" (Ariadne.Expr.var "x" { start := 1804, stop := 1805 }) (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 1808, stop := 1810 }) { start := 1804, stop := 1810 }) (Ariadne.Stmt.block [Ariadne.Stmt.assign (Ariadne.Expr.var "temporary" { start := 1814, stop := 1823 }) (Ariadne.Expr.binary "+" (Ariadne.Expr.var "temporary" { start := 1814, stop := 1823 }) (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 1827, stop := 1829 }) { start := 1824, stop := 1826 }) { start := 1814, stop := 1823 }] { start := 1812, stop := 1832 }) (Ariadne.Stmt.block [] { start := 1800, stop := 1802 }) { start := 1800, stop := 1802 }, Ariadne.Stmt.return_ (Ariadne.Expr.var "temporary" { start := 1842, stop := 1851 }) { start := 1835, stop := 1841 }] { start := 1694, stop := 1854 }, exported := true, decreases := none, span := { start := 1654, stop := 1662 } }
+
+def SourceChecks.«scopedTypes».statements : List Stmt := match SourceChecks.«scopedTypes».function.body with | .block body _ => body | _ => []
+
+def SourceChecks.«scopedTypes».names : Adequacy.Names CoreArtifacts.«scopedTypes».params :=
+  Adequacy.Names.fromList ["x"]
+
+def SourceJoinChecks.«scopedTypes#names0» : Adequacy.Names ([Ariadne.Shallow.Core.Ty.int]) := Adequacy.Names.fromList (["x"])
+
+def SourceJoinChecks.«scopedTypes#ghosts1» : Adequacy.Ghosts ([Ariadne.Shallow.Core.Ty.int]) := (Adequacy.Ghosts.skip Adequacy.Ghosts.empty)
+
+def SourceJoinChecks.«scopedTypes#continuation2» : Core.Term ([Ariadne.Shallow.Core.Ty.int]) (Ariadne.Shallow.Core.Ty.int) := (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.int) "temporary" (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.fn (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.int) (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.int) (Ariadne.Shallow.Core.Ty.unit))) (Ariadne.Shallow.Core.Ty.int)) "join" (Core.Term.closed JoinCore.«scopedTypes#0») (Core.Term.ite (Core.Term.binary (Ariadne.Shallow.Core.Binary.intLt) (Core.Term.int (0)) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.int) "temporary" (Core.Term.binary (Ariadne.Shallow.Core.Binary.intAdd) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.int (1))) (Core.Term.app (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) Core.Term.unit)))) (Core.Term.app (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) Core.Term.unit))))))
+
+def SourceJoinChecks.«scopedTypes#names3» : Adequacy.Names ([Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int]) := Adequacy.Names.fromList (["temporary", "x"])
+
+def SourceJoinChecks.«scopedTypes#ghosts4» : Adequacy.Ghosts ([Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int]) := (Adequacy.Ghosts.skip (Adequacy.Ghosts.skip Adequacy.Ghosts.empty))
+
+def SourceJoinChecks.«scopedTypes#continuation5» : Core.Term ([Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int]) (Ariadne.Shallow.Core.Ty.int) := (Core.Term.var (Ariadne.Shallow.Core.Var.here))
+
+theorem SourceJoinChecks.«scopedTypes#suffix6» :
+    Adequacy.ScalarJoins Interpretation.value .int (Adequacy.JoinContext (SourceJoinChecks.«scopedTypes#names3») (SourceJoinChecks.«scopedTypes#ghosts4») (["temporary", "x"]) []) (fun _ _ => False) ((SourceChecks.«scopedTypes».statements.drop 3)) SourceJoinChecks.«scopedTypes#continuation5» := by
+  exact (Adequacy.ScalarJoins.contextReturn (.var .int (Ariadne.Shallow.Core.Var.here) _ (by decide)) _ _)
+
+def SourceJoinChecks.«scopedTypes#select8» : Core.Renaming ([Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int]) ([Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.fn (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.int) (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.int) (Ariadne.Shallow.Core.Ty.unit))) (Ariadne.Shallow.Core.Ty.int), Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int])
+  | _, .here => Core.Var.here
+  | _, (.there .here) => (Core.Var.there (Core.Var.there (Core.Var.there Core.Var.here)))
+
+theorem SourceJoinChecks.«scopedTypes#capture9» : Adequacy.Captures (((((((SourceJoinChecks.«scopedTypes#names0»).cons "temporary")).cons "#joinProof6")).cons "temporary")) ((Adequacy.Ghosts.skip ((Adequacy.Ghosts.bind SourceJoinChecks.«scopedTypes#continuation5».abstract ((Adequacy.Ghosts.skip (SourceJoinChecks.«scopedTypes#ghosts1»)))))))
+    (SourceJoinChecks.«scopedTypes#names3») (SourceJoinChecks.«scopedTypes#ghosts4») SourceJoinChecks.«scopedTypes#select8» := by
+  constructor
+  · intro t v repr visible
+    cases v with
+    | here => first | exact ⟨rfl, rfl⟩ | (solve | cases visible) | (solve | cases repr)
+    | there v =>
+      cases v with
+      | here => first | exact ⟨rfl, rfl⟩ | (solve | cases visible) | (solve | cases repr)
+      | there v =>
+        cases v
+  · intro t v value found
+    cases v with
+    | here => first | exact found | cases found
+    | there v =>
+      cases v with
+      | here => first | exact found | cases found
+      | there v =>
+        cases v
+
+theorem SourceJoinChecks.«scopedTypes#outside10» {t} (v : Core.Var ([Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int]) t) (repr : Adequacy.Scalar t)
+    (visible : (SourceJoinChecks.«scopedTypes#names3»).visible v = true) : (SourceJoinChecks.«scopedTypes#names3»).get v ∈ (["temporary", "x"]) := by
+  cases v with
+  | here => first | exact (show "temporary" ∈ (["temporary", "x"]) from by decide) | (solve | cases visible) | (solve | cases repr)
+  | there v =>
+    cases v with
+    | here => first | exact (show "x" ∈ (["temporary", "x"]) from by decide) | (solve | cases visible) | (solve | cases repr)
+    | there v =>
+      cases v
+
+def SourceJoinChecks.«scopedTypes#select11» : Core.Renaming ([Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int]) ([Ariadne.Shallow.Core.Ty.fn (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.int) (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.int) (Ariadne.Shallow.Core.Ty.unit))) (Ariadne.Shallow.Core.Ty.int), Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.int])
+  | _, .here => (Core.Var.there Core.Var.here)
+  | _, (.there .here) => (Core.Var.there (Core.Var.there Core.Var.here))
+
+theorem SourceJoinChecks.«scopedTypes#capture12» : Adequacy.Captures (((((SourceJoinChecks.«scopedTypes#names0»).cons "temporary")).cons "#joinProof6")) ((Adequacy.Ghosts.bind SourceJoinChecks.«scopedTypes#continuation5».abstract ((Adequacy.Ghosts.skip (SourceJoinChecks.«scopedTypes#ghosts1»)))))
+    (SourceJoinChecks.«scopedTypes#names3») (SourceJoinChecks.«scopedTypes#ghosts4») SourceJoinChecks.«scopedTypes#select11» := by
+  constructor
+  · intro t v repr visible
+    cases v with
+    | here => first | exact ⟨rfl, rfl⟩ | (solve | cases visible) | (solve | cases repr)
+    | there v =>
+      cases v with
+      | here => first | exact ⟨rfl, rfl⟩ | (solve | cases visible) | (solve | cases repr)
+      | there v =>
+        cases v
+  · intro t v value found
+    cases v with
+    | here => first | exact found | cases found
+    | there v =>
+      cases v with
+      | here => first | exact found | cases found
+      | there v =>
+        cases v
+
+theorem SourceJoinChecks.«scopedTypes#suffix13» :
+    Adequacy.ScalarJoins Interpretation.value .int (Adequacy.JoinContext (SourceJoinChecks.«scopedTypes#names0») (SourceJoinChecks.«scopedTypes#ghosts1») (["x"]) []) (fun _ _ => False) ((SourceChecks.«scopedTypes».statements.drop 1)) SourceJoinChecks.«scopedTypes#continuation2» := by
+  exact (Adequacy.ScalarJoins.contextLet "temporary" (.var .int (Ariadne.Shallow.Core.Var.here) _ (by decide)) (by simp) (Adequacy.ScalarJoins.contextShared (leading := [Ariadne.Stmt.if_ (Ariadne.Expr.binary ">" (Ariadne.Expr.var "x" { start := 1804, stop := 1805 }) (Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 1808, stop := 1810 }) { start := 1804, stop := 1810 }) (Ariadne.Stmt.block [Ariadne.Stmt.assign (Ariadne.Expr.var "temporary" { start := 1814, stop := 1823 }) (Ariadne.Expr.binary "+" (Ariadne.Expr.var "temporary" { start := 1814, stop := 1823 }) (Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 1827, stop := 1829 }) { start := 1824, stop := 1826 }) { start := 1814, stop := 1823 }] { start := 1812, stop := 1832 }) (Ariadne.Stmt.block [] { start := 1800, stop := 1802 }) { start := 1800, stop := 1802 }]) (continuation := SourceJoinChecks.«scopedTypes#continuation5»)
+  (suffixPre := (Adequacy.JoinContext (SourceJoinChecks.«scopedTypes#names3») (SourceJoinChecks.«scopedTypes#ghosts4») (["temporary", "x"]) [])) "#joinProof6" (SourceJoinChecks.«scopedTypes#suffix6») (Adequacy.ScalarJoins.contextIf (.binarySwap .intGt (.var .int (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) _ (by decide)) (.int _ _) _) (Adequacy.ScalarJoins.contextBlock (fun _scope7 => (Adequacy.ScalarJoins.contextAssign ((Core.Var.there Core.Var.here)) (by decide) (.binary .intAdd (.var .int (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) _ (by decide)) (.int _ _) _) (Adequacy.ScalarJoins.contextJump (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)) (by rfl) SourceJoinChecks.«scopedTypes#select8» (fun state => { state with env := _scope7 }) (by
+  intro state env h
+  exact ((h.capture SourceJoinChecks.«scopedTypes#capture9»).restore (fun v repr visible => SourceJoinChecks.«scopedTypes#outside10» v repr visible)))) _ _)) _) (Adequacy.ScalarJoins.emptyBlock (Adequacy.ScalarJoins.contextJump (Ariadne.Shallow.Core.Var.here) (by rfl) SourceJoinChecks.«scopedTypes#select11» (fun state => state) (by
+  intro state env h
+  exact (h.capture SourceJoinChecks.«scopedTypes#capture12»))) _) _)) _ _ _)
+
+def SourceJoinChecks.«scopedTypes#select15» : Core.Renaming ([Ariadne.Shallow.Core.Ty.int]) ([Ariadne.Shallow.Core.Ty.string, Ariadne.Shallow.Core.Ty.string, Ariadne.Shallow.Core.Ty.fn (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.int) (Ariadne.Shallow.Core.Ty.unit)) (Ariadne.Shallow.Core.Ty.int), Ariadne.Shallow.Core.Ty.int])
+  | _, .here => (Core.Var.there (Core.Var.there (Core.Var.there Core.Var.here)))
+
+theorem SourceJoinChecks.«scopedTypes#capture16» : Adequacy.Captures (((((((SourceChecks.«scopedTypes».names).cons "#joinProof3")).cons "temporary")).cons "unused")) ((Adequacy.Ghosts.skip ((Adequacy.Ghosts.skip ((Adequacy.Ghosts.bind SourceJoinChecks.«scopedTypes#continuation2».abstract (Adequacy.Ghosts.empty)))))))
+    (SourceJoinChecks.«scopedTypes#names0») (SourceJoinChecks.«scopedTypes#ghosts1») SourceJoinChecks.«scopedTypes#select15» := by
+  constructor
+  · intro t v repr visible
+    cases v with
+    | here => first | exact ⟨rfl, rfl⟩ | (solve | cases visible) | (solve | cases repr)
+    | there v =>
+      cases v
+  · intro t v value found
+    cases v with
+    | here => first | exact found | cases found
+    | there v =>
+      cases v
+
+theorem SourceJoinChecks.«scopedTypes#outside17» {t} (v : Core.Var ([Ariadne.Shallow.Core.Ty.int]) t) (repr : Adequacy.Scalar t)
+    (visible : (SourceJoinChecks.«scopedTypes#names0»).visible v = true) : (SourceJoinChecks.«scopedTypes#names0»).get v ∈ (["x"]) := by
+  cases v with
+  | here => first | exact (show "x" ∈ (["x"]) from by decide) | (solve | cases visible) | (solve | cases repr)
+  | there v =>
+    cases v
+
+theorem SourceChecks.«scopedTypes».translated :
+    Adequacy.ScalarJoins Interpretation.value .int (Adequacy.JoinContext (SourceChecks.«scopedTypes».names) (Adequacy.Ghosts.empty) (["x"]) []) (fun _ _ => False) (SourceChecks.«scopedTypes».statements) CoreArtifacts.«scopedTypes».body := by
+  exact (Adequacy.ScalarJoins.contextShared (leading := [Ariadne.Stmt.block [Ariadne.Stmt.let_ false "temporary" (some (Ariadne.Ty.string)) (Ariadne.Expr.literal (Ariadne.Literal.string [105, 110, 110, 101, 114]) { start := 1726, stop := 1733 }) { start := 1700, stop := 1705 }, Ariadne.Stmt.let_ false "unused" none (Ariadne.Expr.binary "+" (Ariadne.Expr.var "temporary" { start := 1750, stop := 1759 }) (Ariadne.Expr.literal (Ariadne.Literal.string [33]) { start := 1762, stop := 1765 }) { start := 1750, stop := 1765 }) { start := 1735, stop := 1740 }] { start := 1698, stop := 1768 }]) (continuation := SourceJoinChecks.«scopedTypes#continuation2»)
+  (suffixPre := (Adequacy.JoinContext (SourceJoinChecks.«scopedTypes#names0») (SourceJoinChecks.«scopedTypes#ghosts1») (["x"]) [])) "#joinProof3" (SourceJoinChecks.«scopedTypes#suffix13») (Adequacy.ScalarJoins.contextBlock (fun _scope14 => (Adequacy.ScalarJoins.contextLet "temporary" (.string _ _) (by simp) (Adequacy.ScalarJoins.contextLet "unused" (.binary .strAppend (.var .string (Ariadne.Shallow.Core.Var.here) _ (by decide)) (.string _ _) _) (by simp) (Adequacy.ScalarJoins.contextJump (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (by rfl) SourceJoinChecks.«scopedTypes#select15» (fun state => { state with env := _scope14 }) (by
+  intro state env h
+  exact ((h.capture SourceJoinChecks.«scopedTypes#capture16»).restore (fun v repr visible => SourceJoinChecks.«scopedTypes#outside17» v repr visible)))) _ _ _) _ _ _)) _))
+
+theorem «scopedTypes_source» («_x#arg» : _root_.Int) (heap : Heap) :
+    SourceReturnsFrom _root_.Extracted_scalars.source "scopedTypes" heap [(Value.bigint «_x#arg»)] (Value.bigint («scopedTypes» «_x#arg»)) := by
+  have inputs : Adequacy.Environment SourceChecks.«scopedTypes».names
+      (Adequacy.bindArguments { heap } SourceChecks.«scopedTypes».function.params [(Value.bigint «_x#arg»)])
+      (interp := Interpretation.value) («_x#arg», ()) := by
+    intro t v scalar _visible
+    cases v with
+    | here =>
+      cases scalar
+      exact Adequacy.lookup_declare_self _ _ _
+    | there v =>
+      cases v
+  have resultEq : «scopedTypes» «_x#arg» = Denote.term CoreArtifacts.«scopedTypes».body («_x#arg», ()) :=
+    congrFun DenotationChecks.«scopedTypes» («_x#arg», ())
+  rw [resultEq]
+  exact Adequacy.scalar_joins_source _root_.Extracted_scalars.certificate SourceChecks.«scopedTypes».function .int CoreArtifacts.«scopedTypes».body
+    (SourceChecks.«scopedTypes».statements) ({ start := 1694, stop := 1854 })
+    (by kernel_rfl) (by kernel_rfl) Interpretation.value (Adequacy.JoinContext (SourceChecks.«scopedTypes».names) (Adequacy.Ghosts.empty) (["x"]) []) SourceChecks.«scopedTypes».translated («_x#arg», ()) heap [(Value.bigint «_x#arg»)]
+    (Adequacy.JoinContext.initial inputs (Adequacy.bindArguments_valid _ _ _) rfl)
 
 end Extracted_scalars.Shallow

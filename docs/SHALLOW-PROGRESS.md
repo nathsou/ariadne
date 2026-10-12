@@ -525,5 +525,40 @@ All 53 negative fixtures, project regeneration and shallow/reference artifact
 builds pass. The audit accepts 4,968 theorems. The full gate caught an eager
 argument-inference regression for fresh empty arrays; inference now runs only
 for existing mutable arguments. All 21 reference operational comparisons pass
-after that correction. The complete regression gate is running again. CI #80
-passed the preceding full Core erasure checkpoint.
+after that correction. The complete regression gate passes, including all
+source/representation tamper checks, shallow differential suites and reference
+traces. CI #82 passed this checkpoint.
+
+## Optional observations and shared source continuations
+
+Optional reads now flatten absence and present undefined payloads consistently
+for arrays, maps, callbacks and record fields. Undefined-only unions retain their
+unit representation, while literal strings inside containers and optional fields
+retain strings. Coercions and comparisons still evaluate undefined-valued operands
+so their arithmetic safety guards are preserved. Ambiguous nested empty-object
+views require a named runtime representation. The optional suite covers 55
+comparisons, borrowed heap preservation, retained guards and extraction refusal.
+
+`Adequacy/Joins` and `JoinsContext` connect actual shared Core continuations to
+the original source evaluator. Typed captures, scalar assignments, early returns
+and lexical restoration are checked explicitly. Closed continuations are reused
+without duplicating their bodies. The scalar fixture now transfers update and
+scoped functions; eight additional shared-control functions have universal source
+theorems and 50 differential comparisons. Four forged witnesses are rejected.
+
+`GuardedJoins` and `GuardedJoinsContext` preserve the invocation guard of each
+captured function. `Safety/Structural` proves renaming, safe substitution and
+continuation abstraction for the complete Core syntax. Eight guarded functions
+transfer under their actual computed safety predicates. Forty comparisons cover
+safe branches, overflowing shared suffixes and negative-zero multiplication;
+three forged witnesses are checked against a dedicated one-function fixture.
+
+The 20-branch stress artifact stays below 300,000 bytes and kernel-checks in
+about 37 seconds with 3.2 GiB peak memory. Its final theorem reuses the already
+proved denotation equality instead of expanding both sides of every branch.
+
+`SourceData` observes data results in the final operational heap. `ReadExpr`
+proves syntax-directed correspondence for scalar expressions, array length,
+ordinary and flattened optional indexing, and represented record projections.
+This is a data-read foundation; general mutation, state/class and reference-program
+source transfers remain open. M4 is still in progress.

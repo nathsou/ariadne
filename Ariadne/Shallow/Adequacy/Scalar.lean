@@ -62,6 +62,28 @@ theorem BinaryRule.correct {sa : Scalar a} {sb : Scalar b} {sc : Scalar c}
       .ok (sc.encode (Denote.binary op left right)) := by
   cases rule <;> rfl
 
+inductive SwappedBinaryRule : {a b c : Core.Ty} → Scalar a → Scalar b → Scalar c → String → Binary b a c → Prop where
+  | intGt : SwappedBinaryRule .int .int .bool ">" .intLt
+  | intGe : SwappedBinaryRule .int .int .bool ">=" .intLe
+  | numGt : SwappedBinaryRule .number .number .bool ">" .numLt
+  | numGe : SwappedBinaryRule .number .number .bool ">=" .numLe
+  | strGt : SwappedBinaryRule .string .string .bool ">" .strLt
+  | strGe : SwappedBinaryRule .string .string .bool ">=" .strLe
+theorem SwappedBinaryRule.correct {sa : Scalar a} {sb : Scalar b} {sc : Scalar c}
+    {source : String} {op : Binary b a c} (rule : SwappedBinaryRule sa sb sc source op)
+    (interp : Named.Interp) (left : a.denote interp) (right : b.denote interp) :
+    Ariadne.binary source (sa.encode left) (sb.encode right) =
+      .ok (sc.encode (Denote.binary op right left)) := by
+  cases rule <;> try rfl
+  all_goals
+    simp only [Ariadne.binary, Scalar.encode, Denote.binary]
+    rw [Std.OrientedOrd.eq_swap (a := left) (b := right)]
+    cases compare right left <;> rfl
+
+theorem SwappedBinaryRule.strict {sa : Scalar a} {sb : Scalar b} {sc : Scalar c}
+    {source : String} {op : Binary b a c} (rule : SwappedBinaryRule sa sb sc source op) :
+    source ≠ "&&" ∧ source ≠ "||" ∧ source ≠ "??" := by cases rule <;> decide
+
 structure Names (Γ : List Core.Ty) where
   get : ∀ {t}, Var Γ t → String
   /-- Rebinding a source name hides its previous Core versions. -/
@@ -100,6 +122,11 @@ inductive ScalarExpr {Γ : List Core.Ty} (names : Names Γ) : {t : Core.Ty} → 
       {source : String} {op : Binary ta tb tc} {lhs rhs : Expr} {a : Term Γ ta} {b : Term Γ tb} (rule : BinaryRule sa sb sc source op)
       (left : ScalarExpr names sa lhs a) (right : ScalarExpr names sb rhs b) (span) :
       ScalarExpr names sc (.binary source lhs rhs span) (.binary op a b)
+  | binarySwap {ta tb tc : Core.Ty} {sa : Scalar ta} {sb : Scalar tb} {sc : Scalar tc}
+      {source : String} {op : Binary tb ta tc} {lhs rhs : Expr} {a : Term Γ ta} {b : Term Γ tb}
+      (rule : SwappedBinaryRule sa sb sc source op)
+      (left : ScalarExpr names sa lhs a) (right : ScalarExpr names sb rhs b) (span) :
+      ScalarExpr names sc (.binary source lhs rhs span) (.binary op b a)
   | conditional {t : Core.Ty} {scalar : Scalar t} {condition yesExpr noExpr : Expr}
       {c : Term Γ .bool} {a b : Term Γ t} (test : ScalarExpr names .bool condition c)
       (yes : ScalarExpr names scalar yesExpr a) (no : ScalarExpr names scalar noExpr b) (span) :
@@ -131,6 +158,8 @@ theorem ScalarExpr.sound {names : Names Γ} {scalar : Scalar t} {source : Expr} 
   | @boolIte arg term input ih =>
     cases value : Denote.term term env <;> simpa [Denote.term, Scalar.encode, value] using ih
   | binary rule left right span ihl ihr =>
+    exact ihl.binary ihr _ span rule.strict (rule.correct interp _ _)
+  | binarySwap rule left right span ihl ihr =>
     exact ihl.binary ihr _ span rule.strict (rule.correct interp _ _)
   | @conditional _ repr _ yesExpr noExpr c a b test yes no span ihc ihy ihn =>
     cases value : Denote.term c env

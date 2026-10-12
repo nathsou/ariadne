@@ -19,6 +19,7 @@ theorem ScalarExpr.scalarCore {names : Names Γ} {scalar : Scalar t} {source : E
   | notIte input span ih => exact .ite ih (.bool false) (.bool true)
   | boolIte input ih => exact .ite ih (.bool true) (.bool false)
   | binary rule left right span ihl ihr => exact .binary _ ihl ihr
+  | binarySwap rule left right span ihl ihr => exact .binary _ ihr ihl
   | conditional input yes no span ihc ihy ihn => exact .ite ihc ihy ihn
   | and left right span ihl ihr => exact .ite ihl ihr (.bool false)
   | or left right span ihl ihr => exact .ite ihl (.bool true) ihr

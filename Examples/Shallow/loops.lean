@@ -4,6 +4,8 @@ import Ariadne.Shallow.Elaborate
 import Ariadne.Shallow.Safety
 import Ariadne.Shallow.Adequacy.Statements
 import Ariadne.Shallow.Adequacy.GuardedStatements
+import Ariadne.Shallow.Adequacy.JoinsContext
+import Ariadne.Shallow.Adequacy.GuardedJoinsContext
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
@@ -1120,10 +1122,11 @@ def JoinCore.«first#1» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (Ariadne.Shallow.Core.Ty.pair
     (Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int))
     (Ariadne.Shallow.Core.Ty.pair (Ariadne.Shallow.Core.Ty.int) (Ariadne.Shallow.Core.Ty.unit)))
-  (Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int))) := (Core.Term.lam "state" Core.Term.none)
+  (Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int))) := (Core.Term.lam "state" (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.unit) "undefined" Core.Term.unit Core.Term.none))
 
 @[simp] def JoinNative.«first#1» : (((_root_.List _root_.Int) × (_root_.Int × _root_.Unit)) → (_root_.Option _root_.Int)) :=
-  (fun «_state#0» : ((_root_.List _root_.Int) × (_root_.Int × _root_.Unit)) => _root_.Option.none)
+  (fun «_state#0» : ((_root_.List _root_.Int) × (_root_.Int × _root_.Unit)) => (let «_undefined#1» : _root_.Unit := ();
+  _root_.Option.none))
 
 theorem JoinChecks.«first#1» : Denote.term (interp := Interpretation.value) JoinCore.«first#1» () = JoinNative.«first#1» := by
   unfold Extracted_loops.Shallow.JoinNative.«first#1»
@@ -1547,13 +1550,14 @@ theorem JoinChecks.«last#2» : Denote.term (interp := Interpretation.value) Joi
   unfold Extracted_loops.Shallow.JoinNative.«last#2»
   simp only [JoinCore.«last#2», Denote.term, Core.Var.get, JoinChecks.«last#0», JoinChecks.«last#1»] <;> rfl
 
-def CoreArtifacts.«last» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int)], result := Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int), body := (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int)) "found" Core.Term.none (Core.Term.exitCase (Core.Term.each (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) Core.Term.unit)) (Core.Term.closed JoinCore.«last#1»)) (Core.Term.closed JoinCore.«last#2») (Core.Term.lam "result" (Core.Term.var (Ariadne.Shallow.Core.Var.here))))) }
+def CoreArtifacts.«last» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int)], result := Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int), body := (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.option (Ariadne.Shallow.Core.Ty.int)) "found" (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.unit) "undefined" Core.Term.unit Core.Term.none) (Core.Term.exitCase (Core.Term.each (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) Core.Term.unit)) (Core.Term.closed JoinCore.«last#1»)) (Core.Term.closed JoinCore.«last#2») (Core.Term.lam "result" (Core.Term.var (Ariadne.Shallow.Core.Var.here))))) }
 
 theorem ElaborationChecks.«last» :
     Elaborate.function _root_.Extracted_loops.program "last" = .ok CoreArtifacts.«last» := by kernel_rfl
 
 def «last» («_xs#arg» : (_root_.List _root_.Int)) : (_root_.Option _root_.Int) :=
-  (let «_found#0» : (_root_.Option _root_.Int) := _root_.Option.none;
+  (let «_found#0» : (_root_.Option _root_.Int) := (let «_undefined#0» : _root_.Unit := ();
+  _root_.Option.none);
   (_root_.Ariadne.Shallow.Exit.elim (_root_.Ariadne.Shallow.Loop.each «_xs#arg» («_found#0», («_xs#arg», ())) JoinNative.«last#1») JoinNative.«last#2» (fun «_result#1» : (_root_.Option _root_.Int) => «_result#1»)))
 
 abbrev «last».safe («_xs#arg» : (_root_.List _root_.Int)) : Prop :=

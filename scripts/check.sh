@@ -91,8 +91,11 @@ run_verify() {
   timed scripts/reference-operational.mjs "$js" scripts/reference-operational.mjs
   timed scripts/shallow.mjs "$js" scripts/shallow.mjs
   timed scripts/source-transfer.mjs "$js" scripts/source-transfer.mjs
+  timed scripts/shared-source.mjs "$js" scripts/shared-source.mjs
+  timed scripts/guarded-shared-source.mjs "$js" scripts/guarded-shared-source.mjs
   timed scripts/int53-source-transfer.mjs "$js" scripts/int53-source-transfer.mjs
   timed scripts/shallow-arrays.mjs "$js" scripts/shallow-arrays.mjs
+  timed scripts/shallow-optionals.mjs "$js" scripts/shallow-optionals.mjs
   timed scripts/shallow-loops.mjs "$js" scripts/shallow-loops.mjs
   timed scripts/shallow-collections.mjs "$js" scripts/shallow-collections.mjs
   timed scripts/shallow-records.mjs "$js" scripts/shallow-records.mjs

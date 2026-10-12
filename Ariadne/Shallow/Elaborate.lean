@@ -42,6 +42,11 @@ def collectionKey (ty : Ariadne.Ty) (span : Span) : Checked Core.Key :=
   | .boolean => .ok .bool
   | _ => refusal "A5102" "collection keys require a scalar value representation" span
 
+def optionalType : Core.Ty → Core.Ty
+  | .unit => .unit
+  | .option t => .option t
+  | t => .option t
+
 def type (p : Program) (ty : Ariadne.Ty) (span : Span) : Checked Core.Ty :=
   convert 100 ty
 where
@@ -64,8 +69,8 @@ where
     | _ + 1, .number => .ok .number
     | _ + 1, .boolean => .ok .bool
     | _ + 1, .string | _ + 1, .stringLiteral _ => .ok .string
-    | n + 1, .union t .undefined => return .option (← convert n t)
-    | n + 1, .union .undefined t => return .option (← convert n t)
+    | n + 1, .union t .undefined => return optionalType (← convert n t)
+    | n + 1, .union .undefined t => return optionalType (← convert n t)
     | n + 1, .readonly t | n + 1, .fieldReadonly t => convert n t
     | n + 1, .array t | n + 1, .iterator t => return .list (← convert n t)
     | n + 1, .tuple [a, b] => return .pair (← convert n a) (← convert n b)
@@ -180,9 +185,19 @@ def coerce (t : Core.Ty) (value : Typed ctx) (span : Span) : Checked (Term (Type
   if h : value.1 = t then .ok (h ▸ value.2)
   else match t with
   | .option inner => do
-    if value.1 == .unit then return .none
+    if value.1 == .unit then
+      let evaluated ← cast .unit value span
+      return .let_ "undefined" evaluated .none
     return .some (← coercePlain inner value span)
   | other => coercePlain other value span
+
+/-- An undefined stored element and an absent element have the same source
+observation. Keep evaluation/guards while collapsing the extra lookup option. -/
+def optionalRead (value : Term (Types ctx) (.option t)) : Typed ctx :=
+  match t with
+  | .unit => ⟨.unit, .let_ "optionalRead" value .unit⟩
+  | .option inner => ⟨.option inner, .optionCase value .none (.var .here)⟩
+  | other => ⟨.option other, value⟩
 
 def iterable (value : Typed ctx) (span : Span) : Checked (Typed ctx) :=
   match value with
@@ -191,9 +206,21 @@ def iterable (value : Typed ctx) (span : Span) : Checked (Typed ctx) :=
   | ⟨.set k, s⟩ => .ok ⟨.list k.type, .unary .setValues s⟩
   | _ => refusal "A5102" "this value has no iterable representation" span
 
+def ambiguousUnit : Nat → Ariadne.Ty → Bool
+  | 0, _ => true
+  | _ + 1, .record [] => true
+  | n + 1, .readonly t | n + 1, .fieldReadonly t | n + 1, .array t => ambiguousUnit n t
+  | n + 1, .map _ t => ambiguousUnit n t
+  | n + 1, .union a b => ambiguousUnit n a || ambiguousUnit n b
+  | n + 1, .tuple ts => ts.any (ambiguousUnit n)
+  | n + 1, .record fields => fields.any (fun (_, t) => ambiguousUnit n t)
+  | _, _ => false
+
 def recordField (name : String) (span : Span) : List (String × Ariadne.Ty) → Typed ctx → Checked (Typed ctx)
   | (field, source) :: fields, ⟨.pair a b, value⟩ =>
-    if name == field then
+    if name == field then do
+      if ambiguousUnit 100 source then
+        refusal "A5102" "nested empty objects require a named runtime view" span
       match Declarations.fixedString source with
       | some literal => .ok ⟨.string, .string literal⟩
       | none => .ok ⟨a, .fst value⟩
@@ -296,16 +323,24 @@ def arithmetic (op : String) (a b : Typed ctx) (span : Span) : Checked (Typed ct
   if op == "===" || op == "!==" then
     if let ⟨.option _, value⟩ := a then
       if b.1 == .unit then
-        let present := Term.unary .isSome value
-        return ⟨.bool, if op == "!==" then present else .unary .not present⟩
+        let unitValue ← cast .unit b span
+        let present := Term.unary .isSome (.var (.there .here))
+        return ⟨.bool, .let_ "optionalLeft" value (.let_ "undefinedRight" (unitValue.rename Var.there)
+          (if op == "!==" then present else .unary .not present))⟩
       let equal ← optionalEqual value b span
       return ⟨.bool, if op == "===" then equal else .unary .not equal⟩
     if let ⟨.option _, value⟩ := b then
       if a.1 == .unit then
-        let present := Term.unary .isSome value
-        return ⟨.bool, if op == "!==" then present else .unary .not present⟩
+        let unitValue ← cast .unit a span
+        let present := Term.unary .isSome (.var .here)
+        return ⟨.bool, .let_ "undefinedLeft" unitValue (.let_ "optionalRight" (value.rename Var.there)
+          (if op == "!==" then present else .unary .not present))⟩
       let equal ← optionalEqual value a span
       return ⟨.bool, if op == "===" then equal else .unary .not equal⟩
+  if (op == "===" || op == "!==") && a.1 == .unit && b.1 == .unit then
+    let left ← cast .unit a span
+    let right ← cast .unit b span
+    return ⟨.bool, .let_ "unitLeft" left (.let_ "unitRight" (right.rename Var.there) (.bool (op == "===")))⟩
   let (a, b) ← if (a.1 == .int53 && b.1 == .number) || (a.1 == .number && b.1 == .int53) then do
     pure ((⟨.number, ← coerce .number a span⟩ : Typed ctx), (⟨.number, ← coerce .number b span⟩ : Typed ctx))
     else pure (a, b)
@@ -515,7 +550,7 @@ mutual
         | _ => refusal "A5104" "this property has no shallow lowering" span
       | .index object index span =>
         match ← expression p n ctx object with
-        | ⟨.list t, xs⟩ => return ⟨.option t, .binary .get xs (← asType p n ctx index .number)⟩
+        | ⟨.list _, xs⟩ => return optionalRead (.binary .get xs (← asType p n ctx index .number))
         | ⟨.pair a b, pair⟩ =>
           match index with
           | .literal (.number 0 0) _ => return ⟨a, .fst pair⟩
@@ -556,7 +591,7 @@ mutual
         match ← expression p n ctx object with
         | ⟨.map k v, m⟩ =>
           match method, args with
-          | "get", [key] => return ⟨.option v, .binary .mapGet m (← asType p n ctx key k.type)⟩
+          | "get", [key] => return optionalRead (.binary .mapGet m (← asType p n ctx key k.type))
           | "has", [key] => return ⟨.bool, .binary .mapHas m (← asType p n ctx key k.type)⟩
           | "keys", [] => return ⟨.list k.type, .unary .mapKeys m⟩
           | "values", [] => return ⟨.list v, .unary .mapValues m⟩
@@ -576,7 +611,7 @@ mutual
           | "filter", [fn] => return ⟨.list t, .listFilter (← callback p n ctx [t, .number] .bool fn) xs⟩
           | "some", [fn] => return ⟨.bool, .listSome (← callback p n ctx [t, .number] .bool fn) xs⟩
           | "every", [fn] => return ⟨.bool, .listEvery (← callback p n ctx [t, .number] .bool fn) xs⟩
-          | "find", [fn] => return ⟨.option t, .listFind (← callback p n ctx [t, .number] .bool fn) xs⟩
+          | "find", [fn] => return optionalRead (.listFind (← callback p n ctx [t, .number] .bool fn) xs)
           | "findIndex", [fn] => return ⟨.number, .listFindIndex (← callback p n ctx [t, .number] .bool fn) xs⟩
           | "reduce", [fn, initial] =>
             let ⟨acc, initial⟩ ← expression p n ctx initial

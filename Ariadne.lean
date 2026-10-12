@@ -26,3 +26,8 @@ import Ariadne.Shallow.Safety.Erasure
 import Ariadne.Shallow.Safety.Erasure.Term
 import Ariadne.Shallow.Prelude.Measured
 import Ariadne.Shallow.Safety.Capacity
+import Ariadne.Shallow.Adequacy.Optional
+import Ariadne.Shallow.Adequacy.JoinsContext
+import Ariadne.Shallow.Adequacy.GuardedJoinsContext
+import Ariadne.Shallow.Safety.Structural
+import Ariadne.Shallow.Adequacy.ReadExpr

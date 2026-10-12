@@ -20,25 +20,41 @@ def fixedString (ty : Ariadne.Ty) : Option JSString :=
   | .stringLiteral value => some value
   | _ => none
 
-/-- Named data has a closed canonical shape. Literal fields carry no data; their
-known source value is restored when the field is observed. -/
-def shape (span : Span) : Nat → Ariadne.Ty → Checked Named.Shape
-  | 0, _ => unsupported "named data exceeds the type nesting budget" span
-  | _ + 1, .void | _ + 1, .undefined | _ + 1, .stringLiteral _ => .ok .unit
-  | _ + 1, .boolean => .ok .bool
-  | _ + 1, .int53 => .ok .int53
-  | _ + 1, .bigint => .ok .int
-  | _ + 1, .number => .ok .number
-  | _ + 1, .string => .ok .string
-  | n + 1, .readonly ty | n + 1, .fieldReadonly ty => shape span n ty
-  | n + 1, .array ty => return .list (← shape span n ty)
-  | n + 1, .map k v => return .map (← key k span) (← shape span n v)
-  | _ + 1, .set k => return .set (← key k span)
-  | n + 1, .union ty .undefined | n + 1, .union .undefined ty => return .option (← shape span n ty)
-  | n + 1, .union a b => return .sum (← shape span n a) (← shape span n b)
-  | n + 1, .tuple [a, b] => return .pair (← shape span n a) (← shape span n b)
-  | n + 1, .record fields => fields.foldrM (fun (_, ty) rest => do return .pair (← shape span n ty) rest) .unit
-  | _, _ => unsupported "this named field has no canonical data representation" span
+def undefinedOnly : Ariadne.Ty → Bool
+  | .void | .undefined => true
+  | .readonly t | .fieldReadonly t => undefinedOnly t
+  | .union a b => undefinedOnly a && undefinedOnly b
+  | _ => false
+
+def optionalShape : Named.Shape → Named.Shape
+  | .option t => .option t
+  | t => .option t
+
+/-- Only direct fixed record fields erase their known string literal. Collection
+and optional payloads retain strings so their unit cannot mean undefined. -/
+def shape (span : Span) (fuel : Nat) (ty : Ariadne.Ty) : Checked Named.Shape :=
+  convert fuel true ty
+where
+  convert : Nat → Bool → Ariadne.Ty → Checked Named.Shape
+    | 0, _, _ => unsupported "named data exceeds the type nesting budget" span
+    | _ + 1, _, .void | _ + 1, _, .undefined => .ok .unit
+    | _ + 1, field, .stringLiteral _ => .ok (if field then .unit else .string)
+    | _ + 1, _, .boolean => .ok .bool
+    | _ + 1, _, .int53 => .ok .int53
+    | _ + 1, _, .bigint => .ok .int
+    | _ + 1, _, .number => .ok .number
+    | _ + 1, _, .string => .ok .string
+    | n + 1, field, .readonly ty | n + 1, field, .fieldReadonly ty => convert n field ty
+    | n + 1, _, .array ty => return .list (← convert n false ty)
+    | n + 1, _, .map k v => return .map (← key k span) (← convert n false v)
+    | _ + 1, _, .set k => return .set (← key k span)
+    | n + 1, _, .union ty .undefined | n + 1, _, .union .undefined ty => do
+      if undefinedOnly ty then return .unit
+      return optionalShape (← convert n false ty)
+    | n + 1, _, .union a b => return .sum (← convert n false a) (← convert n false b)
+    | n + 1, _, .tuple [a, b] => return .pair (← convert n false a) (← convert n false b)
+    | n + 1, _, .record fields => fields.foldrM (fun (_, ty) rest => do return .pair (← convert n true ty) rest) .unit
+    | _, _, _ => unsupported "this named field has no canonical data representation" span
 
 structure Info where
   declaration : Named.Declaration

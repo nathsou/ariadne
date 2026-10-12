@@ -4,6 +4,8 @@ import Ariadne.Shallow.Elaborate
 import Ariadne.Shallow.Safety
 import Ariadne.Shallow.Adequacy.Statements
 import Ariadne.Shallow.Adequacy.GuardedStatements
+import Ariadne.Shallow.Adequacy.JoinsContext
+import Ariadne.Shallow.Adequacy.GuardedJoinsContext
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
@@ -622,13 +624,14 @@ def Interpretation.value : Named.Interp := (Named.Interp.insert (Named.Interp.in
 
 theorem Interpretation.lawful : Named.Lawful Interpretation.value := Named.lawful _
 
-def CoreArtifacts.«make» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.string], result := Ariadne.Shallow.Core.Ty.named   { name := "Point",     shape := Ariadne.Shallow.Named.Shape.pair                (Ariadne.Shallow.Named.Shape.int)                (Ariadne.Shallow.Named.Shape.pair                  (Ariadne.Shallow.Named.Shape.string)                  (Ariadne.Shallow.Named.Shape.pair                    (Ariadne.Shallow.Named.Shape.option (Ariadne.Shallow.Named.Shape.int))                    (Ariadne.Shallow.Named.Shape.unit))) }, body := (Core.Term.pack ({ name := "Point",   shape := Ariadne.Shallow.Named.Shape.pair              (Ariadne.Shallow.Named.Shape.int)              (Ariadne.Shallow.Named.Shape.pair                (Ariadne.Shallow.Named.Shape.string)                (Ariadne.Shallow.Named.Shape.pair                  (Ariadne.Shallow.Named.Shape.option (Ariadne.Shallow.Named.Shape.int))                  (Ariadne.Shallow.Named.Shape.unit))) }) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair Core.Term.none Core.Term.unit)))) }
+def CoreArtifacts.«make» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.int, Ariadne.Shallow.Core.Ty.string], result := Ariadne.Shallow.Core.Ty.named   { name := "Point",     shape := Ariadne.Shallow.Named.Shape.pair                (Ariadne.Shallow.Named.Shape.int)                (Ariadne.Shallow.Named.Shape.pair                  (Ariadne.Shallow.Named.Shape.string)                  (Ariadne.Shallow.Named.Shape.pair                    (Ariadne.Shallow.Named.Shape.option (Ariadne.Shallow.Named.Shape.int))                    (Ariadne.Shallow.Named.Shape.unit))) }, body := (Core.Term.pack ({ name := "Point",   shape := Ariadne.Shallow.Named.Shape.pair              (Ariadne.Shallow.Named.Shape.int)              (Ariadne.Shallow.Named.Shape.pair                (Ariadne.Shallow.Named.Shape.string)                (Ariadne.Shallow.Named.Shape.pair                  (Ariadne.Shallow.Named.Shape.option (Ariadne.Shallow.Named.Shape.int))                  (Ariadne.Shallow.Named.Shape.unit))) }) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.unit) "undefined" Core.Term.unit Core.Term.none) Core.Term.unit)))) }
 
 theorem ElaborationChecks.«make» :
     Elaborate.function _root_.Extracted_records.program "make" = .ok CoreArtifacts.«make» := by kernel_rfl
 
 def «make» («_x#arg» : _root_.Int) («_label#arg» : _root_.Ariadne.JSString) : NativeTypes.«Point» :=
-  (NativeConstruct.«Point» («_x#arg», («_label#arg», (_root_.Option.none, ()))))
+  (NativeConstruct.«Point» («_x#arg», («_label#arg», ((let «_undefined#0» : _root_.Unit := ();
+  _root_.Option.none), ()))))
 
 abbrev «make».safe («_x#arg» : _root_.Int) («_label#arg» : _root_.Ariadne.JSString) : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«make» (by decide) («_x#arg», («_label#arg», ()))
@@ -836,13 +839,14 @@ theorem DenotationChecks.«fields» :
   unfold Extracted_records.Shallow.«fields»
   simp only [Denote.function, CoreArtifacts.«fields», Denote.term, Core.Var.get] <;> rfl
 
-def CoreArtifacts.«duplicate» : Core.Function := { params := [], result := Ariadne.Shallow.Core.Ty.named   { name := "Point",     shape := Ariadne.Shallow.Named.Shape.pair                (Ariadne.Shallow.Named.Shape.int)                (Ariadne.Shallow.Named.Shape.pair                  (Ariadne.Shallow.Named.Shape.string)                  (Ariadne.Shallow.Named.Shape.pair                    (Ariadne.Shallow.Named.Shape.option (Ariadne.Shallow.Named.Shape.int))                    (Ariadne.Shallow.Named.Shape.unit))) }, body := (Core.Term.pack ({ name := "Point",   shape := Ariadne.Shallow.Named.Shape.pair              (Ariadne.Shallow.Named.Shape.int)              (Ariadne.Shallow.Named.Shape.pair                (Ariadne.Shallow.Named.Shape.string)                (Ariadne.Shallow.Named.Shape.pair                  (Ariadne.Shallow.Named.Shape.option (Ariadne.Shallow.Named.Shape.int))                  (Ariadne.Shallow.Named.Shape.unit))) }) (Core.Term.pair (Core.Term.int (2)) (Core.Term.pair (Core.Term.string [108, 97, 115, 116]) (Core.Term.pair Core.Term.none Core.Term.unit)))) }
+def CoreArtifacts.«duplicate» : Core.Function := { params := [], result := Ariadne.Shallow.Core.Ty.named   { name := "Point",     shape := Ariadne.Shallow.Named.Shape.pair                (Ariadne.Shallow.Named.Shape.int)                (Ariadne.Shallow.Named.Shape.pair                  (Ariadne.Shallow.Named.Shape.string)                  (Ariadne.Shallow.Named.Shape.pair                    (Ariadne.Shallow.Named.Shape.option (Ariadne.Shallow.Named.Shape.int))                    (Ariadne.Shallow.Named.Shape.unit))) }, body := (Core.Term.pack ({ name := "Point",   shape := Ariadne.Shallow.Named.Shape.pair              (Ariadne.Shallow.Named.Shape.int)              (Ariadne.Shallow.Named.Shape.pair                (Ariadne.Shallow.Named.Shape.string)                (Ariadne.Shallow.Named.Shape.pair                  (Ariadne.Shallow.Named.Shape.option (Ariadne.Shallow.Named.Shape.int))                  (Ariadne.Shallow.Named.Shape.unit))) }) (Core.Term.pair (Core.Term.int (2)) (Core.Term.pair (Core.Term.string [108, 97, 115, 116]) (Core.Term.pair (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.unit) "undefined" Core.Term.unit Core.Term.none) Core.Term.unit)))) }
 
 theorem ElaborationChecks.«duplicate» :
     Elaborate.function _root_.Extracted_records.program "duplicate" = .ok CoreArtifacts.«duplicate» := by kernel_rfl
 
 def «duplicate» : NativeTypes.«Point» :=
-  (NativeConstruct.«Point» ((2 : _root_.Int), (([108, 97, 115, 116] : _root_.Ariadne.JSString), (_root_.Option.none, ()))))
+  (NativeConstruct.«Point» ((2 : _root_.Int), (([108, 97, 115, 116] : _root_.Ariadne.JSString), ((let «_undefined#0» : _root_.Unit := ();
+  _root_.Option.none), ()))))
 
 abbrev «duplicate».safe : Prop :=
   Safety.function (interp := Interpretation.value) CoreArtifacts.«duplicate» (by decide) ()
