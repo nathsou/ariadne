@@ -275,3 +275,13 @@ integers unchanged, conversion back to `Int` is exact, and integer quotients and
 remainders remain in range. List lengths below the JavaScript array bound are
 proved to fit Int53. The remaining numeric correspondence is floor/truncation of
 rounded nonintegral binary64 quotients.
+
+`Examples/Proofs/Int53Safety.lean` discharges the actual emitted `.safe`
+predicates for addition, multiplication, negation and remainder from ordinary
+range/divisor/signed-zero hypotheses. These are universal proofs over symbolic
+inputs, not closed executions. The arithmetic library checkpoint audits 3,909
+theorems before adding these safety examples.
+
+Division is now proved exact when the mathematical quotient is integral, including
+its floor/truncation wrappers and the canonical-zero condition. Nonintegral
+quotient rounding remains the numeric proof still in progress.

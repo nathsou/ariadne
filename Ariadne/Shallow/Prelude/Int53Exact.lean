@@ -566,4 +566,104 @@ theorem floor_ofInt (a : Int) (safe : InRange a) :
   simp only [Builtins.numberFloor, isFinite_ofInt a safe, Bool.not_true, Bool.false_or, zero,
     beq_ofInt a 0 safe zero_inRange, toInt_ofInt a safe, lt_ofInt a a safe safe, Int.lt_irrefl, ↓reduceIte]
   split <;> rfl
+
+private theorem divCore_canonical (ma mb pa pb : Nat) (ha : ma.log2 = 52) (hb : mb.log2 = 52)
+    (paBound : pa ≤ 52) (pbBound : pb ≤ 52) :
+    divCore Format.binary64 ma (-(pa : Int)) mb (-(pb : Int)) =
+      ((ma <<< 53) / mb, -((pa + 53 - pb : Nat) : Int), accuracyOfFraction ((ma <<< 53) % mb) mb) := by
+  have target : min (-(pa : Int) - -(pb : Int))
+      (Format.binary64.targetExponent (totalExponent ma (-(pa : Int)) - totalExponent mb (-(pb : Int)))) =
+      -((pa + 53 - pb : Nat) : Int) := by
+    simp only [Format.targetExponent, totalExponent, ha, hb, Format.mantissaBits, Format.minExponent]
+    omega
+  have amount : (-(pa : Int) - -(pb : Int) - -((pa + 53 - pb : Nat) : Int)).toNat = 53 := by omega
+  simp only [divCore, target, amount]
+
+private theorem div_signed_exact (sa sb : Sign) (n m : Nat) (np : 0 < n) (mp : 0 < m)
+    (nb : n < 2 ^ 53) (mb : m < 2 ^ 53) (divides : n % m = 0) :
+    Float.Model.ofInt ((sa / sb).apply ((n / m : Nat) : Int)) =
+      Float.Model.ofInt (sa.apply (n : Int)) / Float.Model.ofInt (sb.apply (m : Int)) := by
+  let q := n / m
+  have product : n = q * m := by simpa [q, divides, Nat.mul_comm] using (Nat.mod_add_div n m).symm
+  have qp : 0 < q := by
+    by_cases h : q = 0
+    · simp [h] at product; omega
+    · exact Nat.pos_of_ne_zero h
+  have qb : q < 2 ^ 53 := Nat.lt_of_le_of_lt (Nat.div_le_self n m) nb
+  have ln : n.log2 ≤ 52 := by have := (Nat.log2_lt (Nat.ne_of_gt np)).mpr nb; omega
+  have lm : m.log2 ≤ 52 := by have := (Nat.log2_lt (Nat.ne_of_gt mp)).mpr mb; omega
+  let pa := 52 - n.log2
+  let pb := 52 - m.log2
+  let k := pa + 53 - pb
+  have paBound : pa ≤ 52 := by dsimp [pa]; omega
+  have pbBound : pb ≤ 52 := by dsimp [pb]; omega
+  have mabits : (n <<< pa).log2 = 52 := by rw [log2_shift n pa np]; dsimp [pa]; omega
+  have mbbits : (m <<< pb).log2 = 52 := by rw [log2_shift m pb mp]; dsimp [pb]; omega
+  have denpos : 0 < m <<< pb := by rw [Nat.shiftLeft_eq]; exact Nat.mul_pos mp (Nat.two_pow_pos _)
+  have exponent : pa + 53 = pb + k := by dsimp [k]; omega
+  have num : (n <<< pa) <<< 53 = (m <<< pb) * (q <<< k) := by
+    rw [← Nat.shiftLeft_add, exponent, product]
+    simp only [Nat.shiftLeft_eq, Nat.pow_add]
+    ac_rfl
+  have quotient : ((n <<< pa) <<< 53) / (m <<< pb) = q <<< k := by
+    rw [num, Nat.mul_div_cancel_left _ denpos]
+  have remainder : ((n <<< pa) <<< 53) % (m <<< pb) = 0 := by rw [num]; simp
+  have lbound : n.log2 ≤ q.log2 + m.log2 + 1 := by
+    have nBound : n < 2 ^ (q.log2 + m.log2 + 2) := by
+      rw [product]
+      have h := Nat.lt_of_lt_of_le
+        (Nat.mul_lt_mul_of_pos_right (Nat.lt_log2_self (n := q)) mp)
+        (Nat.mul_le_mul_left (2 ^ (q.log2 + 1)) (Nat.le_of_lt (Nat.lt_log2_self (n := m))))
+      rw [← Nat.pow_add] at h
+      have exponents : q.log2 + 1 + (m.log2 + 1) = q.log2 + m.log2 + 2 := by omega
+      simpa only [exponents] using h
+    have := (Nat.log2_lt (Nat.ne_of_gt np)).mpr nBound
+    omega
+  have enough : 52 - q.log2 ≤ k := by dsimp [k, pa, pb]; omega
+  change _ = Float.Model.pack (UnpackedFloat.div Format.binary64 _ _)
+  rw [unpack_ofInt_signed sa n np nb, unpack_ofInt_signed sb m mp mb]
+  simp only [UnpackedFloat.div]
+  have core := divCore_canonical (n <<< pa) (m <<< pb) pa pb mabits mbbits paBound pbBound
+  dsimp only [pa, pb] at core quotient remainder
+  rw [core]
+  simp only [quotient, remainder, accuracyOfFraction, ↓reduceIte]
+  rw [rounded_shift (sa / sb) q k qp qb enough]
+  change Float.Model.pack (normalize Format.binary64 ((sa / sb).apply (q : Int)) 0 .positive) = _
+  rw [normalize_signed (sa / sb) q 0 .positive qp]
+
+private theorem signed_quotient (sa sb : Sign) (n m : Nat) :
+    Int.tdiv (sa.apply (n : Int)) (sb.apply (m : Int)) = (sa / sb).apply ((n / m : Nat) : Int) := by
+  cases sa <;> cases sb <;> simp only [Sign.apply, Int.tdiv_neg, Int.neg_tdiv, Int.neg_neg] <;> rfl
+
+theorem div_exact_of_integral (a b : Int) (ha : InRange a) (hb : InRange b)
+    (divisor : b ≠ 0) (integral : a.tmod b = 0) (canonical : a = 0 → 0 ≤ b) :
+    Float.Model.ofInt (a.tdiv b) = Float.Model.ofInt a / Float.Model.ofInt b := by
+  rcases safe_cases b hb with zero | ⟨sb, m, mp, mb, rfl⟩
+  · exact False.elim (divisor zero)
+  · rcases safe_cases a ha with rfl | ⟨sa, n, np, nb, rfl⟩
+    · have nonneg := canonical rfl
+      change _ = Float.Model.pack (UnpackedFloat.div Format.binary64 (Float.Model.ofInt 0).unpack _)
+      rw [unpack_zero, unpack_ofInt_signed sb m mp mb]
+      cases sb with
+      | negative => simp [Sign.apply] at nonneg; omega
+      | positive => simp only [Int.zero_tdiv]; rfl
+    · have divides : n % m = 0 := by
+        have h := congrArg Int.natAbs integral
+        cases sa <;> cases sb <;> simpa [Int.natAbs_tmod, Sign.apply] using h
+      rw [signed_quotient]
+      exact div_signed_exact sa sb n m np mp nb mb divides
+
+theorem trunc_div_exact_of_integral (a b : Int) (ha : InRange a) (hb : InRange b)
+    (divisor : b ≠ 0) (integral : a.tmod b = 0) (canonical : a = 0 → 0 ≤ b) :
+    Builtins.numberTrunc (Float.Model.ofInt a / Float.Model.ofInt b) = Float.Model.ofInt (a.tdiv b) := by
+  rw [← div_exact_of_integral a b ha hb divisor integral canonical]
+  exact trunc_ofInt _ (tdiv_range a b ha)
+
+theorem floor_div_exact_of_integral (a b : Int) (ha : InRange a) (hb : InRange b)
+    (divisor : b ≠ 0) (integral : a.tmod b = 0) (canonical : a = 0 → 0 ≤ b) :
+    Builtins.numberFloor (Float.Model.ofInt a / Float.Model.ofInt b) = Float.Model.ofInt (a.fdiv b) := by
+  have same : a.fdiv b = a.tdiv b :=
+    Int.fdiv_eq_of_eq_mul_left divisor (Int.tdiv_mul_cancel_of_tmod_eq_zero integral).symm
+  rw [same, ← div_exact_of_integral a b ha hb divisor integral canonical]
+  exact floor_ofInt _ (tdiv_range a b ha)
 end Ariadne.Shallow.Int53

@@ -57,3 +57,4 @@ import Examples.Proofs.ShallowInt53
 import Examples.Proofs.ReferenceDecision
 import Examples.Proofs.ReferenceRegisters
 import Examples.Proofs.ReferenceTree
+import Examples.Proofs.Int53Safety
