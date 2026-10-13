@@ -304,6 +304,81 @@ theorem conv_nil {prog : Program} {env : Env} : Converges (fun n => execStmts pr
 theorem some_embed {σ : Ty} {n : Nullish} : ∀ w (y : σ.denote), σ.Rep w y → (Ty.option n σ).Rep w (some y) :=
   fun _ _ h => h
 
+theorem conv_let {prog : Program} {e : Expr} {x : String} {env : Env} {w : JSValue}
+    (h : Converges (fun n => evalExpr prog n env e) (.ok w)) :
+    Converges (fun n => execStmt prog n env (.let_ x e)) (.ok (.normal ((x, w) :: env))) := by
+  obtain ⟨N, h⟩ := h
+  exact Converges.of_succ N fun m hm => by simp [execStmt, h m hm, bind, Except.bind, pure, Except.pure]
+
+theorem conv_assign {prog : Program} {e : Expr} {x : String} {env env' : Env} {w : JSValue}
+    (h : Converges (fun n => evalExpr prog n env e) (.ok w)) (ha : assign x w env = .ok env') :
+    Converges (fun n => execStmt prog n env (.assign x e)) (.ok (.normal env')) := by
+  obtain ⟨N, h⟩ := h
+  exact Converges.of_succ N fun m hm => by simp [execStmt, h m hm, ha, bind, Except.bind, pure, Except.pure]
+
+theorem conv_cont {prog : Program} {env : Env} : Converges (fun n => execStmt prog n env .cont) (.ok (.continued env)) :=
+  Converges.of_succ 0 fun m _ => by simp [execStmt]
+
+theorem conv_forOf {prog : Program} {e : Expr} {x : String} {body : List Stmt} {env : Env} {vs : List JSValue}
+    {o : Outcome} (ha : Converges (fun n => evalExpr prog n env e) (.ok (.array vs)))
+    (hl : Converges (fun n => loop prog n env (vs.map fun v => [(x, v)]) body) (.ok o)) :
+    Converges (fun n => execStmt prog n env (.forOf x e body)) (.ok o) := by
+  obtain ⟨Na, ha⟩ := ha
+  obtain ⟨Nl, hl⟩ := hl
+  exact Converges.of_succ (max Na Nl) fun m hm => by
+    simp [execStmt, ha m (by omega), hl m (by omega), bind, Except.bind]
+
+theorem conv_forEntries {prog : Program} {e : Expr} {i x : String} {body : List Stmt} {env : Env}
+    {vs : List JSValue} {o : Outcome} (ha : Converges (fun n => evalExpr prog n env e) (.ok (.array vs)))
+    (hl : Converges (fun n => loop prog n env (entryBindings i x vs) body) (.ok o)) :
+    Converges (fun n => execStmt prog n env (.forEntries i x e body)) (.ok o) := by
+  obtain ⟨Na, ha⟩ := ha
+  obtain ⟨Nl, hl⟩ := hl
+  exact Converges.of_succ (max Na Nl) fun m hm => by
+    simp [execStmt, ha m (by omega), hl m (by omega), bind, Except.bind]
+
+theorem Exit.restore_length {Γ : Ctx} {α} {env0 env : Env} {kk : Γ.denote → α} {ks r} (h : Exit env0 env kk ks r) :
+    (V2.restore env0 env).length = env0.length := by
+  obtain ⟨bs, envM, ρ', rfl, hl, -⟩ := h
+  simp [V2.restore, hl]
+
+/-- A loop: each iteration binds `bs` on top of the environment and runs the body;
+`break` leaves the loop, `continue` and completing go to the next iteration. -/
+theorem conv_loop {prog : Program} {Γ : Ctx} {τ : Ty} {α : Type} {body : List Stmt} {P : Env → α → Prop}
+    {step : α → (Γ.denote → τ.denote) → (Γ.denote → τ.denote) → Γ.denote → τ.denote}
+    {stepS : α → (Γ.denote → Bool) → (Γ.denote → Bool) → Γ.denote → Bool} {k : K Γ τ.denote} {ks : K Γ Bool}
+    (hbody : ∀ bs y env ρ (next : Γ.denote → τ.denote) (nextS : Γ.denote → Bool), P bs y → EnvRel Γ env ρ →
+      stepS y nextS ks.normal ρ = true →
+      ∃ o, Converges (fun n => execStmts prog n (bs ++ env) body) (.ok o) ∧
+        SRel Γ τ env (step y next k.normal ρ) ⟨next, k.normal, next⟩ ⟨nextS, ks.normal, nextS⟩ true true true o) :
+    ∀ {bss : List Env} {items : List α}, Forall2 P bss items → ∀ {env : Env} {ρ : Γ.denote}, EnvRel Γ env ρ →
+      forIn items stepS ks.normal ρ = true →
+      ∃ o, Converges (fun n => loop prog n env bss body) (.ok o) ∧
+        SRel Γ τ env (forIn items step k.normal ρ) k ks true false false o ∧
+        (∀ e, o = .normal e → e.length = env.length)
+  | _, _, .nil, env, ρ, he, hs =>
+    ⟨.normal env, Converges.of_succ 0 fun m _ => by simp [loop], ⟨rfl, [], env, ρ, rfl, rfl, he, rfl, hs⟩,
+      fun e h => by cases h; rfl⟩
+  | bs :: _, y :: ys, .cons hp rest, env, ρ, he, hs => by
+    obtain ⟨o, ⟨N1, h1⟩, hr⟩ := hbody bs y env ρ (forIn ys step k.normal) (forIn ys stepS ks.normal) hp he hs
+    cases o with
+    | returned w =>
+      exact ⟨.returned w, Converges.of_succ N1 fun m hm => by simp [loop, h1 m hm, Outcome.restore, bind, Except.bind],
+        hr, by simp⟩
+    | broke e0 =>
+      obtain ⟨-, hx⟩ := hr
+      exact ⟨.normal (V2.restore env e0),
+        Converges.of_succ N1 fun m hm => by simp [loop, h1 m hm, Outcome.restore, bind, Except.bind],
+        ⟨rfl, hx.restore.1⟩, fun e h => by cases h; exact hx.restore_length⟩
+    | normal e0 | continued e0 =>
+      obtain ⟨-, hx⟩ := hr
+      obtain ⟨ρ', he', hr', hs'⟩ := hx.restore.2
+      obtain ⟨o2, ⟨N2, h2⟩, hr2, hl2⟩ := conv_loop hbody rest he' hs'
+      refine ⟨o2, Converges.of_succ (max N1 N2) fun m hm => ?_, ?_, fun e h => (hl2 e h).trans hx.restore_length⟩
+      · simp [loop, h1 m (by omega), h2 m (by omega), Outcome.restore, bind, Except.bind]
+      · show SRel Γ τ env (step y (forIn ys step k.normal) k.normal ρ) k ks true false false o2
+        rw [hr']; exact hr2.relen hx.restore_length
+
 section
 variable {prog : Program} {Φ : Sigs} {fs : Φ.denote} {ss : Φ.safety} (hfs : FnsOK prog fs ss)
 include hfs
@@ -356,6 +431,64 @@ mutual
       exact ⟨_, conv_cons_exit (conv_ret hc) (by simp), hrep⟩
     | _, _, .brk rest, k, ks, env, ρ, he, hs, _ =>
       ⟨_, conv_cons_exit conv_brk (by simp), rfl, [], env, ρ, rfl, rfl, he, rfl, hs⟩
+    | _, _, .cont rest, k, ks, env, ρ, he, hs, _ =>
+      ⟨_, conv_cons_exit conv_cont (by simp), rfl, [], env, ρ, rfl, rfl, he, rfl, hs⟩
+    | _, _, .let_ x e rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.safe, Bool.and_eq_true] at hs
+      obtain ⟨w, hc, hrep⟩ := TExpr.adequate hfs hss e he (TExpr.ok hs.1)
+      obtain ⟨o, hc2, hr⟩ := TStmts.adequate rest (k.map Prod.snd) (ks.map Prod.snd)
+        (env := (x, w) :: env) (ρ := (e.denote fs ρ, ρ)) ⟨w, env, rfl, hrep, he⟩ hs.2 hw
+      exact ⟨o, conv_cons_normal (conv_let hc) hc2, hr.pop⟩
+    | _, _, .assign v e rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.safe, Bool.and_eq_true] at hs
+      obtain ⟨w, hc, hrep⟩ := TExpr.adequate hfs hss e he (TExpr.ok hs.1)
+      obtain ⟨env', hasg, hlen, he'⟩ := v.assignRel he hrep
+      obtain ⟨o, hc2, hr⟩ := TStmts.adequate rest k ks he' hs.2 hw
+      exact ⟨o, conv_cons_normal (conv_assign hc hasg) hc2, hr.relen hlen⟩
+    | Γ, τ, .forOf x a body rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.safe, Bool.and_eq_true] at hs
+      simp only [TStmts.wf, Bool.and_eq_true] at hw
+      obtain ⟨_, ha, vs, rfl, hvs⟩ := TExpr.adequate hfs hss a he (TExpr.ok hs.1)
+      have hrest := fun envM ρ' (_ : envM.length = env.length) hrel hsafe =>
+        TStmts.adequate rest k ks (env := envM) (ρ := ρ') hrel hsafe hw.2
+      obtain ⟨o, hl, hro, hlen⟩ := conv_loop (prog := prog) (body := body.erase)
+        (k := { k with normal := rest.denote fs k }) (ks := { ks with normal := rest.safe fs ss ks })
+        (step := fun y next exit ρ' => body.denote fs (K.map Prod.snd ⟨next, exit, next⟩) (y, ρ'))
+        (stepS := fun y next exit ρ' => body.safe fs ss (K.map Prod.snd ⟨next, exit, next⟩) (y, ρ'))
+        (P := fun bs y => ∃ w, bs = [(x, w)] ∧ Ty.Rep _ w y)
+        (fun bs y env ρ next nextS ⟨w, hbs, hw'⟩ he hs => by
+          subst hbs
+          obtain ⟨o, hc, hr⟩ := TStmts.adequate body _ _ (env := (x, w) :: env) (ρ := (y, ρ)) ⟨w, env, rfl, hw', he⟩
+            hs hw.1
+          exact ⟨o, hc, (SRel.pop hr).mono (fun _ => rfl) (fun _ => rfl) (fun _ => rfl)⟩)
+        (hvs.map_left fun w y h => ⟨w, rfl, h⟩) he hs.2
+      obtain ⟨out, h, hr⟩ := then_rest hfs hrest (conv_forOf ha hl) hro hlen
+      refine ⟨out, h, ?_⟩
+      simp only [TStmts.denote, TStmts.falls, TStmts.breaks, TStmts.continues]
+      exact hr.mono (by flags) (by flags) (by flags)
+    | Γ, τ, .forEntries i x a body rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.safe, Bool.and_eq_true] at hs
+      simp only [TStmts.wf, Bool.and_eq_true] at hw
+      obtain ⟨_, ha, vs, rfl, hvs⟩ := TExpr.adequate hfs hss a he (TExpr.ok hs.1)
+      have hrest := fun envM ρ' (_ : envM.length = env.length) hrel hsafe =>
+        TStmts.adequate rest k ks (env := envM) (ρ := ρ') hrel hsafe hw.2
+      obtain ⟨o, hl, hro, hlen⟩ := conv_loop (prog := prog) (body := body.erase)
+        (k := { k with normal := rest.denote fs k }) (ks := { ks with normal := rest.safe fs ss ks })
+        (step := fun p next exit ρ' =>
+          body.denote fs (K.map Prod.snd (K.map Prod.snd ⟨next, exit, next⟩)) (p.1, (p.2 : Int), ρ'))
+        (stepS := fun p next exit ρ' =>
+          body.safe fs ss (K.map Prod.snd (K.map Prod.snd ⟨next, exit, next⟩)) (p.1, (p.2 : Int), ρ'))
+        (P := fun bs p => ∃ w, bs = [(x, w), (i, .number p.2)] ∧ Ty.Rep _ w p.1)
+        (fun bs p env ρ next nextS ⟨w, hbs, hw'⟩ he hs => by
+          subst hbs
+          obtain ⟨o, hc, hr⟩ := TStmts.adequate body _ _ (env := (x, w) :: (i, .number p.2) :: env)
+            (ρ := (p.1, (p.2 : Int), ρ)) ⟨w, _, rfl, hw', _, env, rfl, rfl, he⟩ hs hw.1
+          exact ⟨o, hc, (SRel.pop (SRel.pop hr)).mono (fun _ => rfl) (fun _ => rfl) (fun _ => rfl)⟩)
+        (bss := entryBindings i x vs) ((hvs.zipIdx 0).map_left fun q p ⟨h, h2⟩ => ⟨q.1, by rw [← h2], h⟩) he hs.2
+      obtain ⟨out, h, hr⟩ := then_rest hfs hrest (conv_forEntries ha hl) hro hlen
+      refine ⟨out, h, ?_⟩
+      simp only [TStmts.denote, TStmts.falls, TStmts.breaks, TStmts.continues]
+      exact hr.mono (by flags) (by flags) (by flags)
     | Γ, τ, .ite c yes no rest, k, ks, env, ρ, he, hs, hw => by
       simp only [TStmts.safe, Bool.and_eq_true] at hs
       simp only [TStmts.wf, Bool.and_eq_true] at hw

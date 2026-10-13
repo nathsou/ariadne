@@ -330,6 +330,10 @@ def bindParams : List String → List JSValue → Env
   | x :: xs, [] => (x, .undefined) :: bindParams xs []
   | x :: xs, v :: vs => (x, v) :: bindParams xs vs
 
+/-- The iterations of `for (const [i, x] of xs.entries())`: each element with its index. -/
+def entryBindings (i x : String) (xs : List JSValue) : List Env :=
+  xs.zipIdx.map fun p => [(x, p.1), (i, .number p.2)]
+
 /-- Leaving a block: discard its declarations, and turn `break`/`continue` aimed at
 an enclosing construct back into outcomes in the outer environment. -/
 def Outcome.restore (outer : Env) : Outcome → Outcome
@@ -540,7 +544,7 @@ mutual
       | _ => .error (.unsupported "for-of over a non-array")
     | n + 1, env, .forEntries i x e body => do
       match ← evalExpr p n env e with
-      | .array xs => loop p n env ((List.range xs.length).zip xs |>.map fun (k, v) => [(x, v), (i, .number k)]) body
+      | .array xs => loop p n env (entryBindings i x xs) body
       | _ => .error (.unsupported "entries of a non-array")
 
   /-- One iteration per element: run the body with the iteration's bindings. -/

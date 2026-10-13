@@ -11,7 +11,8 @@ why, and measurements. Update it with each milestone.
 | M1: L0 end to end | Done: model, typed syntax, erasure, denotation, general theorem, frontend, CLI, fixture, differential and negative tests. |
 | M2: L1 | Done: records (literals, `{ ...r, f }`, field reads), string-literal unions, tagged unions (string or boolean tags) with `switch` narrowing, optionals (`?:`, `T \| null`, `T \| null \| undefined`), `== null` narrowing in expressions and statements, `??`, optional parameters, `break` in `switch`. Theorem, frontend, fixture, differential and negative tests. |
 | M3: L2 | Done: integer-mode `number` with safety conditions, array literals with spreads, `length`, indexing, `includes`, `some`/`every`/`find`/`filter`/`map` with arrow callbacks, `toSorted` with a comparator. Theorem, frontend, fixture, property proof, differential and negative tests. |
-| M4: L3 | In progress (the model already covers it). |
+| M4: L3 | Done: `let`, assignment (including `+=`, `++`), `for…of`, `for (const [i, x] of xs.entries())`, `break`/`continue`, early `return` in loops, `switch` in loops. Theorem, frontend, fixture, property proof, differential and negative tests. Counted `for` deferred (see the checkpoint). |
+| Checkpoint after M4 | Written below: continue. |
 
 ### Toolchain
 
@@ -70,6 +71,83 @@ own `checkout`/`upload-artifact` actions, pinned by commit, are CI infrastructur
 - **Proof size:** about 1,970 lines (+495 for L2: numbers about 110, arrays and callbacks about 300, the safety-flag
   refactor about 60, plus `Safe.lean`).
 
+### M4 notes
+
+- **Assignment** replaces the variable's component of the environment tuple (`Var.set`); the model's `assign` updates
+  the innermost binding in place, so environments keep their length and the relation is preserved
+  (`Var.assignRel`, 12 lines). Readable definitions print an assignment as a shadowing `let`.
+- **Loops** denote through one combinator, `forIn items step exit` (a `foldr` building the continuation chain); the body
+  runs with `K.map Prod.snd ⟨next, exit, next⟩`, so `break` is the loop's exit and `continue` the next iteration. One
+  lemma, `conv_loop` (40 lines, induction over the iterations), serves `for…of` and `entries`; each statement case is
+  about 30 lines. Nothing in the existing cases changed.
+- **Readable loops** pass the environment tuple between iterations: `V2.forIn xs (fun x next exit s => let total :=
+  s.1; …) (fun s => …) (total, xs, ())`, rebinding only the variables the text uses. `sum_eq` in `Properties.lean`
+  proves `sum xs = xs.sum` by a plain induction over `forIn`.
+- **Join points:** an `if` whose branches both complete now binds the rest of the list once (`let after' := fun s =>
+  …`) instead of repeating it in each branch; repeated, sequential `if`s made readable text exponential.
+- **Model change:** the iterations of `entries()` are named (`entryBindings`, via `zipIdx`), same meaning.
+- **Tests:** `l3.ts` (12 functions, checked in about 6 s), 30 negative fixtures, differential 13,200 calls (292 refused,
+  overflows).
+
+## Checkpoint after M4: is adding constructs viable?
+
+The design asked to compare the adequacy proof's size per construct and stop if it grew faster than linearly or a
+level needed global invariants. Lines (`wc -l`, including comments and statements of lemmas):
+
+| Level | Constructs | Proof | Typed syntax and denotation | Checker and printer |
+| --- | --- | --- | --- | --- |
+| L0 | bool, bigint, string, `const`, `if`, `return`, calls | 299 | 275 | 353 |
+| L1 | records, spreads, unions, `switch`, optionals, narrowing | +1,175 | +638 | +550 |
+| L2 | numbers with safety conditions, arrays, 7 methods, callbacks, sorting | +495 | +169 | +200 |
+| L3 | `let`, assignment, two loops, `continue` | +179 | +55 | +81 |
+| Total | | 2,148 | 1,137 | 1,184 |
+
+Per construct, once the infrastructure exists:
+
+- **An expression form** (an operator, a field read, `length`, indexing) costs 5 to 15 lines of proof, mostly a copy of
+  its neighbour's case; the 22 binary-operator cases are near-identical.
+- **A statement form without control flow** (`let`, assignment, `continue`) costs 5 to 20 lines.
+- **A family that needs a new idea** costs one generic lemma plus short cases: callbacks (`*Apply_conv`, about 150
+  lines for six methods), loops (`conv_loop`, 40 lines, plus 30 per loop form), sorting (sign matrix and `filterMap`
+  over indices, about 40).
+- **Infrastructure** was paid once, in L1: the relational representation, outcomes and continuations (`SRel`, `Exit`),
+  narrowing. L2 needed one cross-cutting change (safety conditions that leave out trivially safe syntax, which added a
+  `SafeSigs` hypothesis and touched every two-operand case mechanically); L3 needed none.
+
+So the cost is linear, and the slope falls: L1 paid for the framework, L2 and L3 added constructs at a fraction of
+the cost. No level needed a global invariant beyond the environment relation: assignment and loops fit the existing
+outcome relation unchanged, which was the main risk named in the design (L3 is "the core of drive's code").
+
+What did not scale as well, and what to do about it:
+
+1. **Compile time of the general proof.** `Proof/Expr.lean` takes 51 s and `Proof/Safe.lean` 35 s (the rest of `V2`
+   under 40 s together): structural recursion over `TExpr`, now 75 constructors, and its equation lemmas. It is paid
+   once per build, not per file, but it grows with each constructor. Mitigation before L5: group operators into one
+   constructor with an operator index (`arith op`, `cmp op`), which also removes most of the duplicated cases.
+2. **Per-file checking hazards are in the untrusted printer, not the proof.** Three failures this round were all
+   caught by the kernel and fixed in the printer or in kernel-friendly definitions: `inRange` stated with `Int` order
+   made the kernel recurse 2^53 deep on a partly symbolic argument; nested calls needed their signature printed; a
+   `switch` re-embedding needed a type ascription. Rule kept from v1: definitions the kernel unfolds must not recurse
+   on large literals.
+3. **Readable output** stays faithful but gets verbose for loops (the environment tuple and its rebinding). Join points
+   keep it linear in the source. Users prove loop properties by induction over `forIn` (`sum_eq` is 8 lines).
+4. **Safety conditions** are readable and only mention operations that can fault; the comparator condition
+   (`consistent (signs …)`) is the one that is hard to discharge by hand and needs library lemmas (for example for
+   comparators of the form `a.k - b.k` on safe integers) before drive's sorts are usable.
+5. **Restrictions accepted so far** (each a candidate for a later level, none needed by the reference programs read so
+   far): callbacks take one parameter, functions are not values, no counted `for`, no `while`.
+
+**Conclusion: continue.** Adding constructs is viable: the theorem never changed shape, each level's proof was
+additive, the marginal cost per construct is small and falling, and every per-file failure was caught by the kernel
+in untrusted output. The next levels are the riskier ones the design already flagged: owned collections (L5) and
+classes with backward functions (L6) change what an environment holds, so they will be the real test of the
+environment relation. Plan changes from this checkpoint:
+
+- L4 shrinks to "port drive's `trust.ts` and prove `Spec/Trust.lean`": integer-mode numbers moved into L2.
+- Counted `for (let i = 0; i < n; i++)` moves to L7 with measured `while`: as a loop over `List.range` it needs the
+  index not to be assigned in the body, a check that fits better with measured loops.
+- Before L5: group operator constructors (point 1) and add comparator lemmas (point 4).
+
 ## Layout
 
 | Path | Role | Trusted? |
@@ -79,7 +157,7 @@ own `checkout`/`upload-artifact` actions, pinned by commit, are CI infrastructur
 | `V2/Front/Convert.lean` | v1 parser AST → v2 AST (drops spans and annotations; refuses non-L0 forms) | **Yes** (with v1's lexer and parser) |
 | `V2/Typed/Syntax.lean` | `Ty`, `Ctx`, `Var`, `Sig`, `FVar`, `TExpr`/`TArgs`/`TStmts`/`TProgram`, erasure, `returns` | No (checked) |
 | `V2/Typed/Denote.lean` | Denotation, `TProgram.WF`, `TProgram.denote_cons` | No |
-| `V2/Proof/Basic.lean`, `Array.lean`, `Safe.lean`, `Expr.lean`, `Stmt.lean`, `Trivial.lean` | Environment relation, representation lemmas, array and callback lemmas, adequacy of expressions and statements | No |
+| `V2/Proof/Basic.lean`, `Array.lean`, `Safe.lean`, `Expr.lean`, `Stmt.lean`, `Trivial.lean` | Environment relation, representation and assignment lemmas, array and callback lemmas, adequacy of expressions and statements (with loops) | No |
 | `V2/Proof/Adequacy.lean` | `V2.adequacy` (the general theorem) and `source_of` | No |
 | `V2/Kernel.lean` | `kernel_rfl`: closed equations checked by the kernel only | No |
 | `V2/Front/Check.lean` | Untrusted type checker and printer | No |

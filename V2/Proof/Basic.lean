@@ -59,6 +59,16 @@ theorem Var.widenRel : ∀ {Γ : Ctx} {x τ σ} (v : Var Γ x τ) (e : σ.denote
     obtain ⟨w, env', rfl, hw, rest⟩ := h
     exact ⟨w, env', rfl, hw, v.widenRel _ he rest⟩
 
+/-- Assignment updates the variable's binding in place. -/
+theorem Var.assignRel : ∀ {Γ : Ctx} {x τ} (v : Var Γ x τ) {env : Env} {ρ : Γ.denote} {w : JSValue} {a : τ.denote},
+    EnvRel Γ env ρ → τ.Rep w a → ∃ env', assign x w env = .ok env' ∧ env'.length = env.length ∧ EnvRel Γ env' (v.set ρ a)
+  | _ :: _, _, _, .here, _, (_, _), w, _, ⟨_, env', rfl, _, rest⟩, hw =>
+    ⟨(_, w) :: env', by simp [assign], rfl, w, env', rfl, hw, rest⟩
+  | _ :: _, _, _, .there hne v, _, (_, _), _, _, ⟨w', env', rfl, hw', rest⟩, hw => by
+    obtain ⟨env'', ha, hl, hr⟩ := v.assignRel rest hw
+    refine ⟨_ :: env'', ?_, by simp [hl], w', env'', rfl, hw', hr⟩
+    simp [assign, beq_eq_false_iff_ne.mpr (Ne.symm hne), ha, bind, Except.bind, pure, Except.pure]
+
 /-- Arguments bound to parameters, as a call does. -/
 def ArgsRep (ps : Ctx) (vs : List JSValue) (xs : ps.denote) : Prop := EnvRel ps (bindParams (ps.map Prod.fst) vs) xs
 

@@ -402,6 +402,8 @@ Each milestone ends with CI green, the axiom audit clean, docs updated, and a sh
 - **M8: L7.** **M9 (optional): L8.**
 - **Checkpoint after M4:** compare the size of the adequacy proof per construct. If it is growing faster than linearly,
   or a level needed global invariants, stop and write up the reason before continuing.
+  Done (see `V2-PROGRESS.md`): growth is linear with a falling slope; continue. Plan changes recorded there: numbers
+  moved into L2, so L4 is drive's `trust.ts`; counted `for` moves to L7.
 
 When v2 covers L4 and the reference programs it can express, delete v1's code from the tree (the history and the
 draft PR keep it).

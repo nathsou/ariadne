@@ -1,5 +1,6 @@
 import V2Tests.Generated.L1
 import V2Tests.Generated.L2
+import V2Tests.Generated.L3
 
 /-!
 # Using the source theorems
@@ -47,6 +48,32 @@ theorem scaled_run (xs : List Int) (k : Int) (vs : List JSValue)
       Ty.Rep (.array .number) w («scaled» xs k) ∧ («scaled» xs k).length ≤ xs.length := by
   obtain ⟨w, hc, hr⟩ := «scaled».source xs k vs args (scaled_safe xs k hx hk)
   exact ⟨w, hc, hr, scaled_length xs k⟩
+
+end
+
+section
+open V2Tests.Generated.L3
+
+/-- The loop in `sum`, from an accumulator. -/
+theorem forIn_sum (ys : List Int) (acc : Int) (zs : List Int) :
+    V2.forIn ys (fun x next _ s => next (s.1 + x, s.2.1, ())) (fun s => s.1)
+      ((acc, zs, ()) : Int × List Int × Unit) = acc + ys.sum := by
+  induction ys generalizing acc with
+  | nil => simp [V2.forIn]
+  | cons y ys ih =>
+    simp only [V2.forIn, List.foldr_cons] at ih ⊢
+    rw [ih]; simp [List.sum_cons]; omega
+
+/-- `sum` computes the sum of its array. -/
+theorem sum_eq (xs : List Int) : «sum» xs = xs.sum := by
+  simpa [«sum»] using forIn_sum xs 0 xs
+
+/-- Every run of `sum` on an input where it stays exact returns the sum. -/
+theorem sum_run (xs : List Int) (vs : List JSValue) (args : ArgsRep sig.«sum».params vs (xs, ()))
+    (safe : «sum».safe xs = true) :
+    ∃ w, Converges (fun fuel => run Generated.L3.ast fuel "sum" vs) (.ok w) ∧ Ty.Rep .number w xs.sum := by
+  obtain ⟨w, hc, hr⟩ := «sum».source xs vs args safe
+  exact ⟨w, hc, sum_eq xs ▸ hr⟩
 
 end
 

@@ -50,6 +50,11 @@ def Var.widen : {Γ : Ctx} → (v : Var Γ x τ) → (σ.denote → τ.denote) �
   | (_, _) :: _, .here, e, ρ => let ρ' : σ.denote × _ := ρ; (e ρ'.1, ρ'.2)
   | (_, τ') :: _, .there _ v, e, ρ => let ρ' : τ'.denote × _ := ρ; (ρ'.1, v.widen e ρ'.2)
 
+/-- The environment with the variable's value replaced (assignment). -/
+def Var.set : {Γ : Ctx} → Var Γ x τ → Γ.denote → τ.denote → Γ.denote
+  | (_, _) :: _, .here, (_, ρ), y => (y, ρ)
+  | (_, _) :: _, .there _ v, (a, ρ), y => (a, v.set ρ y)
+
 /-- Parameters that may be omitted at a call: optionals admitting `undefined`. -/
 def Ctx.omittable : Ctx → Bool
   | [] => true
@@ -254,6 +259,17 @@ mutual
     | ite (c : TExpr Φ Γ .bool) (yes no : TStmts Φ Γ τ) (rest : TStmts Φ Γ τ) : TStmts Φ Γ τ
     | block (body : TStmts Φ Γ τ) (rest : TStmts Φ Γ τ) : TStmts Φ Γ τ
     | brk (rest : TStmts Φ Γ τ) : TStmts Φ Γ τ
+    /-- `let x = e`. -/
+    | let_ (x : String) (e : TExpr Φ Γ σ) (rest : TStmts Φ ((x, σ) :: Γ) τ) : TStmts Φ Γ τ
+    /-- `x = e`. -/
+    | assign {x : String} (v : Var Γ x σ) (e : TExpr Φ Γ σ) (rest : TStmts Φ Γ τ) : TStmts Φ Γ τ
+    | cont (rest : TStmts Φ Γ τ) : TStmts Φ Γ τ
+    /-- `for (const x of a) body`. -/
+    | forOf (x : String) (a : TExpr Φ Γ (.array σ)) (body : TStmts Φ ((x, σ) :: Γ) τ) (rest : TStmts Φ Γ τ) :
+        TStmts Φ Γ τ
+    /-- `for (const [i, x] of a.entries()) body`. -/
+    | forEntries (i x : String) (a : TExpr Φ Γ (.array σ)) (body : TStmts Φ ((x, σ) :: (i, .number) :: Γ) τ)
+        (rest : TStmts Φ Γ τ) : TStmts Φ Γ τ
     /-- `if (x == null) yes else no`, with `x` narrowed in `no`. -/
     | ifNull {x : String} (v : Var Γ x (.option n σ)) (h : σ.nonNullish = true)
         (yes : TStmts Φ Γ τ) (no : TStmts Φ (v.narrow σ) τ) (rest : TStmts Φ Γ τ) : TStmts Φ Γ τ
@@ -370,6 +386,11 @@ mutual
     | .ite c yes no rest => .ite c.erase yes.erase no.erase :: rest.erase
     | .block body rest => .block body.erase :: rest.erase
     | .brk rest => .brk :: rest.erase
+    | .let_ x e rest => .let_ x e.erase :: rest.erase
+    | @TStmts.assign _ _ _ _ x _ e rest => .assign x e.erase :: rest.erase
+    | .cont rest => .cont :: rest.erase
+    | .forOf x a body rest => .forOf x a.erase body.erase :: rest.erase
+    | .forEntries i x a body rest => .forEntries i x a.erase body.erase :: rest.erase
     | @TStmts.ifNull _ _ _ _ _ x _ _ yes no rest => .ite (nullTest x) yes.erase no.erase :: rest.erase
     | @TStmts.ifNullExit _ _ _ _ _ x _ _ yes rest => .ite (nullTest x) yes.erase [] :: rest.erase
     | @TStmts.ifNotNull _ _ _ _ _ x _ _ yes no rest => .ite (notNullTest x) yes.erase no.erase :: rest.erase
@@ -399,7 +420,8 @@ mutual
     | .ite _ yes no rest | .ifNull _ _ yes no rest | .ifNotNull _ _ yes no rest =>
       (yes.falls || no.falls) && rest.falls
     | .block body rest => body.falls && rest.falls
-    | .brk _ => false
+    | .brk _ | .cont _ => false
+    | .let_ _ _ rest | .assign _ _ rest | .forOf _ _ _ rest | .forEntries _ _ _ _ rest => rest.falls
     | .ifNullExit _ _ _ rest => rest.falls
     | .switchU _ _ cases rest => (cases.falls || cases.breaks) && rest.falls
 
@@ -411,6 +433,8 @@ mutual
       yes.breaks || no.breaks || ((yes.falls || no.falls) && rest.breaks)
     | .block body rest => body.breaks || (body.falls && rest.breaks)
     | .brk _ => true
+    | .cont _ => false
+    | .let_ _ _ rest | .assign _ _ rest | .forOf _ _ _ rest | .forEntries _ _ _ _ rest => rest.breaks
     | .ifNullExit _ _ yes rest => yes.breaks || rest.breaks
     | .switchU _ _ cases rest => (cases.falls || cases.breaks) && rest.breaks
 
@@ -422,6 +446,8 @@ mutual
       yes.continues || no.continues || ((yes.falls || no.falls) && rest.continues)
     | .block body rest => body.continues || (body.falls && rest.continues)
     | .brk _ => false
+    | .cont _ => true
+    | .let_ _ _ rest | .assign _ _ rest | .forOf _ _ _ rest | .forEntries _ _ _ _ rest => rest.continues
     | .ifNullExit _ _ yes rest => yes.continues || rest.continues
     | .switchU _ _ cases rest => cases.continues || ((cases.falls || cases.breaks) && rest.continues)
 
@@ -443,7 +469,8 @@ mutual
   normally. -/
   def TStmts.wf : TStmts Φ Γ τ → Bool
     | .nil => true
-    | .const _ _ rest | .ret _ rest | .brk rest => rest.wf
+    | .const _ _ rest | .ret _ rest | .brk rest | .let_ _ _ rest | .assign _ _ rest | .cont rest => rest.wf
+    | .forOf _ _ body rest | .forEntries _ _ _ body rest => body.wf && rest.wf
     | .ite _ yes no rest | .ifNull _ _ yes no rest | .ifNotNull _ _ yes no rest => yes.wf && no.wf && rest.wf
     | .block body rest => body.wf && rest.wf
     | .ifNullExit _ _ yes rest => !yes.falls && yes.wf && rest.wf
@@ -498,7 +525,9 @@ mutual
     | .const _ e rest | .ret e rest => e.trivial && rest.trivial
     | .ite c yes no rest => c.trivial && yes.trivial && no.trivial && rest.trivial
     | .block body rest => body.trivial && rest.trivial
-    | .brk rest => rest.trivial
+    | .brk rest | .cont rest => rest.trivial
+    | .let_ _ e rest | .assign _ e rest => e.trivial && rest.trivial
+    | .forOf _ a body rest | .forEntries _ _ a body rest => a.trivial && body.trivial && rest.trivial
     | .ifNull _ _ yes no rest | .ifNotNull _ _ yes no rest => yes.trivial && no.trivial && rest.trivial
     | .ifNullExit _ _ yes rest => yes.trivial && rest.trivial
     | .switchU _ _ cases rest => cases.trivial && rest.trivial

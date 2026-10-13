@@ -44,6 +44,17 @@ theorem Forall2.filterMap_idx {R : α → β → Prop} {as bs} (h : Forall2 R as
     · simpa [List.filterMap_cons, h1, h2] using h.filterMap_idx is
     · simpa [List.filterMap_cons, h1, h2] using Forall2.cons r (h.filterMap_idx is)
 
+theorem Forall2.map_left {R : α → β → Prop} {S : γ → β → Prop} {f : α → γ} (hf : ∀ a b, R a b → S (f a) b) :
+    ∀ {as bs}, Forall2 R as bs → Forall2 S (as.map f) bs
+  | _, _, .nil => .nil
+  | _, _, .cons r h => .cons (hf _ _ r) (h.map_left hf)
+
+/-- The iterations of `entries()`: each element with its index. -/
+theorem Forall2.zipIdx {R : α → β → Prop} : ∀ {as bs} (s : Nat), Forall2 R as bs →
+    Forall2 (fun (a : α × Nat) (b : β × Nat) => R a.1 b.1 ∧ a.2 = b.2) (as.zipIdx s) (bs.zipIdx s)
+  | _, _, _, .nil => .nil
+  | _, _, s, .cons r h => by simpa [List.zipIdx_cons] using Forall2.cons ⟨r, rfl⟩ (h.zipIdx (s + 1))
+
 theorem index_rep {τ : Ty} {vs : List JSValue} {xs : List τ.denote} (h : Forall2 (fun w x => τ.Rep w x) vs xs)
     (i : Int) :
     (Ty.option .undef τ).Rep (if 0 ≤ i then (vs[i.toNat]?).getD .undefined else .undefined) (listIndex xs i) := by

@@ -218,6 +218,12 @@ end
 
 /-! ## Statements -/
 
+/-- A loop over `items` in continuation-passing style: `step y next exit` runs an
+iteration on `y`, continuing with `next` (the remaining iterations) or leaving the
+loop with `exit`; after the last iteration, `exit`. The state is the environment. -/
+def forIn {α σ R : Type} (items : List α) (step : α → (σ → R) → (σ → R) → σ → R) (exit : σ → R) : σ → R :=
+  items.foldr (fun y next => step y next exit) exit
+
 mutual
   def TStmts.denote (fs : Φ.denote) : TStmts Φ Γ τ → K Γ τ.denote → Γ.denote → τ.denote
     | .nil, k, ρ => k.normal ρ
@@ -228,6 +234,16 @@ mutual
       else no.denote fs { k with normal := rest.denote fs k } ρ
     | .block body rest, k, ρ => body.denote fs { k with normal := rest.denote fs k } ρ
     | .brk _, k, ρ => k.brk ρ
+    | .let_ _ e rest, k, ρ => rest.denote fs (k.map Prod.snd) (e.denote fs ρ, ρ)
+    | .assign v e rest, k, ρ => rest.denote fs k (v.set ρ (e.denote fs ρ))
+    | .cont _, k, ρ => k.cont ρ
+    | .forOf _ a body rest, k, ρ =>
+      forIn (a.denote fs ρ) (fun y next exit ρ' => body.denote fs (K.map Prod.snd ⟨next, exit, next⟩) (y, ρ'))
+        (rest.denote fs k) ρ
+    | .forEntries _ _ a body rest, k, ρ =>
+      forIn (a.denote fs ρ).zipIdx (fun p next exit ρ' =>
+          body.denote fs (K.map Prod.snd (K.map Prod.snd ⟨next, exit, next⟩)) (p.1, (p.2 : Int), ρ'))
+        (rest.denote fs k) ρ
     | .ifNull v _ yes no rest, k, ρ => match v.get ρ with
       | none => yes.denote fs { k with normal := rest.denote fs k } ρ
       | some y => no.denote fs (K.map (v.widen some) { k with normal := rest.denote fs k }) (v.narrowVal ρ y)
@@ -261,6 +277,16 @@ mutual
        else no.safe fs ss { k with normal := rest.safe fs ss k } ρ)
     | .block body rest, k, ρ => body.safe fs ss { k with normal := rest.safe fs ss k } ρ
     | .brk _, k, ρ => k.brk ρ
+    | .let_ _ e rest, k, ρ => (e.trivial || e.safe fs ss ρ) && rest.safe fs ss (k.map Prod.snd) (e.denote fs ρ, ρ)
+    | .assign v e rest, k, ρ => (e.trivial || e.safe fs ss ρ) && rest.safe fs ss k (v.set ρ (e.denote fs ρ))
+    | .cont _, k, ρ => k.cont ρ
+    | .forOf _ a body rest, k, ρ => (a.trivial || a.safe fs ss ρ) &&
+      forIn (a.denote fs ρ) (fun y next exit ρ' => body.safe fs ss (K.map Prod.snd ⟨next, exit, next⟩) (y, ρ'))
+        (rest.safe fs ss k) ρ
+    | .forEntries _ _ a body rest, k, ρ => (a.trivial || a.safe fs ss ρ) &&
+      forIn (a.denote fs ρ).zipIdx (fun p next exit ρ' =>
+          body.safe fs ss (K.map Prod.snd (K.map Prod.snd ⟨next, exit, next⟩)) (p.1, (p.2 : Int), ρ'))
+        (rest.safe fs ss k) ρ
     | .ifNull v _ yes no rest, k, ρ => match v.get ρ with
       | none => yes.safe fs ss { k with normal := rest.safe fs ss k } ρ
       | some y => no.safe fs ss (K.map (v.widen some) { k with normal := rest.safe fs ss k }) (v.narrowVal ρ y)

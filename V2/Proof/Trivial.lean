@@ -16,6 +16,12 @@ namespace V2
 section
 variable {Φ : Sigs} {fs : Φ.denote} {ss : Φ.safety}
 
+theorem forIn_true {α σ : Type} {step : α → (σ → Bool) → (σ → Bool) → σ → Bool} {exit : σ → Bool}
+    (hstep : ∀ y next exit ρ, (∀ ρ, next ρ = true) → (∀ ρ, exit ρ = true) → step y next exit ρ = true)
+    (hexit : ∀ ρ, exit ρ = true) : ∀ (items : List α) ρ, forIn items step exit ρ = true
+  | [], ρ => hexit ρ
+  | y :: ys, ρ => hstep y _ exit ρ (forIn_true hstep hexit ys) hexit
+
 /-- Continuations that are safe everywhere. -/
 def K.True (k : K Γ Bool) : Prop := ∀ ρ, k.normal ρ = true ∧ k.brk ρ = true ∧ k.cont ρ = true
 
@@ -24,6 +30,25 @@ mutual
       ks.True → st.trivial = true → st.safe fs ss ks ρ = true
     | _, _, .nil, _, ρ, hk, _ => (hk ρ).1
     | _, _, .brk _, _, ρ, hk, _ => (hk ρ).2.1
+    | _, _, .cont _, _, ρ, hk, _ => (hk ρ).2.2
+    | _, _, .let_ _ e rest, ks, ρ, hk, h => by
+      simp only [TStmts.trivial, Bool.and_eq_true] at h
+      simp only [TStmts.safe, h.1, Bool.true_or, Bool.true_and]
+      exact TStmts.safe_of_trivial rest _ _ (fun ρ' => hk ρ'.2) h.2
+    | _, _, .assign _ e rest, ks, ρ, hk, h => by
+      simp only [TStmts.trivial, Bool.and_eq_true] at h
+      simp only [TStmts.safe, h.1, Bool.true_or, Bool.true_and]
+      exact TStmts.safe_of_trivial rest _ _ hk h.2
+    | _, _, .forOf _ a body rest, ks, ρ, hk, h => by
+      simp only [TStmts.trivial, Bool.and_eq_true] at h
+      simp only [TStmts.safe, h.1.1, Bool.true_or, Bool.true_and]
+      exact forIn_true (fun y next exit ρ' hn hx => TStmts.safe_of_trivial body _ _
+        (fun ρ'' => ⟨hn _, hx _, hn _⟩) h.1.2) (fun ρ' => TStmts.safe_of_trivial rest ks ρ' hk h.2) _ _
+    | _, _, .forEntries _ _ a body rest, ks, ρ, hk, h => by
+      simp only [TStmts.trivial, Bool.and_eq_true] at h
+      simp only [TStmts.safe, h.1.1, Bool.true_or, Bool.true_and]
+      exact forIn_true (fun y next exit ρ' hn hx => TStmts.safe_of_trivial body _ _
+        (fun ρ'' => ⟨hn _, hx _, hn _⟩) h.1.2) (fun ρ' => TStmts.safe_of_trivial rest ks ρ' hk h.2) _ _
     | _, _, .const _ e rest, ks, ρ, hk, h => by
       simp only [TStmts.trivial, Bool.and_eq_true] at h
       simp only [TStmts.safe, h.1, Bool.true_or, Bool.true_and]

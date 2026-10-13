@@ -204,6 +204,8 @@ structure Scope where
   fns : List FnSig
   /-- Bindings in scope, innermost first, with their current (narrowed) types. -/
   locals : List (String × Ty)
+  /-- The assignable bindings: parameters and `let` declarations. -/
+  mutables : List String := []
 
 /-- A variable reference past the bindings `skipped` (innermost first). Each step
 cites a named lemma `ne.«x».«y»` (emitted by `printFile`): a postponed `by decide`
@@ -740,12 +742,42 @@ def switchArms (render : Block → String → KText → String) (x : String) (ar
     s!"match {scrut} with\n{ind}| Sum.inl p' =>\n{j}let {ident x} := ((), p')\n{j}{render b j (k.wrap n)}\n" ++
       s!"{ind}| Sum.inr p' =>\n{j}{switchArms render x more k "p'" j}"
 
-/-- `if (c) yes else no; rest`, rendered for the denotation or the safety condition. -/
-def iteText (render : Block → String → KText → String) (c : String) (yes no rest : Block) (i : String) (k : KText) :
-    String :=
+/-- The environment tuple of a scope, as readable text. -/
+def tupleText (locals : List (String × Ty)) : String :=
+  "(" ++ ", ".intercalate (locals.map (ident ·.1) ++ ["()"]) ++ ")"
+
+/-- Bind the scope's variables that `text` uses from the environment tuple `sv`
+(a continuation's argument). -/
+def rebind (locals : List (String × Ty)) (sv indent text : String) : String :=
+  locals.zipIdx.foldr (fun ((x, _), k) acc =>
+    if (text.splitOn (ident x)).length > 1 then s!"let {ident x} := {projText sv k}\n{indent}{acc}" else acc) text
+
+/-- `if (c) yes else no; rest`, rendered for the denotation or the safety condition.
+When both branches may complete, the rest is bound once as a join point instead of
+being repeated in each branch. -/
+def iteText (render : Block → String → KText → String) (locals : List (String × Ty)) (c : String)
+    (yes no rest : Block) (i : String) (k : KText) : String :=
   let j := i ++ "  "
-  let k' := { k with normal := fun j' => render rest j' k }
-  s!"if {c} then\n{j}{render yes j k'}\n{i}else\n{j}{render no j k'}"
+  if yes.falls && no.falls && rest.typed != ".nil" then
+    let (after, sv) := (s!"after{i.length}'", s!"s{i.length}'")
+    let k' := { k with normal := fun _ => s!"{after} {tupleText locals}" }
+    s!"let {after} := fun {sv} =>\n{j}{rebind locals sv j (render rest j k)}\n{i}" ++
+      s!"if {c} then\n{j}{render yes j k'}\n{i}else\n{j}{render no j k'}"
+  else
+    let k' := { k with normal := fun j' => render rest j' k }
+    s!"if {c} then\n{j}{render yes j k'}\n{i}else\n{j}{render no j k'}"
+
+/-- A loop: `V2.forIn items (fun binder next exit s => body) (fun s => rest) tuple`. -/
+def loopText (render : Block → String → KText → String) (locals : List (String × Ty)) (items binder : String)
+    (pre : String → String)
+    (body rest : Block) (i : String) (k : KText) : String :=
+  let d := i.length
+  let (nx, ex, sv) := (s!"next{d}'", s!"exit{d}'", s!"s{d}'")
+  let tup := tupleText locals
+  let j := i ++ "  "
+  let kb : KText := ⟨fun _ => s!"{nx} {tup}", fun _ => s!"{ex} {tup}", fun _ => s!"{nx} {tup}"⟩
+  s!"V2.forIn {items} (fun {binder} {nx} {ex} {sv} =>\n{j}{pre j}{rebind locals sv j (render body j kb)})\n{i}  " ++
+    s!"(fun {sv} =>\n{j}{rebind locals sv j (render rest j k)})\n{i}  {tup}"
 
 def flagsIte (yes no rest : Block) : Bool × Bool × Bool :=
   ((yes.falls || no.falls) && rest.falls,
@@ -763,6 +795,55 @@ mutual
              readable := fun i k => s!"let {ident x} := {v.readable}\n{i}{rest.readable i k}",
              safe := fun i k => andText v.ok s!"let {ident x} := {v.readable}\n{i}{rest.safe i k}",
              trivial := v.trivial && rest.trivial,
+             falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
+    | .let_ true x annotation e span :: rest => do
+      let expected ← annotation.mapM (T.resolve span 64)
+      let v ← checkExpr T s e expected
+      let s' ← declare s span x v.ty
+      let rest ← checkStmts T { s' with mutables := x :: s'.mutables } result rest
+      pure { typed := s!"(.let_ {leanString x} {v.typed}\n  {rest.typed})",
+             readable := fun i k => s!"let {ident x} := {v.readable}\n{i}{rest.readable i k}",
+             safe := fun i k => andText v.ok s!"let {ident x} := {v.readable}\n{i}{rest.safe i k}",
+             trivial := v.trivial && rest.trivial,
+             falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
+    | .assign (.var x _) e span :: rest => do
+      let some (j, τ) := s.lookup x | throw { code := "A2001", message := s!"unknown variable '{x}'", span }
+      if !s.mutables.contains x then mismatch span s!"'{x}' is not assignable (a const declaration)"
+      let v ← checkExpr T s e (some τ)
+      let rest ← checkStmts T s result rest
+      pure { typed := s!"(.assign {s.varPath j} {v.typed}\n  {rest.typed})",
+             readable := fun i k => s!"let {ident x} := {v.readable}\n{i}{rest.readable i k}",
+             safe := fun i k => andText v.ok s!"let {ident x} := {v.readable}\n{i}{rest.safe i k}",
+             trivial := v.trivial && rest.trivial,
+             falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
+    | .continue_ _ :: rest => do
+      let rest ← checkStmts T s result rest
+      pure { typed := s!"(.cont {rest.typed})", readable := (fun i k => k.cont i), safe := (fun i k => k.cont i),
+             trivial := rest.trivial, falls := false, breaks := false, continues := true }
+    | .forOf false x e (.block body _) span :: rest => do
+      let a ← inferExpr T s e none
+      let .array σ := a.ty | mismatch span s!"for-of over {a.ty.ts}"
+      let body ← checkStmts T (← declare s span x σ) result body
+      let rest ← checkStmts T s result rest
+      let text (render : Block → String → KText → String) :=
+        loopText render s.locals a.term (ident x) (fun _ => "") body rest
+      pure { typed := s!"(.forOf {leanString x} {a.typed}\n  {body.typed}\n  {rest.typed})",
+             readable := text (·.readable), safe := fun i k => andText a.ok (text (·.safe) i k),
+             trivial := a.trivial && body.trivial && rest.trivial,
+             falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
+    | .forOfPair false ix x (.call (.member e "entries" _) [] _) (.block body _) span :: rest => do
+      let a ← inferExpr T s e none
+      let .array σ := a.ty | mismatch span s!"entries of {a.ty.ts}"
+      if ix == x then mismatch span "an index and an element of the same name"
+      let body ← checkStmts T (← declare (← declare s span ix .number) span x σ) result body
+      let rest ← checkStmts T s result rest
+      let p := s!"p{s.locals.length}'"
+      let text (render : Block → String → KText → String) :=
+        loopText render s.locals s!"(List.zipIdx {a.term})" p
+          (fun j => s!"let {ident x} := {p}.1\n{j}let {ident ix} := ({p}.2 : Int)\n{j}") body rest
+      pure { typed := s!"(.forEntries {leanString ix} {leanString x} {a.typed}\n  {body.typed}\n  {rest.typed})",
+             readable := text (·.readable), safe := fun i k => andText a.ok (text (·.safe) i k),
+             trivial := a.trivial && body.trivial && rest.trivial,
              falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
     | .return_ e _ :: rest => do
       let v ← checkExpr T s e (some result)
@@ -792,8 +873,8 @@ mutual
         let rest ← checkStmts T s result rest
         let (falls, breaks, continues) := flagsIte yes no rest
         pure { typed := s!"(.ite {c.typed}\n  {yes.typed}\n  {no.typed}\n  {rest.typed})",
-               readable := iteText (·.readable) c.readable yes no rest,
-               safe := fun i k => andText c.ok (iteText (·.safe) c.readable yes no rest i k),
+               readable := iteText (·.readable) s.locals c.readable yes no rest,
+               safe := fun i k => andText c.ok (iteText (·.safe) s.locals c.readable yes no rest i k),
                trivial := c.trivial && yes.trivial && no.trivial && rest.trivial, falls, breaks, continues }
     | .switch_ e cases span :: rest => checkSwitch T s result e cases span rest
     | st :: _ => unsupportedTy st.span "this statement"
@@ -855,7 +936,7 @@ mutual
       if !ok then unsupportedTy span s!"case {j + 1} must be {tagLitTS t} (cases follow the union's order)"
       let σ := vrec' key t fs
       let n : Narrowed := { index := i, name := x, wide := τ, narrow := σ,
-                            embed := injText j variants.length s!"{ident x}.2" }
+                            embed := s!"({injText j variants.length s!"{ident x}.2"} : {T.lean τ})" }
       let b ← checkStmts T (s.narrow i σ) result body
       if j + 1 < variants.length && b.falls then
         unsupportedTy span s!"case {tagLitTS t} falls through to the next case"
@@ -893,7 +974,7 @@ def checkFunction (T : Types) (fns : List FnSig) (f : Parse.Function) : Checked 
     params := params ++ [(p.name, τ)]
     if s.locals.any (·.1 == p.name) || fns.any (·.name == p.name) || p.name == f.name then
       throw { code := "A2004", message := s!"'{p.name}' shadows a declaration in scope", span := p.span }
-    s := { s with locals := s.locals ++ [(p.name, τ)] }
+    s := { s with locals := s.locals ++ [(p.name, τ)], mutables := p.name :: s.mutables }
   let .block body _ := f.body | unsupportedTy f.span "this function body"
   let block ← checkStmts T s result body
   if block.falls then
