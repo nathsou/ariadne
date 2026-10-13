@@ -10,7 +10,7 @@ when their exit criteria pass; finite native tests are not universal proofs.
 | M2 | Complete | Typed Core, scalar/list/Map/Set extraction, owned local updates, structural loops, pure calls, structural denotation, three-way differential and tamper tests. Lawful named records/unions and direct borrowed-state calls are implemented; class states, Int53 guards and original reference extraction are implemented; the full integration regression gate passed. |
 | M3 | Complete | All three original reference acceptance proofs hold universally over emitted definitions. The native proof library includes loop, collection, string and stable-sort laws, and general Int53 arithmetic correspondence, including rounded nonintegral division. |
 | M4 | Acceptance complete; general lemma partial | All three reference programs are proved against the original source evaluator for all inputs, and their reference theorems hold of source runs ([below](#reference-source-transfer)). The general fundamental lemma covers scalar, guarded Int53 and data-read fragments; for other stateful/data programs without a source theorem, the elaborator and denotation remain trusted. |
-| M5 | Pending | Measures, larger ownership, polymorphism, exceptions and scalar backend integration |
+| M5 | In progress | Measured `while` loops are extracted ([below](#measured-while-loops-tier-1)). Measured recursion, larger ownership, polymorphism, exceptions and scalar backend integration are pending. |
 
 ## Reference specifications
 
@@ -879,3 +879,41 @@ Not yet covered:
 - maps, unions and loops;
 - methods.
 
+## Measured while loops (tier 1)
+
+A `while` loop preceded by `/** @decreases m */` is now extracted, where `m`
+is a bigint or Int53 expression over the loop's variables. `break`,
+`continue` and `return` inside the body work as in `for...of` loops. Loops
+without a measure stay on the operational path.
+
+- **Core.** `Term.measured measure init body` takes the measure and the body
+  as functions of the explicit loop state.
+- **Denotation.** `Measured.bounded` iterates the body for one step more than
+  the initial measure. It is total whatever the body does. When every
+  continuing step lowers the measure, `Measured.bounded_run` equates it with
+  the well-founded recursion `Measured.run`, and `Measured.bounded_unfold`
+  gives the loop's unfolding equation.
+- **Emission.** The emitted definition calls `Measured.bounded` directly, so
+  the per-file denotation check stays `rfl`. A proof about the emitted loop
+  first shows that the measure decreases, then reasons by its unfolding
+  equation; `Examples/Proofs/ShallowMeasured.lean` proves `countdown n =
+  n.toNat` this way. The design's `termination_by` presentation is replaced by
+  this library lemma, so the extractor never has to print a decrease proof.
+- **Safety and erasure.** The guard semantics runs the same budget and
+  requires each continuing step to be safe and to strictly decrease the
+  nonnegative measure. This requirement becomes part of `f.safe`, so every
+  adequacy result that assumes `f.safe` only applies when the measure really
+  decreases. `measured_erases` extends the value-erasure lemma to the new
+  term.
+
+`scripts/shallow-measured.mjs` compares each fixture function across three
+implementations: the TypeScript source, the emitted definition and the
+original evaluator. For `climb`, whose stated measure grows, the safety
+condition is false whenever the loop runs. There the bounded denotation stops
+early, and the suite checks that `f.safe` is false instead of comparing the
+emitted value.
+
+Not yet covered:
+
+- measured recursion;
+- generated source theorems for loops.

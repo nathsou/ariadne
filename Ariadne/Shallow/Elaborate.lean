@@ -460,6 +460,10 @@ def loopVariable : Var (a :: Γ) t → Term [Core.environmentType Γ, a] t
   | .here => .var (.there .here)
   | .there v => Core.project (.var .here) v
 
+/-- Close a measured loop's body or measure over its explicit state tuple. -/
+def abstractState (body : Term Γ t) : Term Δ (.fn (Core.environmentType Γ) t) :=
+  .closed (.lam "state" (body.substitute fun v => Core.project (.var .here) v))
+
 /-- Close a loop body over its element and explicit state tuple. -/
 def abstractLoop (name : String) (body : Term (a :: Γ) t) :
     Term Δ (.fn a (.fn (Core.environmentType Γ) t)) :=
@@ -1195,8 +1199,34 @@ mutual
         let inner := binding rangeName rangeTy :: ctx
         let loop := Stmt.forOf true name (.call (.var rangeName span) [start, stop] span) body span
         return .let_ "range" range (← statements p n inner (loop :: rest) t)
+      | .measured measure (.while_ guard body _) span =>
+        let state := afterWrites ctx (Check.writes n stmt)
+        let stateType := Core.environmentType (Types state)
+        let stepType := Core.Ty.step stateType t
+        let retName := s!"#internalReturn{n}"
+        let nextName := s!"#joinNext{n}"
+        let stopName := s!"#joinStop{n}"
+        let retCtx := binding retName (.fn t stepType) :: state
+        let nextCtx := binding nextName (.fn stateType stepType) :: retCtx
+        let inner := binding stopName (.fn stateType stepType) :: nextCtx
+        let jump := fun name => Stmt.return_ (.call (.var name span)
+          (state.map fun b => .var b.name span) span) span
+        let body := loopControl n retName nextName stopName state true true body
+        let iteration := Stmt.if_ guard (.block [body, jump nextName] span) (jump stopName) span
+        let body ← statements p n inner [iteration] stepType
+        let body := Term.let_ retName (.lam "result" (.ret (.var .here)))
+          (.let_ nextName (.lam "state" (.next (.var .here)))
+            (.let_ stopName (.lam "state" (.stop (.var .here))) body))
+        let measure : Term (Types state) .int ← match ← expression p n state measure with
+          | ⟨.int, m⟩ => pure m
+          | ⟨.int53, m⟩ => pure (.unary .int53ToInt m)
+          | _ => refusal "A5101" "a loop measure must be a bigint or an Int53" measure.span
+        let initial ← tupleArgs p n ctx stateType (state.map fun b => .var b.name span) span
+        let continuation ← statements p n state rest t
+        return .exitCase (.measured (abstractState measure) initial (abstractState body))
+          continuation.abstract (.lam "result" (.var .here))
       | .while_ .. | .measured .. =>
-        refusal "A5101" "loop extraction is not implemented yet" stmt.span
+        refusal "A5101" "loops without a measure stay on the operational path" stmt.span
       | _ => refusal "A5102" "this statement needs ownership or control-flow lowering" stmt.span
 
 end

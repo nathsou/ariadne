@@ -214,4 +214,25 @@ theorem each_erases {interp : Named.Interp}
     · simpa only [each, Loop.each, hx, hy, Erases] using step
     · simpa only [each, Loop.each, hx, hy, Erases] using step
 
+theorem measured_erases {interp : Named.Interp}
+    {m : Model (.fn s .int) interp} {n : (Core.Ty.fn s .int).denote interp}
+    {f : Model (.fn s (.step s r)) interp} {g : (Core.Ty.fn s (.step s r)).denote interp}
+    {initial : Model s interp} {native : s.denote interp}
+    (measure : Erases (.fn s .int) m n) (function : Erases (.fn s (.step s r)) f g)
+    (start : Erases s initial native) :
+    Erases (.exit s r) (measured m f ((m initial).1.toNat + 1) initial).1 (Measured.bounded n native g) := by
+  have budget : (m initial).1 = n native := measure _ _ start
+  unfold Measured.bounded
+  rw [budget]
+  generalize (n native).toNat + 1 = fuel
+  induction fuel generalizing initial native with
+  | zero => exact start
+  | succ fuel ih =>
+    have step := function _ _ start
+    cases hx : (f initial).1 <;> cases hy : g native
+    all_goals simp only [hx, hy, Erases] at step
+    · simpa only [measured, Measured.iterate, hx, hy] using ih step (measure _ _ step)
+    · simpa only [measured, Measured.iterate, hx, hy, Erases] using step
+    · simpa only [measured, Measured.iterate, hx, hy, Erases] using step
+
 end Ariadne.Shallow.Safety

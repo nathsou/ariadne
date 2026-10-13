@@ -1,4 +1,5 @@
 import Ariadne.Shallow.Core
+import Ariadne.Shallow.Prelude.Measured
 
 namespace Ariadne.Shallow
 open Core
@@ -151,6 +152,7 @@ def Denote.term {interp : Named.Interp} : Term Γ t → Core.Env Γ interp → t
   | .stop a, env => .stop (term (interp := interp) a env)
   | .ret a, env => .ret (term (interp := interp) a env)
   | .each xs init body, env => Loop.each (term (interp := interp) xs env) (term (interp := interp) init env) (term (interp := interp) body env)
+  | .measured measure init body, env => Measured.bounded (term (interp := interp) measure env) (term (interp := interp) init env) (term (interp := interp) body env)
   | .exitCase e done ret, env => Exit.elim (term (interp := interp) e env) (term (interp := interp) done env) (term (interp := interp) ret env)
 
 def Denote.function {interp : Named.Interp} (f : Core.Function) : Core.Env f.params interp → f.result.denote interp := term (interp := interp) f.body

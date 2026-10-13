@@ -190,6 +190,22 @@ def each (body : α → σ → Step σ τ × Bool) : List α → σ → Exit σ 
     | .stop state => (.done state, safe)
     | .ret value => (.ret value, safe)
 
+/-- A measured loop with the denotation's budget. It is safe when every body
+step is safe and every continuing step strictly decreases the nonnegative
+measure, which also guarantees the budget suffices. -/
+def measured (measure : σ → Int × Bool) (body : σ → Step σ τ × Bool) : Nat → σ → Exit σ τ × Bool
+  | 0, state => (.done state, false)
+  | n + 1, state =>
+    let (step, safe) := body state
+    match step with
+    | .next next =>
+      let (before, sb) := measure state
+      let (after, sa) := measure next
+      let (result, rest) := measured measure body n next
+      (result, safe && sb && sa && decide (after.toNat < before.toNat) && rest)
+    | .stop state => (.done state, safe)
+    | .ret value => (.ret value, safe)
+
 /-- Execute the same structural control flow while collecting primitive guards.
 Functions return their guards when invoked, including closures stored in joins. -/
 def term {interp : Named.Interp} : Term Γ t → Environment Γ interp → Model t interp × Bool
@@ -329,6 +345,13 @@ def term {interp : Named.Interp} : Term Γ t → Environment Γ interp → Model
     let (body, sb) := term (interp := interp) body env
     let (result, safe) := each (call2 body) xs initial
     (result, sx && si && sb && safe)
+  | .measured measure initial body, env =>
+    let (measure, sm) := term (interp := interp) measure env
+    let (initial, si) := term (interp := interp) initial env
+    let (body, sb) := term (interp := interp) body env
+    let (start, ss) := measure initial
+    let (result, safe) := measured measure body (start.toNat + 1) initial
+    (result, sm && si && sb && ss && safe)
   | .exitCase value done returned, env =>
     let (value, sv) := term (interp := interp) value env
     let (done, sd) := term (interp := interp) done env

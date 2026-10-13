@@ -76,6 +76,8 @@ theorem term_erases {interp : Named.Interp} (body : Term Γ t)
   | stop input ih => exact ih model native related
   | ret input ih => exact ih model native related
   | each xs initial body ihx ihi ihb => exact each_erases (ihb model native related) (ihx model native related) (ihi model native related)
+  | measured measure initial body ihm ihi ihb =>
+    exact measured_erases (ihm model native related) (ihb model native related) (ihi model native related)
   | exitCase value done returned ihe ihd ihr =>
     have output := ihe model native related
     cases hx : (term value model).1 <;> cases hy : Denote.term value native

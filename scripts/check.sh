@@ -126,6 +126,7 @@ run_verify_data() {
   timed scripts/shallow-arrays.mjs "$js" scripts/shallow-arrays.mjs
   timed scripts/shallow-optionals.mjs "$js" scripts/shallow-optionals.mjs
   timed scripts/shallow-loops.mjs "$js" scripts/shallow-loops.mjs
+  timed scripts/shallow-measured.mjs "$js" scripts/shallow-measured.mjs
   timed scripts/shallow-collections.mjs "$js" scripts/shallow-collections.mjs
   timed scripts/shallow-records.mjs "$js" scripts/shallow-records.mjs
   timed scripts/shallow-unions.mjs "$js" scripts/shallow-unions.mjs

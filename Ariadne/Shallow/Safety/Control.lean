@@ -10,6 +10,15 @@ theorem each_value (body : α → σ → Step σ τ × Bool) (values : List α) 
     | mk step safe =>
       cases step <;> simp [each, Loop.each, called, ih]
 
+theorem measured_value (measure : σ → Int × Bool) (body : σ → Step σ τ × Bool) (budget : Nat) (initial : σ) :
+    (measured measure body budget initial).1 = Measured.iterate (fun state => (body state).1) budget initial := by
+  induction budget generalizing initial with
+  | zero => rfl
+  | succ budget ih =>
+    cases called : body initial with
+    | mk step safe =>
+      cases step <;> simp [measured, Measured.iterate, called, ih]
+
 theorem foldl_value (body : σ → α → σ × Bool) (values : List α) (initial : σ) (safe : Bool) :
     (values.foldl (fun (state, safe) value =>
       let (state, step) := body state value
