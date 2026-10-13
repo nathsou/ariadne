@@ -74,6 +74,7 @@ run_shallow_values() {
   lake build Examples.ReferenceSource.Registers
   lake build Examples.ReferenceSource.Decision
   lake build Examples.ReferenceSource.Tree
+  lake build Examples.ReferenceSource.TreeRelation
   for source in examples/tamper/*.ts; do
     stem=$(basename "$source" .ts)
     lake build "Examples.Tamper.$stem"

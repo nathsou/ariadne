@@ -41,6 +41,10 @@ structure Layout (heap : Heap) (address : Nat) (native : State') (pA cA : Nat) :
   parentsMap : heap[pA]? = some (.map (stringStrings native.parents.entries))
   childrenMap : ∃ enc, heap[cA]? = some (.map enc) ∧ Children heap pA cA enc native.children.entries
   distinct : pA ≠ cA ∧ address ≠ pA ∧ address ≠ cA
+  /-- Child lists are distinct arrays, none of them the instance. -/
+  unique : ∀ enc, heap[cA]? = some (.map enc) → (enc.map Prod.snd).Nodup ∧ .ref address ∉ enc.map Prod.snd
+  /-- Child lists stay below the dense-array length limit. -/
+  lengths : ∀ e ∈ native.children.entries, e.2.length < 4294967296
 
 /-- A call keeps every object it found, except the two maps. -/
 def Keeps (before after : Heap) (pA cA : Nat) : Prop :=
@@ -136,22 +140,145 @@ theorem Children.set {heap : Heap} {pA cA : Nat} {k : JSString} {v : List JSStri
 
 /-! ## Layouts -/
 
-theorem Layout.rewrite {heap heap' : Heap} {address : Nat} {native : State'} {pA cA : Nat}
-    (l : Layout heap address native pA cA) (native' : State')
-    (agree : ∀ i, i < heap.length → i ≠ pA → i ≠ cA → heap'[i]? = heap[i]?)
-    (parents : heap'[pA]? = some (.map (stringStrings native'.parents.entries)))
-    (children : ∃ enc, heap'[cA]? = some (.map enc) ∧ Children heap' pA cA enc native'.children.entries) :
-    Layout heap' address native' pA cA := by
-  obtain ⟨d1, d2, d3⟩ := l.distinct
-  exact ⟨(agree address (bound_of_some l.instance_) d2 d3).trans l.instance_, parents, children, l.distinct⟩
+theorem Children.refs {heap : Heap} {pA cA : Nat} :
+    ∀ {enc : List (Value × Value)} {es : List (JSString × List JSString)},
+      Children heap pA cA enc es → ∀ val ∈ enc.map Prod.snd, ∃ a, val = .ref a ∧ a < heap.length
+  | [], [], _ => by simp
+  | _ :: _, _ :: _, ⟨_, ⟨a, value, lookup, _, _⟩, rest⟩ => by
+    intro val member
+    simp only [List.map_cons, List.mem_cons] at member
+    rcases member with rfl | member
+    · exact ⟨a, value, bound_of_some lookup⟩
+    · exact Children.refs rest val member
 
-/-- A call that keeps the two maps' objects keeps the layout. -/
+theorem mapSet_snd_mem {xs : List (Value × Value)} {key v : Value} :
+    ∀ val ∈ (mapSet xs key v).map Prod.snd, val = v ∨ val ∈ xs.map Prod.snd := by
+  induction xs with
+  | nil => simp [mapSet]
+  | cons entry xs ih =>
+    rcases entry with ⟨k, w⟩
+    intro val member
+    simp only [mapSet] at member
+    split at member
+    · simp only [List.map_cons, List.mem_cons] at member ⊢
+      rcases member with h | h
+      · exact Or.inl h
+      · exact Or.inr (Or.inr h)
+    · simp only [List.map_cons, List.mem_cons] at member ⊢
+      rcases member with h | h
+      · exact Or.inr (Or.inl h)
+      · rcases ih val h with h | h
+        · exact Or.inl h
+        · exact Or.inr (Or.inr h)
+
+theorem mapSet_nodup {xs : List (Value × Value)} {key v : Value} (nodup : (xs.map Prod.snd).Nodup)
+    (fresh : v ∉ xs.map Prod.snd) : ((mapSet xs key v).map Prod.snd).Nodup := by
+  induction xs with
+  | nil => simp [mapSet]
+  | cons entry xs ih =>
+    rcases entry with ⟨k, w⟩
+    simp only [List.map_cons, List.nodup_cons, List.mem_cons, not_or] at nodup fresh
+    simp only [mapSet]
+    split
+    · simp only [List.map_cons, List.nodup_cons]
+      exact ⟨fresh.2, nodup.2⟩
+    · simp only [List.map_cons, List.nodup_cons]
+      refine ⟨fun member => ?_, ih nodup.2 fresh.2⟩
+      rcases mapSet_snd_mem w member with h | h
+      · exact fresh.1 h.symm
+      · exact nodup.1 h
+
+theorem MapEntries.mem_set {κ υ : Type} [BEq κ] {xs : List (κ × υ)} {k : κ} {v : υ} :
+    ∀ e ∈ MapEntries.set xs k v, e.2 = v ∨ e ∈ xs := by
+  induction xs with
+  | nil => simp [MapEntries.set]
+  | cons entry xs ih =>
+    rcases entry with ⟨k', v'⟩
+    intro e member
+    simp only [MapEntries.set] at member
+    split at member
+    · rcases List.mem_cons.mp member with rfl | member
+      · exact Or.inl rfl
+      · exact Or.inr (List.mem_cons_of_mem _ member)
+    · rcases List.mem_cons.mp member with rfl | member
+      · exact Or.inr (List.mem_cons_self ..)
+      · rcases ih e member with h | h
+        · exact Or.inl h
+        · exact Or.inr (List.mem_cons_of_mem _ h)
+
+theorem MapEntries.get_mem {κ υ : Type} [BEq κ] {xs : List (κ × υ)} {k : κ} {v : υ}
+    (found : MapEntries.get xs k = some v) : ∃ k', (k', v) ∈ xs := by
+  induction xs with
+  | nil => simp [MapEntries.get] at found
+  | cons entry xs ih =>
+    rcases entry with ⟨k', v'⟩
+    simp only [MapEntries.get] at found
+    split at found
+    · cases found; exact ⟨k', List.mem_cons_self ..⟩
+    · obtain ⟨k'', member⟩ := ih found
+      exact ⟨k'', List.mem_cons_of_mem _ member⟩
+
 theorem Layout.extend {heap heap' : Heap} {address : Nat} {native : State'} {pA cA : Nat}
     (l : Layout heap address native pA cA) (agree : ∀ i, i < heap.length → heap'[i]? = heap[i]?) :
     Layout heap' address native pA cA := by
   obtain ⟨enc, lookup, rest⟩ := l.childrenMap
-  exact l.rewrite native (fun i hi _ _ => agree i hi) ((agree _ (bound_of_some l.parentsMap)).trans l.parentsMap)
-    ⟨enc, (agree _ (bound_of_some lookup)).trans lookup, rest.mono (fun i hi _ _ => agree i hi)⟩
+  have cSame := agree _ (bound_of_some lookup)
+  refine ⟨(agree _ (bound_of_some l.instance_)).trans l.instance_,
+    (agree _ (bound_of_some l.parentsMap)).trans l.parentsMap,
+    ⟨enc, cSame.trans lookup, rest.mono (fun i hi _ _ => agree i hi)⟩, l.distinct, fun enc' h => ?_, l.lengths⟩
+  rw [cSame] at h
+  exact l.unique enc' h
+
+/-- Rewriting only the parent map keeps the layout. -/
+theorem Layout.rewriteParents {heap heap' : Heap} {address : Nat} {native : State'} {pA cA : Nat}
+    (l : Layout heap address native pA cA) (parents' : JSMap JSString JSString)
+    (agree : ∀ i, i < heap.length → i ≠ pA → heap'[i]? = heap[i]?)
+    (parents : heap'[pA]? = some (.map (stringStrings parents'.entries))) :
+    Layout heap' address { native with parents := parents' } pA cA := by
+  obtain ⟨d1, d2, d3⟩ := l.distinct
+  obtain ⟨enc, lookup, rest⟩ := l.childrenMap
+  have cSame := agree _ (bound_of_some lookup) (Ne.symm d1)
+  refine ⟨(agree _ (bound_of_some l.instance_) d2).trans l.instance_, parents,
+    ⟨enc, cSame.trans lookup, rest.mono (fun i hi np _ => agree i hi np)⟩, l.distinct, fun enc' h => ?_, l.lengths⟩
+  rw [cSame] at h
+  exact l.unique enc' h
+
+/-- Pointing one children entry at a fresh array, and rewriting the parent map,
+keeps the layout. -/
+theorem Layout.rewriteSet {heap heap' : Heap} {address : Nat} {native : State'} {pA cA : Nat}
+    (l : Layout heap address native pA cA) (parents' : JSMap JSString JSString) (k : JSString)
+    (v : List JSString) (a : Nat) (enc : List (Value × Value)) (cLookup : heap[cA]? = some (.map enc))
+    (agree : ∀ i, i < heap.length → i ≠ pA → i ≠ cA → heap'[i]? = heap[i]?)
+    (parents : heap'[pA]? = some (.map (stringStrings parents'.entries)))
+    (children : heap'[cA]? = some (.map (mapSet enc (.string k) (.ref a))))
+    (array : heap'[a]? = some (.array (v.map .string))) (fresh : heap.length ≤ a)
+    (short : v.length < 4294967296) :
+    Layout heap' address { parents := parents', children := native.children.set k v } pA cA := by
+  obtain ⟨d1, d2, d3⟩ := l.distinct
+  obtain ⟨enc0, lookup0, rest⟩ := l.childrenMap
+  rw [cLookup] at lookup0
+  cases lookup0
+  have hp := bound_of_some l.parentsMap
+  have hc := bound_of_some cLookup
+  have ha := bound_of_some l.instance_
+  have notOld : Value.ref a ∉ enc.map Prod.snd := by
+    intro member
+    obtain ⟨b, same, bound⟩ := rest.refs _ member
+    cases same
+    omega
+  refine ⟨(agree _ ha d2 d3).trans l.instance_, parents,
+    ⟨_, children, Children.set array (by omega) (by omega) (rest.mono agree)⟩, l.distinct, fun enc' h => ?_, ?_⟩
+  · rw [children] at h
+    cases h
+    obtain ⟨nodup, notSelf⟩ := l.unique enc cLookup
+    refine ⟨mapSet_nodup nodup notOld, fun member => ?_⟩
+    rcases mapSet_snd_mem _ member with h | h
+    · cases h; omega
+    · exact notSelf h
+  · intro e member
+    rcases MapEntries.mem_set e member with h | h
+    · rw [h]; exact short
+    · exact l.lengths e h
 
 theorem Keeps.of_agree {heap heap' : Heap} {pA cA : Nat} (longer : heap.length ≤ heap'.length)
     (agree : ∀ i, i < heap.length → heap'[i]? = heap[i]?) : Keeps heap heap' pA cA :=
@@ -246,10 +373,10 @@ theorem add_source (before : State) (address : Nat) (native : State') (pA cA : N
     simp only [bindArguments, State.declare, State.alloc, List.zip_cons_cons, List.zip_nil_right,
       List.foldl_cons, List.foldl_nil, List.length_append, List.length_cons, List.length_nil, Nat.zero_add]
     refine ⟨by simp, trivial, ?_, ?_, trivial⟩
-    · refine input.rewrite _ (fun i hi np nc => ?_) ?_
-        ⟨_, ?_, Children.set (a := before.heap.length + 1 + 1) ?_ ?_ ?_ (children.mono (fun i hi np nc => ?_))⟩
+    · refine input.rewriteSet native.parents node [] (before.heap.length + 1 + 1) enc cLookup
+        (fun i hi np nc => ?_) ?_ ?_ ?_ (by omega) (by simp)
       all_goals heap_simp
-      all_goals first | rfl | omega | exact input.parentsMap | done
+      all_goals first | rfl | exact input.parentsMap | done
     · refine ⟨by simp, fun i hi np nc => ?_⟩
       heap_simp
 

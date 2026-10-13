@@ -143,9 +143,12 @@ theorem new_source (before : State) (span : Span) :
   have length : ((before.alloc (.map [])).2.alloc (.map [])).2.heap.length = n + 2 := by
     simp [State.alloc, n]
   rw [length] at evaluated
-  refine ⟨_, Extracted_reference_tree.certificate.transfer_evaluation evaluated, ?_, ?_, ⟨[], ?_, trivial⟩, ?_⟩
+  refine ⟨_, Extracted_reference_tree.certificate.transfer_evaluation evaluated, ?_, ?_, ⟨[], ?_, trivial⟩, ?_,
+    fun enc h => ?_, ?_⟩
   all_goals simp [State.alloc, n, «Tree##new», JSMap.empty, stringStrings, encodeEntries,
-    NativeConstruct.«Tree#state»]
+    NativeConstruct.«Tree#state»] at *
+  subst h
+  simp
 
 /-! ## Call traces -/
 

@@ -272,8 +272,8 @@ theorem move_tail (heap0 : Heap) (st : State) (address : Nat) (d : State') (pA c
           simp [Examples.Proofs.ReferenceTree.after, Examples.Proofs.ReferenceTree.attached, JSMap.get, seen]
         rw [attached]
         simp only [State.alloc, List.length_set]
-        refine ⟨Or.inl rfl, rfl, layout.rewrite _ (fun i hi np nc => ?_) ?_
-          ⟨_, ?_, Children.set (a := out.state.heap.length) ?_ ?_ ?_ (children'.mono (fun i hi np nc => ?_))⟩,
+        refine ⟨Or.inl rfl, rfl, layout.rewriteSet (d.parents.set node p) p (v ++ [node]) out.state.heap.length enc'
+          cLookup' (fun i hi np nc => ?_) ?_ ?_ ?_ (Nat.le_refl _) (by simp; omega),
           keeps.trans ⟨by simp, fun i hi np nc => ?_⟩⟩
         all_goals heap_simp
         all_goals first | omega | simp [JSMap.set, stringStrings, mapSet_string]
@@ -286,8 +286,8 @@ theorem move_tail (heap0 : Heap) (st : State) (address : Nat) (d : State') (pA c
         rw [attached]
         simp only [State.alloc, List.length_set, List.length_append, List.length_cons, List.length_nil,
           List.nil_append, Nat.zero_add]
-        refine ⟨Or.inl rfl, rfl, layout.rewrite _ (fun i hi np nc => ?_) ?_
-          ⟨_, ?_, Children.set (a := out.state.heap.length + 1) ?_ ?_ ?_ (children'.mono (fun i hi np nc => ?_))⟩,
+        refine ⟨Or.inl rfl, rfl, layout.rewriteSet (d.parents.set node p) p [node] (out.state.heap.length + 1) enc'
+          cLookup' (fun i hi np nc => ?_) ?_ ?_ ?_ (by omega) (by simp),
           keeps.trans ⟨by simp, fun i hi np nc => ?_⟩⟩
         all_goals heap_simp
         all_goals first | omega | simp [JSMap.set, stringStrings, mapSet_string]
@@ -340,7 +340,7 @@ theorem move_middle (heap0 : Heap) (st : State) (address : Nat) (a : State') (pA
       simp [Examples.Proofs.ReferenceTree.detached, JSMap.get, up]
     refine move_tail heap0 _ address _ pA cA node parent st.heap.length ?_ ?_ below range fits ?_ ?_ ?_ ?_
     · rw [det]
-      refine input.rewrite _ (fun i hi np nc => ?_) ?_ ⟨enc, ?_, children.mono (fun i hi np nc => ?_)⟩
+      refine input.rewriteParents (a.parents.delete node) (fun i hi np => ?_) ?_
       all_goals simp only [State.declare, State.alloc]
       all_goals heap_simp
       all_goals first | omega | simp [JSMap.delete, stringStrings, mapDelete_string]
@@ -402,8 +402,8 @@ theorem move_middle (heap0 : Heap) (st : State) (address : Nat) (a : State') (pA
         omega
       refine move_tail heap0 _ address _ pA cA node parent st.heap.length ?_ ?_ below range fits ?_ ?_ ?_ ?_
       · rw [det]
-        refine input.rewrite _ (fun i hi np nc => ?_) ?_
-          ⟨_, ?_, Children.set (a := after.heap.length) ?_ ?_ ?_ (children.mono (fun i hi np nc => ?_))⟩
+        refine input.rewriteSet (a.parents.delete node) o (v.filter (· != node)) after.heap.length enc cLookup
+          (fun i hi np nc => ?_) ?_ ?_ ?_ (by omega) (by obtain ⟨_, m⟩ := MapEntries.get_mem seen; exact Nat.lt_of_le_of_lt (List.length_filter_le _ _) (input.lengths _ m))
         all_goals try simp only [State.alloc]
         all_goals try heap_simp
         all_goals try (rw [keep' i (by omega)]; heap_simp)
@@ -463,8 +463,8 @@ theorem move_middle (heap0 : Heap) (st : State) (address : Nat) (a : State') (pA
         omega
       refine move_tail heap0 _ address _ pA cA node parent st.heap.length ?_ ?_ below range fits ?_ ?_ ?_ ?_
       · rw [det]
-        refine input.rewrite _ (fun i hi np nc => ?_) ?_
-          ⟨_, ?_, Children.set (a := after.heap.length) ?_ ?_ ?_ (children.mono (fun i hi np nc => ?_))⟩
+        refine input.rewriteSet (a.parents.delete node) o [] after.heap.length enc cLookup
+          (fun i hi np nc => ?_) ?_ ?_ ?_ (by omega) (by simp)
         all_goals try simp only [State.alloc]
         all_goals try heap_simp
         all_goals try (rw [keep' i (by omega)]; heap_simp)
