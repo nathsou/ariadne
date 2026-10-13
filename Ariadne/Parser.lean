@@ -387,7 +387,7 @@ mutual
     | 0 => budget
     | n + 1 =>
       let t ← peek
-      if ["async", "class", "interface", "enum", "namespace", "try", "throw", "do", "with", "var", "debugger"].contains t.text then unsupported t
+      if ["async", "class", "interface", "enum", "namespace", "try", "do", "with", "var", "debugger"].contains t.text then unsupported t
       match t.text with
       | "<decreases>" =>
         let _ ← pop
@@ -465,6 +465,26 @@ mutual
         let value ← if ← isNext ";" then pure (.literal .undefined t.span) else expression n
         let _ ← expect ";"
         return .return_ value t.span
+      | "throw" =>
+        let _ ← pop
+        let next ← peek
+        if next.lineBreak then
+          fail "A1005" "line break after 'throw' changes JavaScript behavior" next
+            (some "Put the thrown expression on the same line as 'throw'.")
+        let unsupportedThrow := "only `throw new Error(\"message\")` is supported"
+        if next.text != "new" then fail "A1001" unsupportedThrow next
+        let _ ← pop
+        let error ← peek
+        if error.text != "Error" then fail "A1001" unsupportedThrow error
+        let _ ← pop
+        let _ ← expect "("
+        let message ← peek
+        let some units := message.stringValue
+          | fail "A1001" "a thrown error's message must be a string literal" message
+        let _ ← pop
+        let _ ← expect ")"
+        let _ ← expect ";"
+        return .throw_ units t.span
       | "break" | "continue" =>
         let _ ← pop
         let _ ← expect ";"

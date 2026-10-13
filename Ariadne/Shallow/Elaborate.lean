@@ -101,6 +101,52 @@ def prepare (p : Program) (fuel : Nat) (f : Ariadne.Function) : Checked Prepared
     Stmt.let_ false (StatePlan.loanName name) none (.var name f.span) f.span) ++ [body]) f.span
   return ⟨ctx, .pair result (Core.environmentType states), body, loans⟩
 
+/-- Whether a statement can throw: it throws, or returns the result of a call
+to a function whose body can. Other uses of such calls are not extracted.
+Structural on the fuel, so the kernel evaluates it in elaboration checks. -/
+def raisesStmt (p : Program) : Nat → Stmt → Bool
+  | 0, _ => false
+  | _ + 1, .throw_ .. => true
+  | n + 1, .return_ (.call (.var name _) _ _) _ => match p.functions.find? (·.name == name) with
+    | some g => raisesStmt p n g.body
+    | none => false
+  | n + 1, .block ss _ => ss.any (raisesStmt p n)
+  | n + 1, .if_ _ a b _ => raisesStmt p n a || raisesStmt p n b
+  | n + 1, .while_ _ b _ | n + 1, .for_ _ _ _ b _ | n + 1, .forOf _ _ _ b _ | n + 1, .measured _ b _ =>
+    raisesStmt p n b
+  | n + 1, .switch_ _ cases _ => cases.any (fun c => c.2.any (raisesStmt p n))
+  | _, _ => false
+
+def raises (p : Program) (fuel : Nat) (f : Ariadne.Function) : Bool := raisesStmt p fuel f.body
+
+/-- A throwing function returns `inr value` or `inl message`. Its returns are
+wrapped in `#ok`, its throws become returns of `#fail`, and the result of a
+call to another throwing function is returned unchanged. -/
+def raisingBody (p : Program) (fuel : Nat) : Nat → Stmt → Stmt
+  | 0, stmt => stmt
+  | n + 1, stmt => match stmt with
+    | .return_ value span =>
+      let direct : Bool := match value with
+        | .call (.var name _) _ _ => (p.functions.find? (·.name == name)).any (raises p fuel)
+        | _ => false
+      if direct then stmt else .return_ (.call (.var "#ok" span) [value] span) span
+    | .throw_ message span => .return_ (.call (.var "#fail" span) [.literal (.string message) span] span) span
+    | .block ss span => .block (ss.map (raisingBody p fuel n)) span
+    | .if_ c a b span => .if_ c (raisingBody p fuel n a) (raisingBody p fuel n b) span
+    | .while_ c b span => .while_ c (raisingBody p fuel n b) span
+    | .for_ i c u b span => .for_ i c u (raisingBody p fuel n b) span
+    | .forOf m x xs b span => .forOf m x xs (raisingBody p fuel n b) span
+    | .measured m b span => .measured m (raisingBody p fuel n b) span
+    | .switch_ v cases span => .switch_ v (cases.map fun (label, ss) => (label, ss.map (raisingBody p fuel n))) span
+    | _ => stmt
+
+/-- The Core result type and body of a function, with throws lowered. -/
+def raising (p : Program) (f : Ariadne.Function) (result : Core.Ty) (body : Stmt) : Core.Ty × Stmt :=
+  if raises p 256 f then
+    let body := if result == .unit then Stmt.block [body, .return_ (.literal .undefined f.span) f.span] f.span else body
+    (.sum .string result, raisingBody p 256 256 body)
+  else (result, body)
+
 def lookup : (ctx : Context) → String → Option ((t : Core.Ty) × Var (Types ctx) t)
   | [], _ => none
   | b :: ctx, wanted =>
@@ -648,8 +694,8 @@ mutual
         if !(← StatePlan.effects p n f).isEmpty then
           refusal "A5102" "this effectful call needs statement-level state threading" span
         let inputs ← f.params.mapM fun param => type p param.ty param.span
-        let result ← type p f.result f.span
-        let closed ← lambda p n [] inputs f.params result f.body
+        let (result, body) := raising p f (← type p f.result f.span) f.body
+        let closed ← lambda p n [] inputs f.params result body
         applications p n ctx ⟨functionType inputs result, .closed closed⟩ args span
       | .lambda _ _ span => refusal "A5104" "callback lowering is not implemented yet" span
       | _ => refusal "A5104" "this expression has no shallow model yet" expr.span
@@ -660,6 +706,10 @@ mutual
     | 0, _, _ => refusal "A5101" "expression nesting budget exhausted" expr.span
     | n + 1, t, .conditional c a b _ => do
       condition p n ctx c [.return_ a a.span] [.return_ b b.span] t
+    | n + 1, .sum _ value, .call (.var "#ok" _) [e] _ => do
+      return .inr (← asType p n ctx e value)
+    | _ + 1, .sum error _, .call (.var "#fail" _) [.literal (.string message) _] span => do
+      return .inl (← coerce error ⟨.string, .string message⟩ span)
     | n + 1, .option inner, .record fields span =>
       return .some (← asType p n ctx (.record fields span) inner)
     | n + 1, .named declaration, .record fields span => do
@@ -1101,7 +1151,7 @@ mutual
         let ⟨a, value⟩ ← expression p n ctx e
         return .let_ "ignored" value (← statements p n (binding "#ignored" a :: ctx) rest t)
       | .switch_ value cases span =>
-        let direct := match value with
+        let direct : Bool := match value with
           | .member (.var name _) _ _ => match lookup ctx name with
             | some ⟨.named ⟨_, .sum ..⟩, _⟩ => true
             | _ => false
@@ -1237,7 +1287,10 @@ def function (p : Program) (name : String) : Checked Core.Function := do
   let some f := p.functions.find? (·.name == name)
     | refusal "A5101" "unknown extraction entry point" {}
   let prepared ← prepare p 512 f
-  let body ← statements p 512 prepared.ctx [prepared.body] prepared.result
-  return { params := Types prepared.ctx, result := prepared.result, body }
+  if raises p 256 f && !prepared.loans.isEmpty then
+    refusal "A5102" "a throwing function cannot also update its arguments yet" f.span
+  let (result, body) := raising p f prepared.result prepared.body
+  let body ← statements p 512 prepared.ctx [body] result
+  return { params := Types prepared.ctx, result, body }
 
 end Ariadne.Shallow.Elaborate

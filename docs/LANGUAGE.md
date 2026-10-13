@@ -15,7 +15,7 @@ allowed). Local declarations infer types, except empty arrays need annotations.
 | Containers | Dense scalar arrays, scalar tuples, flat records, scalar-key/scalar-value Maps |
 | Types | Explicit aliases and scalar unions; optional values can be consumed with `??` |
 | Locals | `let`, `const`, assignment; scalar `+=`, `-=`, `*=`, `/=`; number `++`, `--` on local variables |
-| Control | `if`, conditional expressions, `while`, three-part `for`, `return`, `break`, `continue` |
+| Control | `if`, conditional expressions, `while`, three-part `for`, `return`, `break`, `continue`, `throw new Error("message")` with a string literal message |
 | Calls | Named functions, including recursion; supported methods; explicitly typed arrow callbacks |
 | Operators | Numeric `+ - * / %`, comparisons, `===`, `!==`, boolean `! && ||`, nullish `??` |
 
@@ -51,7 +51,8 @@ reinserting puts it last. Object identity keys are not accepted.
 
 Imports, modules spanning multiple source files, JavaScript input, generics,
 classes, interfaces, enums, destructuring, spread, templates, regular expressions,
-async/await, promises, generators, exceptions/catch, getters/setters, proxies,
+async/await, promises, generators, `try`/`catch`, throwing anything but
+`new Error("literal")`, shadowing `Error`, getters/setters, proxies,
 reflection, dynamic property names on records, prototype access, `eval`, `any`,
 casts, optional chaining, bitwise operators, and overloaded coercions are rejected.
 Hexadecimal/binary/octal literals, bigint increments, leading-dot numeric literals,

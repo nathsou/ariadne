@@ -235,6 +235,7 @@ def Flow.sequence (a b : Flow) : Flow :=
 def flow : Nat → Stmt → Flow
   | 0, _ => { normal := true }
   | _ + 1, .return_ .. => { returned := true }
+  | _ + 1, .throw_ .. => { returned := true }
   | _ + 1, .break_ .. => { broken := true }
   | _ + 1, .continue_ .. => { continued := true }
   | n + 1, .block ss _ => ss.foldl (fun out stmt => out.sequence (flow n stmt)) { normal := true }
@@ -383,7 +384,7 @@ def literalType (p : Program) : Literal → Ty
 
 def reserved (name : String) : Bool :=
   ["#templateString", "NaN", "Infinity", "Math", "Number", "BigInt", "Map", "Set", "Array", "Object", "Reflect",
-    "eval", "Function", "globalThis", "__proto__", "constructor", "prototype"].contains name
+    "eval", "Function", "globalThis", "__proto__", "constructor", "prototype", "Error"].contains name
 
 def shadowsCallable (program : Program) (name : String) : Bool :=
   program.functions.any (·.name == name) || program.classes.any (·.name == name)
@@ -1006,6 +1007,7 @@ mutual
       | .continue_ span =>
         if ctx.loopDepth == 0 then error "A2009" "continue is only valid inside a loop" span
         return ctx
+      | .throw_ _ _ => return ctx
 
   def checkBlock (fuel : Nat) (ctx : Context) (stmts : List Stmt) : Checked Context := do
     match fuel with

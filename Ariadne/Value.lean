@@ -44,6 +44,8 @@ inductive Fault where
   | rangeError (message : String)
   | referenceError (name : String)
   | invariant (message : String)
+  /-- A source `throw new Error(message)`. -/
+  | thrown (message : JSString)
   deriving Repr, BEq, DecidableEq, Inhabited
 
 abbrev Result := Except Fault

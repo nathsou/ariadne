@@ -891,7 +891,9 @@ In addition:
 5. **The reference semantics.** Should the operational model eventually be proved
    against a semantics derived from the ECMAScript specification, or replaced by
    one?
-6. **Exceptions.** Keep rejecting `throw`, or model it with `Except` in tier 0?
+6. **Exceptions.** Resolved in M5: `throw new Error("message")` is a source
+   fault, and a function that can throw is extracted with a `Sum string τ`
+   result. `try`/`catch` stays rejected.
 
 ## Related work
 

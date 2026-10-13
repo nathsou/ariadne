@@ -10,7 +10,7 @@ when their exit criteria pass; finite native tests are not universal proofs.
 | M2 | Complete | Typed Core, scalar/list/Map/Set extraction, owned local updates, structural loops, pure calls, structural denotation, three-way differential and tamper tests. Lawful named records/unions and direct borrowed-state calls are implemented; class states, Int53 guards and original reference extraction are implemented; the full integration regression gate passed. |
 | M3 | Complete | All three original reference acceptance proofs hold universally over emitted definitions. The native proof library includes loop, collection, string and stable-sort laws, and general Int53 arithmetic correspondence, including rounded nonintegral division. |
 | M4 | Acceptance complete; general lemma partial | All three reference programs are proved against the original source evaluator for all inputs, and their reference theorems hold of source runs ([below](#reference-source-transfer)). The general fundamental lemma covers scalar, guarded Int53 and data-read fragments; for other stateful/data programs without a source theorem, the elaborator and denotation remain trusted. |
-| M5 | In progress | Measured `while` loops are extracted ([below](#measured-while-loops-tier-1)). Measured recursion, larger ownership, polymorphism, exceptions and scalar backend integration are pending. |
+| M5 | In progress | Measured `while` loops ([below](#measured-while-loops-tier-1)) and `throw` ([below](#thrown-errors)) are extracted. Measured recursion, larger ownership, polymorphism and scalar backend integration are pending. |
 
 ## Reference specifications
 
@@ -917,3 +917,37 @@ Not yet covered:
 
 - measured recursion;
 - generated source theorems for loops.
+
+## Thrown errors
+
+`throw new Error("message")` is now part of the language, with a string
+literal message; `try`/`catch` stays rejected, and `Error` is reserved so the
+constructor cannot be shadowed.
+
+- **Evaluator.** The statement fails with the new fault
+  `Fault.thrown message`, which propagates through calls and builtins like
+  every other fault.
+- **Extraction.** A function can throw when its body throws, or when it
+  returns the result of a call to a function that can. Its Core result is
+  `.sum .string τ`, so the emitted definition returns
+  `Sum JSString τ`:
+  - `return e` becomes `Sum.inr e`;
+  - `throw new Error(m)` becomes `Sum.inl m`;
+  - a returned call to another throwing function is passed through
+    unchanged.
+- **Unsupported uses.** Any other use of a throwing call has the wrong type and
+  is refused. So is a throwing function that also updates its arguments.
+
+The lowering happens before elaboration, so the existing Core, denotation and
+erasure proofs apply unchanged. `Examples/Proofs/ShallowThrows.lean` proves
+facts about the emitted results.
+
+`scripts/shallow-throws.mjs` compares each fixture case across three
+implementations: the TypeScript source, the emitted definition and the
+original evaluator. A source `Error`'s message must equal the emitted
+`Sum.inl` message and the evaluator's `Fault.thrown` message.
+
+Not yet covered:
+
+- propagation through calls in non-tail positions;
+- source theorems relating `Sum.inl` to the evaluator's fault.

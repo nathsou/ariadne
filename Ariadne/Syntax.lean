@@ -107,6 +107,8 @@ mutual
     | return_ (value : Expr) (span : Span)
     | break_ (span : Span)
     | continue_ (span : Span)
+    /-- `throw new Error(message)` with a string literal message. -/
+    | throw_ (message : List UInt16) (span : Span)
     deriving Repr, BEq, Inhabited
 end
 
@@ -119,7 +121,7 @@ def Expr.span : Expr → Span
 def Stmt.span : Stmt → Span
   | .block _ s | .let_ _ _ _ _ s | .assign _ _ s | .update _ _ _ s | .expr _ s
   | .if_ _ _ _ s | .while_ _ _ s | .for_ _ _ _ _ s | .return_ _ s
-  | .break_ s | .continue_ s | .forOf _ _ _ _ s | .switch_ _ _ s | .measured _ _ s => s
+  | .break_ s | .continue_ s | .forOf _ _ _ _ s | .switch_ _ _ s | .measured _ _ s | .throw_ _ s => s
 
 structure Function where
   name : String

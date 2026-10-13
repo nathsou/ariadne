@@ -544,6 +544,7 @@ mutual
       let out ← loop program n initial.state condition body (some update)
       return { out with state := { out.state with env := outer } }
     | n + 1, s, .measured _ body _ => exec program n s body
+    | _ + 1, _, .throw_ message _ => .error (.thrown message)
     | n + 1, s, .forOf _ name collection body _ => do
       let (value, s) ← evalExpr program n s collection
       let (xs, s) ← iterable s value
