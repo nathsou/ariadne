@@ -44,4 +44,17 @@ def findIndex (f : α → Float.Model → Bool) (xs : List α) : Float.Model :=
   have h := congrArg (List.filter f) (List.zipIdx_map_fst 0 xs)
   simpa only [filter, List.filter_map, Function.comp_def] using h
 
+@[simp] theorem find_unindexed (f : α → Bool) (xs : List α) : find (fun x _ => f x) xs = xs.find? f := by
+  have h := congrArg (List.find? f) (List.zipIdx_map_fst 0 xs)
+  simp only [find, List.find?_map, Function.comp_def] at h ⊢
+  exact h
+
+@[simp] theorem some_unindexed (f : α → Bool) (xs : List α) : some (fun x _ => f x) xs = xs.any f := by
+  have h := congrArg (List.any · f) (List.zipIdx_map_fst 0 xs)
+  simpa only [some, List.any_map, Function.comp_def] using h
+
+@[simp] theorem every_unindexed (f : α → Bool) (xs : List α) : every (fun x _ => f x) xs = xs.all f := by
+  have h := congrArg (List.all · f) (List.zipIdx_map_fst 0 xs)
+  simpa only [every, List.all_map, Function.comp_def] using h
+
 end Ariadne.Shallow.JSArray

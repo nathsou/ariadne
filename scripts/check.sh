@@ -116,6 +116,7 @@ run_verify_source() {
   timed scripts/shared-source.mjs "$js" scripts/shared-source.mjs
   timed scripts/guarded-shared-source.mjs "$js" scripts/guarded-shared-source.mjs
   timed scripts/int53-source-transfer.mjs "$js" scripts/int53-source-transfer.mjs
+  timed scripts/data-source.mjs "$js" scripts/data-source.mjs
 }
 
 run_verify_data() {

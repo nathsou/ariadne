@@ -585,6 +585,192 @@ private def emitDeclaration (program : Program) (declaration : Named.Declaration
     s!"    | {lc} value => exact congrArg NativeTypes.{name}.{lc} (NativeRepresentations.{leftName}.construct_destruct value)\n" ++
     s!"    | {rc} value => exact congrArg NativeTypes.{name}.{rc} (NativeRepresentations.{rightName}.construct_destruct value)\n\n"
 
+/-! ## Generated weakest-precondition source theorems for array functions
+
+Functions whose body returns an expression over scalar and scalar-array
+parameters, built from scalar operations and the array builtins `filter`,
+`map`, `reduce`, `some`, `every` and `find` with index-free callbacks, receive a
+theorem proved by stepping through the original evaluator. The printer only
+chooses rule applications; the Lean kernel checks every step. -/
+
+/-- Codec name, value constructor and representation relation of a scalar. -/
+private def dataScalar : Core.Ty → Option (String × String × String)
+  | .int => some ("Adequacy.ScalarCodec.bigint", ".bigint", "DataRelation.int")
+  | .number => some ("Adequacy.ScalarCodec.number", ".number", "DataRelation.number")
+  | .bool => some ("Adequacy.ScalarCodec.boolean", ".boolean", "DataRelation.bool")
+  | .string => some ("Adequacy.ScalarCodec.string", ".string", "DataRelation.string")
+  | _ => none
+
+/-- A callback in evaluation order: builtin, element and result types, and the
+native function each call computes. -/
+private structure DataCallback where
+  builtin : String
+  element : Core.Ty
+  result : Core.Ty
+  native : String
+
+private def unusedName (name : String) : Bool := name.startsWith "#unused"
+
+/-- Callback-free scalar terms. -/
+private def dataScalarTerm : Term Γ t → Bool
+  | .var _ | .unit | .bool _ | .int _ | .number _ _ | .string _ => true
+  | .unary _ a => dataScalarTerm a
+  | @Term.binary _ a b _ _ x y => (dataScalar a).isSome && (dataScalar b).isSome && dataScalarTerm x && dataScalarTerm y
+  | _ => false
+
+private def dataCallbacks (label : String) (keys names : List String) : Term Γ t → Option (List DataCallback)
+  | .var _ | .unit | .bool _ | .int _ | .number _ _ | .string _ => some []
+  | .unary _ a => dataCallbacks label keys names a
+  | @Term.binary _ a b _ _ x y => do
+    if (dataScalar a).isNone || (dataScalar b).isNone then none
+    return (← dataCallbacks label keys names x) ++ (← dataCallbacks label keys names y)
+  | @Term.listMap _ a b f xs => do
+    let .lam _ (.lam index body) := f | none
+    if !unusedName index || !dataScalarTerm body then none
+    let text := termText label keys f names
+    return (← dataCallbacks label keys names xs) ++
+      [⟨"map", a, b, s!"(fun _x => {text} _x (_root_.Float.Model.ofNat 0))"⟩]
+  | @Term.listFilter _ a f xs => do
+    let .lam _ (.lam index body) := f | none
+    if !unusedName index || !dataScalarTerm body then none
+    let text := termText label keys f names
+    return (← dataCallbacks label keys names xs) ++
+      [⟨"filter", a, .bool, s!"(fun _x => {text} _x (_root_.Float.Model.ofNat 0))"⟩]
+  | @Term.listSome _ a f xs => do
+    let .lam _ (.lam index body) := f | none
+    if !unusedName index || !dataScalarTerm body then none
+    let text := termText label keys f names
+    return (← dataCallbacks label keys names xs) ++
+      [⟨"some", a, .bool, s!"(fun _x => {text} _x (_root_.Float.Model.ofNat 0))"⟩]
+  | @Term.listEvery _ a f xs => do
+    let .lam _ (.lam index body) := f | none
+    if !unusedName index || !dataScalarTerm body then none
+    let text := termText label keys f names
+    return (← dataCallbacks label keys names xs) ++
+      [⟨"every", a, .bool, s!"(fun _x => {text} _x (_root_.Float.Model.ofNat 0))"⟩]
+  | @Term.listFind _ a f xs => do
+    let .lam _ (.lam index body) := f | none
+    if !unusedName index || !dataScalarTerm body then none
+    let text := termText label keys f names
+    return (← dataCallbacks label keys names xs) ++
+      [⟨"find", a, .bool, s!"(fun _x => {text} _x (_root_.Float.Model.ofNat 0))"⟩]
+  | @Term.listReduce _ b a f initial xs => do
+    let .lam _ (.lam _ (.lam index body)) := f | none
+    if !unusedName index || !dataScalarTerm body || !dataScalarTerm initial then none
+    let text := termText label keys f names
+    return (← dataCallbacks label keys names xs) ++
+      [⟨"reduce", a, b, s!"(fun _acc _x => {text} _acc _x (_root_.Float.Model.ofNat 0))"⟩]
+  | _ => none
+
+private def dataSourceTheorem (program : Program) (namespace_ : String) (f : Ariadne.Function)
+    (core : Core.Function) (names : List String) (keys : List String) (publicAlias : Bool) : Option String := do
+  let .block [.return_ _ _] _ := f.body | none
+  let some index := program.functions.findIdx? (·.name == f.name) | none
+  if names.length != core.params.length || core.params.isEmpty then none
+  -- Parameters: scalars, or arrays of scalars.
+  let mut binders := ""
+  let mut inputs := ""
+  let mut sourceArgs : List String := []
+  let mut realArgs : List String := []
+  let mut obtains := ""
+  for ((ty, name), i) in (core.params.zip names).zipIdx do
+    match ty with
+    | .list element =>
+      let (codec, _, relation) ← dataScalar element
+      binders := binders ++ s!" ({name} : {typeText ty}) (_v{i} : Value) (_fp{i} : Heap.Footprint)"
+      inputs := inputs ++ s!"\n    (_in{i} : (DataRelation.array {relation}).Holds heap _v{i} {name} _fp{i})"
+      sourceArgs := sourceArgs ++ [s!"_v{i}"]
+      realArgs := realArgs ++ [s!".ref _a{i}"]
+      obtains := obtains ++
+        s!"  obtain ⟨_short{i}, -, _a{i}, rfl, _lookup{i}, rfl⟩ := (Adequacy.array_codec_iff {codec}).mp _in{i}\n" ++
+        s!"  simp only [{codec}] at _lookup{i}\n" ++
+        s!"  obtain ⟨_, _lookup{i}'⟩ := getElem_of_some _lookup{i}\n"
+    | ty =>
+      let (_, encode, _) ← dataScalar ty
+      binders := binders ++ s!" ({name} : {typeText ty})"
+      sourceArgs := sourceArgs ++ [s!"{encode} {name}"]
+      realArgs := realArgs ++ [s!"{encode} {name}"]
+  let resultRelation ← match core.result with
+    | .list element => do let (_, _, relation) ← dataScalar element; pure s!"(DataRelation.array {relation})"
+    | .option element => do let (_, _, relation) ← dataScalar element; pure s!"(DataRelation.option {relation})"
+    | ty => do let (_, _, relation) ← dataScalar ty; pure relation
+  let callbacks ← dataCallbacks f.name keys names core.body
+  let checkName := s!"SourceChecks.{ident f.name}"
+  let fn := s!"{checkName}.function"
+  let program_ := s!"_root_.{namespace_}.program"
+  let unfold := s!"{fn}, {program_}, List.getElem!_cons_zero, List.getElem!_cons_succ"
+  let args := "[" ++ String.intercalate ", " realArgs ++ "]"
+  let base := s!"(Adequacy.bindArguments \u007b heap := heap \u007d {fn}.params {args}).heap"
+  let native := s!"({ident f.name}{String.join (names.map (" " ++ ·))})"
+  let mut proof := obtains ++
+    s!"  change WPI {program_} _ (.function {fn}.name) _ _\n" ++
+    "  refine WPI.function (by kernel_rfl) ?_\n" ++
+    s!"  conv => arg 3; simp only [{unfold}]\n" ++
+    s!"  conv => arg 2; simp only [{unfold}]\n" ++
+    s!"  have F0 := Frames.bindArguments \u007b heap := heap \u007d {fn}.params {args}\n"
+  for (arg, i) in realArgs.zipIdx do
+    let position := if i == 0 then "heap.length" else s!"heap.length + {i}"
+    proof := proof ++ s!"  have c{i} : {base}[{position}]? = some (.cell ({arg})) := by\n" ++
+      s!"    simp [{unfold}, Adequacy.bindArguments, State.declare, State.alloc]\n"
+  proof := proof ++ "  wp_data\n"
+  for callback in callbacks do
+    let (_, encode, _) ← dataScalar callback.element
+    let (lemma_, intro) ← match callback.builtin with
+      | "filter" => some (s!"traverse_filter_native (encode := {encode}) (g := {callback.native}) ?_ _ _ 0", "st n i kept")
+      | "map" => do
+        let (_, out, _) ← dataScalar callback.result
+        pure (s!"traverse_map_native (encode := {encode}) (out := {out}) (g := {callback.native}) ?_ _ _ 0", "st n i kept")
+      | "reduce" => do
+        let (_, out, _) ← dataScalar callback.result
+        pure (s!"reduce_native (encode := {encode}) (out := {out}) (g := {callback.native}) ?_ _ _ _ 0", "st acc n i kept")
+      | builtin =>
+        some (s!"search_native (encode := {encode}) (g := {callback.native}) ?_ {reprStr builtin} (by decide) _ _ 0", "st n i kept")
+    proof := proof ++ s!"  refine ({lemma_}\n    (Kept.start (base := {base}) ?_)).mono ?_\n" ++
+      s!"  · intro {intro}\n"
+    for (_, i) in realArgs.zipIdx do
+      proof := proof ++ s!"    have k{i} := kept.frames.lookup c{i}\n    obtain ⟨_, k{i}'⟩ := getElem_of_some k{i}\n"
+    proof := proof ++ "    refine WPI.closure kept.lookup ?_\n    wp_data\n    callback_close\n  · frames_auto\n" ++
+      "  rintro results after ⟨rfl, kept, env'⟩\n  try simp only at kept\n  wp_data\n"
+  let simps := s!"{ident f.name}, JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, " ++
+    "JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed"
+  let closing ← match core.result with
+    | .list element => do
+      let (codec, _, _) ← dataScalar element
+      pure (s!"  refine ⟨Or.inr trivial, ⟨_, (Adequacy.array_codec_iff {codec}).mpr ⟨?_, by simp [{codec}], _, rfl, ?_, rfl⟩⟩,\n" ++
+        "    Frames.trans F0 (by frames_auto)⟩\n" ++
+        s!"  · simp only [{simps}, List.length_map, List.length_reverse] at *\n" ++
+        "    first | omega | exact Nat.lt_of_le_of_lt (List.length_filter_le _ _) (by assumption)\n" ++
+        s!"  · simp [State.alloc, {codec}, {simps}]\n")
+    | .option element => do
+      let (codec, _, _) ← dataScalar element
+      pure ("  refine ⟨Or.inr trivial, ⟨[], ?_⟩, Frames.trans F0 (by frames_auto)⟩\n" ++
+        s!"  simpa [{simps}, {codec}] using Adequacy.option_codec_holds {codec} (heap := _) _ (fun _ _ => trivial)\n")
+    | ty => do
+      let (codec, _, _) ← dataScalar ty
+      pure (s!"  exact ⟨Or.inr trivial, ⟨[], {codec}.holds.mpr ⟨⟨trivial, by simp [{simps}, {codec}]; try rfl⟩, rfl⟩⟩,\n" ++
+        "    Frames.trans F0 (by frames_auto)⟩\n")
+  proof := proof ++ closing
+  let sourceList := "[" ++ String.intercalate ", " sourceArgs ++ "]"
+  let post := s!"Represents {resultRelation} after.heap result {native} ∧ Frames heap after"
+  let theoremName := if publicAlias then ident (f.name ++ "_source") else s!"{checkName}.source"
+  let inputNames := String.join ((List.range core.params.length).filterMap fun i =>
+    match core.params[i]? with
+    | some (.list _) => some s!" _in{i}"
+    | _ => none)
+  let explicit := String.join ((names.zip core.params).zipIdx.map fun ((name, ty), i) =>
+    match ty with
+    | .list _ => s!" {name} _v{i} _fp{i}"
+    | _ => s!" {name}")
+  return s!"def {fn} : Ariadne.Function := {program_}.functions[{index}]!\n\n" ++
+    s!"theorem {checkName}.wp{binders} (heap : Heap){inputs} :\n" ++
+    s!"    WPI {program_} \u007b heap := heap \u007d (.function {reprStr f.name}) {sourceList} (fun result after =>\n" ++
+    s!"      {post}) := by\n" ++ proof ++ "\n" ++
+    s!"theorem {theoremName}{binders} (heap : Heap){inputs} :\n" ++
+    s!"    ∃ result after, SourceInvokes _root_.{namespace_}.source \u007b heap := heap \u007d (.function {reprStr f.name})\n" ++
+    s!"      {sourceList} result after ∧ {post} := by\n" ++
+    s!"  obtain ⟨result, after, invoked, post⟩ := ({checkName}.wp{explicit} heap{inputNames}).elim\n" ++
+    s!"  exact ⟨result, after, _root_.{namespace_}.certificate.transfer_invocation invoked, post⟩\n\n"
+
 def emit (source : String) (program : Program) (namespace_ : String) : Checked String := do
   let original := program
   let wrapper ← Ownership.Wrap.emit source original
@@ -597,7 +783,7 @@ def emit (source : String) (program : Program) (namespace_ : String) : Checked S
     core.params.flatMap typeDeclarations ++ termDeclarations core.body).eraseDups
   let declarations := (← roots.mapM (declarationOrder expanded 100)).flatten.eraseDups
   let mut out := (Ariadne.emit source original namespace_).replace
-    "import Ariadne.Certificate\n" "import Ariadne.Certificate\nimport Ariadne.Shallow.Elaborate\nimport Ariadne.Shallow.Safety\nimport Ariadne.Shallow.Adequacy.Statements\nimport Ariadne.Shallow.Adequacy.GuardedStatements\nimport Ariadne.Shallow.Adequacy.JoinsContext\nimport Ariadne.Shallow.Adequacy.GuardedJoinsContext\nimport Ariadne.Shallow.Adequacy.ProjectionSource\nimport Ariadne.Ownership.Source\nimport Ariadne.Ownership.MethodGuard\n"
+    "import Ariadne.Certificate\n" "import Ariadne.Certificate\nimport Ariadne.Shallow.Elaborate\nimport Ariadne.Shallow.Adequacy.WPTactic\nimport Ariadne.Shallow.Safety\nimport Ariadne.Shallow.Adequacy.Statements\nimport Ariadne.Shallow.Adequacy.GuardedStatements\nimport Ariadne.Shallow.Adequacy.JoinsContext\nimport Ariadne.Shallow.Adequacy.GuardedJoinsContext\nimport Ariadne.Shallow.Adequacy.ProjectionSource\nimport Ariadne.Ownership.Source\nimport Ariadne.Ownership.MethodGuard\n"
   out := out ++ s!"\nnamespace {namespace_}.Wrapper\nopen Ariadne\n\n"
   if wrapper == Ownership.Wrap.header ++ source then
     out := out ++ s!"def source : String := Ownership.Wrap.header ++ _root_.{namespace_}.source\n\n" ++
@@ -708,7 +894,8 @@ def emit (source : String) (program : Program) (namespace_ : String) : Checked S
         (guardedSourceTheorem namespace_ f core params names safeEnv publicAlias).orElse (fun _ =>
           (JoinEmit.sourceTheorem program namespace_ f core params names safeEnv publicAlias).orElse (fun _ =>
             (GuardedJoinEmit.sourceTheorem program namespace_ f core params names safeEnv publicAlias).orElse (fun _ =>
-              ProjectionEmit.sourceTheorem namespace_ f core params names publicAlias))))
+              (ProjectionEmit.sourceTheorem namespace_ f core params names publicAlias).orElse (fun _ =>
+                dataSourceTheorem original namespace_ f core names keys publicAlias)))))
       if let some theoremText := theoremText then
         out := out ++ theoremText
   return out ++ s!"end {namespace_}.Shallow\n"

@@ -64,7 +64,8 @@ proofs are transferred to the TypeScript source: each reference program is
 proved for all inputs against the original evaluator. Generated
 source-transfer theorems currently cover supported scalar expressions, local
 bindings, scalar reassignment, conditional early returns and guarded Int53
-arithmetic, comparisons and unary Math calls. General data/state/class adequacy
+arithmetic, comparisons and unary Math calls, plus array functions built from
+`filter`/`map`/`reduce`/`some`/`every`/`find` over scalar arrays. General data/state/class adequacy
 for other programs and the M5 extensions remain in progress. See
 [milestone status](docs/SHALLOW-PROGRESS.md).
 

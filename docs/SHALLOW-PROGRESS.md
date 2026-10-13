@@ -809,3 +809,51 @@ Because these theorems relate the emitted definitions directly to the source
 evaluator, the elaborator and the denotation are not trusted for these three
 programs. This is per-program evidence, not the general fundamental lemma.
 
+## Generated source theorems for array functions
+
+The extractor now also emits source theorems for a first data fragment, proved
+by stepping through the original evaluator rather than by a syntax-directed
+witness. A function qualifies when:
+
+- its body is one `return`;
+- its parameters are scalars or arrays of scalars;
+- its result is a scalar, an array of scalars, or an optional scalar;
+- its expression uses scalar operations, `length`, `slice()`, and the builtins
+  `filter`, `map`, `reduce`, `some`, `every` and `find`;
+- each callback ignores its index and computes a scalar expression.
+
+For each such function `f`, the extractor emits:
+
+- `SourceChecks.f.wp`: for every heap whose arguments represent the native
+  inputs, the original evaluator runs `f` to completion, the result represents
+  the emitted `f` of those inputs, and the input heap is unchanged;
+- `f_source`: the same conclusion, stated with `SourceInvokes`.
+
+The proof script applies one rule per source node. It discharges each callback
+with a traversal lemma, specified by the native lambda the extractor printed,
+and ends with the representation of the result. The kernel checks every step;
+the printer only chooses which rules to apply.
+
+Coverage today:
+
+| Module | Generated theorems |
+| --- | --- |
+| `arrays` | `transform`, `sum`, `find`, `allPositive`, `anyPositive`, `copy`, `constantMap`, `count`, `Int` |
+| `entryguards` | `observations` |
+| `state` | `pureCopy` |
+
+`scripts/data-source.mjs` checks this coverage and four kernel tamper cases. The
+changed item in each tamper is one of:
+
+- the callback specification;
+- the claimed result;
+- a folded result;
+- the source function the theorem names.
+
+Not yet covered:
+
+- index-dependent callbacks;
+- `findIndex`, indexing, `slice` with bounds, and spreads;
+- records, maps, unions and loops;
+- methods.
+

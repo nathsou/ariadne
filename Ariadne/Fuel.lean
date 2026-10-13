@@ -263,6 +263,12 @@ theorem selectCase_fuel_mono (p : Program) {small large : Nat} (le : small ≤ l
   Result.refines_of_step (fun n => selectCase p n s v cases i d)
     (fun n => (fuel_step p n).select s v cases i d) le
 
+theorem search_fuel_mono (p : Program) {small large : Nat} (le : small ≤ large)
+    (s : State) (cb : Value) (xs : List Value) (i : Nat) (mode : String) :
+    (search p small s cb xs i mode).Refines (search p large s cb xs i mode) :=
+  Result.refines_of_step (fun n => search p n s cb xs i mode)
+    (fun n => (fuel_step p n).search s cb xs i mode) le
+
 theorem runState_fuel_mono (p : Program) (name : String) (args : List Value)
     {small large : Nat} (le : small ≤ large) :
     (runState p name small args).Refines (runState p name large args) :=
