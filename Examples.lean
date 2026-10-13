@@ -78,3 +78,4 @@ import Examples.ClassConstructionAdequacy
 import Examples.Tamper.methodguards
 import Examples.ReferenceSource.Registers
 import Examples.ReferenceSource.Decision
+import Examples.ReferenceSource.Tree

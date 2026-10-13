@@ -645,6 +645,19 @@ theorem WPEach.mono {program : Program} {state : State} {name : String} {body : 
   obtain ⟨out, e, hp⟩ := h
   exact ⟨out, e, f out hp⟩
 
+theorem WPLoop.mono {program : Program} {state : State} {guard : Expr} {body : Stmt} {update : Option Stmt}
+    {p q : Completion → Prop} (h : WPLoop program state guard body update p) (f : ∀ out, p out → q out) :
+    WPLoop program state guard body update q := by
+  obtain ⟨out, e, hp⟩ := h
+  exact ⟨out, e, f out hp⟩
+
+theorem WPTraverse.mono {program : Program} {state : State} {callback : Value} {values : List Value}
+    {index : Nat} {mode : String} {p q : List Value → State → Prop}
+    (h : WPTraverse program state callback values index mode p) (f : ∀ results after, p results after → q results after) :
+    WPTraverse program state callback values index mode q := by
+  obtain ⟨results, after, e, hp⟩ := h
+  exact ⟨results, after, e, f results after hp⟩
+
 theorem WPE.elim {program : Program} {state : State} {expression : Expr} {post : Value → State → Prop}
     (h : WPE program state expression post) : ∃ v after, Evaluates program state expression v after ∧ post v after := h
 theorem WPI.elim {program : Program} {state : State} {target : Value} {args : List Value}
