@@ -14,6 +14,15 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - name: Install checksum-pinned Lean, elan, and Bun
         run: bash scripts/install-ci-tools.sh
+      # Lake checks source/dependency hashes after restoration. Always run the
+      # build and regeneration below; an earlier build can supply unchanged modules.
+      - name: Restore incremental library build
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .lake/build
+          key: library-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lakefile.toml', 'lake-manifest.json', 'scripts/install-ci-tools.sh') }}-${{ hashFiles('Ariadne.lean', 'Main.lean', 'Ariadne/**/*.lean') }}
+          restore-keys: |
+            library-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lakefile.toml', 'lake-manifest.json', 'scripts/install-ci-tools.sh') }}-
       - name: Build library and check regeneration
         run: scripts/check.sh prepare
       # Tar retains the executable's permissions and Lake's complete build traces.
