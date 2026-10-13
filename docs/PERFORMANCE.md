@@ -52,6 +52,10 @@ and a cold cache affect the wall time; these are observed CI timings.
 
 Logs: [baseline #82](https://github.com/nathsou/ariadne/actions/runs/38294746569)
 and [class state #128](https://github.com/nathsou/ariadne/actions/runs/38359764572).
+The private Map method/trace extension
+[#130](https://github.com/nathsou/ariadne/actions/runs/38361175018) passed in
+9m12s with 7,090 audited theorems and all 27 suites. Its incremental preparation
+build and source/Int53 tamper phases took 21s and 22s/8s respectively.
 
 Future work should profile parser sharing, use certificates with smaller replay
 steps, and prove a transition from cells to specialized typed state tuples. Measure these separately from native runtime

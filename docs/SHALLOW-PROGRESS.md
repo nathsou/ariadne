@@ -170,7 +170,13 @@ preserving the class identity, private Map and unchanged scalar field.
 `MapExpressions` composes original lookup, nullish fallback, key equality,
 insertion and local-binding execution; six class witnesses and six forged
 return, state, method and representation declarations are checked.
-Constructors, general class/checker
+`ClassConstruction` proves initializer fuel stability, fresh object/Map
+allocation and original constructor-body execution. Four further witnesses
+connect `Seeded` and `Counter` construction to their actual emitted constructors
+from arbitrary ambient heaps, then compose fresh construction with arbitrary
+method traces. The class suite checks ten universal witnesses and nine forged
+declarations, including wrong constructor arguments, initial states and private
+Map footprints. General class/checker
 adequacy and the original reference source proofs remain pending.
 
 CI #96 on `5e31ceb` passes in 11m23s, compared with baseline CI #82's 21m18s.
@@ -230,6 +236,10 @@ modules and checked regeneration in 27s (57s for the preparation job overall).
 All nine jobs passed in 8m54s with 7,071 audited theorems and all 27 suites.
 Its source/Int53 tamper phases took 21s/9s. The complete local class-state gate
 also passed; general M4 and M5 remain open.
+CI #130 passed the private Map method/trace checkpoint in 9m12s with 7,090
+audited theorems and all 27 suites. Build/regeneration took 21s after incremental
+restoration; source/Int53 tamper phases took 22s/8s. The complete local gate
+also passed that checkpoint.
 
 Frontend checkpoint: the complete `scripts/check.sh` suite passes with 1,217
 audited theorems, 42 native entry points, 64 generated programs, 51 scalar

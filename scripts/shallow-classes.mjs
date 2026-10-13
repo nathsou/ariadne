@@ -23,13 +23,17 @@ const observed = values => ({ok: ['array', values.map(value => ['bigint', value.
 await mkdir('work', {recursive: true});
 const dir = await mkdtemp(resolve('work/shallow-classes-'));
 try {
-  let runner = 'import Examples.Shallow.classes\nimport Examples.ClassAdequacy\nimport Ariadne.Observe\nopen Ariadne\nopen Extracted_classes.Shallow\nset_option linter.unusedVariables false\n' +
+  let runner = 'import Examples.Shallow.classes\nimport Examples.ClassAdequacy\nimport Examples.ClassConstructionAdequacy\nimport Ariadne.Observe\nopen Ariadne\nopen Extracted_classes.Shallow\nset_option linter.unusedVariables false\n' +
     '#check @Examples.ClassAdequacy.seeded_add_source\n' +
     '#check @Examples.ClassAdequacy.seeded_read_source\n' +
     '#check @Examples.ClassAdequacy.seeded_trace_source\n' +
     '#check @Examples.ClassAdequacy.counter_bump_source\n' +
     '#check @Examples.ClassAdequacy.counter_count_source\n' +
-    '#check @Examples.ClassAdequacy.counter_trace_source\n';
+    '#check @Examples.ClassAdequacy.counter_trace_source\n' +
+    '#check @Examples.ClassAdequacy.seeded_constructor_source\n' +
+    '#check @Examples.ClassAdequacy.counter_constructor_source\n' +
+    '#check @Examples.ClassAdequacy.seeded_fresh_trace_source\n' +
+    '#check @Examples.ClassAdequacy.counter_fresh_trace_source\n';
   const expected = [];
   for (const [i, [name, args, ops]] of traces.entries()) {
     const value = new ({Counter, Seeded}[name])(...args);
@@ -98,5 +102,22 @@ try {
     assert.notEqual(refused.status, 0, 'a forged class source witness must fail kernel checking');
     assert.ok(refused.stdout.includes('error'), refused.stdout + refused.stderr);
   }
-  console.log(`Shallow classes passed: ${traces.length} three-way constructor/method traces with intermediate state observations, 6 universal source/trace witnesses, and 6 class tamper checks.`);
+  const constructorWitness = await readFile('Examples/ClassConstructionAdequacy.lean', 'utf8');
+  const constructorAlterations = [
+    constructorWitness.replace('(«Seeded##new» initial) [before.heap.length]',
+      '(NativeTypes.«Seeded#state».mk (initial + 1)) [before.heap.length]'),
+    constructorWitness.replace('(.newClass "Seeded" [.literal (.bigint initial) {}] {})',
+      '(.newClass "Seeded" [.literal (.bigint (initial + 1)) {}] {})'),
+    constructorWitness.replace('«Counter##new»\n        [before.heap.length + 1, before.heap.length]',
+      '«Counter##new»\n        [before.heap.length + 1]'),
+  ];
+  for (const [i, altered] of constructorAlterations.entries()) {
+    assert.notEqual(altered, constructorWitness);
+    const path = resolve(dir, `TamperedConstructor${i}.lean`);
+    await writeFile(path, altered);
+    const refused = spawnSync('lake', ['env', 'lean', path], {encoding:'utf8', timeout:60000, maxBuffer:8e6});
+    assert.notEqual(refused.status, 0, 'a forged constructor witness must fail kernel checking');
+    assert.ok(refused.stdout.includes('error'), refused.stdout + refused.stderr);
+  }
+  console.log(`Shallow classes passed: ${traces.length} three-way constructor/method traces with intermediate state observations, 10 universal source/constructor/trace witnesses, and 9 class tamper checks.`);
 } finally { await rm(dir, {recursive:true, force:true}); }

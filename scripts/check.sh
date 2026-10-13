@@ -70,6 +70,7 @@ run_shallow_values() {
     esac
   done
   lake build Examples.ClassAdequacy
+  lake build Examples.ClassConstructionAdequacy
   for source in examples/tamper/*.ts; do
     stem=$(basename "$source" .ts)
     lake build "Examples.Tamper.$stem"
