@@ -33,6 +33,7 @@ import Ariadne.Shallow.Safety.Structural
 import Ariadne.Shallow.Adequacy.ReadExpr
 import Ariadne.Shallow.Adequacy.Ownership
 import Ariadne.Shallow.Adequacy.Permissions
+import Ariadne.Shallow.Adequacy.ParameterFrame
 import Ariadne.Shallow.Adequacy.ClassMutation
 import Ariadne.Shallow.Adequacy.ClassConstruction
 import Ariadne.Shallow.Adequacy.MapScalarMutation

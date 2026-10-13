@@ -143,4 +143,23 @@ theorem shared_write_refused :
     (.here : Var [Row, Row] Row) rfl rfl (by decide)
   exact separate 4 (by decide) (by decide)
 
+-- An actual record-field write cannot change either newly bound argument.
+-- The pointer parameter and scalar argument are framed from the input layout.
+theorem parameter_lookup_survives (number : Int) (after : Heap)
+    (modified : Modifies [1]
+      (bindArguments state
+        [{name := "row", ty := .record [("count", .bigint), ("shared", .readonly (.array .bigint))]},
+         {name := "number", ty := .bigint}] [.ref 1, .bigint number]).heap after) :
+    ({bindArguments state
+        [{name := "row", ty := .record [("count", .bigint), ("shared", .readonly (.array .bigint))]},
+         {name := "number", ty := .bigint}] [.ref 1, .bigint number] with heap := after} : State).lookup "row" = .ok (.ref 1) ∧
+    ({bindArguments state
+        [{name := "row", ty := .record [("count", .bigint), ("shared", .readonly (.array .bigint))]},
+         {name := "number", ty := .bigint}] [.ref 1, .bigint number] with heap := after} : State).lookup "number" = .ok (.bigint number) := by
+  constructor
+  · exact bindArguments_lookup_frame (row_related 1 0 rfl (by decide)) _ _ after
+      (by simp) modified rfl
+  · exact bindArguments_lookup_frame (row_related 1 0 rfl (by decide)) _ _ after
+      (by simp) modified rfl
+
 end Tests.Permissions

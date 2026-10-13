@@ -23,6 +23,11 @@ updating the borrowed record's scalar field preserves both records and the
 shared array, while granting write permission over that shared array is refused.
 Deriving these permissions from every checked source type and proving the
 general translation theorem remain M4 work.
+`ParameterFrame` derives call-frame facts directly from binding arguments:
+no preexisting data changes, every visible parameter cell lies beyond the input
+heap, and represented input footprints exclude those cells. Mutations within
+an input footprint therefore preserve parameter lookups without a separate
+binding-cell exclusion premise, including when parameter names are shadowed.
 
 `examples/reference/baseline.json` records diagnostics at the design commit. It is
 historical evidence, not an assertion that the programs should remain rejected.
@@ -240,6 +245,11 @@ CI #130 passed the private Map method/trace checkpoint in 9m12s with 7,090
 audited theorems and all 27 suites. Build/regeneration took 21s after incremental
 restoration; source/Int53 tamper phases took 22s/8s. The complete local gate
 also passed that checkpoint.
+CI #132 passed fresh construction and constructor-backed traces in 9m16s,
+including all nine jobs, all 27 suites, ten universal class witnesses and nine
+class tamper checks. Its audit covers 7,111 theorems; incremental build and
+regeneration took 23s, with source/Int53 tamper phases at 23s/9s. The full local
+gate passed the same checkpoint.
 
 Frontend checkpoint: the complete `scripts/check.sh` suite passes with 1,217
 audited theorems, 42 native entry points, 64 generated programs, 51 scalar
