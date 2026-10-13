@@ -104,7 +104,10 @@ wrapper and its operational entry guard. Neither has input disjointness or
 whole-function execution as a premise. Three forged state/guard/entry witnesses
 are checked against a dedicated one-function fixture. General data/state/class
 source transfer and checker soundness remain M4 work. Simultaneous projected
-call arguments remain pending.
+call arguments remain pending. Distinct valid array positions select disjoint
+element footprints. Map projections have the corresponding rule for keys whose
+map-equality classes cannot overlap; this makes the SameValueZero obligation
+explicit instead of treating strict inequality as sufficient for numeric keys.
 
 CI #96 on `5e31ceb` passes in 11m23s, compared with baseline CI #82's 21m18s.
 Its logged source-transfer and Int53 tamper phases take 17s and 7s respectively,
@@ -123,7 +126,12 @@ all 26 suites and 20 new projection comparisons. Source/Int53 tamper phases
 took 21s/9s. Shared-continuation tamper checks still took 73s, so their four
 unchanged assignment/capture/restoration/comparison mutations now use a
 dedicated two-function fixture while all eight universal source theorems and
-50 three-way comparisons remain checked.
+50 three-way comparisons remain checked. CI #106 on `f49b893` passed in 11m20s,
+with shared-continuation tamper checks reduced from 73s to 18s. CI #108 on
+`3304abe` passed in 10m24s, including all 26 suites and the 6,716-theorem audit.
+Its preparation, slowest example job and slowest verification job took 196s,
+289s and 130s respectively. All example and verification builds remain serial
+within each runner, and no check was removed.
 
 Frontend checkpoint: the complete `scripts/check.sh` suite passes with 1,217
 audited theorems, 42 native entry points, 64 generated programs, 51 scalar
