@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 # Checks for Ariadne v2: the general theorem, regenerated fixtures (kernel-checked),
-# differential execution against JavaScript, and negative fixtures.
+# the model against JavaScript, differential execution, and negative fixtures.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 lake build V2 ariadne2
+
+if command -v bun >/dev/null 2>&1; then js=bun; else js=node; fi
+"$js" scripts/v2-model.mjs
 
 for source in V2Tests/fixtures/*.ts; do
   stem=$(basename "$source" .ts)
@@ -16,6 +19,5 @@ git diff --exit-code -- V2Tests/Generated
 lake build V2Tests
 lake env lean scripts/V2Audit.lean
 
-if command -v bun >/dev/null 2>&1; then js=bun; else js=node; fi
 "$js" scripts/v2-differential.mjs
 "$js" scripts/v2-negative.mjs

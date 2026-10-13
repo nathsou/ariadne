@@ -33,6 +33,7 @@ def K.all (r : Γ.denote → R) : K Γ R := ⟨r, r, r⟩
 def Sel.pick : Sel src fs → src.denote → fs.denote
   | .nil, _ => ()
   | .cons i rest, xs => (i.get xs, rest.pick xs)
+  | .absent _ rest, xs => (none, rest.pick xs)
 
 def Upd.apply : {fs : Fields} → Upd src fs → src.denote → fs.denote → fs.denote
   | .nil, .nil, _, _ => ()

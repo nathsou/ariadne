@@ -5,7 +5,8 @@ import V2.Proof.Adequacy
 namespace V2Tests.Generated.L0
 open V2
 
-set_option maxRecDepth 4096
+set_option maxRecDepth 8192
+set_option linter.unusedVariables false
 
 /-- The source file in the model's syntax. -/
 def ast : Program := [
@@ -59,56 +60,72 @@ def ast : Program := [
         [],
       .ret (.lit (.bool true))] }]
 
-def sig.«max» : Sig := { name := "max", params := [("a", .int), ("b", .int)], result := .int }
-def sig.«clamp» : Sig := { name := "clamp", params := [("x", .int), ("lo", .int), ("hi", .int)], result := .int }
-def sig.«sign» : Sig := { name := "sign", params := [("n", .int)], result := .int }
-def sig.«describe» : Sig := { name := "describe", params := [("n", .int), ("label", .string)], result := .string }
-def sig.«between» : Sig := { name := "between", params := [("lo", .string), ("x", .string), ("hi", .string)], result := .bool }
-def sig.«polynomial» : Sig := { name := "polynomial", params := [("x", .int)], result := .int }
-def sig.«implies» : Sig := { name := "implies", params := [("a", .bool), ("b", .bool)], result := .bool }
+def sig.«max» : Sig := { name := "max", params := [("a", .int), ("b", .int)], result := .int, trivial := true }
+def sig.«clamp» : Sig := { name := "clamp", params := [("x", .int), ("lo", .int), ("hi", .int)], result := .int, trivial := true }
+def sig.«sign» : Sig := { name := "sign", params := [("n", .int)], result := .int, trivial := true }
+def sig.«describe» : Sig := { name := "describe", params := [("n", .int), ("label", .string)], result := .string, trivial := true }
+def sig.«between» : Sig := { name := "between", params := [("lo", .string), ("x", .string), ("hi", .string)], result := .bool, trivial := true }
+def sig.«polynomial» : Sig := { name := "polynomial", params := [("x", .int)], result := .int, trivial := true }
+def sig.«implies» : Sig := { name := "implies", params := [("a", .bool), ("b", .bool)], result := .bool, trivial := true }
+
+theorem ne.«b».«a» : ("b" : String) ≠ "a" := by decide
+theorem ne.«lo».«x» : ("lo" : String) ≠ "x" := by decide
+theorem ne.«hi».«y» : ("hi" : String) ≠ "y" := by decide
+theorem ne.«hi».«x» : ("hi" : String) ≠ "x" := by decide
+theorem ne.«hi».«lo» : ("hi" : String) ≠ "lo" := by decide
+theorem ne.«label».«s» : ("label" : String) ≠ "s" := by decide
+theorem ne.«label».«n» : ("label" : String) ≠ "n" := by decide
+theorem ne.«s».«prefix» : ("s" : String) ≠ "prefix" := by decide
+theorem ne.«label».«kind» : ("label" : String) ≠ "kind" := by decide
+theorem ne.«label».«prefix» : ("label" : String) ≠ "prefix" := by decide
+theorem ne.«prefix».«kind» : ("prefix" : String) ≠ "kind" := by decide
+theorem ne.«x».«lo» : ("x" : String) ≠ "lo" := by decide
+theorem ne.«x».«square» : ("x" : String) ≠ "square" := by decide
+theorem ne.«square».«cube» : ("square" : String) ≠ "cube" := by decide
+theorem ne.«x».«cube» : ("x" : String) ≠ "cube" := by decide
 
 def body.«max» : TStmts [] sig.«max».params sig.«max».result :=
-  (.ite (.lt (.var .here) (.var (.there (by decide) .here)))
-  (.ret (.var (.there (by decide) .here)) .nil)
+  (.ite (.lt (.var .here) (.var (.there ne.«b».«a» .here)))
+  (.ret (.var (.there ne.«b».«a» .here)) .nil)
   .nil
   (.ret (.var .here) .nil))
 
 def body.«clamp» : TStmts [sig.«max»] sig.«clamp».params sig.«clamp».result :=
-  (.const "y" (.call .here (.cons (.var .here) (.cons (.var (.there (by decide) .here)) .nil)))
-  (.ret (.cond (.gt (.var .here) (.var (.there (by decide) (.there (by decide) (.there (by decide) .here))))) (.var (.there (by decide) (.there (by decide) (.there (by decide) .here)))) (.var .here)) .nil))
+  (.const "y" (.call .here (by decide) (.cons (.var .here) (.cons (.var (.there ne.«lo».«x» .here)) .nil)))
+  (.ret (.cond (.gt (.var .here) (.var (.there ne.«hi».«y» (.there ne.«hi».«x» (.there ne.«hi».«lo» .here))))) (.var (.there ne.«hi».«y» (.there ne.«hi».«x» (.there ne.«hi».«lo» .here)))) (.var .here)) .nil))
 
 def body.«sign» : TStmts [sig.«clamp», sig.«max»] sig.«sign».params sig.«sign».result :=
   (.ite (.lt (.var .here) (.int 0))
   (.ret (.neg (.int 1)) .nil)
-  (.ite (.eq (.var .here) (.int 0))
+  (.ite (.eq (by decide) (.var .here) (.int 0))
   (.ret (.int 0) .nil)
   .nil
   .nil)
   (.ret (.int 1) .nil))
 
 def body.«describe» : TStmts [sig.«sign», sig.«clamp», sig.«max»] sig.«describe».params sig.«describe».result :=
-  (.const "s" (.call .here (.cons (.var .here) .nil))
-  (.const "prefix" (.concat (.var (.there (by decide) (.there (by decide) .here))) (.str (js ": ")))
-  (.ite (.eq (.var (.there (by decide) .here)) (.int 0))
+  (.const "s" (.call .here (by decide) (.cons (.var .here) .nil))
+  (.const "prefix" (.concat (.var (.there ne.«label».«s» (.there ne.«label».«n» .here))) (.str (js ": ")))
+  (.ite (.eq (by decide) (.var (.there ne.«s».«prefix» .here)) (.int 0))
   (.ret (.concat (.var .here) (.str (js "zero"))) .nil)
   .nil
-  (.const "kind" (.cond (.gt (.var (.there (by decide) .here)) (.int 0)) (.str (js "positive")) (.str (js "negative")))
-  (.ite (.or (.eq (.var (.there (by decide) (.there (by decide) (.there (by decide) (.there (by decide) .here))))) (.str (js ""))) (.sle (.var (.there (by decide) (.there (by decide) (.there (by decide) (.there (by decide) .here))))) (.str (js "a"))))
+  (.const "kind" (.cond (.gt (.var (.there ne.«s».«prefix» .here)) (.int 0)) (.str (js "positive")) (.str (js "negative")))
+  (.ite (.or (.eq (by decide) (.var (.there ne.«label».«kind» (.there ne.«label».«prefix» (.there ne.«label».«s» (.there ne.«label».«n» .here))))) (.str (js ""))) (.sle (.var (.there ne.«label».«kind» (.there ne.«label».«prefix» (.there ne.«label».«s» (.there ne.«label».«n» .here))))) (.str (js "a"))))
   (.ret (.var .here) .nil)
   .nil
-  (.ret (.concat (.var (.there (by decide) .here)) (.var .here)) .nil))))))
+  (.ret (.concat (.var (.there ne.«prefix».«kind» .here)) (.var .here)) .nil))))))
 
 def body.«between» : TStmts [sig.«describe», sig.«sign», sig.«clamp», sig.«max»] sig.«between».params sig.«between».result :=
-  (.ret (.and (.and (.not (.slt (.var (.there (by decide) .here)) (.var .here))) (.sle (.var (.there (by decide) .here)) (.var (.there (by decide) (.there (by decide) .here))))) (.ne (.var .here) (.var (.there (by decide) (.there (by decide) .here))))) .nil)
+  (.ret (.and (.and (.not (.slt (.var (.there ne.«x».«lo» .here)) (.var .here))) (.sle (.var (.there ne.«x».«lo» .here)) (.var (.there ne.«hi».«lo» (.there ne.«hi».«x» .here))))) (.ne (by decide) (.var .here) (.var (.there ne.«hi».«lo» (.there ne.«hi».«x» .here))))) .nil)
 
 def body.«polynomial» : TStmts [sig.«between», sig.«describe», sig.«sign», sig.«clamp», sig.«max»] sig.«polynomial».params sig.«polynomial».result :=
   (.const "square" (.mul (.var .here) (.var .here))
-  (.const "cube" (.mul (.var .here) (.var (.there (by decide) .here)))
-  (.ret (.sub (.add (.sub (.var .here) (.mul (.int 2) (.var (.there (by decide) .here)))) (.mul (.int 3) (.var (.there (by decide) (.there (by decide) .here))))) (.int 4)) .nil)))
+  (.const "cube" (.mul (.var .here) (.var (.there ne.«x».«square» .here)))
+  (.ret (.sub (.add (.sub (.var .here) (.mul (.int 2) (.var (.there ne.«square».«cube» .here)))) (.mul (.int 3) (.var (.there ne.«x».«cube» (.there ne.«x».«square» .here))))) (.int 4)) .nil)))
 
 def body.«implies» : TStmts [sig.«polynomial», sig.«between», sig.«describe», sig.«sign», sig.«clamp», sig.«max»] sig.«implies».params sig.«implies».result :=
   (.ite (.var .here)
-  (.const "t" (.eq (.var (.there (by decide) .here)) (.bool true))
+  (.const "t" (.eq (by decide) (.var (.there ne.«b».«a» .here)) (.bool true))
   (.ite (.var .here)
   (.ret (.bool true) .nil)
   .nil
@@ -139,7 +156,7 @@ def «clamp» («x» : Int) («lo» : Int) («hi» : Int) : Int :=
 
 def «sign» («n» : Int) : Int :=
   if decide («n» < (0 : Int)) then
-    -(1 : Int)
+    (-(1 : Int))
   else
     if «n» == (0 : Int) then
       (0 : Int)
@@ -183,84 +200,157 @@ readable definitions as its environment, so no check unfolds a callee. -/
 
 def «max».uncurried : sig.«max».denote := fun xs => «max» xs.1 xs.2.1
 
+/-- Trivially safe: every input is in what the model covers. -/
+def «max».safety : sig.«max».params.denote → Bool := fun _ => true
+
 theorem «max».body_eq :
     body.«max».denoteFn (()) = «max».uncurried := by
   kernel_rfl
 
+theorem «max».safe_eq :
+    body.«max».safeFn (()) (()) = «max».safety := by
+  kernel_rfl
+
 def «clamp».uncurried : sig.«clamp».denote := fun xs => «clamp» xs.1 xs.2.1 xs.2.2.1
+
+/-- Trivially safe: every input is in what the model covers. -/
+def «clamp».safety : sig.«clamp».params.denote → Bool := fun _ => true
 
 theorem «clamp».body_eq :
     body.«clamp».denoteFn («max».uncurried, ()) = «clamp».uncurried := by
   kernel_rfl
 
+theorem «clamp».safe_eq :
+    body.«clamp».safeFn («max».uncurried, ()) («max».safety, ()) = «clamp».safety := by
+  kernel_rfl
+
 def «sign».uncurried : sig.«sign».denote := fun xs => «sign» xs.1
+
+/-- Trivially safe: every input is in what the model covers. -/
+def «sign».safety : sig.«sign».params.denote → Bool := fun _ => true
 
 theorem «sign».body_eq :
     body.«sign».denoteFn («clamp».uncurried, «max».uncurried, ()) = «sign».uncurried := by
   kernel_rfl
 
+theorem «sign».safe_eq :
+    body.«sign».safeFn («clamp».uncurried, «max».uncurried, ()) («clamp».safety, «max».safety, ()) = «sign».safety := by
+  kernel_rfl
+
 def «describe».uncurried : sig.«describe».denote := fun xs => «describe» xs.1 xs.2.1
+
+/-- Trivially safe: every input is in what the model covers. -/
+def «describe».safety : sig.«describe».params.denote → Bool := fun _ => true
 
 theorem «describe».body_eq :
     body.«describe».denoteFn («sign».uncurried, «clamp».uncurried, «max».uncurried, ()) = «describe».uncurried := by
   kernel_rfl
 
+theorem «describe».safe_eq :
+    body.«describe».safeFn («sign».uncurried, «clamp».uncurried, «max».uncurried, ()) («sign».safety, «clamp».safety, «max».safety, ()) = «describe».safety := by
+  kernel_rfl
+
 def «between».uncurried : sig.«between».denote := fun xs => «between» xs.1 xs.2.1 xs.2.2.1
+
+/-- Trivially safe: every input is in what the model covers. -/
+def «between».safety : sig.«between».params.denote → Bool := fun _ => true
 
 theorem «between».body_eq :
     body.«between».denoteFn («describe».uncurried, «sign».uncurried, «clamp».uncurried, «max».uncurried, ()) = «between».uncurried := by
   kernel_rfl
 
+theorem «between».safe_eq :
+    body.«between».safeFn («describe».uncurried, «sign».uncurried, «clamp».uncurried, «max».uncurried, ()) («describe».safety, «sign».safety, «clamp».safety, «max».safety, ()) = «between».safety := by
+  kernel_rfl
+
 def «polynomial».uncurried : sig.«polynomial».denote := fun xs => «polynomial» xs.1
+
+/-- Trivially safe: every input is in what the model covers. -/
+def «polynomial».safety : sig.«polynomial».params.denote → Bool := fun _ => true
 
 theorem «polynomial».body_eq :
     body.«polynomial».denoteFn («between».uncurried, «describe».uncurried, «sign».uncurried, «clamp».uncurried, «max».uncurried, ()) = «polynomial».uncurried := by
   kernel_rfl
 
+theorem «polynomial».safe_eq :
+    body.«polynomial».safeFn («between».uncurried, «describe».uncurried, «sign».uncurried, «clamp».uncurried, «max».uncurried, ()) («between».safety, «describe».safety, «sign».safety, «clamp».safety, «max».safety, ()) = «polynomial».safety := by
+  kernel_rfl
+
 def «implies».uncurried : sig.«implies».denote := fun xs => «implies» xs.1 xs.2.1
+
+/-- Trivially safe: every input is in what the model covers. -/
+def «implies».safety : sig.«implies».params.denote → Bool := fun _ => true
 
 theorem «implies».body_eq :
     body.«implies».denoteFn («polynomial».uncurried, «between».uncurried, «describe».uncurried, «sign».uncurried, «clamp».uncurried, «max».uncurried, ()) = «implies».uncurried := by
   kernel_rfl
 
+theorem «implies».safe_eq :
+    body.«implies».safeFn («polynomial».uncurried, «between».uncurried, «describe».uncurried, «sign».uncurried, «clamp».uncurried, «max».uncurried, ()) («polynomial».safety, «between».safety, «describe».safety, «sign».safety, «clamp».safety, «max».safety, ()) = «implies».safety := by
+  kernel_rfl
+
 theorem denote_eq : typed.denote = («implies».uncurried, «polynomial».uncurried, «between».uncurried, «describe».uncurried, «sign».uncurried, «clamp».uncurried, «max».uncurried, ()) :=
   (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «max».body_eq) «clamp».body_eq) «sign».body_eq) «describe».body_eq) «between».body_eq) «polynomial».body_eq) «implies».body_eq)
 
+theorem safety_eq : typed.safety = («implies».safety, «polynomial».safety, «between».safety, «describe».safety, «sign».safety, «clamp».safety, «max».safety, ()) :=
+  (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «max».body_eq) «clamp».body_eq) «sign».body_eq) «describe».body_eq) «between».body_eq) «polynomial».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «max».body_eq) «clamp».body_eq) «sign».body_eq) «describe».body_eq) «between».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «max».body_eq) «clamp».body_eq) «sign».body_eq) «describe».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «max».body_eq) «clamp».body_eq) «sign».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons rfl «max».body_eq) «clamp».body_eq) (TProgram.safety_cons (TProgram.denote_cons rfl «max».body_eq) (TProgram.safety_cons rfl rfl «max».safe_eq) «clamp».safe_eq) «sign».safe_eq) «describe».safe_eq) «between».safe_eq) «polynomial».safe_eq) «implies».safe_eq)
+
 /-! ## Source theorems -/
 
-/-- Every run of `max` converges to the readable definition's result. -/
-theorem «max».source («a» : Int) («b» : Int) :
-    Converges (fun fuel' => run ast fuel' "max" [.bigint «a», .bigint «b»]) (.ok (.bigint («max» «a» «b»))) :=
-  source_of erased wf denote_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "max" sig.«max») («a», «b», ())
+/-- Every run of `max` on arguments representing its inputs converges to a value
+representing the readable definition's result. -/
+theorem «max».source («a» : Int) («b» : Int) (vs : List JSValue)
+    (args : ArgsRep sig.«max».params vs («a», «b», ())) :
+    ∃ w, Converges (fun fuel' => run ast fuel' "max" vs) (.ok w) ∧
+      Ty.Rep .int w («max» «a» «b») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "max" sig.«max») («a», «b», ()) vs args rfl
 
-/-- Every run of `clamp` converges to the readable definition's result. -/
-theorem «clamp».source («x» : Int) («lo» : Int) («hi» : Int) :
-    Converges (fun fuel' => run ast fuel' "clamp" [.bigint «x», .bigint «lo», .bigint «hi»]) (.ok (.bigint («clamp» «x» «lo» «hi»))) :=
-  source_of erased wf denote_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "clamp" sig.«clamp») («x», «lo», «hi», ())
+/-- Every run of `clamp` on arguments representing its inputs converges to a value
+representing the readable definition's result. -/
+theorem «clamp».source («x» : Int) («lo» : Int) («hi» : Int) (vs : List JSValue)
+    (args : ArgsRep sig.«clamp».params vs («x», «lo», «hi», ())) :
+    ∃ w, Converges (fun fuel' => run ast fuel' "clamp" vs) (.ok w) ∧
+      Ty.Rep .int w («clamp» «x» «lo» «hi») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "clamp" sig.«clamp») («x», «lo», «hi», ()) vs args rfl
 
-/-- Every run of `sign` converges to the readable definition's result. -/
-theorem «sign».source («n» : Int) :
-    Converges (fun fuel' => run ast fuel' "sign" [.bigint «n»]) (.ok (.bigint («sign» «n»))) :=
-  source_of erased wf denote_eq ((.there (.there (.there (.there .here)))) : FVar sigs "sign" sig.«sign») («n», ())
+/-- Every run of `sign` on arguments representing its inputs converges to a value
+representing the readable definition's result. -/
+theorem «sign».source («n» : Int) (vs : List JSValue)
+    (args : ArgsRep sig.«sign».params vs («n», ())) :
+    ∃ w, Converges (fun fuel' => run ast fuel' "sign" vs) (.ok w) ∧
+      Ty.Rep .int w («sign» «n») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "sign" sig.«sign») («n», ()) vs args rfl
 
-/-- Every run of `describe` converges to the readable definition's result. -/
-theorem «describe».source («n» : Int) («label» : JSString) :
-    Converges (fun fuel' => run ast fuel' "describe" [.bigint «n», .string «label»]) (.ok (.string («describe» «n» «label»))) :=
-  source_of erased wf denote_eq ((.there (.there (.there .here))) : FVar sigs "describe" sig.«describe») («n», «label», ())
+/-- Every run of `describe` on arguments representing its inputs converges to a value
+representing the readable definition's result. -/
+theorem «describe».source («n» : Int) («label» : JSString) (vs : List JSValue)
+    (args : ArgsRep sig.«describe».params vs («n», «label», ())) :
+    ∃ w, Converges (fun fuel' => run ast fuel' "describe" vs) (.ok w) ∧
+      Ty.Rep .string w («describe» «n» «label») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "describe" sig.«describe») («n», «label», ()) vs args rfl
 
-/-- Every run of `between` converges to the readable definition's result. -/
-theorem «between».source («lo» : JSString) («x» : JSString) («hi» : JSString) :
-    Converges (fun fuel' => run ast fuel' "between" [.string «lo», .string «x», .string «hi»]) (.ok (.bool («between» «lo» «x» «hi»))) :=
-  source_of erased wf denote_eq ((.there (.there .here)) : FVar sigs "between" sig.«between») («lo», «x», «hi», ())
+/-- Every run of `between` on arguments representing its inputs converges to a value
+representing the readable definition's result. -/
+theorem «between».source («lo» : JSString) («x» : JSString) («hi» : JSString) (vs : List JSValue)
+    (args : ArgsRep sig.«between».params vs («lo», «x», «hi», ())) :
+    ∃ w, Converges (fun fuel' => run ast fuel' "between" vs) (.ok w) ∧
+      Ty.Rep .bool w («between» «lo» «x» «hi») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "between" sig.«between») («lo», «x», «hi», ()) vs args rfl
 
-/-- Every run of `polynomial` converges to the readable definition's result. -/
-theorem «polynomial».source («x» : Int) :
-    Converges (fun fuel' => run ast fuel' "polynomial" [.bigint «x»]) (.ok (.bigint («polynomial» «x»))) :=
-  source_of erased wf denote_eq ((.there .here) : FVar sigs "polynomial" sig.«polynomial») («x», ())
+/-- Every run of `polynomial` on arguments representing its inputs converges to a value
+representing the readable definition's result. -/
+theorem «polynomial».source («x» : Int) (vs : List JSValue)
+    (args : ArgsRep sig.«polynomial».params vs («x», ())) :
+    ∃ w, Converges (fun fuel' => run ast fuel' "polynomial" vs) (.ok w) ∧
+      Ty.Rep .int w («polynomial» «x») :=
+  source_of erased wf denote_eq safety_eq ((.there .here) : FVar sigs "polynomial" sig.«polynomial») («x», ()) vs args rfl
 
-/-- Every run of `implies` converges to the readable definition's result. -/
-theorem «implies».source («a» : Bool) («b» : Bool) :
-    Converges (fun fuel' => run ast fuel' "implies" [.bool «a», .bool «b»]) (.ok (.bool («implies» «a» «b»))) :=
-  source_of erased wf denote_eq (.here : FVar sigs "implies" sig.«implies») («a», «b», ())
+/-- Every run of `implies` on arguments representing its inputs converges to a value
+representing the readable definition's result. -/
+theorem «implies».source («a» : Bool) («b» : Bool) (vs : List JSValue)
+    (args : ArgsRep sig.«implies».params vs («a», «b», ())) :
+    ∃ w, Converges (fun fuel' => run ast fuel' "implies" vs) (.ok w) ∧
+      Ty.Rep .bool w («implies» «a» «b») :=
+  source_of erased wf denote_eq safety_eq (.here : FVar sigs "implies" sig.«implies») («a», «b», ()) vs args rfl
 
 end V2Tests.Generated.L0

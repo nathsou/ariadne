@@ -105,6 +105,8 @@ def FVar.safe : FVar Φ f s → Φ.safety → s.params.denote → Bool
 inductive Sel (src : Fields) : Fields → Type where
   | nil : Sel src .nil
   | cons (i : FIdx src f τ) (rest : Sel src fs) : Sel src (.cons f τ fs)
+  /-- An optional field the literal leaves out: it reads as `undefined`. -/
+  | absent (h : (n.undef? && !src.names.contains f) = true) (rest : Sel src fs) : Sel src (.cons f (.option n τ) fs)
 
 /-- How `{ ...r, entries }` takes each field: an entry, or `r`'s field. -/
 inductive Upd (src : Fields) : Fields → Type where

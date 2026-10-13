@@ -37,10 +37,22 @@ theorem ArgsRep.omitted : ∀ {ps : Ctx}, ps.omittable = true → ArgsRep ps [] 
   | (_, .tag _) :: _, h | (_, .lits _ _) :: _, h | (_, .record _) :: _, h | (_, .union _ _) :: _, h
   | (_, .array _) :: _, h => by simp [Ctx.omittable] at h
 
-theorem Sel.rep : ∀ {fs : Fields} (sel : Sel src fs) {kvs} {xs : src.denote}, src.Rep kvs xs →
-    fs.Rep kvs (sel.pick xs)
-  | .nil, .nil, _, _, _ => trivial
-  | .cons _ _ _, .cons i rest, _, _, h => ⟨i.rep h, rest.rep h⟩
+theorem Nullish.admits_undef {n : Nullish} (h : n.undef? = true) : n.admits .undefined := by
+  cases n <;> simp_all [Nullish.undef?, Nullish.admits]
+
+theorem Nullish.admits_null {n : Nullish} (h : n.null? = true) : n.admits .null := by
+  cases n <;> simp_all [Nullish.null?, Nullish.admits]
+
+theorem Sel.rep : ∀ {fs : Fields} (sel : Sel src fs) {kvs : List (String × JSValue)} {xs : src.denote},
+    kvs.map Prod.fst = src.names → src.Rep kvs xs → fs.Rep kvs (sel.pick xs)
+  | .nil, .nil, _, _, _, _ => trivial
+  | .cons _ _ _, .cons i rest, _, _, hn, h => ⟨i.rep h, rest.rep hn h⟩
+  | .cons f _ _, .absent ha rest, kvs, _, hn, h => by
+    simp only [Bool.and_eq_true, Bool.not_eq_true'] at ha
+    refine ⟨?_, rest.rep hn h⟩
+    have hf : f ∉ kvs.map Prod.fst := by rw [hn]; simpa using ha.2
+    simp only [Ty.Rep, fieldOf, lookup_eq_none_of_not_mem hf, Option.getD_none]
+    exact Nullish.admits_undef ha.1
 
 theorem Upd.rep : ∀ {fs : Fields} (u : Upd src fs) {ps rkvs} {xs : src.denote} {r : fs.denote},
     (ps.map Prod.fst) = src.names → (ps.map Prod.fst).Nodup → src.Rep ps xs → fs.Rep rkvs r →
@@ -49,12 +61,12 @@ theorem Upd.rep : ∀ {fs : Fields} (u : Upd src fs) {ps rkvs} {xs : src.denote}
   | .cons f _ _, .set i rest, ps, rkvs, xs, (_, r), hn, hd, hs, ⟨_, hr⟩ => by
     refine ⟨?_, rest.rep hn hd hs hr⟩
     have hf : f ∈ ps.map Prod.fst := by rw [hn]; exact i.mem
-    rw [fieldOf_upsertAll _ _ _ hd, if_pos hf]
+    rw [fieldOf_upsertAll _ _ _ hd]; simp only [hf, ↓reduceIte]
     exact i.rep hs
   | .cons f _ _, .keep h rest, ps, rkvs, xs, (_, r), hn, hd, hs, ⟨ha, hr⟩ => by
     refine ⟨?_, rest.rep hn hd hs hr⟩
     have hf : f ∉ ps.map Prod.fst := by rw [hn]; simpa using h
-    rw [fieldOf_upsertAll _ _ _ hd, if_neg hf]
+    rw [fieldOf_upsertAll _ _ _ hd]; simp only [hf, ↓reduceIte]
     exact ha
 
 /-- A binary operation whose operands converge. -/
@@ -68,12 +80,6 @@ theorem converges_binary {prog : Program} {env : Env} {op : BinOp} {a b : Expr} 
   obtain ⟨Nb, hb⟩ := hb
   refine Converges.of_succ (max Na Nb) fun m hm => ?_
   rcases op <;> simp_all [evalExpr, ha m (by omega), hb m (by omega), bind, Except.bind]
-
-theorem Nullish.admits_undef {n : Nullish} (h : n.undef? = true) : n.admits .undefined := by
-  cases n <;> simp_all [Nullish.undef?, Nullish.admits]
-
-theorem Nullish.admits_null {n : Nullish} (h : n.null? = true) : n.admits .null := by
-  cases n <;> simp_all [Nullish.null?, Nullish.admits]
 
 /-- An optional's representation is nullish exactly for `none`. -/
 theorem option_nullish {n : Nullish} {σ : Ty} {w : JSValue} {x : Option σ.denote} (hσ : σ.nonNullish = true)
@@ -330,7 +336,7 @@ mutual
       obtain ⟨ps, ⟨N, hc⟩, hn, hr⟩ := TEntries.adequate es [] hl he hs
       have hd : (ps.map Prod.fst).Nodup := by rw [hn]; exact Fields.literalNames_nodup hl
       exact ⟨.record ps, Converges.of_succ N fun m hm => by
-        simp [evalExpr, TExpr.erase, hc m hm, upsertAll_nil _ hd], ps, rfl, hd, sel.rep hr⟩
+        simp [evalExpr, TExpr.erase, hc m hm, upsertAll_nil _ hd], ps, rfl, hd, sel.rep hn hr⟩
     | _, _, .update r es u hl, env, ρ, he, hs => by
       simp only [TExpr.safe, Bool.and_eq_true] at hs
       obtain ⟨wr, ⟨Nr, hcr⟩, rkvs, rfl, hrd, hrr⟩ := TExpr.adequate r he hs.1

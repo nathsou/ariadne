@@ -76,12 +76,40 @@ theorem Nullish.admits_nullish : ∀ {n : Nullish} {w : JSValue}, n.admits w →
   | .undef, _, h | .null, _, h => by simp only [Nullish.admits] at h; subst h; rfl
   | .both, _, h => by rcases h with h | h <;> subst h <;> rfl
 
+theorem distinctStrs_getElem : ∀ {l : List JSString}, distinctStrs l = true →
+    ∀ (i j : Nat) (hi : i < l.length) (hj : j < l.length), l[i] = l[j] → i = j
+  | [], _, _, _, hi, _, _ => absurd hi (by simp)
+  | x :: xs, h, i, j, hi, hj, he => by
+    simp only [distinctStrs, Bool.and_eq_true, Bool.not_eq_true'] at h
+    have hx : x ∉ xs := by simpa using h.1
+    match i, j with
+    | 0, 0 => rfl
+    | 0, j + 1 =>
+      simp only [List.getElem_cons_zero, List.getElem_cons_succ] at he
+      exact absurd (he ▸ List.getElem_mem (by simpa using hj)) hx
+    | i + 1, 0 =>
+      simp only [List.getElem_cons_zero, List.getElem_cons_succ] at he
+      exact absurd (he.symm ▸ List.getElem_mem (by simpa using hi)) hx
+    | i + 1, j + 1 =>
+      simp only [List.getElem_cons_succ] at he
+      simp [distinctStrs_getElem h.2 i j (by simpa using hi) (by simpa using hj) he]
+
 /-- `===` on representations of primitives is `Ty.beq`. -/
 theorem Ty.strictEq_rep : ∀ {τ : Ty} {w₁ w₂ : JSValue} {a b : τ.denote}, τ.prim = true → τ.Rep w₁ a → τ.Rep w₂ b →
     strictEq w₁ w₂ = .ok (τ.beq a b)
   | .bool, _, _, _, _, _, h₁, h₂ | .int, _, _, _, _, _, h₁, h₂ | .number, _, _, _, _, _, h₁, h₂
-  | .string, _, _, _, _, _, h₁, h₂ | .lits _ _, _, _, _, _, _, h₁, h₂ => by
+  | .string, _, _, _, _, _, h₁, h₂ => by
     simp only [Ty.Rep] at h₁ h₂; subst h₁; subst h₂; rfl
+  | .lits a as, _, _, i, j, hp, h₁, h₂ => by
+    simp only [Ty.Rep] at h₁ h₂; subst h₁; subst h₂
+    simp only [strictEq, Ty.beq, Except.ok.injEq]
+    by_cases hij : i = j
+    · subst hij; simp
+    · have : (a :: as)[i] ≠ (a :: as)[j] := fun he =>
+        hij (Fin.ext (distinctStrs_getElem hp i j i.isLt j.isLt he))
+      have h1 : ((a :: as)[i] == (a :: as)[j]) = false := beq_eq_false_iff_ne.mpr this
+      have h2 : (i == j) = false := beq_eq_false_iff_ne.mpr hij
+      rw [h1, h2]
   | .tag t, _, _, _, _, _, h₁, h₂ => by
     simp only [Ty.Rep] at h₁ h₂; subst h₁; subst h₂; cases t <;> simp [TagLit.value, strictEq, Ty.beq]
   | .option _ _, _, _, _, _, h, _, _ | .record _, _, _, _, _, h, _, _ | .union _ _, _, _, _, _, h, _, _

@@ -1,4 +1,4 @@
-import V2.Front.Convert
+import V2.Front.Check
 import V2.Model.Eval
 import Lean.Data.Json
 
@@ -8,6 +8,7 @@ open V2 V2.Front Lean
 
 private def usage : String :=
   "ariadne2 — TypeScript subset to Lean 4, with a general correctness theorem\n\n" ++
+  "  ariadne2 translate FILE --out FILE.lean --namespace NAME\n" ++
   "  ariadne2 batch FILE < CALLS\n" ++
   "  ariadne2 signatures FILE\n\n" ++
   "batch evaluates calls in the trusted model (no type checking): one JSON array per\n" ++
@@ -66,12 +67,15 @@ private def report (source : V2.Parse.Source) (d : V2.Parse.Diagnostic) : IO UIn
   if let some help := d.help then IO.eprintln s!"  help: {help}"
   return 1
 
-private def tyName : V2.Parse.Ty → String
-  | .bigint => "bigint" | .boolean => "boolean" | .string => "string" | .number => "number"
-  | .named n => n | _ => "other"
-
 def main (args : List String) : IO UInt32 := do
   match args with
+  | "translate" :: path :: rest =>
+    let some out := option rest "--out" | IO.eprintln usage; return 2
+    let some ns := option rest "--namespace" | IO.eprintln usage; return 2
+    let text ← IO.FS.readFile path
+    match translate path ns text with
+    | .ok lean => IO.FS.writeFile out lean; return 0
+    | .error d => report { path, text } d
   | "batch" :: path :: [] =>
     let text ← IO.FS.readFile path
     let parsed ← match V2.Parse.parse text >>= convertProgram with
@@ -95,11 +99,9 @@ def main (args : List String) : IO UInt32 := do
     return 0
   | "signatures" :: path :: [] =>
     let text ← IO.FS.readFile path
-    match V2.Parse.parse text with
+    match signatures text with
     | .error d => report { path, text } d
-    | .ok parsed =>
-      for f in parsed.functions do
-        let params := ",".intercalate (f.params.map fun p => s!"\"{tyName p.ty}\"")
-        IO.println s!"\{\"name\":\"{f.name}\",\"exported\":{f.exported},\"params\":[{params}],\"result\":\"{tyName f.result}\"}"
+    | .ok lines =>
+      for l in lines do IO.println l
       return 0
   | _ => IO.eprintln usage; return 2

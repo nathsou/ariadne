@@ -9,7 +9,37 @@ why, and measurements. Update it with each milestone.
 | --- | --- |
 | M0: measurements, CI | Kernel-cost measurements below. CI job `v2` runs `scripts/v2-check.sh` and is part of the required `verify` status. |
 | M1: L0 end to end | Done: model, typed syntax, erasure, denotation, general theorem, frontend, CLI, fixture, differential and negative tests. |
-| M2 (L1) onward | Not started. |
+| M2: L1 | Done: records (literals, `{ ...r, f }`, field reads), string-literal unions, tagged unions (string or boolean tags) with `switch` narrowing, optionals (`?:`, `T \| null`, `T \| null \| undefined`), `== null` narrowing in expressions and statements, `??`, optional parameters, `break` in `switch`. Theorem, frontend, fixture, differential and negative tests. |
+| M3 (L2), M4 (L3) | In progress (the model already covers them; see below). |
+
+### Toolchain
+
+The only external tools are Lean 4.35.0 (with Lake) and Bun 1.4.3, both the latest releases, downloaded by
+`scripts/install-ci-tools.sh` and checked against pinned SHA-256 hashes. elan is no longer used. (GitHub Actions'
+own `checkout`/`upload-artifact` actions, pinned by commit, are CI infrastructure.)
+
+### M2 notes
+
+- **The model now covers L1 to L3** (records, arrays and their methods, integer-mode numbers, callbacks, `switch`,
+  `break`/`continue`, `let`, loops), validated against Bun by `V2Tests/model/*.ts` (`scripts/v2-model.mjs`): every
+  `t_*` function agrees, every `fault_*` function is refused by the model. Writing the trusted model in one piece kept it
+  coherent; the typed layer and the proof grow level by level.
+- **Representation is a relation** (`Ty.Rep`): a record is any object whose fields, read as JavaScript reads them,
+  represent the record's fields, in any order and with extra fields; an optional's `none` is `undefined` and/or `null`
+  as its type allows. The theorem quantifies over all JavaScript arguments representing the inputs
+  (`ArgsRep`), so it covers callers that pass richer objects, omit optional arguments, or pass `undefined` explicitly.
+- **Statements denote with three continuations** (normal, `break`, `continue`), still in continuation-passing style.
+- **Narrowing replaces a variable's type in the context** (`Var.narrow`), keeping the environment aligned; a
+  narrowing carries an embedding back into the wide type (`some`, union injection), used when control leaves the
+  narrowed region.
+- **A safety predicate** (Bool, mirroring the denotation) is in place for L2's numbers; trivially safe functions
+  (no operation that can fault) get `fun _ => true` by definition, so their source theorems have no safety hypothesis.
+- **Restrictions in L1:** `switch` over a union must list one case per variant in the union's order, each case but the
+  last ending in `return`/`break`; a literal union compared with `===` must have distinct literals.
+- **Frontend lesson:** variable references inside narrowed contexts cite named lemmas `ne.«x».«y»` instead of
+  `by decide`; postponed tactic proofs block reducing `Var.narrow` during elaboration.
+- **Proof size:** about 1,300 lines for L0 + L1 (L0 alone was about 300), most of it reusable: the relational
+  environment, outcomes and continuations, narrowing.
 
 ## Layout
 

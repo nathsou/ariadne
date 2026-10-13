@@ -162,9 +162,16 @@ end
 
 /-! ## Primitive types -/
 
-/-- Types whose values `===` compares by value. -/
+/-- The strings are distinct. -/
+def distinctStrs : List JSString → Bool
+  | [] => true
+  | x :: xs => !xs.contains x && distinctStrs xs
+
+/-- Types whose values `===` compares by value (for a literal union, by index:
+its literals must be distinct). -/
 def Ty.prim : Ty → Bool
-  | .bool | .int | .number | .string | .tag _ | .lits _ _ => true
+  | .bool | .int | .number | .string | .tag _ => true
+  | .lits a as => distinctStrs (a :: as)
   | _ => false
 
 /-- Types with no nullish value, so `x == null` tells an optional's `none` apart. -/
@@ -179,7 +186,7 @@ def Ty.beq : (τ : Ty) → τ.denote → τ.denote → Bool
   | .number, a, b => a == b
   | .string, a, b => a == b
   | .tag _, _, _ => true
-  | .lits a as, i, j => (a :: as)[i] == (a :: as)[j]
+  | .lits _ _, i, j => i == j
   | _, _, _ => false
 
 /-! ## Fields and variants -/
