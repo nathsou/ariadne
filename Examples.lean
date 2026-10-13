@@ -69,3 +69,4 @@ import Examples.Tamper.int53
 import Examples.Proofs.SharedSource
 import Examples.Shallow.guardedshared
 import Examples.Tamper.guardedshared
+import Examples.Tamper.projectionarray

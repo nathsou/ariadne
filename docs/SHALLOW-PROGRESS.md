@@ -104,7 +104,13 @@ wrapper and its operational entry guard. Neither has input disjointness or
 whole-function execution as a premise. Three forged state/guard/entry witnesses
 are checked against a dedicated one-function fixture. General data/state/class
 source transfer and checker soundness remain M4 work. Simultaneous projected
-call arguments remain pending. Distinct valid array positions select disjoint
+call arguments remain pending. Exported three-parameter `bigint[][]` element
+pushes also receive universal source and wrapper witnesses. `ArrayUpdate`
+proves that the emitted numeric-index map equals the array lens replacement
+for every valid dense-array index, including negative zero. The projection
+suite checks all four universal witnesses and rejects six forged state, guard
+and entry declarations against two separate one-function fixtures.
+Distinct valid array positions select disjoint
 element footprints. Map projections have the corresponding rule for keys whose
 map-equality classes cannot overlap; this makes the SameValueZero obligation
 explicit instead of treating strict inequality as sufficient for numeric keys.

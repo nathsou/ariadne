@@ -2,6 +2,7 @@ import Ariadne.Shallow.Adequacy.Focus
 import Ariadne.Shallow.Adequacy.ArrayMutation
 import Ariadne.Ownership.Sound
 import Ariadne.Shallow.Lens
+import Ariadne.Shallow.Prelude.ArrayUpdate
 
 namespace Ariadne.Shallow.Adequacy
 open Heap DataRelation
@@ -21,7 +22,8 @@ theorem array_projection_push {relation : Value → α → Prop} {program : Prog
         (.number (Float.Model.ofNat (old ++ [native]).length)) after ∧
       (DataRelation.scalar relation).array.array.Holds after.heap (.ref outer)
         (natives.set index (old ++ [native])) owned ∧
-      Modifies [address] state.heap after.heap := by
+      Modifies [address] state.heap after.heap ∧
+      ∃ runtime, state.heap[outer]? = some (.array runtime) ∧ runtime[index]? = some (.ref address) := by
   obtain ⟨root, runtime, children, same, lookup, elements, rootFresh, footprintEq⟩ := array_contents input
   have rootEq : outer = root := Value.ref.inj same
   subst root
@@ -44,7 +46,8 @@ theorem array_projection_push {relation : Value → α → Prop} {program : Prog
   have outside : outer ∉ selected := fun member => rootFresh (subset member)
   have rootAllocated : outer < state.heap.length := (List.getElem?_eq_some_iff.mp lookup).choose
   have unchanged := writesSelected.2 outer rootAllocated outside
-  refine ⟨.ref address, address, after, rfl, invoked, ?_, writes⟩
+  refine ⟨.ref address, address, after, rfl, invoked, ?_, writes,
+    runtime, lookup, runtimeFound⟩
   rw [footprintEq]
   refine ⟨?_, outer, .array runtime, children, rfl, unchanged.symm.trans lookup,
     ⟨runtime, rfl, updatedElements⟩, rootFresh, rfl⟩
