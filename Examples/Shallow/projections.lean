@@ -6,6 +6,7 @@ import Ariadne.Shallow.Adequacy.Statements
 import Ariadne.Shallow.Adequacy.GuardedStatements
 import Ariadne.Shallow.Adequacy.JoinsContext
 import Ariadne.Shallow.Adequacy.GuardedJoinsContext
+import Ariadne.Shallow.Adequacy.ProjectionSource
 import Ariadne.Ownership.Source
 
 set_option maxRecDepth 100000
@@ -457,6 +458,49 @@ theorem DenotationChecks.«appendGroup» :
       Denote.function (interp := Interpretation.value) CoreArtifacts.«appendGroup» := by
   unfold Extracted_projections.Shallow.«appendGroup»
   simp only [Denote.function, CoreArtifacts.«appendGroup», Denote.term, Core.Var.get] <;> rfl
+
+theorem SourceProjectionChecks.«appendGroup».parameters : EntryGuards.«appendGroup».function.params = [{ name := "groups", ty := Ariadne.Ty.map (Ariadne.Ty.string) (Ariadne.Ty.array (Ariadne.Ty.bigint)), span := { start := 155, stop := 161 } }, { name := "key", ty := Ariadne.Ty.string, span := { start := 186, stop := 189 } }, { name := "value", ty := Ariadne.Ty.bigint, span := { start := 199, stop := 204 } }] := by kernel_rfl
+
+theorem «appendGroup_source» («_groups#arg» : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString (_root_.List _root_.Int))) («_key#arg» : _root_.Ariadne.JSString) («_value#arg» : _root_.Int) (_sourceHeap : Heap) (_sourceAddress : Nat) (_sourceFootprint : Heap.Footprint)
+    (_sourceInput : (DataRelation.map DataRelation.string DataRelation.int.array).Holds _sourceHeap (.ref _sourceAddress) «_groups#arg» _sourceFootprint)
+    (_sourceSafe : «appendGroup».safe «_groups#arg» «_key#arg» «_value#arg») :
+    Adequacy.SourceMutatesFrom _root_.Extracted_projections.source "appendGroup" _sourceHeap [.ref _sourceAddress, .string «_key#arg», .bigint «_value#arg»]
+      (DataRelation.map DataRelation.string DataRelation.int.array) (.ref _sourceAddress) («appendGroup» «_groups#arg» «_key#arg» «_value#arg»).2.1 := by
+  have accepted := _sourceSafe.2
+  have selected : ∃ old, JSMap.get «_groups#arg» «_key#arg» = some old ∧ (old ++ [«_value#arg»]).length < 2 ^ 32 := by
+    cases found : JSMap.get «_groups#arg» «_key#arg» with
+    | none =>
+      simp [CoreArtifacts.«appendGroup», Safety.term, Safety.getVariable, Safety.binary,
+        Safety.binarySafe, Safety.liftEnvironment, found] at accepted
+    | some old =>
+      refine ⟨old, rfl, ?_⟩
+      simp [CoreArtifacts.«appendGroup», Safety.term, Safety.getVariable, Safety.binary,
+        Safety.binarySafe, Safety.mapSet, Safety.liftEnvironment, found] at accepted
+      simpa using accepted
+  obtain ⟨old, found, capacity⟩ := selected
+  have updated : («appendGroup» «_groups#arg» «_key#arg» «_value#arg»).2.1 = JSMap.set «_groups#arg» «_key#arg» (old ++ [«_value#arg»]) := by
+    simp [«appendGroup», found]
+  rw [updated]
+  have lookups : (Adequacy.bindArguments {heap := _sourceHeap} EntryGuards.«appendGroup».function.params [.ref _sourceAddress, .string «_key#arg», .bigint «_value#arg»]).lookup "groups" = .ok (.ref _sourceAddress) ∧
+      (Adequacy.bindArguments {heap := _sourceHeap} EntryGuards.«appendGroup».function.params [.ref _sourceAddress, .string «_key#arg», .bigint «_value#arg»]).lookup "key" = .ok (.string «_key#arg») ∧
+      (Adequacy.bindArguments {heap := _sourceHeap} EntryGuards.«appendGroup».function.params [.ref _sourceAddress, .string «_key#arg», .bigint «_value#arg»]).lookup "value" = .ok (.bigint «_value#arg») := by
+    rw [SourceProjectionChecks.«appendGroup».parameters]
+    exact Adequacy.bindArguments_three _ ({ name := "groups", ty := Ariadne.Ty.map (Ariadne.Ty.string) (Ariadne.Ty.array (Ariadne.Ty.bigint)), span := { start := 155, stop := 161 } }) ({ name := "key", ty := Ariadne.Ty.string, span := { start := 186, stop := 189 } }) ({ name := "value", ty := Ariadne.Ty.bigint, span := { start := 199, stop := 204 } })
+      (.ref _sourceAddress) (.string «_key#arg») (.bigint «_value#arg») (by decide) (by decide) (by decide)
+  exact Adequacy.map_push_source _root_.Extracted_projections.certificate EntryGuards.«appendGroup».function
+    _sourceHeap [.ref _sourceAddress, .string «_key#arg», .bigint «_value#arg»] _sourceAddress «_groups#arg» _sourceFootprint «_key#arg» (.string «_key#arg») (.bigint «_value#arg») old «_value#arg»
+    "groups" "key" "value" ({ start := 224, stop := 230 }) ({ start := 235, stop := 238 }) ({ start := 246, stop := 251 }) ({ start := 224, stop := 234 }) ({ start := 224, stop := 239 }) ({ start := 224, stop := 240 }) ({ start := 224, stop := 245 }) ({ start := 224, stop := 252 }) ({ start := 224, stop := 252 }) ({ start := 220, stop := 255 })
+    (by kernel_rfl) (by kernel_rfl) lookups.1 lookups.2.1 lookups.2.2 _sourceInput found
+    (by intro source native same; cases same; rfl) rfl capacity
+
+theorem SourceProjectionChecks.«appendGroup».wrapperSource («_groups#arg» : (_root_.Ariadne.Shallow.JSMap _root_.Ariadne.JSString (_root_.List _root_.Int))) («_key#arg» : _root_.Ariadne.JSString) («_value#arg» : _root_.Int) (_sourceHeap : Heap) (_sourceAddress : Nat) (_sourceFootprint : Heap.Footprint)
+    (_sourceInput : (DataRelation.map DataRelation.string DataRelation.int.array).Holds _sourceHeap (.ref _sourceAddress) «_groups#arg» _sourceFootprint)
+    (_sourceSafe : «appendGroup».safe «_groups#arg» «_key#arg» «_value#arg»)
+    (_entrySafe : «appendGroup».entrySafe _sourceHeap [.ref _sourceAddress, .string «_key#arg», .bigint «_value#arg»] = true) :
+    Adequacy.WrappedSourceMutatesFrom _root_.Extracted_projections.source _root_.Extracted_projections.Wrapper.source
+      "appendGroup" _sourceHeap [.ref _sourceAddress, .string «_key#arg», .bigint «_value#arg»] (DataRelation.map DataRelation.string DataRelation.int.array) (.ref _sourceAddress) («appendGroup» «_groups#arg» «_key#arg» «_value#arg»).2.1 := by
+  exact Adequacy.transfer_mutation EntryGuards.«appendGroup».certificate
+    («appendGroup_source» «_groups#arg» «_key#arg» «_value#arg» _sourceHeap _sourceAddress _sourceFootprint _sourceInput _sourceSafe) _entrySafe
 
 def CoreArtifacts.«appendRow» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int)),  Ariadne.Shallow.Core.Ty.number,  Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.pair   (Ariadne.Shallow.Core.Ty.unit)   (Ariadne.Shallow.Core.Ty.pair     (Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int)))     (Ariadne.Shallow.Core.Ty.unit)), body := (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int))) "#loan:rows" (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int))) "rows" (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.number) "#projectionKey" (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) (Core.Term.optionCase (Core.Term.binary (Ariadne.Shallow.Core.Binary.get) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) (Core.Term.var (Ariadne.Shallow.Core.Var.here))) (Core.Term.binary (Ariadne.Shallow.Core.Binary.guard) (Core.Term.bool false) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) (Core.Term.listMap (Core.Term.lam "value" (Core.Term.lam "index" (Core.Term.ite (Core.Term.binary (Ariadne.Shallow.Core.Binary.numEq) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))) (Core.Term.binary (Ariadne.Shallow.Core.Binary.append) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) (Core.Term.cons (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there     (Ariadne.Shallow.Core.Var.there       (Ariadne.Shallow.Core.Var.there         (Ariadne.Shallow.Core.Var.there           (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))))))) Core.Term.nil)) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))) (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int))) "#loan:rows" (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.unit) "#returned:264" Core.Term.unit (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) Core.Term.unit)))))) }
 

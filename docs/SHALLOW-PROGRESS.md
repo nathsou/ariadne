@@ -89,8 +89,15 @@ heap. Missing elements fail the computed safety predicate. The native runtime
 updates the existing inner object without copying it; Lean uses pure container
 replacement. Differential checks cover arrays, Maps, record-field updates,
 binary64 edge cases, selected-element identities and missing-element guards.
-Connecting the syntax-directed footprint rules to general emitted source
-transfer remains M4 work. Simultaneous projected call arguments remain pending.
+Exported three-parameter `Map<string, bigint[]>` pushes now receive a universal
+stateful source theorem over the actual input heap representation and computed
+`f.safe`. Its conclusion observes the actual emitted native state in the final
+source heap. A second theorem lifts the result through the kernel-bound runtime
+wrapper and its operational entry guard. Neither has input disjointness or
+whole-function execution as a premise. Three forged state/guard/entry witnesses
+are checked against a dedicated one-function fixture. General data/state/class
+source transfer and checker soundness remain M4 work. Simultaneous projected
+call arguments remain pending.
 
 CI #96 on `5e31ceb` passes in 11m23s, compared with baseline CI #82's 21m18s.
 Its logged source-transfer and Int53 tamper phases take 17s and 7s respectively,
@@ -103,7 +110,13 @@ The subsequent local projection gate passed all 26 JavaScript suites and a
 6,594-theorem axiom audit. CI now runs basic verification, data comparisons and
 source/tamper checks on separate runners after restoring the checked artifacts.
 Every runner remains serial, and the final required status rejects a failed or
-skipped phase. Fresh CI timings for this split are pending.
+skipped phase.
+CI #104 on `76ae948` passed the split in 12m00s (baseline: 21m18s), including
+all 26 suites and 20 new projection comparisons. Source/Int53 tamper phases
+took 21s/9s. Shared-continuation tamper checks still took 73s, so their four
+unchanged assignment/capture/restoration/comparison mutations now use a
+dedicated two-function fixture while all eight universal source theorems and
+50 three-way comparisons remain checked.
 
 Frontend checkpoint: the complete `scripts/check.sh` suite passes with 1,217
 audited theorems, 42 native entry points, 64 generated programs, 51 scalar

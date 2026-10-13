@@ -39,6 +39,8 @@ import Examples.Shallow.records
 import Examples.Shallow.unions
 import Examples.Shallow.state
 import Examples.Shallow.projections
+import Examples.Tamper.projections
+import Examples.Tamper.shared
 import Examples.Proofs.ShallowScalars
 import Examples.Proofs.ShallowArrays
 import Examples.Proofs.ShallowLoops

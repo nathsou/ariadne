@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import * as native from '../examples/shallow/shared.ts';
 
 const good = await readFile('Examples/Shallow/shared.lean', 'utf8');
+const fixture = await readFile('Examples/Tamper/shared.lean', 'utf8');
 const names = ['nested', 'flattened', 'nestedFlattened', 'early', 'empty', 'greater', 'numberGreater', 'stringGreater'];
 for (const name of names) assert.ok(good.includes(`theorem «${name}_source»`), `missing source theorem for ${name}`);
 const bits = value => {
@@ -50,13 +51,13 @@ try {
   assert.equal(compared.status, 0, compared.stdout + compared.stderr);
   assert.deepEqual(compared.stdout.trim().split('\n').map(JSON.parse), expected);
 
-  const changedSource = good.replace(/(def SourceChecks\.«nested»\.function[^\n]*?Ariadne.Stmt.assign\s*\(Ariadne.Expr.var )"x"/, '$1"wrongTarget"');
-  const changedCapture = good.replace(/(def SourceJoinChecks\.«nested#select[^»]*» :[\s\S]*?\n\s*\| _, \.here => )[^\n]+/, '$1Core.Var.here');
-  const changedRestore = good.replace(/(theorem SourceChecks\.«nested»\.translated[\s\S]*?)\.restore/, '$1.capture');
-  const changedOrder = good.replace(/(theorem SourceChecks\.«greater»\.translated[\s\S]*?exact[^\n]*?)\.intGt/, '$1.intGe');
+  const changedSource = fixture.replace(/(def SourceChecks\.«nested»\.function[^\n]*?Ariadne.Stmt.assign\s*\(Ariadne.Expr.var )"x"/, '$1"wrongTarget"');
+  const changedCapture = fixture.replace(/(def SourceJoinChecks\.«nested#select[^»]*» :[\s\S]*?\n\s*\| _, \.here => )[^\n]+/, '$1Core.Var.here');
+  const changedRestore = fixture.replace(/(theorem SourceChecks\.«nested»\.translated[\s\S]*?)\.restore/, '$1.capture');
+  const changedOrder = fixture.replace(/(theorem SourceChecks\.«greater»\.translated[\s\S]*?exact[^\n]*?)\.intGt/, '$1.intGe');
   const tampered = resolve(dir, 'Tampered.lean');
   for (const [label, bad] of [['source assignment', changedSource], ['captured variable', changedCapture], ['scope restoration', changedRestore], ['reversed comparison', changedOrder]]) {
-    assert.ok(bad !== good, `tamper did not match ${label}`);
+    assert.ok(bad !== fixture, `tamper did not match ${label}`);
     await writeFile(tampered, bad);
     const rejected = spawnSync('lake', ['env', 'lean', tampered], { encoding: 'utf8', timeout: 120000, maxBuffer: 8e6 });
     assert.notEqual(rejected.status, 0, `kernel accepted modified ${label}`);

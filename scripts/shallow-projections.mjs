@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdir, mkdtemp, writeFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import * as native from '../Examples/Shallow/projections.runtime.ts';
@@ -44,7 +44,9 @@ const nativeState = (name, expr) => {
 await mkdir('work', {recursive: true});
 const dir = await mkdtemp(resolve('work/shallow-projections-'));
 try {
-  let runner = 'import Examples.Shallow.projections\nimport Ariadne.Observe\nopen Ariadne\n';
+  let runner = 'import Examples.Shallow.projections\nimport Ariadne.Observe\nopen Ariadne\n' +
+    '#check @Extracted_projections.Shallow.appendGroup_source\n' +
+    '#check @Extracted_projections.Shallow.SourceProjectionChecks.appendGroup.wrapperSource\n';
   const expected = [];
   let count = 0;
   for (const [name, entries] of Object.entries(cases)) for (const input of entries) {
@@ -81,6 +83,28 @@ try {
   await writeFile(path, runner);
   const result = spawnSync('lake', ['env', 'lean', path], {encoding: 'utf8', timeout: 120000, maxBuffer: 8e6});
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.deepEqual(result.stdout.trim().split('\n').map(JSON.parse), expected);
-  console.log(`Shallow projections passed: ${count} three-way heap comparisons, retained element identities, and 6 missing-element guards.`);
+  assert.deepEqual(result.stdout.trim().split('\n').filter(line => line.startsWith('{')).map(JSON.parse), expected);
+  const original = await readFile('Examples/Tamper/projections.lean', 'utf8');
+  const start = original.indexOf('theorem «appendGroup_source»');
+  assert.ok(start >= 0, 'the universal stateful source witness must be emitted');
+  const end = original.indexOf('theorem SourceProjectionChecks.«appendGroup».wrapperSource', start);
+  assert.ok(end > start);
+  const declaration = original.slice(start, end);
+  const updated = declaration.match(/  have updated :[^\n]+/)[0];
+  const alteredUpdates = updated.replace('(old ++ [«_value#arg»])', 'old');
+  assert.notEqual(updated, alteredUpdates);
+  const alterations = [
+    declaration.replace(updated, alteredUpdates),
+    declaration.replace('(_sourceSafe : «appendGroup».safe «_groups#arg» «_key#arg» «_value#arg»)', '(_sourceSafe : True)'),
+    declaration.replace('source "appendGroup"', 'source "forgedEntry"'),
+  ];
+  for (const [i, altered] of alterations.entries()) {
+    assert.notEqual(altered, declaration);
+    const tampered = resolve(dir, `Tampered${i}.lean`);
+    await writeFile(tampered, original.slice(0, start) + altered + original.slice(end));
+    const refused = spawnSync('lake', ['env', 'lean', tampered], {encoding: 'utf8', timeout: 60000, maxBuffer: 8e6});
+    assert.notEqual(refused.status, 0, 'a forged source mutation witness must fail kernel checking');
+    assert.ok(refused.stdout.includes('error'), refused.stdout + refused.stderr);
+  }
+  console.log(`Shallow projections passed: ${count} three-way heap comparisons, retained element identities, 6 missing-element guards, 2 universal source witnesses, and 3 small-fixture tamper checks.`);
 } finally { await rm(dir, {recursive: true, force: true}); }

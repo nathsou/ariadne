@@ -3,6 +3,7 @@ import Ariadne.Shallow.Elaborate
 import Ariadne.Shallow.Safety
 import Ariadne.Shallow.EmitJoins
 import Ariadne.Shallow.EmitGuardedJoins
+import Ariadne.Shallow.EmitProjection
 import Ariadne.Ownership.Source
 
 namespace Ariadne.Shallow
@@ -595,7 +596,7 @@ def emit (source : String) (program : Program) (namespace_ : String) : Checked S
     core.params.flatMap typeDeclarations ++ termDeclarations core.body).eraseDups
   let declarations := (← roots.mapM (declarationOrder expanded 100)).flatten.eraseDups
   let mut out := (Ariadne.emit source original namespace_).replace
-    "import Ariadne.Certificate\n" "import Ariadne.Certificate\nimport Ariadne.Shallow.Elaborate\nimport Ariadne.Shallow.Safety\nimport Ariadne.Shallow.Adequacy.Statements\nimport Ariadne.Shallow.Adequacy.GuardedStatements\nimport Ariadne.Shallow.Adequacy.JoinsContext\nimport Ariadne.Shallow.Adequacy.GuardedJoinsContext\nimport Ariadne.Ownership.Source\n"
+    "import Ariadne.Certificate\n" "import Ariadne.Certificate\nimport Ariadne.Shallow.Elaborate\nimport Ariadne.Shallow.Safety\nimport Ariadne.Shallow.Adequacy.Statements\nimport Ariadne.Shallow.Adequacy.GuardedStatements\nimport Ariadne.Shallow.Adequacy.JoinsContext\nimport Ariadne.Shallow.Adequacy.GuardedJoinsContext\nimport Ariadne.Shallow.Adequacy.ProjectionSource\nimport Ariadne.Ownership.Source\n"
   out := out ++ s!"\nnamespace {namespace_}.Wrapper\nopen Ariadne\n\n"
   if wrapper == Ownership.Wrap.header ++ source then
     out := out ++ s!"def source : String := Ownership.Wrap.header ++ _root_.{namespace_}.source\n\n" ++
@@ -684,7 +685,8 @@ def emit (source : String) (program : Program) (namespace_ : String) : Checked S
       let theoremText := (sourceTheorem namespace_ f core params names safeEnv publicAlias).orElse (fun _ =>
         (guardedSourceTheorem namespace_ f core params names safeEnv publicAlias).orElse (fun _ =>
           (JoinEmit.sourceTheorem program namespace_ f core params names safeEnv publicAlias).orElse (fun _ =>
-            GuardedJoinEmit.sourceTheorem program namespace_ f core params names safeEnv publicAlias)))
+            (GuardedJoinEmit.sourceTheorem program namespace_ f core params names safeEnv publicAlias).orElse (fun _ =>
+              ProjectionEmit.sourceTheorem namespace_ f core params names publicAlias))))
       if let some theoremText := theoremText then
         out := out ++ theoremText
   return out ++ s!"end {namespace_}.Shallow\n"
