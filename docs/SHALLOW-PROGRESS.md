@@ -243,12 +243,10 @@ with 7,043 audited theorems and all 27 suites; library preparation took 260s,
 and source/Int53 tamper phases took 23s/9s. CI #119's tool-installation failure
 was repeated GitHub HTTP 500 responses; the same commit's PR run #120 passed.
 Release downloads now have a bounded longer retry window with all checksum
-checks retained. Preparation restores an incremental library build keyed by
-the tool/configuration hashes and library source hashes. Lake build and
-regeneration always run after restoration; all subsequent certificate and test
-checks remain. CI #128 restored the prior library, rebuilt the changed class
-modules and checked regeneration in 27s (57s for the preparation job overall).
-All nine jobs passed in 8m54s with 7,071 audited theorems and all 27 suites.
+checks retained. CI #128 briefly restored an incremental library build from the Actions cache
+(57s preparation). That cache was removed again: Lean imports compiled modules
+without re-checking their proofs, so a restored module would be reported as
+checked without this run's kernel having checked it. All nine jobs passed in 8m54s with 7,071 audited theorems and all 27 suites.
 Its source/Int53 tamper phases took 21s/9s. The complete local class-state gate
 also passed; general M4 and M5 remain open.
 CI #130 passed the private Map method/trace checkpoint in 9m12s with 7,090

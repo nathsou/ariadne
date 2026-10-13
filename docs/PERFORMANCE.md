@@ -43,12 +43,12 @@ correctness proofs are erased during native execution.
 PR #4's CI baseline (#82) took 21m18s. The verified class-state checkpoint
 (#128) took 8m54s, retaining all original checks and adding proof witnesses.
 Regeneration avoids duplicate shallow checking; source/Int53 tamper tests use
-small fixtures; serial certificate/test jobs run on separate runners. A pinned
-Actions cache reuses unchanged library modules, with Lake build and regeneration
-always run after restoration. The #128 preparation build took 27s after an
-incremental restore, compared with 260s in the uncached #124 run. Its source and
-Int53 tamper phases took 21s/9s versus 111s/89s in the baseline. Runner variability
-and a cold cache affect the wall time; these are observed CI timings.
+small fixtures; serial certificate/test jobs run on separate runners. CI does not cache
+library builds: Lean imports a compiled module without re-checking its proofs, so a
+restored cache would let a run report modules it never checked. Every run builds
+the library from scratch (about 260s in #124). Its source and Int53 tamper phases
+took 21s/9s versus 111s/89s in the baseline. Runner variability affects the wall
+time; these are observed CI timings.
 
 Logs: [baseline #82](https://github.com/nathsou/ariadne/actions/runs/38294746569)
 and [class state #128](https://github.com/nathsou/ariadne/actions/runs/38359764572).
