@@ -26,7 +26,10 @@ try {
   let runner = 'import Examples.Shallow.classes\nimport Examples.ClassAdequacy\nimport Ariadne.Observe\nopen Ariadne\nopen Extracted_classes.Shallow\nset_option linter.unusedVariables false\n' +
     '#check @Examples.ClassAdequacy.seeded_add_source\n' +
     '#check @Examples.ClassAdequacy.seeded_read_source\n' +
-    '#check @Examples.ClassAdequacy.seeded_trace_source\n';
+    '#check @Examples.ClassAdequacy.seeded_trace_source\n' +
+    '#check @Examples.ClassAdequacy.counter_bump_source\n' +
+    '#check @Examples.ClassAdequacy.counter_count_source\n' +
+    '#check @Examples.ClassAdequacy.counter_trace_source\n';
   const expected = [];
   for (const [i, [name, args, ops]] of traces.entries()) {
     const value = new ({Counter, Seeded}[name])(...args);
@@ -82,6 +85,10 @@ try {
       'layout.Holds after.heap (.ref address) native owned'),
     witness.replace('before (.method address "add")', 'before (.method address "read")'),
     witness.replace('(input : layout.Holds before.heap (.ref address) native owned)', '(input : True)'),
+    witness.replace('counterLayout.Holds after.heap (.ref address) («Counter#bump» native key).2.1 owned',
+      'counterLayout.Holds after.heap (.ref address) native owned'),
+    witness.replace('(.bigint («Counter#bump» native key).1)', '(.bigint 0)'),
+    witness.replace('before (.method address "bump")', 'before (.method address "count")'),
   ];
   for (const [i, altered] of alterations.entries()) {
     assert.notEqual(altered, witness);
@@ -91,5 +98,5 @@ try {
     assert.notEqual(refused.status, 0, 'a forged class source witness must fail kernel checking');
     assert.ok(refused.stdout.includes('error'), refused.stdout + refused.stderr);
   }
-  console.log(`Shallow classes passed: ${traces.length} three-way constructor/method traces with intermediate state observations, 3 universal source/trace witnesses, and 3 class tamper checks.`);
+  console.log(`Shallow classes passed: ${traces.length} three-way constructor/method traces with intermediate state observations, 6 universal source/trace witnesses, and 6 class tamper checks.`);
 } finally { await rm(dir, {recursive:true, force:true}); }

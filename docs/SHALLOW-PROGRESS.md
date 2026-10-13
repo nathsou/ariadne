@@ -164,7 +164,13 @@ An induction proves arbitrary-length add/read call traces through the original
 source evaluator, preserving each intermediate native state. The class suite
 retains its ten finite constructor/method traces, checks all three universal
 witnesses and rejects three forged native-state, method and representation
-declarations. Constructors, private Map method transfer, general class/checker
+declarations. The private Map extension also proves `Counter.bump`, `Counter.count`
+and arbitrary-length bump/count traces against the actual emitted methods,
+preserving the class identity, private Map and unchanged scalar field.
+`MapExpressions` composes original lookup, nullish fallback, key equality,
+insertion and local-binding execution; six class witnesses and six forged
+return, state, method and representation declarations are checked.
+Constructors, general class/checker
 adequacy and the original reference source proofs remain pending.
 
 CI #96 on `5e31ceb` passes in 11m23s, compared with baseline CI #82's 21m18s.
@@ -219,7 +225,11 @@ Release downloads now have a bounded longer retry window with all checksum
 checks retained. Preparation restores an incremental library build keyed by
 the tool/configuration hashes and library source hashes. Lake build and
 regeneration always run after restoration; all subsequent certificate and test
-checks remain. Warm-cache timings have not yet been measured.
+checks remain. CI #128 restored the prior library, rebuilt the changed class
+modules and checked regeneration in 27s (57s for the preparation job overall).
+All nine jobs passed in 8m54s with 7,071 audited theorems and all 27 suites.
+Its source/Int53 tamper phases took 21s/9s. The complete local class-state gate
+also passed; general M4 and M5 remain open.
 
 Frontend checkpoint: the complete `scripts/check.sh` suite passes with 1,217
 audited theorems, 42 native entry points, 64 generated programs, 51 scalar

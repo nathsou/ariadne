@@ -35,6 +35,7 @@ import Ariadne.Shallow.Adequacy.Ownership
 import Ariadne.Shallow.Adequacy.Permissions
 import Ariadne.Shallow.Adequacy.ClassMutation
 import Ariadne.Shallow.Adequacy.MapScalarMutation
+import Ariadne.Shallow.Adequacy.MapExpressions
 import Ariadne.SourceTrace
 import Ariadne.Ownership.Sound
 import Ariadne.Shallow.Lens
