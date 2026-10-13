@@ -286,7 +286,14 @@ theorem TProgram.lookups : ∀ {Φ : Sigs} (P : TProgram Φ), P.names.Nodup → 
 on the encoding of any arguments, converges to the encoding of its denotation. -/
 theorem adequacy {Φ : Sigs} (P : TProgram Φ) (wf : P.WF) {f : String} {s : Sig} (v : FVar Φ f s)
     (xs : s.params.denote) :
-    Converges (fun n => call P.erase n f (s.params.encode xs)) (.ok (s.result.encode (v.get P.denote xs))) :=
-  P.fnsOK (P.lookups wf.1) wf.2 v xs
+    Converges (fun n => run P.erase n f (s.params.encode xs)) (.ok (s.result.encode (v.get P.denote xs))) := by
+  simpa only [run, wf.2.2, ite_true] using P.fnsOK (P.lookups wf.1) wf.2.1 v xs
+
+/-- Adequacy for a printed file: its source AST, and its functions as the readable
+definitions `fs`. -/
+theorem source_of {Φ : Sigs} {P : TProgram Φ} {ast : Program} {fs : Φ.denote} (erased : P.erase = ast)
+    (wf : P.WF) (denote_eq : P.denote = fs) {f : String} {s : Sig} (v : FVar Φ f s) (xs : s.params.denote) :
+    Converges (fun n => run ast n f (s.params.encode xs)) (.ok (s.result.encode (v.get fs xs))) :=
+  erased ▸ denote_eq ▸ adequacy P wf v xs
 
 end V2

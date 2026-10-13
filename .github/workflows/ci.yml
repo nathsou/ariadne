@@ -107,9 +107,21 @@ jobs:
       - name: Run serial verification phase
         run: scripts/check.sh "${{ matrix.phase }}"
 
+  # Ariadne v2: general theorem, kernel-checked fixtures, differential and negative tests.
+  v2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Install checksum-pinned Lean, elan, and Bun
+        run: bash scripts/install-ci-tools.sh
+      # No build cache, as for v1: every module reported as checked is built here.
+      - name: Check v2
+        run: scripts/v2-check.sh
+
   # Retain one required status which fails if any check was skipped or failed.
   verify:
-    needs: [prepare, examples, checks]
+    needs: [prepare, examples, checks, v2]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -119,4 +131,7 @@ jobs:
           PREPARE_RESULT: ${{ needs.prepare.result }}
           EXAMPLES_RESULT: ${{ needs.examples.result }}
           CHECKS_RESULT: ${{ needs.checks.result }}
-        run: test "$PREPARE_RESULT" = success && test "$EXAMPLES_RESULT" = success && test "$CHECKS_RESULT" = success
+          V2_RESULT: ${{ needs.v2.result }}
+        run: >-
+          test "$PREPARE_RESULT" = success && test "$EXAMPLES_RESULT" = success &&
+          test "$CHECKS_RESULT" = success && test "$V2_RESULT" = success

@@ -21,3 +21,7 @@ name = "V2"
 
 [[lean_lib]]
 name = "V2Tests"
+
+[[lean_exe]]
+name = "ariadne2"
+root = "V2Main"

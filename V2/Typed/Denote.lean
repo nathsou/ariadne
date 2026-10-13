@@ -1,4 +1,5 @@
 import V2.Typed.Syntax
+import V2.Kernel
 
 /-!
 # Denotation
@@ -66,9 +67,17 @@ def TProgram.denote : TProgram Φ → Φ.denote
   | .nil => ()
   | .cons _ body rest => (body.denoteFn rest.denote, rest.denote)
 
-/-- Distinct function names, and every body returns on every path. -/
-def TProgram.WF (P : TProgram Φ) : Prop := P.names.Nodup ∧ P.returns = true
+/-- Assemble a program's denotation from per-function equations, so that checking a
+function never unfolds the functions it calls. -/
+theorem TProgram.denote_cons {s : Sig} {body : TStmts Φ s.params s.result} {P : TProgram Φ}
+    {fs : Φ.denote} {g : s.denote} (hP : P.denote = fs) (hg : body.denoteFn fs = g) :
+    (TProgram.cons s body P).denote = (g, fs) := by
+  rw [TProgram.denote, hP, hg]
 
-instance (P : TProgram Φ) : Decidable P.WF := inferInstanceAs (Decidable (_ ∧ _))
+/-- Distinct function names, every body returns on every path, and no declaration
+shadows (the condition under which `run` models JavaScript's scoping). -/
+def TProgram.WF (P : TProgram Φ) : Prop := P.names.Nodup ∧ P.returns = true ∧ P.erase.scoped = true
+
+instance (P : TProgram Φ) : Decidable P.WF := inferInstanceAs (Decidable (_ ∧ _ ∧ _))
 
 end V2

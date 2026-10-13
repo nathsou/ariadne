@@ -45,13 +45,13 @@ theorem clamp_eq (x lo hi : Int) :
     «clamp» x lo hi = (FVar.here : FVar _ "clamp" sig_clamp).get typed.denote (x, lo, hi, ()) := rfl
 
 theorem max_source (a b : Int) :
-    Converges (fun n => call ast n "max" [.bigint a, .bigint b]) (.ok (.bigint («max» a b))) := by
+    Converges (fun n => run ast n "max" [.bigint a, .bigint b]) (.ok (.bigint («max» a b))) := by
   have h := adequacy typed wf (FVar.there .here : FVar _ "max" sig_max) (a, b, ())
   rw [erased, ← max_eq] at h
   exact h
 
 theorem clamp_source (x lo hi : Int) :
-    Converges (fun n => call ast n "clamp" [.bigint x, .bigint lo, .bigint hi]) (.ok (.bigint («clamp» x lo hi))) := by
+    Converges (fun n => run ast n "clamp" [.bigint x, .bigint lo, .bigint hi]) (.ok (.bigint («clamp» x lo hi))) := by
   have h := adequacy typed wf (FVar.here : FVar _ "clamp" sig_clamp) (x, lo, hi, ())
   rw [erased, ← clamp_eq] at h
   exact h
@@ -60,6 +60,6 @@ theorem clamp_source (x lo hi : Int) :
 theorem clamp_le (x lo hi : Int) (h : lo ≤ hi) : «clamp» x lo hi ≤ hi := by
   simp only [«clamp», «max»]; split <;> split <;> simp_all <;> omega
 
-#eval call ast 10 "clamp" [.bigint 7, .bigint 1, .bigint 5]
+example : run ast 10 "clamp" [.bigint 7, .bigint 1, .bigint 5] = .ok (.bigint 5) := by rfl
 
 end V2Tests.Hand

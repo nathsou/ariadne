@@ -169,6 +169,42 @@ mutual
       | .normal env' => .ok (.normal (restore env env'))
 end
 
+/-! ## Scoping
+
+JavaScript resolves names lexically: a block's `const` declarations are in scope
+for the whole block (reading one before its declaration throws), and a local
+shadows a function of the same name. The evaluator resolves variables in the
+environment and functions in the program, which agrees with JavaScript exactly
+when no declaration reuses a name in scope or a function's name. `run` checks
+this first; then reading a name before its declaration is a `referenceError`
+in both. -/
+
+def distinct : List String → Bool
+  | [] => true
+  | x :: xs => !xs.contains x && distinct xs
+
+mutual
+  /-- Declarations in `ss`, run with `scope` bound, reuse no name in scope and no
+  function name. -/
+  def stmtsScoped (fns : List String) : List String → List Stmt → Bool
+    | _, [] => true
+    | scope, s :: rest => stmtScoped fns scope s && stmtsScoped fns (s.declares ++ scope) rest
+
+  def stmtScoped (fns : List String) : List String → Stmt → Bool
+    | scope, .const x _ => !scope.contains x && !fns.contains x
+    | _, .ret _ => true
+    | scope, .ite _ yes no => stmtsScoped fns scope yes && stmtsScoped fns scope no
+end
+
+def Program.scoped (p : Program) : Bool :=
+  let fns := p.map (·.name)
+  distinct fns && p.all fun fn =>
+    distinct fn.params && fn.params.all (!fns.contains ·) && stmtsScoped fns fn.params fn.body
+
+/-- Call `f` in `p`, refusing programs whose scoping the evaluator does not model. -/
+def run (p : Program) (fuel : Nat) (f : String) (args : List JSValue) : Except Fault JSValue :=
+  if p.scoped then call p fuel f args else .error (.typeError "shadowed declaration")
+
 /-- `f` eventually stabilises at `a`: every budget from some point on gives `a`. -/
 def Converges (f : Nat → α) (a : α) : Prop := ∃ n, ∀ m, n ≤ m → f m = a
 

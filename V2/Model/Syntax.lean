@@ -12,6 +12,10 @@ namespace V2
 /-- Strings are sequences of UTF-16 code units, as in JavaScript. -/
 abbrev JSString := List UInt16
 
+/-- A string of Basic Multilingual Plane characters (no surrogates) as UTF-16:
+one code unit per character. Printed programs use it for readable literals. -/
+def js (s : String) : JSString := s.toList.map fun c => c.toNat.toUInt16
+
 inductive Lit where
   | bool (b : Bool)
   | bigint (n : Int)
@@ -57,6 +61,11 @@ inductive Stmt where
   /-- `if (c) { yes } else { no }`; a missing `else` is an empty list. -/
   | ite (c : Expr) (yes no : List Stmt)
   deriving Repr, BEq, Inhabited
+
+/-- Names a statement adds to the scope of the rest of its list. -/
+def Stmt.declares : Stmt → List String
+  | .const x _ => [x]
+  | _ => []
 
 structure Function where
   name : String
