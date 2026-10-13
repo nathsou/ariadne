@@ -61,6 +61,13 @@ borrows and observations. Declaration, reassignment, projection and framing
 laws are kernel checked. This relation is currently conservative about shared
 immutable descendants inside writable owners; its integration into general
 stateful source transfer and the checker soundness theorem is still pending.
+`PermissionEnvironment` refines this relation with separate read and write
+footprints. Every existing ownership witness embeds into it. Declarations,
+binding-cell reassignment, scope exit and temporary projection framing preserve
+the refined invariant. Other values are framed using write/read separation,
+even when their read footprints share immutable descendants. Computing those
+permissions from checked types and proving the checker fundamental lemma remain
+open; these are environment laws rather than a complete adequacy theorem.
 
 Export guard checkpoint: extraction emits a sibling TypeScript runtime module,
 kernel-bound wrapper text, and per-export checked guard plans, `entrySafe` and
