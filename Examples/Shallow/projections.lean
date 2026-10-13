@@ -633,6 +633,51 @@ theorem DenotationChecks.«increment» :
   unfold Extracted_projections.Shallow.«increment»
   simp only [Denote.function, CoreArtifacts.«increment», Denote.term, Core.Var.get] <;> rfl
 
+theorem SourceProjectionChecks.«increment».parameters : EntryGuards.«increment».function.params = [{ name := "rows", ty := Ariadne.Ty.array (Ariadne.Ty.named "Row"), span := { start := 395, stop := 399 } }, { name := "index", ty := Ariadne.Ty.number, span := { start := 408, stop := 413 } }] := by kernel_rfl
+
+theorem «increment_source» («_rows#arg» : (_root_.List NativeTypes.«Row»)) («_index#arg» : _root_.Float.Model) (_sourceHeap : Heap) (_sourceAddress : Nat) (_sourceFootprint : Heap.Footprint)
+    (_sourceInput : ((DataRelation.field "count" DataRelation.number DataRelation.fieldsNil).record.comap (fun row : NativeTypes.«Row» => (row.«count», ()))).array.Holds _sourceHeap (.ref _sourceAddress) «_rows#arg» _sourceFootprint)
+    (_sourceSafe : «increment».safe «_rows#arg» «_index#arg») :
+    Adequacy.SourceMutatesFrom _root_.Extracted_projections.source "increment" _sourceHeap [.ref _sourceAddress, .number «_index#arg»]
+      ((DataRelation.field "count" DataRelation.number DataRelation.fieldsNil).record.comap (fun row : NativeTypes.«Row» => (row.«count», ()))).array (.ref _sourceAddress) («increment» «_rows#arg» «_index#arg»).2.1 := by
+  have accepted := _sourceSafe.2
+  have selected : ∃ old, JSArray.get «_rows#arg» «_index#arg» = some old := by
+    cases found : JSArray.get «_rows#arg» «_index#arg» with
+    | none =>
+      dsimp [CoreArtifacts.«increment», Safety.term, Safety.getVariable, Safety.binary,
+        Safety.liftEnvironment, Safety.Model, Core.Ty.denote, Interpretation.value,
+        NativeRepresentations.«Row», Named.Interp.insert, Named.Representation.transport] at accepted
+      set_option backward.isDefEq.respectTransparency false in
+        simp only [cast_eq] at accepted
+      simp [found, Safety.binarySafe] at accepted
+    | some old => exact ⟨old, rfl⟩
+  obtain ⟨old, found⟩ := selected
+  let delta := Float.Model.ofScientific 1 (0)
+  let replacement : NativeTypes.«Row» := ⟨old.«count» + delta⟩
+  have updated : («increment» «_rows#arg» «_index#arg»).2.1 = JSArray.map (fun item position => if position == «_index#arg» then replacement else item) «_rows#arg» := by
+    simp [«increment», found, NativeConstruct.«Row», NativeDestruct.«Row», replacement, delta]
+  rw [updated]
+  have lookups : (Adequacy.bindArguments {heap := _sourceHeap} EntryGuards.«increment».function.params [.ref _sourceAddress, .number «_index#arg»]).lookup "rows" = .ok (.ref _sourceAddress) ∧
+      (Adequacy.bindArguments {heap := _sourceHeap} EntryGuards.«increment».function.params [.ref _sourceAddress, .number «_index#arg»]).lookup "index" = .ok (.number «_index#arg») := by
+    rw [SourceProjectionChecks.«increment».parameters]
+    exact Adequacy.bindArguments_two _ ({ name := "rows", ty := Ariadne.Ty.array (Ariadne.Ty.named "Row"), span := { start := 395, stop := 399 } }) ({ name := "index", ty := Ariadne.Ty.number, span := { start := 408, stop := 413 } }) (.ref _sourceAddress) (.number «_index#arg») (by decide)
+  exact Adequacy.array_record_source _root_.Extracted_projections.certificate EntryGuards.«increment».function
+    _sourceHeap [.ref _sourceAddress, .number «_index#arg»] _sourceAddress «_rows#arg» _sourceFootprint «_index#arg» old replacement old.«count» (old.«count» + delta) ()
+    (fun row : NativeTypes.«Row» => (row.«count», ())) "count" "+" "rows" "index"
+    (.literal (.number 1 (0)) ({ start := 450, stop := 452 })) (.number delta) (.number (old.«count» + delta)) ({ start := 433, stop := 437 }) ({ start := 438, stop := 443 }) ({ start := 433, stop := 444 }) ({ start := 433, stop := 450 }) ({ start := 433, stop := 450 }) ({ start := 429, stop := 455 })
+    (by kernel_rfl) (by kernel_rfl) lookups.1 lookups.2 _sourceInput found rfl rfl
+    (Adequacy.IgnoresField.nil "count") (by exact Evaluates.literal _ _ _ _)
+    (by intro before same; cases same; rfl) rfl
+
+theorem SourceProjectionChecks.«increment».wrapperSource («_rows#arg» : (_root_.List NativeTypes.«Row»)) («_index#arg» : _root_.Float.Model) (_sourceHeap : Heap) (_sourceAddress : Nat) (_sourceFootprint : Heap.Footprint)
+    (_sourceInput : ((DataRelation.field "count" DataRelation.number DataRelation.fieldsNil).record.comap (fun row : NativeTypes.«Row» => (row.«count», ()))).array.Holds _sourceHeap (.ref _sourceAddress) «_rows#arg» _sourceFootprint)
+    (_sourceSafe : «increment».safe «_rows#arg» «_index#arg»)
+    (_entrySafe : «increment».entrySafe _sourceHeap [.ref _sourceAddress, .number «_index#arg»] = true) :
+    Adequacy.WrappedSourceMutatesFrom _root_.Extracted_projections.source _root_.Extracted_projections.Wrapper.source
+      "increment" _sourceHeap [.ref _sourceAddress, .number «_index#arg»] ((DataRelation.field "count" DataRelation.number DataRelation.fieldsNil).record.comap (fun row : NativeTypes.«Row» => (row.«count», ()))).array (.ref _sourceAddress) («increment» «_rows#arg» «_index#arg»).2.1 := by
+  exact Adequacy.transfer_mutation EntryGuards.«increment».certificate
+    («increment_source» «_rows#arg» «_index#arg» _sourceHeap _sourceAddress _sourceFootprint _sourceInput _sourceSafe) _entrySafe
+
 def CoreArtifacts.«addCount» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.list    (Ariadne.Shallow.Core.Ty.named      { name := "Row",        shape := Ariadne.Shallow.Named.Shape.pair                   (Ariadne.Shallow.Named.Shape.number)                   (Ariadne.Shallow.Named.Shape.unit) }),  Ariadne.Shallow.Core.Ty.number,  Ariadne.Shallow.Core.Ty.number], result := Ariadne.Shallow.Core.Ty.pair   (Ariadne.Shallow.Core.Ty.unit)   (Ariadne.Shallow.Core.Ty.pair     (Ariadne.Shallow.Core.Ty.list       (Ariadne.Shallow.Core.Ty.named         { name := "Row",           shape := Ariadne.Shallow.Named.Shape.pair                      (Ariadne.Shallow.Named.Shape.number)                      (Ariadne.Shallow.Named.Shape.unit) }))     (Ariadne.Shallow.Core.Ty.unit)), body := (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.list   (Ariadne.Shallow.Core.Ty.named     { name := "Row",       shape := Ariadne.Shallow.Named.Shape.pair                  (Ariadne.Shallow.Named.Shape.number)                  (Ariadne.Shallow.Named.Shape.unit) })) "#loan:rows" (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.list   (Ariadne.Shallow.Core.Ty.named     { name := "Row",       shape := Ariadne.Shallow.Named.Shape.pair                  (Ariadne.Shallow.Named.Shape.number)                  (Ariadne.Shallow.Named.Shape.unit) })) "rows" (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.number) "#projectionKey" (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) (Core.Term.optionCase (Core.Term.binary (Ariadne.Shallow.Core.Binary.get) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) (Core.Term.var (Ariadne.Shallow.Core.Var.here))) (Core.Term.binary (Ariadne.Shallow.Core.Binary.guard) (Core.Term.bool false) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) (Core.Term.listMap (Core.Term.lam "value" (Core.Term.lam "index" (Core.Term.ite (Core.Term.binary (Ariadne.Shallow.Core.Binary.numEq) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))) (Core.Term.pack ({ name := "Row",   shape := Ariadne.Shallow.Named.Shape.pair (Ariadne.Shallow.Named.Shape.number) (Ariadne.Shallow.Named.Shape.unit) }) (Core.Term.pair (Core.Term.binary (Ariadne.Shallow.Core.Binary.numAdd) (Core.Term.fst (Core.Term.unpack (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))) (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there     (Ariadne.Shallow.Core.Var.there       (Ariadne.Shallow.Core.Var.there         (Ariadne.Shallow.Core.Var.there           (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))))))) (Core.Term.snd (Core.Term.unpack (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))))) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))) (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.list   (Ariadne.Shallow.Core.Ty.named     { name := "Row",       shape := Ariadne.Shallow.Named.Shape.pair                  (Ariadne.Shallow.Named.Shape.number)                  (Ariadne.Shallow.Named.Shape.unit) })) "#loan:rows" (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.unit) "#returned:464" Core.Term.unit (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) Core.Term.unit)))))) }
 
 theorem ElaborationChecks.«addCount» :

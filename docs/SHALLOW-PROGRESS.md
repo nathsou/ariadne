@@ -132,9 +132,13 @@ in the original heap model. The rest of the record layout is framed, including
 reference fields, using compositional field-independence rules. `ProjectionRecord`
 composes those rules with array and Map selection: the original statement writes
 only the selected record root, retains the parent references and order, and
-matches the native lens replacement. These are primitive and statement adequacy
-rules; emitted universal field-update source witnesses and the general checker
-fundamental lemma remain pending.
+matches the native lens replacement. `RepresentationMap` connects those rules
+to named native records through their constructor/destructor equations. A sole
+array projection increment on a one-field named numeric record now receives
+universal source and wrapper witnesses over the actual emitted definition and
+computed guard. The projection suite checks six witnesses and nine forged
+state, guard and entry declarations against three one-function fixtures.
+General field-update witnesses and the checker fundamental lemma remain pending.
 
 CI #96 on `5e31ceb` passes in 11m23s, compared with baseline CI #82's 21m18s.
 Its logged source-transfer and Int53 tamper phases take 17s and 7s respectively,
@@ -171,6 +175,10 @@ CI #114 on `1080ab2` passed all nine jobs in 10m53s, including the new simultane
 suite. The serial kernel-test job took 129s in parallel with the examples;
 preparation, the slowest example job and source verification took 196s, 295s
 and 152s respectively. All 27 JavaScript suites and the original checks remain.
+CI #116 on `4eda067` passed the record/Map/array statement adequacy checkpoint
+in 12m16s (preparation 259s; slowest example job 320s; source verification 148s).
+The measured successful runs range from 10m24s to 12m16s after the CI changes,
+compared with the original 21m18s, while retaining all checks and adding witnesses.
 
 Frontend checkpoint: the complete `scripts/check.sh` suite passes with 1,217
 audited theorems, 42 native entry points, 64 generated programs, 51 scalar

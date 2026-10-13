@@ -1,4 +1,5 @@
 import Ariadne.Shallow.Adequacy.ProjectionMutation
+import Ariadne.Shallow.Adequacy.RepresentationMap
 import Ariadne.CallConvergence
 import Ariadne.StatementConvergence
 import Ariadne.Shallow.Adequacy.Function
@@ -150,28 +151,36 @@ theorem ExecutesStatement.expression {program : Program} {before after : State}
   refine ⟨(by intro h; cases h), fuel + 1, ?_⟩
   simp [exec, evaluated, bind, Except.bind, pure, Except.pure]
 
-/-- A single expression statement finishes normally with undefined, and both
-its block and function restore lexical environments without changing the heap. -/
-theorem invoke_expression {program : Program} {function : Ariadne.Function} {before after : State}
-    {args : List Value} {expression : Expr} {value : Value} {statementSpan blockSpan : Span}
+/-- A normal single statement restores its block and function environments.
+Its heap effects are those proved for the original statement. -/
+theorem invoke_statement {program : Program} {function : Ariadne.Function} {before after : State}
+    {args : List Value} {statement : Stmt} {blockSpan : Span}
     (lookup : program.functions.find? (fun f => f.name == function.name) = some function)
-    (body : function.body = .block [.expr expression statementSpan] blockSpan)
-    (evaluated : Evaluates program (bindArguments before function.params args) expression value after) :
+    (body : function.body = .block [statement] blockSpan)
+    (executed : ExecutesStatement program (bindArguments before function.params args) statement {state := after}) :
     Invokes program before (.function function.name) args .undefined {after with env := before.env} := by
-  have head := ExecutesStatement.expression evaluated statementSpan
-  have statements := ExecutesBlock.next head rfl (ExecutesBlock.nil program after)
+  have statements := ExecutesBlock.next executed rfl (ExecutesBlock.nil program after)
   have block := ExecutesStatement.block statements blockSpan
   obtain ⟨_, fuel, executed⟩ := block
   refine ⟨(by intro h; cases h), fuel + 2, ?_⟩
   simp only [apply, lookup, callBody, body]
   change (exec program fuel (bindArguments before function.params args)
-    (.block [.expr expression statementSpan] blockSpan)).bind (fun out =>
+    (.block [statement] blockSpan)).bind (fun out =>
       if out.control == Control.broke || out.control == Control.continued then
         .error (Fault.invariant "loop control escaped a function")
       else .ok (out.value, {out.state with env := before.env})) = _
   dsimp only at executed
   rw [executed]
   rfl
+
+/-- A single expression statement returns undefined after lexical restoration. -/
+theorem invoke_expression {program : Program} {function : Ariadne.Function} {before after : State}
+    {args : List Value} {expression : Expr} {value : Value} {statementSpan blockSpan : Span}
+    (lookup : program.functions.find? (fun f => f.name == function.name) = some function)
+    (body : function.body = .block [.expr expression statementSpan] blockSpan)
+    (evaluated : Evaluates program (bindArguments before function.params args) expression value after) :
+    Invokes program before (.function function.name) args .undefined {after with env := before.env} := by
+  exact invoke_statement lookup body (ExecutesStatement.expression evaluated statementSpan)
 
 theorem bindArguments_data {layout : DataRelation Value α} {state : State}
     {receiver : Value} {native : α} {footprint : Footprint}
@@ -200,6 +209,13 @@ theorem bindArguments_three (state : State) (first second third : Param) (a b c 
   exact ⟨lookup_declare_other firstThird.symm
       (lookup_declare_other firstSecond.symm (lookup_declare_self _ _ _)),
     lookup_declare_other secondThird.symm (lookup_declare_self _ _ _), lookup_declare_self _ _ _⟩
+
+theorem bindArguments_two (state : State) (first second : Param) (a b : Value)
+    (different : first.name ≠ second.name) :
+    (bindArguments state [first, second] [a, b]).lookup first.name = .ok a ∧
+    (bindArguments state [first, second] [a, b]).lookup second.name = .ok b := by
+  simp only [bindArguments, List.zip_cons_cons, List.zip_nil_left, List.foldl_cons, List.foldl_nil]
+  exact ⟨lookup_declare_other different.symm (lookup_declare_self _ _ _), lookup_declare_self _ _ _⟩
 
 /-- A universal stateful source transfer for this syntax fragment. Its heap
 premise is the actual input representation; it assumes neither whole-function
@@ -271,6 +287,45 @@ theorem array_push_source {relation : Value → α → Prop}
     indexSpan pushMember pushCall containerEval keyEval valueEval
     (bindArguments_data input function.params args) found value capacity
   exact ⟨{after with env := []}, certificate.transfer_invocation (invoke_expression lookup body evaluated),
+    owned, updated⟩
+
+/-- Transfer a named record update through the original entry, observing the
+actual native record replacement. Operand premises concern only the RHS. -/
+theorem array_record_source {codec : Value → α → Prop}
+    {tail : DataRelation (List (String × Value)) β} {source : String}
+    (certificate : Certificate source) (function : Ariadne.Function)
+    (heap : Heap) (args : List Value) (outer : Nat) (natives : List γ) (owned : Footprint)
+    (query : Float.Model) (before replacement : γ) (old updated : α) (rest : β)
+    (decode : γ → α × β) (name op containerName keyName : String) (rhs : Expr) (delta value : Value)
+    (containerSpan keySpan indexSpan fieldSpan statementSpan blockSpan : Span)
+    (lookup : certificate.program.functions.find? (fun f => f.name == function.name) = some function)
+    (body : function.body = .block [.update (.member (.index
+      (.var containerName containerSpan) (.var keyName keySpan) indexSpan) name fieldSpan)
+      op rhs statementSpan] blockSpan)
+    (containerLookup : (bindArguments {heap} function.params args).lookup containerName = .ok (.ref outer))
+    (keyLookup : (bindArguments {heap} function.params args).lookup keyName = .ok (.number query))
+    (input : ((DataRelation.field name (DataRelation.scalar codec) tail).record.comap decode).array.Holds
+      heap (.ref outer) natives owned)
+    (found : JSArray.get natives query = some before)
+    (decodedBefore : decode before = (old, rest)) (decodedUpdate : decode replacement = (updated, rest))
+    (independent : IgnoresField tail name)
+    (operand : Evaluates certificate.program (bindArguments {heap} function.params args) rhs delta
+      (bindArguments {heap} function.params args))
+    (operation : ∀ before, codec before old → binary op before delta = .ok value)
+    (encoded : codec value updated) :
+    SourceMutatesFrom source function.name heap args
+      ((DataRelation.field name (DataRelation.scalar codec) tail).record.comap decode).array (.ref outer)
+      (JSArray.map (fun item position => if position == query then replacement else item) natives) := by
+  let state := bindArguments {heap} function.params args
+  have containerEval := Evaluates.variable certificate.program state containerName containerSpan
+    (.ref outer) (State.lookup_present containerLookup) containerLookup
+  have keyEval := Evaluates.variable certificate.program state keyName keySpan
+    (.number query) (State.lookup_present keyLookup) keyLookup
+  obtain ⟨_, after, executed, updated, _⟩ := array_projection_decoded_record_update
+    decode name op (.var containerName containerSpan) (.var keyName keySpan) rhs delta value
+    indexSpan fieldSpan statementSpan (bindArguments_data input function.params args)
+    found decodedBefore decodedUpdate independent containerEval keyEval operand operation encoded
+  exact ⟨{after with env := []}, certificate.transfer_invocation (invoke_statement lookup body executed),
     owned, updated⟩
 
 end Ariadne.Shallow.Adequacy

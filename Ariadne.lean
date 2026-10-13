@@ -38,5 +38,6 @@ import Ariadne.Shallow.Lens
 import Ariadne.Shallow.Adequacy.ProjectionMutation
 import Ariadne.Shallow.Adequacy.RecordMutation
 import Ariadne.Shallow.Adequacy.ProjectionRecord
+import Ariadne.Shallow.Adequacy.RepresentationMap
 import Ariadne.Shallow.Adequacy.ProjectionGuard
 import Ariadne.Shallow.Adequacy.ProjectionSource
