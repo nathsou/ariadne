@@ -59,11 +59,13 @@ UTF-16 strings, options, readonly array operations, indexed pure callbacks,
 array/Map/Set iteration, locally owned collection updates, counted bigint loops,
 scalar switches, and calls with scalar or immutable parameters. It also extracts
 named records, tagged unions, borrowed state, classes and Int53 arithmetic. All
-three reference programs extract and have universal native proofs. Generated
+three reference programs extract and have universal native proofs, and those
+proofs are transferred to the TypeScript source: each reference program is
+proved for all inputs against the original evaluator. Generated
 source-transfer theorems currently cover supported scalar expressions, local
 bindings, scalar reassignment, conditional early returns and guarded Int53
-arithmetic, comparisons and unary Math calls. Full data/state/class adequacy
-and the M5 extensions remain in progress. See
+arithmetic, comparisons and unary Math calls. General data/state/class adequacy
+for other programs and the M5 extensions remain in progress. See
 [milestone status](docs/SHALLOW-PROGRESS.md).
 
 ## What is proved

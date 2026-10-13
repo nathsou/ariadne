@@ -9,7 +9,7 @@ when their exit criteria pass; finite native tests are not universal proofs.
 | M1 | Complete | All reference programs check and certify; grammar, ownership checks, operational semantics and the builtin table have differential coverage. Conservative dialect limits are listed below. |
 | M2 | Complete | Typed Core, scalar/list/Map/Set extraction, owned local updates, structural loops, pure calls, structural denotation, three-way differential and tamper tests. Lawful named records/unions and direct borrowed-state calls are implemented; class states, Int53 guards and original reference extraction are implemented; the full integration regression gate passed. |
 | M3 | Complete | All three original reference acceptance proofs hold universally over emitted definitions. The native proof library includes loop, collection, string and stable-sort laws, and general Int53 arithmetic correspondence, including rounded nonintegral division. |
-| M4 | In progress | Heap framing, compositional data relations and external-heap source predicates are proved. Scalar expression correspondence and generated source transfer are proved; the stateful ownership environment has declaration, reassignment, mutation and framing laws. Full stateful/data adequacy remains pending. |
+| M4 | Acceptance complete; general lemma partial | All three reference programs are proved against the original source evaluator for all inputs, and their reference theorems hold of source runs ([below](#reference-source-transfer)). The general fundamental lemma covers scalar, guarded Int53 and data-read fragments; for other stateful/data programs without a source theorem, the elaborator and denotation remain trusted. |
 | M5 | Pending | Measures, larger ownership, polymorphism, exceptions and scalar backend integration |
 
 ## Reference specifications
@@ -780,3 +780,32 @@ proves syntax-directed correspondence for scalar expressions, array length,
 ordinary and flattened optional indexing, and represented record projections.
 This is a data-read foundation; general mutation, state/class and reference-program
 source transfers remain open. M4 is still in progress.
+
+## Reference source transfer
+
+`Examples/ReferenceSource` proves the three acceptance programs against the
+original evaluator (`Semantics`), not against the denotation. Each theorem
+quantifies over every heap that represents a native input and concludes that
+the source call converges, returns what the emitted Lean definition returns,
+and leaves a heap representing the emitted new state. The reference theorems
+are then transported from the emitted definitions to source runs:
+
+| Program | Source theorems | Side conditions |
+| --- | --- | --- |
+| Registers | Every method and `new Registers()`; traces from a fresh instance; read and counter convergence for permuted compatible traces; idempotence | Integer arguments are safe integers (`Int53`) |
+| Decision | `choose` returns `undefined` or an input record representing the emitted choice; a chosen record is valid and at least the floor; permuted inputs choose records representing the same candidate | Input records represent candidates; versions and the floor are safe integers |
+| Tree | Every method and `new Tree()`; traces from a fresh instance; `root` reaches a node whose `parent` is `undefined`; `childList(p)` contains a node exactly when `parent` returns `p` | Before each `move`, the node count is a safe integer and child lists stay below the dense-array length limit |
+
+The proofs use a budget-free weakest-precondition library over the evaluator
+(`Ariadne/Shallow/Adequacy/WP.lean`): one rule per syntactic form, each derived
+from convergence of the fuel-indexed semantics, plus a `wp` tactic that applies
+them. Heap shapes are concrete layout predicates: scalar maps are equations on
+their encoded entries, and the tree's child lists are arrays held by reference
+in the children map. Loops (`for`, `for...of`, counted loops with exact float
+counters) carry explicit invariants; nested method calls compose the callee's
+theorem with a frame condition on the caller's cells.
+
+Because these theorems relate the emitted definitions directly to the source
+evaluator, the elaborator and the denotation are not trusted for these three
+programs. This is per-program evidence, not the general fundamental lemma.
+

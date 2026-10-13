@@ -9,7 +9,7 @@ model. No plugin-provided axiom or native decision procedure discharges those eq
 | Lexer/parser | Total Lean definitions; exact per-file source → tokens → AST equations | No independent ECMAScript grammar or universal grammar-equivalence proof |
 | Checker | Exact per-file acceptance equation; conservative type/ownership restrictions | No universal preservation/progress or ownership-soundness theorem |
 | Emission | Incorrect source/AST/compiled-code substitution fails kernel checking; source certificates are unique | The printer is untrusted; certification must finish successfully |
-| Shallow extraction | Intrinsically typed Core, kernel-checked elaboration equation and emitted-definition/denotation equality | Universal source transfer for the returned scalar-expression fragment; the general M4 fundamental lemma and transfer for stateful/data fragments remain pending |
+| Shallow extraction | Intrinsically typed Core, kernel-checked elaboration equation and emitted-definition/denotation equality; universal source transfer for the scalar, guarded Int53 and data-read fragments; the three reference programs are proved directly against the source evaluator | For other stateful/data programs, the elaborator and denotation remain trusted: the general M4 fundamental lemma is not yet proved for those fragments |
 | Scalar compiler | Proof-carrying compilation and general equality with the evaluator at every fuel/input | Smaller fragment; explicit cells, no calls/collections or typed state optimization yet |
 | Fuel | All evaluator entry points preserve non-timeout outcomes at larger budgets; convergence and source returns are deterministic | Convergence is defined from evaluator approximations, not an independent ECMAScript semantics |
 | Scalars | Explicit binary64 logical model from Lean core, UTF-16 code units, signed unbounded integers | Conformance of these definitions to an actual JS engine is assumed and differentially tested |
@@ -17,6 +17,17 @@ model. No plugin-provided axiom or native decision procedure discharges those eq
 | Collections | General map/reduce/list correspondences under callback contracts; Map update laws | Native builtin implementation and host realm assumptions |
 | Loops | General invariant-preservation rule, including guard effects and updates | Automatic invariant discovery and termination proofs are not implemented |
 | Examples | Arbitrary-integer arithmetic and compiled multiplication with a termination bound; concrete algorithm executions and final heaps | Concrete runs for other algorithms do not prove them for every input |
+
+The three reference programs (register store, decision function, tree) do not
+rely on the elaborator or the denotation. `Examples/ReferenceSource` proves, for
+every input heap that represents a native value, that the original evaluator
+runs each source method or function to completion, returns what the emitted
+definition returns, and leaves a heap representing the emitted new state. Their
+reference theorems are stated about source runs (`SourceInvokes`,
+`SourceTrace`) from a fresh instance. The stated side conditions are the
+evaluator's limits: safe-integer inputs and, for the tree, a safe node count
+and dense-array lengths. These are per-program proofs; they are not a general
+adequacy theorem for other programs.
 
 `Certificate.transfer_at` turns a proved successful model evaluation at a particular
 fuel into `SourceReturns`. `transfer_property` transports universally quantified

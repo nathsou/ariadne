@@ -50,6 +50,13 @@ the library from scratch (about 260s in #124). Its source and Int53 tamper phase
 took 21s/9s versus 111s/89s in the baseline. Runner variability affects the wall
 time; these are observed CI timings.
 
+The reference source proofs (`Examples/ReferenceSource`) run in the
+`shallow-values` phase. Local kernel-checking times on one development machine
+were about 61s (Registers), 48s (Decision), and 40s, 44s and 5s for the three
+Tree modules. Symbolic execution uses one weakest-precondition rule per syntax
+node; an earlier attempt that unfolded the evaluator with `simp` took minutes
+per method.
+
 Logs: [baseline #82](https://github.com/nathsou/ariadne/actions/runs/38294746569)
 and [class state #128](https://github.com/nathsou/ariadne/actions/runs/38359764572).
 The private Map method/trace extension
