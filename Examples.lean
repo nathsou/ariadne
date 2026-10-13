@@ -76,3 +76,4 @@ import Examples.Tamper.projectionaddfield
 import Examples.ClassAdequacy
 import Examples.ClassConstructionAdequacy
 import Examples.Tamper.methodguards
+import Examples.ReferenceSource.Registers

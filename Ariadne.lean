@@ -48,3 +48,5 @@ import Ariadne.Shallow.Adequacy.ProjectionRecord
 import Ariadne.Shallow.Adequacy.RepresentationMap
 import Ariadne.Shallow.Adequacy.ProjectionGuard
 import Ariadne.Shallow.Adequacy.ProjectionSource
+import Ariadne.Shallow.Adequacy.WP
+import Ariadne.Shallow.Adequacy.ScalarMap

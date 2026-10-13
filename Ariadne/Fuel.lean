@@ -245,6 +245,24 @@ theorem loop_fuel_mono (p : Program) {small large : Nat} (le : small ≤ large)
   Result.refines_of_step (fun n => loop p n s guard body update)
     (fun n => (fuel_step p n).loop s guard body update) le
 
+theorem evalElements_fuel_mono (p : Program) {small large : Nat} (le : small ≤ large)
+    (s : State) (es : List Expr) :
+    (evalElements p small s es).Refines (evalElements p large s es) :=
+  Result.refines_of_step (fun n => evalElements p n s es)
+    (fun n => (fuel_step p n).elements s es) le
+
+theorem eachBody_fuel_mono (p : Program) {small large : Nat} (le : small ≤ large)
+    (s : State) (name : String) (body : Stmt) (xs : List Value) :
+    (eachBody p small s name body xs).Refines (eachBody p large s name body xs) :=
+  Result.refines_of_step (fun n => eachBody p n s name body xs)
+    (fun n => (fuel_step p n).each s name body xs) le
+
+theorem selectCase_fuel_mono (p : Program) {small large : Nat} (le : small ≤ large)
+    (s : State) (v : Value) (cases : List (Option Expr × List Stmt)) (i : Nat) (d : Option Nat) :
+    (selectCase p small s v cases i d).Refines (selectCase p large s v cases i d) :=
+  Result.refines_of_step (fun n => selectCase p n s v cases i d)
+    (fun n => (fuel_step p n).select s v cases i d) le
+
 theorem runState_fuel_mono (p : Program) (name : String) (args : List Value)
     {small large : Nat} (le : small ≤ large) :
     (runState p name small args).Refines (runState p name large args) :=

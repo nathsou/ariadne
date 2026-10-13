@@ -12,6 +12,15 @@ inductive SourceTrace (source : String) : State → List (Value × List Value) �
       (rest : SourceTrace source middle calls values after) :
       SourceTrace source before ((target, args) :: calls) (value :: values) after
 
+/-- Traces compose: running one call sequence and then another is running both. -/
+theorem SourceTrace.append {source : String} {before middle after : State}
+    {first second : List (Value × List Value)} {observed rest : List Value}
+    (a : SourceTrace source before first observed middle) (b : SourceTrace source middle second rest after) :
+    SourceTrace source before (first ++ second) (observed ++ rest) after := by
+  induction a with
+  | nil => exact b
+  | next call _ ih => exact .next call (ih b)
+
 /-- Call-sequence observations and final heaps are uniquely determined. -/
 theorem SourceTrace.deterministic {source : String} {before : State}
     {calls : List (Value × List Value)} {left right : List Value} {afterLeft afterRight : State}
