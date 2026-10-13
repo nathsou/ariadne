@@ -10,7 +10,8 @@ why, and measurements. Update it with each milestone.
 | M0: measurements, CI | Kernel-cost measurements below. CI job `v2` runs `scripts/v2-check.sh` and is part of the required `verify` status. |
 | M1: L0 end to end | Done: model, typed syntax, erasure, denotation, general theorem, frontend, CLI, fixture, differential and negative tests. |
 | M2: L1 | Done: records (literals, `{ ...r, f }`, field reads), string-literal unions, tagged unions (string or boolean tags) with `switch` narrowing, optionals (`?:`, `T \| null`, `T \| null \| undefined`), `== null` narrowing in expressions and statements, `??`, optional parameters, `break` in `switch`. Theorem, frontend, fixture, differential and negative tests. |
-| M3 (L2), M4 (L3) | In progress (the model already covers them; see below). |
+| M3: L2 | Done: integer-mode `number` with safety conditions, array literals with spreads, `length`, indexing, `includes`, `some`/`every`/`find`/`filter`/`map` with arrow callbacks, `toSorted` with a comparator. Theorem, frontend, fixture, property proof, differential and negative tests. |
+| M4: L3 | In progress (the model already covers it). |
 
 ### Toolchain
 
@@ -41,6 +42,34 @@ own `checkout`/`upload-artifact` actions, pinned by commit, are CI infrastructur
 - **Proof size:** about 1,300 lines for L0 + L1 (L0 alone was about 300), most of it reusable: the relational
   environment, outcomes and continuations, narrowing.
 
+### M3 notes
+
+- **Numbers** denote `Int`. Arithmetic results must be safe integers (`inRange`); that is the first real safety
+  condition. Comparisons and `===` are always safe. A negative literal `-5` is its own trivially safe form (`negNum`).
+- **Arrays** denote lists, related elementwise (`Forall2`). `a[i]` is `T | undefined` (`listIndex`). Callbacks are arrow
+  functions with an expression body, typed in the context extended with their parameter; the proof applies the
+  callback's adequacy element by element (`someApply_conv` … `mapApply_conv`). `toSorted` denotes `sortedBy`: the
+  model's stable insertion order over the comparator's sign matrix, so it agrees with any stable sort by a consistent
+  comparator; its safety condition requires the comparator to be safe on every pair and consistent on the array.
+- **Safety conditions are printed** as readable `«f».safe` definitions, and the source theorem of a function that is not
+  trivially safe takes `(safe : «f».safe … = true)`. Conjuncts coming from trivially safe syntax are left out *by
+  definition* (`andT` with static triviality flags, so the kernel drops them), so a condition mentions only operations
+  that can leave the model: `total(a, b) = a + b * 2` has `inRange (b * 2) && inRange (a + b * 2)`;
+  `scaled(xs, k)` has `List.all (List.filter … xs) (fun x => inRange (x * k))`. A structural condition would carry
+  noise such as `if c then true else true` that the kernel cannot simplify. The proof takes `SafeSigs` (trivially safe
+  callees are safe) for calls whose condition was left out.
+- **Kernel lesson:** `inRange` is `Nat.ble n.natAbs (2^53 − 1)`. Stated with `Int` order, the kernel, unfolding it on a
+  partly symbolic argument (`List.length es + 2`), recursed 2^53 deep in `Nat.sub`.
+- **Elaboration lesson:** calls print their signature (`.call (s := sig.«f») …`); otherwise nested calls leave the
+  callee's signature to unification through `?s.result` and elaboration fails.
+- **Restrictions in L2:** callbacks take one parameter (comparators two), no index or array parameter; declared
+  functions are not passed as values; indexing or `find` on an array of optionals is refused (a nested optional).
+- **Tests:** `V2Tests/fixtures/l2.ts` (18 functions, checked in under 5 s), `Properties.lean` proves `scaled` safe on
+  small inputs and transfers a property to every run, 24 negative fixtures. The differential test skips calls the model
+  refuses (it makes no claim about them) and reports how many: 9,600 calls, 150 refused (overflows).
+- **Proof size:** about 1,970 lines (+495 for L2: numbers about 110, arrays and callbacks about 300, the safety-flag
+  refactor about 60, plus `Safe.lean`).
+
 ## Layout
 
 | Path | Role | Trusted? |
@@ -50,6 +79,7 @@ own `checkout`/`upload-artifact` actions, pinned by commit, are CI infrastructur
 | `V2/Front/Convert.lean` | v1 parser AST → v2 AST (drops spans and annotations; refuses non-L0 forms) | **Yes** (with v1's lexer and parser) |
 | `V2/Typed/Syntax.lean` | `Ty`, `Ctx`, `Var`, `Sig`, `FVar`, `TExpr`/`TArgs`/`TStmts`/`TProgram`, erasure, `returns` | No (checked) |
 | `V2/Typed/Denote.lean` | Denotation, `TProgram.WF`, `TProgram.denote_cons` | No |
+| `V2/Proof/Basic.lean`, `Array.lean`, `Safe.lean`, `Expr.lean`, `Stmt.lean`, `Trivial.lean` | Environment relation, representation lemmas, array and callback lemmas, adequacy of expressions and statements | No |
 | `V2/Proof/Adequacy.lean` | `V2.adequacy` (the general theorem) and `source_of` | No |
 | `V2/Kernel.lean` | `kernel_rfl`: closed equations checked by the kernel only | No |
 | `V2/Front/Check.lean` | Untrusted type checker and printer | No |

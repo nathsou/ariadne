@@ -210,7 +210,7 @@ def «trusted» («f» : ty.«Fact».denote) : Bool :=
       let «f» := ((), p')
       ((«f».2.2.1) != (3 : Fin 4)) && ((«f».2.2.1) != (2 : Fin 4))
 
-def «choose» («n» : Int) («floor» : (((.option .both .int) : Ty)).denote) : ty.«Choice».denote :=
+def «choose» («n» : Int) («floor» : Option (Int)) : ty.«Choice».denote :=
   match «floor» with
   | some «floor» =>
     if decide («n» < «floor») then
@@ -420,7 +420,7 @@ theorem «trusted».source («f» : ty.«Fact».denote) (vs : List JSValue)
 
 /-- Every run of `choose` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «choose».source («n» : Int) («floor» : (((.option .both .int) : Ty)).denote) (vs : List JSValue)
+theorem «choose».source («n» : Int) («floor» : Option (Int)) (vs : List JSValue)
     (args : ArgsRep sig.«choose».params vs («n», «floor», ())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "choose" vs) (.ok w) ∧
       Ty.Rep ty.«Choice» w («choose» «n» «floor») :=

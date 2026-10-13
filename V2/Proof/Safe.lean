@@ -1,0 +1,104 @@
+import V2.Proof.Array
+
+/-!
+# Trivially safe expressions
+
+A trivially safe expression's safety condition is `true` by definition: its
+parent leaves it out (`andT`), and every node of it is trivially safe.
+-/
+
+set_option linter.unusedSimpArgs false
+
+namespace V2
+
+theorem andT_elim {ta a tb b : Bool} (h : andT ta a tb b = true) (ha : ta = true → a = true)
+    (hb : tb = true → b = true) : a = true ∧ b = true := by
+  cases ta <;> cases tb <;> simp_all [andT]
+
+theorem orT_elim {t a : Bool} (h : (t || a) = true) (ha : t = true → a = true) : a = true := by
+  cases t <;> simp_all
+
+theorem anySafe_true {p s : α → Bool} (h : ∀ x, s x = true) : ∀ xs, anySafe p s xs = true
+  | [] => rfl
+  | x :: xs => by simp [anySafe, h x, anySafe_true h xs]
+
+theorem allSafe_true {p s : α → Bool} (h : ∀ x, s x = true) : ∀ xs, allSafe p s xs = true
+  | [] => rfl
+  | x :: xs => by simp [allSafe, h x, allSafe_true h xs]
+
+/-- The safety conditions of trivially safe functions hold everywhere. -/
+def SafeSigs {Φ : Sigs} (ss : Φ.safety) : Prop :=
+  ∀ {f s} (v : FVar Φ f s) (xs : s.params.denote), s.trivial = true → v.safe ss xs = true
+
+section
+variable {Φ : Sigs} {fs : Φ.denote} {ss : Φ.safety}
+
+mutual
+  theorem TExpr.safe_of_trivial : ∀ {Γ : Ctx} {τ : Ty} (e : TExpr Φ Γ τ) (ρ : Γ.denote), e.trivial = true →
+      e.safe fs ss ρ = true
+    | _, _, .bool _, _, _ | _, _, .int _, _, _ | _, _, .str _, _, _ | _, _, .tagLit _, _, _
+    | _, _, .litIn .., _, _ | _, _, .undef .., _, _ | _, _, .null .., _, _ | _, _, .var _, _, _
+    | _, _, .num _, _, _ | _, _, .negNum .., _, _ => rfl
+    | _, _, .widen _ e, ρ, h | _, _, .not e, ρ, h | _, _, .neg e, ρ, h | _, _, .isNull _ e, ρ, h
+    | _, _, .notNull _ e, ρ, h | _, _, .field e _ _, ρ, h | _, _, .length e, ρ, h | _, _, .slength e, ρ, h => by
+      simp only [TExpr.trivial] at h; simp [TExpr.safe, TExpr.safe_of_trivial e ρ h]
+    | _, _, .record es _ _, ρ, h => by
+      simp only [TExpr.trivial] at h; simp [TExpr.safe, TEntries.safe_of_trivial es ρ h]
+    | _, _, .array es, ρ, h => by
+      simp only [TExpr.trivial] at h; simp [TExpr.safe, TElems.safe_of_trivial es ρ h]
+    | _, _, .nneg _, _, h | _, _, .nadd .., _, h | _, _, .nsub .., _, h | _, _, .nmul .., _, h
+    | _, _, .sorted .., _, h => by simp [TExpr.trivial] at h
+    | _, _, .add a b, ρ, h | _, _, .sub a b, ρ, h | _, _, .mul a b, ρ, h | _, _, .concat a b, ρ, h
+    | _, _, .eq _ a b, ρ, h | _, _, .ne _ a b, ρ, h | _, _, .lt a b, ρ, h | _, _, .le a b, ρ, h
+    | _, _, .gt a b, ρ, h | _, _, .ge a b, ρ, h | _, _, .slt a b, ρ, h | _, _, .sle a b, ρ, h
+    | _, _, .sgt a b, ρ, h | _, _, .sge a b, ρ, h | _, _, .and a b, ρ, h | _, _, .or a b, ρ, h
+    | _, _, .coalesce _ a b, ρ, h | _, _, .nlt a b, ρ, h | _, _, .nle a b, ρ, h | _, _, .ngt a b, ρ, h
+    | _, _, .nge a b, ρ, h | _, _, .index a b, ρ, h | _, _, .includes _ a b, ρ, h
+    | _, _, .any a _ b, ρ, h | _, _, .all a _ b, ρ, h | _, _, .find a _ b, ρ, h | _, _, .filter a _ b, ρ, h
+    | _, _, .map a _ b, ρ, h => by
+      simp only [TExpr.trivial, Bool.and_eq_true] at h
+      simp [TExpr.safe, andT, h.1, h.2]
+    | _, _, .cond c a b, ρ, h => by
+      simp only [TExpr.trivial, Bool.and_eq_true] at h
+      simp [TExpr.safe, andT, h.1.1, h.1.2, h.2]
+    | _, _, .condNull v _ a b, ρ, h | _, _, .condNotNull v _ a b, ρ, h => by
+      simp only [TExpr.trivial, Bool.and_eq_true] at h
+      simp only [TExpr.safe]
+      split <;> simp [h.1, h.2]
+    | _, _, .call fn _ args, ρ, h => by
+      simp only [TExpr.trivial, Bool.and_eq_true] at h
+      simp [TExpr.safe, andT, h.1, h.2]
+    | _, _, .update r es _ _, ρ, h => by
+      simp only [TExpr.trivial, Bool.and_eq_true] at h
+      simp [TExpr.safe, andT, h.1, h.2]
+
+  theorem TArgs.safe_of_trivial : ∀ {Γ ps : Ctx} (args : TArgs Φ Γ ps) (ρ : Γ.denote), args.trivial = true →
+      args.safe fs ss ρ = true
+    | _, _, .nil, _, _ | _, _, .omitted _, _, _ => rfl
+    | _, _, .cons e rest, ρ, h => by
+      simp only [TArgs.trivial, Bool.and_eq_true] at h
+      simp [TArgs.safe, andT, h.1, h.2]
+
+  theorem TEntries.safe_of_trivial : ∀ {Γ : Ctx} {src : Fields} (es : TEntries Φ Γ src) (ρ : Γ.denote),
+      es.trivial = true → es.safe fs ss ρ = true
+    | _, _, .nil, _, _ => rfl
+    | _, _, .cons _ e rest, ρ, h => by
+      simp only [TEntries.trivial, Bool.and_eq_true] at h
+      simp [TEntries.safe, andT, h.1, h.2]
+
+  theorem TElems.safe_of_trivial : ∀ {Γ : Ctx} {τ : Ty} (es : TElems Φ Γ τ) (ρ : Γ.denote),
+      es.trivial = true → es.safe fs ss ρ = true
+    | _, _, .nil, _, _ => rfl
+    | _, _, .cons e rest, ρ, h | _, _, .spread e rest, ρ, h => by
+      simp only [TElems.trivial, Bool.and_eq_true] at h
+      simp [TElems.safe, andT, h.1, h.2]
+end
+
+/-- A subterm's safety, as its parent consults it. -/
+theorem TExpr.ok {Γ : Ctx} {τ : Ty} {e : TExpr Φ Γ τ} {ρ : Γ.denote} (h : (e.trivial || e.safe fs ss ρ) = true) :
+    e.safe fs ss ρ = true :=
+  orT_elim h (e.safe_of_trivial ρ)
+
+end
+
+end V2

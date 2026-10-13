@@ -148,8 +148,10 @@ def getField : JSValue → String → Except Fault JSValue
   | .record kvs, f => match kvs.lookup f with
     | some v => .ok v
     | none => if protoNames.contains f then .error (.unsupported s!"prototype property {f}") else .ok .undefined
-  | .array xs, "length" => number xs.length
-  | .string s, "length" => number s.length
+  -- JavaScript bounds lengths by 2^32 - 1 (a `RangeError` beyond); like memory and
+  -- stack depth, the model treats that as a resource limit and does not model it.
+  | .array xs, "length" => .ok (.number xs.length)
+  | .string s, "length" => .ok (.number s.length)
   | _, f => .error (.unsupported s!"property {f}")
 
 /-- Defining a property: an existing key keeps its position. -/
@@ -387,7 +389,7 @@ mutual
       | .array xs, "map", [f] => return .array (← mapApply p n f xs 0 recv)
       | .array xs, "toSorted", [f] => do
         let signs ← compareAll p n f xs xs
-        if consistent signs then return .array ((sortIndices signs xs.length).map fun i => xs[i]!)
+        if consistent signs then return .array ((sortIndices signs xs.length).filterMap (xs[·]?))
         else .error (.unsupported "inconsistent comparator")
       | _, _, _ => .error (.unsupported s!"method {m}")
     | _ + 1, env, .arrow ps body => .ok (.closure ps body env)

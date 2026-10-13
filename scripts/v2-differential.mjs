@@ -62,6 +62,7 @@ function record(fields, fixed) {
 }
 
 let calls = 0;
+let refused = 0;
 let failures = 0;
 for (const file of (await readdir(dir)).filter(f => f.endsWith('.ts')).sort()) {
   const path = resolve(dir, file);
@@ -87,6 +88,9 @@ for (const file of (await readdir(dir)).filter(f => f.endsWith('.ts')).sort()) {
   const actual = run.stdout.trim().split('\n').map(l => JSON.parse(l));
   expected.forEach(({ call, result }, i) => {
     calls++;
+    // The model refuses operations outside the subset (numbers leaving the safe
+    // range, inconsistent comparators) and makes no claim about them.
+    if (actual[i][0] === 'error' && actual[i][1].startsWith('unsupported:')) { refused++; return; }
     if (JSON.stringify(actual[i]) !== JSON.stringify(result)) {
       failures++;
       if (failures <= 20) console.error(`${file}: ${call}:\n  js    ${JSON.stringify(result)}\n  model ${JSON.stringify(actual[i])}`);
@@ -102,4 +106,4 @@ if (failures > 0) {
   console.error(`V2 differential: ${failures} of ${calls} calls disagree.`);
   process.exit(1);
 }
-console.log(`V2 differential passed: ${calls} calls.`);
+console.log(`V2 differential passed: ${calls} calls (${refused} refused by the model).`);

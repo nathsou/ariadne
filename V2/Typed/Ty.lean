@@ -160,6 +160,11 @@ mutual
     | .cons _ _ rest, kvs, .inr y => rest.Rep key kvs y
 end
 
+/-- A safe integer: the range in which the model's numbers are exact. Stated on
+`natAbs` with `Nat.ble` so that the kernel, should it unfold it on a partly
+symbolic argument, stops after a few steps instead of recursing on the bound. -/
+def inRange (n : Int) : Bool := Nat.ble n.natAbs 9007199254740991
+
 /-! ## Primitive types -/
 
 /-- The strings are distinct. -/

@@ -48,24 +48,29 @@ def printNullish : Nullish → String
   | .undef => ".undef" | .null => ".null" | .both => ".both"
 
 mutual
-  /-- Lean syntax for a type. -/
-  partial def printTy : Ty → String
-    | .bool => ".bool" | .int => ".int" | .number => ".number" | .string => ".string"
-    | .tag t => s!"(.tag {printTag t})"
-    | .lits a as => s!"(.lits {jsString a} [{", ".intercalate (as.map jsString)}])"
-    | .option n τ => s!"(.option {printNullish n} {printTy τ})"
-    | .record fs => s!"(.record {printFields fs})"
-    | .union key vs => s!"(.union {leanString key} {printVariants vs})"
-    | .array τ => s!"(.array {printTy τ})"
+  /-- Lean syntax for a type, naming the types `named` resolves. -/
+  partial def printTyWith (named : Ty → Option String) (τ : Ty) : String :=
+    match named τ with
+    | some n => n
+    | none => match τ with
+      | .bool => ".bool" | .int => ".int" | .number => ".number" | .string => ".string"
+      | .tag t => s!"(.tag {printTag t})"
+      | .lits a as => s!"(.lits {jsString a} [{", ".intercalate (as.map jsString)}])"
+      | .option n τ => s!"(.option {printNullish n} {printTyWith named τ})"
+      | .record fs => s!"(.record {printFields named fs})"
+      | .union key vs => s!"(.union {leanString key} {printVariants named vs})"
+      | .array τ => s!"(.array {printTyWith named τ})"
 
-  partial def printFields : Fields → String
+  partial def printFields (named : Ty → Option String) : Fields → String
     | .nil => ".nil"
-    | .cons f τ rest => s!"(.cons {leanString f} {printTy τ} {printFields rest})"
+    | .cons f τ rest => s!"(.cons {leanString f} {printTyWith named τ} {printFields named rest})"
 
-  partial def printVariants : Variants → String
-    | .one t fs => s!"(.one {printTag t} {printFields fs})"
-    | .cons t fs rest => s!"(.cons {printTag t} {printFields fs} {printVariants rest})"
+  partial def printVariants (named : Ty → Option String) : Variants → String
+    | .one t fs => s!"(.one {printTag t} {printFields named fs})"
+    | .cons t fs rest => s!"(.cons {printTag t} {printFields named fs} {printVariants named rest})"
 end
+
+def printTy : Ty → String := printTyWith fun _ => none
 
 def _root_.V2.Ty.ts : Ty → String
   | .bool => "boolean" | .int => "bigint" | .number => "number" | .string => "string"
@@ -78,17 +83,18 @@ structure Types where
   /-- Resolved named types, printed as `ty.«Name»`. -/
   named : List (String × Ty) := []
 
-def Types.print (T : Types) (τ : Ty) : String :=
-  match T.named.find? (·.2 == τ) with
-  | some (n, _) => s!"ty.{ident n}"
-  | none => printTy τ
+def Types.name (T : Types) (τ : Ty) : Option String := (T.named.find? (·.2 == τ)).map fun (n, _) => s!"ty.{ident n}"
+
+def Types.print (T : Types) (τ : Ty) : String := printTyWith T.name τ
 
 /-- The Lean type of a denoted value. -/
-def Types.lean (T : Types) : Ty → String
+partial def Types.lean (T : Types) : Ty → String
   | .bool => "Bool" | .int => "Int" | .number => "Int" | .string => "JSString"
-  | τ => match T.named.find? (·.2 == τ) with
-    | some (n, _) => s!"ty.{ident n}.denote"
-    | none => s!"(({printTy τ} : Ty)).denote"
+  | τ => match T.name τ, τ with
+    | some n, _ => s!"{n}.denote"
+    | none, .array σ => s!"List ({T.lean σ})"
+    | none, .option _ σ => s!"Option ({T.lean σ})"
+    | none, _ => s!"(({T.print τ} : Ty)).denote"
 
 def Fields.toList : Fields → List (String × Ty)
   | .nil => []
@@ -190,6 +196,8 @@ structure FnSig where
   name : String
   params : List (String × Ty)
   result : Ty
+  /-- The body is trivially safe (no operation that can leave the model). -/
+  trivial : Bool := true
   deriving Inhabited
 
 structure Scope where
@@ -248,15 +256,41 @@ def Scope.narrow (s : Scope) (i : Nat) (σ : Ty) : Scope :=
 
 /-! ## Expressions -/
 
-/-- A checked expression as typed syntax, and as a readable Lean term. -/
+/-- A checked expression as typed syntax, and as a readable Lean term, with its
+safety condition (meaningful when it is not trivially safe; parents leave out
+trivially safe subterms, as `TExpr.safe` does). -/
 structure Out where
   ty : Ty
   typed : String
   readable : String
   atomic : Bool := false
+  trivial : Bool := true
+  safe : String := "true"
   deriving Inhabited
 
 def Out.term (o : Out) : String := if o.atomic then o.readable else s!"({o.readable})"
+
+/-- Parenthesize an operand of `&&` unless precedence makes it unnecessary. -/
+def paren (t : String) : String :=
+  let needs := ["if ", "match ", "let ", "fun "].any (fun p => t.startsWith p) ||
+    ["\n", "&&", "||", "=>"].any (fun p => (t.splitOn p).length > 1)
+  if needs then s!"({t})" else t
+
+/-- Readable `andT`. -/
+def andTText (ta : Bool) (a : String) (tb : Bool) (b : String) : String :=
+  if ta then (if tb then "true" else b) else if tb then a else s!"{paren a} && {paren b}"
+
+/-- Readable `t || a` for a static `t`. -/
+def orTText (t : Bool) (a : String) : String := if t then "true" else a
+
+/-- Readable `a && b` where `a` may be the literal `true` (which reduces away). -/
+def andText (a b : String) : String := if a == "true" then b else s!"{paren a} && {paren b}"
+
+/-- A subterm's safety as its parent consults it. -/
+def Out.ok (o : Out) : String := orTText o.trivial o.safe
+
+/-- Two operands, both evaluated. -/
+def both (a b : Out) : String := andTText a.trivial a.safe b.trivial b.safe
 
 /-- A variable narrowed by a test, with how its narrowed value re-embeds. -/
 structure Narrowed where
@@ -279,14 +313,14 @@ def coerce (T : Types) (span : Span) (out : Out) (τ : Ty) : Checked Out := do
   | .option n σ =>
     if out.ty == σ then
       return { ty := τ, typed := s!"(.widen (.some {printNullish n} {T.print σ}) {out.typed})",
-               readable := s!"some {out.term}" }
+               readable := s!"some {out.term}", trivial := out.trivial, safe := out.safe }
     mismatch span s!"{out.ty.ts} where {τ.ts} is expected"
   | .union key vs =>
     let variants := Variants.toList vs
     match variants.findIdx? (fun (t, fs) => out.ty == vrec' key t fs) with
     | some i =>
       return { ty := τ, typed := s!"(.widen (.variant {vidxPath i variants.length}) {out.typed})",
-               readable := injText i variants.length s!"{out.term}.2" }
+               readable := injText i variants.length s!"{out.term}.2", trivial := out.trivial, safe := out.safe }
     | none => mismatch span s!"{out.ty.ts} where {τ.ts} is expected"
   | _ => mismatch span s!"{out.ty.ts} where {τ.ts} is expected"
 
@@ -306,6 +340,32 @@ def Scope.nullNarrowing (s : Scope) (span : Span) (x : String) : Checked (Narrow
 
 def protoName (f : String) : Bool := protoNames.contains f
 
+def declare (s : Scope) (span : Span) (x : String) (τ : Ty) : Checked Scope := do
+  if s.locals.any (·.1 == x) || s.fns.any (·.name == x) then
+    throw { code := "A2004", message := s!"'{x}' shadows a declaration in scope", span,
+            help := some "Rename it: the model requires names in scope to be distinct." }
+  pure { s with locals := (x, τ) :: s.locals }
+
+/-- `a.trivial`/`a.safe` of a right-nested list (`TArgs`, `TEntries`, `TElems`). -/
+def foldSafe (outs : List Out) : Bool × String :=
+  outs.foldr (fun o (t, txt) => (o.trivial && t, andTText o.trivial o.safe t txt)) (true, "true")
+
+/-- A readable array literal: `[a, b]` is `a :: b :: []`, a spread `xs ++ rest`. -/
+partial def elemsText (es : List (Bool × String)) : String :=
+  let plain := es.takeWhile (!·.1)
+  match es.dropWhile (!·.1) with
+  | [] => "[" ++ ", ".intercalate (plain.map (·.2)) ++ "]"
+  | (_, xs) :: rest =>
+    let tail := s!"{xs} ++ ({elemsText rest})"
+    if plain.isEmpty then tail else s!"{" :: ".intercalate (plain.map (·.2))} :: ({tail})"
+
+/-- A callback `(x) => e`, or `(x, y) => e`. -/
+def callbackOf (span : Span) (n : Nat) : Parse.Expr → Checked (List String × Parse.Expr)
+  | .lambda ps (.return_ body _) _ =>
+    if ps.length == n then pure (ps.map (·.name), body)
+    else unsupportedTy span s!"a callback with other than {n} parameter(s)"
+  | _ => unsupportedTy span "a callback other than an arrow function with an expression body"
+
 mutual
   partial def checkExpr (T : Types) (s : Scope) (e : Parse.Expr) (expected : Option Ty) : Checked Out := do
     let out ← inferExpr T s e expected
@@ -321,6 +381,9 @@ mutual
       return { ty := .bool, typed := s!"(.bool {b})", readable := s!"{b}", atomic := true }
     | .literal (.bigint n) _ =>
       return { ty := .int, typed := s!"(.int {n})", readable := s!"({n} : Int)", atomic := true }
+    | .literal (.number m ex) span => do
+      let n ← integerLiteral span m ex
+      return { ty := .number, typed := s!"(.num {n})", readable := s!"({n} : Int)", atomic := true }
     | .literal (.string units) _ =>
       match expected with
       | some (.tag (.str u)) =>
@@ -347,16 +410,22 @@ mutual
         return { ty := τ, typed := s!"(.null {printNullish n} {T.print σ} (by decide))", readable := "none",
                  atomic := true }
       | _ => mismatch span "null needs an optional type here"
-    | .literal _ span => unsupportedTy span "this literal (number literals arrive with L2)"
     | .var x span =>
       match s.lookup x with
       | some (i, τ) => return { ty := τ, typed := s!"(.var {s.varPath i})", readable := ident x, atomic := true }
       | none => throw { code := "A2001", message := s!"unknown variable '{x}'", span }
+    | .unary "-" (.literal (.number m ex) _) span => do
+      let n ← integerLiteral span m ex
+      return { ty := .number, typed := s!"(.negNum {n} (by decide))", readable := s!"(-({n} : Int))", atomic := true }
     | .unary op a span => do
       let a ← inferExpr T s a none
       match op, a.ty with
-      | "!", .bool => return { ty := .bool, typed := s!"(.not {a.typed})", readable := s!"!{a.term}" }
-      | "-", .int => return { ty := .int, typed := s!"(.neg {a.typed})", readable := s!"(-{a.term})", atomic := true }
+      | "!", .bool => return { ty := .bool, typed := s!"(.not {a.typed})", readable := s!"!{a.term}",
+                               trivial := a.trivial, safe := a.safe }
+      | "-", .int => return { ty := .int, typed := s!"(.neg {a.typed})", readable := s!"(-{a.term})", atomic := true,
+                              trivial := a.trivial, safe := a.safe }
+      | "-", .number => return { ty := .number, typed := s!"(.nneg {a.typed})", readable := s!"(-{a.term})",
+                                 atomic := true, trivial := false, safe := andText a.ok s!"V2.inRange (-{a.term})" }
       | op, τ => mismatch span s!"'{op}' does not apply to {τ.ts}"
     | .binary op a b span => checkBinary T s op a b span expected
     | .conditional c a b span =>
@@ -370,10 +439,12 @@ mutual
           | none => inferExpr T sa a none
         let b ← checkExpr T sb b (some a.ty)
         let ctor := if isNull then "condNull" else "condNotNull"
-        let readable := if isNull then
-            s!"match {ident x} with | none => {a.readable} | some {ident x} => {b.readable}"
-          else s!"match {ident x} with | some {ident x} => {a.readable} | none => {b.readable}"
-        return { ty := a.ty, typed := s!"(.{ctor} {path} (by decide) {a.typed} {b.typed})", readable }
+        let arms (ra rb : String) := if isNull then
+            s!"match {ident x} with | none => {ra} | some {ident x} => {rb}"
+          else s!"match {ident x} with | some {ident x} => {ra} | none => {rb}"
+        return { ty := a.ty, typed := s!"(.{ctor} {path} (by decide) {a.typed} {b.typed})",
+                 readable := arms a.readable b.readable, trivial := a.trivial && b.trivial,
+                 safe := arms (paren a.ok) (paren b.ok) }
       | none => do
         let c ← checkExpr T s c (some .bool)
         let a ← match expected with
@@ -381,7 +452,10 @@ mutual
           | none => inferExpr T s a none
         let b ← checkExpr T s b (some a.ty)
         return { ty := a.ty, typed := s!"(.cond {c.typed} {a.typed} {b.typed})",
-                 readable := s!"if {c.readable} then {a.readable} else {b.readable}" }
+                 readable := s!"if {c.readable} then {a.readable} else {b.readable}",
+                 trivial := c.trivial && a.trivial && b.trivial,
+                 safe := andTText c.trivial c.safe (a.trivial && b.trivial)
+                   s!"if {c.readable} then {paren a.ok} else {paren b.ok}" }
     | .call (.var f _) args span => do
       let some j := s.fns.findIdx? (·.name == f)
         | throw { code := "A2001", message := s!"'{f}' is not a function declared earlier", span }
@@ -396,24 +470,100 @@ mutual
         (if omitted.isEmpty then ".nil" else "(.omitted (by decide))")
       let readableArgs := given.map (·.term) ++ omitted.map fun _ => "none"
       let readable := if readableArgs.isEmpty then ident f else " ".intercalate (ident f :: readableArgs)
-      return { ty := sig.result, typed := s!"(.call {fnPath (s.fns.length - 1 - j)} (by decide) {typedArgs})",
-               readable, atomic := readableArgs.isEmpty }
+      let (argsT, argsS) := foldSafe given
+      let calleeSafe := " ".intercalate (s!"{ident f}.safe" :: readableArgs)
+      return { ty := sig.result, typed := s!"(.call (s := sig.{ident f}) {fnPath (s.fns.length - 1 - j)} (by decide) {typedArgs})",
+               readable, atomic := readableArgs.isEmpty, trivial := argsT && sig.trivial,
+               safe := andTText argsT argsS sig.trivial calleeSafe }
+    | .call (.member recv m _) args span => checkMethod T s recv m args span
     | .member a f span => do
       let a ← inferExpr T s a none
-      match a.ty with
-      | .record fs =>
+      match a.ty, f with
+      | .array _, "length" | .string, "length" =>
+        return { ty := .number, typed := s!"(.{if a.ty == .string then "slength" else "length"} {a.typed})",
+                 readable := s!"(List.length {a.term} : Int)", atomic := true, trivial := a.trivial, safe := a.safe }
+      | .record fs, _ =>
         let fields := Fields.toList fs
         match fields.findIdx? (·.1 == f) with
         | some k =>
           if protoName f then mismatch span s!"'{f}' is an Object.prototype property"
           return { ty := fields[k]!.2, typed := s!"(.field {a.typed} {fidxPath k} (by decide))",
-                   readable := projText a.term k }
+                   readable := projText a.term k, trivial := a.trivial, safe := a.safe }
         | none => mismatch span s!"no field '{f}'"
-      | τ => mismatch span s!"field '{f}' of {τ.ts}"
+      | τ, _ => mismatch span s!"field '{f}' of {τ.ts}"
+    | .index a i span => do
+      let a ← inferExpr T s a none
+      let .array τ := a.ty | mismatch span s!"indexing {a.ty.ts}"
+      if τ matches .option .. then mismatch span "indexing an array of optionals (a nested optional)"
+      let i ← checkExpr T s i (some .number)
+      return { ty := .option .undef τ, typed := s!"(.index {a.typed} {i.typed})",
+               readable := s!"V2.listIndex {a.term} {i.term}", trivial := a.trivial && i.trivial, safe := both a i }
+    | .array elems span => do
+      let τ ← match expected with
+        | some (.array τ) => pure τ
+        | _ => match elems with
+          | .spread x _ :: _ => do
+            let o ← inferExpr T s x none
+            let .array τ := o.ty | mismatch span s!"spreading {o.ty.ts}"
+            pure τ
+          | x :: _ => pure (← inferExpr T s x none).ty
+          | [] => mismatch span "an empty array literal needs a known type here"
+      let outs ← elems.mapM fun
+        | .spread x _ => return (true, ← checkExpr T s x (some (.array τ)))
+        | x => return (false, ← checkExpr T s x (some τ))
+      let typed := outs.foldr (fun (sp, o) acc => s!"(.{if sp then "spread" else "cons"} {o.typed} {acc})") ".nil"
+      let readable := elemsText (outs.map fun (sp, o) => (sp, o.term))
+      let (t, safe) := foldSafe (outs.map (·.2))
+      return { ty := .array τ, typed := s!"(.array {typed})", readable, trivial := t, safe }
     | .record entries span => do
-      let some τ := expected | mismatch span "an object literal needs a known type here"
-      checkRecord T s entries span τ
+      match expected, entries with
+      | some τ, _ => checkRecord T s entries span τ
+      | none, ("", r) :: _ => do
+        -- `{ ...r, … }` has the type of `r`.
+        let o ← inferExpr T s r none
+        checkRecord T s entries span o.ty
+      | none, _ => mismatch span "an object literal needs a known type here"
     | e => unsupportedTy e.span "this expression"
+
+  /-- An array method with a callback, or `includes`. -/
+  partial def checkMethod (T : Types) (s : Scope) (recv : Parse.Expr) (m : String) (args : List Parse.Expr)
+      (span : Span) : Checked Out := do
+    let a ← inferExpr T s recv none
+    let .array τ := a.ty | unsupportedTy span s!"the method '{m}' of {a.ty.ts}"
+    let [arg] := args | unsupportedTy span s!"'{m}' with other than one argument"
+    match m with
+    | "includes" =>
+      if !τ.prim then mismatch span s!"'includes' on an array of {τ.ts} (objects compare by identity)"
+      let x ← checkExpr T s arg (some τ)
+      return { ty := .bool, typed := s!"(.includes (by decide) {a.typed} {x.typed})",
+               readable := s!"List.any {a.term} (fun y' => y' == {x.term})", trivial := a.trivial && x.trivial,
+               safe := both a x }
+    | "some" | "every" | "find" | "filter" | "map" => do
+      let ([x], body) ← callbackOf span 1 arg | unreachable!
+      let inner ← declare s span x τ
+      let f ← if m == "map" then inferExpr T inner body none else checkExpr T inner body (some .bool)
+      let lam := s!"(fun {ident x} => {f.readable})"
+      let lamSafe := s!"(fun {ident x} => {f.safe})"
+      let (ctor, ty, readable, cond) := match m with
+        | "some" => ("any", Ty.bool, s!"List.any {a.term} {lam}", s!"V2.anySafe {lam} {lamSafe} {a.term}")
+        | "every" => ("all", .bool, s!"List.all {a.term} {lam}", s!"V2.allSafe {lam} {lamSafe} {a.term}")
+        | "find" => ("find", .option .undef τ, s!"List.find? {lam} {a.term}", s!"V2.anySafe {lam} {lamSafe} {a.term}")
+        | "filter" => ("filter", .array τ, s!"List.filter {lam} {a.term}", s!"List.all {a.term} {lamSafe}")
+        | _ => ("map", .array f.ty, s!"List.map {lam} {a.term}", s!"List.all {a.term} {lamSafe}")
+      if m == "find" && τ matches .option .. then mismatch span "'find' on an array of optionals (a nested optional)"
+      return { ty, typed := s!"(.{ctor} {a.typed} {leanString x} {f.typed})", readable,
+               trivial := a.trivial && f.trivial, safe := andTText a.trivial a.safe f.trivial cond }
+    | "toSorted" => do
+      let ([x, y], body) ← callbackOf span 2 arg | unreachable!
+      if x == y then mismatch span "a comparator with two parameters of the same name"
+      let inner ← declare (← declare s span y τ) span x τ
+      let c ← checkExpr T inner body (some .number)
+      let lam := s!"(fun {ident x} {ident y} => {c.readable})"
+      let cond := if c.trivial then s!"V2.consistent (V2.signs {lam} {a.term})"
+        else s!"V2.sortSafe {lam} false (fun {ident x} {ident y} => {c.safe}) {a.term}"
+      return { ty := .array τ, typed := s!"(.sorted {a.typed} {leanString x} {leanString y} {c.typed})",
+               readable := s!"V2.sortedBy {lam} {a.term}", trivial := false, safe := andText a.ok cond }
+    | _ => unsupportedTy span s!"the array method '{m}'"
 
   partial def checkBinary (T : Types) (s : Scope) (op : String) (a b : Parse.Expr) (span : Span)
       (_expected : Option Ty) : Checked Out := do
@@ -421,22 +571,29 @@ mutual
     | "&&" | "||" => do
       let a ← checkExpr T s a (some .bool)
       let b ← checkExpr T s b (some .bool)
+      let cond := if op == "&&" then s!"if {a.term} then {paren b.safe} else true"
+        else s!"if {a.term} then true else {paren b.safe}"
       return { ty := .bool, typed := s!"(.{if op == "&&" then "and" else "or"} {a.typed} {b.typed})",
-               readable := s!"{a.term} {op} {b.term}" }
+               readable := s!"{a.term} {op} {b.term}", trivial := a.trivial && b.trivial,
+               safe := andTText a.trivial a.safe b.trivial cond }
     | "==" | "!=" => do
       let .literal .null _ := b | unsupportedTy span s!"'{op}' other than against null"
       let a ← inferExpr T s a none
       let .option _ σ := a.ty | mismatch span s!"'{op} null' on {a.ty.ts}"
       if !σ.nonNullish then mismatch span "a nested optional"
       let (ctor, readable) := if op == "==" then ("isNull", s!"{a.term}.isNone") else ("notNull", s!"{a.term}.isSome")
-      return { ty := .bool, typed := s!"(.{ctor} (by decide) {a.typed})", readable }
+      return { ty := .bool, typed := s!"(.{ctor} (by decide) {a.typed})", readable, trivial := a.trivial,
+               safe := a.safe }
     | "??" => do
       let a ← inferExpr T s a none
       let .option _ σ := a.ty | mismatch span s!"'??' on {a.ty.ts}"
       if !σ.nonNullish then mismatch span "a nested optional"
       let b ← checkExpr T s b (some σ)
       return { ty := σ, typed := s!"(.coalesce (by decide) {a.typed} {b.typed})",
-               readable := s!"match {a.readable} with | some v' => v' | none => {b.readable}" }
+               readable := s!"match {a.readable} with | some v' => v' | none => {b.readable}",
+               trivial := a.trivial && b.trivial,
+               safe := andTText a.trivial a.safe b.trivial
+                 s!"match {a.readable} with | some _ => true | none => {paren b.safe}" }
     | "===" | "!==" => do
       -- Type a literal operand against the other side.
       let (a, b) ← match a with
@@ -445,24 +602,38 @@ mutual
       if !a.ty.prim then mismatch span s!"'{op}' on {a.ty.ts} (objects compare by identity)"
       let neg := op == "!=="
       return { ty := .bool, typed := s!"(.{if neg then "ne" else "eq"} (by decide) {a.typed} {b.typed})",
-               readable := s!"{a.term} {if neg then "!=" else "=="} {b.term}" }
+               readable := s!"{a.term} {if neg then "!=" else "=="} {b.term}", trivial := a.trivial && b.trivial,
+               safe := both a b }
     | _ => do
       let a ← inferExpr T s a none
       let b ← checkExpr T s b (some a.ty)
-      let mk (ty : Ty) (ctor readable : String) : Out := { ty, typed := s!"(.{ctor} {a.typed} {b.typed})", readable }
+      let mk (ty : Ty) (ctor readable : String) : Out :=
+        { ty, typed := s!"(.{ctor} {a.typed} {b.typed})", readable, trivial := a.trivial && b.trivial,
+          safe := both a b }
+      -- Number arithmetic stays exact only within the safe-integer range.
+      let arith (ctor sym : String) : Out :=
+        { ty := .number, typed := s!"(.{ctor} {a.typed} {b.typed})", readable := s!"{a.term} {sym} {b.term}",
+          trivial := false, safe := andText (both a b) s!"V2.inRange ({a.term} {sym} {b.term})" }
       match op, a.ty with
       | "+", .int => pure (mk .int "add" s!"{a.term} + {b.term}")
       | "-", .int => pure (mk .int "sub" s!"{a.term} - {b.term}")
       | "*", .int => pure (mk .int "mul" s!"{a.term} * {b.term}")
+      | "+", .number => pure (arith "nadd" "+")
+      | "-", .number => pure (arith "nsub" "-")
+      | "*", .number => pure (arith "nmul" "*")
       | "+", .string => pure (mk .string "concat" s!"{a.term} ++ {b.term}")
       | "<", .int => pure (mk .bool "lt" s!"decide ({a.term} < {b.term})")
       | "<=", .int => pure (mk .bool "le" s!"decide ({a.term} ≤ {b.term})")
       | ">", .int => pure (mk .bool "gt" s!"decide ({a.term} > {b.term})")
       | ">=", .int => pure (mk .bool "ge" s!"decide ({a.term} ≥ {b.term})")
-      | "<", .string => pure (mk .bool "slt" s!"strLt {a.term} {b.term}")
-      | "<=", .string => pure (mk .bool "sle" s!"strLe {a.term} {b.term}")
-      | ">", .string => pure (mk .bool "sgt" s!"strLt {b.term} {a.term}")
-      | ">=", .string => pure (mk .bool "sge" s!"strLe {b.term} {a.term}")
+      | "<", .number => pure (mk .bool "nlt" s!"decide ({a.term} < {b.term})")
+      | "<=", .number => pure (mk .bool "nle" s!"decide ({a.term} ≤ {b.term})")
+      | ">", .number => pure (mk .bool "ngt" s!"decide ({a.term} > {b.term})")
+      | ">=", .number => pure (mk .bool "nge" s!"decide ({a.term} ≥ {b.term})")
+      | "<", .string => pure (mk .bool "slt" s!"V2.strLt {a.term} {b.term}")
+      | "<=", .string => pure (mk .bool "sle" s!"V2.strLe {a.term} {b.term}")
+      | ">", .string => pure (mk .bool "sgt" s!"V2.strLt {b.term} {a.term}")
+      | ">=", .string => pure (mk .bool "sge" s!"V2.strLe {b.term} {a.term}")
       | op, τ => mismatch span s!"'{op}' does not apply to {τ.ts}"
 
   /-- An object literal at a record or union type. -/
@@ -496,8 +667,10 @@ mutual
             match srcNames.findIdx? (· == f) with
             | some j => (s!"(.set {fidxPath j} {accU})", src[j]!.2.term :: accR)
             | none => (s!"(.keep (by decide) {accU})", projText "r'" k :: accR)) (".nil", [])
+        let (esT, esS) := foldSafe (src.map (·.2))
         return { ty := τ, typed := s!"(.update {r.typed} {typedEntries} {upd} (by decide))",
-                 readable := s!"let r' := {r.readable}; ({", ".intercalate (readable ++ ["()"])})" }
+                 readable := s!"let r' := {r.readable}; ({", ".intercalate (readable ++ ["()"])})",
+                 trivial := r.trivial && esT, safe := andTText r.trivial r.safe esT esS }
       | _ => do
         let src ← entries.mapM fun (f, e) => do
           if f.isEmpty then unsupportedTy span "a spread after the first entry"
@@ -511,8 +684,9 @@ mutual
             | none => match fτ with
               | .option .undef _ | .option .both _ => pure (s!"(.absent (by decide) {accS})", "none" :: accR)
               | _ => mismatch span s!"the literal has no '{f}' field") (".nil", [])
+        let (esT, esS) := foldSafe (src.map (·.2))
         return { ty := τ, typed := s!"(.record {typedEntries} {sel.1} (by decide))",
-                 readable := "(" ++ ", ".intercalate (sel.2 ++ ["()"]) ++ ")" }
+                 readable := "(" ++ ", ".intercalate (sel.2 ++ ["()"]) ++ ")", trivial := esT, safe := esS }
     | τ => mismatch span s!"an object literal where {τ.ts} is expected"
 end
 
@@ -526,11 +700,13 @@ structure KText where
 
 def KText.wrap (k : KText) (n : Narrowed) : KText := ⟨n.wrap k.normal, n.wrap k.brk, n.wrap k.cont⟩
 
-/-- A checked statement list: typed syntax, a readable printer taking the
-continuations' text, and how it can end. -/
+/-- A checked statement list: typed syntax, readable printers of its denotation and
+of its safety condition (each taking the continuations' text), and how it can end. -/
 structure Block where
   typed : String
   readable : (indent : String) → KText → String
+  safe : (indent : String) → KText → String
+  trivial : Bool
   falls : Bool
   breaks : Bool
   continues : Bool
@@ -538,17 +714,13 @@ structure Block where
 def blockNil : Block where
   typed := ".nil"
   readable i k := k.normal i
+  safe i k := k.normal i
+  trivial := true
   falls := true
   breaks := false
   continues := false
 
 instance : Inhabited Block := ⟨blockNil⟩
-
-def declare (s : Scope) (span : Span) (x : String) (τ : Ty) : Checked Scope := do
-  if s.locals.any (·.1 == x) || s.fns.any (·.name == x) then
-    throw { code := "A2004", message := s!"'{x}' shadows a declaration in scope", span,
-            help := some "Rename it: the model requires names in scope to be distinct." }
-  pure { s with locals := (x, τ) :: s.locals }
 
 /-- An `if` branch's statements. -/
 def branchStmts : Parse.Stmt → List Parse.Stmt
@@ -556,15 +728,29 @@ def branchStmts : Parse.Stmt → List Parse.Stmt
   | s => [s]
 
 /-- Readable `switch` arms: nested matches on the union's sum, each binding the
-narrowed variable to the variant's record (`((), fields)`). -/
-def switchArms (x : String) (arms : List (Block × Narrowed)) (k : KText) (scrut ind : String) : String :=
+narrowed variable to the variant's record (`((), fields)`). `render` picks the
+denotation or the safety condition. -/
+def switchArms (render : Block → String → KText → String) (x : String) (arms : List (Block × Narrowed)) (k : KText)
+    (scrut ind : String) : String :=
   match arms with
   | [] => ""
-  | [(b, n)] => s!"let {ident x} := ((), {scrut})\n{ind}{b.readable ind (k.wrap n)}"
+  | [(b, n)] => s!"let {ident x} := ((), {scrut})\n{ind}{render b ind (k.wrap n)}"
   | (b, n) :: more =>
     let j := ind ++ "  "
-    s!"match {scrut} with\n{ind}| Sum.inl p' =>\n{j}let {ident x} := ((), p')\n{j}{b.readable j (k.wrap n)}\n" ++
-      s!"{ind}| Sum.inr p' =>\n{j}{switchArms x more k "p'" j}"
+    s!"match {scrut} with\n{ind}| Sum.inl p' =>\n{j}let {ident x} := ((), p')\n{j}{render b j (k.wrap n)}\n" ++
+      s!"{ind}| Sum.inr p' =>\n{j}{switchArms render x more k "p'" j}"
+
+/-- `if (c) yes else no; rest`, rendered for the denotation or the safety condition. -/
+def iteText (render : Block → String → KText → String) (c : String) (yes no rest : Block) (i : String) (k : KText) :
+    String :=
+  let j := i ++ "  "
+  let k' := { k with normal := fun j' => render rest j' k }
+  s!"if {c} then\n{j}{render yes j k'}\n{i}else\n{j}{render no j k'}"
+
+def flagsIte (yes no rest : Block) : Bool × Bool × Bool :=
+  ((yes.falls || no.falls) && rest.falls,
+   yes.breaks || no.breaks || ((yes.falls || no.falls) && rest.breaks),
+   yes.continues || no.continues || ((yes.falls || no.falls) && rest.continues))
 
 mutual
   partial def checkStmts (T : Types) (s : Scope) (result : Ty) : List Parse.Stmt → Checked Block
@@ -575,21 +761,25 @@ mutual
       let rest ← checkStmts T (← declare s span x v.ty) result rest
       pure { typed := s!"(.const {leanString x} {v.typed}\n  {rest.typed})",
              readable := fun i k => s!"let {ident x} := {v.readable}\n{i}{rest.readable i k}",
+             safe := fun i k => andText v.ok s!"let {ident x} := {v.readable}\n{i}{rest.safe i k}",
+             trivial := v.trivial && rest.trivial,
              falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
     | .return_ e _ :: rest => do
       let v ← checkExpr T s e (some result)
       let rest ← checkStmts T s result rest
-      pure { typed := s!"(.ret {v.typed} {rest.typed})", readable := fun _ _ => v.readable,
-             falls := false, breaks := false, continues := false }
+      pure { typed := s!"(.ret {v.typed} {rest.typed})", readable := fun _ _ => v.readable, safe := fun _ _ => v.ok,
+             trivial := v.trivial && rest.trivial, falls := false, breaks := false, continues := false }
     | .break_ _ :: rest => do
       let rest ← checkStmts T s result rest
-      pure { typed := s!"(.brk {rest.typed})", readable := (fun i k => k.brk i), falls := false, breaks := true,
-             continues := false }
+      pure { typed := s!"(.brk {rest.typed})", readable := (fun i k => k.brk i), safe := (fun i k => k.brk i),
+             trivial := rest.trivial, falls := false, breaks := true, continues := false }
     | .block body _ :: rest => do
       let body ← checkStmts T s result body
       let rest ← checkStmts T s result rest
       pure { typed := s!"(.block {body.typed}\n  {rest.typed})",
              readable := fun i k => body.readable i { k with normal := fun j => rest.readable j k },
+             safe := fun i k => body.safe i { k with normal := fun j => rest.safe j k },
+             trivial := body.trivial && rest.trivial,
              falls := body.falls && rest.falls, breaks := body.breaks || (body.falls && rest.breaks),
              continues := body.continues || (body.falls && rest.continues) }
     | .if_ c yes no span :: rest =>
@@ -600,14 +790,11 @@ mutual
         let yes ← checkStmts T s result (branchStmts yes)
         let no ← checkStmts T s result (branchStmts no)
         let rest ← checkStmts T s result rest
+        let (falls, breaks, continues) := flagsIte yes no rest
         pure { typed := s!"(.ite {c.typed}\n  {yes.typed}\n  {no.typed}\n  {rest.typed})",
-               readable := fun i k =>
-                 let j := i ++ "  "
-                 let k' := { k with normal := fun j' => rest.readable j' k }
-                 s!"if {c.readable} then\n{j}{yes.readable j k'}\n{i}else\n{j}{no.readable j k'}",
-               falls := (yes.falls || no.falls) && rest.falls,
-               breaks := yes.breaks || no.breaks || ((yes.falls || no.falls) && rest.breaks),
-               continues := yes.continues || no.continues || ((yes.falls || no.falls) && rest.continues) }
+               readable := iteText (·.readable) c.readable yes no rest,
+               safe := fun i k => andText c.ok (iteText (·.safe) c.readable yes no rest i k),
+               trivial := c.trivial && yes.trivial && no.trivial && rest.trivial, falls, breaks, continues }
     | .switch_ e cases span :: rest => checkSwitch T s result e cases span rest
     | st :: _ => unsupportedTy st.span "this statement"
 
@@ -620,34 +807,35 @@ mutual
       if noSs.isEmpty && !yes.falls then
         -- `if (x == null) exit; rest` with `x` narrowed in the rest.
         let rest ← checkStmts T narrowed result rest
+        let text (render : Block → String → KText → String) (i : String) (k : KText) :=
+          let j := i ++ "  "
+          s!"match {ident x} with\n{i}| none =>\n{j}{render yes j k}\n{i}| some {ident x} =>\n{j}{render rest j (k.wrap n)}"
         return { typed := s!"(.ifNullExit {path} (by decide)\n  {yes.typed}\n  {rest.typed})",
-                 readable := fun i k =>
-                   let j := i ++ "  "
-                   s!"match {ident x} with\n{i}| none =>\n{j}{yes.readable j k}\n{i}| some {ident x} =>\n{j}{rest.readable j (k.wrap n)}",
+                 readable := text (·.readable), safe := text (·.safe), trivial := yes.trivial && rest.trivial,
                  falls := rest.falls, breaks := yes.breaks || rest.breaks,
                  continues := yes.continues || rest.continues }
       let no ← checkStmts T narrowed result noSs
       let rest ← checkStmts T s result rest
+      let text (render : Block → String → KText → String) (i : String) (k : KText) :=
+        let j := i ++ "  "
+        let k' := { k with normal := fun j' => render rest j' k }
+        s!"match {ident x} with\n{i}| none =>\n{j}{render yes j k'}\n{i}| some {ident x} =>\n{j}{render no j (k'.wrap n)}"
+      let (falls, breaks, continues) := flagsIte yes no rest
       return { typed := s!"(.ifNull {path} (by decide)\n  {yes.typed}\n  {no.typed}\n  {rest.typed})",
-               readable := fun i k =>
-                 let j := i ++ "  "
-                 let k' := { k with normal := fun j' => rest.readable j' k }
-                 s!"match {ident x} with\n{i}| none =>\n{j}{yes.readable j k'}\n{i}| some {ident x} =>\n{j}{no.readable j (k'.wrap n)}",
-               falls := (yes.falls || no.falls) && rest.falls,
-               breaks := yes.breaks || no.breaks || ((yes.falls || no.falls) && rest.breaks),
-               continues := yes.continues || no.continues || ((yes.falls || no.falls) && rest.continues) }
+               readable := text (·.readable), safe := text (·.safe),
+               trivial := yes.trivial && no.trivial && rest.trivial, falls, breaks, continues }
     else
       let yes ← checkStmts T narrowed result yesSs
       let no ← checkStmts T s result noSs
       let rest ← checkStmts T s result rest
+      let text (render : Block → String → KText → String) (i : String) (k : KText) :=
+        let j := i ++ "  "
+        let k' := { k with normal := fun j' => render rest j' k }
+        s!"match {ident x} with\n{i}| some {ident x} =>\n{j}{render yes j (k'.wrap n)}\n{i}| none =>\n{j}{render no j k'}"
+      let (falls, breaks, continues) := flagsIte yes no rest
       return { typed := s!"(.ifNotNull {path} (by decide)\n  {yes.typed}\n  {no.typed}\n  {rest.typed})",
-               readable := fun i k =>
-                 let j := i ++ "  "
-                 let k' := { k with normal := fun j' => rest.readable j' k }
-                 s!"match {ident x} with\n{i}| some {ident x} =>\n{j}{yes.readable j (k'.wrap n)}\n{i}| none =>\n{j}{no.readable j k'}",
-               falls := (yes.falls || no.falls) && rest.falls,
-               breaks := yes.breaks || no.breaks || ((yes.falls || no.falls) && rest.breaks),
-               continues := yes.continues || no.continues || ((yes.falls || no.falls) && rest.continues) }
+               readable := text (·.readable), safe := text (·.safe),
+               trivial := yes.trivial && no.trivial && rest.trivial, falls, breaks, continues }
 
   /-- `switch (x.key)` over a union-typed local, one case per variant in order. -/
   partial def checkSwitch (T : Types) (s : Scope) (result : Ty) (e : Parse.Expr)
@@ -678,10 +866,12 @@ mutual
     let falls := (bodies.getLast?.map (·.1.falls)).getD false
     let breaks := bodies.any (·.1.breaks)
     let continues := bodies.any (·.1.continues)
+    let text (render : Block → String → KText → String) (ind : String) (k : KText) :=
+      let kr := fun j => render rest j k
+      switchArms render x bodies { k with normal := kr, brk := kr } (ident x) ind
     pure { typed := s!"(.switchU {s.varPath i} (by decide)\n  {casesTyped}\n  {rest.typed})",
-           readable := fun ind k =>
-             let kr := fun j => rest.readable j k
-             switchArms x bodies { k with normal := kr, brk := kr } (ident x) ind,
+           readable := text (·.readable), safe := text (·.safe),
+           trivial := bodies.all (·.1.trivial) && rest.trivial,
            falls := (falls || breaks) && rest.falls, breaks := (falls || breaks) && rest.breaks,
            continues := continues || ((falls || breaks) && rest.continues) }
 end
@@ -710,7 +900,7 @@ def checkFunction (T : Types) (fns : List FnSig) (f : Parse.Function) : Checked 
     throw { code := "A2003", message := s!"'{f.name}' may finish without returning a value", span := f.span }
   if block.breaks || block.continues then
     throw { code := "A2003", message := "break or continue outside a loop or switch", span := f.span }
-  pure { sig := { name := f.name, params, result }, body := block }
+  pure { sig := { name := f.name, params, result, trivial := block.trivial }, body := block }
 
 def checkProgram (p : Parse.Program) : Checked (Types × List CheckedFn) := do
   let T ← Types.ofProgram p
@@ -804,7 +994,7 @@ def printFile (source namespace_ : String) (ast : Program) (T : Types) (fns : Li
     let s := fn.sig
     let ctx := "[" ++ ", ".intercalate (s.params.map fun (x, τ) => s!"({leanString x}, {T.print τ})") ++ "]"
     out := out ++ s!"def {sigName s.name} : Sig := " ++ "{ name := " ++ leanString s.name ++
-      s!", params := {ctx}, result := {T.print s.result}, trivial := true " ++ "}\n"
+      s!", params := {ctx}, result := {T.print s.result}, trivial := {s.trivial} " ++ "}\n"
   out := out ++ "\n"
   let nes := (fns.foldl (fun acc fn => acc ++ collectNe fn.body.typed) []).eraseDups
   for (a, b) in nes do
@@ -828,6 +1018,10 @@ def printFile (source namespace_ : String) (ast : Program) (T : Types) (fns : Li
     let dflt := s!"(Ty.default {T.print s.result})"
     out := out ++ s!"def {ident s.name} {params} : {T.lean s.result} :=\n  " ++
       fn.body.readable "  " ⟨fun _ => dflt, fun _ => dflt, fun _ => dflt⟩ ++ "\n\n"
+    if !s.trivial then
+      out := out ++ s!"/-- The inputs on which `{s.name}` stays within what the model covers. -/\n"
+      out := out ++ s!"def {ident s.name}.safe {params} : Bool :=\n  " ++
+        fn.body.safe "  " ⟨fun _ => "true", fun _ => "true", fun _ => "true"⟩ ++ "\n\n"
   out := out ++ "/-! ## Denotation
 
 Each body is checked against its readable definition with the earlier functions'
@@ -840,8 +1034,12 @@ readable definitions as its environment, so no check unfolds a callee. -/\n\n"
     let projections := (List.range s.params.length).map fun k => projText "xs" k
     let applied := if s.params.isEmpty then ident s.name else " ".intercalate (ident s.name :: projections)
     out := out ++ s!"def {ident s.name}.uncurried : {sigName s.name}.denote := fun xs => {applied}\n\n"
-    out := out ++ s!"/-- Trivially safe: every input is in what the model covers. -/\n"
-    out := out ++ s!"def {ident s.name}.safety : {sigName s.name}.params.denote → Bool := fun _ => true\n\n"
+    if s.trivial then
+      out := out ++ s!"/-- Trivially safe: every input is in what the model covers. -/\n"
+      out := out ++ s!"def {ident s.name}.safety : {sigName s.name}.params.denote → Bool := fun _ => true\n\n"
+    else
+      let safeApplied := " ".intercalate (s!"{ident s.name}.safe" :: projections)
+      out := out ++ s!"def {ident s.name}.safety : {sigName s.name}.params.denote → Bool := fun xs => {safeApplied}\n\n"
     out := out ++ s!"theorem {ident s.name}.body_eq :\n    body.{ident s.name}.denoteFn {tupleOf prior "uncurried"} = {ident s.name}.uncurried := by\n  kernel_rfl\n\n"
     out := out ++ s!"theorem {ident s.name}.safe_eq :\n    body.{ident s.name}.safeFn {tupleOf prior "uncurried"} {tupleOf prior "safety"} = {ident s.name}.safety := by\n  kernel_rfl\n\n"
     prior := s.name :: prior
@@ -862,9 +1060,11 @@ readable definitions as its environment, so no check unfolds a callee. -/\n\n"
     let tuple := "(" ++ ", ".intercalate (s.params.map (ident ·.1) ++ ["()"]) ++ ")"
     let call := if s.params.isEmpty then ident s.name else s!"{ident s.name} {names}"
     out := out ++ s!"/-- Every run of `{s.name}` on arguments representing its inputs converges to a value\nrepresenting the readable definition's result. -/\n"
-    out := out ++ s!"theorem {ident s.name}.source {binders} (vs : List JSValue)\n    (args : ArgsRep {sigName s.name}.params vs {tuple}) :\n"
+    let safeHyp := if s.trivial then "" else
+      s!"\n    (safe : {" ".intercalate (s!"{ident s.name}.safe" :: s.params.map (ident ·.1))} = true)"
+    out := out ++ s!"theorem {ident s.name}.source {binders} (vs : List JSValue)\n    (args : ArgsRep {sigName s.name}.params vs {tuple}){safeHyp} :\n"
     out := out ++ s!"    ∃ w, Converges (fun fuel' => run ast fuel' {leanString s.name} vs) (.ok w) ∧\n      Ty.Rep {T.print s.result} w ({call}) :=\n"
-    out := out ++ s!"  source_of erased wf denote_eq safety_eq {fvar} {tuple} vs args rfl\n\n"
+    out := out ++ s!"  source_of erased wf denote_eq safety_eq {fvar} {tuple} vs args {if s.trivial then "rfl" else "safe"}\n\n"
   out := out ++ s!"end {namespace_}\n"
   return out
 

@@ -12,7 +12,7 @@ denotation of `if (c) return a; …` definitionally `if c then a else …`, so p
 definitions are checked by `rfl`.
 
 `safe` mirrors the denotation and says that a run stays within what the model
-covers. At L1 every operation is covered, so it only follows calls.
+covers: numbers stay safe integers and comparators are consistent.
 -/
 
 namespace V2
@@ -39,6 +39,33 @@ def Upd.apply : {fs : Fields} → Upd src fs → src.denote → fs.denote → fs
   | .nil, .nil, _, _ => ()
   | .cons .., .set i rest, xs, (_, r) => (i.get xs, rest.apply xs r)
   | .cons .., .keep _ rest, xs, (a, r) => (a, rest.apply xs r)
+
+/-! ## Numbers and arrays -/
+
+/-- `a[i]`. -/
+def listIndex (xs : List α) (i : Int) : Option α := if 0 ≤ i then xs[i.toNat]? else none
+
+/-- `some`/`find` apply the callback until it returns `true`; each application is safe. -/
+def anySafe (p s : α → Bool) : List α → Bool
+  | [] => true
+  | x :: xs => s x && (p x || anySafe p s xs)
+
+/-- `every` applies the callback until it returns `false`. -/
+def allSafe (p s : α → Bool) : List α → Bool
+  | [] => true
+  | x :: xs => s x && (!p x || allSafe p s xs)
+
+/-- The comparator's signs on every pair of elements, as `toSorted` computes them. -/
+def signs (cmp : α → α → Int) (xs : List α) : List (List Int) := xs.map fun x => xs.map fun y => sign (cmp x y)
+
+/-- `toSorted(cmp)`: the stable order of a consistent comparator. -/
+def sortedBy (cmp : α → α → Int) (xs : List α) : List α :=
+  (sortIndices (signs cmp xs) xs.length).filterMap (xs[·]?)
+
+/-- The comparator is safe on every pair (unless trivially safe, flag `t`) and
+consistent on the array. -/
+def sortSafe (cmp : α → α → Int) (t : Bool) (s : α → α → Bool) (xs : List α) : Bool :=
+  (t || xs.all (fun x => xs.all (s x))) && consistent (signs cmp xs)
 
 /-! ## Expressions -/
 
@@ -87,6 +114,27 @@ mutual
     | .record es sel _, ρ => sel.pick (es.denote fs ρ)
     | .update r es u _, ρ => u.apply (es.denote fs ρ) (r.denote fs ρ)
     | .field e i _, ρ => i.get (e.denote fs ρ)
+    | .num n, _ => n
+    | .negNum n _, _ => -n
+    | .nneg e, ρ => -e.denote fs ρ
+    | .nadd a b, ρ => a.denote fs ρ + b.denote fs ρ
+    | .nsub a b, ρ => a.denote fs ρ - b.denote fs ρ
+    | .nmul a b, ρ => a.denote fs ρ * b.denote fs ρ
+    | .nlt a b, ρ => decide (a.denote fs ρ < b.denote fs ρ)
+    | .nle a b, ρ => decide (a.denote fs ρ ≤ b.denote fs ρ)
+    | .ngt a b, ρ => decide (b.denote fs ρ < a.denote fs ρ)
+    | .nge a b, ρ => decide (b.denote fs ρ ≤ a.denote fs ρ)
+    | .array es, ρ => es.denote fs ρ
+    | .length a, ρ => ((a.denote fs ρ).length : Int)
+    | .slength s, ρ => ((s.denote fs ρ).length : Int)
+    | .index a i, ρ => listIndex (a.denote fs ρ) (i.denote fs ρ)
+    | .includes _ a e, ρ => (a.denote fs ρ).any fun y => Ty.beq _ y (e.denote fs ρ)
+    | .any a _ p, ρ => (a.denote fs ρ).any fun y => p.denote fs (y, ρ)
+    | .all a _ p, ρ => (a.denote fs ρ).all fun y => p.denote fs (y, ρ)
+    | .find a _ p, ρ => (a.denote fs ρ).find? fun y => p.denote fs (y, ρ)
+    | .filter a _ p, ρ => (a.denote fs ρ).filter fun y => p.denote fs (y, ρ)
+    | .map a _ f, ρ => (a.denote fs ρ).map fun y => f.denote fs (y, ρ)
+    | .sorted a _ _ c, ρ => sortedBy (fun y z => c.denote fs (y, z, ρ)) (a.denote fs ρ)
 
   def TArgs.denote (fs : Φ.denote) : TArgs Φ Γ ps → Γ.denote → ps.denote
     | .nil, _ => ()
@@ -96,40 +144,76 @@ mutual
   def TEntries.denote (fs : Φ.denote) : TEntries Φ Γ src → Γ.denote → src.denote
     | .nil, _ => ()
     | .cons _ e rest, ρ => (e.denote fs ρ, rest.denote fs ρ)
+
+  def TElems.denote (fs : Φ.denote) : TElems Φ Γ τ → Γ.denote → List τ.denote
+    | .nil, _ => []
+    | .cons e rest, ρ => e.denote fs ρ :: rest.denote fs ρ
+    | .spread a rest, ρ => a.denote fs ρ ++ rest.denote fs ρ
 end
+
+/-- `a && b`, where a static flag marks a conjunct that holds whatever the
+environment (it comes from trivially safe syntax): flagged conjuncts are left out,
+so a safety condition mentions only the operations that can leave the model. -/
+def andT (ta : Bool) (a : Bool) (tb : Bool) (b : Bool) : Bool :=
+  if ta then (if tb then true else b) else (if tb then a else a && b)
 
 mutual
   /-- The run stays within what the model covers, evaluating as JavaScript does
-  (`&&`, `||`, `??` and `?:` evaluate only the operand they need). -/
+  (`&&`, `||`, `??` and `?:` evaluate only the operand they need). A subterm's
+  condition is consulted only when the subterm is not trivially safe. -/
   def TExpr.safe (fs : Φ.denote) (ss : Φ.safety) : TExpr Φ Γ τ → Γ.denote → Bool
-    | .bool _, _ | .int _, _ | .str _, _ | .tagLit _, _ | .litIn .., _ | .undef .., _ | .null .., _ | .var _, _ => true
-    | .widen _ e, ρ | .not e, ρ | .neg e, ρ | .isNull _ e, ρ | .notNull _ e, ρ | .field e _ _, ρ => e.safe fs ss ρ
+    | .bool _, _ | .int _, _ | .str _, _ | .tagLit _, _ | .litIn .., _ | .undef .., _ | .null .., _ | .var _, _
+    | .num _, _ | .negNum .., _ => true
+    | .widen _ e, ρ | .not e, ρ | .neg e, ρ | .isNull _ e, ρ | .notNull _ e, ρ | .field e _ _, ρ
+    | .length e, ρ | .slength e, ρ => e.safe fs ss ρ
     | .add a b, ρ | .sub a b, ρ | .mul a b, ρ | .concat a b, ρ | .eq _ a b, ρ | .ne _ a b, ρ
     | .lt a b, ρ | .le a b, ρ | .gt a b, ρ | .ge a b, ρ
-    | .slt a b, ρ | .sle a b, ρ | .sgt a b, ρ | .sge a b, ρ => a.safe fs ss ρ && b.safe fs ss ρ
-    | .and a b, ρ => a.safe fs ss ρ && (if a.denote fs ρ then b.safe fs ss ρ else true)
-    | .or a b, ρ => a.safe fs ss ρ && (if a.denote fs ρ then true else b.safe fs ss ρ)
-    | .cond c a b, ρ => c.safe fs ss ρ && (if c.denote fs ρ then a.safe fs ss ρ else b.safe fs ss ρ)
+    | .slt a b, ρ | .sle a b, ρ | .sgt a b, ρ | .sge a b, ρ
+    | .nlt a b, ρ | .nle a b, ρ | .ngt a b, ρ | .nge a b, ρ | .index a b, ρ | .includes _ a b, ρ =>
+      andT a.trivial (a.safe fs ss ρ) b.trivial (b.safe fs ss ρ)
+    | .nneg e, ρ => (e.trivial || e.safe fs ss ρ) && inRange (-e.denote fs ρ)
+    | .nadd a b, ρ => andT a.trivial (a.safe fs ss ρ) b.trivial (b.safe fs ss ρ) &&
+      inRange (a.denote fs ρ + b.denote fs ρ)
+    | .nsub a b, ρ => andT a.trivial (a.safe fs ss ρ) b.trivial (b.safe fs ss ρ) &&
+      inRange (a.denote fs ρ - b.denote fs ρ)
+    | .nmul a b, ρ => andT a.trivial (a.safe fs ss ρ) b.trivial (b.safe fs ss ρ) &&
+      inRange (a.denote fs ρ * b.denote fs ρ)
+    | .and a b, ρ => andT a.trivial (a.safe fs ss ρ) b.trivial (if a.denote fs ρ then b.safe fs ss ρ else true)
+    | .or a b, ρ => andT a.trivial (a.safe fs ss ρ) b.trivial (if a.denote fs ρ then true else b.safe fs ss ρ)
+    | .cond c a b, ρ => andT c.trivial (c.safe fs ss ρ) (a.trivial && b.trivial)
+      (if c.denote fs ρ then a.trivial || a.safe fs ss ρ else b.trivial || b.safe fs ss ρ)
     | .condNull v _ a b, ρ => match v.get ρ with
-      | none => a.safe fs ss ρ
-      | some y => b.safe fs ss (v.narrowVal ρ y)
+      | none => a.trivial || a.safe fs ss ρ
+      | some y => b.trivial || b.safe fs ss (v.narrowVal ρ y)
     | .condNotNull v _ a b, ρ => match v.get ρ with
-      | some y => a.safe fs ss (v.narrowVal ρ y)
-      | none => b.safe fs ss ρ
-    | .coalesce _ a b, ρ => a.safe fs ss ρ && (match a.denote fs ρ with
+      | some y => a.trivial || a.safe fs ss (v.narrowVal ρ y)
+      | none => b.trivial || b.safe fs ss ρ
+    | .coalesce _ a b, ρ => andT a.trivial (a.safe fs ss ρ) b.trivial (match a.denote fs ρ with
       | some _ => true
       | none => b.safe fs ss ρ)
-    | .call fn _ args, ρ => args.safe fs ss ρ && fn.safe ss (args.denote fs ρ)
-    | .record es _ _, ρ => es.safe fs ss ρ
-    | .update r es _ _, ρ => r.safe fs ss ρ && es.safe fs ss ρ
+    | @TExpr.call _ _ _ s fn _ args, ρ => andT args.trivial (args.safe fs ss ρ) s.trivial (fn.safe ss (args.denote fs ρ))
+    | .record es _ _, ρ | .array es, ρ => es.safe fs ss ρ
+    | .update r es _ _, ρ => andT r.trivial (r.safe fs ss ρ) es.trivial (es.safe fs ss ρ)
+    | .any a _ p, ρ | .find a _ p, ρ => andT a.trivial (a.safe fs ss ρ) p.trivial
+      (anySafe (fun y => p.denote fs (y, ρ)) (fun y => p.safe fs ss (y, ρ)) (a.denote fs ρ))
+    | .all a _ p, ρ => andT a.trivial (a.safe fs ss ρ) p.trivial
+      (allSafe (fun y => p.denote fs (y, ρ)) (fun y => p.safe fs ss (y, ρ)) (a.denote fs ρ))
+    | .filter a _ p, ρ | .map a _ p, ρ => andT a.trivial (a.safe fs ss ρ) p.trivial
+      ((a.denote fs ρ).all fun y => p.safe fs ss (y, ρ))
+    | .sorted a _ _ c, ρ => (a.trivial || a.safe fs ss ρ) &&
+      sortSafe (fun y z => c.denote fs (y, z, ρ)) c.trivial (fun y z => c.safe fs ss (y, z, ρ)) (a.denote fs ρ)
 
   def TArgs.safe (fs : Φ.denote) (ss : Φ.safety) : TArgs Φ Γ ps → Γ.denote → Bool
     | .nil, _ | .omitted _, _ => true
-    | .cons e rest, ρ => e.safe fs ss ρ && rest.safe fs ss ρ
+    | .cons e rest, ρ => andT e.trivial (e.safe fs ss ρ) rest.trivial (rest.safe fs ss ρ)
 
   def TEntries.safe (fs : Φ.denote) (ss : Φ.safety) : TEntries Φ Γ src → Γ.denote → Bool
     | .nil, _ => true
-    | .cons _ e rest, ρ => e.safe fs ss ρ && rest.safe fs ss ρ
+    | .cons _ e rest, ρ => andT e.trivial (e.safe fs ss ρ) rest.trivial (rest.safe fs ss ρ)
+
+  def TElems.safe (fs : Φ.denote) (ss : Φ.safety) : TElems Φ Γ τ → Γ.denote → Bool
+    | .nil, _ => true
+    | .cons e rest, ρ | .spread e rest, ρ => andT e.trivial (e.safe fs ss ρ) rest.trivial (rest.safe fs ss ρ)
 end
 
 /-! ## Statements -/
@@ -170,9 +254,9 @@ end
 mutual
   def TStmts.safe (fs : Φ.denote) (ss : Φ.safety) : TStmts Φ Γ τ → K Γ Bool → Γ.denote → Bool
     | .nil, k, ρ => k.normal ρ
-    | .const _ e rest, k, ρ => e.safe fs ss ρ && rest.safe fs ss (k.map Prod.snd) (e.denote fs ρ, ρ)
-    | .ret e _, _, ρ => e.safe fs ss ρ
-    | .ite c yes no rest, k, ρ => c.safe fs ss ρ &&
+    | .const _ e rest, k, ρ => (e.trivial || e.safe fs ss ρ) && rest.safe fs ss (k.map Prod.snd) (e.denote fs ρ, ρ)
+    | .ret e _, _, ρ => e.trivial || e.safe fs ss ρ
+    | .ite c yes no rest, k, ρ => (c.trivial || c.safe fs ss ρ) &&
       (if c.denote fs ρ then yes.safe fs ss { k with normal := rest.safe fs ss k } ρ
        else no.safe fs ss { k with normal := rest.safe fs ss k } ρ)
     | .block body rest, k, ρ => body.safe fs ss { k with normal := rest.safe fs ss k } ρ

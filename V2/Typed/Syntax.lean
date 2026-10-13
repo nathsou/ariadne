@@ -187,6 +187,42 @@ mutual
         TExpr Φ Γ (.record fs)
     /-- `e.f`. -/
     | field (e : TExpr Φ Γ (.record fs)) (i : FIdx fs f τ) (h : protoNames.contains f = false) : TExpr Φ Γ τ
+    /-- A `number` literal. -/
+    | num (n : Int) : TExpr Φ Γ .number
+    /-- `-n` for a `number` literal `n`. -/
+    | negNum (n : Int) (h : inRange n = true) : TExpr Φ Γ .number
+    | nneg (e : TExpr Φ Γ .number) : TExpr Φ Γ .number
+    | nadd (a b : TExpr Φ Γ .number) : TExpr Φ Γ .number
+    | nsub (a b : TExpr Φ Γ .number) : TExpr Φ Γ .number
+    | nmul (a b : TExpr Φ Γ .number) : TExpr Φ Γ .number
+    | nlt (a b : TExpr Φ Γ .number) : TExpr Φ Γ .bool
+    | nle (a b : TExpr Φ Γ .number) : TExpr Φ Γ .bool
+    | ngt (a b : TExpr Φ Γ .number) : TExpr Φ Γ .bool
+    | nge (a b : TExpr Φ Γ .number) : TExpr Φ Γ .bool
+    /-- `[e, ...a, …]`. -/
+    | array (es : TElems Φ Γ τ) : TExpr Φ Γ (.array τ)
+    /-- `a.length` on an array. -/
+    | length (a : TExpr Φ Γ (.array τ)) : TExpr Φ Γ .number
+    /-- `s.length` on a string (UTF-16 code units). -/
+    | slength (s : TExpr Φ Γ .string) : TExpr Φ Γ .number
+    /-- `a[i]`: `undefined` out of bounds. -/
+    | index (a : TExpr Φ Γ (.array τ)) (i : TExpr Φ Γ .number) : TExpr Φ Γ (.option .undef τ)
+    /-- `a.includes(x)`. -/
+    | includes (h : τ.prim = true) (a : TExpr Φ Γ (.array τ)) (e : TExpr Φ Γ τ) : TExpr Φ Γ .bool
+    /-- `a.some((x) => p)`. -/
+    | any (a : TExpr Φ Γ (.array τ)) (x : String) (p : TExpr Φ ((x, τ) :: Γ) .bool) : TExpr Φ Γ .bool
+    /-- `a.every((x) => p)`. -/
+    | all (a : TExpr Φ Γ (.array τ)) (x : String) (p : TExpr Φ ((x, τ) :: Γ) .bool) : TExpr Φ Γ .bool
+    /-- `a.find((x) => p)`. -/
+    | find (a : TExpr Φ Γ (.array τ)) (x : String) (p : TExpr Φ ((x, τ) :: Γ) .bool) :
+        TExpr Φ Γ (.option .undef τ)
+    /-- `a.filter((x) => p)`. -/
+    | filter (a : TExpr Φ Γ (.array τ)) (x : String) (p : TExpr Φ ((x, τ) :: Γ) .bool) : TExpr Φ Γ (.array τ)
+    /-- `a.map((x) => f)`. -/
+    | map (a : TExpr Φ Γ (.array τ)) (x : String) (f : TExpr Φ ((x, τ) :: Γ) σ) : TExpr Φ Γ (.array σ)
+    /-- `a.toSorted((x, y) => c)`. -/
+    | sorted (a : TExpr Φ Γ (.array τ)) (x y : String) (c : TExpr Φ ((x, τ) :: (y, τ) :: Γ) .number) :
+        TExpr Φ Γ (.array τ)
 
   /-- Arguments for the parameters `ps`, evaluated in `Γ`. -/
   inductive TArgs (Φ : Sigs) : Ctx → Ctx → Type where
@@ -199,6 +235,13 @@ mutual
   inductive TEntries (Φ : Sigs) : Ctx → Fields → Type where
     | nil : TEntries Φ Γ .nil
     | cons (f : String) (e : TExpr Φ Γ τ) (rest : TEntries Φ Γ src) : TEntries Φ Γ (.cons f τ src)
+
+  /-- An array literal's elements. -/
+  inductive TElems (Φ : Sigs) : Ctx → Ty → Type where
+    | nil : TElems Φ Γ τ
+    | cons (e : TExpr Φ Γ τ) (rest : TElems Φ Γ τ) : TElems Φ Γ τ
+    /-- `...a`. -/
+    | spread (a : TExpr Φ Γ (.array τ)) (rest : TElems Φ Γ τ) : TElems Φ Γ τ
 end
 
 mutual
@@ -282,6 +325,27 @@ mutual
     | .record es _ _ => .record es.erase
     | .update r es _ _ => .record ((none, r.erase) :: es.erase)
     | @TExpr.field _ _ _ f _ e _ _ => .field e.erase f
+    | .num n => .lit (.number n)
+    | .negNum n _ => .unary .neg (.lit (.number n))
+    | .nneg e => .unary .neg e.erase
+    | .nadd a b => .binary .add a.erase b.erase
+    | .nsub a b => .binary .sub a.erase b.erase
+    | .nmul a b => .binary .mul a.erase b.erase
+    | .nlt a b => .binary .lt a.erase b.erase
+    | .nle a b => .binary .le a.erase b.erase
+    | .ngt a b => .binary .gt a.erase b.erase
+    | .nge a b => .binary .ge a.erase b.erase
+    | .array es => .array es.erase
+    | .length a => .field a.erase "length"
+    | .slength s => .field s.erase "length"
+    | .index a i => .index a.erase i.erase
+    | .includes _ a e => .method a.erase "includes" [e.erase]
+    | .any a x p => .method a.erase "some" [.arrow [x] p.erase]
+    | .all a x p => .method a.erase "every" [.arrow [x] p.erase]
+    | .find a x p => .method a.erase "find" [.arrow [x] p.erase]
+    | .filter a x p => .method a.erase "filter" [.arrow [x] p.erase]
+    | .map a x f => .method a.erase "map" [.arrow [x] f.erase]
+    | .sorted a x y c => .method a.erase "toSorted" [.arrow [x, y] c.erase]
 
   def TArgs.erase : TArgs Φ Γ ps → List Expr
     | .nil => []
@@ -291,6 +355,11 @@ mutual
   def TEntries.erase : TEntries Φ Γ src → List (Option String × Expr)
     | .nil => []
     | .cons f e rest => (some f, e.erase) :: rest.erase
+
+  def TElems.erase : TElems Φ Γ τ → List (Bool × Expr)
+    | .nil => []
+    | .cons e rest => (false, e.erase) :: rest.erase
+    | .spread a rest => (true, a.erase) :: rest.erase
 end
 
 mutual
@@ -402,6 +471,13 @@ mutual
     | @TExpr.call _ _ _ s _ _ args => s.trivial && args.trivial
     | .record es _ _ => es.trivial
     | .update r es _ _ => r.trivial && es.trivial
+    | .num _ | .negNum .. => true
+    | .nneg _ | .nadd .. | .nsub .. | .nmul .. | .sorted .. => false
+    | .nlt a b | .nle a b | .ngt a b | .nge a b | .index a b => a.trivial && b.trivial
+    | .includes _ a e => a.trivial && e.trivial
+    | .any a _ p | .all a _ p | .find a _ p | .filter a _ p | .map a _ p => a.trivial && p.trivial
+    | .array es => es.trivial
+    | .length e | .slength e => e.trivial
 
   def TArgs.trivial : TArgs Φ Γ ps → Bool
     | .nil | .omitted _ => true
@@ -410,6 +486,10 @@ mutual
   def TEntries.trivial : TEntries Φ Γ src → Bool
     | .nil => true
     | .cons _ e rest => e.trivial && rest.trivial
+
+  def TElems.trivial : TElems Φ Γ τ → Bool
+    | .nil => true
+    | .cons e rest | .spread e rest => e.trivial && rest.trivial
 end
 
 mutual

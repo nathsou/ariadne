@@ -31,13 +31,13 @@ theorem TProgram.fnsOK {prog : Program} : ∀ {Φ : Sigs} (P : TProgram Φ), Loo
       intro xs h
       unfold TStmts.safeFn at h
       split at h
-      · exact TStmts.safe_of_trivial (rest.safeSigs hok.2) body _ xs (fun _ => ⟨rfl, rfl, rfl⟩) (by assumption)
+      · exact TStmts.safe_of_trivial body _ xs (fun _ => ⟨rfl, rfl, rfl⟩) (by assumption)
       · exact h
     intro v xs vs hargs hsafe
     cases v with
     | there v => exact ih v xs vs hargs hsafe
     | here =>
-      obtain ⟨out, ⟨N, hc⟩, hr⟩ := TStmts.adequate ih body (K.all fun _ => Ty.default _) (K.all fun _ => true)
+      obtain ⟨out, ⟨N, hc⟩, hr⟩ := TStmts.adequate ih (rest.safeSigs hok.2) body (K.all fun _ => Ty.default _) (K.all fun _ => true)
         hargs (hbody xs hsafe) hok.1.1.1.1.1
       cases out with
       | returned w =>

@@ -335,6 +335,9 @@ theorem then_rest {Γ τ} {s : Stmt} {rest : TStmts Φ Γ τ} {k : K Γ τ.denot
   | broke e => exact ⟨_, conv_cons_exit h1 (by simp), by simp [ho.1], ho.2⟩
   | continued e => exact ⟨_, conv_cons_exit h1 (by simp), by simp [ho.1], ho.2⟩
 
+variable (hss : SafeSigs ss)
+include hss
+
 mutual
   theorem TStmts.adequate : ∀ {Γ : Ctx} {τ : Ty} (st : TStmts Φ Γ τ) (k : K Γ τ.denote) (ks : K Γ Bool)
       {env : Env} {ρ : Γ.denote}, EnvRel Γ env ρ → st.safe fs ss ks ρ = true → st.wf = true →
@@ -344,19 +347,19 @@ mutual
       ⟨_, conv_nil, rfl, [], env, ρ, rfl, rfl, he, rfl, hs⟩
     | _, _, .const x e rest, k, ks, env, ρ, he, hs, hw => by
       simp only [TStmts.safe, Bool.and_eq_true] at hs
-      obtain ⟨w, hc, hrep⟩ := TExpr.adequate hfs e he hs.1
+      obtain ⟨w, hc, hrep⟩ := TExpr.adequate hfs hss e he (TExpr.ok hs.1)
       obtain ⟨o, hc2, hr⟩ := TStmts.adequate rest (k.map Prod.snd) (ks.map Prod.snd)
         (env := (x, w) :: env) (ρ := (e.denote fs ρ, ρ)) ⟨w, env, rfl, hrep, he⟩ hs.2 hw
       exact ⟨o, conv_cons_normal (conv_const hc) hc2, hr.pop⟩
     | _, _, .ret e rest, k, ks, env, ρ, he, hs, _ => by
-      obtain ⟨w, hc, hrep⟩ := TExpr.adequate hfs e he hs
+      obtain ⟨w, hc, hrep⟩ := TExpr.adequate hfs hss e he (TExpr.ok hs)
       exact ⟨_, conv_cons_exit (conv_ret hc) (by simp), hrep⟩
     | _, _, .brk rest, k, ks, env, ρ, he, hs, _ =>
       ⟨_, conv_cons_exit conv_brk (by simp), rfl, [], env, ρ, rfl, rfl, he, rfl, hs⟩
     | Γ, τ, .ite c yes no rest, k, ks, env, ρ, he, hs, hw => by
       simp only [TStmts.safe, Bool.and_eq_true] at hs
       simp only [TStmts.wf, Bool.and_eq_true] at hw
-      obtain ⟨wc, hcc, hwc⟩ := TExpr.adequate hfs c he hs.1
+      obtain ⟨wc, hcc, hwc⟩ := TExpr.adequate hfs hss c he (TExpr.ok hs.1)
       simp only [Ty.Rep] at hwc; subst hwc
       have hrest := fun envM ρ' (_ : envM.length = env.length) hrel hsafe =>
         TStmts.adequate rest k ks (env := envM) (ρ := ρ') hrel hsafe hw.2

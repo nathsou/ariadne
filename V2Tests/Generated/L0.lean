@@ -91,7 +91,7 @@ def body.«max» : TStmts [] sig.«max».params sig.«max».result :=
   (.ret (.var .here) .nil))
 
 def body.«clamp» : TStmts [sig.«max»] sig.«clamp».params sig.«clamp».result :=
-  (.const "y" (.call .here (by decide) (.cons (.var .here) (.cons (.var (.there ne.«lo».«x» .here)) .nil)))
+  (.const "y" (.call (s := sig.«max») .here (by decide) (.cons (.var .here) (.cons (.var (.there ne.«lo».«x» .here)) .nil)))
   (.ret (.cond (.gt (.var .here) (.var (.there ne.«hi».«y» (.there ne.«hi».«x» (.there ne.«hi».«lo» .here))))) (.var (.there ne.«hi».«y» (.there ne.«hi».«x» (.there ne.«hi».«lo» .here)))) (.var .here)) .nil))
 
 def body.«sign» : TStmts [sig.«clamp», sig.«max»] sig.«sign».params sig.«sign».result :=
@@ -104,7 +104,7 @@ def body.«sign» : TStmts [sig.«clamp», sig.«max»] sig.«sign».params sig.
   (.ret (.int 1) .nil))
 
 def body.«describe» : TStmts [sig.«sign», sig.«clamp», sig.«max»] sig.«describe».params sig.«describe».result :=
-  (.const "s" (.call .here (by decide) (.cons (.var .here) .nil))
+  (.const "s" (.call (s := sig.«sign») .here (by decide) (.cons (.var .here) .nil))
   (.const "prefix" (.concat (.var (.there ne.«label».«s» (.there ne.«label».«n» .here))) (.str (js ": ")))
   (.ite (.eq (by decide) (.var (.there ne.«s».«prefix» .here)) (.int 0))
   (.ret (.concat (.var .here) (.str (js "zero"))) .nil)
@@ -170,13 +170,13 @@ def «describe» («n» : Int) («label» : JSString) : JSString :=
     «prefix» ++ (js "zero")
   else
     let «kind» := if decide («s» > (0 : Int)) then (js "positive") else (js "negative")
-    if («label» == (js "")) || (strLe «label» (js "a")) then
+    if («label» == (js "")) || (V2.strLe «label» (js "a")) then
       «kind»
     else
       «prefix» ++ «kind»
 
 def «between» («lo» : JSString) («x» : JSString) («hi» : JSString) : Bool :=
-  ((!(strLt «x» «lo»)) && (strLe «x» «hi»)) && («lo» != «hi»)
+  ((!(V2.strLt «x» «lo»)) && (V2.strLe «x» «hi»)) && («lo» != «hi»)
 
 def «polynomial» («x» : Int) : Int :=
   let «square» := «x» * «x»
