@@ -127,6 +127,15 @@ execution is modeled; additional statements, impure keys, readonly elements and
 long-lived references remain refused. General statement guards and universal
 simultaneous-call source transfer remain M4 work.
 
+`RecordMutation` proves scalar field assignment and compound-update execution
+in the original heap model. The rest of the record layout is framed, including
+reference fields, using compositional field-independence rules. `ProjectionRecord`
+composes those rules with array and Map selection: the original statement writes
+only the selected record root, retains the parent references and order, and
+matches the native lens replacement. These are primitive and statement adequacy
+rules; emitted universal field-update source witnesses and the general checker
+fundamental lemma remain pending.
+
 CI #96 on `5e31ceb` passes in 11m23s, compared with baseline CI #82's 21m18s.
 Its logged source-transfer and Int53 tamper phases take 17s and 7s respectively,
 compared with the baseline 1m51s and 1m29s. The axiom audit covers 5,435 theorems.
@@ -158,6 +167,10 @@ test modules now run serially in a fourth matrix job alongside the example
 jobs, restoring their checked artifacts before verification. This removes
 those growing test proofs from the preparation critical path while preserving
 every test module and the final failure-on-skipped-job requirement.
+CI #114 on `1080ab2` passed all nine jobs in 10m53s, including the new simultaneous
+suite. The serial kernel-test job took 129s in parallel with the examples;
+preparation, the slowest example job and source verification took 196s, 295s
+and 152s respectively. All 27 JavaScript suites and the original checks remain.
 
 Frontend checkpoint: the complete `scripts/check.sh` suite passes with 1,217
 audited theorems, 42 native entry points, 64 generated programs, 51 scalar
