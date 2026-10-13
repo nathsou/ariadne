@@ -12,6 +12,7 @@ structure ArgumentCheck where
   right : Nat
   leftTraversal : Traversal
   rightTraversal : Traversal
+  projection : Option Projection.Kind := none
   deriving Repr, BEq
 
 /-- Readonly views and compatible structural views can denote the same object.
@@ -78,10 +79,14 @@ only for a possible containment path, in either direction. Unrelated immutable
 arguments need no guard. -/
 def entryPlan (program : Program) (function : Ariadne.Function) : Checked (List ArgumentCheck) := do
   let types ← function.params.mapM fun param => Check.resolve 100 program param.ty
-  if (types.filter Check.referenceType).length < 2 || types.all Check.immutable then return []
+  let mut plan := []
+  if let some entry := Projection.simultaneousEntry function then
+    let left := function.params.findIdx (·.name == entry.leftKey)
+    let right := function.params.findIdx (·.name == entry.rightKey)
+    plan := [{left, right, leftTraversal := .root, rightTraversal := .root, projection := some entry.left.kind}]
+  if (types.filter Check.referenceType).length < 2 || types.all Check.immutable then return plan
   let lowered ← Shallow.ClassPlan.lower program
   let writes ← Shallow.StatePlan.effects lowered 256 function
-  let mut plan := []
   for left in List.range types.length do
     for right in List.range types.length do
       if left < right then

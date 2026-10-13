@@ -1,5 +1,6 @@
 import Ariadne.Shallow.Prelude.Int53Exact
 import Ariadne.Shallow.Prelude.Array
+import Ariadne.Shallow.Prelude.NumberKey
 
 namespace Ariadne.Shallow.JSArray
 
@@ -27,6 +28,34 @@ theorem index_number_eq {query : Float.Model} {index : Nat}
     rw [integer]
     exact accepted.2
   · contradiction
+
+/-- Passing numeric inequality separates the actual dense-array indices,
+including the two representations of zero. -/
+theorem index_guard_distinct {left right : Float.Model} {i j : Nat}
+    (leftIndex : Ariadne.indexOf (.number left) = Option.some i)
+    (rightIndex : Ariadne.indexOf (.number right) = Option.some j)
+    (passed : (left == right) = false) : i ≠ j := by
+  intro same
+  subst j
+  have leftEqual : NumberKey.equal (Float.Model.ofNat i) left = true := by
+    simp [NumberKey.equal, index_number_eq leftIndex]
+  have rightEqual : NumberKey.equal (Float.Model.ofNat i) right = true := by
+    simp [NumberKey.equal, index_number_eq rightIndex]
+  have equal := NumberKey.equal_transitive
+    (show NumberKey.equal left (Float.Model.ofNat i) = true from
+      (NumberKey.equal_symmetric left _).trans leftEqual) rightEqual
+  have finite : left.isFinite = true := by
+    simp only [Ariadne.indexOf] at leftIndex
+    split at leftIndex
+    · rename_i accepted
+      simp only [Bool.and_eq_true, decide_eq_true_eq] at accepted
+      exact accepted.1.1
+    · contradiction
+  have notNaN : left.isNaN = false := by
+    cases value : left.unpack <;>
+      simp_all [Float.Model.isFinite, Float.Model.isNaN,
+        Float.Model.UnpackedFloat.isFinite, Float.Model.UnpackedFloat.isNaN]
+  simp [NumberKey.equal, notNaN, passed] at equal
 
 /-- The indexed replacement emitted for a statement projection equals the array
 lens update for every valid source index, including negative zero. -/

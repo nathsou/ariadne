@@ -5,8 +5,8 @@ cd "$(dirname "$0")/.."
 # CI restores the prepare job's build before invoking individual phases.
 # Local invocation runs the same phases in sequence.
 phase=${1:-all}
-if (( $# > 1 )) || [[ ! "$phase" =~ ^(all|prepare|operational|shallow|shallow-data|shallow-values|verify|verify-basic|verify-data|verify-source)$ ]]; then
-  echo "Usage: scripts/check.sh [all|prepare|operational|shallow|shallow-data|shallow-values|verify|verify-basic|verify-data|verify-source]" >&2
+if (( $# > 1 )) || [[ ! "$phase" =~ ^(all|prepare|tests|operational|shallow|shallow-data|shallow-values|verify|verify-basic|verify-data|verify-source)$ ]]; then
+  echo "Usage: scripts/check.sh [all|prepare|tests|operational|shallow|shallow-data|shallow-values|verify|verify-basic|verify-data|verify-source]" >&2
   exit 2
 fi
 
@@ -19,9 +19,17 @@ timed() {
 }
 
 run_prepare() {
-  lake build ariadne Tests Ariadne
+  lake build ariadne Ariadne
   scripts/regenerate.sh
   git diff --exit-code -- Examples/Generated Examples/Compiled Examples/OperationalReference Examples/ShallowReference Examples/Shallow Examples/Tamper
+}
+
+run_tests() {
+  for source in Tests/*.lean; do
+    stem=$(basename "$source" .lean)
+    lake build "Tests.$stem"
+  done
+  lake build Tests
 }
 
 run_operational() {
@@ -81,7 +89,7 @@ select_js() {
 }
 
 run_verify_basic() {
-  lake build Examples
+  lake build Tests Examples
   lake env lean scripts/Audit.lean
   select_js
   timed scripts/differential.mjs "$js" scripts/differential.mjs
@@ -115,6 +123,7 @@ run_verify_data() {
   timed scripts/shallow-unions.mjs "$js" scripts/shallow-unions.mjs
   timed scripts/shallow-state.mjs "$js" scripts/shallow-state.mjs
   timed scripts/shallow-projections.mjs "$js" scripts/shallow-projections.mjs
+  timed scripts/shallow-simultaneous.mjs "$js" scripts/shallow-simultaneous.mjs
   timed scripts/shallow-classes.mjs "$js" scripts/shallow-classes.mjs
   timed scripts/shallow-int53.mjs "$js" scripts/shallow-int53.mjs
   timed scripts/reference-shallow.mjs "$js" scripts/reference-shallow.mjs
@@ -129,6 +138,7 @@ run_verify() {
 case "$phase" in
   all)
     timed prepare run_prepare
+    timed tests run_tests
     timed operational run_operational
     timed shallow run_shallow
     timed verify run_verify

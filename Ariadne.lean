@@ -36,4 +36,5 @@ import Ariadne.Shallow.Adequacy.Permissions
 import Ariadne.Ownership.Sound
 import Ariadne.Shallow.Lens
 import Ariadne.Shallow.Adequacy.ProjectionMutation
+import Ariadne.Shallow.Adequacy.ProjectionGuard
 import Ariadne.Shallow.Adequacy.ProjectionSource

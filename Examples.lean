@@ -70,3 +70,4 @@ import Examples.Proofs.SharedSource
 import Examples.Shallow.guardedshared
 import Examples.Tamper.guardedshared
 import Examples.Tamper.projectionarray
+import Examples.Shallow.simultaneous

@@ -30,6 +30,8 @@ structure Context where
   inferReturns : Bool := false
   /-- Ephemeral element borrows are admitted only by the enclosing statement. -/
   projectionSpans : List Span := []
+  /-- Only a sole exported entry statement may move its key guard to entry. -/
+  simultaneous : Option Projection.Entry := none
 
 def error (code message : String) (span : Span) (help : Option String := none) : Checked α :=
   .error { code, message, span, help }
@@ -587,6 +589,15 @@ mutual
           if ctx.inCallback then error "A3003" "user function calls inside callbacks require interprocedural effect summaries" span
           let some f := ctx.program.functions.find? (fun f => f.name == name)
             | error "A2003" s!"unknown function '{name}'" span
+          if (Projection.simultaneousEntry f).isSome then
+            error "A3001" "simultaneous projection entries must be invoked through their generated entry wrapper" span
+          let ctx ← match ctx.simultaneous with
+            | some entry =>
+              if entry.callee == name && entry.callSpan == span then do
+                checkWrite ctx entry.left.container
+                pure {ctx with projectionSpans := [entry.left.focus.span, entry.right.focus.span]}
+              else pure ctx
+            | none => pure ctx
           if args.length != f.params.length then error "A2007" s!"'{name}' expects {f.params.length} arguments" span
           let mut roots : List String := []
           for (arg, param) in args.zip f.params do
@@ -601,7 +612,8 @@ mutual
                   error "A3001" "a mutable owner cannot be shared as an immutable argument" arg.span
               if !immutable expected then checkBorrowOwner ctx arg
               if let some r := root arg then
-                if roots.contains r then error "A3001" s!"'{r}' is passed through overlapping mutable arguments" arg.span
+                if roots.contains r && ctx.projectionSpans.length != 2 then
+                  error "A3001" s!"'{r}' is passed through overlapping mutable arguments" arg.span
                 roots := r :: roots
           resolve 100 ctx.program f.result
         | .member object field _ => inferMethod n ctx object field args span
@@ -1033,7 +1045,7 @@ def program (p : Program) : Checked Unit := do
     if let some measure := f.decreases then
       let ty ← infer 256 { program := p, bindings, result, inCallback := true } measure
       if ty != .number && ty != .int53 && ty != .bigint then error "A2002" "a measure must have a numeric type" measure.span
-    let _ ← checkStmt 256 { program := p, bindings, result } f.body
+    let _ ← checkStmt 256 { program := p, bindings, result, simultaneous := Projection.simultaneousEntry f } f.body
     if result != .void && !returns 256 f.body then
       error "A2010" s!"function '{f.name}' may fall through without returning a value" f.span
   if (p.classes.map Class.name).eraseDups.length != p.classes.length then

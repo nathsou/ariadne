@@ -37,7 +37,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        phase: [operational, shallow-data, shallow-values]
+        phase: [operational, shallow-data, shallow-values, tests]
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - name: Install checksum-pinned Lean, elan, and Bun
@@ -49,12 +49,17 @@ jobs:
       - name: Restore library build
         run: tar -xzf work/ci-artifacts/library.tar.gz
       # Each runner checks its certificates serially to bound kernel memory.
-      - name: Kernel-check examples
+      - name: Kernel-check modules serially
         run: scripts/check.sh "${{ matrix.phase }}"
-      - name: Package checked example modules
+      - name: Package checked modules
         run: |
-          tar -czf work/ci-artifacts/checked-examples-${{ matrix.phase }}.tar.gz \
-            .lake/build/lib/lean/Examples .lake/build/ir/Examples
+          if [[ "${{ matrix.phase }}" == tests ]]; then
+            tar -czf work/ci-artifacts/checked-examples-tests.tar.gz \
+              .lake/build/lib/lean/Tests* .lake/build/ir/Tests*
+          else
+            tar -czf work/ci-artifacts/checked-examples-${{ matrix.phase }}.tar.gz \
+              .lake/build/lib/lean/Examples .lake/build/ir/Examples
+          fi
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: checked-examples-${{ matrix.phase }}

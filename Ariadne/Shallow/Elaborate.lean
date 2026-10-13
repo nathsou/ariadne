@@ -904,6 +904,69 @@ mutual
         finish updated
       | _ => refusal "A5102" "projection requires an array or Map" expr.span
 
+  /-- Two statement borrows carry two independent returned states. Their entry
+  keys are guarded, and both are restored through the same parent lens. -/
+  def simultaneousCall (p : Program) (fuel : Nat) (ctx : Context)
+      (entry : Projection.Entry) : Checked (String × Typed ctx) := do
+    match fuel with
+    | 0 => refusal "A5101" "simultaneous projection budget exhausted" entry.callSpan
+    | n + 1 =>
+      let some function := p.functions.find? (·.name == entry.callee)
+        | refusal "A5102" "unknown simultaneous projection callee" entry.callSpan
+      let prepared ← prepare p n function
+      if prepared.loans.length != 2 || function.params.length != 2 then
+        refusal "A5102" "simultaneous projections require two mutable callee parameters" entry.callSpan
+      let collection ← expression p n ctx entry.left.container
+      let build (collectionType keyType elementType : Core.Ty)
+          (original : Term (Types ctx) collectionType)
+          (get : {Γ : List Core.Ty} → Term Γ collectionType → Term Γ keyType → Term Γ (.option elementType))
+          (put : {Γ : List Core.Ty} → Term Γ collectionType → Term Γ keyType → Term Γ elementType → Term Γ collectionType)
+          (equal : {Γ : List Core.Ty} → Term Γ keyType → Term Γ keyType → Term Γ .bool) : Checked (Typed ctx) := do
+        let firstKey ← asType p n ctx entry.left.query keyType
+        let secondKey ← asType p n ctx entry.right.query keyType
+        let firstName := "#projectionKeyA"
+        let secondName := "#projectionKeyB"
+        let firstFocus := "#projectionValueA"
+        let secondFocus := "#projectionValueB"
+        let keyCtx := binding secondName keyType :: binding firstName keyType :: ctx
+        let focusCtx := binding secondFocus elementType true :: binding firstFocus elementType true :: keyCtx
+        let body ← statements p n prepared.ctx [prepared.body] prepared.result
+        let call := Term.app body.abstract (← tupleArgs p n focusCtx
+          (Core.environmentType (Types prepared.ctx)) [.var firstFocus entry.callSpan, .var secondFocus entry.callSpan]
+          entry.callSpan)
+        let call ← cast (.pair .unit (.pair elementType (.pair elementType .unit)))
+          ⟨prepared.result, call⟩ entry.callSpan
+        let original' := original.rename (fun v => .there (.there (.there (.there (.there v)))))
+        let firstState := Term.fst (Term.snd (Term.var .here))
+        let secondState := Term.fst (Term.snd (Term.snd (Term.var .here)))
+        let updated := put (put original' (.var (.there (.there (.there (.there .here))))) firstState)
+          (.var (.there (.there (.there .here)))) secondState
+        let secondRead := get (original.rename (fun v => .there (.there (.there v)))) (.var (.there .here))
+        let secondAbsent := Term.binary .guard (.bool false)
+          (original.rename (fun v => .there (.there (.there v))))
+        let both := Term.optionCase secondRead secondAbsent (.let_ "projectionCall" call updated)
+        let firstRead := get (original.rename (fun v => .there (.there v))) (.var (.there .here))
+        let firstAbsent := Term.binary .guard (.bool false) (original.rename (fun v => .there (.there v)))
+        let separated := Term.binary .guard (.unary .not (equal (.var (.there .here)) (.var .here)))
+          (.optionCase firstRead firstAbsent both)
+        return ⟨collectionType, .let_ firstName firstKey (.let_ secondName (secondKey.rename Var.there) separated)⟩
+      let updated ← match collection with
+        | ⟨.map k v, values⟩ => do
+          build (.map k v) k.type v values
+            (fun values key => Term.binary .mapGet values key) (fun values key value => Term.mapSet values key value)
+            (fun a b => Term.binary .mapHas (.mapSet (Term.mapEmpty (k := k) (v := .unit)) a .unit) b)
+        | ⟨.list v, values⟩ => do
+          let put : {Γ : List Core.Ty} → Term Γ (.list v) → Term Γ .number → Term Γ v → Term Γ (.list v) :=
+            fun {Γ} values key updated =>
+              let selected : Term (.number :: v :: Γ) .bool :=
+                .binary .numEq (.var .here) (key.rename (fun index => .there (.there index)))
+              .listMap (.lam "value" (.lam "index" (.ite selected
+                (updated.rename (fun index => .there (.there index))) (.var (.there .here))))) values
+          build (.list v) .number v values (fun values key => Term.binary .get values key) put
+            (fun a b => Term.binary .numEq a b)
+        | _ => refusal "A5102" "simultaneous projection requires an array or Map" entry.callSpan
+      return (entry.owner, updated)
+
   /-- Mutable locals become shadowed pure lets. Branches share their continuations.
   Structural loops carry an explicit value state and typed exits. -/
   def statements (p : Program) : Nat → (ctx : Context) → List Stmt → (t : Core.Ty) →
@@ -928,6 +991,17 @@ mutual
         | .let_ _ _ _ value _ | .expr value _ | .return_ value _ => some value
         | .assign (.var ..) value _ => some value
         | _ => none
+      if let .expr _ span := stmt then
+        let params := ctx.map (fun b => ({name := b.name, ty := sourceType b.ty} : Param))
+        let entryFunction : Ariadne.Function := {name := "#projection", exported := true, params, result := .void, body := .block [stmt] span}
+        if let some entry := Projection.simultaneousEntry entryFunction then
+          let (name, ⟨a, updated⟩) ← simultaneousCall p n ctx entry
+          let target := (ctx.find? (·.name == name)).getD (binding name a true)
+          let inner := ({ name, ty := a, declared := target.declared, owned := true, loan := target.loan } : Binding) :: ctx
+          if let some loan := target.loan then
+            return .let_ name updated (.let_ loan (.var .here)
+              (← statements p n (binding loan a :: inner) rest t))
+          return .let_ name updated (← statements p n inner rest t)
       if let some (.call (.var name _) args span) := value then
         if let some f := p.functions.find? (·.name == name) then
           let prepared ← prepare p n f

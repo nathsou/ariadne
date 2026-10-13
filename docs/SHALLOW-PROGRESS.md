@@ -103,8 +103,7 @@ source heap. A second theorem lifts the result through the kernel-bound runtime
 wrapper and its operational entry guard. Neither has input disjointness or
 whole-function execution as a premise. Three forged state/guard/entry witnesses
 are checked against a dedicated one-function fixture. General data/state/class
-source transfer and checker soundness remain M4 work. Simultaneous projected
-call arguments remain pending. Exported three-parameter `bigint[][]` element
+source transfer and checker soundness remain M4 work. Exported three-parameter `bigint[][]` element
 pushes also receive universal source and wrapper witnesses. `ArrayUpdate`
 proves that the emitted numeric-index map equals the array lens replacement
 for every valid dense-array index, including negative zero. The projection
@@ -114,6 +113,19 @@ Distinct valid array positions select disjoint
 element footprints. Map projections have the corresponding rule for keys whose
 map-equality classes cannot overlap; this makes the SameValueZero obligation
 explicit instead of treating strict inequality as sufficient for numeric keys.
+
+The first simultaneous-call fragment accepts a sole expression statement in an
+exported function, with two projections from the same parameter container and
+parameter keys. The wrapper checks the keys before invoking the original body;
+the native safety predicate contains the same guard. Array keys use strict
+numeric inequality and Map keys use SameValueZero, rejecting duplicate NaN and
+the two zeros. Both selected values are bound once, passed to a two-parameter
+mutable callee, and restored through the parent lens. The operational guard
+success theorem and actual heap-footprint separation laws are kernel checked.
+Internal calls to these entries are rejected until nested exported guard
+execution is modeled; additional statements, impure keys, readonly elements and
+long-lived references remain refused. General statement guards and universal
+simultaneous-call source transfer remain M4 work.
 
 CI #96 on `5e31ceb` passes in 11m23s, compared with baseline CI #82's 21m18s.
 Its logged source-transfer and Int53 tamper phases take 17s and 7s respectively,
@@ -138,6 +150,14 @@ with shared-continuation tamper checks reduced from 73s to 18s. CI #108 on
 Its preparation, slowest example job and slowest verification job took 196s,
 289s and 130s respectively. All example and verification builds remain serial
 within each runner, and no check was removed.
+CI #112 on `bb60930`, including array projection source witnesses and all six
+small-fixture projection tamper checks, passed in 11m23s with 6,774 audited
+theorems. The first simultaneous-call checkpoint adds a 27th JavaScript suite;
+the existing 26 suites remain in their original verification groups. Kernel
+test modules now run serially in a fourth matrix job alongside the example
+jobs, restoring their checked artifacts before verification. This removes
+those growing test proofs from the preparation critical path while preserving
+every test module and the final failure-on-skipped-job requirement.
 
 Frontend checkpoint: the complete `scripts/check.sh` suite passes with 1,217
 audited theorems, 42 native entry points, 64 generated programs, 51 scalar

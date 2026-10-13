@@ -66,6 +66,14 @@ private theorem unit_bind_iff (first second : Result Unit) :
   | error error => simp [Except.bind]
   | ok result => cases result; simp [Except.bind]
 
+def projectionEqual : Projection.Kind → Value → Value → Bool
+  | .array => strictEqual
+  | .map => sameValueZero
+
+def NonReference : Value → Prop
+  | .ref _ => False
+  | _ => True
+
 def checkArgument (program : Program) (heap : Heap) (args : List Value)
     (check : ArgumentCheck) : Result Unit := do
   let some left := args[check.left]?
@@ -81,7 +89,21 @@ def checkArgument (program : Program) (heap : Heap) (args : List Value)
       if check.rightTraversal == .deep then
         rejectContained program heap a right
       return ()
-  | _, _ => return () -- A missing optional reference has no footprint.
+  | _, _ =>
+    let overlaps := match check.projection with
+      | none => false -- A missing optional reference has no footprint.
+      | some kind => projectionEqual kind left right
+    if overlaps then .error (.typeError "overlapping projected arguments") else return ()
+
+/-- The wrapper's scalar key guard has the same failure behavior as the
+operational model. Its success is an equality test, not a separation premise. -/
+theorem checkArgument_projection_iff {program : Program} {heap : Heap} {args : List Value}
+    {check : ArgumentCheck} {left right : Value} {kind : Projection.Kind}
+    (leftLookup : args[check.left]? = some left) (rightLookup : args[check.right]? = some right)
+    (planned : check.projection = some kind) (leftScalar : NonReference left) (rightScalar : NonReference right) :
+    checkArgument program heap args check = .ok () ↔ projectionEqual kind left right = false := by
+  cases left <;> cases right <;>
+    simp_all [NonReference, checkArgument, pure, Except.pure]
 
 def checkArguments (program : Program) : List ArgumentCheck → Heap → List Value → Result Unit
   | [], _, _ => .ok ()
@@ -104,7 +126,7 @@ theorem checkArgument_iff {program : Program} {heap : Heap} {args : List Value}
       (check.leftTraversal = .deep → containsReference program heap b heap.length [] (.ref a) = .ok false) ∧
       (check.rightTraversal = .deep → containsReference program heap a heap.length [] (.ref b) = .ok false) := by
   cases check with
-  | mk leftIndex rightIndex leftTraversal rightTraversal =>
+  | mk leftIndex rightIndex leftTraversal rightTraversal projection =>
     cases leftTraversal <;> cases rightTraversal <;>
       by_cases same : a = b <;>
       simp [checkArgument, left, right, same, bind, pure, Except.pure,

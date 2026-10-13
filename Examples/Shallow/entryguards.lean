@@ -711,7 +711,7 @@ abbrev «grow».safe («_rows#arg» : (_root_.List (_root_.List _root_.Int))) (�
 
 def EntryGuards.«grow».function : Ariadne.Function := _root_.Extracted_entryguards.program.functions[0]!
 
-def EntryGuards.«grow».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.deep,    rightTraversal := Ariadne.Ownership.Traversal.root }]
+def EntryGuards.«grow».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.deep,    rightTraversal := Ariadne.Ownership.Traversal.root,    projection := none }]
 
 theorem EntryGuards.«grow».planned : Ownership.entryPlan _root_.Extracted_entryguards.program EntryGuards.«grow».function = .ok EntryGuards.«grow».plan := by kernel_rfl
 
@@ -747,7 +747,7 @@ abbrev «outer».safe («_rows#arg» : (_root_.List (_root_.List _root_.Int))) (
 
 def EntryGuards.«outer».function : Ariadne.Function := _root_.Extracted_entryguards.program.functions[1]!
 
-def EntryGuards.«outer».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.deep,    rightTraversal := Ariadne.Ownership.Traversal.root }]
+def EntryGuards.«outer».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.deep,    rightTraversal := Ariadne.Ownership.Traversal.root,    projection := none }]
 
 theorem EntryGuards.«outer».planned : Ownership.entryPlan _root_.Extracted_entryguards.program EntryGuards.«outer».function = .ok EntryGuards.«outer».plan := by kernel_rfl
 
@@ -783,7 +783,7 @@ abbrev «mapped».safe («_rows#arg» : (_root_.Ariadne.Shallow.JSMap _root_.Ari
 
 def EntryGuards.«mapped».function : Ariadne.Function := _root_.Extracted_entryguards.program.functions[2]!
 
-def EntryGuards.«mapped».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.deep,    rightTraversal := Ariadne.Ownership.Traversal.root }]
+def EntryGuards.«mapped».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.deep,    rightTraversal := Ariadne.Ownership.Traversal.root,    projection := none }]
 
 theorem EntryGuards.«mapped».planned : Ownership.entryPlan _root_.Extracted_entryguards.program EntryGuards.«mapped».function = .ok EntryGuards.«mapped».plan := by kernel_rfl
 
@@ -819,7 +819,7 @@ abbrev «flat».safe («_left#arg» : (_root_.List _root_.Int)) («_right#arg» 
 
 def EntryGuards.«flat».function : Ariadne.Function := _root_.Extracted_entryguards.program.functions[3]!
 
-def EntryGuards.«flat».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root }]
+def EntryGuards.«flat».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root,    projection := none }]
 
 theorem EntryGuards.«flat».planned : Ownership.entryPlan _root_.Extracted_entryguards.program EntryGuards.«flat».function = .ok EntryGuards.«flat».plan := by kernel_rfl
 
@@ -918,7 +918,7 @@ abbrev «encapsulated».safe («_left#arg» : NativeTypes.«Box#state») («_rig
 
 def EntryGuards.«encapsulated».function : Ariadne.Function := _root_.Extracted_entryguards.program.functions[5]!
 
-def EntryGuards.«encapsulated».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root }]
+def EntryGuards.«encapsulated».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root,    projection := none }]
 
 theorem EntryGuards.«encapsulated».planned : Ownership.entryPlan _root_.Extracted_entryguards.program EntryGuards.«encapsulated».function = .ok EntryGuards.«encapsulated».plan := by kernel_rfl
 
@@ -954,7 +954,7 @@ abbrev «exposed».safe («_box#arg» : NativeTypes.«PublicBox#state») («_ite
 
 def EntryGuards.«exposed».function : Ariadne.Function := _root_.Extracted_entryguards.program.functions[6]!
 
-def EntryGuards.«exposed».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.deep,    rightTraversal := Ariadne.Ownership.Traversal.root }]
+def EntryGuards.«exposed».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.deep,    rightTraversal := Ariadne.Ownership.Traversal.root,    projection := none }]
 
 theorem EntryGuards.«exposed».planned : Ownership.entryPlan _root_.Extracted_entryguards.program EntryGuards.«exposed».function = .ok EntryGuards.«exposed».plan := by kernel_rfl
 
@@ -990,7 +990,7 @@ abbrev «names».safe («___ariadne0_contains#arg» : (_root_.List _root_.Int)) 
 
 def EntryGuards.«names».function : Ariadne.Function := _root_.Extracted_entryguards.program.functions[7]!
 
-def EntryGuards.«names».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root }]
+def EntryGuards.«names».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root,    projection := none }]
 
 theorem EntryGuards.«names».planned : Ownership.entryPlan _root_.Extracted_entryguards.program EntryGuards.«names».function = .ok EntryGuards.«names».plan := by kernel_rfl
 

@@ -37,12 +37,18 @@ private def guards (helperPrefix : String) (names : List String) (plan : List Ar
     let left := names[check.left]!.toList
     let right := names[check.right]!.toList
     let stem := helperPrefix.toList
-    let tests := [chars! "(" ++ left ++ chars! " as object) === (" ++ right ++ chars! " as object)"] ++
-      (if check.leftTraversal == .deep then [stem ++ chars! "contains(" ++ right ++ chars! ", " ++ left ++ chars! ")"] else []) ++
-      (if check.rightTraversal == .deep then [stem ++ chars! "contains(" ++ left ++ chars! ", " ++ right ++ chars! ")"] else [])
-    chars! "  if (" ++ left ++ chars! " !== null && typeof " ++ left ++ chars! " === 'object' && " ++
-      right ++ chars! " !== null && typeof " ++ right ++ chars! " === 'object' && (" ++
-      joinCharacters (chars! " || ") tests ++ chars! ")) {\n    throw new TypeError('overlapping borrowed arguments');\n  }\n"
+    if let some kind := check.projection then
+      let test := chars! "(" ++ left ++ chars! ") === (" ++ right ++ chars! ")" ++
+        (if kind == .map then chars! " || (Number.isNaN(" ++ left ++ chars! ") && Number.isNaN(" ++
+          right ++ chars! "))" else [])
+      chars! "  if (" ++ test ++ chars! ") {\n    throw new TypeError('overlapping projected arguments');\n  }\n"
+    else
+      let tests := [chars! "(" ++ left ++ chars! " as object) === (" ++ right ++ chars! " as object)"] ++
+        (if check.leftTraversal == .deep then [stem ++ chars! "contains(" ++ right ++ chars! ", " ++ left ++ chars! ")"] else []) ++
+        (if check.rightTraversal == .deep then [stem ++ chars! "contains(" ++ left ++ chars! ", " ++ right ++ chars! ")"] else [])
+      chars! "  if (" ++ left ++ chars! " !== null && typeof " ++ left ++ chars! " === 'object' && " ++
+        right ++ chars! " !== null && typeof " ++ right ++ chars! " === 'object' && (" ++
+        joinCharacters (chars! " || ") tests ++ chars! ")) {\n    throw new TypeError('overlapping borrowed arguments');\n  }\n"
 
 private def quoteCharacters (text : String) : List Char :=
   let digits := chars! "0123456789abcdef"

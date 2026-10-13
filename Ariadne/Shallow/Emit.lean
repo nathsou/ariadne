@@ -413,7 +413,7 @@ private def coreText (label : String) (keys : List String) : Term Γ t → Strin
   | .ret a => s!"(Core.Term.ret {coreText label keys a})"
   | .each a b c => s!"(Core.Term.each {coreText label keys a} {coreText label keys b} {coreText label keys c})"
   | .exitCase a b c => s!"(Core.Term.exitCase {coreText label keys a} {coreText label keys b} {coreText label keys c})"
-  | .mapEmpty => "Core.Term.mapEmpty"
+  | @Term.mapEmpty _ k v => s!"(Core.Term.mapEmpty (k := {reprStr k}) (v := {reprStr v}))"
   | .setEmpty => "Core.Term.setEmpty"
   | .mapSet m k v => s!"(Core.Term.mapSet {coreText label keys m} {coreText label keys k} {coreText label keys v})"
   | .inl a => s!"(Core.Term.inl {coreText label keys a})"

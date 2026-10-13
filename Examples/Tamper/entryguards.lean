@@ -193,7 +193,7 @@ abbrev «grow».safe («_rows#arg» : (_root_.List (_root_.List _root_.Int))) (�
 
 def EntryGuards.«grow».function : Ariadne.Function := _root_.Extracted_tamper_entryguards.program.functions[0]!
 
-def EntryGuards.«grow».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.deep,    rightTraversal := Ariadne.Ownership.Traversal.root }]
+def EntryGuards.«grow».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.deep,    rightTraversal := Ariadne.Ownership.Traversal.root,    projection := none }]
 
 theorem EntryGuards.«grow».planned : Ownership.entryPlan _root_.Extracted_tamper_entryguards.program EntryGuards.«grow».function = .ok EntryGuards.«grow».plan := by kernel_rfl
 

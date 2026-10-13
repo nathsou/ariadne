@@ -15,7 +15,7 @@ private def plan (source : String) : Checked (List ArgumentCheck) := do
 
 theorem flat_borrows_compare_roots :
     plan "export function f(xs: bigint[], ys: readonly bigint[]): void { xs.push(1n); }" =
-      .ok [⟨0, 1, .root, .root⟩] := by kernel_rfl
+      .ok [⟨0, 1, .root, .root, none⟩] := by kernel_rfl
 
 theorem immutable_arguments_need_no_guard :
     plan "export function f(xs: readonly bigint[], ys: readonly bigint[]): bigint { return 0n; }" =
@@ -23,30 +23,30 @@ theorem immutable_arguments_need_no_guard :
 
 theorem argument_inside_other_argument_is_deep :
     plan "export function f(rows: readonly bigint[][], xs: bigint[]): void { xs.push(1n); }" =
-      .ok [⟨0, 1, .deep, .root⟩] := by kernel_rfl
+      .ok [⟨0, 1, .deep, .root, none⟩] := by kernel_rfl
 
 theorem observation_inside_mutated_argument_is_deep :
     plan "export function f(rows: bigint[][], xs: readonly bigint[]): void { rows.push([1n]); }" =
-      .ok [⟨0, 1, .deep, .root⟩] := by kernel_rfl
+      .ok [⟨0, 1, .deep, .root, none⟩] := by kernel_rfl
 
 theorem encapsulated_fields_are_not_nested :
     plan "class Box { private items: bigint[] = []; } export function f(box: Box, xs: bigint[]): void { xs.push(1n); }" =
-      .ok [⟨0, 1, .root, .root⟩] := by kernel_rfl
+      .ok [⟨0, 1, .root, .root, none⟩] := by kernel_rfl
 
 theorem class_method_writes_are_guarded :
     plan "class Box { private items: bigint[] = []; add(x: bigint): void { this.items.push(x); } } export function f(a: Box, b: Box): void { a.add(1n); }" =
-      .ok [⟨0, 1, .root, .root⟩] := by kernel_rfl
+      .ok [⟨0, 1, .root, .root, none⟩] := by kernel_rfl
 
 theorem public_fields_are_nested :
     plan "class Box { items: bigint[] = []; } export function f(box: Box, xs: bigint[]): void { xs.push(1n); }" =
-      .ok [⟨0, 1, .deep, .root⟩] := by kernel_rfl
+      .ok [⟨0, 1, .deep, .root, none⟩] := by kernel_rfl
 
 theorem transitive_record_containment_is_deep :
     plan "type Box = { readonly rows: readonly bigint[][] }; export function f(box: Box, xs: bigint[]): void { xs.push(1n); }" =
-      .ok [⟨0, 1, .deep, .root⟩] := by kernel_rfl
+      .ok [⟨0, 1, .deep, .root, none⟩] := by kernel_rfl
 
-private def roots : ArgumentCheck := ⟨0, 1, .root, .root⟩
-private def nested : ArgumentCheck := ⟨0, 1, .deep, .root⟩
+private def roots : ArgumentCheck := ⟨0, 1, .root, .root, none⟩
+private def nested : ArgumentCheck := ⟨0, 1, .deep, .root, none⟩
 private def noFunctions : Program := {functions := []}
 
 theorem root_alias_throws :

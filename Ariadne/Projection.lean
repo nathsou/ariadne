@@ -5,7 +5,7 @@ namespace Ariadne.Projection
 inductive Kind where
   | array
   | map
-  deriving Repr, BEq, DecidableEq
+  deriving Repr, BEq, ReflBEq, LawfulBEq, DecidableEq
 
 structure Path where
   kind : Kind
@@ -31,6 +31,34 @@ def find : Expr → Option Path
   | focus@(.call (.member container "get" _) [query] _) => some ⟨.map, container, query, focus⟩
   | .member object _ _ => find object
   | _ => none
+
+/-- An entry consisting of one simultaneous projected call can check its keys
+before the implementation starts. These are statement borrows, not bindings. -/
+structure Entry where
+  callee : String
+  owner : String
+  leftKey : String
+  rightKey : String
+  left : Path
+  right : Path
+  callSpan : Span
+  deriving Repr
+
+private def entryPath (argument : Expr) : Option (String × String × Path) := do
+  let path ← find argument
+  let .var owner _ := path.container | none
+  let .var key _ := path.query | none
+  if path.focus.span != argument.span then none else pure ()
+  return (owner, key, path)
+
+def simultaneousEntry (function : Function) : Option Entry := do
+  if !function.exported then none else pure ()
+  let .block [.expr (.call (.var callee _) [a, b] callSpan) _] _ := function.body | none
+  let (owner, leftKey, left) ← entryPath a
+  let (other, rightKey, right) ← entryPath b
+  if owner != other || left.kind != right.kind then none else pure ()
+  if ![owner, leftKey, rightKey].all (fun name => function.params.any (·.name == name)) then none else pure ()
+  return {callee, owner, leftKey, rightKey, left, right, callSpan}
 
 /-- Expression occurrence checks descend into every source argument, including
 callback captures. Matching the container stops the walk at that occurrence. -/

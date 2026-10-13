@@ -1340,7 +1340,7 @@ abbrev «count».safe («_store#arg» : (_root_.Ariadne.Shallow.JSMap _root_.Ari
 
 def EntryGuards.«count».function : Ariadne.Function := _root_.Extracted_state.program.functions[1]!
 
-def EntryGuards.«count».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root }]
+def EntryGuards.«count».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root,    projection := none }]
 
 theorem EntryGuards.«count».planned : Ownership.entryPlan _root_.Extracted_state.program EntryGuards.«count».function = .ok EntryGuards.«count».plan := by kernel_rfl
 
@@ -1408,7 +1408,7 @@ abbrev «transfer».safe («_source#arg» : (_root_.Ariadne.Shallow.JSMap _root_
 
 def EntryGuards.«transfer».function : Ariadne.Function := _root_.Extracted_state.program.functions[2]!
 
-def EntryGuards.«transfer».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root }]
+def EntryGuards.«transfer».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root,    projection := none }]
 
 theorem EntryGuards.«transfer».planned : Ownership.entryPlan _root_.Extracted_state.program EntryGuards.«transfer».function = .ok EntryGuards.«transfer».plan := by kernel_rfl
 
@@ -1427,7 +1427,7 @@ theorem DenotationChecks.«transfer» :
   unfold Extracted_state.Shallow.«transfer»
   simp only [Denote.function, CoreArtifacts.«transfer», Denote.term, Core.Var.get, JoinChecks.«transfer#0»] <;> rfl
 
-def CoreArtifacts.«scoped» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int)], result := Ariadne.Shallow.Core.Ty.pair   (Ariadne.Shallow.Core.Ty.int)   (Ariadne.Shallow.Core.Ty.pair     (Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int))     (Ariadne.Shallow.Core.Ty.unit)), body := (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int)) "#loan:store" (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int)) "store" (Core.Term.mapSet (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.string [111, 114, 105, 103, 105, 110, 97, 108]) (Core.Term.int (1))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int)) "#loan:store" (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int)) "local" Core.Term.mapEmpty (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int)) "local" (Core.Term.mapSet (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.string [108, 111, 99, 97, 108]) (Core.Term.int (2))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.int) "#returned:717" (Core.Term.optionCase (Core.Term.binary (Ariadne.Shallow.Core.Binary.mapGet) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.string [108, 111, 99, 97, 108])) (Core.Term.int (0)) (Core.Term.var (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) Core.Term.unit)))))))) }
+def CoreArtifacts.«scoped» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int)], result := Ariadne.Shallow.Core.Ty.pair   (Ariadne.Shallow.Core.Ty.int)   (Ariadne.Shallow.Core.Ty.pair     (Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int))     (Ariadne.Shallow.Core.Ty.unit)), body := (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int)) "#loan:store" (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int)) "store" (Core.Term.mapSet (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.string [111, 114, 105, 103, 105, 110, 97, 108]) (Core.Term.int (1))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int)) "#loan:store" (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int)) "local" (Core.Term.mapEmpty (k := Ariadne.Shallow.Core.Key.string) (v := Ariadne.Shallow.Core.Ty.int)) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int)) "local" (Core.Term.mapSet (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.string [108, 111, 99, 97, 108]) (Core.Term.int (2))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.int) "#returned:717" (Core.Term.optionCase (Core.Term.binary (Ariadne.Shallow.Core.Binary.mapGet) (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.string [108, 111, 99, 97, 108])) (Core.Term.int (0)) (Core.Term.var (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))))) Core.Term.unit)))))))) }
 
 theorem ElaborationChecks.«scoped» :
     Elaborate.function _root_.Extracted_state.program "scoped" = .ok CoreArtifacts.«scoped» := by kernel_rfl
@@ -1701,7 +1701,7 @@ theorem JoinChecks.«localCalls#3» : Denote.term (interp := Interpretation.valu
   unfold Extracted_state.Shallow.JoinNative.«localCalls#3»
   simp only [JoinCore.«localCalls#3», Denote.term, Core.Var.get, JoinChecks.«localCalls#0», JoinChecks.«localCalls#1», JoinChecks.«localCalls#2»] <;> rfl
 
-def CoreArtifacts.«localCalls» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.string], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int)) "store" Core.Term.mapEmpty (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.pair   (Ariadne.Shallow.Core.Ty.unit)   (Ariadne.Shallow.Core.Ty.pair     (Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int))     (Ariadne.Shallow.Core.Ty.unit))) "#borrowedCall509" (Core.Term.app (Core.Term.closed JoinCore.«localCalls#2») (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.cons (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.cons (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) Core.Term.nil)) Core.Term.unit))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int)) "store" (Core.Term.fst (Core.Term.snd (Core.Term.var (Ariadne.Shallow.Core.Var.here)))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.unit) "ignored" (Core.Term.fst (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.pair   (Ariadne.Shallow.Core.Ty.int)   (Ariadne.Shallow.Core.Ty.pair     (Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int))     (Ariadne.Shallow.Core.Ty.unit))) "#borrowedCall506" (Core.Term.app (Core.Term.closed JoinCore.«localCalls#3») (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there     (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))) Core.Term.unit))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int)) "store" (Core.Term.fst (Core.Term.snd (Core.Term.var (Ariadne.Shallow.Core.Var.here)))) (Core.Term.fst (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))))))) }
+def CoreArtifacts.«localCalls» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.string], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int)) "store" (Core.Term.mapEmpty (k := Ariadne.Shallow.Core.Key.string) (v := Ariadne.Shallow.Core.Ty.int)) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.pair   (Ariadne.Shallow.Core.Ty.unit)   (Ariadne.Shallow.Core.Ty.pair     (Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int))     (Ariadne.Shallow.Core.Ty.unit))) "#borrowedCall509" (Core.Term.app (Core.Term.closed JoinCore.«localCalls#2») (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.cons (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.cons (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) Core.Term.nil)) Core.Term.unit))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int)) "store" (Core.Term.fst (Core.Term.snd (Core.Term.var (Ariadne.Shallow.Core.Var.here)))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.unit) "ignored" (Core.Term.fst (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.pair   (Ariadne.Shallow.Core.Ty.int)   (Ariadne.Shallow.Core.Ty.pair     (Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int))     (Ariadne.Shallow.Core.Ty.unit))) "#borrowedCall506" (Core.Term.app (Core.Term.closed JoinCore.«localCalls#3») (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there   (Ariadne.Shallow.Core.Var.there     (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))) Core.Term.unit))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int)) "store" (Core.Term.fst (Core.Term.snd (Core.Term.var (Ariadne.Shallow.Core.Var.here)))) (Core.Term.fst (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))))))))) }
 
 theorem ElaborationChecks.«localCalls» :
     Elaborate.function _root_.Extracted_state.program "localCalls" = .ok CoreArtifacts.«localCalls» := by kernel_rfl
@@ -1818,7 +1818,7 @@ abbrev «swapInto».safe («_source#arg» : (_root_.Ariadne.Shallow.JSMap _root_
 
 def EntryGuards.«swapInto».function : Ariadne.Function := _root_.Extracted_state.program.functions[8]!
 
-def EntryGuards.«swapInto».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root }]
+def EntryGuards.«swapInto».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root,    projection := none }]
 
 theorem EntryGuards.«swapInto».planned : Ownership.entryPlan _root_.Extracted_state.program EntryGuards.«swapInto».function = .ok EntryGuards.«swapInto».plan := by kernel_rfl
 
@@ -1859,7 +1859,7 @@ theorem JoinChecks.«fromFresh#0» : Denote.term (interp := Interpretation.value
   unfold Extracted_state.Shallow.JoinNative.«fromFresh#0»
   simp only [JoinCore.«fromFresh#0», Denote.term, Core.Var.get] <;> rfl
 
-def CoreArtifacts.«fromFresh» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.string], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.pair   (Ariadne.Shallow.Core.Ty.int)   (Ariadne.Shallow.Core.Ty.pair     (Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int))     (Ariadne.Shallow.Core.Ty.unit))) "#borrowedCall510" (Core.Term.app (Core.Term.closed JoinCore.«fromFresh#0») (Core.Term.pair Core.Term.mapEmpty (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) Core.Term.unit))) (Core.Term.fst (Core.Term.var (Ariadne.Shallow.Core.Var.here)))) }
+def CoreArtifacts.«fromFresh» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.string], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.pair   (Ariadne.Shallow.Core.Ty.int)   (Ariadne.Shallow.Core.Ty.pair     (Ariadne.Shallow.Core.Ty.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Core.Ty.int))     (Ariadne.Shallow.Core.Ty.unit))) "#borrowedCall510" (Core.Term.app (Core.Term.closed JoinCore.«fromFresh#0») (Core.Term.pair (Core.Term.mapEmpty (k := Ariadne.Shallow.Core.Key.string) (v := Ariadne.Shallow.Core.Ty.int)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) Core.Term.unit))) (Core.Term.fst (Core.Term.var (Ariadne.Shallow.Core.Var.here)))) }
 
 theorem ElaborationChecks.«fromFresh» :
     Elaborate.function _root_.Extracted_state.program "fromFresh" = .ok CoreArtifacts.«fromFresh» := by kernel_rfl
@@ -1964,7 +1964,7 @@ abbrev «append».safe («_values#arg» : (_root_.List _root_.Int)) («_items#ar
 
 def EntryGuards.«append».function : Ariadne.Function := _root_.Extracted_state.program.functions[10]!
 
-def EntryGuards.«append».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root }]
+def EntryGuards.«append».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root,    projection := none }]
 
 theorem EntryGuards.«append».planned : Ownership.entryPlan _root_.Extracted_state.program EntryGuards.«append».function = .ok EntryGuards.«append».plan := by kernel_rfl
 
@@ -2080,7 +2080,7 @@ abbrev «appendLength».safe («_values#arg» : (_root_.List _root_.Int)) («_it
 
 def EntryGuards.«appendLength».function : Ariadne.Function := _root_.Extracted_state.program.functions[11]!
 
-def EntryGuards.«appendLength».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root }]
+def EntryGuards.«appendLength».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root,    projection := none }]
 
 theorem EntryGuards.«appendLength».planned : Ownership.entryPlan _root_.Extracted_state.program EntryGuards.«appendLength».function = .ok EntryGuards.«appendLength».plan := by kernel_rfl
 
@@ -2171,7 +2171,7 @@ abbrev «addAll».safe («_values#arg» : (_root_.Ariadne.Shallow.JSSet _root_.I
 
 def EntryGuards.«addAll».function : Ariadne.Function := _root_.Extracted_state.program.functions[12]!
 
-def EntryGuards.«addAll».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root }]
+def EntryGuards.«addAll».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root,    projection := none }]
 
 theorem EntryGuards.«addAll».planned : Ownership.entryPlan _root_.Extracted_state.program EntryGuards.«addAll».function = .ok EntryGuards.«addAll».plan := by kernel_rfl
 
@@ -2298,7 +2298,7 @@ abbrev «until».safe («_store#arg» : (_root_.Ariadne.Shallow.JSMap _root_.Ari
 
 def EntryGuards.«until».function : Ariadne.Function := _root_.Extracted_state.program.functions[13]!
 
-def EntryGuards.«until».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root }]
+def EntryGuards.«until».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root,    projection := none }]
 
 theorem EntryGuards.«until».planned : Ownership.entryPlan _root_.Extracted_state.program EntryGuards.«until».function = .ok EntryGuards.«until».plan := by kernel_rfl
 

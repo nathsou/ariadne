@@ -147,7 +147,7 @@ theorem Elements.focusKey_disjoint [BEq key]
       sameValueZero source sourceLeft = (native == left))
     (keysRight : ∀ {source native}, codec source native →
       sameValueZero source sourceRight = (native == right))
-    (different : ∀ candidate, (candidate == left) = true →
+    (different : ∀ {source candidate}, codec source candidate → (candidate == left) = true →
       (candidate == right) = true → False) :
     ∃ first second firstFootprint secondFootprint,
       mapGet entries sourceLeft = first ∧ mapGet entries sourceRight = second ∧
@@ -166,7 +166,7 @@ theorem Elements.focusKey_disjoint [BEq key]
     have sameLeft := keysLeft keyEncoded
     have sameRight := keysRight keyEncoded
     by_cases atLeft : (nativeKey == left) = true
-    · have atRight : (nativeKey == right) ≠ true := different nativeKey atLeft
+    · have atRight : (nativeKey == right) ≠ true := different keyEncoded atLeft
       have equal : a = nativeValue := by
         simpa [MapEntries.get, atLeft] using foundLeft.symm
       subst a
