@@ -151,6 +151,92 @@ theorem PermissionEnvironment.frame_projection {interp : Named.Interp} {names : 
   intro address read selected
   exact inputs.separate other target observed visible distinct address read (within selected)
 
+/-- Finish a statement-local mutation by restoring the complete environment.
+The source binding still points to the same object; only its native version
+changes. Shadowing hides the old version and preserves the original access,
+including a parameter borrow, without allocating or assigning a binding cell.
+The selected write domain may be smaller than the owner's read footprint. -/
+theorem PermissionEnvironment.mutate {interp : Named.Interp} {names : Names Γ}
+    {layouts : Layouts Γ interp} {accesses : Accesses Γ} {reads writes : Footprints Γ}
+    {state : State} {env : Core.Env Γ interp}
+    (inputs : PermissionEnvironment names (@layouts) (@accesses) (@reads) (@writes) state env)
+    (target : Var Γ t) (visible : names.visible target = true)
+    (selected : Footprint) (within : selected ⊆ writes target) (after : Heap)
+    (modified : Modifies selected state.heap after)
+    (value : Value) (lookup : state.lookup (names.get target) = .ok value)
+    (native : t.denote interp)
+    (related : (layouts target).Holds after value native (reads target))
+    (scalar : ∀ repr : Scalar t, value = repr.encode native) :
+    PermissionEnvironment (names.cons (names.get target))
+      (Layouts.cons (layouts target) (@layouts))
+      (@Accesses.cons Γ t (accesses target) (@accesses))
+      (@Footprints.cons Γ t (reads target) (@reads))
+      (@Footprints.cons Γ t (writes target) (@writes))
+      {state with heap := after} (native, env) := by
+  have cells : ∀ {query address}, state.Binds query address →
+      state.heap[address]? = after[address]? := by
+    intro query address bound
+    apply modified.2 address (inputs.bindings.allocated bound)
+    intro member
+    exact inputs.noCells target visible bound (inputs.permitted target visible (within member))
+  constructor
+  · exact inputs.bindings.heap after modified.1
+  · intro u v repr seen
+    cases v with
+    | here => simpa only [Names.cons, Var.get, scalar repr] using State.lookup_heap lookup after cells
+    | there v =>
+      have observed : names.visible v = true ∧ names.get v ≠ names.get target := by
+        simpa [Names.cons] using seen
+      exact State.lookup_heap (inputs.scalar v repr observed.1) after cells
+  · intro u v seen
+    cases v with
+    | here => exact ⟨value, State.lookup_heap lookup after cells, related⟩
+    | there v =>
+      have observed : names.visible v = true ∧ names.get v ≠ names.get target := by
+        simpa [Names.cons] using seen
+      obtain ⟨old, lookup, represented⟩ :=
+        inputs.frame_projection target visible selected within after modified v observed.1 observed.2
+      exact ⟨old, State.lookup_heap lookup after cells, represented⟩
+  · intro u v seen
+    cases v with
+    | here => exact inputs.permitted target visible
+    | there v =>
+      have observed : names.visible v = true ∧ names.get v ≠ names.get target := by
+        simpa [Names.cons] using seen
+      exact inputs.permitted v observed.1
+  · intro u v seen immutable
+    cases v with
+    | here => exact inputs.readonly target visible immutable
+    | there v =>
+      have observed : names.visible v = true ∧ names.get v ≠ names.get target := by
+        simpa [Names.cons] using seen
+      exact inputs.readonly v observed.1 immutable
+  · intro u v seen query address bound
+    cases v with
+    | here => exact inputs.noCells target visible bound
+    | there v =>
+      have observed : names.visible v = true ∧ names.get v ≠ names.get target := by
+        simpa [Names.cons] using seen
+      exact inputs.noCells v observed.1 bound
+  · intro a b v w hv hw distinct
+    cases v with
+    | here =>
+      cases w with
+      | here => exact False.elim (distinct rfl)
+      | there w =>
+        have observed : names.visible w = true ∧ names.get w ≠ names.get target := by
+          simpa [Names.cons] using hw
+        exact inputs.separate target w visible observed.1 distinct
+    | there v =>
+      have observed : names.visible v = true ∧ names.get v ≠ names.get target := by
+        simpa [Names.cons] using hv
+      cases w with
+      | here => exact inputs.separate v target observed.1 visible observed.2
+      | there w =>
+        have other : names.visible w = true ∧ names.get w ≠ names.get target := by
+          simpa [Names.cons] using hw
+        exact inputs.separate v w observed.1 other.1 distinct
+
 /-- Reassignment changes a binding cell, outside every data read footprint.
 The previous native version is hidden, so its permission is not duplicated. -/
 theorem PermissionEnvironment.assign {interp : Named.Interp} {names : Names Γ}

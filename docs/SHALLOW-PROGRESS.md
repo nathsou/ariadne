@@ -9,10 +9,20 @@ when their exit criteria pass; finite native tests are not universal proofs.
 | M1 | Complete | All reference programs check and certify; grammar, ownership checks, operational semantics and the builtin table have differential coverage. Conservative dialect limits are listed below. |
 | M2 | Complete | Typed Core, scalar/list/Map/Set extraction, owned local updates, structural loops, pure calls, structural denotation, three-way differential and tamper tests. Lawful named records/unions and direct borrowed-state calls are implemented; class states, Int53 guards and original reference extraction are implemented; the full integration regression gate passed. |
 | M3 | Complete | All three original reference acceptance proofs hold universally over emitted definitions. The native proof library includes loop, collection, string and stable-sort laws, and general Int53 arithmetic correspondence, including rounded nonintegral division. |
-| M4 | In progress | Heap framing, compositional data relations and external-heap source predicates are proved. Scalar expression correspondence and generated source transfer are proved; the stateful ownership environment has declaration, reassignment and framing laws. Full stateful/data adequacy remains pending. |
+| M4 | In progress | Heap framing, compositional data relations and external-heap source predicates are proved. Scalar expression correspondence and generated source transfer are proved; the stateful ownership environment has declaration, reassignment, mutation and framing laws. Full stateful/data adequacy remains pending. |
 | M5 | Pending | Measures, larger ownership, polymorphism, exceptions and scalar backend integration |
 
 ## Reference specifications
+
+The permission environment now survives a statement-local heap mutation as a
+complete invariant. Its updated native binding shadows the previous version,
+preserves its owner/borrow access, and retains both read and write footprints.
+Binding cells and other visible values are framed from the selected write
+domain. `Tests/Permissions.lean` checks two records sharing an immutable array:
+updating the borrowed record's scalar field preserves both records and the
+shared array, while granting write permission over that shared array is refused.
+Deriving these permissions from every checked source type and proving the
+general translation theorem remain M4 work.
 
 `examples/reference/baseline.json` records diagnostics at the design commit. It is
 historical evidence, not an assertion that the programs should remain rejected.

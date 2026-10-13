@@ -88,4 +88,24 @@ theorem State.ValidBindings.write {state : State} (valid : state.ValidBindings) 
   · intro name loc bound; simpa using valid.allocated bound
   · exact valid.separate
 
+/-- Growing or changing the data heap leaves lexical bindings valid. -/
+theorem State.ValidBindings.heap {state : State} (valid : state.ValidBindings)
+    (heap : List Object) (grows : state.heap.length ≤ heap.length) :
+    ({state with heap := heap} : State).ValidBindings := by
+  constructor
+  · intro name address bound
+    exact Nat.lt_of_lt_of_le (valid.allocated bound) grows
+  · exact valid.separate
+
+/-- A data mutation preserves name lookup when it preserves binding cells. -/
+theorem State.lookup_heap {state : State} {name : String} {value : Value}
+    (lookup : state.lookup name = .ok value) (heap : List Object)
+    (cells : ∀ {query address}, state.Binds query address →
+      state.heap[address]? = heap[address]?) :
+    ({state with heap := heap} : State).lookup name = .ok value := by
+  obtain ⟨address, bound, stored⟩ := State.lookup_binds lookup
+  have after : heap[address]? = some (.cell value) := (cells bound).symm.trans stored
+  simp [State.lookup, State.Binds] at bound ⊢
+  simp [bound, after, pure, Except.pure]
+
 end Ariadne
