@@ -179,6 +179,10 @@ CI #116 on `4eda067` passed the record/Map/array statement adequacy checkpoint
 in 12m16s (preparation 259s; slowest example job 320s; source verification 148s).
 The measured successful runs range from 10m24s to 12m16s after the CI changes,
 compared with the original 21m18s, while retaining all checks and adding witnesses.
+CI #118 on `4468cfc` passed the emitted field-increment witnesses in 10m36s:
+6,987 audited theorems, all 27 JavaScript suites and all nine jobs. Its logged
+source-transfer, shared-continuation and Int53 tamper phases took 21s, 18s and
+8s respectively; the baseline source/Int53 phases took 111s and 89s.
 
 Frontend checkpoint: the complete `scripts/check.sh` suite passes with 1,217
 audited theorems, 42 native entry points, 64 generated programs, 51 scalar
