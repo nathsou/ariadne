@@ -170,7 +170,7 @@ private def inputProof (count : Nat) : String :=
 private def closedTerms : Term Γ t → List ((t : Core.Ty) × Term [] t)
   | .closed body => closedTerms body ++ [⟨_, body⟩]
   | .unary _ a | .some a | .fst a | .snd a | .lam _ a | .next a | .stop a | .ret a | .inl a | .inr a | .pack _ a | .unpack a => closedTerms a
-  | .binary _ a b | .let_ _ a b | .cons a b | .pair a b | .app a b => closedTerms a ++ closedTerms b
+  | .binary _ a b | .let_ _ a b | .cons a b | .pair a b | .app a b | .recursive a b => closedTerms a ++ closedTerms b
   | .ite a b c | .optionCase a b c | .each a b c | .measured a b c | .exitCase a b c | .mapSet a b c | .sumCase a b c => closedTerms a ++ closedTerms b ++ closedTerms c
   | .listMap a b | .listFilter a b | .listSome a b | .listEvery a b |
       .listFind a b | .listFindIndex a b => closedTerms a ++ closedTerms b
@@ -217,6 +217,7 @@ private def coreText (label : String) (keys : List String) : Term Γ t → Strin
   | .ret a => s!"(Core.Term.ret {coreText label keys a})"
   | .each a b c => s!"(Core.Term.each {coreText label keys a} {coreText label keys b} {coreText label keys c})"
   | .measured a b c => s!"(Core.Term.measured {coreText label keys a} {coreText label keys b} {coreText label keys c})"
+  | .recursive a b => s!"(Core.Term.recursive {coreText label keys a} {coreText label keys b})"
   | .exitCase a b c => s!"(Core.Term.exitCase {coreText label keys a} {coreText label keys b} {coreText label keys c})"
   | @Term.mapEmpty _ k v => s!"(Core.Term.mapEmpty (k := {compactRepr k}) (v := {compactRepr v}))"
   | .setEmpty => "Core.Term.setEmpty"

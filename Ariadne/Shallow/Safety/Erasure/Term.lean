@@ -78,6 +78,24 @@ theorem term_erases {interp : Named.Interp} (body : Term Γ t)
   | each xs initial body ihx ihi ihb => exact each_erases (ihb model native related) (ihx model native related) (ihi model native related)
   | measured measure initial body ihm ihi ihb =>
     exact measured_erases (ihm model native related) (ihb model native related) (ihi model native related)
+  | @recursive Γ a b measure body ihm ihb =>
+    intro x y start
+    have budget : ((term measure model).1 x).1 = Denote.term measure native y :=
+      ihm model native related _ _ start
+    show Erases b (recurse (term measure model).1 (fun self => term body (self, ())) (defaultModel interp b)
+      (((term measure model).1 x).1.toNat + 1) x).1
+      (Measured.recurse (fun self => Denote.term body (self, ())) (Core.Ty.default interp b)
+        ((Denote.term measure native y).toNat + 1) y)
+    rw [budget]
+    clear budget
+    generalize (Denote.term measure native y).toNat + 1 = fuel
+    induction fuel generalizing x y with
+    | zero => exact default_erases interp b
+    | succ fuel ih =>
+      simp only [recurse, Measured.recurse]
+      refine ihb _ _ (ErasesEnvironment.cons (by intro t v; cases v) ?_) x y start
+      intro z w related
+      exact ih z w related
   | exitCase value done returned ihe ihd ihr =>
     have output := ihe model native related
     cases hx : (term value model).1 <;> cases hy : Denote.term value native

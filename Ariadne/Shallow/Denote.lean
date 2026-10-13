@@ -4,6 +4,24 @@ import Ariadne.Shallow.Prelude.Measured
 namespace Ariadne.Shallow
 open Core
 
+/-- An inhabitant of every Core type, returned by an exhausted recursion budget. -/
+def Core.Ty.default (interp : Named.Interp) : (t : Core.Ty) → t.denote interp
+  | .unit => ()
+  | .bool => false
+  | .int | .int53 => 0
+  | .number => Float.Model.ofNat 0
+  | .string => []
+  | .option _ => none
+  | .list _ => []
+  | .map key _ => key.mapEmpty
+  | .set key => key.setEmpty
+  | .pair a b => (Core.Ty.default interp a, Core.Ty.default interp b)
+  | .sum a _ => .inl (Core.Ty.default interp a)
+  | .named declaration => (interp declaration).construct declaration.shape.default
+  | .fn _ b => fun _ => Core.Ty.default interp b
+  | .step s _ => .stop (Core.Ty.default interp s)
+  | .exit s _ => .done (Core.Ty.default interp s)
+
 def Denote.unary {interp : Named.Interp} : Unary a b → a.denote interp → b.denote interp
   | .not, a => !a
   | .intNeg, a => -a
@@ -153,6 +171,8 @@ def Denote.term {interp : Named.Interp} : Term Γ t → Core.Env Γ interp → t
   | .ret a, env => .ret (term (interp := interp) a env)
   | .each xs init body, env => Loop.each (term (interp := interp) xs env) (term (interp := interp) init env) (term (interp := interp) body env)
   | .measured measure init body, env => Measured.bounded (term (interp := interp) measure env) (term (interp := interp) init env) (term (interp := interp) body env)
+  | @Term.recursive _ _ b measure body, env => Measured.fixBounded (term (interp := interp) measure env)
+      (fun self => term (interp := interp) body (self, ())) (Core.Ty.default interp b)
   | .exitCase e done ret, env => Exit.elim (term (interp := interp) e env) (term (interp := interp) done env) (term (interp := interp) ret env)
 
 def Denote.function {interp : Named.Interp} (f : Core.Function) : Core.Env f.params interp → f.result.denote interp := term (interp := interp) f.body

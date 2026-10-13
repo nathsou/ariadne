@@ -190,6 +190,38 @@ def each (body : α → σ → Step σ τ × Bool) : List α → σ → Exit σ 
     | .stop state => (.done state, safe)
     | .ret value => (.ret value, safe)
 
+/-- The denotation's default, with function values that report safe calls. -/
+def defaultModel (interp : Named.Interp) : (t : Core.Ty) → Model t interp
+  | .unit => ()
+  | .bool => false
+  | .int | .int53 => 0
+  | .number => Float.Model.ofNat 0
+  | .string => []
+  | .option _ => none
+  | .list _ => []
+  | .map key _ => key.mapEmpty
+  | .set key => key.setEmpty
+  | .pair a b => (defaultModel interp a, defaultModel interp b)
+  | .sum a _ => .inl (defaultModel interp a)
+  | .named declaration => (interp declaration).construct declaration.shape.default
+  | .fn _ b => fun _ => (defaultModel interp b, true)
+  | .step s _ => .stop (defaultModel interp s)
+  | .exit s _ => .done (defaultModel interp s)
+
+/-- A measured recursive function with the denotation's budget. It is safe
+when its body is safe and every recursive call has a strictly smaller
+nonnegative measure, which also guarantees the budget suffices. -/
+def recurse {α β : Type} (measure : α → Int × Bool) (body : (α → β × Bool) → (α → β × Bool) × Bool)
+    (default : β) : Nat → α → β × Bool
+  | 0, _ => (default, false)
+  | n + 1, x =>
+    let self := fun y =>
+      let (result, safe) := recurse measure body default n y
+      (result, safe && (measure y).2 && decide ((measure y).1.toNat < (measure x).1.toNat))
+    let (function, sf) := body self
+    let (result, sr) := function x
+    (result, sf && sr && (measure x).2)
+
 /-- A measured loop with the denotation's budget. It is safe when every body
 step is safe and every continuing step strictly decreases the nonnegative
 measure, which also guarantees the budget suffices. -/
@@ -352,6 +384,12 @@ def term {interp : Named.Interp} : Term Γ t → Environment Γ interp → Model
     let (start, ss) := measure initial
     let (result, safe) := measured measure body (start.toNat + 1) initial
     (result, sm && si && sb && ss && safe)
+  | @Term.recursive _ _ b measure body, env =>
+    let (measure, sm) := term (interp := interp) measure env
+    let function := fun x =>
+      recurse measure (fun self => term (interp := interp) body (self, ())) (defaultModel interp b)
+        ((measure x).1.toNat + 1) x
+    (function, sm)
   | .exitCase value done returned, env =>
     let (value, sv) := term (interp := interp) value env
     let (done, sd) := term (interp := interp) done env

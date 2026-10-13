@@ -127,6 +127,7 @@ run_verify_data() {
   timed scripts/shallow-optionals.mjs "$js" scripts/shallow-optionals.mjs
   timed scripts/shallow-loops.mjs "$js" scripts/shallow-loops.mjs
   timed scripts/shallow-measured.mjs "$js" scripts/shallow-measured.mjs
+  timed scripts/shallow-recursion.mjs "$js" scripts/shallow-recursion.mjs
   timed scripts/shallow-throws.mjs "$js" scripts/shallow-throws.mjs
   timed scripts/shallow-moves.mjs "$js" scripts/shallow-moves.mjs
   timed scripts/shallow-nested.mjs "$js" scripts/shallow-nested.mjs

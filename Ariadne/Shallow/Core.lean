@@ -191,6 +191,9 @@ inductive Term : List Ty → Ty → Type where
   | each : Term Γ (.list a) → Term Γ s → Term Γ (.fn a (.fn s (.step s r))) → Term Γ (.exit s r)
   /-- A loop with a measure, its initial state and its body (tier 1). -/
   | measured : Term Γ (.fn s .int) → Term Γ s → Term Γ (.fn s (.step s r)) → Term Γ (.exit s r)
+  /-- A measured recursive function of its argument tuple (tier 1). The body
+  sees only itself, so it is closed over the enclosing context. -/
+  | recursive : Term Γ (.fn a .int) → Term [.fn a b] (.fn a b) → Term Γ (.fn a b)
   | exitCase : Term Γ (.exit s r) → Term Γ (.fn s t) → Term Γ (.fn r t) → Term Γ t
   deriving Repr
 
@@ -243,6 +246,7 @@ def Term.rename (r : Renaming Γ Δ) : Term Γ t → Term Δ t
   | .ret a => .ret (a.rename r)
   | .each a b c => .each (a.rename r) (b.rename r) (c.rename r)
   | .measured a b c => .measured (a.rename r) (b.rename r) (c.rename r)
+  | .recursive m body => .recursive (m.rename r) body
   | .exitCase a b c => .exitCase (a.rename r) (b.rename r) (c.rename r)
 
 abbrev Substitution (Γ Δ : List Ty) := ∀ {t}, Var Γ t → Term Δ t
@@ -294,6 +298,7 @@ def Term.substitute (s : Substitution Γ Δ) : Term Γ t → Term Δ t
   | .ret a => .ret (a.substitute s)
   | .each a b c => .each (a.substitute s) (b.substitute s) (c.substitute s)
   | .measured a b c => .measured (a.substitute s) (b.substitute s) (c.substitute s)
+  | .recursive m body => .recursive (m.substitute s) body
   | .exitCase a b c => .exitCase (a.substitute s) (b.substitute s) (c.substitute s)
 
 def environmentType : List Ty → Ty

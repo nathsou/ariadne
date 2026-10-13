@@ -27,6 +27,20 @@ abbrev Shape.denote : Shape → Type
   | .pair left right => left.denote × right.denote
   | .sum left right => Sum left.denote right.denote
 
+/-- An inhabitant of every shape. -/
+def Shape.default : (shape : Shape) → shape.denote
+  | .unit => ()
+  | .bool => false
+  | .int | .int53 => 0
+  | .number => Float.Model.ofNat 0
+  | .string => []
+  | .option _ => none
+  | .list _ => []
+  | .map key _ => key.mapEmpty
+  | .set key => key.setEmpty
+  | .pair left right => (left.default, right.default)
+  | .sum left _ => .inl left.default
+
 structure Declaration where
   name : String
   shape : Shape

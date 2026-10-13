@@ -38,6 +38,7 @@ import Examples.Shallow.measured
 import Examples.Shallow.throws
 import Examples.Shallow.moves
 import Examples.Shallow.nested
+import Examples.Shallow.recursion
 import Examples.Shallow.collections
 import Examples.Shallow.records
 import Examples.Shallow.unions
@@ -50,6 +51,7 @@ import Examples.Proofs.ShallowArrays
 import Examples.Proofs.ShallowLoops
 import Examples.Proofs.ShallowMeasured
 import Examples.Proofs.ShallowThrows
+import Examples.Proofs.ShallowRecursion
 import Examples.Proofs.ShallowCollections
 import Examples.Proofs.ShallowRecords
 import Examples.Proofs.ShallowUnions

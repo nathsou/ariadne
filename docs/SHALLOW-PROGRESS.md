@@ -10,7 +10,7 @@ when their exit criteria pass; finite native tests are not universal proofs.
 | M2 | Complete | Typed Core, scalar/list/Map/Set extraction, owned local updates, structural loops, pure calls, structural denotation, three-way differential and tamper tests. Lawful named records/unions and direct borrowed-state calls are implemented; class states, Int53 guards and original reference extraction are implemented; the full integration regression gate passed. |
 | M3 | Complete | All three original reference acceptance proofs hold universally over emitted definitions. The native proof library includes loop, collection, string and stable-sort laws, and general Int53 arithmetic correspondence, including rounded nonintegral division. |
 | M4 | Acceptance complete; general lemma partial | All three reference programs are proved against the original source evaluator for all inputs, and their reference theorems hold of source runs ([below](#reference-source-transfer)). The general fundamental lemma covers scalar, guarded Int53 and data-read fragments; for other stateful/data programs without a source theorem, the elaborator and denotation remain trusted. |
-| M5 | In progress | Measured `while` loops ([below](#measured-while-loops-tier-1)), `throw` ([below](#thrown-errors)), moves and nested owned mutation ([below](#moves-and-nested-owned-mutation)) are extracted. Measured recursion, polymorphism and scalar backend integration are pending. |
+| M5 | In progress | Tier 1 is extracted: measured `while` loops ([below](#measured-while-loops-tier-1)) and measured recursion ([below](#measured-recursion-tier-1)). So are `throw` ([below](#thrown-errors)), moves and nested owned mutation ([below](#moves-and-nested-owned-mutation)). Polymorphism and scalar backend integration are pending. |
 
 ## Reference specifications
 
@@ -915,7 +915,6 @@ emitted value.
 
 Not yet covered:
 
-- measured recursion;
 - generated source theorems for loops.
 
 ## Thrown errors
@@ -995,3 +994,33 @@ Not yet covered:
 - index paths;
 - effectful calls inside expressions;
 - storing a moved local into a record literal.
+
+## Measured recursion (tier 1)
+
+A function annotated `/** @decreases m */` may call itself. Here `m` is a
+bigint or Int53 expression over its parameters.
+
+- **Core.** `Term.recursive measure body` is a function of the argument tuple.
+  Its body is closed over a single binding, the function itself. Self calls
+  apply that binding to the argument tuple; calls from other functions apply
+  the whole closed term.
+- **Denotation.** `Measured.fixBounded` recurses to one level more than the
+  initial measure. An exhausted budget returns `Core.Ty.default`, an
+  inhabitant of the result type. When the body calls itself only on smaller
+  measures (`Measured.Decreasing`), `Measured.fixBounded_unfold` gives the
+  fixpoint equation. `Examples/Proofs/ShallowRecursion.lean` uses it to prove
+  the factorial recurrence.
+- **Safety and erasure.** The guard semantics wraps each self call with a
+  check that the callee's measure is strictly smaller and nonnegative. The
+  measure condition is therefore part of `f.safe`. The value-erasure lemma
+  covers the new term, by induction on the budget.
+- **Analyses.** The parameter-effect analysis resolves self calls by a
+  fixpoint, so a parameter mutated only through a recursive call is still
+  found. The throw analysis examines each function once along a call path.
+  Recursive functions that update their arguments are refused for now.
+
+`scripts/shallow-recursion.mjs` compares each fixture function across three
+implementations: the TypeScript source, the emitted definition and the
+original evaluator. For `wrong`, whose stated measure grows, the safety
+condition fails exactly when it recurses. There the emitted value is not
+compared.

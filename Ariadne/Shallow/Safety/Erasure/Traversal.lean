@@ -235,4 +235,16 @@ theorem measured_erases {interp : Named.Interp}
     · simpa only [measured, Measured.iterate, hx, hy, Erases] using step
     · simpa only [measured, Measured.iterate, hx, hy, Erases] using step
 
+theorem default_erases (interp : Named.Interp) :
+    ∀ t, Erases (interp := interp) t (defaultModel interp t) (Core.Ty.default interp t)
+  | .unit | .bool | .int | .int53 | .number | .string | .set _ | .named _ => rfl
+  | .option _ => trivial
+  | .list _ => .nil
+  | .map k _ => by cases k <;> exact .nil
+  | .pair a b => ⟨default_erases interp a, default_erases interp b⟩
+  | .sum a _ => default_erases interp a
+  | .fn _ b => fun _ _ _ => default_erases interp b
+  | .step s _ => default_erases interp s
+  | .exit s _ => default_erases interp s
+
 end Ariadne.Shallow.Safety

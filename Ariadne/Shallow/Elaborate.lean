@@ -104,20 +104,24 @@ def prepare (p : Program) (fuel : Nat) (f : Ariadne.Function) : Checked Prepared
 /-- Whether a statement can throw: it throws, or returns the result of a call
 to a function whose body can. Other uses of such calls are not extracted.
 Structural on the fuel, so the kernel evaluates it in elaboration checks. -/
-def raisesStmt (p : Program) : Nat → Stmt → Bool
+def raisesStmt (p : Program) (visited : List String) : Nat → Stmt → Bool
   | 0, _ => false
   | _ + 1, .throw_ .. => true
-  | n + 1, .return_ (.call (.var name _) _ _) _ => match p.functions.find? (·.name == name) with
-    | some g => raisesStmt p n g.body
+  | n + 1, .return_ (.call (.var name _) _ _) _ =>
+    if visited.contains name then false else
+    match p.functions.find? (·.name == name) with
+    | some g => raisesStmt p (name :: visited) n g.body
     | none => false
-  | n + 1, .block ss _ => ss.any (raisesStmt p n)
-  | n + 1, .if_ _ a b _ => raisesStmt p n a || raisesStmt p n b
+  | n + 1, .block ss _ => ss.any (raisesStmt p visited n)
+  | n + 1, .if_ _ a b _ => raisesStmt p visited n a || raisesStmt p visited n b
   | n + 1, .while_ _ b _ | n + 1, .for_ _ _ _ b _ | n + 1, .forOf _ _ _ b _ | n + 1, .measured _ b _ =>
-    raisesStmt p n b
-  | n + 1, .switch_ _ cases _ => cases.any (fun c => c.2.any (raisesStmt p n))
+    raisesStmt p visited n b
+  | n + 1, .switch_ _ cases _ => cases.any (fun c => c.2.any (raisesStmt p visited n))
   | _, _ => false
 
-def raises (p : Program) (fuel : Nat) (f : Ariadne.Function) : Bool := raisesStmt p fuel f.body
+/-- Calls back into a function already being examined add no throws beyond
+its body's, so each function is examined once along a call path. -/
+def raises (p : Program) (fuel : Nat) (f : Ariadne.Function) : Bool := raisesStmt p [f.name] fuel f.body
 
 /-- A throwing function returns `inr value` or `inl message`. Its returns are
 wrapped in `#ok`, its throws become returns of `#fail`, and the result of a
@@ -506,6 +510,9 @@ def loopVariable : Var (a :: Γ) t → Term [Core.environmentType Γ, a] t
   | .here => .var (.there .here)
   | .there v => Core.project (.var .here) v
 
+/-- The binding through which a measured recursive function calls itself. -/
+def selfName (name : String) : String := "#self:" ++ name
+
 /-- Close a measured loop's body or measure over its explicit state tuple. -/
 def abstractState (body : Term Γ t) : Term Δ (.fn (Core.environmentType Γ) t) :=
   .closed (.lam "state" (body.substitute fun v => Core.project (.var .here) v))
@@ -689,10 +696,15 @@ mutual
           let some ⟨.fn domain result, v⟩ := lookup ctx name
             | refusal "A5102" "invalid generated continuation" span
           return ⟨result, .app (.var v) (← tupleArgs p n ctx domain args span)⟩
+        if let some ⟨.fn arguments result, self⟩ := lookup ctx (selfName name) then
+          return ⟨result, .app (.var self) (← tupleArgs p n ctx arguments args span)⟩
         let some f := p.functions.find? (·.name == name)
           | refusal "A5104" "this intrinsic has no shallow lowering" span
         if !(← StatePlan.effects p n f).isEmpty then
           refusal "A5102" "this effectful call needs statement-level state threading" span
+        if let some measure := f.decreases then
+          let ⟨arguments, result, function⟩ ← recursive p n f measure
+          return ⟨result, .app (.closed function) (← tupleArgs p n ctx arguments args span)⟩
         let inputs ← f.params.mapM fun param => type p param.ty param.span
         let (result, body) := raising p f (← type p f.result f.span) f.body
         let closed ← lambda p n [] inputs f.params result body
@@ -743,6 +755,26 @@ mutual
         return ⟨.pair .unit tailType, .pair .unit tail⟩
       let fieldType := Core.shapeType (← Declarations.shape span 100 source)
       return ⟨.pair fieldType tailType, .pair (← asType p n ctx value fieldType) tail⟩
+
+  /-- A measured recursive function, closed, as a function of its argument
+  tuple. Its body sees itself under `selfName`, and calls itself through it. -/
+  def recursive (p : Program) (fuel : Nat) (f : Ariadne.Function) (measure : Expr) :
+      Checked ((arguments : Core.Ty) × (result : Core.Ty) × Term [] (.fn arguments result)) :=
+    match fuel with
+    | 0 => refusal "A5101" "recursive function budget exhausted" f.span
+    | n + 1 => do
+      let params ← f.params.mapM fun param => do
+        let ty ← type p param.ty param.span
+        return ({ name := param.name, ty, declared := ty } : Binding)
+      let (result, body) := raising p f (← type p f.result f.span) f.body
+      let arguments := Core.environmentType (Types params)
+      let measure : Term (Types params) .int ← match ← expression p n params measure with
+        | ⟨.int, m⟩ => pure m
+        | ⟨.int53, m⟩ => pure (.unary .int53ToInt m)
+        | _ => refusal "A5101" "a recursion measure must be a bigint or an Int53" measure.span
+      let inner := binding (selfName f.name) (.fn arguments result) :: params
+      let body ← statements p n inner [body] result
+      return ⟨arguments, result, .recursive (abstractState measure) (.lam "args" (body.substitute loopVariable))⟩
 
   def tupleArgs (p : Program) (fuel : Nat) (ctx : Context) (t : Core.Ty) (args : List Expr)
       (span : Span) : Checked (Term (Types ctx) t) :=
@@ -1234,7 +1266,7 @@ mutual
         if !validIncrement then refusal "A5101" "counted loops require an integer unit increment" span
         if tested != name || updated != name || prior != name || (Check.writes n body).contains name then
           refusal "A5101" "only the update step may assign the counted-loop counter" span
-        let writes := Check.writes n body ++ (← StatePlan.statementEffects p n body)
+        let writes := Check.writes n body ++ (← StatePlan.statementEffects p none n body)
         match stop with
         | .var bound _ =>
           if bound == name || writes.contains bound then
@@ -1297,6 +1329,13 @@ def function (p : Program) (name : String) : Checked Core.Function := do
   let some f := p.functions.find? (·.name == name)
     | refusal "A5101" "unknown extraction entry point" {}
   let prepared ← prepare p 512 f
+  if let some measure := f.decreases then
+    if !prepared.loans.isEmpty then
+      refusal "A5102" "a recursive function cannot also update its arguments yet" f.span
+    let ⟨arguments, result, function⟩ ← recursive p 512 f measure
+    let call := Term.app (.closed function)
+      (← tupleArgs p 512 prepared.ctx arguments (f.params.map fun param => .var param.name param.span) f.span)
+    return { params := Types prepared.ctx, result, body := call }
   if raises p 256 f && !prepared.loans.isEmpty then
     refusal "A5102" "a throwing function cannot also update its arguments yet" f.span
   let (result, body) := raising p f prepared.result prepared.body

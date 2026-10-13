@@ -87,4 +87,45 @@ theorem bounded_unfold (measure : σ → Int) (state : σ) (body : σ → Step �
   | stop state => rfl
   | ret value => rfl
 
+/-! ## Measured recursion -/
+
+/-- Recursion to depth at most `budget`; an exhausted budget yields `default`. -/
+def recurse (body : (α → β) → α → β) (default : β) : Nat → α → β
+  | 0, _ => default
+  | n + 1, x => body (recurse body default n) x
+
+/-- A measured recursive function's denotation: recursion to one level more
+than the initial measure. It is total whatever the body does. -/
+def fixBounded (measure : α → Int) (body : (α → β) → α → β) (default : β) (x : α) : β :=
+  recurse body default ((measure x).toNat + 1) x
+
+/-- The body calls itself only on arguments of smaller measure. -/
+def Decreasing (measure : α → Nat) (body : (α → β) → α → β) : Prop :=
+  ∀ (f g : α → β) (x : α), (∀ y, measure y < measure x → f y = g y) → body f x = body g x
+
+/-- Any two budgets above the measure agree. -/
+theorem recurse_stable (measure : α → Nat) (body : (α → β) → α → β) (default : β)
+    (decreasing : Decreasing measure body) :
+    ∀ (n m : Nat) (x : α), measure x < n → measure x < m →
+      recurse body default n x = recurse body default m x := by
+  intro n
+  induction n with
+  | zero => intro m x h; omega
+  | succ n ih =>
+    intro m x hn hm
+    cases m with
+    | zero => omega
+    | succ m =>
+      simp only [recurse]
+      exact decreasing _ _ x (fun y hy => ih m y (by omega) (by omega))
+
+/-- The fixpoint equation of a measured recursive function whose body calls
+itself only on arguments of smaller measure. -/
+theorem fixBounded_unfold (measure : α → Int) (body : (α → β) → α → β) (default : β)
+    (decreasing : Decreasing (fun x => (measure x).toNat) body) (x : α) :
+    fixBounded measure body default x = body (fixBounded measure body default) x := by
+  show body (recurse body default (measure x).toNat) x = body (fun y => recurse body default ((measure y).toNat + 1) y) x
+  exact decreasing _ _ x (fun y hy =>
+    recurse_stable _ body default decreasing _ _ y (by omega) (by omega))
+
 end Ariadne.Shallow.Measured

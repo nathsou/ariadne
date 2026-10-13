@@ -367,7 +367,7 @@ private def binaryText : Binary a b c → String → String → String
 private def closedTerms : Term Γ t → List ((t : Core.Ty) × Term [] t)
   | .closed body => closedTerms body ++ [⟨_, body⟩]
   | .unary _ a | .some a | .fst a | .snd a | .lam _ a | .next a | .stop a | .ret a | .inl a | .inr a | .pack _ a | .unpack a => closedTerms a
-  | .binary _ a b | .let_ _ a b | .cons a b | .pair a b | .app a b => closedTerms a ++ closedTerms b
+  | .binary _ a b | .let_ _ a b | .cons a b | .pair a b | .app a b | .recursive a b => closedTerms a ++ closedTerms b
   | .ite a b c | .optionCase a b c | .each a b c | .measured a b c | .exitCase a b c | .mapSet a b c | .sumCase a b c => closedTerms a ++ closedTerms b ++ closedTerms c
   | .listMap a b | .listFilter a b | .listSome a b | .listEvery a b |
       .listFind a b | .listFindIndex a b => closedTerms a ++ closedTerms b
@@ -414,6 +414,7 @@ private def coreText (label : String) (keys : List String) : Term Γ t → Strin
   | .ret a => s!"(Core.Term.ret {coreText label keys a})"
   | .each a b c => s!"(Core.Term.each {coreText label keys a} {coreText label keys b} {coreText label keys c})"
   | .measured a b c => s!"(Core.Term.measured {coreText label keys a} {coreText label keys b} {coreText label keys c})"
+  | .recursive a b => s!"(Core.Term.recursive {coreText label keys a} {coreText label keys b})"
   | .exitCase a b c => s!"(Core.Term.exitCase {coreText label keys a} {coreText label keys b} {coreText label keys c})"
   | @Term.mapEmpty _ k v => s!"(Core.Term.mapEmpty (k := {reprStr k}) (v := {reprStr v}))"
   | .setEmpty => "Core.Term.setEmpty"
@@ -466,6 +467,11 @@ private def termText (label : String) (keys : List String) (term : Term Γ t) (n
   | .ret a => s!"(_root_.Ariadne.Shallow.Step.ret {termText label keys a names depth})"
   | .each xs init body => s!"(_root_.Ariadne.Shallow.Loop.each {termText label keys xs names depth} {termText label keys init names depth} {termText label keys body names depth})"
   | .measured measure init body => s!"(_root_.Ariadne.Shallow.Measured.bounded {termText label keys measure names depth} {termText label keys init names depth} {termText label keys body names depth})"
+  | @Term.recursive _ a b measure body =>
+    let name := ident s!"_self#{depth}"
+    s!"(_root_.Ariadne.Shallow.Measured.fixBounded {termText label keys measure names depth} " ++
+      s!"(fun {name} : {typeText (.fn a b)} => {termText label keys body [name] (depth + 1)}) " ++
+      s!"(_root_.Ariadne.Shallow.Core.Ty.default Interpretation.value ({reprStr b})))"
   | .exitCase e done ret => s!"(_root_.Ariadne.Shallow.Exit.elim {termText label keys e names depth} {termText label keys done names depth} {termText label keys ret names depth})"
   | @Term.mapEmpty _ k _ => s!"{mapNamespace k}.empty"
   | @Term.setEmpty _ k => s!"{setNamespace k}.empty"
@@ -490,7 +496,8 @@ private def termDeclarations (term : Term Γ t) : List Named.Declaration :=
   | .closed body => termDeclarations body
   | .unary _ a | .some a | .fst a | .snd a | .lam _ a | .next a | .stop a | .ret a |
       .inl a | .inr a | .pack _ a | .unpack a => termDeclarations a
-  | .binary _ a b | .let_ _ a b | .cons a b | .pair a b | .app a b => termDeclarations a ++ termDeclarations b
+  | .binary _ a b | .let_ _ a b | .cons a b | .pair a b | .app a b | .recursive a b =>
+    termDeclarations a ++ termDeclarations b
   | .ite a b c | .optionCase a b c | .each a b c | .measured a b c | .exitCase a b c | .mapSet a b c |
       .sumCase a b c | .listReduce a b c | .listSlice a b c =>
     termDeclarations a ++ termDeclarations b ++ termDeclarations c

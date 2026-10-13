@@ -282,12 +282,20 @@ checks.
 - These are `while` loops and recursion that carry a measure annotation. The
   annotation is a comment, `/** @decreases expr */`, placed immediately before the
   loop or the function, so the TypeScript is unchanged.
-- The emitted definition uses `termination_by expr`. Its `decreasing_by`
-  obligation is discharged by `omega` or `simp`, or by a lemma in a user file.
-- The denotation of a tier-1 function is defined by fuel bounded by the measure.
-  The check against it uses one library lemma: a function defined by
-  well-founded recursion on a measure equals the fueled iteration of its body,
-  at any fuel above the measure.
+- The denotation of a tier-1 loop or function is defined by fuel bounded by
+  the measure (`Measured.bounded`, `Measured.fixBounded`). The emitted
+  definition uses the same bounded form, so the per-file check stays a
+  definitional equation, and the extractor never prints a decrease proof.
+- Library lemmas give the well-founded view when the measure decreases:
+  - `bounded_run` equates a loop with well-founded recursion on its measure;
+  - `bounded_unfold` and `fixBounded_unfold` give the unfolding and fixpoint
+    equations.
+
+  A proof about an emitted tier-1 definition first shows the decrease, often by
+  `omega`, then reasons by these equations.
+- The decrease itself is part of `f.safe`. The guard semantics checks it at
+  every continuing step and every recursive call, so adequacy claims nothing
+  when the stated measure does not decrease.
 
 **Tier 2: fuel.** Everything else the frontend accepts stays on the operational
 and scalar-compiler paths, as today. Shallow extraction reports which construct
