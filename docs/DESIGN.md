@@ -330,8 +330,28 @@ through a second name. The checker's ownership rules state this precisely:
 
 In the adequacy proof, these rules give the footprint invariant:
 
-- The heap objects reachable from distinct owners are disjoint.
+- Each owner's write footprint is disjoint from every other visible value's
+  read footprint. Immutable descendants may have overlapping read footprints.
 - Shared objects are never written.
+
+Exported entries check argument overlap before invoking their implementation,
+throwing on overlap. This check is an operational guard alongside `f.safe`;
+passing it establishes mutable-footprint separation instead of requiring input
+disjointness in every transfer theorem. Types choose the check: root identity
+comparison suffices unless a mutated argument's type occurs inside another
+argument's type, in which case the corresponding argument is traversed.
+Encapsulated private class fields do not count as nested public arguments.
+Proxies remain a host-realm assumption.
+
+A checked single-statement projection such as `groups.get(k)!.push(x)` or
+`rows[i].count++` temporarily permits mutation through exactly that path. The
+container cannot otherwise be used during the statement. Its native translation
+uses get/modify/set and retains the selected runtime object's identity. Two
+simultaneous projections require a generated key/index guard; numeric Map keys
+use SameValueZero so NaN and the two zeros cannot evade it. No local binding may
+extend the projection's lifetime, and there is no module-level nested-mutation
+opt-in. General statement and nested-call guard execution remain proof work;
+the first implemented simultaneous fragment is restricted to exported entries.
 
 The rules are what the proof needs and no more. If a rule turns out to be too
 weak, the proof fails; the result is never an unsound theorem.
@@ -770,8 +790,9 @@ working and CI green.
 - **Fundamental lemma** for tier 0, by induction on Core terms. Elaboration
   followed by denotation agrees with `Semantics` under these conditions:
   - for every lawful interpretation;
-  - for inputs related to their denotations, in disjoint footprints;
-  - under `f.safe`.
+  - for inputs related to their denotations under the typed ownership invariant;
+  - under the generated entry guard and `f.safe`, deriving mutable-footprint
+    separation from guard success.
 
   Termination comes from `Fuel`'s `Converges`, with no fuel visible to the user.
 - Staged by fragment:

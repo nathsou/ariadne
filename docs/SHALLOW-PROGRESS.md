@@ -150,6 +150,23 @@ computed guard. The projection suite checks eight witnesses and twelve forged
 state, guard and entry declarations against four one-function fixtures.
 General field-update witnesses and the checker fundamental lemma remain pending.
 
+`ClassMutation` proves required-field reads, scalar assignments and compound
+updates in actual class instances, including private fields and unchanged
+reference descendants. Method invocation binds `this`, executes the original
+body and restores the caller's environment. Its field-focus rule rebuilds the
+class relation after a selected child mutation while retaining instance identity.
+`MapScalarMutation` proves scalar Map insertion with unchanged key order and a
+root-only write footprint; passing an entry guard separates actual scalar Map
+layouts. These rules do not assume whole-function execution or input disjointness.
+`Examples/ClassAdequacy.lean` ties the original `Seeded.add` and `Seeded.read`
+methods to their emitted native definitions for arbitrary represented heaps.
+An induction proves arbitrary-length add/read call traces through the original
+source evaluator, preserving each intermediate native state. The class suite
+retains its ten finite constructor/method traces, checks all three universal
+witnesses and rejects three forged native-state, method and representation
+declarations. Constructors, private Map method transfer, general class/checker
+adequacy and the original reference source proofs remain pending.
+
 CI #96 on `5e31ceb` passes in 11m23s, compared with baseline CI #82's 21m18s.
 Its logged source-transfer and Int53 tamper phases take 17s and 7s respectively,
 compared with the baseline 1m51s and 1m29s. The axiom audit covers 5,435 theorems.
@@ -193,6 +210,16 @@ CI #118 on `4468cfc` passed the emitted field-increment witnesses in 10m36s:
 6,987 audited theorems, all 27 JavaScript suites and all nine jobs. Its logged
 source-transfer, shared-continuation and Int53 tamper phases took 21s, 18s and
 8s respectively; the baseline source/Int53 phases took 111s and 89s.
+CI #122 on the permission-environment checkpoint passed in 12m01s with 6,995
+audited theorems. CI #124 on the parameter-addition checkpoint passed in 13m11s
+with 7,043 audited theorems and all 27 suites; library preparation took 260s,
+and source/Int53 tamper phases took 23s/9s. CI #119's tool-installation failure
+was repeated GitHub HTTP 500 responses; the same commit's PR run #120 passed.
+Release downloads now have a bounded longer retry window with all checksum
+checks retained. Preparation restores an incremental library build keyed by
+the tool/configuration hashes and library source hashes. Lake build and
+regeneration always run after restoration; all subsequent certificate and test
+checks remain. Warm-cache timings have not yet been measured.
 
 Frontend checkpoint: the complete `scripts/check.sh` suite passes with 1,217
 audited theorems, 42 native entry points, 64 generated programs, 51 scalar

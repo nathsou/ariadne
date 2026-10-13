@@ -73,3 +73,4 @@ import Examples.Tamper.projectionarray
 import Examples.Shallow.simultaneous
 import Examples.Tamper.projectionfield
 import Examples.Tamper.projectionaddfield
+import Examples.ClassAdequacy

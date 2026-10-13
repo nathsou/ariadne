@@ -1,4 +1,4 @@
-import { writeFile, mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import assert from 'node:assert/strict';
@@ -23,7 +23,10 @@ const observed = values => ({ok: ['array', values.map(value => ['bigint', value.
 await mkdir('work', {recursive: true});
 const dir = await mkdtemp(resolve('work/shallow-classes-'));
 try {
-  let runner = 'import Examples.Shallow.classes\nimport Ariadne.Observe\nopen Ariadne\nopen Extracted_classes.Shallow\nset_option linter.unusedVariables false\n';
+  let runner = 'import Examples.Shallow.classes\nimport Examples.ClassAdequacy\nimport Ariadne.Observe\nopen Ariadne\nopen Extracted_classes.Shallow\nset_option linter.unusedVariables false\n' +
+    '#check @Examples.ClassAdequacy.seeded_add_source\n' +
+    '#check @Examples.ClassAdequacy.seeded_read_source\n' +
+    '#check @Examples.ClassAdequacy.seeded_trace_source\n';
   const expected = [];
   for (const [i, [name, args, ops]] of traces.entries()) {
     const value = new ({Counter, Seeded}[name])(...args);
@@ -70,6 +73,23 @@ try {
   await writeFile(path, runner);
   const native = spawnSync('lake', ['env', 'lean', path], {encoding:'utf8', timeout:120000, maxBuffer:8e6});
   assert.equal(native.status, 0, native.stdout + native.stderr);
-  assert.deepEqual(native.stdout.trim().split('\n').map(JSON.parse), expected);
-  console.log(`Shallow classes passed: ${traces.length} three-way constructor/method traces with intermediate state observations.`);
+  assert.deepEqual(native.stdout.trim().split('\n').filter(line => line.startsWith('{')).map(JSON.parse), expected);
+  // Recheck only the handwritten source witnesses. Their generated dependency
+  // is imported from the already checked module, avoiding repeated extraction checks.
+  const witness = await readFile('Examples/ClassAdequacy.lean', 'utf8');
+  const alterations = [
+    witness.replace('layout.Holds after.heap (.ref address) («Seeded#add» native amount).2.1 owned',
+      'layout.Holds after.heap (.ref address) native owned'),
+    witness.replace('before (.method address "add")', 'before (.method address "read")'),
+    witness.replace('(input : layout.Holds before.heap (.ref address) native owned)', '(input : True)'),
+  ];
+  for (const [i, altered] of alterations.entries()) {
+    assert.notEqual(altered, witness);
+    const path = resolve(dir, `TamperedClass${i}.lean`);
+    await writeFile(path, altered);
+    const refused = spawnSync('lake', ['env', 'lean', path], {encoding:'utf8', timeout:60000, maxBuffer:8e6});
+    assert.notEqual(refused.status, 0, 'a forged class source witness must fail kernel checking');
+    assert.ok(refused.stdout.includes('error'), refused.stdout + refused.stderr);
+  }
+  console.log(`Shallow classes passed: ${traces.length} three-way constructor/method traces with intermediate state observations, 3 universal source/trace witnesses, and 3 class tamper checks.`);
 } finally { await rm(dir, {recursive:true, force:true}); }
