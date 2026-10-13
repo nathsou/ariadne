@@ -805,6 +805,14 @@ in the children map. Loops (`for`, `for...of`, counted loops with exact float
 counters) carry explicit invariants; nested method calls compose the callee's
 theorem with a frame condition on the caller's cells.
 
+The concrete layouts coincide with the relations the extractor's combinators
+generate. `TreeRelation.lean` shows that the tree's state relation (a class
+instance holding a scalar map and a map to owned string arrays) holds exactly
+when the tree layout does, and restates trace preservation with it.
+`DecisionRelation.lean` does the same for `Candidate`, a union of two records
+tagged by a literal `kind` field, and restates `choose` with the generated
+array and optional relations.
+
 Because these theorems relate the emitted definitions directly to the source
 evaluator, the elaborator and the denotation are not trusted for these three
 programs. This is per-program evidence, not the general fundamental lemma.
