@@ -1075,6 +1075,11 @@ mutual
               | .var owner _ =>
                 let state := component ((List.range i).foldl (fun value _ => component value 1) states) 0
                 restores := restores ++ [.expr (.call (.var ("#restore:" ++ owner) span) [state] span) span]
+              | .member (.var owner ownerSpan) field fieldSpan =>
+                -- A backward function: the callee's final state for the borrowed
+                -- field is written back into the owner's record.
+                let state := component ((List.range i).foldl (fun value _ => component value 1) states) 0
+                restores := restores ++ [.assign (.member (.var owner ownerSpan) field fieldSpan) state span]
               | _ =>
                 if !Check.fresh argument then refusal "A5102" "nested borrowed arguments need backward functions" argument.span
             let resumed := match stmt with
@@ -1102,7 +1107,12 @@ mutual
         let restoredResult := match value with
           | .index (.var package _) (.literal (.number 0 0) _) _ => package.startsWith "#borrowedCall"
           | _ => false
-        let owns := Check.fresh value || restoredResult
+        -- The checker admits a declaration from an owned mutable local only
+        -- as a move, so the new name takes over its ownership.
+        let moved := match value with
+          | .var source _ => (ctx.find? (·.name == source)).any (fun b => b.owned && b.loan.isNone)
+          | _ => false
+        let owns := Check.fresh value || restoredResult || moved
         let ⟨a, value⟩ ← match annotation with
           | none => expression p n ctx value
           | some ty => do

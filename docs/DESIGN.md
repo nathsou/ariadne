@@ -302,9 +302,10 @@ through a second name. The checker's ownership rules state this precisely:
 1. Every mutable value has one owner. The owner is a local, a parameter, or a
    field of `this`. A parameter is an exclusive borrow for the duration of the
    call.
-2. Only the owner mutates. Binding a second name to a mutable value is rejected.
-   A later milestone may accept it as a move when the first name is no longer
-   used.
+2. Only the owner mutates. Binding a second name to a mutable value is rejected,
+   except as a move: `const b = a` takes over a local `a` declared earlier in
+   the same statement list when the rest of that list never mentions `a`. The
+   first name is then never used again.
    References borrowed from a caller are second-class: only parameters and
    `this` bind them. They cannot be aliased, stored, returned, or captured by
    an escaping closure, even through a readonly annotation. Allocating a copy

@@ -32,6 +32,8 @@ structure Context where
   projectionSpans : List Span := []
   /-- Only a sole exported entry statement may move its key guard to entry. -/
   simultaneous : Option Projection.Entry := none
+  /-- A local whose value the current declaration takes over (rule 2 moves). -/
+  moving : Option String := none
 
 def error (code message : String) (span : Span) (help : Option String := none) : Checked α :=
   .error { code, message, span, help }
@@ -168,6 +170,12 @@ def root : Expr → Option String
   | .call (.member e method _) _ _ => if ["get", "keys", "values", "entries"].contains method then root e else none
   | _ => none
 
+/-- A variable followed by record field selections. -/
+def fieldPath : Expr → Option (List String)
+  | .var n _ => some [n]
+  | .member e field _ => (fieldPath e).map (· ++ [field])
+  | _ => none
+
 def fresh : Expr → Bool
   | .array .. | .record .. | .newMap .. | .newSet .. | .newClass .. => true
   | .call (.var ..) _ _ => true
@@ -211,6 +219,40 @@ def checkNoBorrowEscape (ctx : Context) (ty : Ty) (value : Expr) : Checked Unit 
   if referenceType ty && borrowedReference ctx value then
     error "A3001" "borrowed references exist only as parameters and this; they cannot be bound, stored, or returned" value.span
   else .ok ()
+
+mutual
+  /-- Whether an expression mentions a name anywhere, including in callbacks. -/
+  def mentionsExpr (name : String) : Nat → Expr → Bool
+    | 0, _ => true
+    | n + 1, expr => match expr with
+      | .var other _ => other == name
+      | .literal .. | .newMap .. | .newSet .. => false
+      | .unary _ a _ | .member a _ _ | .spread a _ => mentionsExpr name n a
+      | .binary _ a b _ | .index a b _ => mentionsExpr name n a || mentionsExpr name n b
+      | .conditional a b c _ => mentionsExpr name n a || mentionsExpr name n b || mentionsExpr name n c
+      | .call f args _ => mentionsExpr name n f || args.any (mentionsExpr name n)
+      | .array xs _ | .newClass _ xs _ => xs.any (mentionsExpr name n)
+      | .record fields _ => fields.any (fun f => mentionsExpr name n f.2)
+      | .lambda _ body _ => mentionsStmt name n body
+
+  /-- Whether a statement mentions a name anywhere. -/
+  def mentionsStmt (name : String) : Nat → Stmt → Bool
+    | 0, _ => true
+    | n + 1, stmt => match stmt with
+      | .block ss _ => ss.any (mentionsStmt name n)
+      | .let_ _ other _ value _ => other == name || mentionsExpr name n value
+      | .assign a b _ | .update a _ b _ => mentionsExpr name n a || mentionsExpr name n b
+      | .expr e _ | .return_ e _ => mentionsExpr name n e
+      | .if_ c a b _ => mentionsExpr name n c || mentionsStmt name n a || mentionsStmt name n b
+      | .while_ c b _ => mentionsExpr name n c || mentionsStmt name n b
+      | .for_ i c u b _ => mentionsStmt name n i || mentionsExpr name n c || mentionsStmt name n u ||
+          mentionsStmt name n b
+      | .forOf _ other xs b _ => other == name || mentionsExpr name n xs || mentionsStmt name n b
+      | .measured m b _ => mentionsExpr name n m || mentionsStmt name n b
+      | .switch_ v cases _ => mentionsExpr name n v ||
+          cases.any (fun c => c.1.any (mentionsExpr name n) || c.2.any (mentionsStmt name n))
+      | .break_ _ | .continue_ _ | .throw_ .. => false
+end
 
 def scalarPrintable : Ty → Bool
   | .int53 | .number | .bigint | .string | .stringLiteral _ | .boolean | .null | .undefined => true
@@ -601,6 +643,7 @@ mutual
             | none => pure ctx
           if args.length != f.params.length then error "A2007" s!"'{name}' expects {f.params.length} arguments" span
           let mut roots : List String := []
+          let mut paths : List (List String) := []
           for (arg, param) in args.zip f.params do
             let expected ← resolve 100 ctx.program param.ty
             checkExpr n ctx arg expected
@@ -613,8 +656,13 @@ mutual
                   error "A3001" "a mutable owner cannot be shared as an immutable argument" arg.span
               if !immutable expected then checkBorrowOwner ctx arg
               if let some r := root arg then
-                if roots.contains r && ctx.projectionSpans.length != 2 then
+                -- Distinct fields of one owner are distinct owned objects (rule 3),
+                -- so only nested field paths overlap; other paths cover their root.
+                let path := (fieldPath arg).getD [r]
+                let overlaps := paths.any (fun other => other.isPrefixOf path || path.isPrefixOf other)
+                if overlaps && ctx.projectionSpans.length != 2 then
                   error "A3001" s!"'{r}' is passed through overlapping mutable arguments" arg.span
+                paths := path :: paths
                 roots := r :: roots
           resolve 100 ctx.program f.result
         | .member object field _ => inferMethod n ctx object field args span
@@ -866,8 +914,11 @@ mutual
         checkNoBorrowEscape ctx t value
         if referenceType t && !immutable t && sharedRead value then
           error "A3001" "mutable container reads cannot be bound; consume the read within one statement or make a fresh copy" value.span
-        if referenceType t && !immutable t && !fresh value then
-          error "A3001" "reference bindings require a fresh allocation or an owned function result" value.span
+        let moved := match value with
+          | .var source _ => ctx.moving == some source
+          | _ => false
+        if referenceType t && !immutable t && !fresh value && !moved then
+          error "A3001" "reference bindings require a fresh allocation, an owned function result, or a move of a local that is not used again" value.span
         if immutable t && referenceType t && !fresh value then
           if !immutable (← infer n ctx value) then
             error "A3001" "a readonly alias cannot share a mutable owner" value.span
@@ -1009,13 +1060,30 @@ mutual
         return ctx
       | .throw_ _ _ => return ctx
 
-  def checkBlock (fuel : Nat) (ctx : Context) (stmts : List Stmt) : Checked Context := do
+  /-- `locals` are the names declared earlier in this same statement list. A
+  declaration may take over (move) one of them when the rest of the list never
+  mentions it: the source then has no later use anywhere, since it goes out
+  of scope with the list. The moved name is removed from scope. -/
+  def checkBlock (fuel : Nat) (ctx : Context) (stmts : List Stmt) (locals : List String := []) :
+      Checked Context := do
     match fuel with
     | 0 => error "A2000" "type checking resource bound exceeded" {}
     | n + 1 =>
       match stmts with
       | [] => return ctx
-      | stmt :: rest => checkBlock n (← checkStmt n ctx stmt) rest
+      | stmt :: rest =>
+        let declared := match stmt with
+          | .let_ _ name _ _ _ => [name]
+          | _ => []
+        let moving := match stmt with
+          | .let_ _ _ _ (.var source _) _ =>
+            if locals.contains source && !rest.any (mentionsStmt source 256) then some source else none
+          | _ => none
+        let out ← checkStmt n { ctx with moving } stmt
+        let out := match moving with
+          | some source => { out with moving := none, bindings := out.bindings.filter (·.name != source) }
+          | none => { out with moving := none }
+        checkBlock n out rest (locals ++ declared)
 end
 
 def returns (fuel : Nat) (stmt : Stmt) : Bool :=

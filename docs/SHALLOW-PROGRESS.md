@@ -10,7 +10,7 @@ when their exit criteria pass; finite native tests are not universal proofs.
 | M2 | Complete | Typed Core, scalar/list/Map/Set extraction, owned local updates, structural loops, pure calls, structural denotation, three-way differential and tamper tests. Lawful named records/unions and direct borrowed-state calls are implemented; class states, Int53 guards and original reference extraction are implemented; the full integration regression gate passed. |
 | M3 | Complete | All three original reference acceptance proofs hold universally over emitted definitions. The native proof library includes loop, collection, string and stable-sort laws, and general Int53 arithmetic correspondence, including rounded nonintegral division. |
 | M4 | Acceptance complete; general lemma partial | All three reference programs are proved against the original source evaluator for all inputs, and their reference theorems hold of source runs ([below](#reference-source-transfer)). The general fundamental lemma covers scalar, guarded Int53 and data-read fragments; for other stateful/data programs without a source theorem, the elaborator and denotation remain trusted. |
-| M5 | In progress | Measured `while` loops ([below](#measured-while-loops-tier-1)) and `throw` ([below](#thrown-errors)) are extracted. Measured recursion, larger ownership, polymorphism and scalar backend integration are pending. |
+| M5 | In progress | Measured `while` loops ([below](#measured-while-loops-tier-1)), `throw` ([below](#thrown-errors)), moves and nested owned mutation ([below](#moves-and-nested-owned-mutation)) are extracted. Measured recursion, polymorphism and scalar backend integration are pending. |
 
 ## Reference specifications
 
@@ -951,3 +951,47 @@ Not yet covered:
 
 - propagation through calls in non-tail positions;
 - source theorems relating `Sum.inl` to the evaluator's fault.
+
+## Moves and nested owned mutation
+
+**Moves (ownership rule 2).** `const b = a` may take over an owned local `a`
+when two conditions hold:
+
+- `a` was declared earlier in the same statement list;
+- the rest of that list never mentions `a`.
+
+`a` goes out of scope with the list, so it has no later use anywhere. The
+checker removes it from scope, and the elaborator gives `b` the ownership of
+`a`. Three cases are still rejected (each has a negative fixture):
+
+- a move followed by a use of the source;
+- a move from an enclosing block;
+- a move inside a loop of a variable declared outside the loop.
+
+**Nested owned mutation.** A field of an owned record can be passed to a
+function that mutates its parameter, as in `addTwice(bag.items, n)`. This
+lowers to a backward function, in the style of Aeneas: the callee returns its
+result with its final parameter states, and the caller writes the field's
+final state back into the record. Several fields of one owner may be passed
+together, since ownership rule 3 makes distinct fields distinct objects. The
+checker now compares field paths, and rejects two arguments only when one
+path is a prefix of the other:
+
+- `pair(bag.items, bag.items)` is rejected;
+- `both(bag, bag.items)` is rejected;
+- `split(bag.items, bag.extra, xs)` is accepted.
+
+The data relations already require owned fields to have disjoint footprints.
+The rest of the pipeline is unchanged: Core, denotation and erasure proofs
+apply as before.
+
+`scripts/shallow-moves.mjs` and `scripts/shallow-nested.mjs` compare the
+TypeScript source, the emitted definitions and the original evaluator. In the
+evaluator, the moved names and the borrowed fields share heap objects.
+
+Not yet covered:
+
+- deeper paths such as `a.b.c`;
+- index paths;
+- effectful calls inside expressions;
+- storing a moved local into a record literal.
