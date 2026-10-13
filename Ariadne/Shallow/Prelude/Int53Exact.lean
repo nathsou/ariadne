@@ -787,7 +787,7 @@ private def divisionMantissa (m : Nat) := if m = 2 ^ 53 then 2 ^ 52 else m
 private theorem division_mantissa_bits (m : Nat) (lo : 2 ^ 52 ≤ m) (hi : m ≤ 2 ^ 53) :
     (divisionMantissa m).log2 = 52 := by
   by_cases overflow : m = 2 ^ 53
-  · simp [divisionMantissa, overflow]; decide
+  · simp [divisionMantissa, overflow]
   · simp only [divisionMantissa, overflow, ↓reduceIte]
     exact (Nat.log2_eq_iff (by omega)).mpr ⟨lo, by omega⟩
 

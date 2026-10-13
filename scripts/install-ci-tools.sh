@@ -12,12 +12,9 @@ fetch() {
     --retry 6 --retry-max-time 120 "$1" -o "$2"
   printf '%s  %s\n' "$3" "$2" | sha256sum --check --strict
 }
-fetch https://github.com/leanprover/elan/releases/download/v4.1.2/elan-x86_64-unknown-linux-gnu.tar.gz elan.tar.gz f81c2e48c1588d4612cd2c8851947898a45ac8d72748a07dff3a5694f1cf589b
-fetch https://github.com/leanprover/lean4/releases/download/v4.34.1/lean-4.34.1-linux.tar.zst lean.tar.zst 47bf4bbd78f70c2e9670598ab7124d92b6efb7330ff33e5fbb4030f6fd72e4e4
-fetch https://github.com/oven-sh/bun/releases/download/bun-v1.3.5/bun-linux-x64.zip bun.zip 7051d86a924aefea3e0b96213b5fd8f79c0793f9cae6534233e627e5c3db4669
-tar -xzf elan.tar.gz
-./elan-init -y --no-modify-path --default-toolchain none
+fetch https://releases.lean-lang.org/lean4/v4.35.0/lean-4.35.0-linux.tar.zst lean.tar.zst 7289597a44543246c9227b8cae501767e095ce17f6d448b95fc4a8dc97268f6d
+fetch https://github.com/oven-sh/bun/releases/download/bun-v1.4.3/bun-linux-x64.zip bun.zip 3e730528d89775f03f87f05c06787c4df4099d0a37f3f252e7b829cb23816e18
 tar --zstd -xf lean.tar.zst
 unzip -q bun.zip
-# Put the verified binaries first; elan must not fetch an unchecked toolchain.
-printf '%s\n' "$tool_dir/lean-4.34.1-linux/bin" "$tool_dir/bun-linux-x64" >> "${GITHUB_PATH:?}"
+# The only tools: checksum-pinned Lean (with Lake) and Bun. No toolchain manager.
+printf '%s\n' "$tool_dir/lean-4.35.0-linux/bin" "$tool_dir/bun-linux-x64" >> "${GITHUB_PATH:?}"
