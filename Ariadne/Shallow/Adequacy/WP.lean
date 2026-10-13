@@ -343,6 +343,25 @@ theorem WPI.closure {program : Program} {state : State} {post : Value → State 
   rw [executed]
   rcases normal with normal | normal <;> simp [normal, Except.bind] <;> decide
 
+/-- Call a named source function in a fresh frame; the caller's bindings are restored. -/
+theorem WPI.function {program : Program} {state : State} {post : Value → State → Prop}
+    {function : Ariadne.Function} {args : List Value}
+    (lookup : program.functions.find? (fun f => f.name == function.name) = some function)
+    (h : WPS program (Shallow.Adequacy.bindArguments state function.params args) function.body
+      (fun out => (out.control = .normal ∨ out.control = .returned) ∧
+        post out.value { out.state with env := state.env })) :
+    WPI program state (.function function.name) args post := by
+  obtain ⟨out, ⟨_, fuel, executed⟩, normal, q⟩ := h
+  refine ⟨_, _, ⟨(by intro h; cases h), fuel + 2, ?_⟩, q⟩
+  dsimp only at executed
+  simp only [apply, lookup, callBody]
+  change (exec program fuel (Shallow.Adequacy.bindArguments state function.params args) function.body).bind
+    (fun result => if result.control == Control.broke || result.control == Control.continued then
+      .error (Fault.invariant "loop control escaped a function")
+    else .ok (result.value, {result.state with env := state.env})) = _
+  rw [executed]
+  rcases normal with normal | normal <;> simp [normal, Except.bind] <;> decide
+
 theorem WPTraverse.nil {program : Program} {state : State} {callback : Value} {index : Nat} {mode : String}
     {post : List Value → State → Prop} (h : post [] state) :
     WPTraverse program state callback [] index mode post :=
@@ -571,6 +590,60 @@ theorem WPS.switch_ {program : Program} {state : State} {post : Completion → P
       hs n (Nat.le_trans (Nat.le_max_left ..) (Nat.le_max_right ..)),
       hb n (Nat.le_trans (Nat.le_max_right ..) (Nat.le_max_right ..)), bind, Except.bind, pure, Except.pure,
       Completion.leaveSwitch]
+
+/-- Case selection when every label is a literal or `default`, as the checker requires. -/
+def literalCase (value : Value) : List (Option Expr × List Stmt) → Nat → Option Nat → Option Nat
+  | [], _, fallback => fallback
+  | (none, _) :: cases, index, _ => literalCase value cases (index + 1) (some index)
+  | (some (.literal label _), _) :: cases, index, fallback =>
+    if strictEqual value (Value.ofLiteral label) then some index
+    else literalCase value cases (index + 1) fallback
+  | (some _, _) :: cases, index, fallback => literalCase value cases (index + 1) fallback
+
+def literalLabels : List (Option Expr × List Stmt) → Bool
+  | [] => true
+  | (none, _) :: cases => literalLabels cases
+  | (some (.literal _ _), _) :: cases => literalLabels cases
+  | (some _, _) :: _ => false
+
+theorem selectCase_literals (program : Program) (state : State) (value : Value) :
+    ∀ (cases : List (Option Expr × List Stmt)) (index : Nat) (fallback : Option Nat),
+      literalLabels cases = true →
+      selectCase program (cases.length + 2) state value cases index fallback =
+        .ok (literalCase value cases index fallback)
+  | [], _, _, _ => rfl
+  | (none, _) :: cases, index, _, labels => by
+    simp only [selectCase, List.length_cons]
+    rw [show cases.length + 1 + 1 = cases.length + 2 from rfl]
+    exact selectCase_literals program state value cases _ _ labels
+  | (some (.literal label span), _) :: cases, index, fallback, labels => by
+    have rest := selectCase_literals program state value cases (index + 1) fallback labels
+    simp only [selectCase, List.length_cons, literalCase]
+    have evaluated : evalExpr program (cases.length + 1 + 1) state (.literal label span) =
+        .ok (Value.ofLiteral label, state) := rfl
+    simp only [evaluated, bind, Except.bind, pure, Except.pure]
+    split
+    · rfl
+    · exact rest
+  | (some (.var _ _), _) :: _, _, _, labels | (some (.unary _ _ _), _) :: _, _, _, labels
+  | (some (.binary _ _ _ _), _) :: _, _, _, labels | (some (.conditional _ _ _ _), _) :: _, _, _, labels
+  | (some (.call _ _ _), _) :: _, _, _, labels | (some (.member _ _ _), _) :: _, _, _, labels
+  | (some (.index _ _ _), _) :: _, _, _, labels | (some (.array _ _), _) :: _, _, _, labels
+  | (some (.record _ _), _) :: _, _, _, labels | (some (.lambda _ _ _), _) :: _, _, _, labels
+  | (some (.newMap _ _ _), _) :: _, _, _, labels | (some (.newSet _ _), _) :: _, _, _, labels
+  | (some (.newClass _ _ _), _) :: _, _, _, labels | (some (.spread _ _), _) :: _, _, _, labels => by
+    simp [literalLabels] at labels
+
+theorem SelectsCase.literals {program : Program} {state : State} {value : Value}
+    {cases : List (Option Expr × List Stmt)} (labels : literalLabels cases = true) :
+    SelectsCase program state value cases (literalCase value cases 0 none) :=
+  ⟨(by intro h; cases h), _, selectCase_literals program state value cases 0 none labels⟩
+
+theorem WPEach.mono {program : Program} {state : State} {name : String} {body : Stmt} {values : List Value}
+    {p q : Completion → Prop} (h : WPEach program state name body values p) (f : ∀ out, p out → q out) :
+    WPEach program state name body values q := by
+  obtain ⟨out, e, hp⟩ := h
+  exact ⟨out, e, f out hp⟩
 
 theorem WPE.elim {program : Program} {state : State} {expression : Expr} {post : Value → State → Prop}
     (h : WPE program state expression post) : ∃ v after, Evaluates program state expression v after ∧ post v after := h

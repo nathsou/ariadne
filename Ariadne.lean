@@ -50,3 +50,5 @@ import Ariadne.Shallow.Adequacy.ProjectionGuard
 import Ariadne.Shallow.Adequacy.ProjectionSource
 import Ariadne.Shallow.Adequacy.WP
 import Ariadne.Shallow.Adequacy.ScalarMap
+import Ariadne.Shallow.Adequacy.WPAttr
+import Ariadne.Shallow.Adequacy.WPTactic
