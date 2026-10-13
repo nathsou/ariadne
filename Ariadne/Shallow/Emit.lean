@@ -601,6 +601,58 @@ private def dataScalar : Core.Ty → Option (String × String × String)
   | .string => some ("Adequacy.ScalarCodec.string", ".string", "DataRelation.string")
   | _ => none
 
+private def dataShape : Named.Shape → Option (String × String × String)
+  | .int => dataScalar .int
+  | .number => dataScalar .number
+  | .bool => dataScalar .bool
+  | .string => dataScalar .string
+  | _ => none
+
+private def stripReadonly : Ariadne.Ty → Ariadne.Ty
+  | .readonly ty | .fieldReadonly ty => stripReadonly ty
+  | ty => ty
+
+/-- Codec and relation for the fields of a record whose fields are scalars,
+optional scalars or single literals, in source order. -/
+private def dataFields : List (String × Ariadne.Ty) → Named.Shape → Option (String × String × List String)
+  | [], .unit => some ("Adequacy.FieldsCodec.nil", "DataRelation.fieldsNil", [])
+  | (name, fieldTy) :: rest, .pair shape tail => do
+    let (codec, relation, optional) ← dataFields rest tail
+    let key := reprStr name
+    match shape with
+    | .option inner =>
+      let (c, _, r) ← dataShape inner
+      pure (s!"(Adequacy.FieldsCodec.default {key} (Adequacy.ScalarCodec.option {c}) {codec})",
+        s!"(DataRelation.defaultField {key} (DataRelation.option {r}) {relation})", name :: optional)
+    | .unit =>
+      let value ← match stripReadonly fieldTy with
+        | .stringLiteral units => some s!"Value.string {reprStr units}"
+        | .undefined => some "Value.undefined"
+        | _ => none
+      pure (s!"(Adequacy.FieldsCodec.cons {key} (Adequacy.ScalarCodec.literal ({value})) {codec})",
+        s!"(DataRelation.field {key} (DataRelation.literal ({value})) {relation})", optional)
+    | shape =>
+      let (c, _, r) ← dataShape shape
+      pure (s!"(Adequacy.FieldsCodec.cons {key} {c} {codec})", s!"(DataRelation.field {key} {r} {relation})",
+        optional)
+  | _, _ => none
+
+/-- Codec and relation for a named record of scalars, from its source alias,
+and its optional fields. -/
+private def dataRecord (program : Program) (declaration : Named.Declaration) :
+    Option (String × String × List String) := do
+  let some ty := program.aliases.lookup declaration.name | none
+  let .record fields := stripReadonly ty | none
+  let names := fields.map (·.1)
+  if names.eraseDups.length != names.length || names.any (· == "") then none
+  let (codec, relation, optional) ← dataFields fields declaration.shape
+  pure (codec, s!"((DataRelation.record {relation}).comap NativeDestruct.{ident declaration.name})", optional)
+
+private def dataCodecSimps : String :=
+  "Adequacy.FieldsCodec.cons, Adequacy.FieldsCodec.default, Adequacy.FieldsCodec.nil, " ++
+  "Adequacy.ScalarCodec.option, Adequacy.ScalarCodec.literal, Adequacy.ScalarCodec.bigint, " ++
+  "Adequacy.ScalarCodec.number, Adequacy.ScalarCodec.boolean, Adequacy.ScalarCodec.string"
+
 /-- A callback in evaluation order: builtin, element and result types, and the
 native function each call computes. -/
 private structure DataCallback where
@@ -611,16 +663,27 @@ private structure DataCallback where
 
 private def unusedName (name : String) : Bool := name.startsWith "#unused"
 
+/-- A field of a record variable: projections of its unpacked shape. -/
+private def dataProjection : Term Γ t → Bool
+  | .unpack (.var _) => true
+  | .snd a => dataProjection a
+  | _ => false
+
 /-- Callback-free scalar terms. -/
 private def dataScalarTerm : Term Γ t → Bool
   | .var _ | .unit | .bool _ | .int _ | .number _ _ | .string _ => true
   | .unary _ a => dataScalarTerm a
+  | .fst a => dataProjection a
   | @Term.binary _ a b _ _ x y => (dataScalar a).isSome && (dataScalar b).isSome && dataScalarTerm x && dataScalarTerm y
   | _ => false
 
 private def dataCallbacks (label : String) (keys names : List String) : Term Γ t → Option (List DataCallback)
   | .var _ | .unit | .bool _ | .int _ | .number _ _ | .string _ => some []
   | .unary _ a => dataCallbacks label keys names a
+  | .none => some []
+  | .pair a b | .let_ _ a b => do
+    return (← dataCallbacks label keys names a) ++ (← dataCallbacks label keys names b)
+  | .pack _ a | .fst a | .snd a | .unpack a => dataCallbacks label keys names a
   | @Term.binary _ a b _ _ x y => do
     if (dataScalar a).isNone || (dataScalar b).isNone then none
     return (← dataCallbacks label keys names x) ++ (← dataCallbacks label keys names y)
@@ -666,13 +729,14 @@ private def dataSourceTheorem (program : Program) (namespace_ : String) (f : Ari
     (core : Core.Function) (names : List String) (keys : List String) (publicAlias : Bool) : Option String := do
   let .block [.return_ _ _] _ := f.body | none
   let some index := program.functions.findIdx? (·.name == f.name) | none
-  if names.length != core.params.length || core.params.isEmpty then none
-  -- Parameters: scalars, or arrays of scalars.
+  if names.length != core.params.length then none
+  -- Parameters: scalars, arrays of scalars, or records of scalars.
   let mut binders := ""
   let mut inputs := ""
   let mut sourceArgs : List String := []
   let mut realArgs : List String := []
   let mut obtains := ""
+  let mut optionals : List String := []
   for ((ty, name), i) in (core.params.zip names).zipIdx do
     match ty with
     | .list element =>
@@ -685,6 +749,18 @@ private def dataSourceTheorem (program : Program) (namespace_ : String) (f : Ari
         s!"  obtain ⟨_short{i}, -, _a{i}, rfl, _lookup{i}, rfl⟩ := (Adequacy.array_codec_iff {codec}).mp _in{i}\n" ++
         s!"  simp only [{codec}] at _lookup{i}\n" ++
         s!"  obtain ⟨_, _lookup{i}'⟩ := getElem_of_some _lookup{i}\n"
+    | .named declaration =>
+      let (codec, relation, optional) ← dataRecord program declaration
+      optionals := optionals ++ optional.map (fun field => s!"{name}.{ident field}")
+      binders := binders ++ s!" ({name} : {typeText ty}) (_v{i} : Value) (_fp{i} : Heap.Footprint)"
+      inputs := inputs ++ s!"\n    (_in{i} : {relation}.Holds heap _v{i} {name} _fp{i})"
+      sourceArgs := sourceArgs ++ [s!"_v{i}"]
+      realArgs := realArgs ++ [s!".ref _a{i}"]
+      obtains := obtains ++
+        s!"  obtain ⟨_a{i}, _fs{i}, rfl, _lookup{i}, _reads{i}, rfl⟩ := (Adequacy.record_comap_iff {codec} NativeDestruct.{ident declaration.name}).mp _in{i}\n" ++
+        s!"  obtain ⟨_, _lookup{i}'⟩ := getElem_of_some _lookup{i}\n" ++
+        s!"  simp only [{dataCodecSimps}, NativeDestruct.{ident declaration.name}, Option.map_some, Option.map_none,\n" ++
+        s!"    implies_true, true_and, and_true] at _reads{i}\n"
     | ty =>
       let (_, encode, _) ← dataScalar ty
       binders := binders ++ s!" ({name} : {typeText ty})"
@@ -693,6 +769,7 @@ private def dataSourceTheorem (program : Program) (namespace_ : String) (f : Ari
   let resultRelation ← match core.result with
     | .list element => do let (_, _, relation) ← dataScalar element; pure s!"(DataRelation.array {relation})"
     | .option element => do let (_, _, relation) ← dataScalar element; pure s!"(DataRelation.option {relation})"
+    | .named declaration => do let (_, relation, _) ← dataRecord program declaration; pure relation
     | ty => do let (_, _, relation) ← dataScalar ty; pure relation
   let callbacks ← dataCallbacks f.name keys names core.body
   let checkName := s!"SourceChecks.{ident f.name}"
@@ -745,9 +822,19 @@ private def dataSourceTheorem (program : Program) (namespace_ : String) (f : Ari
       let (codec, _, _) ← dataScalar element
       pure ("  refine ⟨Or.inr trivial, ⟨[], ?_⟩, Frames.trans F0 (by frames_auto)⟩\n" ++
         s!"  simpa [{simps}, {codec}] using Adequacy.option_codec_holds {codec} (heap := _) _ (fun _ _ => trivial)\n")
+    | .named declaration => do
+      let (codec, _, _) ← dataRecord program declaration
+      pure (s!"  refine ⟨Or.inr trivial, Adequacy.record_represents {codec} NativeDestruct.{ident declaration.name}\n" ++
+        "    (by wp_lookup) ?_, Frames.trans F0 (by frames_auto)⟩\n" ++
+        s!"  simp [{dataCodecSimps}, NativeDestruct.{ident declaration.name}, {simps}, fieldSet, List.lookup, *]\n")
     | ty => do
       let (codec, _, _) ← dataScalar ty
-      pure (s!"  exact ⟨Or.inr trivial, ⟨[], {codec}.holds.mpr ⟨⟨trivial, by simp [{simps}, {codec}]; try rfl⟩, rfl⟩⟩,\n" ++
+      let close := s!"simp [{simps}, {codec}]"
+      let cases := optionals.zipIdx.map fun (field, i) => s!"cases _o{i} : {field}"
+      let facts := String.join ((List.range optionals.length).map (s!", _o{·}"))
+      let split := if optionals.isEmpty then "" else
+        s!" | (({String.intercalate " <;> " cases}) <;> simp [{simps}, {codec}{facts}])"
+      pure (s!"  exact ⟨Or.inr trivial, ⟨[], {codec}.holds.mpr ⟨⟨trivial, by first | ({close}; done) | ({close}; rfl){split}⟩, rfl⟩⟩,\n" ++
         "    Frames.trans F0 (by frames_auto)⟩\n")
   proof := proof ++ closing
   let sourceList := "[" ++ String.intercalate ", " sourceArgs ++ "]"
@@ -755,11 +842,11 @@ private def dataSourceTheorem (program : Program) (namespace_ : String) (f : Ari
   let theoremName := if publicAlias then ident (f.name ++ "_source") else s!"{checkName}.source"
   let inputNames := String.join ((List.range core.params.length).filterMap fun i =>
     match core.params[i]? with
-    | some (.list _) => some s!" _in{i}"
+    | some (.list _) | some (.named _) => some s!" _in{i}"
     | _ => none)
   let explicit := String.join ((names.zip core.params).zipIdx.map fun ((name, ty), i) =>
     match ty with
-    | .list _ => s!" {name} _v{i} _fp{i}"
+    | .list _ | .named _ => s!" {name} _v{i} _fp{i}"
     | _ => s!" {name}")
   return s!"def {fn} : Ariadne.Function := {program_}.functions[{index}]!\n\n" ++
     s!"theorem {checkName}.wp{binders} (heap : Heap){inputs} :\n" ++

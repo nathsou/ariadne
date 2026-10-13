@@ -684,6 +684,31 @@ theorem DenotationChecks.«make» :
   unfold Extracted_records.Shallow.«make»
   simp only [Denote.function, CoreArtifacts.«make», Denote.term, Core.Var.get] <;> rfl
 
+def SourceChecks.«make».function : Ariadne.Function := _root_.Extracted_records.program.functions[0]!
+
+theorem SourceChecks.«make».wp («_x#arg» : _root_.Int) («_label#arg» : _root_.Ariadne.JSString) (heap : Heap) :
+    WPI _root_.Extracted_records.program { heap := heap } (.function "make") [.bigint «_x#arg», .string «_label#arg»] (fun result after =>
+      Represents ((DataRelation.record (DataRelation.field "x" DataRelation.int (DataRelation.field "label" DataRelation.string (DataRelation.defaultField "weight" (DataRelation.option DataRelation.int) DataRelation.fieldsNil)))).comap NativeDestruct.«Point») after.heap result («make» «_x#arg» «_label#arg») ∧ Frames heap after) := by
+  change WPI _root_.Extracted_records.program _ (.function SourceChecks.«make».function.name) _ _
+  refine WPI.function (by kernel_rfl) ?_
+  conv => arg 3; simp only [SourceChecks.«make».function, _root_.Extracted_records.program, List.getElem!_cons_zero, List.getElem!_cons_succ]
+  conv => arg 2; simp only [SourceChecks.«make».function, _root_.Extracted_records.program, List.getElem!_cons_zero, List.getElem!_cons_succ]
+  have F0 := Frames.bindArguments { heap := heap } SourceChecks.«make».function.params [.bigint «_x#arg», .string «_label#arg»]
+  have c0 : (Adequacy.bindArguments { heap := heap } SourceChecks.«make».function.params [.bigint «_x#arg», .string «_label#arg»]).heap[heap.length]? = some (.cell (.bigint «_x#arg»)) := by
+    simp [SourceChecks.«make».function, _root_.Extracted_records.program, List.getElem!_cons_zero, List.getElem!_cons_succ, Adequacy.bindArguments, State.declare, State.alloc]
+  have c1 : (Adequacy.bindArguments { heap := heap } SourceChecks.«make».function.params [.bigint «_x#arg», .string «_label#arg»]).heap[heap.length + 1]? = some (.cell (.string «_label#arg»)) := by
+    simp [SourceChecks.«make».function, _root_.Extracted_records.program, List.getElem!_cons_zero, List.getElem!_cons_succ, Adequacy.bindArguments, State.declare, State.alloc]
+  wp_data
+  refine ⟨Or.inr trivial, Adequacy.record_represents (Adequacy.FieldsCodec.cons "x" Adequacy.ScalarCodec.bigint (Adequacy.FieldsCodec.cons "label" Adequacy.ScalarCodec.string (Adequacy.FieldsCodec.default "weight" (Adequacy.ScalarCodec.option Adequacy.ScalarCodec.bigint) Adequacy.FieldsCodec.nil))) NativeDestruct.«Point»
+    (by wp_lookup) ?_, Frames.trans F0 (by frames_auto)⟩
+  simp [Adequacy.FieldsCodec.cons, Adequacy.FieldsCodec.default, Adequacy.FieldsCodec.nil, Adequacy.ScalarCodec.option, Adequacy.ScalarCodec.literal, Adequacy.ScalarCodec.bigint, Adequacy.ScalarCodec.number, Adequacy.ScalarCodec.boolean, Adequacy.ScalarCodec.string, NativeDestruct.«Point», «make», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, fieldSet, List.lookup, *]
+
+theorem «make_source» («_x#arg» : _root_.Int) («_label#arg» : _root_.Ariadne.JSString) (heap : Heap) :
+    ∃ result after, SourceInvokes _root_.Extracted_records.source { heap := heap } (.function "make")
+      [.bigint «_x#arg», .string «_label#arg»] result after ∧ Represents ((DataRelation.record (DataRelation.field "x" DataRelation.int (DataRelation.field "label" DataRelation.string (DataRelation.defaultField "weight" (DataRelation.option DataRelation.int) DataRelation.fieldsNil)))).comap NativeDestruct.«Point») after.heap result («make» «_x#arg» «_label#arg») ∧ Frames heap after := by
+  obtain ⟨result, after, invoked, post⟩ := (SourceChecks.«make».wp «_x#arg» «_label#arg» heap).elim
+  exact ⟨result, after, _root_.Extracted_records.certificate.transfer_invocation invoked, post⟩
+
 def JoinCore.«sum#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (Ariadne.Shallow.Core.Ty.named
     { name := "Point",
@@ -858,6 +883,37 @@ theorem DenotationChecks.«relabel» :
   unfold Extracted_records.Shallow.«relabel»
   simp only [Denote.function, CoreArtifacts.«relabel», Denote.term, Core.Var.get] <;> rfl
 
+def SourceChecks.«relabel».function : Ariadne.Function := _root_.Extracted_records.program.functions[3]!
+
+theorem SourceChecks.«relabel».wp («_point#arg» : NativeTypes.«Point») (_v0 : Value) (_fp0 : Heap.Footprint) («_label#arg» : _root_.Ariadne.JSString) (heap : Heap)
+    (_in0 : ((DataRelation.record (DataRelation.field "x" DataRelation.int (DataRelation.field "label" DataRelation.string (DataRelation.defaultField "weight" (DataRelation.option DataRelation.int) DataRelation.fieldsNil)))).comap NativeDestruct.«Point»).Holds heap _v0 «_point#arg» _fp0) :
+    WPI _root_.Extracted_records.program { heap := heap } (.function "relabel") [_v0, .string «_label#arg»] (fun result after =>
+      Represents ((DataRelation.record (DataRelation.field "x" DataRelation.int (DataRelation.field "label" DataRelation.string (DataRelation.defaultField "weight" (DataRelation.option DataRelation.int) DataRelation.fieldsNil)))).comap NativeDestruct.«Point») after.heap result («relabel» «_point#arg» «_label#arg») ∧ Frames heap after) := by
+  obtain ⟨_a0, _fs0, rfl, _lookup0, _reads0, rfl⟩ := (Adequacy.record_comap_iff (Adequacy.FieldsCodec.cons "x" Adequacy.ScalarCodec.bigint (Adequacy.FieldsCodec.cons "label" Adequacy.ScalarCodec.string (Adequacy.FieldsCodec.default "weight" (Adequacy.ScalarCodec.option Adequacy.ScalarCodec.bigint) Adequacy.FieldsCodec.nil))) NativeDestruct.«Point»).mp _in0
+  obtain ⟨_, _lookup0'⟩ := getElem_of_some _lookup0
+  simp only [Adequacy.FieldsCodec.cons, Adequacy.FieldsCodec.default, Adequacy.FieldsCodec.nil, Adequacy.ScalarCodec.option, Adequacy.ScalarCodec.literal, Adequacy.ScalarCodec.bigint, Adequacy.ScalarCodec.number, Adequacy.ScalarCodec.boolean, Adequacy.ScalarCodec.string, NativeDestruct.«Point», Option.map_some, Option.map_none,
+    implies_true, true_and, and_true] at _reads0
+  change WPI _root_.Extracted_records.program _ (.function SourceChecks.«relabel».function.name) _ _
+  refine WPI.function (by kernel_rfl) ?_
+  conv => arg 3; simp only [SourceChecks.«relabel».function, _root_.Extracted_records.program, List.getElem!_cons_zero, List.getElem!_cons_succ]
+  conv => arg 2; simp only [SourceChecks.«relabel».function, _root_.Extracted_records.program, List.getElem!_cons_zero, List.getElem!_cons_succ]
+  have F0 := Frames.bindArguments { heap := heap } SourceChecks.«relabel».function.params [.ref _a0, .string «_label#arg»]
+  have c0 : (Adequacy.bindArguments { heap := heap } SourceChecks.«relabel».function.params [.ref _a0, .string «_label#arg»]).heap[heap.length]? = some (.cell (.ref _a0)) := by
+    simp [SourceChecks.«relabel».function, _root_.Extracted_records.program, List.getElem!_cons_zero, List.getElem!_cons_succ, Adequacy.bindArguments, State.declare, State.alloc]
+  have c1 : (Adequacy.bindArguments { heap := heap } SourceChecks.«relabel».function.params [.ref _a0, .string «_label#arg»]).heap[heap.length + 1]? = some (.cell (.string «_label#arg»)) := by
+    simp [SourceChecks.«relabel».function, _root_.Extracted_records.program, List.getElem!_cons_zero, List.getElem!_cons_succ, Adequacy.bindArguments, State.declare, State.alloc]
+  wp_data
+  refine ⟨Or.inr trivial, Adequacy.record_represents (Adequacy.FieldsCodec.cons "x" Adequacy.ScalarCodec.bigint (Adequacy.FieldsCodec.cons "label" Adequacy.ScalarCodec.string (Adequacy.FieldsCodec.default "weight" (Adequacy.ScalarCodec.option Adequacy.ScalarCodec.bigint) Adequacy.FieldsCodec.nil))) NativeDestruct.«Point»
+    (by wp_lookup) ?_, Frames.trans F0 (by frames_auto)⟩
+  simp [Adequacy.FieldsCodec.cons, Adequacy.FieldsCodec.default, Adequacy.FieldsCodec.nil, Adequacy.ScalarCodec.option, Adequacy.ScalarCodec.literal, Adequacy.ScalarCodec.bigint, Adequacy.ScalarCodec.number, Adequacy.ScalarCodec.boolean, Adequacy.ScalarCodec.string, NativeDestruct.«Point», «relabel», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, fieldSet, List.lookup, *]
+
+theorem «relabel_source» («_point#arg» : NativeTypes.«Point») (_v0 : Value) (_fp0 : Heap.Footprint) («_label#arg» : _root_.Ariadne.JSString) (heap : Heap)
+    (_in0 : ((DataRelation.record (DataRelation.field "x" DataRelation.int (DataRelation.field "label" DataRelation.string (DataRelation.defaultField "weight" (DataRelation.option DataRelation.int) DataRelation.fieldsNil)))).comap NativeDestruct.«Point»).Holds heap _v0 «_point#arg» _fp0) :
+    ∃ result after, SourceInvokes _root_.Extracted_records.source { heap := heap } (.function "relabel")
+      [_v0, .string «_label#arg»] result after ∧ Represents ((DataRelation.record (DataRelation.field "x" DataRelation.int (DataRelation.field "label" DataRelation.string (DataRelation.defaultField "weight" (DataRelation.option DataRelation.int) DataRelation.fieldsNil)))).comap NativeDestruct.«Point») after.heap result («relabel» «_point#arg» «_label#arg») ∧ Frames heap after := by
+  obtain ⟨result, after, invoked, post⟩ := (SourceChecks.«relabel».wp «_point#arg» _v0 _fp0 «_label#arg» heap _in0).elim
+  exact ⟨result, after, _root_.Extracted_records.certificate.transfer_invocation invoked, post⟩
+
 def CoreArtifacts.«tagged» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.named   { name := "Tagged",     shape := Ariadne.Shallow.Named.Shape.pair                (Ariadne.Shallow.Named.Shape.unit)                (Ariadne.Shallow.Named.Shape.pair (Ariadne.Shallow.Named.Shape.int) (Ariadne.Shallow.Named.Shape.unit)) }, body := (Core.Term.pack ({ name := "Tagged",   shape := Ariadne.Shallow.Named.Shape.pair              (Ariadne.Shallow.Named.Shape.unit)              (Ariadne.Shallow.Named.Shape.pair (Ariadne.Shallow.Named.Shape.int) (Ariadne.Shallow.Named.Shape.unit)) }) (Core.Term.pair Core.Term.unit (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) Core.Term.unit))) }
 
 theorem ElaborationChecks.«tagged» :
@@ -889,6 +945,29 @@ theorem DenotationChecks.«tagged» :
       Denote.function (interp := Interpretation.value) CoreArtifacts.«tagged» := by
   unfold Extracted_records.Shallow.«tagged»
   simp only [Denote.function, CoreArtifacts.«tagged», Denote.term, Core.Var.get] <;> rfl
+
+def SourceChecks.«tagged».function : Ariadne.Function := _root_.Extracted_records.program.functions[4]!
+
+theorem SourceChecks.«tagged».wp («_value#arg» : _root_.Int) (heap : Heap) :
+    WPI _root_.Extracted_records.program { heap := heap } (.function "tagged") [.bigint «_value#arg»] (fun result after =>
+      Represents ((DataRelation.record (DataRelation.field "kind" (DataRelation.literal (Value.string [111, 107])) (DataRelation.field "payload" DataRelation.int DataRelation.fieldsNil))).comap NativeDestruct.«Tagged») after.heap result («tagged» «_value#arg») ∧ Frames heap after) := by
+  change WPI _root_.Extracted_records.program _ (.function SourceChecks.«tagged».function.name) _ _
+  refine WPI.function (by kernel_rfl) ?_
+  conv => arg 3; simp only [SourceChecks.«tagged».function, _root_.Extracted_records.program, List.getElem!_cons_zero, List.getElem!_cons_succ]
+  conv => arg 2; simp only [SourceChecks.«tagged».function, _root_.Extracted_records.program, List.getElem!_cons_zero, List.getElem!_cons_succ]
+  have F0 := Frames.bindArguments { heap := heap } SourceChecks.«tagged».function.params [.bigint «_value#arg»]
+  have c0 : (Adequacy.bindArguments { heap := heap } SourceChecks.«tagged».function.params [.bigint «_value#arg»]).heap[heap.length]? = some (.cell (.bigint «_value#arg»)) := by
+    simp [SourceChecks.«tagged».function, _root_.Extracted_records.program, List.getElem!_cons_zero, List.getElem!_cons_succ, Adequacy.bindArguments, State.declare, State.alloc]
+  wp_data
+  refine ⟨Or.inr trivial, Adequacy.record_represents (Adequacy.FieldsCodec.cons "kind" (Adequacy.ScalarCodec.literal (Value.string [111, 107])) (Adequacy.FieldsCodec.cons "payload" Adequacy.ScalarCodec.bigint Adequacy.FieldsCodec.nil)) NativeDestruct.«Tagged»
+    (by wp_lookup) ?_, Frames.trans F0 (by frames_auto)⟩
+  simp [Adequacy.FieldsCodec.cons, Adequacy.FieldsCodec.default, Adequacy.FieldsCodec.nil, Adequacy.ScalarCodec.option, Adequacy.ScalarCodec.literal, Adequacy.ScalarCodec.bigint, Adequacy.ScalarCodec.number, Adequacy.ScalarCodec.boolean, Adequacy.ScalarCodec.string, NativeDestruct.«Tagged», «tagged», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, fieldSet, List.lookup, *]
+
+theorem «tagged_source» («_value#arg» : _root_.Int) (heap : Heap) :
+    ∃ result after, SourceInvokes _root_.Extracted_records.source { heap := heap } (.function "tagged")
+      [.bigint «_value#arg»] result after ∧ Represents ((DataRelation.record (DataRelation.field "kind" (DataRelation.literal (Value.string [111, 107])) (DataRelation.field "payload" DataRelation.int DataRelation.fieldsNil))).comap NativeDestruct.«Tagged») after.heap result («tagged» «_value#arg») ∧ Frames heap after := by
+  obtain ⟨result, after, invoked, post⟩ := (SourceChecks.«tagged».wp «_value#arg» heap).elim
+  exact ⟨result, after, _root_.Extracted_records.certificate.transfer_invocation invoked, post⟩
 
 def CoreArtifacts.«tagName» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.named    { name := "Tagged",      shape := Ariadne.Shallow.Named.Shape.pair                 (Ariadne.Shallow.Named.Shape.unit)                 (Ariadne.Shallow.Named.Shape.pair                   (Ariadne.Shallow.Named.Shape.int)                   (Ariadne.Shallow.Named.Shape.unit)) }], result := Ariadne.Shallow.Core.Ty.string, body := (Core.Term.string [111, 107]) }
 
@@ -922,6 +1001,34 @@ theorem DenotationChecks.«tagName» :
   unfold Extracted_records.Shallow.«tagName»
   simp only [Denote.function, CoreArtifacts.«tagName», Denote.term, Core.Var.get] <;> rfl
 
+def SourceChecks.«tagName».function : Ariadne.Function := _root_.Extracted_records.program.functions[5]!
+
+theorem SourceChecks.«tagName».wp («_value#arg» : NativeTypes.«Tagged») (_v0 : Value) (_fp0 : Heap.Footprint) (heap : Heap)
+    (_in0 : ((DataRelation.record (DataRelation.field "kind" (DataRelation.literal (Value.string [111, 107])) (DataRelation.field "payload" DataRelation.int DataRelation.fieldsNil))).comap NativeDestruct.«Tagged»).Holds heap _v0 «_value#arg» _fp0) :
+    WPI _root_.Extracted_records.program { heap := heap } (.function "tagName") [_v0] (fun result after =>
+      Represents DataRelation.string after.heap result («tagName» «_value#arg») ∧ Frames heap after) := by
+  obtain ⟨_a0, _fs0, rfl, _lookup0, _reads0, rfl⟩ := (Adequacy.record_comap_iff (Adequacy.FieldsCodec.cons "kind" (Adequacy.ScalarCodec.literal (Value.string [111, 107])) (Adequacy.FieldsCodec.cons "payload" Adequacy.ScalarCodec.bigint Adequacy.FieldsCodec.nil)) NativeDestruct.«Tagged»).mp _in0
+  obtain ⟨_, _lookup0'⟩ := getElem_of_some _lookup0
+  simp only [Adequacy.FieldsCodec.cons, Adequacy.FieldsCodec.default, Adequacy.FieldsCodec.nil, Adequacy.ScalarCodec.option, Adequacy.ScalarCodec.literal, Adequacy.ScalarCodec.bigint, Adequacy.ScalarCodec.number, Adequacy.ScalarCodec.boolean, Adequacy.ScalarCodec.string, NativeDestruct.«Tagged», Option.map_some, Option.map_none,
+    implies_true, true_and, and_true] at _reads0
+  change WPI _root_.Extracted_records.program _ (.function SourceChecks.«tagName».function.name) _ _
+  refine WPI.function (by kernel_rfl) ?_
+  conv => arg 3; simp only [SourceChecks.«tagName».function, _root_.Extracted_records.program, List.getElem!_cons_zero, List.getElem!_cons_succ]
+  conv => arg 2; simp only [SourceChecks.«tagName».function, _root_.Extracted_records.program, List.getElem!_cons_zero, List.getElem!_cons_succ]
+  have F0 := Frames.bindArguments { heap := heap } SourceChecks.«tagName».function.params [.ref _a0]
+  have c0 : (Adequacy.bindArguments { heap := heap } SourceChecks.«tagName».function.params [.ref _a0]).heap[heap.length]? = some (.cell (.ref _a0)) := by
+    simp [SourceChecks.«tagName».function, _root_.Extracted_records.program, List.getElem!_cons_zero, List.getElem!_cons_succ, Adequacy.bindArguments, State.declare, State.alloc]
+  wp_data
+  exact ⟨Or.inr trivial, ⟨[], Adequacy.ScalarCodec.string.holds.mpr ⟨⟨trivial, by first | (simp [«tagName», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, Adequacy.ScalarCodec.string]; done) | (simp [«tagName», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, Adequacy.ScalarCodec.string]; rfl)⟩, rfl⟩⟩,
+    Frames.trans F0 (by frames_auto)⟩
+
+theorem «tagName_source» («_value#arg» : NativeTypes.«Tagged») (_v0 : Value) (_fp0 : Heap.Footprint) (heap : Heap)
+    (_in0 : ((DataRelation.record (DataRelation.field "kind" (DataRelation.literal (Value.string [111, 107])) (DataRelation.field "payload" DataRelation.int DataRelation.fieldsNil))).comap NativeDestruct.«Tagged»).Holds heap _v0 «_value#arg» _fp0) :
+    ∃ result after, SourceInvokes _root_.Extracted_records.source { heap := heap } (.function "tagName")
+      [_v0] result after ∧ Represents DataRelation.string after.heap result («tagName» «_value#arg») ∧ Frames heap after := by
+  obtain ⟨result, after, invoked, post⟩ := (SourceChecks.«tagName».wp «_value#arg» _v0 _fp0 heap _in0).elim
+  exact ⟨result, after, _root_.Extracted_records.certificate.transfer_invocation invoked, post⟩
+
 def CoreArtifacts.«weird» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.int], result := Ariadne.Shallow.Core.Ty.named   { name := "Weird",     shape := Ariadne.Shallow.Named.Shape.pair                (Ariadne.Shallow.Named.Shape.int)                (Ariadne.Shallow.Named.Shape.pair                  (Ariadne.Shallow.Named.Shape.string)                  (Ariadne.Shallow.Named.Shape.pair                    (Ariadne.Shallow.Named.Shape.int)                    (Ariadne.Shallow.Named.Shape.unit))) }, body := (Core.Term.pack ({ name := "Weird",   shape := Ariadne.Shallow.Named.Shape.pair              (Ariadne.Shallow.Named.Shape.int)              (Ariadne.Shallow.Named.Shape.pair                (Ariadne.Shallow.Named.Shape.string)                (Ariadne.Shallow.Named.Shape.pair                  (Ariadne.Shallow.Named.Shape.int)                  (Ariadne.Shallow.Named.Shape.unit))) }) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.string [97, 98, 99]) (Core.Term.pair (Core.Term.int (2)) Core.Term.unit)))) }
 
 theorem ElaborationChecks.«weird» :
@@ -954,6 +1061,29 @@ theorem DenotationChecks.«weird» :
   unfold Extracted_records.Shallow.«weird»
   simp only [Denote.function, CoreArtifacts.«weird», Denote.term, Core.Var.get] <;> rfl
 
+def SourceChecks.«weird».function : Ariadne.Function := _root_.Extracted_records.program.functions[6]!
+
+theorem SourceChecks.«weird».wp («_length#arg» : _root_.Int) (heap : Heap) :
+    WPI _root_.Extracted_records.program { heap := heap } (.function "weird") [.bigint «_length#arg»] (fun result after =>
+      Represents ((DataRelation.record (DataRelation.field "length" DataRelation.int (DataRelation.field "size" DataRelation.string (DataRelation.field "rec" DataRelation.int DataRelation.fieldsNil)))).comap NativeDestruct.«Weird») after.heap result («weird» «_length#arg») ∧ Frames heap after) := by
+  change WPI _root_.Extracted_records.program _ (.function SourceChecks.«weird».function.name) _ _
+  refine WPI.function (by kernel_rfl) ?_
+  conv => arg 3; simp only [SourceChecks.«weird».function, _root_.Extracted_records.program, List.getElem!_cons_zero, List.getElem!_cons_succ]
+  conv => arg 2; simp only [SourceChecks.«weird».function, _root_.Extracted_records.program, List.getElem!_cons_zero, List.getElem!_cons_succ]
+  have F0 := Frames.bindArguments { heap := heap } SourceChecks.«weird».function.params [.bigint «_length#arg»]
+  have c0 : (Adequacy.bindArguments { heap := heap } SourceChecks.«weird».function.params [.bigint «_length#arg»]).heap[heap.length]? = some (.cell (.bigint «_length#arg»)) := by
+    simp [SourceChecks.«weird».function, _root_.Extracted_records.program, List.getElem!_cons_zero, List.getElem!_cons_succ, Adequacy.bindArguments, State.declare, State.alloc]
+  wp_data
+  refine ⟨Or.inr trivial, Adequacy.record_represents (Adequacy.FieldsCodec.cons "length" Adequacy.ScalarCodec.bigint (Adequacy.FieldsCodec.cons "size" Adequacy.ScalarCodec.string (Adequacy.FieldsCodec.cons "rec" Adequacy.ScalarCodec.bigint Adequacy.FieldsCodec.nil))) NativeDestruct.«Weird»
+    (by wp_lookup) ?_, Frames.trans F0 (by frames_auto)⟩
+  simp [Adequacy.FieldsCodec.cons, Adequacy.FieldsCodec.default, Adequacy.FieldsCodec.nil, Adequacy.ScalarCodec.option, Adequacy.ScalarCodec.literal, Adequacy.ScalarCodec.bigint, Adequacy.ScalarCodec.number, Adequacy.ScalarCodec.boolean, Adequacy.ScalarCodec.string, NativeDestruct.«Weird», «weird», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, fieldSet, List.lookup, *]
+
+theorem «weird_source» («_length#arg» : _root_.Int) (heap : Heap) :
+    ∃ result after, SourceInvokes _root_.Extracted_records.source { heap := heap } (.function "weird")
+      [.bigint «_length#arg»] result after ∧ Represents ((DataRelation.record (DataRelation.field "length" DataRelation.int (DataRelation.field "size" DataRelation.string (DataRelation.field "rec" DataRelation.int DataRelation.fieldsNil)))).comap NativeDestruct.«Weird») after.heap result («weird» «_length#arg») ∧ Frames heap after := by
+  obtain ⟨result, after, invoked, post⟩ := (SourceChecks.«weird».wp «_length#arg» heap).elim
+  exact ⟨result, after, _root_.Extracted_records.certificate.transfer_invocation invoked, post⟩
+
 def CoreArtifacts.«fields» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.named    { name := "Weird",      shape := Ariadne.Shallow.Named.Shape.pair                 (Ariadne.Shallow.Named.Shape.int)                 (Ariadne.Shallow.Named.Shape.pair                   (Ariadne.Shallow.Named.Shape.string)                   (Ariadne.Shallow.Named.Shape.pair                     (Ariadne.Shallow.Named.Shape.int)                     (Ariadne.Shallow.Named.Shape.unit))) }], result := Ariadne.Shallow.Core.Ty.int, body := (Core.Term.binary (Ariadne.Shallow.Core.Binary.intAdd) (Core.Term.fst (Core.Term.unpack (Core.Term.var (Ariadne.Shallow.Core.Var.here)))) (Core.Term.fst (Core.Term.snd (Core.Term.snd (Core.Term.unpack (Core.Term.var (Ariadne.Shallow.Core.Var.here))))))) }
 
 theorem ElaborationChecks.«fields» :
@@ -985,6 +1115,34 @@ theorem DenotationChecks.«fields» :
       Denote.function (interp := Interpretation.value) CoreArtifacts.«fields» := by
   unfold Extracted_records.Shallow.«fields»
   simp only [Denote.function, CoreArtifacts.«fields», Denote.term, Core.Var.get] <;> rfl
+
+def SourceChecks.«fields».function : Ariadne.Function := _root_.Extracted_records.program.functions[7]!
+
+theorem SourceChecks.«fields».wp («_value#arg» : NativeTypes.«Weird») (_v0 : Value) (_fp0 : Heap.Footprint) (heap : Heap)
+    (_in0 : ((DataRelation.record (DataRelation.field "length" DataRelation.int (DataRelation.field "size" DataRelation.string (DataRelation.field "rec" DataRelation.int DataRelation.fieldsNil)))).comap NativeDestruct.«Weird»).Holds heap _v0 «_value#arg» _fp0) :
+    WPI _root_.Extracted_records.program { heap := heap } (.function "fields") [_v0] (fun result after =>
+      Represents DataRelation.int after.heap result («fields» «_value#arg») ∧ Frames heap after) := by
+  obtain ⟨_a0, _fs0, rfl, _lookup0, _reads0, rfl⟩ := (Adequacy.record_comap_iff (Adequacy.FieldsCodec.cons "length" Adequacy.ScalarCodec.bigint (Adequacy.FieldsCodec.cons "size" Adequacy.ScalarCodec.string (Adequacy.FieldsCodec.cons "rec" Adequacy.ScalarCodec.bigint Adequacy.FieldsCodec.nil))) NativeDestruct.«Weird»).mp _in0
+  obtain ⟨_, _lookup0'⟩ := getElem_of_some _lookup0
+  simp only [Adequacy.FieldsCodec.cons, Adequacy.FieldsCodec.default, Adequacy.FieldsCodec.nil, Adequacy.ScalarCodec.option, Adequacy.ScalarCodec.literal, Adequacy.ScalarCodec.bigint, Adequacy.ScalarCodec.number, Adequacy.ScalarCodec.boolean, Adequacy.ScalarCodec.string, NativeDestruct.«Weird», Option.map_some, Option.map_none,
+    implies_true, true_and, and_true] at _reads0
+  change WPI _root_.Extracted_records.program _ (.function SourceChecks.«fields».function.name) _ _
+  refine WPI.function (by kernel_rfl) ?_
+  conv => arg 3; simp only [SourceChecks.«fields».function, _root_.Extracted_records.program, List.getElem!_cons_zero, List.getElem!_cons_succ]
+  conv => arg 2; simp only [SourceChecks.«fields».function, _root_.Extracted_records.program, List.getElem!_cons_zero, List.getElem!_cons_succ]
+  have F0 := Frames.bindArguments { heap := heap } SourceChecks.«fields».function.params [.ref _a0]
+  have c0 : (Adequacy.bindArguments { heap := heap } SourceChecks.«fields».function.params [.ref _a0]).heap[heap.length]? = some (.cell (.ref _a0)) := by
+    simp [SourceChecks.«fields».function, _root_.Extracted_records.program, List.getElem!_cons_zero, List.getElem!_cons_succ, Adequacy.bindArguments, State.declare, State.alloc]
+  wp_data
+  exact ⟨Or.inr trivial, ⟨[], Adequacy.ScalarCodec.bigint.holds.mpr ⟨⟨trivial, by first | (simp [«fields», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, Adequacy.ScalarCodec.bigint]; done) | (simp [«fields», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, Adequacy.ScalarCodec.bigint]; rfl)⟩, rfl⟩⟩,
+    Frames.trans F0 (by frames_auto)⟩
+
+theorem «fields_source» («_value#arg» : NativeTypes.«Weird») (_v0 : Value) (_fp0 : Heap.Footprint) (heap : Heap)
+    (_in0 : ((DataRelation.record (DataRelation.field "length" DataRelation.int (DataRelation.field "size" DataRelation.string (DataRelation.field "rec" DataRelation.int DataRelation.fieldsNil)))).comap NativeDestruct.«Weird»).Holds heap _v0 «_value#arg» _fp0) :
+    ∃ result after, SourceInvokes _root_.Extracted_records.source { heap := heap } (.function "fields")
+      [_v0] result after ∧ Represents DataRelation.int after.heap result («fields» «_value#arg») ∧ Frames heap after := by
+  obtain ⟨result, after, invoked, post⟩ := (SourceChecks.«fields».wp «_value#arg» _v0 _fp0 heap _in0).elim
+  exact ⟨result, after, _root_.Extracted_records.certificate.transfer_invocation invoked, post⟩
 
 def CoreArtifacts.«duplicate» : Core.Function := { params := [], result := Ariadne.Shallow.Core.Ty.named   { name := "Point",     shape := Ariadne.Shallow.Named.Shape.pair                (Ariadne.Shallow.Named.Shape.int)                (Ariadne.Shallow.Named.Shape.pair                  (Ariadne.Shallow.Named.Shape.string)                  (Ariadne.Shallow.Named.Shape.pair                    (Ariadne.Shallow.Named.Shape.option (Ariadne.Shallow.Named.Shape.int))                    (Ariadne.Shallow.Named.Shape.unit))) }, body := (Core.Term.pack ({ name := "Point",   shape := Ariadne.Shallow.Named.Shape.pair              (Ariadne.Shallow.Named.Shape.int)              (Ariadne.Shallow.Named.Shape.pair                (Ariadne.Shallow.Named.Shape.string)                (Ariadne.Shallow.Named.Shape.pair                  (Ariadne.Shallow.Named.Shape.option (Ariadne.Shallow.Named.Shape.int))                  (Ariadne.Shallow.Named.Shape.unit))) }) (Core.Term.pair (Core.Term.int (2)) (Core.Term.pair (Core.Term.string [108, 97, 115, 116]) (Core.Term.pair (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.unit) "undefined" Core.Term.unit Core.Term.none) Core.Term.unit)))) }
 
@@ -1019,6 +1177,27 @@ theorem DenotationChecks.«duplicate» :
   unfold Extracted_records.Shallow.«duplicate»
   simp only [Denote.function, CoreArtifacts.«duplicate», Denote.term, Core.Var.get] <;> rfl
 
+def SourceChecks.«duplicate».function : Ariadne.Function := _root_.Extracted_records.program.functions[8]!
+
+theorem SourceChecks.«duplicate».wp (heap : Heap) :
+    WPI _root_.Extracted_records.program { heap := heap } (.function "duplicate") [] (fun result after =>
+      Represents ((DataRelation.record (DataRelation.field "x" DataRelation.int (DataRelation.field "label" DataRelation.string (DataRelation.defaultField "weight" (DataRelation.option DataRelation.int) DataRelation.fieldsNil)))).comap NativeDestruct.«Point») after.heap result («duplicate») ∧ Frames heap after) := by
+  change WPI _root_.Extracted_records.program _ (.function SourceChecks.«duplicate».function.name) _ _
+  refine WPI.function (by kernel_rfl) ?_
+  conv => arg 3; simp only [SourceChecks.«duplicate».function, _root_.Extracted_records.program, List.getElem!_cons_zero, List.getElem!_cons_succ]
+  conv => arg 2; simp only [SourceChecks.«duplicate».function, _root_.Extracted_records.program, List.getElem!_cons_zero, List.getElem!_cons_succ]
+  have F0 := Frames.bindArguments { heap := heap } SourceChecks.«duplicate».function.params []
+  wp_data
+  refine ⟨Or.inr trivial, Adequacy.record_represents (Adequacy.FieldsCodec.cons "x" Adequacy.ScalarCodec.bigint (Adequacy.FieldsCodec.cons "label" Adequacy.ScalarCodec.string (Adequacy.FieldsCodec.default "weight" (Adequacy.ScalarCodec.option Adequacy.ScalarCodec.bigint) Adequacy.FieldsCodec.nil))) NativeDestruct.«Point»
+    (by wp_lookup) ?_, Frames.trans F0 (by frames_auto)⟩
+  simp [Adequacy.FieldsCodec.cons, Adequacy.FieldsCodec.default, Adequacy.FieldsCodec.nil, Adequacy.ScalarCodec.option, Adequacy.ScalarCodec.literal, Adequacy.ScalarCodec.bigint, Adequacy.ScalarCodec.number, Adequacy.ScalarCodec.boolean, Adequacy.ScalarCodec.string, NativeDestruct.«Point», «duplicate», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, fieldSet, List.lookup, *]
+
+theorem «duplicate_source» (heap : Heap) :
+    ∃ result after, SourceInvokes _root_.Extracted_records.source { heap := heap } (.function "duplicate")
+      [] result after ∧ Represents ((DataRelation.record (DataRelation.field "x" DataRelation.int (DataRelation.field "label" DataRelation.string (DataRelation.defaultField "weight" (DataRelation.option DataRelation.int) DataRelation.fieldsNil)))).comap NativeDestruct.«Point») after.heap result («duplicate») ∧ Frames heap after := by
+  obtain ⟨result, after, invoked, post⟩ := (SourceChecks.«duplicate».wp heap).elim
+  exact ⟨result, after, _root_.Extracted_records.certificate.transfer_invocation invoked, post⟩
+
 def CoreArtifacts.«empty» : Core.Function := { params := [], result := Ariadne.Shallow.Core.Ty.named { name := "Empty", shape := Ariadne.Shallow.Named.Shape.unit }, body := (Core.Term.pack ({ name := "Empty", shape := Ariadne.Shallow.Named.Shape.unit }) Core.Term.unit) }
 
 theorem ElaborationChecks.«empty» :
@@ -1050,5 +1229,26 @@ theorem DenotationChecks.«empty» :
       Denote.function (interp := Interpretation.value) CoreArtifacts.«empty» := by
   unfold Extracted_records.Shallow.«empty»
   simp only [Denote.function, CoreArtifacts.«empty», Denote.term, Core.Var.get] <;> rfl
+
+def SourceChecks.«empty».function : Ariadne.Function := _root_.Extracted_records.program.functions[9]!
+
+theorem SourceChecks.«empty».wp (heap : Heap) :
+    WPI _root_.Extracted_records.program { heap := heap } (.function "empty") [] (fun result after =>
+      Represents ((DataRelation.record DataRelation.fieldsNil).comap NativeDestruct.«Empty») after.heap result («empty») ∧ Frames heap after) := by
+  change WPI _root_.Extracted_records.program _ (.function SourceChecks.«empty».function.name) _ _
+  refine WPI.function (by kernel_rfl) ?_
+  conv => arg 3; simp only [SourceChecks.«empty».function, _root_.Extracted_records.program, List.getElem!_cons_zero, List.getElem!_cons_succ]
+  conv => arg 2; simp only [SourceChecks.«empty».function, _root_.Extracted_records.program, List.getElem!_cons_zero, List.getElem!_cons_succ]
+  have F0 := Frames.bindArguments { heap := heap } SourceChecks.«empty».function.params []
+  wp_data
+  refine ⟨Or.inr trivial, Adequacy.record_represents Adequacy.FieldsCodec.nil NativeDestruct.«Empty»
+    (by wp_lookup) ?_, Frames.trans F0 (by frames_auto)⟩
+  simp [Adequacy.FieldsCodec.cons, Adequacy.FieldsCodec.default, Adequacy.FieldsCodec.nil, Adequacy.ScalarCodec.option, Adequacy.ScalarCodec.literal, Adequacy.ScalarCodec.bigint, Adequacy.ScalarCodec.number, Adequacy.ScalarCodec.boolean, Adequacy.ScalarCodec.string, NativeDestruct.«Empty», «empty», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, fieldSet, List.lookup, *]
+
+theorem «empty_source» (heap : Heap) :
+    ∃ result after, SourceInvokes _root_.Extracted_records.source { heap := heap } (.function "empty")
+      [] result after ∧ Represents ((DataRelation.record DataRelation.fieldsNil).comap NativeDestruct.«Empty») after.heap result («empty») ∧ Frames heap after := by
+  obtain ⟨result, after, invoked, post⟩ := (SourceChecks.«empty».wp heap).elim
+  exact ⟨result, after, _root_.Extracted_records.certificate.transfer_invocation invoked, post⟩
 
 end Extracted_records.Shallow

@@ -809,18 +809,26 @@ Because these theorems relate the emitted definitions directly to the source
 evaluator, the elaborator and the denotation are not trusted for these three
 programs. This is per-program evidence, not the general fundamental lemma.
 
-## Generated source theorems for array functions
+## Generated source theorems for array and record functions
 
 The extractor now also emits source theorems for a first data fragment, proved
 by stepping through the original evaluator rather than by a syntax-directed
 witness. A function qualifies when:
 
 - its body is one `return`;
-- its parameters are scalars or arrays of scalars;
-- its result is a scalar, an array of scalars, or an optional scalar;
-- its expression uses scalar operations, `length`, `slice()`, and the builtins
-  `filter`, `map`, `reduce`, `some`, `every` and `find`;
+- its parameters are scalars, arrays of scalars, or named records of scalars;
+- its result is a scalar, an array of scalars, an optional scalar, or a named
+  record of scalars;
+- its expression uses scalar operations, record literals, field reads,
+  `length`, `slice()`, and the builtins `filter`, `map`, `reduce`, `some`,
+  `every` and `find`;
 - each callback ignores its index and computes a scalar expression.
+
+A record of scalars has scalar, optional scalar or single-literal fields. Its
+relation selects fields by source name: required fields must be present, and
+optional fields may be absent or `undefined`. Generated proofs read a record
+through a field codec (`Adequacy.FieldsCodec`), which states the relation as
+lookups on the heap object's fields.
 
 For each such function `f`, the extractor emits:
 
@@ -839,21 +847,27 @@ Coverage today:
 | Module | Generated theorems |
 | --- | --- |
 | `arrays` | `transform`, `sum`, `find`, `allPositive`, `anyPositive`, `copy`, `constantMap`, `count`, `Int` |
+| `records` | `make`, `relabel`, `tagged`, `tagName`, `weird`, `fields`, `duplicate`, `empty` |
+| `optionals` | `tagPresent` |
 | `entryguards` | `observations` |
 | `state` | `pureCopy` |
 
-`scripts/data-source.mjs` checks this coverage and four kernel tamper cases. The
-changed item in each tamper is one of:
+`scripts/data-source.mjs` checks the `arrays` and `records` coverage and seven
+kernel tamper cases. The changed item in each tamper is one of:
 
 - the callback specification;
 - the claimed result;
 - a folded result;
-- the source function the theorem names.
+- the source function the theorem names;
+- a record field name, in both the statement and the proof;
+- a claimed record result;
+- a scalar result read from a record field.
 
 Not yet covered:
 
 - index-dependent callbacks;
 - `findIndex`, indexing, `slice` with bounds, and spreads;
-- records, maps, unions and loops;
+- records with non-scalar fields, arrays of records, and callbacks over records;
+- maps, unions and loops;
 - methods.
 

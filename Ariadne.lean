@@ -52,5 +52,6 @@ import Ariadne.Shallow.Adequacy.WP
 import Ariadne.Shallow.Adequacy.ScalarMap
 import Ariadne.Shallow.Adequacy.WPHeap
 import Ariadne.Shallow.Adequacy.WPData
+import Ariadne.Shallow.Adequacy.WPRecord
 import Ariadne.Shallow.Adequacy.WPAttr
 import Ariadne.Shallow.Adequacy.WPTactic

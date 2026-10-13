@@ -1019,7 +1019,7 @@ theorem SourceChecks.«sum».wp («_xs#arg» : (_root_.List _root_.Int)) (_v0 : 
   rintro results after ⟨rfl, kept, env'⟩
   try simp only at kept
   wp_data
-  exact ⟨Or.inr trivial, ⟨[], Adequacy.ScalarCodec.bigint.holds.mpr ⟨⟨trivial, by simp [«sum», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, Adequacy.ScalarCodec.bigint]; try rfl⟩, rfl⟩⟩,
+  exact ⟨Or.inr trivial, ⟨[], Adequacy.ScalarCodec.bigint.holds.mpr ⟨⟨trivial, by first | (simp [«sum», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, Adequacy.ScalarCodec.bigint]; done) | (simp [«sum», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, Adequacy.ScalarCodec.bigint]; rfl)⟩, rfl⟩⟩,
     Frames.trans F0 (by frames_auto)⟩
 
 theorem «sum_source» («_xs#arg» : (_root_.List _root_.Int)) (_v0 : Value) (_fp0 : Heap.Footprint) (heap : Heap)
@@ -1229,7 +1229,7 @@ theorem SourceChecks.«allPositive».wp («_xs#arg» : (_root_.List _root_.Int))
   rintro results after ⟨rfl, kept, env'⟩
   try simp only at kept
   wp_data
-  exact ⟨Or.inr trivial, ⟨[], Adequacy.ScalarCodec.boolean.holds.mpr ⟨⟨trivial, by simp [«allPositive», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, Adequacy.ScalarCodec.boolean]; try rfl⟩, rfl⟩⟩,
+  exact ⟨Or.inr trivial, ⟨[], Adequacy.ScalarCodec.boolean.holds.mpr ⟨⟨trivial, by first | (simp [«allPositive», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, Adequacy.ScalarCodec.boolean]; done) | (simp [«allPositive», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, Adequacy.ScalarCodec.boolean]; rfl)⟩, rfl⟩⟩,
     Frames.trans F0 (by frames_auto)⟩
 
 theorem «allPositive_source» («_xs#arg» : (_root_.List _root_.Int)) (_v0 : Value) (_fp0 : Heap.Footprint) (heap : Heap)
@@ -1300,7 +1300,7 @@ theorem SourceChecks.«anyPositive».wp («_xs#arg» : (_root_.List _root_.Int))
   rintro results after ⟨rfl, kept, env'⟩
   try simp only at kept
   wp_data
-  exact ⟨Or.inr trivial, ⟨[], Adequacy.ScalarCodec.boolean.holds.mpr ⟨⟨trivial, by simp [«anyPositive», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, Adequacy.ScalarCodec.boolean]; try rfl⟩, rfl⟩⟩,
+  exact ⟨Or.inr trivial, ⟨[], Adequacy.ScalarCodec.boolean.holds.mpr ⟨⟨trivial, by first | (simp [«anyPositive», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, Adequacy.ScalarCodec.boolean]; done) | (simp [«anyPositive», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, Adequacy.ScalarCodec.boolean]; rfl)⟩, rfl⟩⟩,
     Frames.trans F0 (by frames_auto)⟩
 
 theorem «anyPositive_source» («_xs#arg» : (_root_.List _root_.Int)) (_v0 : Value) (_fp0 : Heap.Footprint) (heap : Heap)
@@ -1591,7 +1591,7 @@ theorem SourceChecks.«count».wp («_xs#arg» : (_root_.List _root_.Int)) (_v0 
   have c0 : (Adequacy.bindArguments { heap := heap } SourceChecks.«count».function.params [.ref _a0]).heap[heap.length]? = some (.cell (.ref _a0)) := by
     simp [SourceChecks.«count».function, _root_.Extracted_arrays.program, List.getElem!_cons_zero, List.getElem!_cons_succ, Adequacy.bindArguments, State.declare, State.alloc]
   wp_data
-  exact ⟨Or.inr trivial, ⟨[], Adequacy.ScalarCodec.number.holds.mpr ⟨⟨trivial, by simp [«count», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, Adequacy.ScalarCodec.number]; try rfl⟩, rfl⟩⟩,
+  exact ⟨Or.inr trivial, ⟨[], Adequacy.ScalarCodec.number.holds.mpr ⟨⟨trivial, by first | (simp [«count», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, Adequacy.ScalarCodec.number]; done) | (simp [«count», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, Adequacy.ScalarCodec.number]; rfl)⟩, rfl⟩⟩,
     Frames.trans F0 (by frames_auto)⟩
 
 theorem «count_source» («_xs#arg» : (_root_.List _root_.Int)) (_v0 : Value) (_fp0 : Heap.Footprint) (heap : Heap)

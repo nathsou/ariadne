@@ -1443,6 +1443,34 @@ theorem DenotationChecks.«tagPresent» :
   unfold Extracted_optionals.Shallow.«tagPresent»
   simp only [Denote.function, CoreArtifacts.«tagPresent», Denote.term, Core.Var.get] <;> rfl
 
+def SourceChecks.«tagPresent».function : Ariadne.Function := _root_.Extracted_optionals.program.functions[15]!
+
+theorem SourceChecks.«tagPresent».wp («_value#arg» : NativeTypes.«OptionalTag») (_v0 : Value) (_fp0 : Heap.Footprint) (heap : Heap)
+    (_in0 : ((DataRelation.record (DataRelation.defaultField "kind" (DataRelation.option DataRelation.string) DataRelation.fieldsNil)).comap NativeDestruct.«OptionalTag»).Holds heap _v0 «_value#arg» _fp0) :
+    WPI _root_.Extracted_optionals.program { heap := heap } (.function "tagPresent") [_v0] (fun result after =>
+      Represents DataRelation.bool after.heap result («tagPresent» «_value#arg») ∧ Frames heap after) := by
+  obtain ⟨_a0, _fs0, rfl, _lookup0, _reads0, rfl⟩ := (Adequacy.record_comap_iff (Adequacy.FieldsCodec.default "kind" (Adequacy.ScalarCodec.option Adequacy.ScalarCodec.string) Adequacy.FieldsCodec.nil) NativeDestruct.«OptionalTag»).mp _in0
+  obtain ⟨_, _lookup0'⟩ := getElem_of_some _lookup0
+  simp only [Adequacy.FieldsCodec.cons, Adequacy.FieldsCodec.default, Adequacy.FieldsCodec.nil, Adequacy.ScalarCodec.option, Adequacy.ScalarCodec.literal, Adequacy.ScalarCodec.bigint, Adequacy.ScalarCodec.number, Adequacy.ScalarCodec.boolean, Adequacy.ScalarCodec.string, NativeDestruct.«OptionalTag», Option.map_some, Option.map_none,
+    implies_true, true_and, and_true] at _reads0
+  change WPI _root_.Extracted_optionals.program _ (.function SourceChecks.«tagPresent».function.name) _ _
+  refine WPI.function (by kernel_rfl) ?_
+  conv => arg 3; simp only [SourceChecks.«tagPresent».function, _root_.Extracted_optionals.program, List.getElem!_cons_zero, List.getElem!_cons_succ]
+  conv => arg 2; simp only [SourceChecks.«tagPresent».function, _root_.Extracted_optionals.program, List.getElem!_cons_zero, List.getElem!_cons_succ]
+  have F0 := Frames.bindArguments { heap := heap } SourceChecks.«tagPresent».function.params [.ref _a0]
+  have c0 : (Adequacy.bindArguments { heap := heap } SourceChecks.«tagPresent».function.params [.ref _a0]).heap[heap.length]? = some (.cell (.ref _a0)) := by
+    simp [SourceChecks.«tagPresent».function, _root_.Extracted_optionals.program, List.getElem!_cons_zero, List.getElem!_cons_succ, Adequacy.bindArguments, State.declare, State.alloc]
+  wp_data
+  exact ⟨Or.inr trivial, ⟨[], Adequacy.ScalarCodec.boolean.holds.mpr ⟨⟨trivial, by first | (simp [«tagPresent», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, Adequacy.ScalarCodec.boolean]; done) | (simp [«tagPresent», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, Adequacy.ScalarCodec.boolean]; rfl) | ((cases _o0 : «_value#arg».«kind») <;> simp [«tagPresent», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, Adequacy.ScalarCodec.boolean, _o0])⟩, rfl⟩⟩,
+    Frames.trans F0 (by frames_auto)⟩
+
+theorem «tagPresent_source» («_value#arg» : NativeTypes.«OptionalTag») (_v0 : Value) (_fp0 : Heap.Footprint) (heap : Heap)
+    (_in0 : ((DataRelation.record (DataRelation.defaultField "kind" (DataRelation.option DataRelation.string) DataRelation.fieldsNil)).comap NativeDestruct.«OptionalTag»).Holds heap _v0 «_value#arg» _fp0) :
+    ∃ result after, SourceInvokes _root_.Extracted_optionals.source { heap := heap } (.function "tagPresent")
+      [_v0] result after ∧ Represents DataRelation.bool after.heap result («tagPresent» «_value#arg») ∧ Frames heap after := by
+  obtain ⟨result, after, invoked, post⟩ := (SourceChecks.«tagPresent».wp «_value#arg» _v0 _fp0 heap _in0).elim
+  exact ⟨result, after, _root_.Extracted_optionals.certificate.transfer_invocation invoked, post⟩
+
 def CoreArtifacts.«unitField» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.named    { name := "UndefinedRecord",      shape := Ariadne.Shallow.Named.Shape.pair (Ariadne.Shallow.Named.Shape.unit) (Ariadne.Shallow.Named.Shape.unit) }], result := Ariadne.Shallow.Core.Ty.bool, body := (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.unit) "unitLeft" (Core.Term.fst (Core.Term.unpack (Core.Term.var (Ariadne.Shallow.Core.Var.here)))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.unit) "unitRight" Core.Term.unit (Core.Term.bool true))) }
 
 theorem ElaborationChecks.«unitField» :

@@ -353,7 +353,7 @@ theorem SourceChecks.«total».wp («_xs#arg» : (_root_.List _root_.Int)) (_v0 
   rintro results after ⟨rfl, kept, env'⟩
   try simp only at kept
   wp_data
-  exact ⟨Or.inr trivial, ⟨[], Adequacy.ScalarCodec.bigint.holds.mpr ⟨⟨trivial, by simp [«total», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, Adequacy.ScalarCodec.bigint]; try rfl⟩, rfl⟩⟩,
+  exact ⟨Or.inr trivial, ⟨[], Adequacy.ScalarCodec.bigint.holds.mpr ⟨⟨trivial, by first | (simp [«total», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, Adequacy.ScalarCodec.bigint]; done) | (simp [«total», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, Adequacy.ScalarCodec.bigint]; rfl)⟩, rfl⟩⟩,
     Frames.trans F0 (by frames_auto)⟩
 
 theorem «total_source» («_xs#arg» : (_root_.List _root_.Int)) (_v0 : Value) (_fp0 : Heap.Footprint) (heap : Heap)

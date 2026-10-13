@@ -1034,7 +1034,7 @@ theorem SourceChecks.«observations».wp («_left#arg» : (_root_.List _root_.In
   have c1 : (Adequacy.bindArguments { heap := heap } SourceChecks.«observations».function.params [.ref _a0, .ref _a1]).heap[heap.length + 1]? = some (.cell (.ref _a1)) := by
     simp [SourceChecks.«observations».function, _root_.Extracted_entryguards.program, List.getElem!_cons_zero, List.getElem!_cons_succ, Adequacy.bindArguments, State.declare, State.alloc]
   wp_data
-  exact ⟨Or.inr trivial, ⟨[], Adequacy.ScalarCodec.bigint.holds.mpr ⟨⟨trivial, by simp [«observations», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, Adequacy.ScalarCodec.bigint]; try rfl⟩, rfl⟩⟩,
+  exact ⟨Or.inr trivial, ⟨[], Adequacy.ScalarCodec.bigint.holds.mpr ⟨⟨trivial, by first | (simp [«observations», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, Adequacy.ScalarCodec.bigint]; done) | (simp [«observations», JSArray.map_unindexed, JSArray.filter_unindexed, JSArray.reduce_unindexed, JSArray.find_unindexed, JSArray.some_unindexed, JSArray.every_unindexed, Adequacy.ScalarCodec.bigint]; rfl)⟩, rfl⟩⟩,
     Frames.trans F0 (by frames_auto)⟩
 
 theorem «observations_source» («_left#arg» : (_root_.List _root_.Int)) (_v0 : Value) (_fp0 : Heap.Footprint) («_right#arg» : (_root_.List _root_.Int)) (_v1 : Value) (_fp1 : Heap.Footprint) (heap : Heap)

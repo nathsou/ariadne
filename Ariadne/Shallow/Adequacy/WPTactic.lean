@@ -2,6 +2,7 @@ import Ariadne.Shallow.Adequacy.WPAttr
 import Ariadne.Shallow.Adequacy.WP
 import Ariadne.Shallow.Adequacy.WPHeap
 import Ariadne.Shallow.Adequacy.WPData
+import Ariadne.Shallow.Adequacy.WPRecord
 
 /-!
 Automation for weakest-precondition proofs about concrete source bodies.
@@ -117,6 +118,9 @@ macro "wp_data" : tactic => `(tactic| (repeat ((fail_if_success (show _ ∧ _));
     | refine WPI.array_search (mode := "every") (Or.inr (Or.inl rfl)) (by wp_lookup) ?_
     | refine WPI.array_search (mode := "find") (Or.inr (Or.inr (Or.inl rfl))) (by wp_lookup) ?_
     | refine WPI.array_toReversed (by wp_lookup) ?_
+    | refine WPE.record ?_
+    | refine WPFields.nil ?_
+    | refine WPFields.cons (by decide) ?_
     | wp_step_by (wp_eval_data)) <;> try wp_reduce))
 
 set_option hygiene false in
