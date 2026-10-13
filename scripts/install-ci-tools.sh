@@ -6,7 +6,10 @@ tool_dir="${RUNNER_TEMP:?}/ariadne-tools"
 mkdir -p "$tool_dir"
 cd "$tool_dir"
 fetch() {
-  curl --proto '=https' --tlsv1.2 --fail --location --retry 3 "$1" -o "$2"
+  # Release downloads occasionally return a cached HTTP 500 for several seconds.
+  # Allow the transient response to expire; checksum failures still stop here.
+  curl --proto '=https' --tlsv1.2 --fail --location --connect-timeout 20 \
+    --retry 6 --retry-max-time 120 "$1" -o "$2"
   printf '%s  %s\n' "$3" "$2" | sha256sum --check --strict
 }
 fetch https://github.com/leanprover/elan/releases/download/v4.1.2/elan-x86_64-unknown-linux-gnu.tar.gz elan.tar.gz f81c2e48c1588d4612cd2c8851947898a45ac8d72748a07dff3a5694f1cf589b
