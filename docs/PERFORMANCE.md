@@ -60,6 +60,12 @@ The fresh-construction extension
 [#132](https://github.com/nathsou/ariadne/actions/runs/38362935992) passed in
 9m16s with 7,111 audited theorems; its preparation build and source/Int53 tamper
 phases took 23s and 23s/9s. All checks remain enabled.
+The method-certificate checkpoint
+[#136](https://github.com/nathsou/ariadne/actions/runs/38366654677) passed in
+9m44s with 7,278 audited theorems, all nine jobs and all 27 suites. Preparation
+build/regeneration took 42s and source/Int53 tamper phases took 18s/7s. This run
+also checked fourteen universal class witnesses and two method-certificate
+tamper cases, retaining every earlier check.
 
 Future work should profile parser sharing, use certificates with smaller replay
 steps, and prove a transition from cells to specialized typed state tuples. Measure these separately from native runtime

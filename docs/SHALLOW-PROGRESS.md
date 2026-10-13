@@ -264,6 +264,11 @@ CI #134 passed the parameter-frame checkpoint in 9m07s with 7,117 audited
 theorems and all 27 suites. Incremental build/regeneration took 26s;
 source/Int53 tamper phases took 19s/8s. Kernel test modules, examples and the
 audit also passed locally for that proof-only checkpoint.
+CI #136 passed the method-certificate checkpoint in 9m44s with 7,278 audited
+theorems, all nine jobs and all 27 suites. Its preparation build/regeneration
+took 42s; source/Int53 tamper phases took 18s/7s. The class suite checked fourteen
+universal witnesses and nine class/constructor tamper cases; entry guards checked
+17 native cases, 12 kernel alias cases and both forged method certificates.
 
 Frontend checkpoint: the complete `scripts/check.sh` suite passes with 1,217
 audited theorems, 42 native entry points, 64 generated programs, 51 scalar
