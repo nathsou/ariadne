@@ -144,10 +144,10 @@ composes those rules with array and Map selection: the original statement writes
 only the selected record root, retains the parent references and order, and
 matches the native lens replacement. `RepresentationMap` connects those rules
 to named native records through their constructor/destructor equations. A sole
-array projection increment on a one-field named numeric record now receives
+array projection increment or parameter addition on a one-field named numeric record receives
 universal source and wrapper witnesses over the actual emitted definition and
-computed guard. The projection suite checks six witnesses and nine forged
-state, guard and entry declarations against three one-function fixtures.
+computed guard. The projection suite checks eight witnesses and twelve forged
+state, guard and entry declarations against four one-function fixtures.
 General field-update witnesses and the checker fundamental lemma remain pending.
 
 CI #96 on `5e31ceb` passes in 11m23s, compared with baseline CI #82's 21m18s.

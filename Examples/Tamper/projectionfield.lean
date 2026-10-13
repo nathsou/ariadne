@@ -223,7 +223,7 @@ theorem «increment_source» («_rows#arg» : (_root_.List NativeTypes.«Row»))
   exact Adequacy.array_record_source _root_.Extracted_tamper_projectionfield.certificate EntryGuards.«increment».function
     _sourceHeap [.ref _sourceAddress, .number «_index#arg»] _sourceAddress «_rows#arg» _sourceFootprint «_index#arg» old replacement old.«count» (old.«count» + delta) ()
     (fun row : NativeTypes.«Row» => (row.«count», ())) "count" "+" "rows" "index"
-    (.literal (.number 1 (0)) ({ start := 112, stop := 114 })) (.number delta) (.number (old.«count» + delta)) ({ start := 95, stop := 99 }) ({ start := 100, stop := 105 }) ({ start := 95, stop := 106 }) ({ start := 95, stop := 112 }) ({ start := 95, stop := 112 }) ({ start := 91, stop := 117 })
+    (Ariadne.Expr.literal (Ariadne.Literal.number 1 0) { start := 112, stop := 114 }) (.number delta) (.number (old.«count» + delta)) ({ start := 95, stop := 99 }) ({ start := 100, stop := 105 }) ({ start := 95, stop := 106 }) ({ start := 95, stop := 112 }) ({ start := 95, stop := 112 }) ({ start := 91, stop := 117 })
     (by kernel_rfl) (by kernel_rfl) lookups.1 lookups.2 _sourceInput found rfl rfl
     (Adequacy.IgnoresField.nil "count") (by exact Evaluates.literal _ _ _ _)
     (by intro before same; cases same; rfl) rfl

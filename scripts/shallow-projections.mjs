@@ -50,7 +50,9 @@ try {
     '#check @Extracted_projections.Shallow.appendRow_source\n' +
     '#check @Extracted_projections.Shallow.SourceProjectionChecks.appendRow.wrapperSource\n' +
     '#check @Extracted_projections.Shallow.increment_source\n' +
-    '#check @Extracted_projections.Shallow.SourceProjectionChecks.increment.wrapperSource\n';
+    '#check @Extracted_projections.Shallow.SourceProjectionChecks.increment.wrapperSource\n' +
+    '#check @Extracted_projections.Shallow.addCount_source\n' +
+    '#check @Extracted_projections.Shallow.SourceProjectionChecks.addCount.wrapperSource\n';
   const expected = [];
   let count = 0;
   for (const [name, entries] of Object.entries(cases)) for (const input of entries) {
@@ -88,15 +90,15 @@ try {
   const result = spawnSync('lake', ['env', 'lean', path], {encoding: 'utf8', timeout: 120000, maxBuffer: 8e6});
   assert.equal(result.status, 0, result.stdout + result.stderr);
   assert.deepEqual(result.stdout.trim().split('\n').filter(line => line.startsWith('{')).map(JSON.parse), expected);
-  for (const [fixture, name] of [['projections', 'appendGroup'], ['projectionarray', 'appendRow'], ['projectionfield', 'increment']]) {
+  for (const [fixture, name] of [['projections', 'appendGroup'], ['projectionarray', 'appendRow'], ['projectionfield', 'increment'], ['projectionaddfield', 'addCount']]) {
     const original = await readFile(`Examples/Tamper/${fixture}.lean`, 'utf8');
     const start = original.indexOf(`theorem «${name}_source»`);
     assert.ok(start >= 0, 'the universal stateful source witness must be emitted');
     const end = original.indexOf(`theorem SourceProjectionChecks.«${name}».wrapperSource`, start);
     assert.ok(end > start);
     const declaration = original.slice(start, end);
-    const updated = declaration.match(name === 'increment' ? /  let replacement :[^\n]+/ : /  have updated :[^\n]+/)[0];
-    const alteredUpdates = name === 'increment' ? updated.replace('old.«count» + delta', 'old.«count»') :
+    const updated = declaration.match((name === 'increment' || name === 'addCount') ? /  let replacement :[^\n]+/ : /  have updated :[^\n]+/)[0];
+    const alteredUpdates = (name === 'increment' || name === 'addCount') ? updated.replace('old.«count» + delta', 'old.«count»') :
       updated.replace('old ++ [«_value#arg»]', 'old');
     assert.notEqual(updated, alteredUpdates);
     const alterations = [
@@ -113,5 +115,5 @@ try {
       assert.ok(refused.stdout.includes('error'), refused.stdout + refused.stderr);
     }
   }
-  console.log(`Shallow projections passed: ${count} three-way heap comparisons, retained element identities, 6 missing-element guards, 6 universal source witnesses, and 9 small-fixture tamper checks.`);
+  console.log(`Shallow projections passed: ${count} three-way heap comparisons, retained element identities, 6 missing-element guards, 8 universal source witnesses, and 12 small-fixture tamper checks.`);
 } finally { await rm(dir, {recursive: true, force: true}); }

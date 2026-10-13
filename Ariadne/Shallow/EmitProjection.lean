@@ -138,19 +138,36 @@ private def arraySourceTheorem (namespace_ : String) (f : Ariadne.Function) (cor
     s!"    ({theoremName}{String.join (names.map (" " ++ ·))} _sourceHeap _sourceAddress _sourceFootprint _sourceInput _sourceSafe) _entrySafe\n\n"
 
 
-/-- Field increments over a one-field named numeric record reuse the generic
+/-- Field increments and parameter additions over a one-field named numeric record reuse the generic
 original-statement transfer and the actual emitted native constructor. -/
 private def fieldSourceTheorem (namespace_ : String) (f : Ariadne.Function) (core : Core.Function)
     (params : String) (names : List String) (publicAlias : Bool) : Option String := do
   if !f.exported then none else pure ()
-  let [rowParam, keyParam] := f.params | none
-  let [rows, key] := names | none
-  let [.list (.named declaration), .number] := core.params | none
+  let (rowParam, keyParam, extraParam) ← match f.params with
+    | [row, key] => some (row, key, none)
+    | [row, key, value] => some (row, key, some value)
+    | _ => none
+  let (rows, key, extraName) ← match names with
+    | [rows, key] => some (rows, key, none)
+    | [rows, key, value] => some (rows, key, some value)
+    | _ => none
+  let declaration ← match core.params with
+    | [.list (.named declaration), .number] => some declaration
+    | [.list (.named declaration), .number, .number] => some declaration
+    | _ => none
   if declaration.shape != .pair .number .unit || declaration.name.startsWith "#" ||
       core.result != .pair .unit (.pair (.list (.named declaration)) .unit) then none else pure ()
   let .block [.update (.member (.index (.var rowsName rowsSpan) (.var keyName keySpan) indexSpan)
-      field fieldSpan) "+" (.literal (.number coefficient exponent) literalSpan) statementSpan] blockSpan := f.body | none
+      field fieldSpan) "+" operand statementSpan] blockSpan := f.body | none
   if rowsName != rowParam.name || keyName != keyParam.name then none else pure ()
+  let (delta, operandProof) ← match operand, extraParam, extraName with
+    | .literal (.number coefficient exponent) _, none, none =>
+      some (s!"Float.Model.ofScientific {coefficient} ({exponent})",
+        "(by exact Evaluates.literal _ _ _ _)")
+    | .var valueName valueSpan, some valueParam, some value =>
+      if valueName != valueParam.name then none else
+        some (value, s!"(Evaluates.variable _ _ ({compact valueName}) ({compact valueSpan}) (.number {value}) (State.lookup_present lookups.2.2) lookups.2.2)")
+    | _, _, _ => none
   let function := "EntryGuards." ++ ident f.name ++ ".function"
   let check := "SourceProjectionChecks." ++ ident f.name
   let native := "NativeTypes." ++ ident declaration.name
@@ -162,7 +179,18 @@ private def fieldSourceTheorem (namespace_ : String) (f : Ariadne.Function) (cor
   let theoremName := if publicAlias then ident (f.name ++ "_source") else check ++ ".source"
   let decode := s!"(fun row : {native} => (row.{ident field}, ()))"
   let layout := s!"((DataRelation.field {compact field} DataRelation.number DataRelation.fieldsNil).record.comap {decode}).array"
-  let args := s!"[.ref _sourceAddress, .number {key}]"
+  let extraArgument := extraName.map (fun name => s!", .number {name}") |>.getD ""
+  let args := s!"[.ref _sourceAddress, .number {key}{extraArgument}]"
+  let extraLookup := match extraParam, extraName with
+    | some valueParam, some value =>
+      s!" ∧\n      (Adequacy.bindArguments \u007bheap := _sourceHeap\u007d {function}.params {args}).lookup {compact valueParam.name} = .ok (.number {value})"
+    | _, _ => ""
+  let lookupProof := match extraParam, extraName with
+    | some valueParam, some value =>
+      s!"Adequacy.bindArguments_three _ ({compact rowParam}) ({compact keyParam}) ({compact valueParam}) (.ref _sourceAddress) (.number {key}) (.number {value}) (by decide) (by decide) (by decide)"
+    | _, _ =>
+      s!"Adequacy.bindArguments_two _ ({compact rowParam}) ({compact keyParam}) (.ref _sourceAddress) (.number {key}) (by decide)"
+  let keyLookup := if extraParam.isSome then "lookups.2.1" else "lookups.2"
   let spans := String.join ([rowsSpan, keySpan, indexSpan, fieldSpan, statementSpan, blockSpan].map
     (fun span => " (" ++ compact span ++ ")"))
   return s!"theorem {check}.parameters : {function}.params = {compact f.params} := by kernel_rfl\n\n" ++
@@ -183,21 +211,21 @@ private def fieldSourceTheorem (namespace_ : String) (f : Ariadne.Function) (cor
     "      simp [found, Safety.binarySafe] at accepted\n" ++
     "    | some old => exact ⟨old, rfl⟩\n" ++
     "  obtain ⟨old, found⟩ := selected\n" ++
-    s!"  let delta := Float.Model.ofScientific {coefficient} ({exponent})\n" ++
+    s!"  let delta := {delta}\n" ++
     s!"  let replacement : {native} := ⟨old.{ident field} + delta⟩\n" ++
     s!"  have updated : ({call}).2.1 = JSArray.map (fun item position => if position == {key} then replacement else item) {rows} := by\n" ++
     s!"    simp [{ident f.name}, found, {construct}, {destruct}, replacement, delta]\n" ++
     "  rw [updated]\n" ++
     s!"  have lookups : (Adequacy.bindArguments \u007bheap := _sourceHeap\u007d {function}.params {args}).lookup {compact rowsName} = .ok (.ref _sourceAddress) ∧\n" ++
-    s!"      (Adequacy.bindArguments \u007bheap := _sourceHeap\u007d {function}.params {args}).lookup {compact keyName} = .ok (.number {key}) := by\n" ++
+    s!"      (Adequacy.bindArguments \u007bheap := _sourceHeap\u007d {function}.params {args}).lookup {compact keyName} = .ok (.number {key}){extraLookup} := by\n" ++
     s!"    rw [{check}.parameters]\n" ++
-    s!"    exact Adequacy.bindArguments_two _ ({compact rowParam}) ({compact keyParam}) (.ref _sourceAddress) (.number {key}) (by decide)\n" ++
+    s!"    exact {lookupProof}\n" ++
     s!"  exact Adequacy.array_record_source _root_.{namespace_}.certificate {function}\n" ++
     s!"    _sourceHeap {args} _sourceAddress {rows} _sourceFootprint {key} old replacement old.{ident field} (old.{ident field} + delta) ()\n" ++
     s!"    {decode} {compact field} \"+\" {compact rowsName} {compact keyName}\n" ++
-    s!"    (.literal (.number {coefficient} ({exponent})) ({compact literalSpan})) (.number delta) (.number (old.{ident field} + delta)){spans}\n" ++
-    "    (by kernel_rfl) (by kernel_rfl) lookups.1 lookups.2 _sourceInput found rfl rfl\n" ++
-    s!"    (Adequacy.IgnoresField.nil {compact field}) (by exact Evaluates.literal _ _ _ _)\n" ++
+    s!"    ({compact operand}) (.number delta) (.number (old.{ident field} + delta)){spans}\n" ++
+    s!"    (by kernel_rfl) (by kernel_rfl) lookups.1 {keyLookup} _sourceInput found rfl rfl\n" ++
+    s!"    (Adequacy.IgnoresField.nil {compact field}) {operandProof}\n" ++
     "    (by intro before same; cases same; rfl) rfl\n\n" ++
     s!"theorem {check}.wrapperSource{params} (_sourceHeap : Heap) (_sourceAddress : Nat) (_sourceFootprint : Heap.Footprint)\n" ++
     s!"    (_sourceInput : {layout}.Holds _sourceHeap (.ref _sourceAddress) {rows} _sourceFootprint)\n" ++
