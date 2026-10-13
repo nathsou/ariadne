@@ -34,6 +34,7 @@ mutual
       | .block ss sp => return .block (← ss.mapM (statement owner n)) sp
       | .let_ m name ty e sp => return .let_ m name ty (← expression owner n e) sp
       | .assign a b sp => return .assign (← expression owner n a) (← expression owner n b) sp
+      | .update target op value sp => return .update (← expression owner n target) op (← expression owner n value) sp
       | .expr e sp => return .expr (← expression owner n e) sp
       | .return_ e sp => return .return_ (← expression owner n e) sp
       | .if_ e a b sp => return .if_ (← expression owner n e) (← statement owner n a) (← statement owner n b) sp

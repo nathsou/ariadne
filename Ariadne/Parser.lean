@@ -246,6 +246,10 @@ mutual
         let index ← expression n
         let endToken ← expect "]"
         parsePostfix n (.index left index ⟨left.span.start, endToken.span.stop⟩)
+      else if ← isNext "!" then
+        let assertion ← pop
+        if assertion.lineBreak then fail "A1005" "a non-null assertion cannot follow a line break" assertion
+        parsePostfix n (.unary "#nonNull" left ⟨left.span.start, assertion.span.stop⟩)
       else if ← isNext "?." then unsupported (← pop)
       else return left
 
@@ -357,23 +361,23 @@ mutual
         if ["=", "+=", "-=", "*=", "/="].contains op.text then
           let _ ← pop
           let rhs ← expression n
-          if op.text != "=" then
+          if op.text == "=" then pure (.assign target rhs target.span) else
             match target with
-            | .var .. => pure ()
-            | _ =>
-              fail "A1001" "compound assignments require a local variable" op
-                (some "Use a temporary variable and a simple assignment; receivers must be evaluated once.")
-          let value := if op.text == "=" then rhs else
-            .binary (if op.text == "+=" then "+" else if op.text == "-=" then "-" else if op.text == "*=" then "*" else "/") target rhs op.span
-          pure (.assign target value target.span)
+            | .var .. => pure (.assign target
+                (.binary (if op.text == "+=" then "+" else if op.text == "-=" then "-" else if op.text == "*=" then "*" else "/") target rhs op.span) target.span)
+            | .member .. | .index .. =>
+              pure (.update target (if op.text == "+=" then "+" else if op.text == "-=" then "-" else if op.text == "*=" then "*" else "/") rhs target.span)
+            | _ => fail "A1001" "invalid compound assignment target" op
         else if op.text == "++" || op.text == "--" then
           if op.lineBreak then fail "A1005" "postfix increment cannot follow a line break" op
-          match target with
-          | .var .. => pure ()
-          | _ => fail "A1001" "increment and decrement require a local variable" op
           let _ ← pop
-          pure (.assign target (.binary (if op.text == "++" then "+" else "-") target
-            (.literal (.number 1 0) op.span) op.span) target.span)
+          match target with
+          | .var .. => pure (.assign target (.binary (if op.text == "++" then "+" else "-") target
+              (.literal (.number 1 0) op.span) op.span) target.span)
+          | .member .. | .index .. =>
+            pure (.update target (if op.text == "++" then "+" else "-")
+              (.literal (.number 1 0) op.span) target.span)
+          | _ => fail "A1001" "invalid increment or decrement target" op
         else pure (.expr target target.span)
       if semicolon then let _ ← expect ";"
       return result

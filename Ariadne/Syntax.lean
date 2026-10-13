@@ -94,6 +94,9 @@ mutual
     | let_ (mutable : Bool) (name : String) (annotation : Option Ty)
         (value : Expr) (span : Span)
     | assign (target : Expr) (value : Expr) (span : Span)
+    /-- Compound updates retain the reference, read it, evaluate the RHS, and
+    write it once. The parser keeps local-variable updates as assignments. -/
+    | update (target : Expr) (op : String) (value : Expr) (span : Span)
     | expr (value : Expr) (span : Span)
     | if_ (condition : Expr) (yes no : Stmt) (span : Span)
     | while_ (condition : Expr) (body : Stmt) (span : Span)
@@ -114,7 +117,7 @@ def Expr.span : Expr → Span
   | .newSet _ s | .newClass _ _ s | .spread _ s => s
 
 def Stmt.span : Stmt → Span
-  | .block _ s | .let_ _ _ _ _ s | .assign _ _ s | .expr _ s
+  | .block _ s | .let_ _ _ _ _ s | .assign _ _ s | .update _ _ _ s | .expr _ s
   | .if_ _ _ _ s | .while_ _ _ s | .for_ _ _ _ _ s | .return_ _ s
   | .break_ s | .continue_ s | .forOf _ _ _ _ s | .switch_ _ _ s | .measured _ _ s => s
 

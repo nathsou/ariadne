@@ -63,11 +63,16 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  verify:
+  checks:
     needs: [prepare, examples]
     if: ${{ always() }}
+    name: ${{ matrix.phase }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        phase: [verify-basic, verify-data, verify-source]
     steps:
       - name: Require successful preparation and all example jobs
         env:
@@ -92,5 +97,19 @@ jobs:
           for archive in work/ci-artifacts/checked-examples-*.tar.gz; do
             tar -xzf "$archive"
           done
-      - name: User proofs, axiom audit, and native differential tests
-        run: scripts/check.sh verify
+      - name: Run serial verification phase
+        run: scripts/check.sh "${{ matrix.phase }}"
+
+  # Retain one required status which fails if any check was skipped or failed.
+  verify:
+    needs: [prepare, examples, checks]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require every verification phase
+        env:
+          PREPARE_RESULT: ${{ needs.prepare.result }}
+          EXAMPLES_RESULT: ${{ needs.examples.result }}
+          CHECKS_RESULT: ${{ needs.checks.result }}
+        run: test "$PREPARE_RESULT" = success && test "$EXAMPLES_RESULT" = success && test "$CHECKS_RESULT" = success

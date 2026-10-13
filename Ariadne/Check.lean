@@ -1,4 +1,5 @@
 import Ariadne.Parser
+import Ariadne.Projection
 
 namespace Ariadne
 namespace Check
@@ -27,6 +28,8 @@ structure Context where
   pureCallback : Bool := true
   /-- First callback pass discovers the result; the second checks every return. -/
   inferReturns : Bool := false
+  /-- Ephemeral element borrows are admitted only by the enclosing statement. -/
+  projectionSpans : List Span := []
 
 def error (code message : String) (span : Span) (help : Option String := none) : Checked α :=
   .error { code, message, span, help }
@@ -159,7 +162,8 @@ def binding (ctx : Context) (name : String) (span : Span) : Checked Binding :=
 def root : Expr → Option String
   | .var n _ => some n
   | .member e _ _ | .index e _ _ => root e
-  | .call (.member e method _) _ _ => if ["keys", "values", "entries"].contains method then root e else none
+  | .unary "#nonNull" e _ => root e
+  | .call (.member e method _) _ _ => if ["get", "keys", "values", "entries"].contains method then root e else none
   | _ => none
 
 def fresh : Expr → Bool
@@ -185,6 +189,7 @@ def sharedRead : Expr → Bool
   | .index .. => true
   | .call (.member _ "get" _) _ _ | .call (.member _ "find" _) _ _ => true
   | .binary "??" a b _ => sharedRead a && (fresh b || sharedRead b)
+  | .unary "#nonNull" value _ => sharedRead value
   | _ => false
 
 /-- References supplied by a caller are second-class, including readonly
@@ -193,6 +198,7 @@ provenance. Allocating methods and container reads produce distinct values. -/
 def borrowedReference (ctx : Context) : Expr → Bool
   | .var name _ => (ctx.bindings.find? (·.name == name)).any (·.borrowed)
   | .member object _ _ => borrowedReference ctx object
+  | .unary "#nonNull" value _ => borrowedReference ctx value
   | .conditional _ yes no _ => borrowedReference ctx yes || borrowedReference ctx no
   | .binary "??" a b _ => borrowedReference ctx a || borrowedReference ctx b
   | .call (.member object method _) _ _ =>
@@ -265,7 +271,8 @@ mutual
 
   def writes : Nat → Stmt → List String
     | 0, _ => []
-    | n + 1, .assign target value _ => (root target).toList ++ writesExpr n value
+    | n + 1, .assign target value _ | n + 1, .update target _ value _ =>
+        (root target).toList ++ writesExpr n target ++ writesExpr n value
     | n + 1, .block ss _ => ss.flatMap (writes n)
     | n + 1, .if_ c a b _ => writesExpr n c ++ writes n a ++ writes n b
     | n + 1, .while_ c b _ => writesExpr n c ++ writes n b
@@ -338,9 +345,17 @@ def checkWrite (ctx : Context) (target : Expr) (rebinding : Bool := false) : Che
 callee's parameter. Statement projections introduce an explicit exclusive
 path; ordinary calls require an owner or a fresh argument. -/
 def checkBorrowOwner (ctx : Context) (value : Expr) : Checked Unit := do
-  if sharedRead value || ((root value).isNone && !fresh value) then
+  if !ctx.projectionSpans.contains value.span &&
+      (sharedRead value || ((root value).isNone && !fresh value)) then
     error "A3001" "a mutable borrow requires an owner; container projections need a checked exclusive statement path" value.span
   checkWrite ctx value
+
+def withProjection (ctx : Context) (target : Expr) (otherExpressions : List Expr) : Checked Context := do
+  let some projection := Projection.find target | return ctx
+  if !Projection.exclusive projection otherExpressions then
+    error "A3001" "the projected container must be used through one exclusive path for this statement; keys and update arguments must be pure" target.span
+  checkWrite ctx projection.container
+  return {ctx with projectionSpans := [projection.focus.span]}
 
 def int53Enabled (p : Program) : Bool := p.aliases.lookup "Int53" == some .number
 
@@ -398,6 +413,10 @@ mutual
         return (← binding ctx name span).ty
       | .unary op e span =>
         let t ← infer n ctx e
+        if op == "#nonNull" then
+          let some value := filterType (fun t => t != .undefined && t != .null) t
+            | error "A2002" "non-null assertion requires a value type" span
+          return value
         if op == "!" then
           requireType t .boolean span
           return .boolean
@@ -526,7 +545,7 @@ mutual
       | .index object index span =>
         requireType (← infer n ctx index) .number index.span
         match unreadonly (← infer n ctx object) with
-        | .array t => return .union t .undefined
+        | .array t => return if ctx.projectionSpans.contains span then t else .union t .undefined
         | .string | .stringLiteral _ => return .union .string .undefined
         | .tuple ts =>
           match index with
@@ -678,7 +697,8 @@ mutual
       let ty := match unreadonly raw with | .stringLiteral _ => Ty.string | t => t
       if ["push", "pop", "set", "add", "delete", "clear"].contains name then
         checkWrite ctx object
-        if sharedRead object || ((root object).isNone && !fresh object) then
+        if !ctx.projectionSpans.contains object.span &&
+            (sharedRead object || ((root object).isNone && !fresh object)) then
           error "A3001" "only an owner may mutate a collection" span
         if let .readonly _ := raw then error "A3001" "cannot mutate a readonly collection" span
       if let .class_ className := ty then
@@ -840,6 +860,10 @@ mutual
             error "A3001" "a readonly alias cannot share a mutable owner" value.span
         return { ctx with bindings := { name, ty := t, mutable, span } :: ctx.bindings }
       | .assign target value span =>
+        let ordinary := ctx
+        let ctx ← match target with
+          | .index .. => pure ctx -- A direct element store borrows no element reference.
+          | _ => withProjection ctx target [value]
         checkWrite ctx target (match target with | .var .. => true | _ => false)
         match target with
         | .var name _ =>
@@ -874,8 +898,21 @@ mutual
             if referenceType ty && !immutable ty && !fresh value then error "A3001" "stored mutable fields must be fresh" span
           | _ => error "A3004" "only declared fields may be assigned" span
         | _ => error "A2002" "invalid assignment target" span
+        return invalidate ordinary (writes n stmt)
+      | .update target op value span =>
+        let projected ← withProjection ctx target [value]
+        let expected ← infer n projected target
+        checkExpr n projected (.binary op target value span) expected
+        let _ ← checkStmt n ctx (.assign target value span)
         return invalidate ctx (writes n stmt)
-      | .expr e _ => let _ ← infer n ctx e; return invalidate ctx (writesExpr n e)
+      | .expr e _ =>
+        let projected ← match e with
+          | .call (.member object method _) args _ =>
+            if ["push", "pop", "set", "add", "delete", "clear"].contains method then
+              withProjection ctx object args else pure ctx
+          | _ => pure ctx
+        let _ ← infer n projected e
+        return invalidate ctx (writesExpr n e)
       | .if_ c yes no _ =>
         checkExpr n ctx c .boolean
         let _ ← checkStmt n (narrow ctx c true) yes

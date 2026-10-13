@@ -5,8 +5,8 @@ cd "$(dirname "$0")/.."
 # CI restores the prepare job's build before invoking individual phases.
 # Local invocation runs the same phases in sequence.
 phase=${1:-all}
-if (( $# > 1 )) || [[ ! "$phase" =~ ^(all|prepare|operational|shallow|shallow-data|shallow-values|verify)$ ]]; then
-  echo "Usage: scripts/check.sh [all|prepare|operational|shallow|shallow-data|shallow-values|verify]" >&2
+if (( $# > 1 )) || [[ ! "$phase" =~ ^(all|prepare|operational|shallow|shallow-data|shallow-values|verify|verify-basic|verify-data|verify-source)$ ]]; then
+  echo "Usage: scripts/check.sh [all|prepare|operational|shallow|shallow-data|shallow-values|verify|verify-basic|verify-data|verify-source]" >&2
   exit 2
 fi
 
@@ -47,7 +47,7 @@ run_shallow_data() {
   for source in examples/shallow/*.ts; do
     stem=$(basename "$source" .ts)
     case "$stem" in
-      arrays|collections|loops) lake build "Examples.Shallow.$stem" ;;
+      arrays|collections|loops|unions|records|entryguards) lake build "Examples.Shallow.$stem" ;;
     esac
   done
 }
@@ -57,7 +57,7 @@ run_shallow_values() {
     stem=$(basename "$source" .ts)
     # Every other file, including future fixtures, belongs to this group.
     case "$stem" in
-      arrays|collections|loops) ;;
+      arrays|collections|loops|unions|records|entryguards) ;;
       *) lake build "Examples.Shallow.$stem" ;;
     esac
   done
@@ -72,29 +72,41 @@ run_shallow() {
   run_shallow_values
 }
 
-run_verify() {
-  lake build Examples
-  lake env lean scripts/Audit.lean
-
+select_js() {
   if command -v bun >/dev/null 2>&1; then
     js=bun
   else
     js=node
   fi
+}
+
+run_verify_basic() {
+  lake build Examples
+  lake env lean scripts/Audit.lean
+  select_js
   timed scripts/differential.mjs "$js" scripts/differential.mjs
   timed scripts/generated-cases.mjs "$js" scripts/generated-cases.mjs
   timed scripts/negative.mjs "$js" scripts/negative.mjs
   timed scripts/realm.mjs "$js" scripts/realm.mjs
-  timed scripts/cli.mjs "$js" scripts/cli.mjs
-  timed scripts/entry-guards.mjs "$js" scripts/entry-guards.mjs
   timed scripts/compiler.mjs "$js" scripts/compiler.mjs
   timed scripts/reference.mjs "$js" scripts/reference.mjs
   timed scripts/reference-operational.mjs "$js" scripts/reference-operational.mjs
+  timed scripts/builtins.mjs "$js" scripts/builtins.mjs
+}
+
+run_verify_source() {
+  select_js
+  timed scripts/cli.mjs "$js" scripts/cli.mjs
   timed scripts/shallow.mjs "$js" scripts/shallow.mjs
   timed scripts/source-transfer.mjs "$js" scripts/source-transfer.mjs
   timed scripts/shared-source.mjs "$js" scripts/shared-source.mjs
   timed scripts/guarded-shared-source.mjs "$js" scripts/guarded-shared-source.mjs
   timed scripts/int53-source-transfer.mjs "$js" scripts/int53-source-transfer.mjs
+}
+
+run_verify_data() {
+  select_js
+  timed scripts/entry-guards.mjs "$js" scripts/entry-guards.mjs
   timed scripts/shallow-arrays.mjs "$js" scripts/shallow-arrays.mjs
   timed scripts/shallow-optionals.mjs "$js" scripts/shallow-optionals.mjs
   timed scripts/shallow-loops.mjs "$js" scripts/shallow-loops.mjs
@@ -102,10 +114,16 @@ run_verify() {
   timed scripts/shallow-records.mjs "$js" scripts/shallow-records.mjs
   timed scripts/shallow-unions.mjs "$js" scripts/shallow-unions.mjs
   timed scripts/shallow-state.mjs "$js" scripts/shallow-state.mjs
+  timed scripts/shallow-projections.mjs "$js" scripts/shallow-projections.mjs
   timed scripts/shallow-classes.mjs "$js" scripts/shallow-classes.mjs
   timed scripts/shallow-int53.mjs "$js" scripts/shallow-int53.mjs
   timed scripts/reference-shallow.mjs "$js" scripts/reference-shallow.mjs
-  timed scripts/builtins.mjs "$js" scripts/builtins.mjs
+}
+
+run_verify() {
+  run_verify_basic
+  run_verify_data
+  run_verify_source
 }
 
 case "$phase" in
@@ -117,5 +135,8 @@ case "$phase" in
     ;;
   shallow-data) timed "$phase" run_shallow_data ;;
   shallow-values) timed "$phase" run_shallow_values ;;
+  verify-basic) timed "$phase" run_verify_basic ;;
+  verify-data) timed "$phase" run_verify_data ;;
+  verify-source) timed "$phase" run_verify_source ;;
   *) timed "$phase" "run_$phase" ;;
 esac

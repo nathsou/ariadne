@@ -482,6 +482,43 @@ mutual
       | _ => throw (.invariant "invalid assignment target")
   termination_by structural fuel
 
+  /-- ECMAScript compound update order: evaluate the reference once, read the
+  old value, evaluate the RHS, then write to that retained reference. -/
+  def updateTarget (program : Program) (fuel : Nat) (s : State) (target : Expr)
+      (op : String) (rhs : Expr) : Result State := do
+    match fuel with
+    | 0 => throw .timeout
+    | n + 1 =>
+      match target with
+      | .var name _ =>
+        let old ← s.lookup name
+        let (delta, s) ← evalExpr program n s rhs
+        s.assign name (← binary op old delta)
+      | .member object field _ =>
+        let (receiver, s) ← evalExpr program n s object
+        let old ← readMember s receiver field
+        let (delta, s) ← evalExpr program n s rhs
+        let value ← binary op old delta
+        let .ref address := receiver | throw (.typeError "update requires a record")
+        match s.heap[address]? with
+        | some (.record fields) => s.write address (.record (fieldSet fields field value))
+        | some (.instance_ name fields) => s.write address (.instance_ name (fieldSet fields field value))
+        | _ => throw (.typeError "update requires a record")
+      | .index object query _ =>
+        let (receiver, s) ← evalExpr program n s object
+        let (query, s) ← evalExpr program n s query
+        let old ← readIndex s receiver query
+        let (delta, s) ← evalExpr program n s rhs
+        let value ← binary op old delta
+        let .ref address := receiver | throw (.typeError "update requires an array")
+        let some index := indexOf query | throw (.invariant "array updates require a nonnegative integer index")
+        let some (.array values) := s.heap[address]? | throw (.typeError "update requires an array")
+        if index > values.length then throw (.invariant "array update would introduce holes")
+        if index ≥ 4294967295 then throw (.invariant "array update exceeds the dense-array index range")
+        s.write address (.array (if index == values.length then values ++ [value] else values.set index value))
+      | _ => throw (.invariant "invalid update target")
+  termination_by structural fuel
+
 
   def exec (program : Program) : Nat → State → Stmt → Result Completion
     | 0, _, _ => .error .timeout
@@ -493,6 +530,7 @@ mutual
       let (v, s) ← evalExpr program n s value
       return { state := s.declare name v }
     | n + 1, s, .assign target value _ => do return { state := ← assignTarget program n s target value }
+    | n + 1, s, .update target op value _ => do return { state := ← updateTarget program n s target op value }
     | n + 1, s, .expr value _ => do
       let (_, s) ← evalExpr program n s value
       return { state := s }

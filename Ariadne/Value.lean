@@ -113,6 +113,7 @@ def numberRemainder (a b : Float.Model) : Float.Model :=
 
 def unary (op : String) (v : Value) : Result Value :=
   match op, v with
+  | "#nonNull", v => .ok v -- TypeScript assertion: erased, including at runtime.
   | "!", v => .ok (.boolean (!v.truthy))
   | "-", .bigint n => .ok (.bigint (-n))
   | "-", .number n => .ok (.number (-n))

@@ -9,6 +9,41 @@ def ExecutesStatement (program : Program) (before : State) (statement : Stmt) (o
 def ExecutesBlock (program : Program) (before : State) (statements : List Stmt) (out : Completion) : Prop :=
   Converges (fun fuel => execBlock program fuel before statements) (.ok out)
 
+/-- Compound updates evaluate the receiver and key once, read the old value,
+then evaluate the right operand and write into its resulting heap. -/
+def UpdatesTarget (program : Program) (before : State) (target : Expr)
+    (op : String) (rhs : Expr) (after : State) : Prop :=
+  Converges (fun fuel => updateTarget program fuel before target op rhs) (.ok after)
+
+theorem UpdatesTarget.eventually {program : Program} {before after : State}
+    {target rhs : Expr} {op : String} (h : UpdatesTarget program before target op rhs after) :
+    ∃ threshold, ∀ fuel, threshold ≤ fuel → updateTarget program fuel before target op rhs = .ok after :=
+  ((converges_iff_eventually _ (fun h => updateTarget_fuel_mono program h before target op rhs) _).mp h).2
+
+theorem ExecutesStatement.update {program : Program} {before after : State}
+    {target rhs : Expr} {op : String}
+    (updated : UpdatesTarget program before target op rhs after) (span : Span) :
+    ExecutesStatement program before (.update target op rhs span) {state := after} := by
+  obtain ⟨_, fuel, written⟩ := updated
+  refine ⟨(by intro h; cases h), fuel + 1, ?_⟩
+  simp [exec, written, bind, Except.bind, pure, Except.pure]
+
+theorem UpdatesTarget.record {program : Program} {before selected operated after : State}
+    {receiver rhs : Expr} {address : Nat} {field op : String} {old delta value : Value}
+    {fields : List (String × Value)}
+    (selectedReceiver : Evaluates program before receiver (.ref address) selected)
+    (read : readMember selected (.ref address) field = .ok old)
+    (operand : Evaluates program selected rhs delta operated)
+    (operation : binary op old delta = .ok value)
+    (object : operated.heap[address]? = some (.record fields))
+    (write : operated.write address (.record (fieldSet fields field value)) = .ok after)
+    (span : Span) : UpdatesTarget program before (.member receiver field span) op rhs after := by
+  obtain ⟨nr, hr⟩ := selectedReceiver.eventually
+  obtain ⟨nd, hd⟩ := operand.eventually
+  refine ⟨(by intro h; cases h), max nr nd + 1, ?_⟩
+  simp [updateTarget, hr _ (Nat.le_max_left ..), hd _ (Nat.le_max_right ..),
+    read, operation, object, write, bind, Except.bind]
+
 theorem ExecutesStatement.eventually {program : Program} {before : State} {statement : Stmt} {out : Completion}
     (h : ExecutesStatement program before statement out) :
     ∃ threshold, ∀ fuel, threshold ≤ fuel → exec program fuel before statement = .ok out :=

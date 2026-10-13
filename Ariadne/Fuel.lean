@@ -54,6 +54,7 @@ local macro "refine_fuel" : tactic => `(tactic|
   | exact hr _ _ _ _ _
   | exact hm _ _ _
   | exact hw _ _ _
+  | exact hu _ _ _ _
   | exact hs _ _
   | exact hb _ _
   | exact hl _ _ _ _
@@ -80,6 +81,7 @@ private structure FuelStep (p : Program) (n : Nat) : Prop where
   reduce : ∀ s cb xs a i, (reduce p n s cb xs a i).Refines (reduce p (n + 1) s cb xs a i)
   mapTraverse : ∀ s cb xs, (mapTraverse p n s cb xs).Refines (mapTraverse p (n + 1) s cb xs)
   assign : ∀ s t r, (assignTarget p n s t r).Refines (assignTarget p (n + 1) s t r)
+  update : ∀ s t op r, (updateTarget p n s t op r).Refines (updateTarget p (n + 1) s t op r)
   statement : ∀ s b, (exec p n s b).Refines (exec p (n + 1) s b)
   block : ∀ s bs, (execBlock p n s bs).Refines (execBlock p (n + 1) s bs)
   loop : ∀ s c b u, (loop p n s c b u).Refines (loop p (n + 1) s c b u)
@@ -97,7 +99,7 @@ private theorem fuel_step (p : Program) (n : Nat) : FuelStep p n := by
     constructor
     all_goals intros; exact Or.inl rfl
   | succ n ih =>
-    rcases ih with ⟨he, ha, hf, hc, ht, hr, hm, hw, hs, hb, hl, hel, hfi, hea, hsc, hsearch, hmerge, hsort⟩
+    rcases ih with ⟨he, ha, hf, hc, ht, hr, hm, hw, hu, hs, hb, hl, hel, hfi, hea, hsc, hsearch, hmerge, hsort⟩
     constructor
     · intro s e; cases e
       all_goals simp only [evalExpr]; refine_fuel
@@ -126,6 +128,10 @@ private theorem fuel_step (p : Program) (n : Nat) : FuelStep p n := by
     · intros
       conv => lhs; unfold assignTarget
       conv => rhs; unfold assignTarget
+      refine_fuel
+    · intros
+      conv => lhs; unfold updateTarget
+      conv => rhs; unfold updateTarget
       refine_fuel
     · intro s b; cases b
       all_goals simp only [exec]; refine_fuel
@@ -214,6 +220,12 @@ theorem assignTarget_fuel_mono (p : Program) {small large : Nat} (le : small ≤
     (assignTarget p small s target rhs).Refines (assignTarget p large s target rhs) :=
   Result.refines_of_step (fun n => assignTarget p n s target rhs)
     (fun n => (fuel_step p n).assign s target rhs) le
+
+theorem updateTarget_fuel_mono (p : Program) {small large : Nat} (le : small ≤ large)
+    (s : State) (target : Expr) (op : String) (rhs : Expr) :
+    (updateTarget p small s target op rhs).Refines (updateTarget p large s target op rhs) :=
+  Result.refines_of_step (fun n => updateTarget p n s target op rhs)
+    (fun n => (fuel_step p n).update s target op rhs) le
 
 theorem exec_fuel_mono (p : Program) {small large : Nat} (le : small ≤ large)
     (s : State) (body : Stmt) :

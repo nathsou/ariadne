@@ -38,6 +38,7 @@ import Examples.Shallow.collections
 import Examples.Shallow.records
 import Examples.Shallow.unions
 import Examples.Shallow.state
+import Examples.Shallow.projections
 import Examples.Proofs.ShallowScalars
 import Examples.Proofs.ShallowArrays
 import Examples.Proofs.ShallowLoops

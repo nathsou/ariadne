@@ -53,7 +53,7 @@ mutual
     | n + 1, stmt => do
       match stmt with
       | .block stmts _ => return (← stmts.mapM (statementEffects p n)).flatten
-      | .assign target value _ =>
+      | .assign target value _ | .update target _ value _ =>
         let roots := match target with | .var .. => [] | _ => (Check.root target).toList
         return roots ++ (← expressionEffects p n target) ++ (← expressionEffects p n value)
       | .let_ _ _ _ value _ | .expr value _ | .return_ value _ => expressionEffects p n value

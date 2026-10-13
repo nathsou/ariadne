@@ -80,12 +80,30 @@ get/put, put/get, repeated-put, modification and composition laws. Element and
 Map-key focus rules rebuild container representations while framing all other
 elements. Array-of-arrays and Map-of-arrays push rules prove actual operational
 invocations, retain the outer runtime references, and write only the selected
-inner array. The parser, exclusive statement checks and lowering still need to
-connect these rules to projection source programs.
+inner array. Single-statement projections now parse, check and lower through
+one key binding and one selected-value binding. Mutable references cannot
+outlive the statement; a second use of the same container and impure keys or
+update arguments are rejected. Compound updates evaluate the source receiver
+once, read the old value before the right operand, and write into the resulting
+heap. Missing elements fail the computed safety predicate. The native runtime
+updates the existing inner object without copying it; Lean uses pure container
+replacement. Differential checks cover arrays, Maps, record-field updates,
+binary64 edge cases, selected-element identities and missing-element guards.
+Connecting the syntax-directed footprint rules to general emitted source
+transfer remains M4 work. Simultaneous projected call arguments remain pending.
 
 CI #96 on `5e31ceb` passes in 11m23s, compared with baseline CI #82's 21m18s.
 Its logged source-transfer and Int53 tamper phases take 17s and 7s respectively,
 compared with the baseline 1m51s and 1m29s. The axiom audit covers 5,435 theorems.
+CI #102, including wrapper certificates and the projection proof foundation,
+passed in 12m49s; its tamper phases take 14s and 6s. Its example jobs were uneven
+(328s versus 172s), so unions, records and entry-guard fixtures now run in the
+data job. Each runner still kernel-checks its own files serially.
+The subsequent local projection gate passed all 26 JavaScript suites and a
+6,594-theorem axiom audit. CI now runs basic verification, data comparisons and
+source/tamper checks on separate runners after restoring the checked artifacts.
+Every runner remains serial, and the final required status rejects a failed or
+skipped phase. Fresh CI timings for this split are pending.
 
 Frontend checkpoint: the complete `scripts/check.sh` suite passes with 1,217
 audited theorems, 42 native entry points, 64 generated programs, 51 scalar

@@ -801,6 +801,12 @@ mutual
     match fuel with
     | 0 => refusal "A5101" "mutation lowering budget exhausted" expr.span
     | n + 1 =>
+      let projected := match expr with
+        | .call (.member receiver _ _) _ _ => Projection.find receiver
+        | .call (.var "#field" _) [target, _] _ => Projection.find target
+        | _ => none
+      if let some path := projected then
+        return some (← projectionMutation p n ctx path expr)
       if let .call (.var restore _) [value] span := expr then
         if restore.startsWith "#restore:" then
           let name := restore.drop 9 |>.toString
@@ -813,6 +819,10 @@ mutual
         let expected ← expression p n ctx (.member (.var owner span) field span)
         let value ← asType p n ctx value expected.1
         return some (owner, ← replaceField p ctx owner field ⟨expected.1, value⟩ span)
+      if let .call (.var "#field" _) [.var owner _, value] span := expr then
+        let some target := ctx.find? (·.name == owner) | refusal "A5102" "unknown element owner" span
+        if !target.owned then refusal "A5102" "element update needs exclusive ownership" span
+        return some (owner, ⟨target.ty, ← asType p n ctx value target.ty⟩)
       let .call (.member receiver method _) args span := expr | return none
       if !StatePlan.mutator method then return none
       let (name, field) ← match receiver with
@@ -843,6 +853,56 @@ mutual
         | none => pure updated
         | some field => replaceField p ctx name field updated span
       return some (name, updated)
+
+  /-- A statement projection borrows one element only while its native update
+  is computed. The key and selected value each have one binding. -/
+  def projectionMutation (p : Program) (fuel : Nat) (ctx : Context)
+      (path : Projection.Path) (expr : Expr) : Checked (String × Typed ctx) := do
+    match fuel with
+    | 0 => refusal "A5101" "projection lowering budget exhausted" expr.span
+    | n + 1 =>
+      let (owner, field) ← match path.container with
+        | .var name _ => pure (name, none)
+        | .member (.var name _) field _ => pure (name, some field)
+        | _ => refusal "A5102" "projection needs a variable or owned field container" expr.span
+      let collection ← expression p n ctx path.container
+      let finish (updated : Typed ctx) : Checked (String × Typed ctx) := do
+        let updated ← match field with
+          | none => pure updated
+          | some field => replaceField p ctx owner field updated expr.span
+        return (owner, updated)
+      let build (collectionType keyType elementType : Core.Ty)
+          (original : Term (Types ctx) collectionType)
+          (get : Term (keyType :: Types ctx) (.option elementType))
+          (put : Term (elementType :: keyType :: Types ctx) elementType →
+            Term (elementType :: keyType :: Types ctx) collectionType) : Checked (Typed ctx) := do
+        let query ← asType p n ctx path.query keyType
+        let keyName := "#projectionKey"
+        let focusName := "#projectionValue"
+        let keyCtx := binding keyName keyType :: ctx
+        let focusCtx := binding focusName elementType true :: keyCtx
+        let rewritten := Projection.replaceFocus path.focus.span focusName 256 expr
+        let some (updatedOwner, updated) ← localMutation p n focusCtx rewritten
+          | refusal "A5102" "projection has no supported element update" expr.span
+        if updatedOwner != focusName then
+          refusal "A5102" "projection update escaped its selected element" expr.span
+        let updated ← cast elementType updated expr.span
+        let absent := Term.binary .guard (.bool false) (original.rename Var.there)
+        return ⟨collectionType, .let_ keyName query (.optionCase get absent (put updated))⟩
+      match collection with
+      | ⟨.map k v, values⟩ =>
+        let updated ← build (.map k v) k.type v values (.binary .mapGet (values.rename Var.there) (.var .here))
+          (fun updated => .mapSet (values.rename (fun index => .there (.there index)))
+            (.var (.there .here)) updated)
+        finish updated
+      | ⟨.list v, values⟩ =>
+        let updated ← build (.list v) .number v values (.binary .get (values.rename Var.there) (.var .here))
+          (fun updated => .listMap (.lam "value" (.lam "index"
+            (.ite (.binary .numEq (.var .here) (.var (.there (.there (.there .here)))))
+              (updated.rename (fun index => .there (.there index))) (.var (.there .here)))))
+            (values.rename (fun index => .there (.there index))))
+        finish updated
+      | _ => refusal "A5102" "projection requires an array or Map" expr.span
 
   /-- Mutable locals become shadowed pure lets. Branches share their continuations.
   Structural loops carry an explicit value state and typed exits. -/
@@ -924,6 +984,8 @@ mutual
         return .let_ name value (← statements p n (binding name a owns :: ctx) rest t)
       | .assign (.member (.var owner _) field _) value span =>
         statements p n ctx (.expr (.call (.var "#field" span) [.member (.var owner span) field span, value] span) span :: rest) t
+      | .update target op value span =>
+        statements p n ctx (.assign target (.binary op target value span) span :: rest) t
       | .assign (.var name _) value span =>
         let some target := ctx.find? (·.name == name) | refusal "A5102" "unknown assignment target" span
         if target.loan.isSome then
@@ -932,6 +994,10 @@ mutual
         let owns := Check.fresh value
         let value ← asType p n ctx value a
         return .let_ name value (← statements p n (binding name a owns :: ctx) rest t)
+      | .assign target value span =>
+        if (Projection.find target).isSome then
+          statements p n ctx (.expr (.call (.var "#field" span) [target, value] span) span :: rest) t
+        else refusal "A5102" "this assignment needs ownership lowering" span
       | .if_ c a b span =>
         if rest.isEmpty then
           return ← condition p n ctx c [a] [b] t
