@@ -238,6 +238,105 @@ theorem vrec_rep {key t fs kvs} {y : fs.denote} (hn : (kvs.map Prod.fst).Nodup) 
     (hy : fs.Rep kvs y) : (vrec key t fs).Rep (.record kvs) ((), y) :=
   ⟨kvs, rfl, hn, ht, hy⟩
 
+/-! ## General `switch` -/
+
+theorem TagLit.value_inj : ∀ {a b : TagLit}, a.value = b.value → a = b
+  | .str _, .str _, h | .bool _, .bool _, h => by simp_all [TagLit.value]
+  | .str _, .bool _, h | .bool _, .str _, h => by simp [TagLit.value] at h
+
+theorem VIdx.mem_tags : ∀ {vs t fs}, VIdx vs t fs → t ∈ vs.tags
+  | _, _, _, .one => by simp [Variants.tags]
+  | _, _, _, .head => by simp [Variants.tags]
+  | _, _, _, .there i => by simp [Variants.tags, i.mem_tags]
+
+theorem Variants.strTags_of_mem {vs : Variants} (hok : vs.tagsOk = true) {t : TagLit} (ht : t ∈ vs.tags) :
+    t.isStr = vs.strTags := by
+  simp only [Variants.tagsOk, Bool.and_eq_true, Bool.or_eq_true] at hok
+  rcases hok.1 with h | h
+  · rw [List.all_eq_true.mp h t ht, Variants.strTags, h]
+  · have h1 := List.all_eq_true.mp h t ht
+    simp at h1
+    have h2 : vs.strTags = false := by
+      simp only [Variants.strTags, List.all_eq_false]
+      exact ⟨t, ht, by simp [h1]⟩
+    rw [h1, h2]
+
+theorem VIdx.decomp : ∀ (vs : Variants) (u : vs.denote), ∃ t fs, ∃ (i : VIdx vs t fs) (y : fs.denote), u = i.inj y
+  | .one t fs, y => ⟨t, fs, .one, y, rfl⟩
+  | .cons t fs _, .inl y => ⟨t, fs, .head, y, rfl⟩
+  | .cons _ _ rest, .inr w => by
+    obtain ⟨t, fs, i, y, h⟩ := VIdx.decomp rest w
+    exact ⟨t, fs, .there i, y, by simp [VIdx.inj, h]⟩
+
+theorem Variants.elim_inj {R : Type} : ∀ {vs t fs} (i : VIdx vs t fs) (y : fs.denote)
+    (h : ∀ {t fs}, VIdx vs t fs → fs.denote → R), Variants.elim vs (i.inj y) h = h i y
+  | _, _, _, .one, _, _ => rfl
+  | _, _, _, .head, _, _ => rfl
+  | _, _, _, .there i, y, h => Variants.elim_inj i y (fun i' y' => h (.there i') y')
+
+theorem VIdx.rep_inj : ∀ {vs t fs} (i : VIdx vs t fs) {key kvs} {y : fs.denote}, vs.Rep key kvs (i.inj y) →
+    fieldOf kvs key = t.value ∧ fs.Rep kvs y
+  | _, _, _, .one, _, _, _, h | _, _, _, .head, _, _, _, h => h
+  | _, _, _, .there i, _, _, _, h => i.rep_inj h
+
+theorem VIdx.rep_proj : ∀ {vs t fs} (i : VIdx vs t fs) {key kvs} {u : vs.denote} {y : fs.denote},
+    vs.Rep key kvs u → i.proj u = some y → fieldOf kvs key = t.value ∧ fs.Rep kvs y
+  | _, _, _, .one, _, _, _, _, h, hp => by simp only [VIdx.proj, Option.some.injEq] at hp; subst hp; exact h
+  | _, _, _, .head, _, _, .inl _, _, h, hp => by simp only [VIdx.proj, Option.some.injEq] at hp; subst hp; exact h
+  | _, _, _, .head, _, _, .inr _, _, _, hp | _, _, _, .there _, _, _, .inl _, _, _, hp => by simp [VIdx.proj] at hp
+  | _, _, _, .there i, _, _, .inr _, _, h, hp => i.rep_proj h hp
+
+theorem VIdx.proj_none : ∀ {vs t fs} (i : VIdx vs t fs) {key kvs} {u : vs.denote}, vs.tagsOk = true →
+    vs.Rep key kvs u → i.proj u = none → fieldOf kvs key ≠ t.value
+  | _, _, _, .one, _, _, _, _, _, hp | _, _, _, .head, _, _, .inl _, _, _, hp => by simp [VIdx.proj] at hp
+  | .cons _ _ rest, _, _, .head, _, _, .inr _, hok, h, _ => by
+    obtain ⟨t', ht', hf⟩ := Variants.rep_tag (vs := rest) h
+    rw [hf]; intro he
+    exact (Variants.tagsOk_cons hok).2.1 (TagLit.value_inj he ▸ ht')
+  | .cons _ _ _, _, _, .there i, _, _, .inl _, hok, h, _ => by
+    rw [h.1]; intro he
+    exact (Variants.tagsOk_cons hok).2.1 (TagLit.value_inj he ▸ i.mem_tags)
+  | .cons _ _ _, _, _, .there i, _, _, .inr _, hok, h, hp => i.proj_none (Variants.tagsOk_cons hok).1 h hp
+
+section
+variable {prog : Program}
+
+/-- A `case t:` label: `===` against the scrutinee decides. -/
+theorem findCase_label {env : Env} {tv : JSValue} {t : TagLit} {body : List Stmt}
+    {rest : List (Option Expr × List Stmt)} {i0 : Nat} {b : Bool} {r : Option Nat} (hb : strictEq tv t.value = .ok b)
+    (hr : b = false → Converges (fun n => findCase prog n env tv rest (i0 + 1)) (.ok r)) :
+    Converges (fun n => findCase prog n env tv ((some (tagLabel t), body) :: rest) i0)
+      (.ok (if b then some i0 else r)) := by
+  cases b with
+  | true =>
+    refine Converges.of_succ 1 fun m hm => ?_
+    obtain ⟨m, rfl⟩ : ∃ k, m = k + 1 := ⟨m - 1, by omega⟩
+    simp [findCase, tagLabel, evalExpr, TagLit.lit_value, hb, bind, Except.bind, pure, Except.pure]
+  | false =>
+    obtain ⟨N, h⟩ := hr rfl
+    refine Converges.of_succ (N + 1) fun m hm => ?_
+    obtain ⟨m, rfl⟩ : ∃ k, m = k + 1 := ⟨m - 1, by omega⟩
+    simp [findCase, tagLabel, evalExpr, TagLit.lit_value, hb, h (m + 1) (by omega), bind, Except.bind]
+
+/-- `default:` is taken when no label after it matches either. -/
+theorem findCase_default {env : Env} {tv : JSValue} {body : List Stmt} {rest : List (Option Expr × List Stmt)}
+    {i0 : Nat} {r : Option Nat} (hr : Converges (fun n => findCase prog n env tv rest (i0 + 1)) (.ok r)) :
+    Converges (fun n => findCase prog n env tv ((none, body) :: rest) i0) (.ok (some (r.getD i0))) := by
+  obtain ⟨N, h⟩ := hr
+  refine Converges.of_succ N fun m hm => ?_
+  cases r <;> simp [findCase, h m hm, bind, Except.bind, pure, Except.pure]
+
+theorem conv_switch_none {d : Expr} {cases : List (Option Expr × List Stmt)} {env : Env} {v : JSValue}
+    (hd : Converges (fun n => evalExpr prog n env d) (.ok v))
+    (hf : Converges (fun n => findCase prog n env v cases 0) (.ok none)) :
+    Converges (fun n => execStmt prog n env (.switch d cases)) (.ok (.normal env)) := by
+  obtain ⟨Nd, hd⟩ := hd
+  obtain ⟨Nf, hf⟩ := hf
+  exact Converges.of_succ (max Nd Nf) fun m hm => by
+    simp [execStmt, hd m (by omega), hf m (by omega), bind, Except.bind]
+
+end
+
 /-! ## The induction -/
 
 theorem SRel.restore_len {Γ τ env r k ks f b c o} (h : SRel Γ τ env r k ks f b c o) :
@@ -596,7 +695,7 @@ mutual
         refine ⟨o, conv_cons_normal hite hco, ?_⟩
         simp only [TStmts.denote, hx, TStmts.falls, TStmts.breaks, TStmts.continues]
         exact (SRel.widen some_embed hro).mono (by flags) (by flags) (by flags)
-    | Γ, τ, .switchU (x := x) (key := key) (vs := vs) v hok cases rest, k, ks, env, ρ, he, hs, hw => by
+    | Γ, τ, .switchG (x := x) (key := key) (vs := vs) v hok arms rest, k, ks, env, ρ, he, hs, hw => by
       simp only [TStmts.wf, Bool.and_eq_true] at hw
       simp only [Bool.and_eq_true, Bool.not_eq_true'] at hok
       have hrest := fun envM ρ' (_ : envM.length = env.length) hrel hsafe =>
@@ -606,77 +705,219 @@ mutual
         Converges.of_succ 1 fun m hm => by
           obtain ⟨m, rfl⟩ : ∃ k, m = k + 1 := ⟨m - 1, by omega⟩
           simp [evalExpr, hl, bind, Except.bind, getField_record hok.2]
-      obtain ⟨j, o, hf, hb, hro⟩ := TCases.adequate cases { k with normal := rest.denote fs k, brk := rest.denote fs k }
-        { ks with normal := rest.safe fs ss ks, brk := rest.safe fs ss ks } id (v.get ρ) kvs 0 he hl hnd hrep
-        (fun _ _ _ h => h) hok.1 hs hw.1
-      simp only [Nat.zero_add] at hf
-      have hsw := conv_switch hd hf hb
-      have hro' := hro.restore.switch
-      obtain ⟨out, h, hr⟩ := then_rest hfs hrest hsw hro'
-        (switchOutcome_len hro.restore_len hro.restore_len_broke)
-      refine ⟨out, h, ?_⟩
-      simp only [TStmts.denote, TStmts.falls, TStmts.breaks, TStmts.continues]
-      exact hr.mono (by flags) (by flags) (by flags)
+      obtain ⟨t, fds, i, y, hu⟩ := VIdx.decomp vs (v.get ρ)
+      rw [hu] at hrep
+      rw [(i.rep_inj hrep).1] at hd
+      simp only [TStmts.safe, hu, Variants.elim_inj] at hs
+      rcases TArms.adequate arms { k with normal := rest.denote fs k, brk := rest.denote fs k }
+          { ks with normal := rest.safe fs ss ks, brk := rest.safe fs ss ks } i y kvs 0 (rest.denote fs k ρ)
+          (rest.safe fs ss ks ρ) he hl hnd hrep hok.1 hs hw.1 with
+        ⟨j, o, hf, hb, hro⟩ | ⟨hf, hden, hsafe, hnt, hnn⟩
+      · simp only [Nat.zero_add] at hf
+        obtain ⟨out, h, hr⟩ := then_rest hfs hrest (conv_switch hd hf hb) hro.restore.switch
+          (switchOutcome_len hro.restore_len hro.restore_len_broke)
+        refine ⟨out, h, ?_⟩
+        simp only [TStmts.denote, hu, Variants.elim_inj, TStmts.falls, TStmts.breaks, TStmts.continues]
+        exact hr.mono (by flags) (by flags) (by flags)
+      · have hcov : arms.covers = false := by
+          simp only [TArms.covers, Bool.or_eq_false_iff, List.all_eq_false]
+          exact ⟨by simpa using hnn, t, i.mem_tags, by simpa using hnt⟩
+        have ho : SRel Γ τ env (rest.denote fs k ρ) { k with normal := rest.denote fs k }
+            { ks with normal := rest.safe fs ss ks } true false false (.normal env) :=
+          ⟨rfl, [], env, ρ, rfl, rfl, he, rfl, show rest.safe fs ss ks ρ = true by rw [← hsafe]; exact hs⟩
+        obtain ⟨out, h, hr⟩ := then_rest hfs hrest (conv_switch_none hd hf) ho (fun e he' => by cases he'; rfl)
+        refine ⟨out, h, ?_⟩
+        simp only [TStmts.denote, hu, Variants.elim_inj, hden, TStmts.falls, TStmts.breaks, TStmts.continues, hcov]
+        exact hr.mono (by flags) (by flags) (by flags)
 
-  theorem TCases.adequate {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} :
-      ∀ {vs : Variants} (cases : TCases Φ Γ τ v vs) (k : K Γ τ.denote) (ks : K Γ Bool) {env : Env}
-        {ρ : Γ.denote} (inj : vs.denote → vs0.denote) (u : vs.denote) (kvs : List (String × JSValue)) (i0 : Nat),
-        EnvRel Γ env ρ → env.lookup x = some (.record kvs) → (kvs.map Prod.fst).Nodup → vs.Rep key kvs u →
-        (∀ kvs' u', (kvs'.map Prod.fst).Nodup → vs.Rep key kvs' u' → vs0.Rep key kvs' (inj u')) →
-        vs.tagsOk = true → cases.safe fs ss ks ρ inj u = true → cases.wf = true →
-        ∃ j out, Converges (fun n => findCase prog n env (fieldOf kvs key) cases.erase i0) (.ok (some (i0 + j))) ∧
-          Converges (fun n => execStmts prog n env ((cases.erase.drop j).flatMap (·.2))) (.ok out) ∧
-          SRel Γ τ env (cases.denote fs k ρ inj u) k ks cases.falls cases.breaks cases.continues out
-    | .one t fs', .one body, k, ks, env, ρ, inj, u, kvs, i0, he, hl, hnd, hrep, hinj, hok, hs, hw => by
-      obtain ⟨ht, hu⟩ := hrep
-      have hrel : EnvRel (v.narrow (vrec key t fs')) env (v.narrowVal ρ ((), u)) :=
-        v.narrowRel he fun w hw _ => by rw [hl] at hw; cases hw; exact vrec_rep hnd ht hu
-      obtain ⟨o, hco, hro⟩ := TStmts.adequate body (k.map (v.widen fun z => inj z.2))
-        (ks.map (v.widen fun z => inj z.2)) hrel hs hw
-      refine ⟨0, o, Converges.of_succ 1 fun m hm => ?_, by simpa [TCases.erase] using hco, ?_⟩
-      · obtain ⟨m, rfl⟩ : ∃ k, m = k + 1 := ⟨m - 1, by omega⟩
-        simp [findCase, TCases.erase, evalExpr, ht, TagLit.lit_value, bind, Except.bind, pure, Except.pure,
-          TagLit.strictEq_value (a := t) (b := t) rfl]
-      · refine SRel.widen (fun w z hz => ?_) hro
-        obtain ⟨kvs', rfl, hnd', ht', hz'⟩ := hz
-        exact ⟨kvs', rfl, hnd', hinj kvs' _ hnd' ⟨ht', hz'⟩⟩
-    | .cons t fs' more, .cons body rest, k, ks, env, ρ, inj, u, kvs, i0, he, hl, hnd, hrep, hinj, hok, hs, hw => by
-      simp only [TCases.wf, Bool.and_eq_true, Bool.not_eq_true'] at hw
-      have hok' := Variants.tagsOk_cons hok
-      cases u with
-      | inl y =>
-        obtain ⟨ht, hu⟩ := hrep
-        have hrel : EnvRel (v.narrow (vrec key t fs')) env (v.narrowVal ρ ((), y)) :=
-          v.narrowRel he fun w hw _ => by rw [hl] at hw; cases hw; exact vrec_rep hnd ht hu
-        obtain ⟨o, hco, hro⟩ := TStmts.adequate body (k.map (v.widen fun z => inj (.inl z.2)))
-          (ks.map (v.widen fun z => inj (.inl z.2))) hrel hs hw.1.2
-        have hn : ∀ e, o ≠ .normal e := by
-          intro e h; subst h; simp [SRel, hw.1.1] at hro
-        refine ⟨0, o, Converges.of_succ 1 fun m hm => ?_, by simpa [TCases.erase] using conv_append hco hn, ?_⟩
-        · obtain ⟨m, rfl⟩ : ∃ k, m = k + 1 := ⟨m - 1, by omega⟩
-          simp [findCase, TCases.erase, evalExpr, ht, TagLit.lit_value, bind, Except.bind, pure, Except.pure,
-            TagLit.strictEq_value (a := t) (b := t) rfl]
+  theorem TArms.first_adequate {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} :
+      ∀ (arms : TArms Φ Γ τ v) (k : K Γ τ.denote) (ks : K Γ Bool) {env : Env} {ρ : Γ.denote}, EnvRel Γ env ρ →
+        arms.firstSafe fs ss ks ρ = true → arms.wf = true → arms.nextOk = true →
+        ∃ out, Converges (fun n => execStmts prog n env (arms.erase.flatMap (·.2))) (.ok out) ∧
+          SRel Γ τ env (arms.first fs k ρ) k ks (arms.isNil || arms.falls) arms.breaks arms.continues out
+    | .nil, k, ks, env, ρ, he, hs, _, _ => ⟨_, conv_nil, rfl, [], env, ρ, rfl, rfl, he, rfl, hs⟩
+    | .empty l rest, k, ks, env, ρ, he, hs, hw, _ => by
+      simp only [TArms.wf, Bool.and_eq_true] at hw
+      obtain ⟨out, hc, hr⟩ := TArms.first_adequate rest k ks he hs hw.2 hw.1.2
+      exact ⟨out, by simpa [TArms.erase] using hc,
+        hr.mono (fun h => show (false || (rest.isNil || rest.falls)) = true by simpa using h) id id⟩
+    | .wide l body rest, k, ks, env, ρ, he, hs, hw, _ => by
+      simp only [TArms.wf, Bool.and_eq_true, Bool.or_eq_true, Bool.not_eq_true'] at hw
+      obtain ⟨o, hc, hr⟩ := TStmts.adequate body k ks he hs hw.1.2
+      refine ⟨o, ?_, ?_⟩
+      · rcases hw.1.1.2 with hnil | hnf
+        · cases rest with
+          | nil => simpa [TArms.erase] using hc
+          | _ => simp [TArms.isNil] at hnil
+        · have hn : ∀ e, o ≠ .normal e := fun e h => by subst h; simp [SRel, hnf] at hr
+          simpa [TArms.erase] using conv_append hc hn
+      · simp only [TArms.first, TArms.isNil, TArms.falls, TArms.breaks, TArms.continues]
+        exact hr.mono (by flags) (by flags) (by flags)
+    | .narrow .., _, _, _, _, _, _, _, hn => by simp [TArms.nextOk] at hn
+
+  /-- The case a variant selects: the first labelled with its tag, else the last
+  `default` (whose run is `d`), else none. -/
+  theorem TArms.adequate {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} :
+      ∀ (arms : TArms Φ Γ τ v) (k : K Γ τ.denote) (ks : K Γ Bool) {env : Env} {ρ : Γ.denote} {t : TagLit}
+        {fds : Fields} (i : VIdx vs0 t fds) (y : fds.denote) (kvs : List (String × JSValue)) (i0 : Nat)
+        (d : τ.denote) (dS : Bool),
+        EnvRel Γ env ρ → env.lookup x = some (.record kvs) → (kvs.map Prod.fst).Nodup →
+        vs0.Rep key kvs (i.inj y) → vs0.tagsOk = true → arms.safe fs ss ks ρ i y dS = true → arms.wf = true →
+        (∃ j out, Converges (fun n => findCase prog n env t.value arms.erase i0) (.ok (some (i0 + j))) ∧
+            Converges (fun n => execStmts prog n env ((arms.erase.drop j).flatMap (·.2))) (.ok out) ∧
+            SRel Γ τ env (arms.denote fs k ρ i y d) k ks arms.falls arms.breaks arms.continues out) ∨
+          (Converges (fun n => findCase prog n env t.value arms.erase i0) (.ok none) ∧
+            arms.denote fs k ρ i y d = d ∧ arms.safe fs ss ks ρ i y dS = dS ∧
+            some t ∉ arms.labels ∧ none ∉ arms.labels)
+    | .nil, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ =>
+      .inr ⟨Converges.of_succ 0 fun m _ => by simp [findCase, TArms.erase], rfl, rfl, by simp [TArms.labels],
+        by simp [TArms.labels]⟩
+    | .empty l rest, k, ks, env, ρ, t, fds, i, y, kvs, i0, d, dS, he, hl, hnd, hrep, hok, hs, hw => by
+      simp only [TArms.wf, Bool.and_eq_true] at hw
+      have hts := Variants.strTags_of_mem hok i.mem_tags
+      rcases l with _ | t'
+      · simp only [TArms.safe, TArms.denote, reduceCtorEq, ↓reduceIte] at hs ⊢
+        rcases TArms.adequate rest k ks i y kvs (i0 + 1) (rest.first fs k ρ) (rest.firstSafe fs ss ks ρ) he hl hnd hrep
+            hok hs hw.2 with ⟨j, out, hf, hb, hr⟩ | ⟨hf, hden, hsafe, _, _⟩
+        · have hf' := findCase_default (body := []) hf
+          simp only [Option.getD_some] at hf'
+          refine .inl ⟨j + 1, out, ?_, by simpa [TArms.erase] using hb, ?_⟩
+          · rw [show i0 + (j + 1) = i0 + 1 + j by omega]; simpa [TArms.erase] using hf'
+          · simp only [TArms.falls, TArms.breaks, TArms.continues]
+            exact hr.mono (by flags) (by flags) (by flags)
+        · have hf' := findCase_default (body := []) hf
+          simp only [Option.getD_none] at hf'
+          obtain ⟨out, hc, hr⟩ := TArms.first_adequate rest k ks he (by rw [← hsafe]; exact hs) hw.2 hw.1.2
+          refine .inl ⟨0, out, by simpa [TArms.erase] using hf', by simpa [TArms.erase] using hc, ?_⟩
+          rw [hden]
+          simp only [TArms.falls, TArms.breaks, TArms.continues]
+          exact hr.mono (by flags) (by flags) (by flags)
+      · have hlab : t'.isStr = vs0.strTags := by simpa using hw.1.1
+        have hb := TagLit.strictEq_value (a := t) (b := t') (by rw [hts, hlab])
+        by_cases heq : t = t'
+        · subst heq
+          simp only [TArms.safe, TArms.denote, ↓reduceIte] at hs ⊢
+          obtain ⟨out, hc, hr⟩ := TArms.first_adequate rest k ks he hs hw.2 hw.1.2
+          have hf := findCase_label (prog := prog) (env := env) (body := []) (rest := rest.erase) (i0 := i0) (r := none) hb
+            (fun h => by simp at h)
+          refine .inl ⟨0, out, by simpa [TArms.erase] using hf, by simpa [TArms.erase] using hc, ?_⟩
+          simp only [TArms.falls, TArms.breaks, TArms.continues]
+          exact hr.mono (by flags) (by flags) (by flags)
+        · have hne : (some t' = some t) = False := by simp [Ne.symm heq]
+          simp only [TArms.safe, TArms.denote, hne, reduceCtorEq, ↓reduceIte] at hs ⊢
+          rcases TArms.adequate rest k ks i y kvs (i0 + 1) d dS he hl hnd hrep hok hs hw.2 with
+            ⟨j, out, hf, hb', hr⟩ | ⟨hf, hden, hsafe, hnt, hnn⟩
+          · have hf' := findCase_label (prog := prog) (env := env) (body := []) hb (fun _ => hf)
+            simp only [heq, decide_false, Bool.false_eq_true, ↓reduceIte] at hf'
+            refine .inl ⟨j + 1, out, ?_, by simpa [TArms.erase] using hb', ?_⟩
+            · rw [show i0 + (j + 1) = i0 + 1 + j by omega]; simpa [TArms.erase] using hf'
+            · simp only [TArms.falls, TArms.breaks, TArms.continues]
+              exact hr.mono (by flags) (by flags) (by flags)
+          · have hf' := findCase_label (prog := prog) (env := env) (body := []) hb (fun _ => hf)
+            simp only [heq, decide_false, Bool.false_eq_true, ↓reduceIte] at hf'
+            exact .inr ⟨by simpa [TArms.erase] using hf', hden, hsafe, by simp [TArms.labels, heq, hnt],
+              by simp [TArms.labels, hnn]⟩
+    | .wide l body rest, k, ks, env, ρ, t, fds, i, y, kvs, i0, d, dS, he, hl, hnd, hrep, hok, hs, hw => by
+      simp only [TArms.wf, Bool.and_eq_true, Bool.or_eq_true, Bool.not_eq_true'] at hw
+      have hts := Variants.strTags_of_mem hok i.mem_tags
+      -- Running this case's body (and, if it is the last, nothing after it).
+      have hrun : body.safe fs ss ks ρ = true → ∃ out,
+          Converges (fun n => execStmts prog n env ((TArms.wide l body rest).erase.flatMap (·.2))) (.ok out) ∧
+          SRel Γ τ env (body.denote fs k ρ) k ks (TArms.wide l body rest).falls (TArms.wide l body rest).breaks
+            (TArms.wide l body rest).continues out := fun hsb => by
+        obtain ⟨o, hco, hro⟩ := TStmts.adequate body k ks he hsb hw.1.2
+        refine ⟨o, ?_, hro.mono (fun h => by simp [TArms.falls, h]) (fun h => by simp [TArms.breaks, h])
+          (fun h => by simp [TArms.continues, h])⟩
+        rcases hw.1.1.2 with hnil | hnf
+        · cases rest with
+          | nil => simpa [TArms.erase] using hco
+          | _ => simp [TArms.isNil] at hnil
+        · have hn : ∀ e, o ≠ .normal e := fun e h => by subst h; simp [SRel, hnf] at hro
+          simpa [TArms.erase] using conv_append hco hn
+      rcases l with _ | t'
+      · simp only [TArms.safe, TArms.denote, reduceCtorEq, ↓reduceIte] at hs ⊢
+        rcases TArms.adequate rest k ks i y kvs (i0 + 1) (body.denote fs k ρ) (body.safe fs ss ks ρ) he hl hnd hrep
+            hok hs hw.2 with ⟨j, out, hf, hb, hr⟩ | ⟨hf, hden, hsafe, _, _⟩
+        · have hf' := findCase_default (body := body.erase) hf
+          simp only [Option.getD_some] at hf'
+          refine .inl ⟨j + 1, out, ?_, by simpa [TArms.erase] using hb, ?_⟩
+          · rw [show i0 + (j + 1) = i0 + 1 + j by omega]; simpa [TArms.erase] using hf'
+          · simp only [TArms.falls, TArms.breaks, TArms.continues]
+            exact hr.mono (by flags) (by flags) (by flags)
+        · have hf' := findCase_default (body := body.erase) hf
+          simp only [Option.getD_none] at hf'
+          obtain ⟨out, hc, hr⟩ := hrun (by rw [← hsafe]; exact hs)
+          refine .inl ⟨0, out, by simpa [TArms.erase] using hf', by simpa using hc, ?_⟩
+          rw [hden]; exact hr
+      · have hlab : t'.isStr = vs0.strTags := by simpa using hw.1.1.1
+        have hb := TagLit.strictEq_value (a := t) (b := t') (by rw [hts, hlab])
+        by_cases heq : t = t'
+        · subst heq
+          simp only [TArms.safe, TArms.denote, ↓reduceIte] at hs ⊢
+          obtain ⟨out, hc, hr⟩ := hrun hs
+          have hf := findCase_label (prog := prog) (env := env) (body := body.erase) (rest := rest.erase) (i0 := i0) (r := none) hb
+            (fun h => by simp at h)
+          exact .inl ⟨0, out, by simpa [TArms.erase] using hf, by simpa using hc, hr⟩
+        · have hne : (some t' = some t) = False := by simp [Ne.symm heq]
+          simp only [TArms.safe, TArms.denote, hne, reduceCtorEq, ↓reduceIte] at hs ⊢
+          rcases TArms.adequate rest k ks i y kvs (i0 + 1) d dS he hl hnd hrep hok hs hw.2 with
+            ⟨j, out, hf, hb', hr⟩ | ⟨hf, hden, hsafe, hnt, hnn⟩
+          · have hf' := findCase_label (prog := prog) (env := env) (body := body.erase) hb (fun _ => hf)
+            simp only [heq, decide_false, Bool.false_eq_true, ↓reduceIte] at hf'
+            refine .inl ⟨j + 1, out, ?_, by simpa [TArms.erase] using hb', ?_⟩
+            · rw [show i0 + (j + 1) = i0 + 1 + j by omega]; simpa [TArms.erase] using hf'
+            · simp only [TArms.falls, TArms.breaks, TArms.continues]
+              exact hr.mono (by flags) (by flags) (by flags)
+          · have hf' := findCase_label (prog := prog) (env := env) (body := body.erase) hb (fun _ => hf)
+            simp only [heq, decide_false, Bool.false_eq_true, ↓reduceIte] at hf'
+            exact .inr ⟨by simpa [TArms.erase] using hf', hden, hsafe, by simp [TArms.labels, heq, hnt],
+              by simp [TArms.labels, hnn]⟩
+    | .narrow (t := t') (fs := fs') i' body rest, k, ks, env, ρ, t, fds, i, y, kvs, i0, d, dS, he, hl, hnd, hrep,
+        hok, hs, hw => by
+      simp only [TArms.wf, Bool.and_eq_true, Bool.or_eq_true, Bool.not_eq_true'] at hw
+      have hts := Variants.strTags_of_mem hok i.mem_tags
+      have hts' := Variants.strTags_of_mem hok i'.mem_tags
+      have hb := TagLit.strictEq_value (a := t) (b := t') (by rw [hts, hts'])
+      have ht := (i.rep_inj hrep).1
+      cases hp : i'.proj (i.inj y) with
+      | some y' =>
+        obtain ⟨ht', hy'⟩ := i'.rep_proj hrep hp
+        have heq : t = t' := TagLit.value_inj (ht.symm.trans ht')
+        simp only [TArms.safe, TArms.denote, hp] at hs ⊢
+        have hrel : EnvRel (v.narrow (vrec key t' fs')) env (v.narrowVal ρ ((), y')) :=
+          v.narrowRel he fun w hw' _ => by rw [hl] at hw'; cases hw'; exact vrec_rep hnd ht' hy'
+        obtain ⟨o, hco, hro⟩ := TStmts.adequate body (k.map (v.widen fun z => i'.inj z.2))
+          (ks.map (v.widen fun z => i'.inj z.2)) hrel hs hw.1.2
+        have hf := findCase_label (prog := prog) (env := env) (body := body.erase) (rest := rest.erase) (i0 := i0) (r := none) hb
+          (fun h => by simp [heq] at h)
+        refine .inl ⟨0, o, by simpa [TArms.erase, heq] using hf, ?_, ?_⟩
+        · rcases hw.1.1 with hnil | hnf
+          · cases rest with
+            | nil => simpa [TArms.erase] using hco
+            | _ => simp [TArms.isNil] at hnil
+          · have hn : ∀ e, o ≠ .normal e := fun e h => by subst h; simp [SRel, hnf] at hro
+            simpa [TArms.erase] using conv_append hco hn
         · have := SRel.widen (fun w z hz => by
-            obtain ⟨kvs', rfl, hnd', ht', hz'⟩ := hz
-            exact ⟨kvs', rfl, hnd', hinj kvs' _ hnd' ⟨ht', hz'⟩⟩) hro
-          simp only [TCases.denote, TCases.falls, TCases.breaks, TCases.continues]
+            obtain ⟨kvs', rfl, hnd', ht'', hz'⟩ := hz
+            exact ⟨kvs', rfl, hnd', i'.rep ht'' hz'⟩) hro
+          simp only [TArms.falls, TArms.breaks, TArms.continues]
           exact this.mono (by flags) (by flags) (by flags)
-      | inr w =>
-        obtain ⟨t', ht', hfield⟩ := Variants.rep_tag (vs := more) hrep
-        have hne : t' ≠ t := fun h => hok'.2.1 (h ▸ ht')
-        obtain ⟨j, o, hf, hb, hro⟩ := TCases.adequate rest k ks (fun z => inj (.inr z)) w kvs (i0 + 1) he hl hnd
-          hrep (fun kvs' u' hn' h => hinj kvs' (.inr u') hn' h) hok'.1 hs hw.2
-        refine ⟨j + 1, o, ?_, by simpa [TCases.erase] using hb, ?_⟩
-        · obtain ⟨N, hf⟩ := hf
-          refine Converges.of_succ (N + 1) fun m hm => ?_
-          obtain ⟨m', rfl⟩ : ∃ k, m = k + 1 := ⟨m - 1, by omega⟩
-          have hf' := hf (m' + 1) (by omega)
-          simp only [hfield] at hf'
-          have hj : i0 + 1 + j = i0 + (j + 1) := by omega
-          simp [findCase, TCases.erase, evalExpr, hfield, TagLit.lit_value, bind, Except.bind, pure, Except.pure,
-            TagLit.strictEq_value (hok'.2.2 t' ht'), hne, hf', hj]
-        · simp only [TCases.denote, TCases.falls, TCases.breaks, TCases.continues]
-          exact hro.mono (by flags) (by flags) (by flags)
+      | none =>
+        have hne := i'.proj_none hok hrep hp
+        have heq : t ≠ t' := fun h => hne (h ▸ ht)
+        simp only [TArms.safe, TArms.denote, hp] at hs ⊢
+        rcases TArms.adequate rest k ks i y kvs (i0 + 1) d dS he hl hnd hrep hok hs hw.2 with
+          ⟨j, out, hf, hb', hr⟩ | ⟨hf, hden, hsafe, hnt, hnn⟩
+        · have hf' := findCase_label (prog := prog) (env := env) (body := body.erase) hb (fun _ => hf)
+          simp only [heq, decide_false, Bool.false_eq_true, ↓reduceIte] at hf'
+          refine .inl ⟨j + 1, out, ?_, by simpa [TArms.erase] using hb', ?_⟩
+          · rw [show i0 + (j + 1) = i0 + 1 + j by omega]; simpa [TArms.erase] using hf'
+          · simp only [TArms.falls, TArms.breaks, TArms.continues]
+            exact hr.mono (by flags) (by flags) (by flags)
+        · have hf' := findCase_label (prog := prog) (env := env) (body := body.erase) hb (fun _ => hf)
+          simp only [heq, decide_false, Bool.false_eq_true, ↓reduceIte] at hf'
+          exact .inr ⟨by simpa [TArms.erase] using hf', hden, hsafe, by simp [TArms.labels, heq, hnt],
+            by simp [TArms.labels, hnn]⟩
 end
 
 end

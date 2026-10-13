@@ -270,18 +270,29 @@ mutual
     | .ifNotNull v _ yes no rest, k, ρ => match v.get ρ with
       | some y => yes.denote fs (K.map (v.widen some) { k with normal := rest.denote fs k }) (v.narrowVal ρ y)
       | none => no.denote fs { k with normal := rest.denote fs k } ρ
-    | .switchU v _ cases rest, k, ρ =>
-      cases.denote fs { k with normal := rest.denote fs k, brk := rest.denote fs k } ρ id (v.get ρ)
+    | .switchG v _ arms rest, k, ρ =>
+      Variants.elim _ (v.get ρ) fun i y =>
+        arms.denote fs { k with normal := rest.denote fs k, brk := rest.denote fs k } ρ i y (rest.denote fs k ρ)
 
-  /-- A case runs with the variable narrowed to its variant; `inj` embeds the
-  remaining variants into the union. -/
-  def TCases.denote {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants}
-      {v : Var Γ x (.union key vs0)} {vs : Variants} (fs : Φ.denote) :
-      TCases Φ Γ τ v vs → K Γ τ.denote → Γ.denote → (vs.denote → vs0.denote) → vs.denote → τ.denote
-    | .one body, k, ρ, inj, y => body.denote fs (k.map (v.widen fun z => inj z.2)) (v.narrowVal ρ ((), y))
-    | .cons body more, k, ρ, inj, u => match u with
-      | .inl y => body.denote fs (k.map (v.widen fun z => inj (.inl z.2))) (v.narrowVal ρ ((), y))
-      | .inr w => more.denote fs k ρ (fun z => inj (.inr z)) w
+  /-- Running the cases from this one on (after a match). -/
+  def TArms.first {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} (fs : Φ.denote) : TArms Φ Γ τ v → K Γ τ.denote → Γ.denote → τ.denote
+    | .nil, k, ρ => k.normal ρ
+    | .empty _ rest, k, ρ => rest.first fs k ρ
+    | .wide _ body _, k, ρ => body.denote fs k ρ
+    | .narrow _ _ _, k, ρ => k.normal ρ
+
+  /-- The case for the variant `i` (tagged `t`): the first case labelled `t`, else
+  `default` (`d`, the run from the last `default` seen so far). -/
+  def TArms.denote {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} {t : TagLit} {fds : Fields} (fs : Φ.denote) :
+      TArms Φ Γ τ v → K Γ τ.denote → Γ.denote → VIdx vs0 t fds → fds.denote → τ.denote → τ.denote
+    | .nil, _, _, _, _, d => d
+    | .empty l rest, k, ρ, i, y, d =>
+      if l = some t then rest.first fs k ρ else rest.denote fs k ρ i y (if l = none then rest.first fs k ρ else d)
+    | .wide l body rest, k, ρ, i, y, d =>
+      if l = some t then body.denote fs k ρ else rest.denote fs k ρ i y (if l = none then body.denote fs k ρ else d)
+    | .narrow i' body rest, k, ρ, i, y, d => match i'.proj (i.inj y) with
+      | some y' => body.denote fs (k.map (v.widen fun z => i'.inj z.2)) (v.narrowVal ρ ((), y'))
+      | none => rest.denote fs k ρ i y d
 end
 
 mutual
@@ -313,16 +324,28 @@ mutual
     | .ifNotNull v _ yes no rest, k, ρ => match v.get ρ with
       | some y => yes.safe fs ss (K.map (v.widen some) { k with normal := rest.safe fs ss k }) (v.narrowVal ρ y)
       | none => no.safe fs ss { k with normal := rest.safe fs ss k } ρ
-    | .switchU v _ cases rest, k, ρ =>
-      cases.safe fs ss { k with normal := rest.safe fs ss k, brk := rest.safe fs ss k } ρ id (v.get ρ)
+    | .switchG v _ arms rest, k, ρ =>
+      Variants.elim _ (v.get ρ) fun i y =>
+        arms.safe fs ss { k with normal := rest.safe fs ss k, brk := rest.safe fs ss k } ρ i y (rest.safe fs ss k ρ)
 
-  def TCases.safe {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants}
-      {v : Var Γ x (.union key vs0)} {vs : Variants} (fs : Φ.denote) (ss : Φ.safety) :
-      TCases Φ Γ τ v vs → K Γ Bool → Γ.denote → (vs.denote → vs0.denote) → vs.denote → Bool
-    | .one body, k, ρ, inj, y => body.safe fs ss (k.map (v.widen fun z => inj z.2)) (v.narrowVal ρ ((), y))
-    | .cons body more, k, ρ, inj, u => match u with
-      | .inl y => body.safe fs ss (k.map (v.widen fun z => inj (.inl z.2))) (v.narrowVal ρ ((), y))
-      | .inr w => more.safe fs ss k ρ (fun z => inj (.inr z)) w
+  def TArms.firstSafe {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} (fs : Φ.denote) (ss : Φ.safety) : TArms Φ Γ τ v → K Γ Bool → Γ.denote → Bool
+    | .nil, k, ρ => k.normal ρ
+    | .empty _ rest, k, ρ => rest.firstSafe fs ss k ρ
+    | .wide _ body _, k, ρ => body.safe fs ss k ρ
+    | .narrow _ _ _, k, ρ => k.normal ρ
+
+  def TArms.safe {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} {t : TagLit} {fds : Fields} (fs : Φ.denote) (ss : Φ.safety) :
+      TArms Φ Γ τ v → K Γ Bool → Γ.denote → VIdx vs0 t fds → fds.denote → Bool → Bool
+    | .nil, _, _, _, _, d => d
+    | .empty l rest, k, ρ, i, y, d =>
+      if l = some t then rest.firstSafe fs ss k ρ
+      else rest.safe fs ss k ρ i y (if l = none then rest.firstSafe fs ss k ρ else d)
+    | .wide l body rest, k, ρ, i, y, d =>
+      if l = some t then body.safe fs ss k ρ
+      else rest.safe fs ss k ρ i y (if l = none then body.safe fs ss k ρ else d)
+    | .narrow i' body rest, k, ρ, i, y, d => match i'.proj (i.inj y) with
+      | some y' => body.safe fs ss (k.map (v.widen fun z => i'.inj z.2)) (v.narrowVal ρ ((), y'))
+      | none => rest.safe fs ss k ρ i y d
 end
 
 /-- A function body; falling off the end (excluded by `TProgram.WF`) gives the default. -/

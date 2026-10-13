@@ -77,3 +77,34 @@ export function pick(a: Point, b: Point, preferA: boolean): Point {
   const chosen = preferA ? a : b;
   return { ...chosen, label: chosen.label ?? 'picked' };
 }
+
+export function rank(f: Fact): bigint {
+  switch (f.kind) {
+    case 'opened':
+      return f.written;
+    case 'unopened':
+    case 'damaged':
+      return -1n;
+  }
+}
+
+export function isOpened(f: Fact): boolean {
+  switch (f.kind) {
+    case 'opened':
+      return true;
+    default:
+      return false;
+  }
+}
+
+export function weight(f: Fact): bigint {
+  let w = 0n;
+  switch (f.kind) {
+    case 'damaged':
+      w = 5n;
+      break;
+    default:
+      w = 1n;
+  }
+  return w;
+}

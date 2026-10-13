@@ -281,11 +281,12 @@ def body.«grid» : TStmts [sig.«bump», sig.«classify», sig.«largest», sig
 def body.«perimeters» : TStmts [sig.«grid», sig.«bump», sig.«classify», sig.«largest», sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«perimeters».params sig.«perimeters».result :=
   (.let_ "t" (.num 0)
   (.forOf "sh" (.var (.there ne.«shapes».«t» .here))
-  (.switchU .here (by decide)
-  (.cons (.assign (.there ne.«t».«sh» .here) (.nadd (.var (.there ne.«t».«sh» .here)) (.nmul (.num 6) (.field (.var .here) (.there .here) (by decide))))
+  (.switchG .here (by decide)
+  (.narrow .head (.assign (.there ne.«t».«sh» .here) (.nadd (.var (.there ne.«t».«sh» .here)) (.nmul (.num 6) (.field (.var .here) (.there .here) (by decide))))
   (.brk .nil))
-  (.one (.assign (.there ne.«t».«sh» .here) (.nadd (.var (.there ne.«t».«sh» .here)) (.nmul (.num 4) (.field (.var .here) (.there .here) (by decide))))
-  (.brk .nil))))
+  (.narrow (.there .one) (.assign (.there ne.«t».«sh» .here) (.nadd (.var (.there ne.«t».«sh» .here)) (.nmul (.num 4) (.field (.var .here) (.there .here) (by decide))))
+  (.brk .nil))
+  .nil))
   .nil)
   (.ret (.var .here) .nil)))
 

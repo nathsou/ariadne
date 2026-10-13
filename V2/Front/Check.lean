@@ -376,13 +376,6 @@ def Scope.fnRef (s : Scope) (span : Span) (f : String) : Checked (String × FnSi
     | throw { code := "A2001", message := s!"'{f}' is not a function declared earlier", span }
   return (fnPath (s.fns.length - 1 - j), s.fns[j]!)
 
-/-- A callback `(x) => e`, or `(x, y) => e`. -/
-def callbackOf (span : Span) (n : Nat) : Parse.Expr → Checked (List String × Parse.Expr)
-  | .lambda ps (.return_ body _) _ =>
-    if ps.length == n then pure (ps.map (·.name), body)
-    else unsupportedTy span s!"a callback with other than {n} parameter(s)"
-  | _ => unsupportedTy span "a callback other than an arrow function with an expression body"
-
 mutual
   partial def checkExpr (T : Types) (s : Scope) (e : Parse.Expr) (expected : Option Ty) : Checked Out := do
     let out ← inferExpr T s e expected
@@ -781,18 +774,38 @@ def branchStmts : Parse.Stmt → List Parse.Stmt
   | .block ss _ => ss
   | s => [s]
 
-/-- Readable `switch` arms: nested matches on the union's sum, each binding the
-narrowed variable to the variant's record (`((), fields)`). `render` picks the
-denotation or the safety condition. -/
-def switchArms (render : Block → String → KText → String) (x : String) (arms : List (Block × Narrowed)) (k : KText)
+/-- A checked `switch` case. -/
+inductive SwitchArm where
+  | empty (l : Option TagLit)
+  | wide (l : Option TagLit) (b : Block)
+  | narrow (j : Nat) (b : Block) (n : Narrowed)
+
+instance : Inhabited SwitchArm := ⟨.empty none⟩
+
+def SwitchArm.body? : SwitchArm → Option Block
+  | .empty _ => none
+  | .wide _ b | .narrow _ b _ => some b
+
+/-- What a `switch` runs for one variant. -/
+inductive Leaf where
+  | narrowed (b : Block) (n : Narrowed)
+  | run (b : Block)
+  | normal
+
+/-- Readable `switch`: nested matches on the union's sum, one leaf per variant. -/
+def switchLeaves (render : Block → String → KText → String) (x : String) (leaves : List Leaf) (k : KText)
     (scrut ind : String) : String :=
-  match arms with
+  let leafText (l : Leaf) (bind j : String) : String := match l with
+    | .narrowed b n => s!"let {ident x} := ((), {bind})\n{j}{render b j (k.wrap n)}"
+    | .run b => render b j k
+    | .normal => k.normal j
+  match leaves with
   | [] => ""
-  | [(b, n)] => s!"let {ident x} := ((), {scrut})\n{ind}{render b ind (k.wrap n)}"
-  | (b, n) :: more =>
+  | [l] => leafText l scrut ind
+  | l :: more =>
     let j := ind ++ "  "
-    s!"match {scrut} with\n{ind}| Sum.inl p' =>\n{j}let {ident x} := ((), p')\n{j}{render b j (k.wrap n)}\n" ++
-      s!"{ind}| Sum.inr p' =>\n{j}{switchArms render x more k "p'" j}"
+    s!"match {scrut} with\n{ind}| Sum.inl p' =>\n{j}{leafText l "p'" j}\n" ++
+      s!"{ind}| Sum.inr p' =>\n{j}{switchLeaves render x more k "p'" j}"
 
 /-- The environment tuple of a scope, as readable text. -/
 def tupleText (locals : List (String × Ty)) : String :=
@@ -970,7 +983,8 @@ mutual
                readable := text (·.readable), safe := text (·.safe),
                trivial := yes.trivial && no.trivial && rest.trivial, falls, breaks, continues }
 
-  /-- `switch (x.key)` over a union-typed local, one case per variant in order. -/
+  /-- `switch (x.key)` over a union-typed local: cases in any order, grouped labels and
+  `default`. A case with one label (not reached by falling through) narrows `x`. -/
   partial def checkSwitch (T : Types) (s : Scope) (result : Ty) (e : Parse.Expr)
       (cases : List (Option Parse.Expr × List Parse.Stmt)) (span : Span) (rest : List Parse.Stmt) : Checked Block := do
     let .member (.var x _) key _ := e | unsupportedTy span "a switch other than on a union's tag field"
@@ -978,35 +992,68 @@ mutual
     if key != key' then mismatch span s!"'{key}' is not the tag field of '{x}'"
     if protoName key then mismatch span s!"'{key}' is an Object.prototype property"
     let variants := Variants.toList vs
-    if cases.length != variants.length then
-      unsupportedTy span "a switch without exactly one case per variant (in the union's order)"
-    let bodies ← (cases.zip variants).zipIdx.mapM fun (((label, body), (t, fs)), j) => do
-      let ok := match label, t with
-        | some (.literal (.string u) _), .str u' => u == u'
-        | some (.literal (.boolean b) _), .bool b' => b == b'
-        | _, _ => false
-      if !ok then unsupportedTy span s!"case {j + 1} must be {tagLitTS t} (cases follow the union's order)"
-      let σ := vrec' key t fs
-      let n : Narrowed := { index := i, name := x, wide := τ, narrow := σ,
-                            embed := s!"({injText j variants.length s!"{ident x}.2"} : {T.lean τ})" }
-      let b ← checkStmts T (s.narrow i σ) result body
-      if j + 1 < variants.length && b.falls then
-        unsupportedTy span s!"case {tagLitTS t} falls through to the next case"
-      pure (b, n)
+    let n := variants.length
+    let labels ← cases.mapM fun (l, _) => match l with
+      | none => pure none
+      | some (.literal (.string u) _) => pure (some (TagLit.str u))
+      | some (.literal (.boolean b) _) => pure (some (TagLit.bool b))
+      | some _ => unsupportedTy span "a case label other than a string or boolean literal"
+    for l in labels do
+      if let some t := l then
+        if !variants.any (·.1 == t) then mismatch span s!"no variant tagged {tagLitTS t}"
+    let tags := labels.filterMap id
+    if tags.length != tags.eraseDups.length then mismatch span "a case label repeated"
+    if (labels.filter (·.isNone)).length > 1 then mismatch span "more than one default"
+    let arms ← (cases.zip labels).zipIdx.mapM fun (((_, body), l), p) => do
+      let reached := p > 0 && ((cases[p - 1]?.map (·.2.isEmpty)).getD false)
+      if body.isEmpty then return SwitchArm.empty l
+      match l with
+      | some t =>
+        if !reached then
+          let j := (variants.findIdx? (·.1 == t)).get!
+          let (t, fs) := variants[j]!
+          let σ := vrec' key t fs
+          let nar : Narrowed := { index := i, name := x, wide := τ, narrow := σ,
+                                  embed := s!"({injText j n s!"{ident x}.2"} : {T.lean τ})" }
+          return SwitchArm.narrow j (← checkStmts T (s.narrow i σ) result body) nar
+        return SwitchArm.wide l (← checkStmts T s result body)
+      | none => return SwitchArm.wide l (← checkStmts T s result body)
+    for (arm, p) in arms.zipIdx do
+      if p + 1 < arms.length && (arm.body?.map (·.falls)).getD false then
+        unsupportedTy span s!"case {p + 1} falls through to the next case"
     let rest ← checkStmts T s result rest
-    let casesTyped := bodies.foldr (fun (b, _) acc =>
-      if acc.isEmpty then s!"(.one {b.typed})" else s!"(.cons {b.typed}\n  {acc})") ""
-    let falls := (bodies.getLast?.map (·.1.falls)).getD false
-    let breaks := bodies.any (·.1.breaks)
-    let continues := bodies.any (·.1.continues)
+    let printLabel : Option TagLit → String
+      | none => "none"
+      | some t => s!"(some {printTag t})"
+    let armsTyped := arms.foldr (fun arm acc => match arm with
+      | .empty l => s!"(.empty {printLabel l} {acc})"
+      | .wide l b => s!"(.wide {printLabel l} {b.typed}\n  {acc})"
+      | .narrow j b _ => s!"(.narrow {vidxPath j n} {b.typed}\n  {acc})") ".nil"
+    -- What each variant runs: its case, else the last default, else nothing.
+    let firstFrom (p : Nat) : Leaf :=
+      match (arms.drop p).find? (fun a => !(a matches .empty _)) with
+      | some (.wide _ b) => .run b
+      | _ => .normal
+    let leaves := variants.map fun (t, _) =>
+      match labels.findIdx? (· == some t) with
+      | some p => match arms[p]? with
+        | some (SwitchArm.narrow _ b nar) => Leaf.narrowed b nar
+        | _ => firstFrom p
+      | none => match (labels.zipIdx.filter (·.1.isNone)).getLast? with
+        | some (_, q) => firstFrom q
+        | none => .normal
+    let bodies := arms.filterMap (·.body?)
+    let armsFalls := bodies.any (·.falls) || (arms.getLast?.map (· matches .empty _)).getD false
+    let covers := labels.contains none || variants.all fun (t, _) => labels.contains (some t)
+    let f := armsFalls || bodies.any (·.breaks) || !covers
     let text (render : Block → String → KText → String) (ind : String) (k : KText) :=
       let kr := fun j => render rest j k
-      switchArms render x bodies { k with normal := kr, brk := kr } (ident x) ind
-    pure { typed := s!"(.switchU {s.varPath i} (by decide)\n  {casesTyped}\n  {rest.typed})",
+      switchLeaves render x leaves { k with normal := kr, brk := kr } (ident x) ind
+    pure { typed := s!"(.switchG {s.varPath i} (by decide)\n  {armsTyped}\n  {rest.typed})",
            readable := text (·.readable), safe := text (·.safe),
-           trivial := bodies.all (·.1.trivial) && rest.trivial,
-           falls := (falls || breaks) && rest.falls, breaks := (falls || breaks) && rest.breaks,
-           continues := continues || ((falls || breaks) && rest.continues) }
+           trivial := bodies.all (·.trivial) && rest.trivial,
+           falls := f && rest.falls, breaks := f && rest.breaks,
+           continues := bodies.any (·.continues) || (f && rest.continues) }
 end
 
 /-! ## Functions and files -/

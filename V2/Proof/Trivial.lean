@@ -89,21 +89,52 @@ mutual
       split
       · exact TStmts.safe_of_trivial yes ks ρ hk h.1
       · exact TStmts.safe_of_trivial rest _ _ (fun ρ' => hk _) h.2
-    | _, _, .switchU v _ cases rest, ks, ρ, hk, h => by
+    | _, _, .switchG v _ arms rest, ks, ρ, hk, h => by
       simp only [TStmts.trivial, Bool.and_eq_true] at h
       have hr := fun ρ' => TStmts.safe_of_trivial rest ks ρ' hk h.2
-      exact TCases.safe_of_trivial cases _ ρ id _ (fun ρ' => ⟨hr ρ', hr ρ', (hk ρ').2.2⟩) h.1
+      obtain ⟨t, fds, i, y, hu⟩ := VIdx.decomp _ (v.get ρ)
+      simp only [TStmts.safe, hu, Variants.elim_inj]
+      exact TArms.safe_of_trivial arms _ ρ i y _ (fun ρ' => ⟨hr ρ', hr ρ', (hk ρ').2.2⟩) h.1 (hr ρ)
+  theorem TArms.firstSafe_of_trivial {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants}
+      {v : Var Γ x (.union key vs0)} : ∀ (arms : TArms Φ Γ τ v) (ks : K Γ Bool) (ρ : Γ.denote), ks.True →
+      arms.trivial = true → arms.firstSafe fs ss ks ρ = true
+    | .nil, _, ρ, hk, _ => (hk ρ).1
+    | .empty _ rest, ks, ρ, hk, h => TArms.firstSafe_of_trivial rest ks ρ hk h
+    | .wide _ body _, ks, ρ, hk, h => by
+      simp only [TArms.trivial, Bool.and_eq_true] at h
+      exact TStmts.safe_of_trivial body ks ρ hk h.1
+    | .narrow .., _, ρ, hk, _ => (hk ρ).1
 
-  theorem TCases.safe_of_trivial {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants}
-      {v : Var Γ x (.union key vs0)} : ∀ {vs : Variants} (cases : TCases Φ Γ τ v vs) (ks : K Γ Bool) (ρ : Γ.denote)
-      (inj : vs.denote → vs0.denote) (u : vs.denote), ks.True → cases.trivial = true →
-      cases.safe fs ss ks ρ inj u = true
-    | _, .one body, ks, ρ, inj, u, hk, h => TStmts.safe_of_trivial body _ _ (fun ρ' => hk _) h
-    | _, .cons body more, ks, ρ, inj, u, hk, h => by
-      simp only [TCases.trivial, Bool.and_eq_true] at h
-      cases u with
-      | inl y => exact TStmts.safe_of_trivial body _ _ (fun ρ' => hk _) h.1
-      | inr w => exact TCases.safe_of_trivial more ks ρ _ w hk h.2
+  theorem TArms.safe_of_trivial {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants}
+      {v : Var Γ x (.union key vs0)} : ∀ (arms : TArms Φ Γ τ v) (ks : K Γ Bool) (ρ : Γ.denote) {t : TagLit}
+      {fds : Fields} (i : VIdx vs0 t fds) (y : fds.denote) (dS : Bool), ks.True → arms.trivial = true → dS = true →
+      arms.safe fs ss ks ρ i y dS = true
+    | .nil, _, _, _, _, _, _, _, _, _, hd => hd
+    | .empty l rest, ks, ρ, _, _, i, y, dS, hk, h, hd => by
+      simp only [TArms.trivial] at h
+      simp only [TArms.safe]
+      split
+      · exact TArms.firstSafe_of_trivial rest ks ρ hk h
+      · refine TArms.safe_of_trivial rest ks ρ i y _ hk h ?_
+        split
+        · exact TArms.firstSafe_of_trivial rest ks ρ hk h
+        · exact hd
+    | .wide l body rest, ks, ρ, _, _, i, y, dS, hk, h, hd => by
+      simp only [TArms.trivial, Bool.and_eq_true] at h
+      simp only [TArms.safe]
+      split
+      · exact TStmts.safe_of_trivial body ks ρ hk h.1
+      · refine TArms.safe_of_trivial rest ks ρ i y _ hk h.2 ?_
+        split
+        · exact TStmts.safe_of_trivial body ks ρ hk h.1
+        · exact hd
+    | .narrow i' body rest, ks, ρ, _, _, i, y, dS, hk, h, hd => by
+      simp only [TArms.trivial, Bool.and_eq_true] at h
+      simp only [TArms.safe]
+      split
+      · exact TStmts.safe_of_trivial body _ _ (fun ρ' => hk _) h.1
+      · exact TArms.safe_of_trivial rest ks ρ i y dS hk h.2 hd
+
 end
 
 end

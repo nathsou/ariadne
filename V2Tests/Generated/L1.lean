@@ -67,7 +67,29 @@ def ast : Program := [
             .ret (.unary .neg (.lit (.bigint 1)))])]] },
   { name := "pick", params := ["a", "b", "preferA"], body := [
       .const "chosen" (.cond (.var "preferA") (.var "a") (.var "b")),
-      .ret (.record [(none, (.var "chosen")), (some "label", (.binary .coalesce (.field (.var "chosen") "label") (.lit (.string (js "picked")))))])] }]
+      .ret (.record [(none, (.var "chosen")), (some "label", (.binary .coalesce (.field (.var "chosen") "label") (.lit (.string (js "picked")))))])] },
+  { name := "rank", params := ["f"], body := [
+      .switch (.field (.var "f") "kind") [
+        (some (.lit (.string (js "opened"))), [
+            .ret (.field (.var "f") "written")]),
+        (some (.lit (.string (js "unopened"))), []),
+        (some (.lit (.string (js "damaged"))), [
+            .ret (.unary .neg (.lit (.bigint 1)))])]] },
+  { name := "isOpened", params := ["f"], body := [
+      .switch (.field (.var "f") "kind") [
+        (some (.lit (.string (js "opened"))), [
+            .ret (.lit (.bool true))]),
+        (none, [
+            .ret (.lit (.bool false))])]] },
+  { name := "weight", params := ["f"], body := [
+      .let_ "w" (.lit (.bigint 0)),
+      .switch (.field (.var "f") "kind") [
+        (some (.lit (.string (js "damaged"))), [
+            .assign "w" (.lit (.bigint 5)),
+            .brk]),
+        (none, [
+            .assign "w" (.lit (.bigint 1))])],
+      .ret (.var "w")] }]
 
 abbrev ty.«Point» : Ty := (.record (.cons "x" .int (.cons "y" .int (.cons "label" (.option .undef .string) .nil))))
 abbrev ty.«Recovery» : Ty := (.lits (js "none") [(js "ok"), (js "legacy"), (js "bad")])
@@ -83,6 +105,9 @@ def sig.«trusted» : Sig := { name := "trusted", params := [("f", ty.«Fact»)]
 def sig.«choose» : Sig := { name := "choose", params := [("n", .int), ("floor", (.option .both .int))], result := ty.«Choice», trivial := true }
 def sig.«orDefault» : Sig := { name := "orDefault", params := [("c", ty.«Choice»)], result := .int, trivial := true }
 def sig.«pick» : Sig := { name := "pick", params := [("a", ty.«Point»), ("b", ty.«Point»), ("preferA", .bool)], result := ty.«Point», trivial := true }
+def sig.«rank» : Sig := { name := "rank", params := [("f", ty.«Fact»)], result := .int, trivial := true }
+def sig.«isOpened» : Sig := { name := "isOpened", params := [("f", ty.«Fact»)], result := .bool, trivial := true }
+def sig.«weight» : Sig := { name := "weight", params := [("f", ty.«Fact»)], result := .int, trivial := true }
 
 theorem ne.«dx».«p» : ("dx" : String) ≠ "p" := by decide
 theorem ne.«f».«suffix» : ("f" : String) ≠ "suffix" := by decide
@@ -91,6 +116,7 @@ theorem ne.«floor».«n» : ("floor" : String) ≠ "n" := by decide
 theorem ne.«preferA».«a» : ("preferA" : String) ≠ "a" := by decide
 theorem ne.«preferA».«b» : ("preferA" : String) ≠ "b" := by decide
 theorem ne.«b».«a» : ("b" : String) ≠ "a" := by decide
+theorem ne.«f».«w» : ("f" : String) ≠ "w" := by decide
 
 def body.«origin» : TStmts [] sig.«origin».params sig.«origin».result :=
   (.ret (.record (.cons "x" (.int 0) (.cons "y" (.int 0) .nil)) (.cons .here (.cons (.there .here) (.absent (by decide) .nil))) (by decide)) .nil)
@@ -108,23 +134,25 @@ def body.«hasLabel» : TStmts [sig.«labelOf», sig.«moved», sig.«origin»] 
   (.ret (.ne (by decide) (.var .here) (.str (js ""))) .nil)))
 
 def body.«describe» : TStmts [sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«describe».params sig.«describe».result :=
-  (.switchU .here (by decide)
-  (.cons (.ret (.str (js "u")) .nil)
-  (.cons (.ret (.str (js "d")) .nil)
-  (.one (.block (.const "k" (.field (.var .here) (.there (.there (.there .here))) (by decide))
+  (.switchG .here (by decide)
+  (.narrow .head (.ret (.str (js "u")) .nil)
+  (.narrow (.there .head) (.ret (.str (js "d")) .nil)
+  (.narrow (.there (.there .one)) (.block (.const "k" (.field (.var .here) (.there (.there (.there .here))) (by decide))
   (.const "suffix" (.condNull .here (by decide) (.str (js "-")) (.var .here))
   (.ite (.eq (by decide) (.field (.var (.there ne.«f».«suffix» (.there ne.«f».«k» .here))) (.there (.there .here)) (by decide)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 3))
   (.ret (.concat (.str (js "o!")) (.var .here)) .nil)
   .nil
   (.ret (.concat (.str (js "o")) (.var .here)) .nil))))
-  .nil))))
+  .nil)
+  .nil)))
   .nil)
 
 def body.«trusted» : TStmts [sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«trusted».params sig.«trusted».result :=
-  (.switchU .here (by decide)
-  (.cons (.ret (.bool false) .nil)
-  (.cons (.ret (.bool false) .nil)
-  (.one (.ret (.and (.ne (by decide) (.field (.var .here) (.there (.there .here)) (by decide)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 3)) (.ne (by decide) (.field (.var .here) (.there (.there .here)) (by decide)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 2))) .nil))))
+  (.switchG .here (by decide)
+  (.narrow .head (.ret (.bool false) .nil)
+  (.narrow (.there .head) (.ret (.bool false) .nil)
+  (.narrow (.there (.there .one)) (.ret (.and (.ne (by decide) (.field (.var .here) (.there (.there .here)) (by decide)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 3)) (.ne (by decide) (.field (.var .here) (.there (.there .here)) (by decide)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 2))) .nil)
+  .nil)))
   .nil)
 
 def body.«choose» : TStmts [sig.«trusted», sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«choose».params sig.«choose».result :=
@@ -140,19 +168,44 @@ def body.«choose» : TStmts [sig.«trusted», sig.«describe», sig.«hasLabel�
   (.ret (.widen (.variant (.there .one)) (.record (.cons "ok" (.tagLit (.bool false)) (.cons "reason" (.str (js "non-positive")) .nil)) (.cons .here (.cons (.there .here) .nil)) (by decide))) .nil)))
 
 def body.«orDefault» : TStmts [sig.«choose», sig.«trusted», sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«orDefault».params sig.«orDefault».result :=
-  (.switchU .here (by decide)
-  (.cons (.ret (.field (.var .here) (.there .here) (by decide)) .nil)
-  (.one (.ret (.neg (.int 1)) .nil)))
+  (.switchG .here (by decide)
+  (.narrow .head (.ret (.field (.var .here) (.there .here) (by decide)) .nil)
+  (.narrow (.there .one) (.ret (.neg (.int 1)) .nil)
+  .nil))
   .nil)
 
 def body.«pick» : TStmts [sig.«orDefault», sig.«choose», sig.«trusted», sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«pick».params sig.«pick».result :=
   (.const "chosen" (.cond (.var (.there ne.«preferA».«a» (.there ne.«preferA».«b» .here))) (.var .here) (.var (.there ne.«b».«a» .here)))
   (.ret (.update (.var .here) (.cons "label" (.widen (.some .undef .string) (.coalesce (by decide) (.field (.var .here) (.there (.there .here)) (by decide)) (.str (js "picked")))) .nil) (.keep (by decide) (.keep (by decide) (.set .here .nil))) (by decide)) .nil))
 
-abbrev sigs : Sigs := [sig.«pick», sig.«orDefault», sig.«choose», sig.«trusted», sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»]
+def body.«rank» : TStmts [sig.«pick», sig.«orDefault», sig.«choose», sig.«trusted», sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«rank».params sig.«rank».result :=
+  (.switchG .here (by decide)
+  (.narrow (.there (.there .one)) (.ret (.field (.var .here) (.there .here) (by decide)) .nil)
+  (.empty (some (.str (js "unopened"))) (.wide (some (.str (js "damaged"))) (.ret (.neg (.int 1)) .nil)
+  .nil)))
+  .nil)
+
+def body.«isOpened» : TStmts [sig.«rank», sig.«pick», sig.«orDefault», sig.«choose», sig.«trusted», sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«isOpened».params sig.«isOpened».result :=
+  (.switchG .here (by decide)
+  (.narrow (.there (.there .one)) (.ret (.bool true) .nil)
+  (.wide none (.ret (.bool false) .nil)
+  .nil))
+  .nil)
+
+def body.«weight» : TStmts [sig.«isOpened», sig.«rank», sig.«pick», sig.«orDefault», sig.«choose», sig.«trusted», sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«weight».params sig.«weight».result :=
+  (.let_ "w" (.int 0)
+  (.switchG (.there ne.«f».«w» .here) (by decide)
+  (.narrow (.there .head) (.assign .here (.int 5)
+  (.brk .nil))
+  (.wide none (.assign .here (.int 1)
+  .nil)
+  .nil))
+  (.ret (.var .here) .nil)))
+
+abbrev sigs : Sigs := [sig.«weight», sig.«isOpened», sig.«rank», sig.«pick», sig.«orDefault», sig.«choose», sig.«trusted», sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»]
 
 def typed : TProgram sigs :=
-  (.cons sig.«pick» body.«pick» (.cons sig.«orDefault» body.«orDefault» (.cons sig.«choose» body.«choose» (.cons sig.«trusted» body.«trusted» (.cons sig.«describe» body.«describe» (.cons sig.«hasLabel» body.«hasLabel» (.cons sig.«labelOf» body.«labelOf» (.cons sig.«moved» body.«moved» (.cons sig.«origin» body.«origin» .nil)))))))))
+  (.cons sig.«weight» body.«weight» (.cons sig.«isOpened» body.«isOpened» (.cons sig.«rank» body.«rank» (.cons sig.«pick» body.«pick» (.cons sig.«orDefault» body.«orDefault» (.cons sig.«choose» body.«choose» (.cons sig.«trusted» body.«trusted» (.cons sig.«describe» body.«describe» (.cons sig.«hasLabel» body.«hasLabel» (.cons sig.«labelOf» body.«labelOf» (.cons sig.«moved» body.«moved» (.cons sig.«origin» body.«origin» .nil))))))))))))
 
 theorem erased : typed.erase = ast := by kernel_rfl
 
@@ -239,6 +292,47 @@ def «orDefault» («c» : ty.«Choice».denote) : Int :=
 def «pick» («a» : ty.«Point».denote) («b» : ty.«Point».denote) («preferA» : Bool) : ty.«Point».denote :=
   let «chosen» := if «preferA» then «a» else «b»
   let r' := «chosen»; (r'.1, r'.2.1, (some (match «chosen».2.2.1 with | some v' => v' | none => (js "picked"))), ())
+
+def «rank» («f» : ty.«Fact».denote) : Int :=
+  match «f» with
+  | Sum.inl p' =>
+    (-(1 : Int))
+  | Sum.inr p' =>
+    match p' with
+    | Sum.inl p' =>
+      (-(1 : Int))
+    | Sum.inr p' =>
+      let «f» := ((), p')
+      «f».2.1
+
+def «isOpened» («f» : ty.«Fact».denote) : Bool :=
+  match «f» with
+  | Sum.inl p' =>
+    false
+  | Sum.inr p' =>
+    match p' with
+    | Sum.inl p' =>
+      false
+    | Sum.inr p' =>
+      let «f» := ((), p')
+      true
+
+def «weight» («f» : ty.«Fact».denote) : Int :=
+  let «w» := (0 : Int)
+  match «f» with
+  | Sum.inl p' =>
+    let «w» := (1 : Int)
+    «w»
+  | Sum.inr p' =>
+    match p' with
+    | Sum.inl p' =>
+      let «f» := ((), p')
+      let «w» := (5 : Int)
+      let «f» := ((Sum.inr (Sum.inl «f».2)) : ty.«Fact».denote)
+      «w»
+    | Sum.inr p' =>
+      let «w» := (1 : Int)
+      «w»
 
 /-! ## Denotation
 
@@ -362,11 +456,50 @@ theorem «pick».safe_eq :
     body.«pick».safeFn («orDefault».uncurried, «choose».uncurried, «trusted».uncurried, «describe».uncurried, «hasLabel».uncurried, «labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) («orDefault».safety, «choose».safety, «trusted».safety, «describe».safety, «hasLabel».safety, «labelOf».safety, «moved».safety, «origin».safety, ()) = «pick».safety := by
   kernel_rfl
 
-theorem denote_eq : typed.denote = («pick».uncurried, «orDefault».uncurried, «choose».uncurried, «trusted».uncurried, «describe».uncurried, «hasLabel».uncurried, «labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) :=
-  (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «origin».body_eq) «moved».body_eq) «labelOf».body_eq) «hasLabel».body_eq) «describe».body_eq) «trusted».body_eq) «choose».body_eq) «orDefault».body_eq) «pick».body_eq)
+def «rank».uncurried : sig.«rank».denote := fun xs => «rank» xs.1
 
-theorem safety_eq : typed.safety = («pick».safety, «orDefault».safety, «choose».safety, «trusted».safety, «describe».safety, «hasLabel».safety, «labelOf».safety, «moved».safety, «origin».safety, ()) :=
-  (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «origin».body_eq) «moved».body_eq) «labelOf».body_eq) «hasLabel».body_eq) «describe».body_eq) «trusted».body_eq) «choose».body_eq) «orDefault».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «origin».body_eq) «moved».body_eq) «labelOf».body_eq) «hasLabel».body_eq) «describe».body_eq) «trusted».body_eq) «choose».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «origin».body_eq) «moved».body_eq) «labelOf».body_eq) «hasLabel».body_eq) «describe».body_eq) «trusted».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «origin».body_eq) «moved».body_eq) «labelOf».body_eq) «hasLabel».body_eq) «describe».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «origin».body_eq) «moved».body_eq) «labelOf».body_eq) «hasLabel».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «origin».body_eq) «moved».body_eq) «labelOf».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons rfl «origin».body_eq) «moved».body_eq) (TProgram.safety_cons (TProgram.denote_cons rfl «origin».body_eq) (TProgram.safety_cons rfl rfl «origin».safe_eq) «moved».safe_eq) «labelOf».safe_eq) «hasLabel».safe_eq) «describe».safe_eq) «trusted».safe_eq) «choose».safe_eq) «orDefault».safe_eq) «pick».safe_eq)
+/-- Trivially safe: every input is in what the model covers. -/
+def «rank».safety : sig.«rank».params.denote → Bool := fun _ => true
+
+theorem «rank».body_eq :
+    body.«rank».denoteFn («pick».uncurried, «orDefault».uncurried, «choose».uncurried, «trusted».uncurried, «describe».uncurried, «hasLabel».uncurried, «labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) = «rank».uncurried := by
+  kernel_rfl
+
+theorem «rank».safe_eq :
+    body.«rank».safeFn («pick».uncurried, «orDefault».uncurried, «choose».uncurried, «trusted».uncurried, «describe».uncurried, «hasLabel».uncurried, «labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) («pick».safety, «orDefault».safety, «choose».safety, «trusted».safety, «describe».safety, «hasLabel».safety, «labelOf».safety, «moved».safety, «origin».safety, ()) = «rank».safety := by
+  kernel_rfl
+
+def «isOpened».uncurried : sig.«isOpened».denote := fun xs => «isOpened» xs.1
+
+/-- Trivially safe: every input is in what the model covers. -/
+def «isOpened».safety : sig.«isOpened».params.denote → Bool := fun _ => true
+
+theorem «isOpened».body_eq :
+    body.«isOpened».denoteFn («rank».uncurried, «pick».uncurried, «orDefault».uncurried, «choose».uncurried, «trusted».uncurried, «describe».uncurried, «hasLabel».uncurried, «labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) = «isOpened».uncurried := by
+  kernel_rfl
+
+theorem «isOpened».safe_eq :
+    body.«isOpened».safeFn («rank».uncurried, «pick».uncurried, «orDefault».uncurried, «choose».uncurried, «trusted».uncurried, «describe».uncurried, «hasLabel».uncurried, «labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) («rank».safety, «pick».safety, «orDefault».safety, «choose».safety, «trusted».safety, «describe».safety, «hasLabel».safety, «labelOf».safety, «moved».safety, «origin».safety, ()) = «isOpened».safety := by
+  kernel_rfl
+
+def «weight».uncurried : sig.«weight».denote := fun xs => «weight» xs.1
+
+/-- Trivially safe: every input is in what the model covers. -/
+def «weight».safety : sig.«weight».params.denote → Bool := fun _ => true
+
+theorem «weight».body_eq :
+    body.«weight».denoteFn («isOpened».uncurried, «rank».uncurried, «pick».uncurried, «orDefault».uncurried, «choose».uncurried, «trusted».uncurried, «describe».uncurried, «hasLabel».uncurried, «labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) = «weight».uncurried := by
+  kernel_rfl
+
+theorem «weight».safe_eq :
+    body.«weight».safeFn («isOpened».uncurried, «rank».uncurried, «pick».uncurried, «orDefault».uncurried, «choose».uncurried, «trusted».uncurried, «describe».uncurried, «hasLabel».uncurried, «labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) («isOpened».safety, «rank».safety, «pick».safety, «orDefault».safety, «choose».safety, «trusted».safety, «describe».safety, «hasLabel».safety, «labelOf».safety, «moved».safety, «origin».safety, ()) = «weight».safety := by
+  kernel_rfl
+
+theorem denote_eq : typed.denote = («weight».uncurried, «isOpened».uncurried, «rank».uncurried, «pick».uncurried, «orDefault».uncurried, «choose».uncurried, «trusted».uncurried, «describe».uncurried, «hasLabel».uncurried, «labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) :=
+  (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «origin».body_eq) «moved».body_eq) «labelOf».body_eq) «hasLabel».body_eq) «describe».body_eq) «trusted».body_eq) «choose».body_eq) «orDefault».body_eq) «pick».body_eq) «rank».body_eq) «isOpened».body_eq) «weight».body_eq)
+
+theorem safety_eq : typed.safety = («weight».safety, «isOpened».safety, «rank».safety, «pick».safety, «orDefault».safety, «choose».safety, «trusted».safety, «describe».safety, «hasLabel».safety, «labelOf».safety, «moved».safety, «origin».safety, ()) :=
+  (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «origin».body_eq) «moved».body_eq) «labelOf».body_eq) «hasLabel».body_eq) «describe».body_eq) «trusted».body_eq) «choose».body_eq) «orDefault».body_eq) «pick».body_eq) «rank».body_eq) «isOpened».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «origin».body_eq) «moved».body_eq) «labelOf».body_eq) «hasLabel».body_eq) «describe».body_eq) «trusted».body_eq) «choose».body_eq) «orDefault».body_eq) «pick».body_eq) «rank».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «origin».body_eq) «moved».body_eq) «labelOf».body_eq) «hasLabel».body_eq) «describe».body_eq) «trusted».body_eq) «choose».body_eq) «orDefault».body_eq) «pick».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «origin».body_eq) «moved».body_eq) «labelOf».body_eq) «hasLabel».body_eq) «describe».body_eq) «trusted».body_eq) «choose».body_eq) «orDefault».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «origin».body_eq) «moved».body_eq) «labelOf».body_eq) «hasLabel».body_eq) «describe».body_eq) «trusted».body_eq) «choose».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «origin».body_eq) «moved».body_eq) «labelOf».body_eq) «hasLabel».body_eq) «describe».body_eq) «trusted».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «origin».body_eq) «moved».body_eq) «labelOf».body_eq) «hasLabel».body_eq) «describe».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «origin».body_eq) «moved».body_eq) «labelOf».body_eq) «hasLabel».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «origin».body_eq) «moved».body_eq) «labelOf».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons rfl «origin».body_eq) «moved».body_eq) (TProgram.safety_cons (TProgram.denote_cons rfl «origin».body_eq) (TProgram.safety_cons rfl rfl «origin».safe_eq) «moved».safe_eq) «labelOf».safe_eq) «hasLabel».safe_eq) «describe».safe_eq) «trusted».safe_eq) «choose».safe_eq) «orDefault».safe_eq) «pick».safe_eq) «rank».safe_eq) «isOpened».safe_eq) «weight».safe_eq)
 
 /-! ## Source theorems -/
 
@@ -376,7 +509,7 @@ theorem «origin».source  (vs : List JSValue)
     (args : ArgsRep sig.«origin».params vs (())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "origin" vs) (.ok w) ∧
       Ty.Rep ty.«Point» w («origin») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) : FVar sigs "origin" sig.«origin») (()) vs args rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "origin" sig.«origin») (()) vs args rfl
 
 /-- Every run of `moved` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -384,7 +517,7 @@ theorem «moved».source («p» : ty.«Point».denote) («dx» : Int) (vs : List
     (args : ArgsRep sig.«moved».params vs («p», «dx», ())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "moved" vs) (.ok w) ∧
       Ty.Rep ty.«Point» w («moved» «p» «dx») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there .here))))))) : FVar sigs "moved" sig.«moved») («p», «dx», ()) vs args rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "moved" sig.«moved») («p», «dx», ()) vs args rfl
 
 /-- Every run of `labelOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -392,7 +525,7 @@ theorem «labelOf».source («p» : ty.«Point».denote) (vs : List JSValue)
     (args : ArgsRep sig.«labelOf».params vs («p», ())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "labelOf" vs) (.ok w) ∧
       Ty.Rep .string w («labelOf» «p») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "labelOf" sig.«labelOf») («p», ()) vs args rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "labelOf" sig.«labelOf») («p», ()) vs args rfl
 
 /-- Every run of `hasLabel` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -400,7 +533,7 @@ theorem «hasLabel».source («p» : ty.«Point».denote) (vs : List JSValue)
     (args : ArgsRep sig.«hasLabel».params vs («p», ())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "hasLabel" vs) (.ok w) ∧
       Ty.Rep .bool w («hasLabel» «p») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "hasLabel" sig.«hasLabel») («p», ()) vs args rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) : FVar sigs "hasLabel" sig.«hasLabel») («p», ()) vs args rfl
 
 /-- Every run of `describe` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -408,7 +541,7 @@ theorem «describe».source («f» : ty.«Fact».denote) (vs : List JSValue)
     (args : ArgsRep sig.«describe».params vs («f», ())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "describe" vs) (.ok w) ∧
       Ty.Rep .string w («describe» «f») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "describe" sig.«describe») («f», ()) vs args rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there .here))))))) : FVar sigs "describe" sig.«describe») («f», ()) vs args rfl
 
 /-- Every run of `trusted` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -416,7 +549,7 @@ theorem «trusted».source («f» : ty.«Fact».denote) (vs : List JSValue)
     (args : ArgsRep sig.«trusted».params vs («f», ())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "trusted" vs) (.ok w) ∧
       Ty.Rep .bool w («trusted» «f») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "trusted" sig.«trusted») («f», ()) vs args rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "trusted" sig.«trusted») («f», ()) vs args rfl
 
 /-- Every run of `choose` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -424,7 +557,7 @@ theorem «choose».source («n» : Int) («floor» : Option (Int)) (vs : List JS
     (args : ArgsRep sig.«choose».params vs («n», «floor», ())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "choose" vs) (.ok w) ∧
       Ty.Rep ty.«Choice» w («choose» «n» «floor») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "choose" sig.«choose») («n», «floor», ()) vs args rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "choose" sig.«choose») («n», «floor», ()) vs args rfl
 
 /-- Every run of `orDefault` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -432,7 +565,7 @@ theorem «orDefault».source («c» : ty.«Choice».denote) (vs : List JSValue)
     (args : ArgsRep sig.«orDefault».params vs («c», ())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "orDefault" vs) (.ok w) ∧
       Ty.Rep .int w («orDefault» «c») :=
-  source_of erased wf denote_eq safety_eq ((.there .here) : FVar sigs "orDefault" sig.«orDefault») («c», ()) vs args rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "orDefault" sig.«orDefault») («c», ()) vs args rfl
 
 /-- Every run of `pick` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -440,6 +573,30 @@ theorem «pick».source («a» : ty.«Point».denote) («b» : ty.«Point».deno
     (args : ArgsRep sig.«pick».params vs («a», «b», «preferA», ())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "pick" vs) (.ok w) ∧
       Ty.Rep ty.«Point» w («pick» «a» «b» «preferA») :=
-  source_of erased wf denote_eq safety_eq (.here : FVar sigs "pick" sig.«pick») («a», «b», «preferA», ()) vs args rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "pick" sig.«pick») («a», «b», «preferA», ()) vs args rfl
+
+/-- Every run of `rank` on arguments representing its inputs converges to a value
+representing the readable definition's result. -/
+theorem «rank».source («f» : ty.«Fact».denote) (vs : List JSValue)
+    (args : ArgsRep sig.«rank».params vs («f», ())) :
+    ∃ w, Converges (fun fuel' => run ast fuel' "rank" vs) (.ok w) ∧
+      Ty.Rep .int w («rank» «f») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "rank" sig.«rank») («f», ()) vs args rfl
+
+/-- Every run of `isOpened` on arguments representing its inputs converges to a value
+representing the readable definition's result. -/
+theorem «isOpened».source («f» : ty.«Fact».denote) (vs : List JSValue)
+    (args : ArgsRep sig.«isOpened».params vs («f», ())) :
+    ∃ w, Converges (fun fuel' => run ast fuel' "isOpened" vs) (.ok w) ∧
+      Ty.Rep .bool w («isOpened» «f») :=
+  source_of erased wf denote_eq safety_eq ((.there .here) : FVar sigs "isOpened" sig.«isOpened») («f», ()) vs args rfl
+
+/-- Every run of `weight` on arguments representing its inputs converges to a value
+representing the readable definition's result. -/
+theorem «weight».source («f» : ty.«Fact».denote) (vs : List JSValue)
+    (args : ArgsRep sig.«weight».params vs («f», ())) :
+    ∃ w, Converges (fun fuel' => run ast fuel' "weight" vs) (.ok w) ∧
+      Ty.Rep .int w («weight» «f») :=
+  source_of erased wf denote_eq safety_eq (.here : FVar sigs "weight" sig.«weight») («f», ()) vs args rfl
 
 end V2Tests.Generated.L1

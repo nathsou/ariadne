@@ -223,6 +223,23 @@ def VIdx.inj : VIdx vs t fs → fs.denote → vs.denote
   | .head, x => .inl x
   | .there i, x => .inr (i.inj x)
 
+/-- The variant's fields, if the union value is that variant. -/
+def VIdx.proj : VIdx vs t fs → vs.denote → Option fs.denote
+  | .one, y => some y
+  | .head, .inl y => some y
+  | .head, .inr _ => none
+  | .there _, .inl _ => none
+  | .there i, .inr w => i.proj w
+
+/-- Case analysis of a union value: the handler gets the variant and its fields.
+The match on the value is separate from the recursion on `vs`, so that on a symbolic
+value it reduces to a plain `match` (as readable definitions print it). -/
+def Variants.elim {R : Type} : (vs : Variants) → vs.denote → (∀ {t fs}, VIdx vs t fs → fs.denote → R) → R
+  | .one _ _, y, h => h .one y
+  | .cons _ _ rest, u, h => match u with
+    | .inl y => h .head y
+    | .inr w => rest.elim w fun i y => h (.there i) y
+
 /-- A narrowed type `σ` of a type `τ`: the type a test (`x == null`, a `switch`
 on a union's tag) establishes, with its embedding back into `τ`. -/
 inductive Narrowing : Ty → Ty → Type where

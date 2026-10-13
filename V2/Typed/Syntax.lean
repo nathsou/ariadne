@@ -266,6 +266,12 @@ mutual
     | spread (a : TExpr Φ Γ (.array τ)) (rest : TElems Φ Γ τ) : TElems Φ Γ τ
 end
 
+/-- Whether a union's tags are strings (else booleans). -/
+def Variants.strTags (vs : Variants) : Bool := vs.tags.all (·.isStr)
+
+/-- A `case` label's expression. -/
+def tagLabel (t : TagLit) : Expr := .lit t.lit
+
 mutual
   /-- Statement lists of a function returning `τ`, run in `Γ`. A declaration scopes
   over the rest of its list. -/
@@ -297,20 +303,26 @@ mutual
     /-- `if (x != null) yes else no`, with `x` narrowed in `yes`. -/
     | ifNotNull {x : String} (v : Var Γ x (.option n σ)) (h : σ.nonNullish = true)
         (yes : TStmts Φ (v.narrow σ) τ) (no : TStmts Φ Γ τ) (rest : TStmts Φ Γ τ) : TStmts Φ Γ τ
-    /-- `switch (x.key) { case t₁: … }` over a union, one case per variant in the
-    union's order, with `x` narrowed to the variant in its case. -/
-    | switchU {x key : String} {vs : Variants} (v : Var Γ x (.union key vs))
+    /-- `switch (x.key) { … }` over a union with cases in any order, grouped labels
+    and `default`; a case with one label narrows `x` to its variant. -/
+    | switchG {x key : String} {vs : Variants} (v : Var Γ x (.union key vs))
         (h : (vs.tagsOk && !protoNames.contains key) = true)
-        (cases : TCases Φ Γ τ v vs) (rest : TStmts Φ Γ τ) : TStmts Φ Γ τ
+        (arms : TArms Φ Γ τ v) (rest : TStmts Φ Γ τ) : TStmts Φ Γ τ
 
-  /-- The cases of `switchU` for the variants `vs`, a suffix of the union's. -/
-  inductive TCases (Φ : Sigs) : (Γ : Ctx) → Ty → {x key : String} → {vs0 : Variants} →
-      Var Γ x (.union key vs0) → Variants → Type where
-    | one {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {t : TagLit} {fs : Fields}
-        {v : Var Γ x (.union key vs0)} (body : TStmts Φ (v.narrow (vrec key t fs)) τ) : TCases Φ Γ τ v (.one t fs)
-    | cons {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {t : TagLit} {fs : Fields} {rest : Variants}
-        {v : Var Γ x (.union key vs0)} (body : TStmts Φ (v.narrow (vrec key t fs)) τ)
-        (more : TCases Φ Γ τ v rest) : TCases Φ Γ τ v (.cons t fs rest)
+  /-- The cases of `switchG`, one per source case (`none` is `default`). -/
+  inductive TArms (Φ : Sigs) : (Γ : Ctx) → Ty → {x key : String} → {vs0 : Variants} →
+      Var Γ x (.union key vs0) → Type where
+    | nil {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} : TArms Φ Γ τ v
+    /-- `case l:` with no statements: falls into the next case. -/
+    | empty {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)}
+        (l : Option TagLit) (rest : TArms Φ Γ τ v) : TArms Φ Γ τ v
+    /-- `case l: body` with `x` not narrowed. -/
+    | wide {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)}
+        (l : Option TagLit) (body : TStmts Φ Γ τ) (rest : TArms Φ Γ τ v) : TArms Φ Γ τ v
+    /-- `case t: body` with `x` narrowed to the variant tagged `t`. -/
+    | narrow {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {t : TagLit} {fs : Fields}
+        {v : Var Γ x (.union key vs0)} (i : VIdx vs0 t fs) (body : TStmts Φ (v.narrow (vrec key t fs)) τ)
+        (rest : TArms Φ Γ τ v) : TArms Φ Γ τ v
 end
 
 /-- A program: its functions, newest first, each typed against the earlier ones. -/
@@ -420,17 +432,31 @@ mutual
     | @TStmts.ifNull _ _ _ _ _ x _ _ yes no rest => .ite (nullTest x) yes.erase no.erase :: rest.erase
     | @TStmts.ifNullExit _ _ _ _ _ x _ _ yes rest => .ite (nullTest x) yes.erase [] :: rest.erase
     | @TStmts.ifNotNull _ _ _ _ _ x _ _ yes no rest => .ite (notNullTest x) yes.erase no.erase :: rest.erase
-    | @TStmts.switchU _ _ _ x key _ _ _ cases rest => .switch (.field (.var x) key) cases.erase :: rest.erase
+    | @TStmts.switchG _ _ _ x key _ _ _ arms rest => .switch (.field (.var x) key) arms.erase :: rest.erase
 
-  def TCases.erase {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} {vs : Variants} : TCases Φ Γ τ v vs → List (Option Expr × List Stmt)
-    | .one (t := t) body => [(some (.lit t.lit), body.erase)]
-    | .cons (t := t) body more => (some (.lit t.lit), body.erase) :: more.erase
+  def TArms.erase {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} :
+      TArms Φ Γ τ v → List (Option Expr × List Stmt)
+    | .nil => []
+    | .empty l rest => (l.map tagLabel, []) :: rest.erase
+    | .wide l body rest => (l.map tagLabel, body.erase) :: rest.erase
+    | .narrow (t := t) _ body rest => (some (tagLabel t), body.erase) :: rest.erase
+
 end
 
 /-- Functions in source order (oldest first). -/
 def TProgram.erase : TProgram Φ → Program
   | .nil => []
   | .cons s body rest => rest.erase ++ [{ name := s.name, params := s.params.map Prod.fst, body := body.erase }]
+
+/-- The case labels, in order (`none` is `default`). -/
+def TArms.labels {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} : TArms Φ Γ τ v → List (Option TagLit)
+  | .nil => []
+  | .empty l rest | .wide l _ rest => l :: rest.labels
+  | .narrow (t := t) _ _ rest => some t :: rest.labels
+
+/-- Every variant has a case, or there is a `default`. -/
+def TArms.covers {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} (arms : TArms Φ Γ τ v) : Bool :=
+  arms.labels.contains none || vs0.tags.all fun t => arms.labels.contains (some t)
 
 /-! ## Control flow
 
@@ -449,7 +475,7 @@ mutual
     | .brk _ | .cont _ => false
     | .let_ _ _ rest | .assign _ _ rest | .forOf _ _ _ rest | .forEntries _ _ _ _ rest => rest.falls
     | .ifNullExit _ _ _ rest => rest.falls
-    | .switchU _ _ cases rest => (cases.falls || cases.breaks) && rest.falls
+    | .switchG _ _ cases rest => (cases.falls || cases.breaks || !cases.covers) && rest.falls
 
   def TStmts.breaks : TStmts Φ Γ τ → Bool
     | .nil => false
@@ -462,7 +488,7 @@ mutual
     | .cont _ => false
     | .let_ _ _ rest | .assign _ _ rest | .forOf _ _ _ rest | .forEntries _ _ _ _ rest => rest.breaks
     | .ifNullExit _ _ yes rest => yes.breaks || rest.breaks
-    | .switchU _ _ cases rest => (cases.falls || cases.breaks) && rest.breaks
+    | .switchG _ _ cases rest => (cases.falls || cases.breaks || !cases.covers) && rest.breaks
 
   def TStmts.continues : TStmts Φ Γ τ → Bool
     | .nil => false
@@ -475,21 +501,28 @@ mutual
     | .cont _ => true
     | .let_ _ _ rest | .assign _ _ rest | .forOf _ _ _ rest | .forEntries _ _ _ _ rest => rest.continues
     | .ifNullExit _ _ yes rest => yes.continues || rest.continues
-    | .switchU _ _ cases rest => cases.continues || ((cases.falls || cases.breaks) && rest.continues)
+    | .switchG _ _ cases rest => cases.continues || ((cases.falls || cases.breaks || !cases.covers) && rest.continues)
 
-  /-- Whether the cases are well formed: every case but the last cannot complete
-  normally. Also whether a case may fall off the end of the switch. -/
-  def TCases.falls {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} {vs : Variants} : TCases Φ Γ τ v vs → Bool
-    | .one body => body.falls
-    | .cons _ more => more.falls
+  /-- Whether running the cases from some position may complete normally: a body
+  that completes, or empty cases at the end. -/
+  def TArms.falls {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} : TArms Φ Γ τ v → Bool
+    | .nil => false
+    | .empty _ rest => rest.isNil || rest.falls
+    | .wide _ body rest | .narrow _ body rest => body.falls || rest.falls
 
-  def TCases.breaks {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} {vs : Variants} : TCases Φ Γ τ v vs → Bool
-    | .one body => body.breaks
-    | .cons body more => body.breaks || more.breaks
+  def TArms.breaks {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} : TArms Φ Γ τ v → Bool
+    | .nil => false
+    | .empty _ rest => rest.breaks
+    | .wide _ body rest | .narrow _ body rest => body.breaks || rest.breaks
 
-  def TCases.continues {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} {vs : Variants} : TCases Φ Γ τ v vs → Bool
-    | .one body => body.continues
-    | .cons body more => body.continues || more.continues
+  def TArms.continues {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} : TArms Φ Γ τ v → Bool
+    | .nil => false
+    | .empty _ rest => rest.continues
+    | .wide _ body rest | .narrow _ body rest => body.continues || rest.continues
+
+  def TArms.isNil {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} : TArms Φ Γ τ v → Bool
+    | .nil => true
+    | .empty _ _ | .wide _ _ _ | .narrow _ _ _ => false
 
   /-- No case but the last falls through, and no `ifNullExit` branch completes
   normally. -/
@@ -500,11 +533,21 @@ mutual
     | .ite _ yes no rest | .ifNull _ _ yes no rest | .ifNotNull _ _ yes no rest => yes.wf && no.wf && rest.wf
     | .block body rest => body.wf && rest.wf
     | .ifNullExit _ _ yes rest => !yes.falls && yes.wf && rest.wf
-    | .switchU _ _ cases rest => cases.wf && rest.wf
+    | .switchG _ _ cases rest => cases.wf && rest.wf
 
-  def TCases.wf {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} {vs : Variants} : TCases Φ Γ τ v vs → Bool
-    | .one body => body.wf
-    | .cons body more => !body.falls && body.wf && more.wf
+  /-- Labels are tags of the union's kind (string or boolean); an empty case is not
+  followed by a narrowing case; no body but the last completes normally. -/
+  def TArms.wf {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} : TArms Φ Γ τ v → Bool
+    | .nil => true
+    | .empty l rest => l.all (·.isStr == vs0.strTags) && rest.nextOk && rest.wf
+    | .wide l body rest => l.all (·.isStr == vs0.strTags) && (rest.isNil || !body.falls) && body.wf && rest.wf
+    | .narrow _ body rest => (rest.isNil || !body.falls) && body.wf && rest.wf
+
+  /-- What may follow an empty case: anything but a narrowing case. -/
+  def TArms.nextOk {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} : TArms Φ Γ τ v → Bool
+    | .narrow _ _ _ => false
+    | .nil | .empty _ _ | .wide _ _ _ => true
+
 end
 
 /-! ## Trivially safe syntax
@@ -564,12 +607,13 @@ mutual
     | .forOf _ a body rest | .forEntries _ _ a body rest => a.trivial && body.trivial && rest.trivial
     | .ifNull _ _ yes no rest | .ifNotNull _ _ yes no rest => yes.trivial && no.trivial && rest.trivial
     | .ifNullExit _ _ yes rest => yes.trivial && rest.trivial
-    | .switchU _ _ cases rest => cases.trivial && rest.trivial
+    | .switchG _ _ cases rest => cases.trivial && rest.trivial
 
-  def TCases.trivial {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants}
-      {v : Var Γ x (.union key vs0)} {vs : Variants} : TCases Φ Γ τ v vs → Bool
-    | .one body => body.trivial
-    | .cons body more => body.trivial && more.trivial
+  def TArms.trivial {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} : TArms Φ Γ τ v → Bool
+    | .nil => true
+    | .empty _ rest => rest.trivial
+    | .wide _ body rest | .narrow _ body rest => body.trivial && rest.trivial
+
 end
 
 def TProgram.names : TProgram Φ → List String
