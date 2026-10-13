@@ -26,8 +26,8 @@ def filterParts : List Param × Stmt :=
   | _ => default
 
 /-- Unfold the parts of `move` named in a hypothesis into literal syntax. -/
-syntax "unfold_move" ident : tactic
-macro_rules
+local syntax "unfold_move" ident : tactic
+local macro_rules
   | `(tactic| unfold_move $h) => `(tactic| simp only [filterParts, moveStmts, method, treeClass, P,
       Extracted_reference_tree.program, List.getElem!_cons_zero, List.getElem!_cons_succ, List.drop_succ_cons,
       List.drop_zero] at $h:ident)
@@ -51,7 +51,7 @@ theorem filter_traverse (captured : Env) (nodeLoc : Nat) (node : JSString)
     have cloLookup' := cloLookup
     unfold_move cloLookup'
     refine WPTraverse.cons (WPI.closure cloLookup' ?_)
-    twp
+    wp
     refine ⟨Or.inr trivial, (ih _ clo (idx + 1) ?_ ?_).mono ?_⟩
     all_goals simp only [State.declare, State.alloc, List.zip_cons_cons, List.zip_nil_left, List.foldl_cons,
       List.foldl_nil] at *
@@ -116,7 +116,7 @@ theorem move_loop (base : Heap) (address : Nat) (d : State') (pA cA : Nat)
     have cMap := (frame.keep cA (bound_of_some cLookup)).trans cLookup
     obtain ⟨hc, cMap⟩ := getElem_of_some cMap
     have stop : ¬ (Float.Model.ofInt (k : Int) < Float.Model.ofNat d.children.size) := by
-      rw [ofNat_ofInt, Int53.lt_ofInt _ _ (nat_range (by omega) range) range]
+      rw [ofNat_ofInt, Int53.lt_ofInt _ _ (Int53.nat_range (by omega) range) range]
       omega
     have this' := (frame.keep n hl0).trans thisCell
     obtain ⟨_, this''⟩ := getElem_of_some this'
@@ -127,7 +127,7 @@ theorem move_loop (base : Heap) (address : Nat) (d : State') (pA cA : Nat)
     conv => arg 5; simp only [moveLoopParts, moveStmts, method, treeClass, P, Extracted_reference_tree.program,
       List.getElem!_cons_zero, List.getElem!_cons_succ]
     refine WPLoop.step ?_
-    twp
+    wp
     exact ⟨frame.keep, Or.inr ⟨rfl, trivial, trivial⟩⟩
   | succ m ih =>
     intro k cursor st count frame
@@ -141,7 +141,7 @@ theorem move_loop (base : Heap) (address : Nat) (d : State') (pA cA : Nat)
     have pMap := (frame.keep pA (bound_of_some input.parentsMap)).trans input.parentsMap
     obtain ⟨hp, pMap⟩ := getElem_of_some pMap
     have go : Float.Model.ofInt (k : Int) < Float.Model.ofNat d.children.size := by
-      rw [ofNat_ofInt, Int53.lt_ofInt _ _ (nat_range (by omega) range) range]
+      rw [ofNat_ofInt, Int53.lt_ofInt _ _ (Int53.nat_range (by omega) range) range]
       omega
     have this' := (frame.keep n hl0).trans thisCell
     obtain ⟨_, this''⟩ := getElem_of_some this'
@@ -150,8 +150,8 @@ theorem move_loop (base : Heap) (address : Nat) (d : State') (pA cA : Nat)
     have cursorCell := frame.cursorCell
     obtain ⟨hl2, cursorCell'⟩ := getElem_of_some cursorCell
     have step : Float.Model.ofInt (k : Int) + Float.Model.ofScientific 1 0 = Float.Model.ofInt ((k + 1 : Nat) : Int) := by
-      rw [one_scientific, ← Int53.add_exact _ _ (nat_range (by omega) range) (by decide)
-        (by exact_mod_cast nat_range (by omega) range)]
+      rw [one_scientific, ← Int53.add_exact _ _ (Int53.nat_range (by omega) range) (by decide)
+        (by exact_mod_cast Int53.nat_range (by omega) range)]
       rfl
     conv => arg 3; simp only [moveLoopParts, moveStmts, method, treeClass, P, Extracted_reference_tree.program,
       List.getElem!_cons_zero, List.getElem!_cons_succ]
@@ -163,17 +163,17 @@ theorem move_loop (base : Heap) (address : Nat) (d : State') (pA cA : Nat)
     cases cursor with
     | none =>
       simp only [optValue] at cursorCell cursorCell'
-      twp
+      wp
       exact ⟨frame.keep, Or.inr ⟨rfl, trivial, trivial⟩⟩
     | some p =>
       simp only [optValue] at cursorCell cursorCell'
       by_cases same : p = node
       · subst same
-        twp
+        wp
         exact ⟨frame.keep, Or.inl ⟨by simp [Examples.Proofs.ReferenceTree.hits], trivial, trivial⟩⟩
       · have ne : (p == node) = false := by simpa using same
         have pget := mapGet_optValue d.parents.entries p
-        twp
+        wp
         have hits : Examples.Proofs.ReferenceTree.hits d node (m + 1) (some p) =
             Examples.Proofs.ReferenceTree.hits d node m (d.parents.get p) := by
           simp [Examples.Proofs.ReferenceTree.hits, same]
@@ -217,9 +217,9 @@ theorem move_tail (heap0 : Heap) (st : State) (address : Nat) (d : State') (pA c
   obtain ⟨hn2, parentCell'⟩ := getElem_of_some parentCell
   conv => arg 3; simp only [moveStmts, method, treeClass, P, Extracted_reference_tree.program,
     List.getElem!_cons_zero, List.getElem!_cons_succ, List.drop_succ_cons, List.drop_zero]
-  twp
+  wp
   refine WPS.for_ ?_
-  twp
+  wp
   rw [zero_scientific]
   refine (loop _ (by simp) ⟨?_, fun i hi => ?_, ?_, ?_, ?_⟩).mono ?_
   all_goals try simp only [State.declare, State.alloc]
@@ -240,7 +240,7 @@ theorem move_tail (heap0 : Heap) (st : State) (address : Nat) (d : State') (pA c
     | none =>
       simp only [optValue] at parentCell2
       obtain ⟨_, parentCell3⟩ := getElem_of_some parentCell2
-      twp
+      wp
       exact ⟨Or.inl rfl, rfl, layout, keeps⟩
     | some p =>
       simp only [optValue] at parentCell2
@@ -266,7 +266,7 @@ theorem move_tail (heap0 : Heap) (st : State) (address : Nat) (d : State') (pA c
         obtain ⟨hla, arr⟩ := getElem_of_some lookup
         have fit := fits p rfl
         simp only [JSMap.get, seen, Option.getD_some] at fit
-        twp
+        wp
         have attached : Examples.Proofs.ReferenceTree.after d node (some p) =
             { parents := d.parents.set node p, children := d.children.set p (v ++ [node]) } := by
           simp [Examples.Proofs.ReferenceTree.after, Examples.Proofs.ReferenceTree.attached, JSMap.get, seen]
@@ -279,7 +279,7 @@ theorem move_tail (heap0 : Heap) (st : State) (address : Nat) (d : State') (pA c
         all_goals first | omega | simp [JSMap.set, stringStrings, mapSet_string]
       | none =>
         have mg := children'.get_none seen
-        twp
+        wp
         have attached : Examples.Proofs.ReferenceTree.after d node (some p) =
             { parents := d.parents.set node p, children := d.children.set p [node] } := by
           simp [Examples.Proofs.ReferenceTree.after, Examples.Proofs.ReferenceTree.attached, JSMap.get, seen]
@@ -334,7 +334,7 @@ theorem move_middle (heap0 : Heap) (st : State) (address : Nat) (a : State') (pA
   cases up : MapEntries.get a.parents.entries node with
   | none =>
     simp only [up, optValue] at pget
-    twp
+    wp
     rw [moveTail_eq]
     have det : Examples.Proofs.ReferenceTree.detached a node = { a with parents := a.parents.delete node } := by
       simp [Examples.Proofs.ReferenceTree.detached, JSMap.get, up]
@@ -358,7 +358,7 @@ theorem move_middle (heap0 : Heap) (st : State) (address : Nat) (a : State') (pA
       obtain ⟨arr, mg, lookup, na, nc⟩ := children.get_some seen
       have na' := Ne.symm na; have nc' := Ne.symm nc
       obtain ⟨hla, arr'⟩ := getElem_of_some lookup
-      twp
+      wp
       have ft := filter_traverse (st.declare "old" (.string o)).env (heap0.length + 1) node
         (by simp [State.declare, State.alloc, env]) v
       unfold_move ft
@@ -389,7 +389,7 @@ theorem move_middle (heap0 : Heap) (st : State) (address : Nat) (a : State') (pA
       obtain ⟨_, k1'⟩ := getElem_of_some k1
       obtain ⟨_, k2'⟩ := getElem_of_some k2
       obtain ⟨_, ka'⟩ := getElem_of_some ka
-      twp
+      wp
       rw [moveTail_eq]
       have det : Examples.Proofs.ReferenceTree.detached a node =
           { parents := a.parents.delete node, children := a.children.set o (v.filter (· != node)) } := by
@@ -419,7 +419,7 @@ theorem move_middle (heap0 : Heap) (st : State) (address : Nat) (a : State') (pA
       all_goals first | omega | simp [*]
     | none =>
       have mg := children.get_none seen
-      twp
+      wp
       have ft := filter_traverse (st.declare "old" (.string o)).env (heap0.length + 1) node
         (by simp [State.declare, State.alloc, env]) []
       unfold_move ft
@@ -450,7 +450,7 @@ theorem move_middle (heap0 : Heap) (st : State) (address : Nat) (a : State') (pA
       obtain ⟨_, k1'⟩ := getElem_of_some k1
       obtain ⟨_, k2'⟩ := getElem_of_some k2
       obtain ⟨_, ka'⟩ := getElem_of_some ka
-      twp
+      wp
       rw [moveTail_eq]
       have det : Examples.Proofs.ReferenceTree.detached a node =
           { parents := a.parents.delete node, children := a.children.set o [] } := by
@@ -519,7 +519,7 @@ theorem move_source (before : State) (address : Nat) (native : State') (pA cA : 
     List.getElem!_cons_zero, List.getElem!_cons_succ]
   conv => arg 3; simp only [moveStmts, method, treeClass, P, Extracted_reference_tree.program,
     List.getElem!_cons_zero, List.getElem!_cons_succ]
-  twp
+  wp
   have below : pA < before.heap.length ∧ cA < before.heap.length := ⟨hp, hc⟩
   refine (add_source _ address native pA cA node (input.extend (fun i hi => ?_))).mono ?_
   · simp [bindArguments, State.declare, State.alloc, List.getElem?_append_left hi]
@@ -550,14 +550,14 @@ theorem move_source (before : State) (address : Nat) (native : State') (pA cA : 
   cases parent with
   | none =>
     simp only [optValue] at c2 c2'
-    twp
+    wp
     refine finish (Examples.Proofs.ReferenceTree.add native node) _ _ rfl ?_
     rw [moveRest_eq]
     exact move_middle before.heap _ address _ pA cA node none l1 kept1 below range fits (by simpa using e1)
       c0 c1 c2
   | some p =>
     simp only [optValue] at c2 c2'
-    twp
+    wp
     refine (add_source _ address _ pA cA p l1).mono ?_
     rintro _ s2 ⟨-, l2, k2, e2⟩
     have kept2 := kept1.trans k2
@@ -567,7 +567,7 @@ theorem move_source (before : State) (address : Nat) (native : State') (pA cA : 
       rw [k2.2 _ (bound_of_some c1) (by omega) (by omega)]; exact c1
     have d2 : s2.heap[before.heap.length + 2]? = some (.cell (optValue (some p))) := by
       rw [k2.2 _ (bound_of_some c2) (by omega) (by omega)]; exact c2
-    twp
+    wp
     refine finish native _ _ rfl ?_
     rw [moveRest_eq]
     exact move_middle before.heap _ address _ pA cA node (some p) l2 kept2 below range fits

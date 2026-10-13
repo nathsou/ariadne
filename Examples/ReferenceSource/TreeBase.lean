@@ -54,13 +54,6 @@ theorem Keeps.trans {a b c : Heap} {pA cA : Nat} (ab : Keeps a b pA cA) (bc : Ke
 
 /-! ## Children entries -/
 
-theorem bound_of_some {heap : Heap} {i : Nat} {o : Object} (h : heap[i]? = some o) : i < heap.length :=
-  (List.getElem?_eq_some_iff.mp h).choose
-
-theorem getElem_of_some {heap : Heap} {i : Nat} {o : Object} (h : heap[i]? = some o) :
-    ∃ bound : i < heap.length, heap[i] = o :=
-  ⟨(List.getElem?_eq_some_iff.mp h).choose, (List.getElem?_eq_some_iff.mp h).choose_spec⟩
-
 theorem Children.length {heap : Heap} {pA cA : Nat} :
     ∀ {enc : List (Value × Value)} {es : List (JSString × List JSString)},
       Children heap pA cA enc es → enc.length = es.length
@@ -160,15 +153,6 @@ theorem Layout.extend {heap heap' : Heap} {address : Nat} {native : State'} {pA 
   exact l.rewrite native (fun i hi _ _ => agree i hi) ((agree _ (bound_of_some l.parentsMap)).trans l.parentsMap)
     ⟨enc, (agree _ (bound_of_some lookup)).trans lookup, rest.mono (fun i hi _ _ => agree i hi)⟩
 
-theorem length_le_of_agree {heap heap' : Heap} (agree : ∀ i, i < heap.length → heap'[i]? = heap[i]?) :
-    heap.length ≤ heap'.length := by
-  rcases heap.eq_nil_or_concat with h | ⟨init, last, rfl⟩
-  · simp [h]
-  · have same := agree init.length (by simp)
-    have last : heap'[init.length]? = some last := by simpa using same
-    have := bound_of_some last
-    (try simp); omega
-
 theorem Keeps.of_agree {heap heap' : Heap} {pA cA : Nat} (longer : heap.length ≤ heap'.length)
     (agree : ∀ i, i < heap.length → heap'[i]? = heap[i]?) : Keeps heap heap' pA cA :=
   ⟨longer, fun i hi _ _ => agree i hi⟩
@@ -186,7 +170,7 @@ theorem methodFind (index : Nat) (bound : index < 5 := by decide) :
   all_goals first | kernel_rfl | omega
 
 /-- Unfold a method of the class into its literal body and parameters. -/
-macro "unfold_method" : tactic => `(tactic| (
+scoped macro "unfold_method" : tactic => `(tactic| (
   conv => arg 3; simp only [method, treeClass, P, Extracted_reference_tree.program,
     List.getElem!_cons_zero, List.getElem!_cons_succ]
   conv => arg 2; simp only [method, treeClass, P, Extracted_reference_tree.program,
@@ -204,44 +188,9 @@ theorem mapDelete_stringStrings (xs : List (JSString × JSString)) (k : JSString
     mapDelete (stringStrings xs) (.string k) = stringStrings (MapEntries.delete xs k) :=
   mapDelete_string .string xs k
 
-/-- Arithmetic side conditions about heap lengths. -/
-macro "heap_arith" : tactic =>
-  `(tactic| (first | omega | (simp only [List.length_append, List.length_set, List.length_cons, List.length_nil]; omega)))
-
-/-- Heap reads through appends and writes, side conditions discharged arithmetically. -/
-macro "heap_simp" : tactic => `(tactic| (simp (disch := heap_arith) only [List.getElem?_set_ne, List.getElem?_set_self,
-  List.getElem?_append_left, List.getElem?_append_right, List.length_append, List.length_set, List.length_cons,
-  List.length_nil, List.append_assoc, List.cons_append, List.nil_append, Nat.add_assoc, Nat.reduceAdd,
-  Nat.add_sub_cancel_left, Nat.sub_self, List.getElem?_cons_succ, List.getElem?_cons_zero, Nat.zero_add, ne_eq,
-  Option.some.injEq] at *))
-
-theorem assign_eq {s : State} {name other : String} {loc : Nat} {v : Value}
-    (find : s.env.find? (fun p => p.1 == name) = some (other, loc)) (bound : loc < s.heap.length) :
-    s.assign name v = .ok { s with heap := s.heap.set loc (.cell v) } := by
-  simp [State.assign, find, State.write, bound, bind, Except.bind, pure, Except.pure]
-
-theorem iterable_array {s : State} {l : Nat} {xs : List Value} (h : s.heap[l]? = some (.array xs)) :
-    iterable s (.ref l) = .ok (xs, s) := by
-  simp [iterable, h, pure, Except.pure]
-
-theorem array_bound {xs : List Value} {p : Prop} (bound : xs.length < 4294967296) (h : p) :
-    xs.length < 4294967296 ∧ p := ⟨bound, h⟩
-
-/-- Array literals, spreads, closures and `filter`, beyond the shared steps. -/
-macro "twp" : tactic => `(tactic| repeat (first
-  | refine WPE.array ?_
-  | refine WPElements.nil ?_
-  | refine WPElements.spread ?_
-  | refine WPElements.single (by intro _ _ h; cases h) ?_
-  | refine WPE.lambda ?_
-  | refine WPI.array_filter (by wp_eval) ?_
-  | refine array_bound (by first | omega | (simp; done) | (simp; omega)) ?_
-  | refine ⟨_, _, iterable_array (by wp_eval), ?_⟩
-  | wp_step))
-
 set_option hygiene false in
 /-- Name every fact of the input layout for the evaluation steps. -/
-macro "layout_facts" : tactic => `(tactic| (
+scoped macro "layout_facts" : tactic => `(tactic| (
   obtain ⟨ha, inst⟩ := getElem_of_some input.instance_
   obtain ⟨hp, pMap⟩ := getElem_of_some input.parentsMap
   obtain ⟨enc, cLookup, children⟩ := input.childrenMap
@@ -279,7 +228,7 @@ theorem add_source (before : State) (address : Nat) (native : State') (pA cA : N
   cases seen : MapEntries.get native.children.entries node with
   | some v =>
     have has : mapHas enc (.string node) = true := by rw [children.has, seen]; rfl
-    twp
+    wp
     have kept : Examples.Proofs.ReferenceTree.add native node = native := by
       simp [Examples.Proofs.ReferenceTree.add, JSMap.has, JSMap.get, seen]
     rw [kept]
@@ -289,7 +238,7 @@ theorem add_source (before : State) (address : Nat) (native : State') (pA cA : N
         (fun i hi => by simp [bindArguments, State.declare, State.alloc, List.getElem?_append_left hi])
   | none =>
     have has : mapHas enc (.string node) = false := by rw [children.has, seen]; rfl
-    twp
+    wp
     have added : Examples.Proofs.ReferenceTree.add native node =
         { native with children := native.children.set node [] } := by
       simp [Examples.Proofs.ReferenceTree.add, JSMap.has, JSMap.get, seen]
@@ -318,7 +267,7 @@ theorem childList_source (before : State) (address : Nat) (native : State') (pA 
   | some v =>
     obtain ⟨a, mg, lookup, na, nc⟩ := children.get_some seen
     obtain ⟨hla, arr⟩ := getElem_of_some lookup
-    twp
+    wp
     have list : «Tree#childList» native node = v := by
       simp [«Tree#childList», JSMap.get, NativeDestruct.«Tree#state», seen]
     rw [list]
@@ -330,7 +279,7 @@ theorem childList_source (before : State) (address : Nat) (native : State') (pA 
     · exact Keeps.of_agree (by simp) (fun i hi => by heap_simp)
   | none =>
     have mg := children.get_none seen
-    twp
+    wp
     have list : «Tree#childList» native node = [] := by
       simp [«Tree#childList», JSMap.get, NativeDestruct.«Tree#state», seen]
     rw [list]
@@ -343,15 +292,6 @@ theorem childList_source (before : State) (address : Nat) (native : State') (pA 
     · exact Keeps.of_agree (by simp) (fun i hi => by heap_simp)
 
 /-! ## `root`: a counted walk up the parent links -/
-
-theorem one_scientific : Float.Model.ofScientific 1 0 = Float.Model.ofInt 1 := by kernel_rfl
-theorem zero_scientific : Float.Model.ofScientific 0 0 = Float.Model.ofInt 0 := by kernel_rfl
-theorem ofNat_ofInt (n : Nat) : Float.Model.ofNat n = Float.Model.ofInt n := rfl
-
-theorem nat_range {k n : Nat} (le : k ≤ n) (range : Int53.InRange (n : Int)) : Int53.InRange (k : Int) := by
-  rw [Int53.range_iff_natAbs] at *
-  simp at *
-  omega
 
 def rootParts : Expr × Stmt × Stmt :=
   match (method 4).body with
@@ -391,7 +331,7 @@ theorem root_loop (heap0 : Heap) (address : Nat) (native : State') (pA cA : Nat)
     have cMap := (frame.keep cA (bound_of_some cLookup)).trans cLookup
     obtain ⟨hc, cMap⟩ := getElem_of_some cMap
     have stop : ¬ (Float.Model.ofInt (k : Int) < Float.Model.ofNat native.children.size) := by
-      rw [ofNat_ofInt, Int53.lt_ofInt _ _ (nat_range (by omega) range) range]
+      rw [ofNat_ofInt, Int53.lt_ofInt _ _ (Int53.nat_range (by omega) range) range]
       omega
     conv => arg 3; simp only [rootParts, method, treeClass, P, Extracted_reference_tree.program,
       List.getElem!_cons_zero, List.getElem!_cons_succ]
@@ -415,7 +355,7 @@ theorem root_loop (heap0 : Heap) (address : Nat) (native : State') (pA cA : Nat)
     have pMap := (frame.keep pA (bound_of_some input.parentsMap)).trans input.parentsMap
     obtain ⟨hp, pMap⟩ := getElem_of_some pMap
     have go : Float.Model.ofInt (k : Int) < Float.Model.ofNat native.children.size := by
-      rw [ofNat_ofInt, Int53.lt_ofInt _ _ (nat_range (by omega) range) range]
+      rw [ofNat_ofInt, Int53.lt_ofInt _ _ (Int53.nat_range (by omega) range) range]
       omega
     conv => arg 3; simp only [rootParts, method, treeClass, P, Extracted_reference_tree.program,
       List.getElem!_cons_zero, List.getElem!_cons_succ]
@@ -428,7 +368,7 @@ theorem root_loop (heap0 : Heap) (address : Nat) (native : State') (pA cA : Nat)
     | none =>
       have pget : mapGet (stringStrings native.parents.entries) (.string cursor) = .undefined := by
         rw [mapGet_stringStrings, up]; rfl
-      twp
+      wp
       have w : Examples.Proofs.ReferenceTree.walk native (m + 1) cursor = cursor := by
         simp [Examples.Proofs.ReferenceTree.walk, JSMap.get, up]
       refine ⟨fun i hi => ?_, Or.inl ⟨trivial, by rw [w]⟩⟩
@@ -439,13 +379,13 @@ theorem root_loop (heap0 : Heap) (address : Nat) (native : State') (pA cA : Nat)
     | some p =>
       have pget : mapGet (stringStrings native.parents.entries) (.string cursor) = .string p := by
         rw [mapGet_stringStrings, up]; rfl
-      twp
+      wp
       refine ⟨_, assign_eq (loc := heap0.length + 2) (other := "cursor") (by wp_eval)
         (by simp [State.declare, State.alloc]; omega), ?_⟩
-      twp
+      wp
       have step : Float.Model.ofInt (k : Int) + Float.Model.ofScientific 1 0 = Float.Model.ofInt ((k + 1 : Nat) : Int) := by
-        rw [one_scientific, ← Int53.add_exact _ _ (nat_range (by omega) range) (by decide)
-          (by exact_mod_cast nat_range (by omega) range)]
+        rw [one_scientific, ← Int53.add_exact _ _ (Int53.nat_range (by omega) range) (by decide)
+          (by exact_mod_cast Int53.nat_range (by omega) range)]
         rfl
       rw [step]
       refine ⟨_, assign_eq (loc := heap0.length + 3) (other := "i") (by wp_eval)
@@ -475,9 +415,9 @@ theorem root_source (before : State) (address : Nat) (native : State') (pA cA : 
   change WPI P before (.method address (method 4).name) _ _
   refine WPI.method (class_ := treeClass) (by rw [treeName]; exact input.instance_) treeFind (methodFind 4) ?_
   unfold_method
-  twp
+  wp
   refine WPS.for_ ?_
-  twp
+  wp
   rw [zero_scientific]
   refine (loop _ (by simp) ⟨?_, fun i hi => ?_, ?_, ?_, ?_, ?_⟩).mono ?_
   all_goals try simp only [bindArguments, State.declare, State.alloc, List.zip_cons_cons, List.zip_nil_right,
@@ -492,7 +432,7 @@ theorem root_source (before : State) (address : Nat) (native : State') (pA cA : 
       exact ⟨Or.inr trivial, value, input.extend keep, Keeps.of_agree (length_le_of_agree keep) keep, trivial⟩
     · simp only [normal, ↓reduceIte]
       obtain ⟨hl2, cell'⟩ := getElem_of_some cell
-      twp
+      wp
       exact ⟨by simp, by simp, input.extend keep, Keeps.of_agree (length_le_of_agree keep) keep, trivial⟩
 
 end Examples.ReferenceSource.Tree

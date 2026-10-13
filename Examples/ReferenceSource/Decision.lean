@@ -73,10 +73,6 @@ structure Frame (s : State) (heap0 : Heap) (refs : List Nat) (cA fA bA : Nat) (f
   floorCell : s.heap[fA]? = some (.cell (.number (Float.Model.ofInt floor)))
   bestCell : ∃ v, s.heap[bA]? = some (.cell v) ∧ BestAt heap0 refs v best
 
-theorem getElem_of_some {heap : Heap} {i : Nat} {o : Object} (h : heap[i]? = some o) :
-    ∃ bound : i < heap.length, heap[i] = o :=
-  ⟨(List.getElem?_eq_some_iff.mp h).choose, (List.getElem?_eq_some_iff.mp h).choose_spec⟩
-
 /-- Appending to the heap keeps the frame. -/
 theorem Frame.append {s : State} {heap0 : Heap} {refs : List Nat} {cA fA bA : Nat} {floor : Int}
     {best : Option Candidate} (frame : Frame s heap0 refs cA fA bA floor best) (extra : List Object) :
@@ -234,10 +230,6 @@ theorem loop (heap0 : Heap) (refs : List Nat) (cA fA bA : Nat) (floor : Int) (fl
     rintro out ⟨normal, next⟩
     simp only [normal, reduceCtorEq, ↓reduceIte]
     exact ih _ _ (fun x member => sub x (List.mem_cons_of_mem _ member)) next
-
-theorem iterable_array {s : State} {l : Nat} {xs : List Value} (h : s.heap[l]? = some (.array xs)) :
-    iterable s (.ref l) = .ok (xs, s) := by
-  simp [iterable, h, pure, Except.pure]
 
 /-- `choose`, run by the original evaluator on an array of candidate records,
 returns `undefined` exactly when the emitted `choose` returns `none`; otherwise

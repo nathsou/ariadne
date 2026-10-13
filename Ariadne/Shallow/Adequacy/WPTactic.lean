@@ -1,5 +1,6 @@
 import Ariadne.Shallow.Adequacy.WPAttr
 import Ariadne.Shallow.Adequacy.WP
+import Ariadne.Shallow.Adequacy.WPHeap
 
 /-!
 Automation for weakest-precondition proofs about concrete source bodies.
@@ -56,6 +57,14 @@ macro "wp_step" : tactic => `(tactic| first
   | refine WPI.map_set (by wp_eval) ?_
   | refine WPI.map_delete (by wp_eval) ?_
   | refine WPI.array_slice (by wp_eval) ?_
+  | refine WPI.array_filter (by wp_eval) ?_
+  | refine WPE.array ?_
+  | refine WPElements.nil ?_
+  | refine WPElements.spread ?_
+  | refine WPElements.single (by intro _ _ h; cases h) ?_
+  | refine WPE.lambda ?_
+  | refine array_bound (by first | omega | (simp; done) | (simp; omega)) ?_
+  | refine ⟨_, _, iterable_array (by wp_eval), ?_⟩
   | refine ⟨_, SelectsCase.literals rfl, ?_⟩
   | refine ⟨_, by wp_eval, ?_⟩
   | (rw [if_pos (by assumption)])

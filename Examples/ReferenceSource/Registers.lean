@@ -1,5 +1,5 @@
 import Examples.ShallowReference.registers
-import Ariadne.Shallow.Adequacy.WP
+import Ariadne.Shallow.Adequacy.WPTactic
 import Ariadne.Shallow.Adequacy.ScalarMap
 import Ariadne.Shallow.Adequacy.ClassConstruction
 import Ariadne.SourceTrace
@@ -107,8 +107,6 @@ theorem layout_iff {heap : Heap} {address : Nat} {native : State'} {owned : Foot
 
 /-! ## Method bodies -/
 
-theorem zero_literal : Value.ofLiteral (.number 0 0) = .number (Float.Model.ofInt 0) := by kernel_rfl
-theorem zero_scientific : Float.Model.ofScientific 0 0 = Float.Model.ofInt 0 := by kernel_rfl
 
 theorem mapSet_stringInts (xs : List (JSString × Int)) (k : JSString) (v : Int) :
     mapSet (stringInts xs) (.string k) (.number (Float.Model.ofInt v)) = stringInts (MapEntries.set xs k v) :=
@@ -129,6 +127,9 @@ theorem mapGet_stringInts (xs : List (JSString × Int)) (k : JSString) :
 
 
 
+attribute [local wp_simps] zero_literal zero_scientific mapGet_stringInts mapGet_stringStrings mapSet_stringInts
+  mapSet_stringStrings
+
 def regClass : Ariadne.Class := P.classes[0]!
 theorem regFind : P.classes.find? (·.name == regClass.name) = some regClass := by kernel_rfl
 theorem regName : regClass.name = "Registers" := by kernel_rfl
@@ -139,57 +140,12 @@ theorem methodFind (index : Nat) (bound : index < 4 := by decide) :
   rcases index with _ | _ | _ | _ | index
   all_goals first | kernel_rfl | omega
 
-/-- Lookup and operator side conditions of a concrete source body. -/
-macro "wp_eval" : tactic => `(tactic| (simp +arith [*, Shallow.Adequacy.bindArguments, State.declare,
-  State.alloc, State.lookup, State.assign, State.write, readMember, List.getElem?_append, List.getElem?_set,
-  List.find?_cons, binary, unary, Value.ofLiteral, strictEqual, Value.truthy, zero_literal, zero_scientific, mapGet_stringInts, mapGet_stringStrings, mapSet_stringInts,
-  mapSet_stringStrings,
-  pure, Except.pure, bind, Except.bind]; try rfl))
-
-/-- One weakest-precondition step for the node at the head of the goal. -/
-macro "wp_step" : tactic => `(tactic| first
-  | refine WPS.block ?_
-  | refine WPB.nil ?_
-  | refine WPB.cons ?_
-  | refine WPS.return_ ?_
-  | refine WPS.let_ ?_
-  | refine WPS.expr ?_
-  | refine WPS.if_ ?_
-  | refine WPS.assignVar ?_
-  | refine WPE.literal ?_
-  | refine WPE.var (by wp_eval) ?_
-  | refine WPE.call ?_
-  | refine WPE.member ?_
-  | refine WPE.and ?_
-  | refine WPE.or ?_
-  | refine WPE.coalesce ?_
-  | refine WPE.binary (by decide) ?_
-  | refine WPE.unary ?_
-  | refine WPA.nil ?_
-  | refine WPA.cons ?_
-  | refine WPI.map_get (by wp_eval) ?_
-  | refine WPI.map_has (by wp_eval) ?_
-  | refine WPI.map_set (by wp_eval) ?_
-  | refine WPI.map_delete (by wp_eval) ?_
-  | refine ⟨_, by wp_eval, ?_⟩
-  | (rw [if_pos (by assumption)])
-  | (rw [if_neg (by assumption)])
-  | (simp only [*, Value.truthy, strictEqual, zero_literal, zero_scientific, decide_true, decide_false, gt_iff_lt, mapGet_stringInts, mapGet_stringStrings, Option.map_none, Option.map_some,
-      Option.getD_none, Option.getD_some, ↓reduceIte, reduceCtorEq, Bool.not_true, Bool.not_false, Bool.false_eq_true,
-      bne_iff_ne, ne_eq, bne_self_eq_false, not_true_eq_false, not_false_eq_true]))
-
-macro "wp" : tactic => `(tactic| repeat wp_step)
-
 /-- Unfold a method of the class into its literal body and parameters. -/
-macro "unfold_method" : tactic => `(tactic| (
+local macro "unfold_method" : tactic => `(tactic| (
   conv => arg 3; simp only [method, regClass, P, Extracted_reference_registers.program,
     List.getElem!_cons_zero, List.getElem!_cons_succ]
   conv => arg 2; simp only [method, regClass, P, Extracted_reference_registers.program,
     List.getElem!_cons_zero, List.getElem!_cons_succ]))
-
-theorem getElem_of_some {heap : Heap} {i : Nat} {o : Object} (h : heap[i]? = some o) :
-    ∃ bound : i < heap.length, heap[i] = o :=
-  ⟨(List.getElem?_eq_some_iff.mp h).choose, (List.getElem?_eq_some_iff.mp h).choose_spec⟩
 
 /-- Heaps that keep every existing object keep the layout. -/
 theorem Layout.extend {heap : Heap} {address : Nat} {native : State'} {fields : List (String × Value)}
@@ -276,7 +232,7 @@ theorem Layout.update {heap heap' : Heap} {address : Nat} {native : State'} {fie
 
 set_option hygiene false in
 /-- Name every fact of the input layout for the evaluation steps. -/
-macro "layout_facts" : tactic => `(tactic| (
+local macro "layout_facts" : tactic => `(tactic| (
   obtain ⟨ha, inst⟩ := getElem_of_some input.instance_
   obtain ⟨hv, vMap⟩ := getElem_of_some input.valuesMap
   obtain ⟨hs, sMap⟩ := getElem_of_some input.stampsMap
@@ -290,7 +246,7 @@ macro "layout_facts" : tactic => `(tactic| (
 
 set_option hygiene false in
 /-- Shared closing step: the final heap only rewrote the selected maps. -/
-macro "layout_close" : tactic => `(tactic| (
+local macro "layout_close" : tactic => `(tactic| (
   refine ⟨by simp, by first | rfl | simp, ?_⟩
   refine Layout.update input _ ?_ ?_ ?_ ?_ ?_ ?_
   · intro i hi n1 n2 n3
