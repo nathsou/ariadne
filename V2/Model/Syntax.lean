@@ -1,10 +1,8 @@
 /-!
-# Source syntax of the subset (trusted)
+# The model's syntax
 
-The untyped, JavaScript-shaped syntax the model evaluates: what the parser produces
-once spans and type annotations are stripped. Type annotations have no runtime
-meaning in TypeScript, so dropping them loses nothing the evaluator could observe.
-Unbraced and braced statement bodies both become statement lists.
+The abstract syntax of the TypeScript subset, after type erasure: exactly what the
+trusted evaluator runs and what generated theorems are about.
 -/
 
 namespace V2
@@ -17,29 +15,28 @@ one code unit per character. Printed programs use it for readable literals. -/
 def js (s : String) : JSString := s.toList.map fun c => c.toNat.toUInt16
 
 inductive Lit where
+  | undefined
+  | null
   | bool (b : Bool)
+  /-- An integer-valued `number` literal. -/
+  | number (n : Int)
   | bigint (n : Int)
   | string (s : JSString)
   deriving Repr, BEq, DecidableEq, Inhabited
 
 inductive UnOp where
-  /-- `!e` -/
-  | not
-  /-- `-e` -/
-  | neg
+  | not | neg
   deriving Repr, BEq, DecidableEq, Inhabited
 
 inductive BinOp where
   | add | sub | mul
-  /-- `===` -/
-  | eq
-  /-- `!==` -/
-  | ne
+  /-- `===` and `!==`. -/
+  | eq | ne
   | lt | le | gt | ge
-  /-- `&&`, short-circuiting -/
-  | and
-  /-- `||`, short-circuiting -/
-  | or
+  /-- `&&`, `||` and `??` (short-circuiting). -/
+  | and | or | coalesce
+  /-- `==` and `!=`, supported only with a `null` or `undefined` operand. -/
+  | looseEq | looseNe
   deriving Repr, BEq, DecidableEq, Inhabited
 
 inductive Expr where
@@ -47,24 +44,44 @@ inductive Expr where
   | var (x : String)
   | unary (op : UnOp) (e : Expr)
   | binary (op : BinOp) (a b : Expr)
-  /-- `c ? a : b` -/
   | cond (c a b : Expr)
-  /-- A call to a function declared in the program. -/
+  /-- A call of a declared function, or of a local holding a function value. -/
   | call (f : String) (args : List Expr)
+  /-- An object literal: `(some name, e)` is `name: e`, `(none, e)` is `...e`. -/
+  | record (entries : List (Option String × Expr))
+  /-- `e.name`: a record field, or `length` of an array or string. -/
+  | field (e : Expr) (name : String)
+  /-- An array literal: `(true, e)` is `...e`. -/
+  | array (elems : List (Bool × Expr))
+  /-- `e[i]`. -/
+  | index (e i : Expr)
+  /-- `e.name(args)`: an array method. -/
+  | method (e : Expr) (name : String) (args : List Expr)
+  /-- `(params) => body`. -/
+  | arrow (params : List String) (body : Expr)
   deriving Repr, BEq, Inhabited
 
 inductive Stmt where
-  /-- `const x = e;` -/
   | const (x : String) (e : Expr)
-  /-- `return e;` -/
+  | let_ (x : String) (e : Expr)
+  | assign (x : String) (e : Expr)
   | ret (e : Expr)
-  /-- `if (c) { yes } else { no }`; a missing `else` is an empty list. -/
   | ite (c : Expr) (yes no : List Stmt)
+  /-- `{ ss }`: a block scope. -/
+  | block (ss : List Stmt)
+  /-- `switch (e) { case t: … default: … }`; `none` labels `default`. -/
+  | switch (e : Expr) (cases : List (Option Expr × List Stmt))
+  | brk
+  | cont
+  /-- `for (const x of e) { body }`. -/
+  | forOf (x : String) (e : Expr) (body : List Stmt)
+  /-- `for (const [i, x] of e.entries()) { body }`. -/
+  | forEntries (i x : String) (e : Expr) (body : List Stmt)
   deriving Repr, BEq, Inhabited
 
 /-- Names a statement adds to the scope of the rest of its list. -/
 def Stmt.declares : Stmt → List String
-  | .const x _ => [x]
+  | .const x _ | .let_ x _ => [x]
   | _ => []
 
 structure Function where

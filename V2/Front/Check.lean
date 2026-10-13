@@ -12,12 +12,12 @@ wrong theorem.
 -/
 
 namespace V2.Front
-open Ariadne (Diagnostic Checked Span)
+open V2.Parse (Diagnostic Checked Span)
 
 def mismatch (span : Span) (message : String) : Checked α :=
   throw { code := "A2002", message, span }
 
-def convertTy (span : Span) : Ariadne.Ty → Checked Ty
+def convertTy (span : Span) : Parse.Ty → Checked Ty
   | .boolean => pure .bool
   | .bigint => pure .int
   | .string => pure .string
@@ -110,7 +110,7 @@ def binaryOut (span : Span) (op : String) (a b : Out) : Checked Out := do
   | op, τ => mismatch span s!"'{op}' does not apply to {τ.ts}"
 
 mutual
-  def checkExpr (scope : Scope) : Ariadne.Expr → Checked Out
+  def checkExpr (scope : Scope) : Parse.Expr → Checked Out
     | .literal (.boolean b) _ => pure { ty := .bool, typed := s!"(.bool {b})", readable := s!"{b}", atomic := true }
     | .literal (.bigint n) _ => pure { ty := .int, typed := s!"(.int {n})", readable := s!"({n} : Int)", atomic := true }
     | .literal (.string units) _ =>
@@ -146,7 +146,7 @@ mutual
              atomic := args.isEmpty }
     | e => unsupported e.span "this expression"
 
-  def checkArgs (scope : Scope) : List Ariadne.Expr → Checked (List Out)
+  def checkArgs (scope : Scope) : List Parse.Expr → Checked (List Out)
     | [] => pure []
     | e :: es => return (← checkExpr scope e) :: (← checkArgs scope es)
 end
@@ -169,7 +169,7 @@ def declare (scope : Scope) (span : Span) (x : String) (τ : Ty) : Checked Scope
   pure { scope with locals := (x, τ) :: scope.locals }
 
 mutual
-  partial def checkStmts (scope : Scope) (result : Ty) : List Ariadne.Stmt → Checked Block
+  partial def checkStmts (scope : Scope) (result : Ty) : List Parse.Stmt → Checked Block
     | [] => pure blockNil
     | .let_ false x annotation e span :: rest => do
       let v ← checkExpr scope e
@@ -199,7 +199,7 @@ mutual
              returns := (yes.returns && no.returns) || rest.returns }
     | s :: _ => unsupported s.span "this statement"
 
-  partial def checkBranch (scope : Scope) (result : Ty) : Ariadne.Stmt → Checked Block
+  partial def checkBranch (scope : Scope) (result : Ty) : Parse.Stmt → Checked Block
     | .block ss _ => checkStmts scope result ss
     | s@(.if_ ..) => checkStmts scope result [s]
     | s => unsupported s.span "this branch"
@@ -209,7 +209,7 @@ structure CheckedFn where
   sig : FnSig
   body : Block
 
-def checkFunction (fns : List FnSig) (f : Ariadne.Function) : Checked CheckedFn := do
+def checkFunction (fns : List FnSig) (f : Parse.Function) : Checked CheckedFn := do
   if fns.any (·.name == f.name) then
     throw { code := "A2004", message := s!"'{f.name}' is declared twice", span := f.span }
   let result ← convertTy f.span f.result
@@ -228,7 +228,7 @@ def checkFunction (fns : List FnSig) (f : Ariadne.Function) : Checked CheckedFn 
     throw { code := "A2003", message := s!"'{f.name}' may finish without returning a value", span := f.span }
   pure { sig := { name := f.name, params, result }, body := block }
 
-def checkProgram (p : Ariadne.Program) : Checked (List CheckedFn) := do
+def checkProgram (p : Parse.Program) : Checked (List CheckedFn) := do
   let mut fns := []
   let mut out := []
   for f in p.functions do
@@ -345,7 +345,7 @@ readable definitions as its environment, so no check unfolds a callee. -/\n\n"
 
 /-- Parse, convert and check a TypeScript file, returning the generated Lean source. -/
 def translate (source namespace_ text : String) : Checked String := do
-  let parsed ← Ariadne.parse text
+  let parsed ← Parse.parse text
   let ast ← convertProgram parsed
   let fns ← checkProgram parsed
   pure (printFile source namespace_ ast fns)

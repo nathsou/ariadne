@@ -1,125 +1,105 @@
-import V2.Front.Check
+import V2.Front.Convert
 import V2.Model.Eval
 import Lean.Data.Json
 
-/-! The `ariadne2` command line: translate a file, or run a function in the model. -/
+/-! The `ariadne2` command line. -/
 
-open V2 V2.Front
+open V2 V2.Front Lean
 
 private def usage : String :=
   "ariadne2 — TypeScript subset to Lean 4, with a general correctness theorem\n\n" ++
-  "  ariadne2 translate FILE --out FILE.lean --namespace NAME\n" ++
-  "  ariadne2 run FILE FUNCTION [ARG...]\n" ++
   "  ariadne2 batch FILE < CALLS\n" ++
   "  ariadne2 signatures FILE\n\n" ++
-  "run evaluates FUNCTION in the trusted model (no type checking). Arguments are\n" ++
-  "bigint literals (12n, -3n), true/false, or JSON strings (\"text\"). Results print as\n" ++
-  "bigint:N, bool:B, string:[code units], undefined, or error:FAULT.\n" ++
-  "batch reads one call per line, tab-separated: FUNCTION then arguments written\n" ++
-  "i:N (bigint), b:true|false, or s:U,U,... (UTF-16 code units), and prints one result per line."
+  "batch evaluates calls in the trusted model (no type checking): one JSON array per\n" ++
+  "line, the function name then its arguments as observations, and prints one\n" ++
+  "observation per line. Observations: [\"undefined\"], [\"null\"], [\"bool\", b],\n" ++
+  "[\"number\", \"n\"], [\"bigint\", \"n\"], [\"string\", [code units]], [\"array\", [...]],\n" ++
+  "[\"record\", [[key, value], ...]] (insertion order), [\"function\"], or [\"error\", fault]."
 
 private def option (args : List String) (key : String) : Option String :=
   match args with
   | a :: b :: rest => if a == key then some b else option (b :: rest) key
   | _ => none
 
-private def utf16 (s : String) : JSString :=
-  s.toList.flatMap fun c =>
-    let n := c.toNat
-    if n < 0x10000 then [n.toUInt16]
-    else let m := n - 0x10000; [(0xD800 + m / 0x400).toUInt16, (0xDC00 + m % 0x400).toUInt16]
+/-- Observations as JSON; bigint and number digits are strings to keep precision. -/
+partial def observe : JSValue → Json
+  | .undefined => Json.arr #["undefined"]
+  | .null => Json.arr #["null"]
+  | .bool b => Json.arr #["bool", toJson b]
+  | .number n => Json.arr #["number", toString n]
+  | .bigint n => Json.arr #["bigint", toString n]
+  | .string s => Json.arr #["string", Json.arr (s.toArray.map fun u => toJson u.toNat)]
+  | .record kvs => Json.arr #["record", Json.arr (kvs.toArray.map fun (k, v) => Json.arr #[toJson k, observe v])]
+  | .array xs => Json.arr #["array", Json.arr (xs.toArray.map observe)]
+  | .closure .. | .function _ => Json.arr #["function"]
 
-private def parseArg (arg : String) : Except String JSValue :=
-  if arg == "true" then .ok (.bool true)
-  else if arg == "false" then .ok (.bool false)
-  else if arg.endsWith "n" then
-    match (arg.dropEnd 1).toString.toInt? with
-    | some n => .ok (.bigint n)
-    | none => .error s!"bad bigint argument {arg}"
-  else match Lean.Json.parse arg with
-    | .ok (.str s) => .ok (.string (utf16 s))
-    | _ => .error s!"bad argument {arg}"
+partial def unobserve (j : Json) : Except String JSValue := do
+  let .arr parts := j | throw s!"bad value {j}"
+  let tag ← parts[0]?.getD Json.null |>.getStr?
+  let arg := parts[1]?.getD Json.null
+  match tag with
+  | "undefined" => pure .undefined
+  | "null" => pure .null
+  | "bool" => return .bool (← arg.getBool?)
+  | "number" => match (← arg.getStr?).toInt? with
+    | some n => pure (.number n)
+    | none => throw "bad number"
+  | "bigint" => match (← arg.getStr?).toInt? with
+    | some n => pure (.bigint n)
+    | none => throw "bad bigint"
+  | "string" => return .string ((← arg.getArr?).toList.map fun u => (u.getNat?.toOption.getD 0).toUInt16)
+  | "array" => return .array (← (← arg.getArr?).toList.mapM unobserve)
+  | "record" => return .record (← (← arg.getArr?).toList.mapM fun kv => do
+      let .arr #[k, v] := kv | throw "bad field"
+      return (← k.getStr?, ← unobserve v))
+  | t => throw s!"bad tag {t}"
 
-private def parseTagged (arg : String) : Except String JSValue :=
-  match arg.splitOn ":" with
-  | ["b", "true"] => .ok (.bool true)
-  | ["b", "false"] => .ok (.bool false)
-  | ["i", n] => match n.toInt? with
-    | some n => .ok (.bigint n)
-    | none => .error s!"bad bigint {n}"
-  | ["s", ""] => .ok (.string [])
-  | ["s", units] => match (units.splitOn ",").mapM String.toNat? with
-    | some us => .ok (.string (us.map (·.toUInt16)))
-    | none => .error s!"bad string {units}"
-  | _ => .error s!"bad argument {arg}"
+private def showFault : Fault → Json
+  | .timeout => Json.arr #["error", "timeout"]
+  | .typeError m => Json.arr #["error", s!"TypeError: {m}"]
+  | .referenceError x => Json.arr #["error", s!"ReferenceError: {x}"]
+  | .unsupported m => Json.arr #["error", s!"unsupported: {m}"]
 
-private def showValue : JSValue → String
-  | .undefined => "undefined"
-  | .bool b => s!"bool:{b}"
-  | .bigint n => s!"bigint:{n}"
-  | .string s => s!"string:[{",".intercalate (s.map (toString ·.toNat))}]"
-
-private def showFault : Fault → String
-  | .timeout => "error:timeout"
-  | .typeError m => s!"error:TypeError:{m}"
-  | .referenceError x => s!"error:ReferenceError:{x}"
-
-private def report (source : Ariadne.Source) (d : Ariadne.Diagnostic) : IO UInt32 := do
+private def report (source : V2.Parse.Source) (d : V2.Parse.Diagnostic) : IO UInt32 := do
   let (line, column) := source.position d.span.start
   IO.eprintln s!"{source.path}:{line}:{column}: error {d.code}: {d.message}"
   if let some help := d.help then IO.eprintln s!"  help: {help}"
   return 1
 
+private def tyName : V2.Parse.Ty → String
+  | .bigint => "bigint" | .boolean => "boolean" | .string => "string" | .number => "number"
+  | .named n => n | _ => "other"
+
 def main (args : List String) : IO UInt32 := do
   match args with
-  | "translate" :: path :: rest =>
-    let some out := option rest "--out" | IO.eprintln usage; return 2
-    let some ns := option rest "--namespace" | IO.eprintln usage; return 2
-    let text ← IO.FS.readFile path
-    match translate path ns text with
-    | .ok lean => IO.FS.writeFile out lean; return 0
-    | .error d => report { path, text } d
-  | "run" :: path :: f :: rest =>
-    let text ← IO.FS.readFile path
-    let parsed ← match Ariadne.parse text >>= convertProgram with
-      | .ok p => pure p
-      | .error d => return ← report { path, text } d
-    let values ← match rest.mapM parseArg with
-      | .ok vs => pure vs
-      | .error e => IO.eprintln e; return 2
-    match run parsed 10000 f values with
-    | .ok v => IO.println (showValue v)
-    | .error e => IO.println (showFault e)
-    return 0
   | "batch" :: path :: [] =>
     let text ← IO.FS.readFile path
-    let parsed ← match Ariadne.parse text >>= convertProgram with
+    let parsed ← match V2.Parse.parse text >>= convertProgram with
       | .ok p => pure p
       | .error d => return ← report { path, text } d
     let stdin ← IO.getStdin
     let stdout ← IO.getStdout
     repeat
       let line ← stdin.getLine
-      if line.isEmpty then break
-      match (line.trimAsciiEnd.toString.splitOn "\t") with
-      | f :: rest =>
-        match rest.mapM parseTagged with
-        | .ok values => stdout.putStrLn (match run parsed 10000 f values with
-            | .ok v => showValue v
-            | .error e => showFault e)
-        | .error e => IO.eprintln e; return 2
-      | [] => pure ()
+      if line.trimAscii.isEmpty then break
+      let call : Except String (String × List JSValue) := do
+        let .arr parts ← Json.parse line | throw "expected an array"
+        let f ← (parts[0]?.getD Json.null).getStr?
+        return (f, ← (parts.toList.drop 1).mapM unobserve)
+      match call with
+      | .ok (f, values) => stdout.putStrLn (match run parsed 100000 f values with
+          | .ok v => (observe v).compress
+          | .error e => (showFault e).compress)
+      | .error e => IO.eprintln e; return 2
     stdout.flush
     return 0
   | "signatures" :: path :: [] =>
     let text ← IO.FS.readFile path
-    match Ariadne.parse text with
+    match V2.Parse.parse text with
     | .error d => report { path, text } d
     | .ok parsed =>
       for f in parsed.functions do
-        let ty (t : Ariadne.Ty) : String := match t with
-          | .bigint => "bigint" | .boolean => "boolean" | .string => "string" | _ => "other"
-        let params := ",".intercalate (f.params.map fun p => s!"\"{ty p.ty}\"")
-        IO.println s!"\{\"name\":\"{f.name}\",\"exported\":{f.exported},\"params\":[{params}],\"result\":\"{ty f.result}\"}"
+        let params := ",".intercalate (f.params.map fun p => s!"\"{tyName p.ty}\"")
+        IO.println s!"\{\"name\":\"{f.name}\",\"exported\":{f.exported},\"params\":[{params}],\"result\":\"{tyName f.result}\"}"
       return 0
   | _ => IO.eprintln usage; return 2
