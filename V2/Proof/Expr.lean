@@ -14,9 +14,11 @@ namespace V2
 
 /-- The functions in scope, called on arguments representing safe inputs, converge
 to values representing their denotations. -/
-def FnsOK {Φ : Sigs} (prog : Program) (fs : Φ.denote) (ss : Φ.safety) : Prop :=
-  ∀ {f s} (v : FVar Φ f s) (xs : s.params.denote) (vs : List JSValue), ArgsRep s.params vs xs →
+structure FnsOK {Φ : Sigs} (prog : Program) (fs : Φ.denote) (ss : Φ.safety) : Prop where
+  conv : ∀ {f s} (v : FVar Φ f s) (xs : s.params.denote) (vs : List JSValue), ArgsRep s.params vs xs →
     v.safe ss xs = true → ∃ w, Converges (fun n => call prog n f vs) (.ok w) ∧ s.result.Rep w (v.get fs xs)
+  /-- Each function in scope is declared in the program (so its name evaluates to it). -/
+  mem : ∀ {f s} (v : FVar Φ f s), prog.any (·.name == f) = true
 
 theorem EnvRel.lookup_none : ∀ {Γ : Ctx} {env : Env} {ρ : Γ.denote} {f : String}, EnvRel Γ env ρ →
     (Γ.map Prod.fst).contains f = false → env.lookup f = none
@@ -359,7 +361,7 @@ mutual
       simp only [TExpr.safe] at hs
       have hs := andT_elim hs (args.safe_of_trivial ρ) (hss fn _)
       obtain ⟨vs, ⟨Na, ha⟩, hvs⟩ := TArgs.adequate args he hs.1
-      obtain ⟨w, ⟨Nc, hc⟩, hw⟩ := hfs fn _ vs hvs hs.2
+      obtain ⟨w, ⟨Nc, hc⟩, hw⟩ := hfs.conv fn _ vs hvs hs.2
       exact ⟨w, Converges.of_succ (max Na Nc) fun m hm => by
         simp [evalExpr, TExpr.erase, ha m (by omega), hc m (by omega), he.lookup_none hf, bind, Except.bind],
         hw⟩
@@ -479,94 +481,61 @@ mutual
         Converges.of_succ (max Na Nx) fun m hm => by
           simp [evalExpr, TExpr.erase, ha m (by omega), hx m (by omega), includes_rep hp hwx hvs, bind,
             Except.bind, pure, Except.pure], rfl⟩
-    | _, _, .any a x p, env, ρ, he, hs => by
+    | _, _, .any a p, env, ρ, he, hs => by
       simp only [TExpr.safe] at hs
-      have hs := andT_elim hs (a.safe_of_trivial ρ) (fun h => anySafe_true (fun y => p.safe_of_trivial (y, ρ) h) _)
+      have hs := andT_elim hs (a.safe_of_trivial ρ) (fun h => anySafe_true (fun y => p.safe_of_trivial hss ρ y h) _)
       obtain ⟨_, ⟨Na, ha⟩, vs, rfl, hvs⟩ := TExpr.adequate a he hs.1
-      have happ : PredOK prog _ (.closure [x] p.erase env) (.array vs) (fun y => p.denote fs (y, ρ))
-          (fun y => p.safe fs ss (y, ρ)) := fun i w y hw hsy => by
-        obtain ⟨r, hc, hr⟩ := TExpr.adequate p (env := (x, w) :: env) (ρ := (y, ρ)) ⟨w, env, rfl, hw, he⟩ hsy
-        simp only [Ty.Rep] at hr; subst hr
-        exact apply_closure1 _ hc
-      obtain ⟨Nf, hf⟩ := conv_arrow (prog := prog) (env := env) (ps := [x]) (body := p.erase)
-      obtain ⟨Ns, hr⟩ := someApply_conv happ 0 hvs hs.2
-      exact ⟨.bool ((a.denote fs ρ).any fun y => p.denote fs (y, ρ)),
-        Converges.of_succ (max Na (max Nf Ns)) fun m hm => by
+      obtain ⟨f, ⟨Nf, hf⟩, happ⟩ := TFn.adequate p he
+      obtain ⟨Ns, hr⟩ := someApply_conv (PredOK.of (arr := .array vs) happ) 0 hvs hs.2
+      exact ⟨.bool ((a.denote fs ρ).any (p.denote fs ρ)), Converges.of_succ (max Na (max Nf Ns)) fun m hm => by
           simp [evalExpr, TExpr.erase, ha m (by omega), hf m (by omega), hr m (by omega), bind, Except.bind,
             pure, Except.pure], rfl⟩
-    | _, _, .all a x p, env, ρ, he, hs => by
+    | _, _, .all a p, env, ρ, he, hs => by
       simp only [TExpr.safe] at hs
-      have hs := andT_elim hs (a.safe_of_trivial ρ) (fun h => allSafe_true (fun y => p.safe_of_trivial (y, ρ) h) _)
+      have hs := andT_elim hs (a.safe_of_trivial ρ) (fun h => allSafe_true (fun y => p.safe_of_trivial hss ρ y h) _)
       obtain ⟨_, ⟨Na, ha⟩, vs, rfl, hvs⟩ := TExpr.adequate a he hs.1
-      have happ : PredOK prog _ (.closure [x] p.erase env) (.array vs) (fun y => p.denote fs (y, ρ))
-          (fun y => p.safe fs ss (y, ρ)) := fun i w y hw hsy => by
-        obtain ⟨r, hc, hr⟩ := TExpr.adequate p (env := (x, w) :: env) (ρ := (y, ρ)) ⟨w, env, rfl, hw, he⟩ hsy
-        simp only [Ty.Rep] at hr; subst hr
-        exact apply_closure1 _ hc
-      obtain ⟨Nf, hf⟩ := conv_arrow (prog := prog) (env := env) (ps := [x]) (body := p.erase)
-      obtain ⟨Ns, hr⟩ := everyApply_conv happ 0 hvs hs.2
-      exact ⟨.bool ((a.denote fs ρ).all fun y => p.denote fs (y, ρ)),
-        Converges.of_succ (max Na (max Nf Ns)) fun m hm => by
+      obtain ⟨f, ⟨Nf, hf⟩, happ⟩ := TFn.adequate p he
+      obtain ⟨Ns, hr⟩ := everyApply_conv (PredOK.of (arr := .array vs) happ) 0 hvs hs.2
+      exact ⟨.bool ((a.denote fs ρ).all (p.denote fs ρ)), Converges.of_succ (max Na (max Nf Ns)) fun m hm => by
           simp [evalExpr, TExpr.erase, ha m (by omega), hf m (by omega), hr m (by omega), bind, Except.bind,
             pure, Except.pure], rfl⟩
-    | _, _, .find a x p, env, ρ, he, hs => by
+    | _, _, .find a p, env, ρ, he, hs => by
       simp only [TExpr.safe] at hs
-      have hs := andT_elim hs (a.safe_of_trivial ρ) (fun h => anySafe_true (fun y => p.safe_of_trivial (y, ρ) h) _)
+      have hs := andT_elim hs (a.safe_of_trivial ρ) (fun h => anySafe_true (fun y => p.safe_of_trivial hss ρ y h) _)
       obtain ⟨_, ⟨Na, ha⟩, vs, rfl, hvs⟩ := TExpr.adequate a he hs.1
-      have happ : PredOK prog _ (.closure [x] p.erase env) (.array vs) (fun y => p.denote fs (y, ρ))
-          (fun y => p.safe fs ss (y, ρ)) := fun i w y hw hsy => by
-        obtain ⟨r, hc, hr⟩ := TExpr.adequate p (env := (x, w) :: env) (ρ := (y, ρ)) ⟨w, env, rfl, hw, he⟩ hsy
-        simp only [Ty.Rep] at hr; subst hr
-        exact apply_closure1 _ hc
-      obtain ⟨Nf, hf⟩ := conv_arrow (prog := prog) (env := env) (ps := [x]) (body := p.erase)
-      obtain ⟨r, ⟨Ns, hr⟩, hrep⟩ := findApply_conv happ 0 hvs hs.2
+      obtain ⟨f, ⟨Nf, hf⟩, happ⟩ := TFn.adequate p he
+      obtain ⟨r, ⟨Ns, hr⟩, hrep⟩ := findApply_conv (PredOK.of (arr := .array vs) happ) 0 hvs hs.2
       exact ⟨r, Converges.of_succ (max Na (max Nf Ns)) fun m hm => by
           simp [evalExpr, TExpr.erase, ha m (by omega), hf m (by omega), hr m (by omega), bind, Except.bind,
             pure, Except.pure], hrep⟩
-    | _, _, .filter a x p, env, ρ, he, hs => by
+    | _, _, .filter a p, env, ρ, he, hs => by
       simp only [TExpr.safe] at hs
-      have hs := andT_elim hs (a.safe_of_trivial ρ) (fun h => by simp [p.safe_of_trivial _ h])
+      have hs := andT_elim hs (a.safe_of_trivial ρ) (fun h => by simp [p.safe_of_trivial hss ρ _ h])
       obtain ⟨_, ⟨Na, ha⟩, vs, rfl, hvs⟩ := TExpr.adequate a he hs.1
-      have happ : PredOK prog _ (.closure [x] p.erase env) (.array vs) (fun y => p.denote fs (y, ρ))
-          (fun y => p.safe fs ss (y, ρ)) := fun i w y hw hsy => by
-        obtain ⟨r, hc, hr⟩ := TExpr.adequate p (env := (x, w) :: env) (ρ := (y, ρ)) ⟨w, env, rfl, hw, he⟩ hsy
-        simp only [Ty.Rep] at hr; subst hr
-        exact apply_closure1 _ hc
-      obtain ⟨Nf, hf⟩ := conv_arrow (prog := prog) (env := env) (ps := [x]) (body := p.erase)
-      obtain ⟨rs, ⟨Ns, hr⟩, hrep⟩ := filterApply_conv happ 0 hvs hs.2
+      obtain ⟨f, ⟨Nf, hf⟩, happ⟩ := TFn.adequate p he
+      obtain ⟨rs, ⟨Ns, hr⟩, hrep⟩ := filterApply_conv (PredOK.of (arr := .array vs) happ) 0 hvs hs.2
       exact ⟨.array rs, Converges.of_succ (max Na (max Nf Ns)) fun m hm => by
           simp [evalExpr, TExpr.erase, ha m (by omega), hf m (by omega), hr m (by omega), bind, Except.bind,
             pure, Except.pure], rs, rfl, hrep⟩
-    | _, _, .map a x f, env, ρ, he, hs => by
+    | _, _, .map a p, env, ρ, he, hs => by
       simp only [TExpr.safe] at hs
-      have hs := andT_elim hs (a.safe_of_trivial ρ) (fun h => by simp [f.safe_of_trivial _ h])
+      have hs := andT_elim hs (a.safe_of_trivial ρ) (fun h => by simp [p.safe_of_trivial hss ρ _ h])
       obtain ⟨_, ⟨Na, ha⟩, vs, rfl, hvs⟩ := TExpr.adequate a he hs.1
-      have happ : ∀ (i : Nat) w y, _ → f.safe fs ss (y, ρ) = true →
-          ∃ r, Converges (fun n => apply prog n (.closure [x] f.erase env) [w, .number i, .array vs]) (.ok r) ∧
-            _ := fun i w y hw hsy => by
-        obtain ⟨r, hc, hr⟩ := TExpr.adequate f (env := (x, w) :: env) (ρ := (y, ρ)) ⟨w, env, rfl, hw, he⟩ hsy
-        exact ⟨r, apply_closure1 _ hc, hr⟩
-      obtain ⟨Nf, hf⟩ := conv_arrow (prog := prog) (env := env) (ps := [x]) (body := f.erase)
-      obtain ⟨rs, ⟨Ns, hr⟩, hrep⟩ := mapApply_conv happ 0 hvs hs.2
+      obtain ⟨f, ⟨Nf, hf⟩, happ⟩ := TFn.adequate p he
+      obtain ⟨rs, ⟨Ns, hr⟩, hrep⟩ := mapApply_conv (arr := .array vs) (fun i w y hw hsy => happ _ w y hw hsy) 0 hvs hs.2
       exact ⟨.array rs, Converges.of_succ (max Na (max Nf Ns)) fun m hm => by
           simp [evalExpr, TExpr.erase, ha m (by omega), hf m (by omega), hr m (by omega), bind, Except.bind,
             pure, Except.pure], rs, rfl, hrep⟩
-    | _, _, .sorted a x y c, env, ρ, he, hs => by
+    | _, _, .sorted a c, env, ρ, he, hs => by
       simp only [TExpr.safe, sortSafe, Bool.and_eq_true] at hs
-      have hall := orT_elim hs.2.1 (fun h => by simp [c.safe_of_trivial _ h])
+      have hall := orT_elim hs.2.1 (fun h => by simp [c.safe_of_trivial hss ρ _ _ h])
       obtain ⟨_, ⟨Na, ha⟩, vs, rfl, hvs⟩ := TExpr.adequate a he (TExpr.ok hs.1)
-      have happ : CmpOK prog _ (.closure [x, y] c.erase env) (fun y z => c.denote fs (y, z, ρ))
-          (fun y z => c.safe fs ss (y, z, ρ)) := fun w₁ a₁ w₂ a₂ h₁ h₂ hsy => by
-        obtain ⟨r, hc, hr⟩ := TExpr.adequate c (env := (x, w₁) :: (y, w₂) :: env) (ρ := (a₁, a₂, ρ))
-          ⟨w₁, _, rfl, h₁, w₂, env, rfl, h₂, he⟩ hsy
-        simp only [Ty.Rep] at hr; subst hr
-        exact apply_closure2 hc
-      obtain ⟨Nf, hf⟩ := conv_arrow (prog := prog) (env := env) (ps := [x, y]) (body := c.erase)
+      obtain ⟨f, ⟨Nf, hf⟩, happ⟩ := TCmp.adequate c he
       obtain ⟨Ns, hr⟩ := compareAll_conv happ hvs hvs hall
       have hcons := hs.2.2
       simp only [signs] at hcons
-      exact ⟨.array ((sortIndices (signs (fun y z => c.denote fs (y, z, ρ)) (a.denote fs ρ)) vs.length).filterMap
-          (vs[·]?)), Converges.of_succ (max Na (max Nf Ns)) fun m hm => by
+      exact ⟨.array ((sortIndices (signs (c.denote fs ρ) (a.denote fs ρ)) vs.length).filterMap (vs[·]?)),
+        Converges.of_succ (max Na (max Nf Ns)) fun m hm => by
           simp [evalExpr, TExpr.erase, ha m (by omega), hf m (by omega), hr m (by omega), hcons, signs, bind,
             Except.bind, pure, Except.pure], _, rfl, sortedBy_rep hvs _⟩
 
@@ -604,6 +573,39 @@ mutual
       · refine ⟨by simpa [fieldOf, List.lookup] using hw, Fields.rep_congr (fun g hg => ?_) hr⟩
         have : g ≠ f := fun h => hl'.2.1 (h ▸ hg)
         simp [fieldOf, List.lookup, beq_eq_false_iff_ne.mpr this]
+
+  /-- A callback evaluates to a function value which, applied to an element (and any
+  further arguments), converges to its denotation. -/
+  theorem TFn.adequate : ∀ {Γ : Ctx} {τ σ : Ty} (p : TFn Φ Γ τ σ) {env : Env} {ρ : Γ.denote}, EnvRel Γ env ρ →
+      ∃ f, Converges (fun n => evalArgs prog n env [p.erase]) (.ok [f]) ∧
+        ∀ (extra : List JSValue) w y, τ.Rep w y → p.safe fs ss ρ y = true →
+          ∃ r, Converges (fun n => apply prog n f (w :: extra)) (.ok r) ∧ σ.Rep r (p.denote fs ρ y)
+    | _, _, _, .arrow x body, env, ρ, he => ⟨_, conv_arrow, fun extra w y hw hs => by
+        obtain ⟨r, hc, hr⟩ := TExpr.adequate body (env := (x, w) :: env) (ρ := (y, ρ)) ⟨w, env, rfl, hw, he⟩ hs
+        exact ⟨r, apply_closure1 extra hc, hr⟩⟩
+    | _, _, _, .const body, env, ρ, he => ⟨_, conv_arrow, fun extra w y _ hs => by
+        obtain ⟨r, ⟨N, hc⟩, hr⟩ := TExpr.adequate body he hs
+        exact ⟨r, Converges.of_succ N fun m hm => by simp [apply, bindParams, hc m hm], hr⟩⟩
+    | _, _, _, @TFn.ref _ _ _ _ f _ _ _ fn h, env, ρ, he =>
+      ⟨.function f, conv_args1 (Converges.of_succ 0 fun m _ => by
+          simp [evalExpr, TFn.erase, he.lookup_none h, hfs.mem fn]), fun extra w y hw hs => by
+        obtain ⟨r, ⟨N, hc⟩, hr⟩ := hfs.conv fn (y, ()) (w :: extra) ⟨w, [], rfl, hw, rfl⟩ hs
+        exact ⟨r, Converges.of_succ N fun m hm => by simp [apply, hc m hm], hr⟩⟩
+
+  theorem TCmp.adequate : ∀ {Γ : Ctx} {τ : Ty} (c : TCmp Φ Γ τ) {env : Env} {ρ : Γ.denote}, EnvRel Γ env ρ →
+      ∃ f, Converges (fun n => evalArgs prog n env [c.erase]) (.ok [f]) ∧
+        CmpOK prog τ f (c.denote fs ρ) (c.safe fs ss ρ)
+    | _, _, .arrow x y body, env, ρ, he => ⟨_, conv_arrow, fun w₁ a₁ w₂ a₂ h₁ h₂ hs => by
+        obtain ⟨r, hc, hr⟩ := TExpr.adequate body (env := (x, w₁) :: (y, w₂) :: env) (ρ := (a₁, a₂, ρ))
+          ⟨w₁, _, rfl, h₁, w₂, env, rfl, h₂, he⟩ hs
+        simp only [Ty.Rep] at hr; subst hr
+        exact apply_closure2 hc⟩
+    | _, _, @TCmp.ref _ _ _ f _ _ _ _ fn h, env, ρ, he =>
+      ⟨.function f, conv_args1 (Converges.of_succ 0 fun m _ => by
+          simp [evalExpr, TCmp.erase, he.lookup_none h, hfs.mem fn]), fun w₁ a₁ w₂ a₂ h₁ h₂ hs => by
+        obtain ⟨r, ⟨N, hc⟩, hr⟩ := hfs.conv fn (a₁, a₂, ()) [w₁, w₂] ⟨w₁, _, rfl, h₁, w₂, [], rfl, h₂, rfl⟩ hs
+        simp only [Ty.Rep] at hr; subst hr
+        exact Converges.of_succ N fun m hm => by simp [apply, hc m hm, TCmp.denote]⟩
 
   theorem TElems.adequate : ∀ {Γ : Ctx} {τ : Ty} (es : TElems Φ Γ τ) {env : Env} {ρ : Γ.denote}, EnvRel Γ env ρ →
       es.safe fs ss ρ = true →

@@ -107,6 +107,13 @@ variable {τ : Ty} {f arr : JSValue}
 abbrev PredOK (prog : Program) (τ : Ty) (f arr : JSValue) (P S : τ.denote → Bool) : Prop :=
   ∀ (i : Nat) w a, τ.Rep w a → S a = true → Converges (fun n => apply prog n f [w, .number i, arr]) (.ok (.bool (P a)))
 
+theorem PredOK.of {P S : τ.denote → Bool}
+    (h : ∀ (extra : List JSValue) w y, τ.Rep w y → S y = true →
+      ∃ r, Converges (fun n => apply prog n f (w :: extra)) (.ok r) ∧ Ty.bool.Rep r (P y)) :
+    PredOK prog τ f arr P S := fun i w y hw hs => by
+  obtain ⟨r, hc, hr⟩ := h _ w y hw hs
+  simp only [Ty.Rep] at hr; subst hr; exact hc
+
 theorem someApply_conv {P S : τ.denote → Bool} (happ : PredOK prog τ f arr P S) :
     ∀ {vs : List JSValue} {xs : List τ.denote} (i : Nat), Forall2 (fun w x => τ.Rep w x) vs xs →
       anySafe P S xs = true → Converges (fun n => someApply prog n f vs i arr) (.ok (xs.any P))

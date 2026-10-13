@@ -1,7 +1,7 @@
-// expect: A1001
-function big(x: number): boolean {
-  return x > 2;
+// expect: A2002
+function both(x: number, y: number): boolean {
+  return x > y;
 }
 export function f(xs: readonly number[]): number[] {
-  return xs.filter(big);
+  return xs.filter(both);
 }

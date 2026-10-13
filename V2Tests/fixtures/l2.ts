@@ -72,3 +72,28 @@ export function scaled(xs: readonly number[], k: number): number[] {
 export function totalOf(es: readonly Entry[]): number {
   return total(count(es), 1);
 }
+
+function isLarge(e: Entry): boolean {
+  return e.size > 100;
+}
+
+function bySizeDesc(a: Entry, b: Entry): number {
+  if (a.size !== b.size) return a.size > b.size ? -1 : 1;
+  return 0;
+}
+
+export function large(es: readonly Entry[]): Entry[] {
+  return es.filter(isLarge);
+}
+
+export function ranked(es: readonly Entry[]): Entry[] {
+  return es.toSorted(bySizeDesc);
+}
+
+export function flags(es: readonly Entry[]): boolean[] {
+  return es.map(() => false);
+}
+
+export function summaries(es: readonly Entry[]): Entry[] {
+  return es.map((e) => ({ id: e.id, size: e.size + 1, name: e.name, tags: [] }));
+}

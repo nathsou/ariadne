@@ -21,7 +21,7 @@ def Lookups (prog : Program) : TProgram Φ → Prop
 
 theorem TProgram.fnsOK {prog : Program} : ∀ {Φ : Sigs} (P : TProgram Φ), Lookups prog P → P.bodiesOk = true →
     FnsOK prog P.denote P.safety
-  | _, .nil, _, _ => fun v => nomatch v
+  | _, .nil, _, _ => ⟨fun v => (nomatch v), fun v => (nomatch v)⟩
   | _, .cons s body rest, h, hok => by
     obtain ⟨hfind, hrest⟩ := h
     simp only [TProgram.bodiesOk, Bool.and_eq_true, Bool.not_eq_true'] at hok
@@ -33,9 +33,13 @@ theorem TProgram.fnsOK {prog : Program} : ∀ {Φ : Sigs} (P : TProgram Φ), Loo
       split at h
       · exact TStmts.safe_of_trivial body _ xs (fun _ => ⟨rfl, rfl, rfl⟩) (by assumption)
       · exact h
-    intro v xs vs hargs hsafe
+    refine ⟨fun v xs vs hargs hsafe => ?_, fun v => ?_⟩
+    case refine_2 =>
+      cases v with
+      | there v => exact ih.mem v
+      | here => exact List.any_eq_true.mpr ⟨_, List.mem_of_find?_eq_some hfind, by simpa using List.find?_some hfind⟩
     cases v with
-    | there v => exact ih v xs vs hargs hsafe
+    | there v => exact ih.conv v xs vs hargs hsafe
     | here =>
       obtain ⟨out, ⟨N, hc⟩, hr⟩ := TStmts.adequate ih (rest.safeSigs hok.2) body (K.all fun _ => Ty.default _) (K.all fun _ => true)
         hargs (hbody xs hsafe) hok.1.1.1.1.1
@@ -78,7 +82,7 @@ representing its denotation. -/
 theorem adequacy {Φ : Sigs} (P : TProgram Φ) (wf : P.WF) {f : String} {s : Sig} (v : FVar Φ f s)
     (xs : s.params.denote) (vs : List JSValue) (args : ArgsRep s.params vs xs) (safe : v.safe P.safety xs = true) :
     ∃ w, Converges (fun n => run P.erase n f vs) (.ok w) ∧ s.result.Rep w (v.get P.denote xs) := by
-  simpa only [run, wf.2.2, ite_true] using P.fnsOK (P.lookups wf.1) wf.2.1 v xs vs args safe
+  simpa only [run, wf.2.2, ite_true] using (P.fnsOK (P.lookups wf.1) wf.2.1).conv v xs vs args safe
 
 /-- Adequacy for a printed file: its source AST, and its functions and safety
 conditions as the readable definitions `fs` and `ss`. -/

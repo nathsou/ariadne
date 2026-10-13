@@ -214,20 +214,18 @@ mutual
     | index (a : TExpr Φ Γ (.array τ)) (i : TExpr Φ Γ .number) : TExpr Φ Γ (.option .undef τ)
     /-- `a.includes(x)`. -/
     | includes (h : τ.prim = true) (a : TExpr Φ Γ (.array τ)) (e : TExpr Φ Γ τ) : TExpr Φ Γ .bool
-    /-- `a.some((x) => p)`. -/
-    | any (a : TExpr Φ Γ (.array τ)) (x : String) (p : TExpr Φ ((x, τ) :: Γ) .bool) : TExpr Φ Γ .bool
-    /-- `a.every((x) => p)`. -/
-    | all (a : TExpr Φ Γ (.array τ)) (x : String) (p : TExpr Φ ((x, τ) :: Γ) .bool) : TExpr Φ Γ .bool
-    /-- `a.find((x) => p)`. -/
-    | find (a : TExpr Φ Γ (.array τ)) (x : String) (p : TExpr Φ ((x, τ) :: Γ) .bool) :
-        TExpr Φ Γ (.option .undef τ)
-    /-- `a.filter((x) => p)`. -/
-    | filter (a : TExpr Φ Γ (.array τ)) (x : String) (p : TExpr Φ ((x, τ) :: Γ) .bool) : TExpr Φ Γ (.array τ)
-    /-- `a.map((x) => f)`. -/
-    | map (a : TExpr Φ Γ (.array τ)) (x : String) (f : TExpr Φ ((x, τ) :: Γ) σ) : TExpr Φ Γ (.array σ)
-    /-- `a.toSorted((x, y) => c)`. -/
-    | sorted (a : TExpr Φ Γ (.array τ)) (x y : String) (c : TExpr Φ ((x, τ) :: (y, τ) :: Γ) .number) :
-        TExpr Φ Γ (.array τ)
+    /-- `a.some(p)`. -/
+    | any (a : TExpr Φ Γ (.array τ)) (p : TFn Φ Γ τ .bool) : TExpr Φ Γ .bool
+    /-- `a.every(p)`. -/
+    | all (a : TExpr Φ Γ (.array τ)) (p : TFn Φ Γ τ .bool) : TExpr Φ Γ .bool
+    /-- `a.find(p)`. -/
+    | find (a : TExpr Φ Γ (.array τ)) (p : TFn Φ Γ τ .bool) : TExpr Φ Γ (.option .undef τ)
+    /-- `a.filter(p)`. -/
+    | filter (a : TExpr Φ Γ (.array τ)) (p : TFn Φ Γ τ .bool) : TExpr Φ Γ (.array τ)
+    /-- `a.map(f)`. -/
+    | map (a : TExpr Φ Γ (.array τ)) (f : TFn Φ Γ τ σ) : TExpr Φ Γ (.array σ)
+    /-- `a.toSorted(c)`. -/
+    | sorted (a : TExpr Φ Γ (.array τ)) (c : TCmp Φ Γ τ) : TExpr Φ Γ (.array τ)
 
   /-- Arguments for the parameters `ps`, evaluated in `Γ`. -/
   inductive TArgs (Φ : Sigs) : Ctx → Ctx → Type where
@@ -240,6 +238,25 @@ mutual
   inductive TEntries (Φ : Sigs) : Ctx → Fields → Type where
     | nil : TEntries Φ Γ .nil
     | cons (f : String) (e : TExpr Φ Γ τ) (rest : TEntries Φ Γ src) : TEntries Φ Γ (.cons f τ src)
+
+  /-- A callback applied to an element of type `τ` (the array methods also pass the
+  index and the array, which these callbacks ignore). -/
+  inductive TFn (Φ : Sigs) : Ctx → Ty → Ty → Type where
+    /-- `(x) => body`. -/
+    | arrow (x : String) (body : TExpr Φ ((x, τ) :: Γ) σ) : TFn Φ Γ τ σ
+    /-- `() => body`. -/
+    | const (body : TExpr Φ Γ σ) : TFn Φ Γ τ σ
+    /-- A declared function of one parameter, where no local in scope has its name. -/
+    | ref {f p name : String} {t : Bool} (fn : FVar Φ f ⟨name, [(p, τ)], σ, t⟩)
+        (h : (Γ.map Prod.fst).contains f = false) : TFn Φ Γ τ σ
+
+  /-- A comparator on elements of type `τ`. -/
+  inductive TCmp (Φ : Sigs) : Ctx → Ty → Type where
+    /-- `(x, y) => body`. -/
+    | arrow (x y : String) (body : TExpr Φ ((x, τ) :: (y, τ) :: Γ) .number) : TCmp Φ Γ τ
+    /-- A declared function of two parameters. -/
+    | ref {f p q name : String} {t : Bool} (fn : FVar Φ f ⟨name, [(p, τ), (q, τ)], .number, t⟩)
+        (h : (Γ.map Prod.fst).contains f = false) : TCmp Φ Γ τ
 
   /-- An array literal's elements. -/
   inductive TElems (Φ : Sigs) : Ctx → Ty → Type where
@@ -356,12 +373,12 @@ mutual
     | .slength s => .field s.erase "length"
     | .index a i => .index a.erase i.erase
     | .includes _ a e => .method a.erase "includes" [e.erase]
-    | .any a x p => .method a.erase "some" [.arrow [x] p.erase]
-    | .all a x p => .method a.erase "every" [.arrow [x] p.erase]
-    | .find a x p => .method a.erase "find" [.arrow [x] p.erase]
-    | .filter a x p => .method a.erase "filter" [.arrow [x] p.erase]
-    | .map a x f => .method a.erase "map" [.arrow [x] f.erase]
-    | .sorted a x y c => .method a.erase "toSorted" [.arrow [x, y] c.erase]
+    | .any a p => .method a.erase "some" [p.erase]
+    | .all a p => .method a.erase "every" [p.erase]
+    | .find a p => .method a.erase "find" [p.erase]
+    | .filter a p => .method a.erase "filter" [p.erase]
+    | .map a f => .method a.erase "map" [f.erase]
+    | .sorted a c => .method a.erase "toSorted" [c.erase]
 
   def TArgs.erase : TArgs Φ Γ ps → List Expr
     | .nil => []
@@ -371,6 +388,15 @@ mutual
   def TEntries.erase : TEntries Φ Γ src → List (Option String × Expr)
     | .nil => []
     | .cons f e rest => (some f, e.erase) :: rest.erase
+
+  def TFn.erase : TFn Φ Γ τ σ → Expr
+    | .arrow x body => .arrow [x] body.erase
+    | .const body => .arrow [] body.erase
+    | @TFn.ref _ _ _ _ f _ _ _ _ _ => .var f
+
+  def TCmp.erase : TCmp Φ Γ τ → Expr
+    | .arrow x y body => .arrow [x, y] body.erase
+    | @TCmp.ref _ _ _ f _ _ _ _ _ _ => .var f
 
   def TElems.erase : TElems Φ Γ τ → List (Bool × Expr)
     | .nil => []
@@ -502,7 +528,7 @@ mutual
     | .nneg _ | .nadd .. | .nsub .. | .nmul .. | .sorted .. => false
     | .nlt a b | .nle a b | .ngt a b | .nge a b | .index a b => a.trivial && b.trivial
     | .includes _ a e => a.trivial && e.trivial
-    | .any a _ p | .all a _ p | .find a _ p | .filter a _ p | .map a _ p => a.trivial && p.trivial
+    | .any a p | .all a p | .find a p | .filter a p | .map a p => a.trivial && p.trivial
     | .array es => es.trivial
     | .length e | .slength e => e.trivial
 
@@ -513,6 +539,14 @@ mutual
   def TEntries.trivial : TEntries Φ Γ src → Bool
     | .nil => true
     | .cons _ e rest => e.trivial && rest.trivial
+
+  def TFn.trivial : TFn Φ Γ τ σ → Bool
+    | .arrow _ body | .const body => body.trivial
+    | @TFn.ref _ _ _ _ _ _ _ t _ _ => t
+
+  def TCmp.trivial : TCmp Φ Γ τ → Bool
+    | .arrow _ _ body => body.trivial
+    | @TCmp.ref _ _ _ _ _ _ _ t _ _ => t
 
   def TElems.trivial : TElems Φ Γ τ → Bool
     | .nil => true

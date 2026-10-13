@@ -54,8 +54,8 @@ mutual
     | _, _, .sgt a b, ρ, h | _, _, .sge a b, ρ, h | _, _, .and a b, ρ, h | _, _, .or a b, ρ, h
     | _, _, .coalesce _ a b, ρ, h | _, _, .nlt a b, ρ, h | _, _, .nle a b, ρ, h | _, _, .ngt a b, ρ, h
     | _, _, .nge a b, ρ, h | _, _, .index a b, ρ, h | _, _, .includes _ a b, ρ, h
-    | _, _, .any a _ b, ρ, h | _, _, .all a _ b, ρ, h | _, _, .find a _ b, ρ, h | _, _, .filter a _ b, ρ, h
-    | _, _, .map a _ b, ρ, h => by
+    | _, _, .any a b, ρ, h | _, _, .all a b, ρ, h | _, _, .find a b, ρ, h | _, _, .filter a b, ρ, h
+    | _, _, .map a b, ρ, h => by
       simp only [TExpr.trivial, Bool.and_eq_true] at h
       simp [TExpr.safe, andT, h.1, h.2]
     | _, _, .cond c a b, ρ, h => by
@@ -93,6 +93,17 @@ mutual
       simp only [TElems.trivial, Bool.and_eq_true] at h
       simp [TElems.safe, andT, h.1, h.2]
 end
+
+theorem TFn.safe_of_trivial (hss : SafeSigs ss) : ∀ {Γ : Ctx} {τ σ : Ty} (p : TFn Φ Γ τ σ) (ρ : Γ.denote)
+    (y : τ.denote), p.trivial = true → p.safe fs ss ρ y = true
+  | _, _, _, .arrow _ body, ρ, y, h => body.safe_of_trivial (y, ρ) h
+  | _, _, _, .const body, ρ, _, h => body.safe_of_trivial ρ h
+  | _, _, _, .ref fn _, _, y, h => hss fn (y, ()) h
+
+theorem TCmp.safe_of_trivial (hss : SafeSigs ss) : ∀ {Γ : Ctx} {τ : Ty} (c : TCmp Φ Γ τ) (ρ : Γ.denote)
+    (y z : τ.denote), c.trivial = true → c.safe fs ss ρ y z = true
+  | _, _, .arrow _ _ body, ρ, y, z, h => body.safe_of_trivial (y, z, ρ) h
+  | _, _, .ref fn _, _, y, z, h => hss fn (y, z, ()) h
 
 /-- A subterm's safety, as its parent consults it. -/
 theorem TExpr.ok {Γ : Ctx} {τ : Ty} {e : TExpr Φ Γ τ} {ρ : Γ.denote} (h : (e.trivial || e.safe fs ss ρ) = true) :

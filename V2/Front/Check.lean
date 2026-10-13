@@ -361,6 +361,21 @@ partial def elemsText (es : List (Bool × String)) : String :=
     let tail := s!"{xs} ++ ({elemsText rest})"
     if plain.isEmpty then tail else s!"{" :: ".intercalate (plain.map (·.2))} :: ({tail})"
 
+/-- A checked callback: typed syntax, the readable function and its safety function. -/
+structure Fn where
+  typed : String
+  lam : String
+  lamSafe : String
+  trivial : Bool
+  ty : Ty
+
+/-- A declared function used as a value: its `FVar` path and signature. -/
+def Scope.fnRef (s : Scope) (span : Span) (f : String) : Checked (String × FnSig) := do
+  if s.locals.any (·.1 == f) then mismatch span s!"'{f}' is a local, not a declared function"
+  let some j := s.fns.findIdx? (·.name == f)
+    | throw { code := "A2001", message := s!"'{f}' is not a function declared earlier", span }
+  return (fnPath (s.fns.length - 1 - j), s.fns[j]!)
+
 /-- A callback `(x) => e`, or `(x, y) => e`. -/
 def callbackOf (span : Span) (n : Nat) : Parse.Expr → Checked (List String × Parse.Expr)
   | .lambda ps (.return_ body _) _ =>
@@ -477,7 +492,7 @@ mutual
       return { ty := sig.result, typed := s!"(.call (s := sig.{ident f}) {fnPath (s.fns.length - 1 - j)} (by decide) {typedArgs})",
                readable, atomic := readableArgs.isEmpty, trivial := argsT && sig.trivial,
                safe := andTText argsT argsS sig.trivial calleeSafe }
-    | .call (.member recv m _) args span => checkMethod T s recv m args span
+    | .call (.member recv m _) args span => checkMethod T s recv m args span expected
     | .member a f span => do
       let a ← inferExpr T s a none
       match a.ty, f with
@@ -529,7 +544,7 @@ mutual
 
   /-- An array method with a callback, or `includes`. -/
   partial def checkMethod (T : Types) (s : Scope) (recv : Parse.Expr) (m : String) (args : List Parse.Expr)
-      (span : Span) : Checked Out := do
+      (span : Span) (expected : Option Ty) : Checked Out := do
     let a ← inferExpr T s recv none
     let .array τ := a.ty | unsupportedTy span s!"the method '{m}' of {a.ty.ts}"
     let [arg] := args | unsupportedTy span s!"'{m}' with other than one argument"
@@ -541,31 +556,68 @@ mutual
                readable := s!"List.any {a.term} (fun y' => y' == {x.term})", trivial := a.trivial && x.trivial,
                safe := both a x }
     | "some" | "every" | "find" | "filter" | "map" => do
-      let ([x], body) ← callbackOf span 1 arg | unreachable!
-      let inner ← declare s span x τ
-      let f ← if m == "map" then inferExpr T inner body none else checkExpr T inner body (some .bool)
-      let lam := s!"(fun {ident x} => {f.readable})"
-      let lamSafe := s!"(fun {ident x} => {f.safe})"
+      let result := if m == "map" then (match expected with | some (.array σ) => some σ | _ => none) else some .bool
+      let f ← checkFn T s span arg τ result
       let (ctor, ty, readable, cond) := match m with
-        | "some" => ("any", Ty.bool, s!"List.any {a.term} {lam}", s!"V2.anySafe {lam} {lamSafe} {a.term}")
-        | "every" => ("all", .bool, s!"List.all {a.term} {lam}", s!"V2.allSafe {lam} {lamSafe} {a.term}")
-        | "find" => ("find", .option .undef τ, s!"List.find? {lam} {a.term}", s!"V2.anySafe {lam} {lamSafe} {a.term}")
-        | "filter" => ("filter", .array τ, s!"List.filter {lam} {a.term}", s!"List.all {a.term} {lamSafe}")
-        | _ => ("map", .array f.ty, s!"List.map {lam} {a.term}", s!"List.all {a.term} {lamSafe}")
+        | "some" => ("any", Ty.bool, s!"List.any {a.term} {f.lam}", s!"V2.anySafe {f.lam} {f.lamSafe} {a.term}")
+        | "every" => ("all", .bool, s!"List.all {a.term} {f.lam}", s!"V2.allSafe {f.lam} {f.lamSafe} {a.term}")
+        | "find" => ("find", .option .undef τ, s!"List.find? {f.lam} {a.term}",
+          s!"V2.anySafe {f.lam} {f.lamSafe} {a.term}")
+        | "filter" => ("filter", .array τ, s!"List.filter {f.lam} {a.term}", s!"List.all {a.term} {f.lamSafe}")
+        | _ => ("map", .array f.ty, s!"List.map {f.lam} {a.term}", s!"List.all {a.term} {f.lamSafe}")
       if m == "find" && τ matches .option .. then mismatch span "'find' on an array of optionals (a nested optional)"
-      return { ty, typed := s!"(.{ctor} {a.typed} {leanString x} {f.typed})", readable,
+      return { ty, typed := s!"(.{ctor} {a.typed} {f.typed})", readable,
                trivial := a.trivial && f.trivial, safe := andTText a.trivial a.safe f.trivial cond }
     | "toSorted" => do
-      let ([x, y], body) ← callbackOf span 2 arg | unreachable!
-      if x == y then mismatch span "a comparator with two parameters of the same name"
-      let inner ← declare (← declare s span y τ) span x τ
-      let c ← checkExpr T inner body (some .number)
-      let lam := s!"(fun {ident x} {ident y} => {c.readable})"
-      let cond := if c.trivial then s!"V2.consistent (V2.signs {lam} {a.term})"
-        else s!"V2.sortSafe {lam} false (fun {ident x} {ident y} => {c.safe}) {a.term}"
-      return { ty := .array τ, typed := s!"(.sorted {a.typed} {leanString x} {leanString y} {c.typed})",
-               readable := s!"V2.sortedBy {lam} {a.term}", trivial := false, safe := andText a.ok cond }
+      let c ← checkCmp T s span arg τ
+      let cond := if c.trivial then s!"V2.consistent (V2.signs {c.lam} {a.term})"
+        else s!"V2.sortSafe {c.lam} false {c.lamSafe} {a.term}"
+      return { ty := .array τ, typed := s!"(.sorted {a.typed} {c.typed})",
+               readable := s!"V2.sortedBy {c.lam} {a.term}", trivial := false, safe := andText a.ok cond }
     | _ => unsupportedTy span s!"the array method '{m}'"
+
+  /-- A callback on elements of type `τ`: `(x) => e`, `() => e`, or a declared function of
+  one parameter. -/
+  partial def checkFn (T : Types) (s : Scope) (span : Span) (arg : Parse.Expr) (τ : Ty) (result : Option Ty) :
+      Checked Fn := do
+    match arg with
+    | .lambda [p] (.return_ body _) _ => do
+      let f ← checkExpr T (← declare s span p.name τ) body result
+      return { typed := s!"(.arrow {leanString p.name} {f.typed})", lam := s!"(fun {ident p.name} => {f.readable})",
+               lamSafe := s!"(fun {ident p.name} => {f.safe})", trivial := f.trivial, ty := f.ty }
+    | .lambda [] (.return_ body _) _ => do
+      let f ← checkExpr T s body result
+      return { typed := s!"(.const {f.typed})", lam := s!"(fun _ => {f.readable})",
+               lamSafe := s!"(fun _ => {f.safe})", trivial := f.trivial, ty := f.ty }
+    | .var f _ => do
+      let (path, sig) ← s.fnRef span f
+      let [(_, τ')] := sig.params | mismatch span s!"'{f}' as a callback must take one parameter"
+      if τ' != τ then mismatch span s!"'{f}' takes {τ'.ts} where {τ.ts} is passed"
+      if let some r := result then
+        if r != sig.result then mismatch span s!"'{f}' returns {sig.result.ts} where {r.ts} is expected"
+      return { typed := s!"(.ref {path} (by decide))", lam := ident f, lamSafe := s!"{ident f}.safe",
+               trivial := sig.trivial, ty := sig.result }
+    | .lambda .. => unsupportedTy span "a callback other than an arrow function with an expression body and at most one parameter"
+    | _ => unsupportedTy span "a callback other than an arrow function or a declared function"
+
+  /-- A comparator: `(x, y) => e`, or a declared function of two parameters. -/
+  partial def checkCmp (T : Types) (s : Scope) (span : Span) (arg : Parse.Expr) (τ : Ty) : Checked Fn := do
+    match arg with
+    | .lambda [p, q] (.return_ body _) _ => do
+      let (x, y) := (p.name, q.name)
+      if x == y then mismatch span "a comparator with two parameters of the same name"
+      let c ← checkExpr T (← declare (← declare s span y τ) span x τ) body (some .number)
+      return { typed := s!"(.arrow {leanString x} {leanString y} {c.typed})",
+               lam := s!"(fun {ident x} {ident y} => {c.readable})",
+               lamSafe := s!"(fun {ident x} {ident y} => {c.safe})", trivial := c.trivial, ty := .number }
+    | .var f _ => do
+      let (path, sig) ← s.fnRef span f
+      let [(_, τ1), (_, τ2)] := sig.params | mismatch span s!"'{f}' as a comparator must take two parameters"
+      if τ1 != τ || τ2 != τ || sig.result != .number then
+        mismatch span s!"'{f}' is not a comparator of {τ.ts}"
+      return { typed := s!"(.ref {path} (by decide))", lam := ident f, lamSafe := s!"{ident f}.safe",
+               trivial := sig.trivial, ty := .number }
+    | _ => unsupportedTy span "a comparator other than an arrow function of two parameters or a declared function"
 
   partial def checkBinary (T : Types) (s : Scope) (op : String) (a b : Parse.Expr) (span : Span)
       (_expected : Option Ty) : Checked Out := do

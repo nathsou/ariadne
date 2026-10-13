@@ -129,12 +129,12 @@ mutual
     | .slength s, ρ => ((s.denote fs ρ).length : Int)
     | .index a i, ρ => listIndex (a.denote fs ρ) (i.denote fs ρ)
     | .includes _ a e, ρ => (a.denote fs ρ).any fun y => Ty.beq _ y (e.denote fs ρ)
-    | .any a _ p, ρ => (a.denote fs ρ).any fun y => p.denote fs (y, ρ)
-    | .all a _ p, ρ => (a.denote fs ρ).all fun y => p.denote fs (y, ρ)
-    | .find a _ p, ρ => (a.denote fs ρ).find? fun y => p.denote fs (y, ρ)
-    | .filter a _ p, ρ => (a.denote fs ρ).filter fun y => p.denote fs (y, ρ)
-    | .map a _ f, ρ => (a.denote fs ρ).map fun y => f.denote fs (y, ρ)
-    | .sorted a _ _ c, ρ => sortedBy (fun y z => c.denote fs (y, z, ρ)) (a.denote fs ρ)
+    | .any a p, ρ => (a.denote fs ρ).any (p.denote fs ρ)
+    | .all a p, ρ => (a.denote fs ρ).all (p.denote fs ρ)
+    | .find a p, ρ => (a.denote fs ρ).find? (p.denote fs ρ)
+    | .filter a p, ρ => (a.denote fs ρ).filter (p.denote fs ρ)
+    | .map a f, ρ => (a.denote fs ρ).map (f.denote fs ρ)
+    | .sorted a c, ρ => sortedBy (c.denote fs ρ) (a.denote fs ρ)
 
   def TArgs.denote (fs : Φ.denote) : TArgs Φ Γ ps → Γ.denote → ps.denote
     | .nil, _ => ()
@@ -144,6 +144,15 @@ mutual
   def TEntries.denote (fs : Φ.denote) : TEntries Φ Γ src → Γ.denote → src.denote
     | .nil, _ => ()
     | .cons _ e rest, ρ => (e.denote fs ρ, rest.denote fs ρ)
+
+  def TFn.denote (fs : Φ.denote) : TFn Φ Γ τ σ → Γ.denote → τ.denote → σ.denote
+    | .arrow _ body, ρ => fun y => body.denote fs (y, ρ)
+    | .const body, ρ => fun _ => body.denote fs ρ
+    | .ref fn _, _ => fun y => fn.get fs (y, ())
+
+  def TCmp.denote (fs : Φ.denote) : TCmp Φ Γ τ → Γ.denote → τ.denote → τ.denote → Int
+    | .arrow _ _ body, ρ => fun y z => body.denote fs (y, z, ρ)
+    | .ref fn _, _ => fun y z => fn.get fs (y, z, ())
 
   def TElems.denote (fs : Φ.denote) : TElems Φ Γ τ → Γ.denote → List τ.denote
     | .nil, _ => []
@@ -194,14 +203,13 @@ mutual
     | @TExpr.call _ _ _ s fn _ args, ρ => andT args.trivial (args.safe fs ss ρ) s.trivial (fn.safe ss (args.denote fs ρ))
     | .record es _ _, ρ | .array es, ρ => es.safe fs ss ρ
     | .update r es _ _, ρ => andT r.trivial (r.safe fs ss ρ) es.trivial (es.safe fs ss ρ)
-    | .any a _ p, ρ | .find a _ p, ρ => andT a.trivial (a.safe fs ss ρ) p.trivial
-      (anySafe (fun y => p.denote fs (y, ρ)) (fun y => p.safe fs ss (y, ρ)) (a.denote fs ρ))
-    | .all a _ p, ρ => andT a.trivial (a.safe fs ss ρ) p.trivial
-      (allSafe (fun y => p.denote fs (y, ρ)) (fun y => p.safe fs ss (y, ρ)) (a.denote fs ρ))
-    | .filter a _ p, ρ | .map a _ p, ρ => andT a.trivial (a.safe fs ss ρ) p.trivial
-      ((a.denote fs ρ).all fun y => p.safe fs ss (y, ρ))
-    | .sorted a _ _ c, ρ => (a.trivial || a.safe fs ss ρ) &&
-      sortSafe (fun y z => c.denote fs (y, z, ρ)) c.trivial (fun y z => c.safe fs ss (y, z, ρ)) (a.denote fs ρ)
+    | .any a p, ρ | .find a p, ρ => andT a.trivial (a.safe fs ss ρ) p.trivial
+      (anySafe (p.denote fs ρ) (p.safe fs ss ρ) (a.denote fs ρ))
+    | .all a p, ρ => andT a.trivial (a.safe fs ss ρ) p.trivial
+      (allSafe (p.denote fs ρ) (p.safe fs ss ρ) (a.denote fs ρ))
+    | .filter a p, ρ | .map a p, ρ => andT a.trivial (a.safe fs ss ρ) p.trivial ((a.denote fs ρ).all (p.safe fs ss ρ))
+    | .sorted a c, ρ => (a.trivial || a.safe fs ss ρ) &&
+      sortSafe (c.denote fs ρ) c.trivial (c.safe fs ss ρ) (a.denote fs ρ)
 
   def TArgs.safe (fs : Φ.denote) (ss : Φ.safety) : TArgs Φ Γ ps → Γ.denote → Bool
     | .nil, _ | .omitted _, _ => true
@@ -210,6 +218,15 @@ mutual
   def TEntries.safe (fs : Φ.denote) (ss : Φ.safety) : TEntries Φ Γ src → Γ.denote → Bool
     | .nil, _ => true
     | .cons _ e rest, ρ => andT e.trivial (e.safe fs ss ρ) rest.trivial (rest.safe fs ss ρ)
+
+  def TFn.safe (fs : Φ.denote) (ss : Φ.safety) : TFn Φ Γ τ σ → Γ.denote → τ.denote → Bool
+    | .arrow _ body, ρ => fun y => body.safe fs ss (y, ρ)
+    | .const body, ρ => fun _ => body.safe fs ss ρ
+    | .ref fn _, _ => fun y => fn.safe ss (y, ())
+
+  def TCmp.safe (fs : Φ.denote) (ss : Φ.safety) : TCmp Φ Γ τ → Γ.denote → τ.denote → τ.denote → Bool
+    | .arrow _ _ body, ρ => fun y z => body.safe fs ss (y, z, ρ)
+    | .ref fn _, _ => fun y z => fn.safe ss (y, z, ())
 
   def TElems.safe (fs : Φ.denote) (ss : Φ.safety) : TElems Φ Γ τ → Γ.denote → Bool
     | .nil, _ => true
