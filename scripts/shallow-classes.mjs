@@ -33,7 +33,11 @@ try {
     '#check @Examples.ClassAdequacy.seeded_constructor_source\n' +
     '#check @Examples.ClassAdequacy.counter_constructor_source\n' +
     '#check @Examples.ClassAdequacy.seeded_fresh_trace_source\n' +
-    '#check @Examples.ClassAdequacy.counter_fresh_trace_source\n';
+    '#check @Examples.ClassAdequacy.counter_fresh_trace_source\n' +
+    '#check @Examples.ClassAdequacy.seeded_add_wrapper_source\n' +
+    '#check @Examples.ClassAdequacy.seeded_read_wrapper_source\n' +
+    '#check @Examples.ClassAdequacy.counter_bump_wrapper_source\n' +
+    '#check @Examples.ClassAdequacy.counter_count_wrapper_source\n';
   const expected = [];
   for (const [i, [name, args, ops]] of traces.entries()) {
     const value = new ({Counter, Seeded}[name])(...args);
@@ -119,5 +123,5 @@ try {
     assert.notEqual(refused.status, 0, 'a forged constructor witness must fail kernel checking');
     assert.ok(refused.stdout.includes('error'), refused.stdout + refused.stderr);
   }
-  console.log(`Shallow classes passed: ${traces.length} three-way constructor/method traces with intermediate state observations, 10 universal source/constructor/trace witnesses, and 9 class tamper checks.`);
+  console.log(`Shallow classes passed: ${traces.length} three-way constructor/method traces with intermediate state observations, 14 universal source/constructor/wrapper/trace witnesses, and 9 class tamper checks.`);
 } finally { await rm(dir, {recursive:true, force:true}); }

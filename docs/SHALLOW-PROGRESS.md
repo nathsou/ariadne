@@ -184,6 +184,16 @@ declarations, including wrong constructor arguments, initial states and private
 Map footprints. General class/checker
 adequacy and the original reference source proofs remain pending.
 
+`MethodGuard` models the method receiver as the first borrowed argument and
+proves that guarded invocation is exactly guard success followed by the original
+method call. Extraction now emits a certificate for every original method's
+guard plan, using the renderer's shared plan function and one staged class
+lowering equation per file. Four class source results lift through their actual
+certified wrappers without an input-disjointness premise. The class suite checks
+fourteen universal witnesses; entry-guard tests cover method alias rejection
+before mutation and two forged method certificates. General nested guard
+execution and the checker fundamental lemma remain pending.
+
 CI #96 on `5e31ceb` passes in 11m23s, compared with baseline CI #82's 21m18s.
 Its logged source-transfer and Int53 tamper phases take 17s and 7s respectively,
 compared with the baseline 1m51s and 1m29s. The axiom audit covers 5,435 theorems.
@@ -250,6 +260,10 @@ including all nine jobs, all 27 suites, ten universal class witnesses and nine
 class tamper checks. Its audit covers 7,111 theorems; incremental build and
 regeneration took 23s, with source/Int53 tamper phases at 23s/9s. The full local
 gate passed the same checkpoint.
+CI #134 passed the parameter-frame checkpoint in 9m07s with 7,117 audited
+theorems and all 27 suites. Incremental build/regeneration took 26s;
+source/Int53 tamper phases took 19s/8s. Kernel test modules, examples and the
+audit also passed locally for that proof-only checkpoint.
 
 Frontend checkpoint: the complete `scripts/check.sh` suite passes with 1,217
 audited theorems, 42 native entry points, 64 generated programs, 51 scalar

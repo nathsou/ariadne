@@ -32,6 +32,9 @@ for (const run of [
   () => guarded.encapsulated(new guarded.Box(), new guarded.Box()),
   () => guarded.names(items, []),
 ]) { run(); count++; }
+const guardedBox = new guarded.GuardedBox();
+rejected(() => guardedBox.append(items, items), items); count++;
+guardedBox.append(items, []); count++;
 const runtime = await readFile('Examples/Shallow/entryguards.runtime.ts', 'utf8');
 assert.ok(runtime.includes('function __ariadne1_contains'), 'generated helper must avoid source bindings');
 const encapsulated = runtime.slice(runtime.indexOf('export function encapsulated'),
@@ -55,6 +58,9 @@ example : observations.entrySafe [.array []] [.ref 0, .ref 0] = true := by kerne
 example : grow.entrySafe [.array [.ref 1], .array [], .array []] [.ref 0, .ref 2] = true := by kernel_rfl
 example : flat.wrapper 100 {heap := [.array []]} [.ref 0, .ref 0] = .error (.typeError "overlapping borrowed arguments") := by kernel_rfl
 example : grow.wrapper 100 {heap := [.array [.ref 1], .array []]} [.ref 0, .ref 1] = .error (.typeError "overlapping borrowed arguments") := by kernel_rfl
+#check @MethodEntries.GuardedBox.append.certificate
+example : «GuardedBox#append».entrySafe [.instance_ "GuardedBox" [("count", .bigint 0)], .array []] 0 [.ref 1, .ref 1] = false := by kernel_rfl
+example : «GuardedBox#append».wrapper 100 {heap := [.instance_ "GuardedBox" [("count", .bigint 0)], .array []]} 0 [.ref 1, .ref 1] = .error (.typeError "overlapping borrowed arguments") := by kernel_rfl
 `);
   const checked = spawnSync('lake', ['env', 'lean', runner], { encoding: 'utf8', timeout: 60000 });
   assert.equal(checked.status, 0, checked.stdout + checked.stderr);
@@ -72,7 +78,26 @@ example : grow.wrapper 100 {heap := [.array [.ref 1], .array []]} [.ref 0, .ref 
   const refused = spawnSync('lake', ['env', 'lean', tampered], { encoding: 'utf8', timeout: 60000 });
   assert.notEqual(refused.status, 0, 'a cheaper tampered plan must fail kernel checking');
   assert.ok(refused.stdout.includes('EntryGuards.grow.planned') || refused.stdout.includes('kernel'), refused.stdout);
+  const methodFixture = await readFile('Examples/Tamper/methodguards.lean', 'utf8');
+  const planStart = methodFixture.indexOf('def MethodEntries.«GuardedBox».«append».plan');
+  assert.ok(planStart >= 0);
+  const planEnd = methodFixture.indexOf('\n\n', planStart);
+  const methodPlan = methodFixture.slice(planStart, planEnd);
+  assert.ok(methodPlan.includes('left := 1') && methodPlan.includes('right := 2'));
+  const methodAlterations = [
+    methodFixture.slice(0, planStart) + methodPlan.replace(/:= \[.*\]/, ':= []') + methodFixture.slice(planEnd),
+    methodFixture.replace('Ownership.MethodEntryCertificate _root_.Extracted_tamper_methodguards.Wrapper.certificate "GuardedBox" "append"',
+      'Ownership.MethodEntryCertificate _root_.Extracted_tamper_methodguards.Wrapper.certificate "GuardedBox" "forged"'),
+  ];
+  for (const [i, altered] of methodAlterations.entries()) {
+    assert.notEqual(altered, methodFixture);
+    const path = resolve(dir, `TamperedMethod${i}.lean`);
+    await writeFile(path, altered);
+    const refused = spawnSync('lake', ['env', 'lean', path], {encoding:'utf8', timeout:60000});
+    assert.notEqual(refused.status, 0, 'a forged method guard certificate must fail kernel checking');
+    assert.ok(refused.stdout.includes('error'), refused.stdout + refused.stderr);
+  }
 } finally {
   await rm(dir, { recursive: true, force: true });
 }
-console.log(`Entry guards passed: ${count} native cases, 10 kernel alias checks, and plan-tampering rejection.`);
+console.log(`Entry guards passed: ${count} native cases, 12 kernel alias checks, function plan-tampering rejection, and 2 method certificate tamper checks.`);

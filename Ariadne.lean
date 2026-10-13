@@ -40,6 +40,7 @@ import Ariadne.Shallow.Adequacy.MapScalarMutation
 import Ariadne.Shallow.Adequacy.MapExpressions
 import Ariadne.SourceTrace
 import Ariadne.Ownership.Sound
+import Ariadne.Ownership.MethodGuard
 import Ariadne.Shallow.Lens
 import Ariadne.Shallow.Adequacy.ProjectionMutation
 import Ariadne.Shallow.Adequacy.RecordMutation

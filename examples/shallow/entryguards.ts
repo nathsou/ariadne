@@ -35,3 +35,8 @@ export function exposed(box: PublicBox, items: bigint[]): void { items.push(7n);
 export function names(__ariadne0_contains: bigint[], other: readonly bigint[]): void {
   __ariadne0_contains.push(8n);
 }
+
+export class GuardedBox {
+  private count = 0n;
+  append(left: bigint[], right: readonly bigint[]): void { left.push(9n); }
+}

@@ -8,6 +8,7 @@ import Ariadne.Shallow.Adequacy.JoinsContext
 import Ariadne.Shallow.Adequacy.GuardedJoinsContext
 import Ariadne.Shallow.Adequacy.ProjectionSource
 import Ariadne.Ownership.Source
+import Ariadne.Ownership.MethodGuard
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
@@ -563,6 +564,102 @@ def NativeRepresentations.«Tree#state» : Named.Representation (({ name := "Tre
 def Interpretation.value : Named.Interp := (Named.Interp.insert Named.canonical ({ name := "Tree#state",   shape := Ariadne.Shallow.Named.Shape.pair              (Ariadne.Shallow.Named.Shape.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Named.Shape.string))              (Ariadne.Shallow.Named.Shape.pair                (Ariadne.Shallow.Named.Shape.map                  (Ariadne.Shallow.Core.Key.string)                  (Ariadne.Shallow.Named.Shape.list (Ariadne.Shallow.Named.Shape.string)))                (Ariadne.Shallow.Named.Shape.unit)) }) NativeRepresentations.«Tree#state»)
 
 theorem Interpretation.lawful : Named.Lawful Interpretation.value := Named.lawful _
+
+def MethodEntries.lowered : Program := (ClassPlan.lower _root_.Extracted_reference_tree.program).toOption.getD default
+
+theorem MethodEntries.lowered_checked : ClassPlan.lower _root_.Extracted_reference_tree.program = .ok MethodEntries.lowered := by kernel_rfl
+
+def MethodEntries.«Tree».class_ : Ariadne.Class := _root_.Extracted_reference_tree.program.classes[0]!
+
+def MethodEntries.«Tree».«add».method : Ariadne.Function := MethodEntries.«Tree».class_.methods[0]!
+
+def MethodEntries.«Tree».«add».plan : List Ownership.ArgumentCheck := []
+
+theorem MethodEntries.«Tree».«add».lowered_plan : Ownership.Wrap.methodPlan MethodEntries.lowered "Tree" MethodEntries.«Tree».«add».method = .ok MethodEntries.«Tree».«add».plan := by kernel_rfl
+
+theorem MethodEntries.«Tree».«add».planned : Ownership.methodEntryPlan _root_.Extracted_reference_tree.program "Tree" MethodEntries.«Tree».«add».method = .ok MethodEntries.«Tree».«add».plan :=
+  Ownership.methodEntryPlan_of_lowered MethodEntries.lowered_checked MethodEntries.«Tree».«add».lowered_plan
+
+def MethodEntries.«Tree».«add».certificate : Ownership.MethodEntryCertificate _root_.Extracted_reference_tree.Wrapper.certificate "Tree" "add" :=
+  ⟨MethodEntries.«Tree».class_, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Tree».«add».method, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Tree».«add».plan, MethodEntries.«Tree».«add».planned⟩
+
+def «Tree#add».entrySafe (heap : Heap) (address : Nat) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_reference_tree.program MethodEntries.«Tree».«add».plan heap (.ref address :: args)
+
+def «Tree#add».wrapper (fuel : Nat) (state : State) (address : Nat) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedMethodApply _root_.Extracted_reference_tree.program MethodEntries.«Tree».«add».plan fuel state address "add" args
+
+def MethodEntries.«Tree».«parent».method : Ariadne.Function := MethodEntries.«Tree».class_.methods[1]!
+
+def MethodEntries.«Tree».«parent».plan : List Ownership.ArgumentCheck := []
+
+theorem MethodEntries.«Tree».«parent».lowered_plan : Ownership.Wrap.methodPlan MethodEntries.lowered "Tree" MethodEntries.«Tree».«parent».method = .ok MethodEntries.«Tree».«parent».plan := by kernel_rfl
+
+theorem MethodEntries.«Tree».«parent».planned : Ownership.methodEntryPlan _root_.Extracted_reference_tree.program "Tree" MethodEntries.«Tree».«parent».method = .ok MethodEntries.«Tree».«parent».plan :=
+  Ownership.methodEntryPlan_of_lowered MethodEntries.lowered_checked MethodEntries.«Tree».«parent».lowered_plan
+
+def MethodEntries.«Tree».«parent».certificate : Ownership.MethodEntryCertificate _root_.Extracted_reference_tree.Wrapper.certificate "Tree" "parent" :=
+  ⟨MethodEntries.«Tree».class_, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Tree».«parent».method, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Tree».«parent».plan, MethodEntries.«Tree».«parent».planned⟩
+
+def «Tree#parent».entrySafe (heap : Heap) (address : Nat) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_reference_tree.program MethodEntries.«Tree».«parent».plan heap (.ref address :: args)
+
+def «Tree#parent».wrapper (fuel : Nat) (state : State) (address : Nat) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedMethodApply _root_.Extracted_reference_tree.program MethodEntries.«Tree».«parent».plan fuel state address "parent" args
+
+def MethodEntries.«Tree».«childList».method : Ariadne.Function := MethodEntries.«Tree».class_.methods[2]!
+
+def MethodEntries.«Tree».«childList».plan : List Ownership.ArgumentCheck := []
+
+theorem MethodEntries.«Tree».«childList».lowered_plan : Ownership.Wrap.methodPlan MethodEntries.lowered "Tree" MethodEntries.«Tree».«childList».method = .ok MethodEntries.«Tree».«childList».plan := by kernel_rfl
+
+theorem MethodEntries.«Tree».«childList».planned : Ownership.methodEntryPlan _root_.Extracted_reference_tree.program "Tree" MethodEntries.«Tree».«childList».method = .ok MethodEntries.«Tree».«childList».plan :=
+  Ownership.methodEntryPlan_of_lowered MethodEntries.lowered_checked MethodEntries.«Tree».«childList».lowered_plan
+
+def MethodEntries.«Tree».«childList».certificate : Ownership.MethodEntryCertificate _root_.Extracted_reference_tree.Wrapper.certificate "Tree" "childList" :=
+  ⟨MethodEntries.«Tree».class_, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Tree».«childList».method, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Tree».«childList».plan, MethodEntries.«Tree».«childList».planned⟩
+
+def «Tree#childList».entrySafe (heap : Heap) (address : Nat) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_reference_tree.program MethodEntries.«Tree».«childList».plan heap (.ref address :: args)
+
+def «Tree#childList».wrapper (fuel : Nat) (state : State) (address : Nat) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedMethodApply _root_.Extracted_reference_tree.program MethodEntries.«Tree».«childList».plan fuel state address "childList" args
+
+def MethodEntries.«Tree».«move».method : Ariadne.Function := MethodEntries.«Tree».class_.methods[3]!
+
+def MethodEntries.«Tree».«move».plan : List Ownership.ArgumentCheck := []
+
+theorem MethodEntries.«Tree».«move».lowered_plan : Ownership.Wrap.methodPlan MethodEntries.lowered "Tree" MethodEntries.«Tree».«move».method = .ok MethodEntries.«Tree».«move».plan := by kernel_rfl
+
+theorem MethodEntries.«Tree».«move».planned : Ownership.methodEntryPlan _root_.Extracted_reference_tree.program "Tree" MethodEntries.«Tree».«move».method = .ok MethodEntries.«Tree».«move».plan :=
+  Ownership.methodEntryPlan_of_lowered MethodEntries.lowered_checked MethodEntries.«Tree».«move».lowered_plan
+
+def MethodEntries.«Tree».«move».certificate : Ownership.MethodEntryCertificate _root_.Extracted_reference_tree.Wrapper.certificate "Tree" "move" :=
+  ⟨MethodEntries.«Tree».class_, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Tree».«move».method, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Tree».«move».plan, MethodEntries.«Tree».«move».planned⟩
+
+def «Tree#move».entrySafe (heap : Heap) (address : Nat) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_reference_tree.program MethodEntries.«Tree».«move».plan heap (.ref address :: args)
+
+def «Tree#move».wrapper (fuel : Nat) (state : State) (address : Nat) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedMethodApply _root_.Extracted_reference_tree.program MethodEntries.«Tree».«move».plan fuel state address "move" args
+
+def MethodEntries.«Tree».«root».method : Ariadne.Function := MethodEntries.«Tree».class_.methods[4]!
+
+def MethodEntries.«Tree».«root».plan : List Ownership.ArgumentCheck := []
+
+theorem MethodEntries.«Tree».«root».lowered_plan : Ownership.Wrap.methodPlan MethodEntries.lowered "Tree" MethodEntries.«Tree».«root».method = .ok MethodEntries.«Tree».«root».plan := by kernel_rfl
+
+theorem MethodEntries.«Tree».«root».planned : Ownership.methodEntryPlan _root_.Extracted_reference_tree.program "Tree" MethodEntries.«Tree».«root».method = .ok MethodEntries.«Tree».«root».plan :=
+  Ownership.methodEntryPlan_of_lowered MethodEntries.lowered_checked MethodEntries.«Tree».«root».lowered_plan
+
+def MethodEntries.«Tree».«root».certificate : Ownership.MethodEntryCertificate _root_.Extracted_reference_tree.Wrapper.certificate "Tree" "root" :=
+  ⟨MethodEntries.«Tree».class_, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Tree».«root».method, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Tree».«root».plan, MethodEntries.«Tree».«root».planned⟩
+
+def «Tree#root».entrySafe (heap : Heap) (address : Nat) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_reference_tree.program MethodEntries.«Tree».«root».plan heap (.ref address :: args)
+
+def «Tree#root».wrapper (fuel : Nat) (state : State) (address : Nat) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedMethodApply _root_.Extracted_reference_tree.program MethodEntries.«Tree».«root».plan fuel state address "root" args
 
 def JoinCore.«Tree#add#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (Ariadne.Shallow.Core.Ty.pair

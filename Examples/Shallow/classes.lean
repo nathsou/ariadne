@@ -8,6 +8,7 @@ import Ariadne.Shallow.Adequacy.JoinsContext
 import Ariadne.Shallow.Adequacy.GuardedJoinsContext
 import Ariadne.Shallow.Adequacy.ProjectionSource
 import Ariadne.Ownership.Source
+import Ariadne.Ownership.MethodGuard
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
@@ -677,6 +678,158 @@ def NativeRepresentations.«Seeded#state» : Named.Representation (({ name := "S
 def Interpretation.value : Named.Interp := (Named.Interp.insert (Named.Interp.insert Named.canonical ({ name := "Counter#state",   shape := Ariadne.Shallow.Named.Shape.pair              (Ariadne.Shallow.Named.Shape.int)              (Ariadne.Shallow.Named.Shape.pair                (Ariadne.Shallow.Named.Shape.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Named.Shape.int))                (Ariadne.Shallow.Named.Shape.unit)) }) NativeRepresentations.«Counter#state») ({ name := "Seeded#state",   shape := Ariadne.Shallow.Named.Shape.pair (Ariadne.Shallow.Named.Shape.int) (Ariadne.Shallow.Named.Shape.unit) }) NativeRepresentations.«Seeded#state»)
 
 theorem Interpretation.lawful : Named.Lawful Interpretation.value := Named.lawful _
+
+def MethodEntries.lowered : Program := (ClassPlan.lower _root_.Extracted_classes.program).toOption.getD default
+
+theorem MethodEntries.lowered_checked : ClassPlan.lower _root_.Extracted_classes.program = .ok MethodEntries.lowered := by kernel_rfl
+
+def MethodEntries.«Counter».class_ : Ariadne.Class := _root_.Extracted_classes.program.classes[0]!
+
+def MethodEntries.«Counter».«read».method : Ariadne.Function := MethodEntries.«Counter».class_.methods[0]!
+
+def MethodEntries.«Counter».«read».plan : List Ownership.ArgumentCheck := []
+
+theorem MethodEntries.«Counter».«read».lowered_plan : Ownership.Wrap.methodPlan MethodEntries.lowered "Counter" MethodEntries.«Counter».«read».method = .ok MethodEntries.«Counter».«read».plan := by kernel_rfl
+
+theorem MethodEntries.«Counter».«read».planned : Ownership.methodEntryPlan _root_.Extracted_classes.program "Counter" MethodEntries.«Counter».«read».method = .ok MethodEntries.«Counter».«read».plan :=
+  Ownership.methodEntryPlan_of_lowered MethodEntries.lowered_checked MethodEntries.«Counter».«read».lowered_plan
+
+def MethodEntries.«Counter».«read».certificate : Ownership.MethodEntryCertificate _root_.Extracted_classes.Wrapper.certificate "Counter" "read" :=
+  ⟨MethodEntries.«Counter».class_, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Counter».«read».method, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Counter».«read».plan, MethodEntries.«Counter».«read».planned⟩
+
+def «Counter#read».entrySafe (heap : Heap) (address : Nat) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_classes.program MethodEntries.«Counter».«read».plan heap (.ref address :: args)
+
+def «Counter#read».wrapper (fuel : Nat) (state : State) (address : Nat) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedMethodApply _root_.Extracted_classes.program MethodEntries.«Counter».«read».plan fuel state address "read" args
+
+def MethodEntries.«Counter».«add».method : Ariadne.Function := MethodEntries.«Counter».class_.methods[1]!
+
+def MethodEntries.«Counter».«add».plan : List Ownership.ArgumentCheck := []
+
+theorem MethodEntries.«Counter».«add».lowered_plan : Ownership.Wrap.methodPlan MethodEntries.lowered "Counter" MethodEntries.«Counter».«add».method = .ok MethodEntries.«Counter».«add».plan := by kernel_rfl
+
+theorem MethodEntries.«Counter».«add».planned : Ownership.methodEntryPlan _root_.Extracted_classes.program "Counter" MethodEntries.«Counter».«add».method = .ok MethodEntries.«Counter».«add».plan :=
+  Ownership.methodEntryPlan_of_lowered MethodEntries.lowered_checked MethodEntries.«Counter».«add».lowered_plan
+
+def MethodEntries.«Counter».«add».certificate : Ownership.MethodEntryCertificate _root_.Extracted_classes.Wrapper.certificate "Counter" "add" :=
+  ⟨MethodEntries.«Counter».class_, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Counter».«add».method, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Counter».«add».plan, MethodEntries.«Counter».«add».planned⟩
+
+def «Counter#add».entrySafe (heap : Heap) (address : Nat) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_classes.program MethodEntries.«Counter».«add».plan heap (.ref address :: args)
+
+def «Counter#add».wrapper (fuel : Nat) (state : State) (address : Nat) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedMethodApply _root_.Extracted_classes.program MethodEntries.«Counter».«add».plan fuel state address "add" args
+
+def MethodEntries.«Counter».«bump».method : Ariadne.Function := MethodEntries.«Counter».class_.methods[2]!
+
+def MethodEntries.«Counter».«bump».plan : List Ownership.ArgumentCheck := []
+
+theorem MethodEntries.«Counter».«bump».lowered_plan : Ownership.Wrap.methodPlan MethodEntries.lowered "Counter" MethodEntries.«Counter».«bump».method = .ok MethodEntries.«Counter».«bump».plan := by kernel_rfl
+
+theorem MethodEntries.«Counter».«bump».planned : Ownership.methodEntryPlan _root_.Extracted_classes.program "Counter" MethodEntries.«Counter».«bump».method = .ok MethodEntries.«Counter».«bump».plan :=
+  Ownership.methodEntryPlan_of_lowered MethodEntries.lowered_checked MethodEntries.«Counter».«bump».lowered_plan
+
+def MethodEntries.«Counter».«bump».certificate : Ownership.MethodEntryCertificate _root_.Extracted_classes.Wrapper.certificate "Counter" "bump" :=
+  ⟨MethodEntries.«Counter».class_, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Counter».«bump».method, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Counter».«bump».plan, MethodEntries.«Counter».«bump».planned⟩
+
+def «Counter#bump».entrySafe (heap : Heap) (address : Nat) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_classes.program MethodEntries.«Counter».«bump».plan heap (.ref address :: args)
+
+def «Counter#bump».wrapper (fuel : Nat) (state : State) (address : Nat) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedMethodApply _root_.Extracted_classes.program MethodEntries.«Counter».«bump».plan fuel state address "bump" args
+
+def MethodEntries.«Counter».«count».method : Ariadne.Function := MethodEntries.«Counter».class_.methods[3]!
+
+def MethodEntries.«Counter».«count».plan : List Ownership.ArgumentCheck := []
+
+theorem MethodEntries.«Counter».«count».lowered_plan : Ownership.Wrap.methodPlan MethodEntries.lowered "Counter" MethodEntries.«Counter».«count».method = .ok MethodEntries.«Counter».«count».plan := by kernel_rfl
+
+theorem MethodEntries.«Counter».«count».planned : Ownership.methodEntryPlan _root_.Extracted_classes.program "Counter" MethodEntries.«Counter».«count».method = .ok MethodEntries.«Counter».«count».plan :=
+  Ownership.methodEntryPlan_of_lowered MethodEntries.lowered_checked MethodEntries.«Counter».«count».lowered_plan
+
+def MethodEntries.«Counter».«count».certificate : Ownership.MethodEntryCertificate _root_.Extracted_classes.Wrapper.certificate "Counter" "count" :=
+  ⟨MethodEntries.«Counter».class_, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Counter».«count».method, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Counter».«count».plan, MethodEntries.«Counter».«count».planned⟩
+
+def «Counter#count».entrySafe (heap : Heap) (address : Nat) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_classes.program MethodEntries.«Counter».«count».plan heap (.ref address :: args)
+
+def «Counter#count».wrapper (fuel : Nat) (state : State) (address : Nat) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedMethodApply _root_.Extracted_classes.program MethodEntries.«Counter».«count».plan fuel state address "count" args
+
+def MethodEntries.«Counter».«twice».method : Ariadne.Function := MethodEntries.«Counter».class_.methods[4]!
+
+def MethodEntries.«Counter».«twice».plan : List Ownership.ArgumentCheck := []
+
+theorem MethodEntries.«Counter».«twice».lowered_plan : Ownership.Wrap.methodPlan MethodEntries.lowered "Counter" MethodEntries.«Counter».«twice».method = .ok MethodEntries.«Counter».«twice».plan := by kernel_rfl
+
+theorem MethodEntries.«Counter».«twice».planned : Ownership.methodEntryPlan _root_.Extracted_classes.program "Counter" MethodEntries.«Counter».«twice».method = .ok MethodEntries.«Counter».«twice».plan :=
+  Ownership.methodEntryPlan_of_lowered MethodEntries.lowered_checked MethodEntries.«Counter».«twice».lowered_plan
+
+def MethodEntries.«Counter».«twice».certificate : Ownership.MethodEntryCertificate _root_.Extracted_classes.Wrapper.certificate "Counter" "twice" :=
+  ⟨MethodEntries.«Counter».class_, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Counter».«twice».method, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Counter».«twice».plan, MethodEntries.«Counter».«twice».planned⟩
+
+def «Counter#twice».entrySafe (heap : Heap) (address : Nat) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_classes.program MethodEntries.«Counter».«twice».plan heap (.ref address :: args)
+
+def «Counter#twice».wrapper (fuel : Nat) (state : State) (address : Nat) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedMethodApply _root_.Extracted_classes.program MethodEntries.«Counter».«twice».plan fuel state address "twice" args
+
+def MethodEntries.«Counter».«until».method : Ariadne.Function := MethodEntries.«Counter».class_.methods[5]!
+
+def MethodEntries.«Counter».«until».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root,    projection := none }]
+
+theorem MethodEntries.«Counter».«until».lowered_plan : Ownership.Wrap.methodPlan MethodEntries.lowered "Counter" MethodEntries.«Counter».«until».method = .ok MethodEntries.«Counter».«until».plan := by kernel_rfl
+
+theorem MethodEntries.«Counter».«until».planned : Ownership.methodEntryPlan _root_.Extracted_classes.program "Counter" MethodEntries.«Counter».«until».method = .ok MethodEntries.«Counter».«until».plan :=
+  Ownership.methodEntryPlan_of_lowered MethodEntries.lowered_checked MethodEntries.«Counter».«until».lowered_plan
+
+def MethodEntries.«Counter».«until».certificate : Ownership.MethodEntryCertificate _root_.Extracted_classes.Wrapper.certificate "Counter" "until" :=
+  ⟨MethodEntries.«Counter».class_, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Counter».«until».method, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Counter».«until».plan, MethodEntries.«Counter».«until».planned⟩
+
+def «Counter#until».entrySafe (heap : Heap) (address : Nat) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_classes.program MethodEntries.«Counter».«until».plan heap (.ref address :: args)
+
+def «Counter#until».wrapper (fuel : Nat) (state : State) (address : Nat) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedMethodApply _root_.Extracted_classes.program MethodEntries.«Counter».«until».plan fuel state address "until" args
+
+def MethodEntries.«Seeded».class_ : Ariadne.Class := _root_.Extracted_classes.program.classes[1]!
+
+def MethodEntries.«Seeded».«add».method : Ariadne.Function := MethodEntries.«Seeded».class_.methods[0]!
+
+def MethodEntries.«Seeded».«add».plan : List Ownership.ArgumentCheck := []
+
+theorem MethodEntries.«Seeded».«add».lowered_plan : Ownership.Wrap.methodPlan MethodEntries.lowered "Seeded" MethodEntries.«Seeded».«add».method = .ok MethodEntries.«Seeded».«add».plan := by kernel_rfl
+
+theorem MethodEntries.«Seeded».«add».planned : Ownership.methodEntryPlan _root_.Extracted_classes.program "Seeded" MethodEntries.«Seeded».«add».method = .ok MethodEntries.«Seeded».«add».plan :=
+  Ownership.methodEntryPlan_of_lowered MethodEntries.lowered_checked MethodEntries.«Seeded».«add».lowered_plan
+
+def MethodEntries.«Seeded».«add».certificate : Ownership.MethodEntryCertificate _root_.Extracted_classes.Wrapper.certificate "Seeded" "add" :=
+  ⟨MethodEntries.«Seeded».class_, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Seeded».«add».method, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Seeded».«add».plan, MethodEntries.«Seeded».«add».planned⟩
+
+def «Seeded#add».entrySafe (heap : Heap) (address : Nat) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_classes.program MethodEntries.«Seeded».«add».plan heap (.ref address :: args)
+
+def «Seeded#add».wrapper (fuel : Nat) (state : State) (address : Nat) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedMethodApply _root_.Extracted_classes.program MethodEntries.«Seeded».«add».plan fuel state address "add" args
+
+def MethodEntries.«Seeded».«read».method : Ariadne.Function := MethodEntries.«Seeded».class_.methods[1]!
+
+def MethodEntries.«Seeded».«read».plan : List Ownership.ArgumentCheck := []
+
+theorem MethodEntries.«Seeded».«read».lowered_plan : Ownership.Wrap.methodPlan MethodEntries.lowered "Seeded" MethodEntries.«Seeded».«read».method = .ok MethodEntries.«Seeded».«read».plan := by kernel_rfl
+
+theorem MethodEntries.«Seeded».«read».planned : Ownership.methodEntryPlan _root_.Extracted_classes.program "Seeded" MethodEntries.«Seeded».«read».method = .ok MethodEntries.«Seeded».«read».plan :=
+  Ownership.methodEntryPlan_of_lowered MethodEntries.lowered_checked MethodEntries.«Seeded».«read».lowered_plan
+
+def MethodEntries.«Seeded».«read».certificate : Ownership.MethodEntryCertificate _root_.Extracted_classes.Wrapper.certificate "Seeded" "read" :=
+  ⟨MethodEntries.«Seeded».class_, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Seeded».«read».method, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Seeded».«read».plan, MethodEntries.«Seeded».«read».planned⟩
+
+def «Seeded#read».entrySafe (heap : Heap) (address : Nat) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_classes.program MethodEntries.«Seeded».«read».plan heap (.ref address :: args)
+
+def «Seeded#read».wrapper (fuel : Nat) (state : State) (address : Nat) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedMethodApply _root_.Extracted_classes.program MethodEntries.«Seeded».«read».plan fuel state address "read" args
 
 def JoinCore.«useCounter#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.named
   { name := "Counter#state",

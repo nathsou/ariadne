@@ -94,7 +94,7 @@ private def orderEdits : List Edit → List Edit
   | [] => []
   | first :: rest => insertEdit first (orderEdits rest)
 
-private def methodPlan (lowered : Program) (className : String)
+def methodPlan (lowered : Program) (className : String)
     (method : Ariadne.Function) : Checked (List ArgumentCheck) := do
   let function := {method with
     params := {name := "this", ty := .class_ className} :: method.params

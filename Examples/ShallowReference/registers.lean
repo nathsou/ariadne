@@ -8,6 +8,7 @@ import Ariadne.Shallow.Adequacy.JoinsContext
 import Ariadne.Shallow.Adequacy.GuardedJoinsContext
 import Ariadne.Shallow.Adequacy.ProjectionSource
 import Ariadne.Ownership.Source
+import Ariadne.Ownership.MethodGuard
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
@@ -402,6 +403,84 @@ def NativeRepresentations.«Registers#state» : Named.Representation (({ name :=
 def Interpretation.value : Named.Interp := (Named.Interp.insert Named.canonical ({ name := "Registers#state",   shape := Ariadne.Shallow.Named.Shape.pair              (Ariadne.Shallow.Named.Shape.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Named.Shape.int53))              (Ariadne.Shallow.Named.Shape.pair                (Ariadne.Shallow.Named.Shape.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Named.Shape.string))                (Ariadne.Shallow.Named.Shape.pair                  (Ariadne.Shallow.Named.Shape.map (Ariadne.Shallow.Core.Key.string) (Ariadne.Shallow.Named.Shape.int53))                  (Ariadne.Shallow.Named.Shape.unit))) }) NativeRepresentations.«Registers#state»)
 
 theorem Interpretation.lawful : Named.Lawful Interpretation.value := Named.lawful _
+
+def MethodEntries.lowered : Program := (ClassPlan.lower _root_.Extracted_reference_registers.program).toOption.getD default
+
+theorem MethodEntries.lowered_checked : ClassPlan.lower _root_.Extracted_reference_registers.program = .ok MethodEntries.lowered := by kernel_rfl
+
+def MethodEntries.«Registers».class_ : Ariadne.Class := _root_.Extracted_reference_registers.program.classes[0]!
+
+def MethodEntries.«Registers».«write».method : Ariadne.Function := MethodEntries.«Registers».class_.methods[0]!
+
+def MethodEntries.«Registers».«write».plan : List Ownership.ArgumentCheck := []
+
+theorem MethodEntries.«Registers».«write».lowered_plan : Ownership.Wrap.methodPlan MethodEntries.lowered "Registers" MethodEntries.«Registers».«write».method = .ok MethodEntries.«Registers».«write».plan := by kernel_rfl
+
+theorem MethodEntries.«Registers».«write».planned : Ownership.methodEntryPlan _root_.Extracted_reference_registers.program "Registers" MethodEntries.«Registers».«write».method = .ok MethodEntries.«Registers».«write».plan :=
+  Ownership.methodEntryPlan_of_lowered MethodEntries.lowered_checked MethodEntries.«Registers».«write».lowered_plan
+
+def MethodEntries.«Registers».«write».certificate : Ownership.MethodEntryCertificate _root_.Extracted_reference_registers.Wrapper.certificate "Registers" "write" :=
+  ⟨MethodEntries.«Registers».class_, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Registers».«write».method, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Registers».«write».plan, MethodEntries.«Registers».«write».planned⟩
+
+def «Registers#write».entrySafe (heap : Heap) (address : Nat) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_reference_registers.program MethodEntries.«Registers».«write».plan heap (.ref address :: args)
+
+def «Registers#write».wrapper (fuel : Nat) (state : State) (address : Nat) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedMethodApply _root_.Extracted_reference_registers.program MethodEntries.«Registers».«write».plan fuel state address "write" args
+
+def MethodEntries.«Registers».«read».method : Ariadne.Function := MethodEntries.«Registers».class_.methods[1]!
+
+def MethodEntries.«Registers».«read».plan : List Ownership.ArgumentCheck := []
+
+theorem MethodEntries.«Registers».«read».lowered_plan : Ownership.Wrap.methodPlan MethodEntries.lowered "Registers" MethodEntries.«Registers».«read».method = .ok MethodEntries.«Registers».«read».plan := by kernel_rfl
+
+theorem MethodEntries.«Registers».«read».planned : Ownership.methodEntryPlan _root_.Extracted_reference_registers.program "Registers" MethodEntries.«Registers».«read».method = .ok MethodEntries.«Registers».«read».plan :=
+  Ownership.methodEntryPlan_of_lowered MethodEntries.lowered_checked MethodEntries.«Registers».«read».lowered_plan
+
+def MethodEntries.«Registers».«read».certificate : Ownership.MethodEntryCertificate _root_.Extracted_reference_registers.Wrapper.certificate "Registers" "read" :=
+  ⟨MethodEntries.«Registers».class_, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Registers».«read».method, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Registers».«read».plan, MethodEntries.«Registers».«read».planned⟩
+
+def «Registers#read».entrySafe (heap : Heap) (address : Nat) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_reference_registers.program MethodEntries.«Registers».«read».plan heap (.ref address :: args)
+
+def «Registers#read».wrapper (fuel : Nat) (state : State) (address : Nat) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedMethodApply _root_.Extracted_reference_registers.program MethodEntries.«Registers».«read».plan fuel state address "read" args
+
+def MethodEntries.«Registers».«count».method : Ariadne.Function := MethodEntries.«Registers».class_.methods[2]!
+
+def MethodEntries.«Registers».«count».plan : List Ownership.ArgumentCheck := []
+
+theorem MethodEntries.«Registers».«count».lowered_plan : Ownership.Wrap.methodPlan MethodEntries.lowered "Registers" MethodEntries.«Registers».«count».method = .ok MethodEntries.«Registers».«count».plan := by kernel_rfl
+
+theorem MethodEntries.«Registers».«count».planned : Ownership.methodEntryPlan _root_.Extracted_reference_registers.program "Registers" MethodEntries.«Registers».«count».method = .ok MethodEntries.«Registers».«count».plan :=
+  Ownership.methodEntryPlan_of_lowered MethodEntries.lowered_checked MethodEntries.«Registers».«count».lowered_plan
+
+def MethodEntries.«Registers».«count».certificate : Ownership.MethodEntryCertificate _root_.Extracted_reference_registers.Wrapper.certificate "Registers" "count" :=
+  ⟨MethodEntries.«Registers».class_, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Registers».«count».method, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Registers».«count».plan, MethodEntries.«Registers».«count».planned⟩
+
+def «Registers#count».entrySafe (heap : Heap) (address : Nat) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_reference_registers.program MethodEntries.«Registers».«count».plan heap (.ref address :: args)
+
+def «Registers#count».wrapper (fuel : Nat) (state : State) (address : Nat) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedMethodApply _root_.Extracted_reference_registers.program MethodEntries.«Registers».«count».plan fuel state address "count" args
+
+def MethodEntries.«Registers».«counter».method : Ariadne.Function := MethodEntries.«Registers».class_.methods[3]!
+
+def MethodEntries.«Registers».«counter».plan : List Ownership.ArgumentCheck := []
+
+theorem MethodEntries.«Registers».«counter».lowered_plan : Ownership.Wrap.methodPlan MethodEntries.lowered "Registers" MethodEntries.«Registers».«counter».method = .ok MethodEntries.«Registers».«counter».plan := by kernel_rfl
+
+theorem MethodEntries.«Registers».«counter».planned : Ownership.methodEntryPlan _root_.Extracted_reference_registers.program "Registers" MethodEntries.«Registers».«counter».method = .ok MethodEntries.«Registers».«counter».plan :=
+  Ownership.methodEntryPlan_of_lowered MethodEntries.lowered_checked MethodEntries.«Registers».«counter».lowered_plan
+
+def MethodEntries.«Registers».«counter».certificate : Ownership.MethodEntryCertificate _root_.Extracted_reference_registers.Wrapper.certificate "Registers" "counter" :=
+  ⟨MethodEntries.«Registers».class_, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Registers».«counter».method, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Registers».«counter».plan, MethodEntries.«Registers».«counter».planned⟩
+
+def «Registers#counter».entrySafe (heap : Heap) (address : Nat) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_reference_registers.program MethodEntries.«Registers».«counter».plan heap (.ref address :: args)
+
+def «Registers#counter».wrapper (fuel : Nat) (state : State) (address : Nat) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedMethodApply _root_.Extracted_reference_registers.program MethodEntries.«Registers».«counter».plan fuel state address "counter" args
 
 def JoinCore.«Registers#write#0» : Core.Term [] (Ariadne.Shallow.Core.Ty.fn
   (Ariadne.Shallow.Core.Ty.pair

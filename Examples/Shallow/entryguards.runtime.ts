@@ -19,6 +19,9 @@ function __ariadne1_contains(target: object, value: unknown, seen: Set<object> =
     if (__ariadne1_contains(target, value["items"], seen)) { return true; }
     return false;
   }
+  if (value instanceof GuardedBox) {
+    return false;
+  }
   for (const key of Object.keys(value)) {
     if (__ariadne1_contains(target, (value as { [key: string]: unknown })[key], seen)) { return true; }
   }
@@ -110,4 +113,18 @@ export function names(__ariadne0_contains: bigint[], other: readonly bigint[]): 
 
 function __ariadne1_names(__ariadne0_contains: bigint[], other: readonly bigint[]): void {
   __ariadne0_contains.push(8n);
+}
+
+export class GuardedBox {
+  private count = 0n;
+  append(left: bigint[], right: readonly bigint[]): void {
+  if (this !== null && typeof this === 'object' && left !== null && typeof left === 'object' && ((this as object) === (left as object))) {
+    throw new TypeError('overlapping borrowed arguments');
+  }
+  if (left !== null && typeof left === 'object' && right !== null && typeof right === 'object' && ((left as object) === (right as object))) {
+    throw new TypeError('overlapping borrowed arguments');
+  }
+  const __ariadne1_implementation = () => { left.push(9n); };
+  return __ariadne1_implementation();
+}
 }

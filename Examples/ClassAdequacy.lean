@@ -284,4 +284,56 @@ theorem counter_trace_source (before : State) (address : Nat) (owned : Footprint
     obtain ⟨after, rest, represented⟩ := ih counted _ unchanged
     exact ⟨after, .next bumpInvoked (.next countInvoked rest), represented⟩
 
+/-- The certified runtime method guard composes with the proved source behavior. -/
+theorem seeded_add_wrapper_source (before : State) (address : Nat) (owned : Footprint)
+    (native : NativeTypes.«Seeded#state») (amount : Int)
+    (input : layout.Holds before.heap (.ref address) native owned) :
+    ∃ after, Ownership.WrappedSourceMethodInvokes Extracted_classes.source Extracted_classes.Wrapper.source
+      "Seeded" "add" before address [.bigint amount] .undefined after ∧
+      layout.Holds after.heap (.ref address) («Seeded#add» native amount).2.1 owned := by
+  obtain ⟨root, fields, children, same, lookup, _, _, _⟩ := class_contents input
+  have equal : address = root := Value.ref.inj same
+  subst root
+  obtain ⟨after, invoked, related⟩ := seeded_add_source before address owned native amount input
+  exact ⟨after, MethodEntries.«Seeded».«add».certificate.transfer ⟨fields, lookup⟩ invoked rfl, related⟩
+
+/-- The certified runtime method guard composes with the proved source behavior. -/
+theorem seeded_read_wrapper_source (before : State) (address : Nat) (owned : Footprint)
+    (native : NativeTypes.«Seeded#state»)
+    (input : layout.Holds before.heap (.ref address) native owned) :
+    ∃ after, Ownership.WrappedSourceMethodInvokes Extracted_classes.source Extracted_classes.Wrapper.source
+      "Seeded" "read" before address [] (.bigint («Seeded#read» native)) after ∧
+      layout.Holds after.heap (.ref address) native owned := by
+  obtain ⟨root, fields, children, same, lookup, _, _, _⟩ := class_contents input
+  have equal : address = root := Value.ref.inj same
+  subst root
+  obtain ⟨after, invoked, related⟩ := seeded_read_source before address owned native input
+  exact ⟨after, MethodEntries.«Seeded».«read».certificate.transfer ⟨fields, lookup⟩ invoked rfl, related⟩
+
+/-- The certified runtime method guard composes with the proved source behavior. -/
+theorem counter_bump_wrapper_source (before : State) (address : Nat) (owned : Footprint)
+    (native : NativeTypes.«Counter#state») (key : JSString)
+    (input : counterLayout.Holds before.heap (.ref address) native owned) :
+    ∃ after, Ownership.WrappedSourceMethodInvokes Extracted_classes.source Extracted_classes.Wrapper.source
+      "Counter" "bump" before address [.string key] (.bigint («Counter#bump» native key).1) after ∧
+      counterLayout.Holds after.heap (.ref address) («Counter#bump» native key).2.1 owned := by
+  obtain ⟨root, fields, children, same, lookup, _, _, _⟩ := class_contents input
+  have equal : address = root := Value.ref.inj same
+  subst root
+  obtain ⟨after, invoked, related⟩ := counter_bump_source before address owned native key input
+  exact ⟨after, MethodEntries.«Counter».«bump».certificate.transfer ⟨fields, lookup⟩ invoked rfl, related⟩
+
+/-- The certified runtime method guard composes with the proved source behavior. -/
+theorem counter_count_wrapper_source (before : State) (address : Nat) (owned : Footprint)
+    (native : NativeTypes.«Counter#state») (key : JSString)
+    (input : counterLayout.Holds before.heap (.ref address) native owned) :
+    ∃ after, Ownership.WrappedSourceMethodInvokes Extracted_classes.source Extracted_classes.Wrapper.source
+      "Counter" "count" before address [.string key] (.bigint («Counter#count» native key)) after ∧
+      counterLayout.Holds after.heap (.ref address) native owned := by
+  obtain ⟨root, fields, children, same, lookup, _, _, _⟩ := class_contents input
+  have equal : address = root := Value.ref.inj same
+  subst root
+  obtain ⟨after, invoked, related⟩ := counter_count_source before address owned native key input
+  exact ⟨after, MethodEntries.«Counter».«count».certificate.transfer ⟨fields, lookup⟩ invoked rfl, related⟩
+
 end Examples.ClassAdequacy

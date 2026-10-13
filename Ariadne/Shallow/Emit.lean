@@ -5,6 +5,7 @@ import Ariadne.Shallow.EmitJoins
 import Ariadne.Shallow.EmitGuardedJoins
 import Ariadne.Shallow.EmitProjection
 import Ariadne.Ownership.Source
+import Ariadne.Ownership.MethodGuard
 
 namespace Ariadne.Shallow
 open Core
@@ -596,7 +597,7 @@ def emit (source : String) (program : Program) (namespace_ : String) : Checked S
     core.params.flatMap typeDeclarations ++ termDeclarations core.body).eraseDups
   let declarations := (← roots.mapM (declarationOrder expanded 100)).flatten.eraseDups
   let mut out := (Ariadne.emit source original namespace_).replace
-    "import Ariadne.Certificate\n" "import Ariadne.Certificate\nimport Ariadne.Shallow.Elaborate\nimport Ariadne.Shallow.Safety\nimport Ariadne.Shallow.Adequacy.Statements\nimport Ariadne.Shallow.Adequacy.GuardedStatements\nimport Ariadne.Shallow.Adequacy.JoinsContext\nimport Ariadne.Shallow.Adequacy.GuardedJoinsContext\nimport Ariadne.Shallow.Adequacy.ProjectionSource\nimport Ariadne.Ownership.Source\n"
+    "import Ariadne.Certificate\n" "import Ariadne.Certificate\nimport Ariadne.Shallow.Elaborate\nimport Ariadne.Shallow.Safety\nimport Ariadne.Shallow.Adequacy.Statements\nimport Ariadne.Shallow.Adequacy.GuardedStatements\nimport Ariadne.Shallow.Adequacy.JoinsContext\nimport Ariadne.Shallow.Adequacy.GuardedJoinsContext\nimport Ariadne.Shallow.Adequacy.ProjectionSource\nimport Ariadne.Ownership.Source\nimport Ariadne.Ownership.MethodGuard\n"
   out := out ++ s!"\nnamespace {namespace_}.Wrapper\nopen Ariadne\n\n"
   if wrapper == Ownership.Wrap.header ++ source then
     out := out ++ s!"def source : String := Ownership.Wrap.header ++ _root_.{namespace_}.source\n\n" ++
@@ -625,6 +626,27 @@ def emit (source : String) (program : Program) (namespace_ : String) : Checked S
     interpretation := s!"(Named.Interp.insert {interpretation} ({data}) NativeRepresentations.{ident declaration.name})"
   out := out ++ s!"def Interpretation.value : Named.Interp := {interpretation}\n\n" ++
     "theorem Interpretation.lawful : Named.Lawful Interpretation.value := Named.lawful _\n\n"
+  if !original.classes.isEmpty then
+    out := out ++ s!"def MethodEntries.lowered : Program := (ClassPlan.lower _root_.{namespace_}.program).toOption.getD default\n\n" ++
+      s!"theorem MethodEntries.lowered_checked : ClassPlan.lower _root_.{namespace_}.program = .ok MethodEntries.lowered := by kernel_rfl\n\n"
+    for (class_, classIndex) in original.classes.zipIdx do
+      let classEntry := "MethodEntries." ++ ident class_.name
+      out := out ++ s!"def {classEntry}.class_ : Ariadne.Class := _root_.{namespace_}.program.classes[{classIndex}]!\n\n"
+      for (method, methodIndex) in class_.methods.zipIdx do
+        let plan ← Ownership.methodEntryPlan original class_.name method
+        let entry := classEntry ++ "." ++ ident method.name
+        let functionName := ident (ClassPlan.methodName class_.name method.name)
+        out := out ++ s!"def {entry}.method : Ariadne.Function := {classEntry}.class_.methods[{methodIndex}]!\n\n" ++
+          s!"def {entry}.plan : List Ownership.ArgumentCheck := {(reprStr plan).replace "\n" " "}\n\n" ++
+          s!"theorem {entry}.lowered_plan : Ownership.Wrap.methodPlan MethodEntries.lowered {reprStr class_.name} {entry}.method = .ok {entry}.plan := by kernel_rfl\n\n" ++
+          s!"theorem {entry}.planned : Ownership.methodEntryPlan _root_.{namespace_}.program {reprStr class_.name} {entry}.method = .ok {entry}.plan :=\n" ++
+          s!"  Ownership.methodEntryPlan_of_lowered MethodEntries.lowered_checked {entry}.lowered_plan\n\n" ++
+          s!"def {entry}.certificate : Ownership.MethodEntryCertificate _root_.{namespace_}.Wrapper.certificate {reprStr class_.name} {reprStr method.name} :=\n" ++
+          s!"  ⟨{classEntry}.class_, (by kernel_rfl), (by kernel_rfl), {entry}.method, (by kernel_rfl), (by kernel_rfl), {entry}.plan, {entry}.planned⟩\n\n" ++
+          s!"def {functionName}.entrySafe (heap : Heap) (address : Nat) (args : List Value) : Bool :=\n" ++
+          s!"  Ownership.entrySafe _root_.{namespace_}.program {entry}.plan heap (.ref address :: args)\n\n" ++
+          s!"def {functionName}.wrapper (fuel : Nat) (state : State) (address : Nat) (args : List Value) : Result (Value × State) :=\n" ++
+          s!"  Ownership.checkedMethodApply _root_.{namespace_}.program {entry}.plan fuel state address {reprStr method.name} args\n\n"
   for (f, core) in compiled do
     let coreName := "CoreArtifacts." ++ ident f.name
     let functionName := ident f.name

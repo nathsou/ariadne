@@ -8,6 +8,7 @@ import Ariadne.Shallow.Adequacy.JoinsContext
 import Ariadne.Shallow.Adequacy.GuardedJoinsContext
 import Ariadne.Shallow.Adequacy.ProjectionSource
 import Ariadne.Ownership.Source
+import Ariadne.Ownership.MethodGuard
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
@@ -15,7 +16,7 @@ set_option maxHeartbeats 0
 namespace Extracted_entryguards
 open Ariadne
 
-def source : String := "export function grow(rows: readonly bigint[][], items: bigint[]): void {\n  items.push(1n);\n}\n\nexport function outer(rows: bigint[][], items: readonly bigint[]): void {\n  rows.push([2n]);\n}\n\nexport function mapped(rows: Map<string, bigint[]>, items: bigint[]): void {\n  items.push(3n);\n}\n\nexport function flat(left: bigint[], right: readonly bigint[]): void {\n  left.push(4n);\n}\n\nexport function observations(left: readonly bigint[], right: readonly bigint[]): bigint {\n  return 5n;\n}\n\nexport class Box {\n  private items: bigint[] = [0n];\n  add(value: bigint): void { this.items.push(value); }\n}\n\nexport function encapsulated(left: Box, right: Box): void { left.add(6n); }\n\nexport class PublicBox {\n  items: bigint[] = [0n];\n}\n\nexport function exposed(box: PublicBox, items: bigint[]): void { items.push(7n); }\n\n// Generated helper names must not shadow source bindings.\nexport function names(__ariadne0_contains: bigint[], other: readonly bigint[]): void {\n  __ariadne0_contains.push(8n);\n}\n"
+def source : String := "export function grow(rows: readonly bigint[][], items: bigint[]): void {\n  items.push(1n);\n}\n\nexport function outer(rows: bigint[][], items: readonly bigint[]): void {\n  rows.push([2n]);\n}\n\nexport function mapped(rows: Map<string, bigint[]>, items: bigint[]): void {\n  items.push(3n);\n}\n\nexport function flat(left: bigint[], right: readonly bigint[]): void {\n  left.push(4n);\n}\n\nexport function observations(left: readonly bigint[], right: readonly bigint[]): bigint {\n  return 5n;\n}\n\nexport class Box {\n  private items: bigint[] = [0n];\n  add(value: bigint): void { this.items.push(value); }\n}\n\nexport function encapsulated(left: Box, right: Box): void { left.add(6n); }\n\nexport class PublicBox {\n  items: bigint[] = [0n];\n}\n\nexport function exposed(box: PublicBox, items: bigint[]): void { items.push(7n); }\n\n// Generated helper names must not shadow source bindings.\nexport function names(__ariadne0_contains: bigint[], other: readonly bigint[]): void {\n  __ariadne0_contains.push(8n);\n}\n\nexport class GuardedBox {\n  private count = 0n;\n  append(left: bigint[], right: readonly bigint[]): void { left.push(9n); }\n}\n"
 
 def characters : List Char :=
 ['e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'g', 'r', 'o', 'w', '(', 'r', 'o', 'w',
@@ -59,7 +60,13 @@ def characters : List Char :=
  'a', 'd', 'n', 'e', '0', '_', 'c', 'o', 'n', 't', 'a', 'i', 'n', 's', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']',
  ',', ' ', 'o', 't', 'h', 'e', 'r', ':', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'b', 'i', 'g', 'i', 'n', 't',
  '[', ']', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{', '\n', ' ', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e',
- '0', '_', 'c', 'o', 'n', 't', 'a', 'i', 'n', 's', '.', 'p', 'u', 's', 'h', '(', '8', 'n', ')', ';', '\n', '}', '\n']
+ '0', '_', 'c', 'o', 'n', 't', 'a', 'i', 'n', 's', '.', 'p', 'u', 's', 'h', '(', '8', 'n', ')', ';', '\n', '}', '\n',
+ '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'c', 'l', 'a', 's', 's', ' ', 'G', 'u', 'a', 'r', 'd', 'e', 'd', 'B', 'o',
+ 'x', ' ', '{', '\n', ' ', ' ', 'p', 'r', 'i', 'v', 'a', 't', 'e', ' ', 'c', 'o', 'u', 'n', 't', ' ', '=', ' ', '0',
+ 'n', ';', '\n', ' ', ' ', 'a', 'p', 'p', 'e', 'n', 'd', '(', 'l', 'e', 'f', 't', ':', ' ', 'b', 'i', 'g', 'i', 'n',
+ 't', '[', ']', ',', ' ', 'r', 'i', 'g', 'h', 't', ':', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'b', 'i', 'g',
+ 'i', 'n', 't', '[', ']', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{', ' ', 'l', 'e', 'f', 't', '.', 'p', 'u', 's', 'h',
+ '(', '9', 'n', ')', ';', ' ', '}', '\n', '}', '\n']
 
 theorem characters_encoded : String.ofList characters = source := by kernel_rfl
 
@@ -340,7 +347,43 @@ def tokens : Array Token :=
   { text := ")", span := { start := 986, stop := 987 }, lineBreak := false, stringValue := none },
   { text := ";", span := { start := 987, stop := 988 }, lineBreak := false, stringValue := none },
   { text := "}", span := { start := 989, stop := 990 }, lineBreak := true, stringValue := none },
-  { text := "<eof>", span := { start := 991, stop := 991 }, lineBreak := true, stringValue := none }]
+  { text := "export", span := { start := 992, stop := 998 }, lineBreak := true, stringValue := none },
+  { text := "class", span := { start := 999, stop := 1004 }, lineBreak := false, stringValue := none },
+  { text := "GuardedBox", span := { start := 1005, stop := 1015 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 1016, stop := 1017 }, lineBreak := false, stringValue := none },
+  { text := "private", span := { start := 1020, stop := 1027 }, lineBreak := true, stringValue := none },
+  { text := "count", span := { start := 1028, stop := 1033 }, lineBreak := false, stringValue := none },
+  { text := "=", span := { start := 1034, stop := 1035 }, lineBreak := false, stringValue := none },
+  { text := "0n", span := { start := 1036, stop := 1038 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 1038, stop := 1039 }, lineBreak := false, stringValue := none },
+  { text := "append", span := { start := 1042, stop := 1048 }, lineBreak := true, stringValue := none },
+  { text := "(", span := { start := 1048, stop := 1049 }, lineBreak := false, stringValue := none },
+  { text := "left", span := { start := 1049, stop := 1053 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1053, stop := 1054 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 1055, stop := 1061 }, lineBreak := false, stringValue := none },
+  { text := "[", span := { start := 1061, stop := 1062 }, lineBreak := false, stringValue := none },
+  { text := "]", span := { start := 1062, stop := 1063 }, lineBreak := false, stringValue := none },
+  { text := ",", span := { start := 1063, stop := 1064 }, lineBreak := false, stringValue := none },
+  { text := "right", span := { start := 1065, stop := 1070 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1070, stop := 1071 }, lineBreak := false, stringValue := none },
+  { text := "readonly", span := { start := 1072, stop := 1080 }, lineBreak := false, stringValue := none },
+  { text := "bigint", span := { start := 1081, stop := 1087 }, lineBreak := false, stringValue := none },
+  { text := "[", span := { start := 1087, stop := 1088 }, lineBreak := false, stringValue := none },
+  { text := "]", span := { start := 1088, stop := 1089 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 1089, stop := 1090 }, lineBreak := false, stringValue := none },
+  { text := ":", span := { start := 1090, stop := 1091 }, lineBreak := false, stringValue := none },
+  { text := "void", span := { start := 1092, stop := 1096 }, lineBreak := false, stringValue := none },
+  { text := "{", span := { start := 1097, stop := 1098 }, lineBreak := false, stringValue := none },
+  { text := "left", span := { start := 1099, stop := 1103 }, lineBreak := false, stringValue := none },
+  { text := ".", span := { start := 1103, stop := 1104 }, lineBreak := false, stringValue := none },
+  { text := "push", span := { start := 1104, stop := 1108 }, lineBreak := false, stringValue := none },
+  { text := "(", span := { start := 1108, stop := 1109 }, lineBreak := false, stringValue := none },
+  { text := "9n", span := { start := 1109, stop := 1111 }, lineBreak := false, stringValue := none },
+  { text := ")", span := { start := 1111, stop := 1112 }, lineBreak := false, stringValue := none },
+  { text := ";", span := { start := 1112, stop := 1113 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 1114, stop := 1115 }, lineBreak := false, stringValue := none },
+  { text := "}", span := { start := 1116, stop := 1117 }, lineBreak := true, stringValue := none },
+  { text := "<eof>", span := { start := 1118, stop := 1118 }, lineBreak := true, stringValue := none }]
 
 theorem lex_checked : lex source = .ok tokens := by
   unfold lex
@@ -348,7 +391,7 @@ theorem lex_checked : lex source = .ok tokens := by
   kernel_rfl
 
 def program : Program :=
-{ functions := [{ name := "grow",                   params := [{ name := "rows",                                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.array (Ariadne.Ty.bigint))),                                span := { start := 21, stop := 25 } },                              { name := "items",                                ty := Ariadne.Ty.array (Ariadne.Ty.bigint),                                span := { start := 48, stop := 53 } }],                   result := Ariadne.Ty.void,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.expr                                (Ariadne.Expr.call                                  (Ariadne.Expr.member                                    (Ariadne.Expr.var "items" { start := 75, stop := 80 })                                    "push"                                    { start := 75, stop := 85 })                                  [Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 86, stop := 88 }]                                  { start := 75, stop := 89 })                                { start := 75, stop := 89 }]                             { start := 71, stop := 92 },                   exported := true,                   decreases := none,                   span := { start := 7, stop := 15 } },                 { name := "outer",                   params := [{ name := "rows",                                ty := Ariadne.Ty.array (Ariadne.Ty.array (Ariadne.Ty.bigint)),                                span := { start := 116, stop := 120 } },                              { name := "items",                                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.bigint)),                                span := { start := 134, stop := 139 } }],                   result := Ariadne.Ty.void,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.expr                                (Ariadne.Expr.call                                  (Ariadne.Expr.member                                    (Ariadne.Expr.var "rows" { start := 170, stop := 174 })                                    "push"                                    { start := 170, stop := 179 })                                  [Ariadne.Expr.array                                     [Ariadne.Expr.literal (Ariadne.Literal.bigint 2) { start := 181, stop := 183 }]                                     { start := 180, stop := 184 }]                                  { start := 170, stop := 185 })                                { start := 170, stop := 185 }]                             { start := 166, stop := 188 },                   exported := true,                   decreases := none,                   span := { start := 101, stop := 109 } },                 { name := "mapped",                   params := [{ name := "rows",                                ty := Ariadne.Ty.map (Ariadne.Ty.string) (Ariadne.Ty.array (Ariadne.Ty.bigint)),                                span := { start := 213, stop := 217 } },                              { name := "items",                                ty := Ariadne.Ty.array (Ariadne.Ty.bigint),                                span := { start := 242, stop := 247 } }],                   result := Ariadne.Ty.void,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.expr                                (Ariadne.Expr.call                                  (Ariadne.Expr.member                                    (Ariadne.Expr.var "items" { start := 269, stop := 274 })                                    "push"                                    { start := 269, stop := 279 })                                  [Ariadne.Expr.literal (Ariadne.Literal.bigint 3) { start := 280, stop := 282 }]                                  { start := 269, stop := 283 })                                { start := 269, stop := 283 }]                             { start := 265, stop := 286 },                   exported := true,                   decreases := none,                   span := { start := 197, stop := 205 } },                 { name := "flat",                   params := [{ name := "left",                                ty := Ariadne.Ty.array (Ariadne.Ty.bigint),                                span := { start := 309, stop := 313 } },                              { name := "right",                                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.bigint)),                                span := { start := 325, stop := 330 } }],                   result := Ariadne.Ty.void,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.expr                                (Ariadne.Expr.call                                  (Ariadne.Expr.member                                    (Ariadne.Expr.var "left" { start := 361, stop := 365 })                                    "push"                                    { start := 361, stop := 370 })                                  [Ariadne.Expr.literal (Ariadne.Literal.bigint 4) { start := 371, stop := 373 }]                                  { start := 361, stop := 374 })                                { start := 361, stop := 374 }]                             { start := 357, stop := 377 },                   exported := true,                   decreases := none,                   span := { start := 295, stop := 303 } },                 { name := "observations",                   params := [{ name := "left",                                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.bigint)),                                span := { start := 408, stop := 412 } },                              { name := "right",                                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.bigint)),                                span := { start := 433, stop := 438 } }],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.literal (Ariadne.Literal.bigint 5) { start := 478, stop := 480 })                                { start := 471, stop := 477 }]                             { start := 467, stop := 483 },                   exported := true,                   decreases := none,                   span := { start := 386, stop := 394 } },                 { name := "encapsulated",                   params := [{ name := "left", ty := Ariadne.Ty.named "Box", span := { start := 625, stop := 629 } },                              { name := "right", ty := Ariadne.Ty.named "Box", span := { start := 636, stop := 641 } }],                   result := Ariadne.Ty.void,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.expr                                (Ariadne.Expr.call                                  (Ariadne.Expr.member                                    (Ariadne.Expr.var "left" { start := 656, stop := 660 })                                    "add"                                    { start := 656, stop := 664 })                                  [Ariadne.Expr.literal (Ariadne.Literal.bigint 6) { start := 665, stop := 667 }]                                  { start := 656, stop := 668 })                                { start := 656, stop := 668 }]                             { start := 654, stop := 671 },                   exported := true,                   decreases := none,                   span := { start := 603, stop := 611 } },                 { name := "exposed",                   params := [{ name := "box",                                ty := Ariadne.Ty.named "PublicBox",                                span := { start := 751, stop := 754 } },                              { name := "items",                                ty := Ariadne.Ty.array (Ariadne.Ty.bigint),                                span := { start := 767, stop := 772 } }],                   result := Ariadne.Ty.void,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.expr                                (Ariadne.Expr.call                                  (Ariadne.Expr.member                                    (Ariadne.Expr.var "items" { start := 792, stop := 797 })                                    "push"                                    { start := 792, stop := 802 })                                  [Ariadne.Expr.literal (Ariadne.Literal.bigint 7) { start := 803, stop := 805 }]                                  { start := 792, stop := 806 })                                { start := 792, stop := 806 }]                             { start := 790, stop := 809 },                   exported := true,                   decreases := none,                   span := { start := 734, stop := 742 } },                 { name := "names",                   params := [{ name := "__ariadne0_contains",                                ty := Ariadne.Ty.array (Ariadne.Ty.bigint),                                span := { start := 892, stop := 911 } },                              { name := "other",                                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.bigint)),                                span := { start := 923, stop := 928 } }],                   result := Ariadne.Ty.void,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.expr                                (Ariadne.Expr.call                                  (Ariadne.Expr.member                                    (Ariadne.Expr.var "__ariadne0_contains" { start := 959, stop := 978 })                                    "push"                                    { start := 959, stop := 983 })                                  [Ariadne.Expr.literal (Ariadne.Literal.bigint 8) { start := 984, stop := 986 }]                                  { start := 959, stop := 987 })                                { start := 959, stop := 987 }]                             { start := 955, stop := 990 },                   exported := true,                   decreases := none,                   span := { start := 877, stop := 885 } }],   aliases := [],   classes := [{ name := "Box",                 fields := [{ name := "items",                              ty := some (Ariadne.Ty.array (Ariadne.Ty.bigint)),                              value := Ariadne.Expr.array                                         [Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 533, stop := 535 }]                                         { start := 532, stop := 536 },                              private_ := true,                              readonly_ := false,                              span := { start := 514, stop := 519 } }],                 methods := [{ name := "add",                               params := [{ name := "value",                                            ty := Ariadne.Ty.bigint,                                            span := { start := 544, stop := 549 } }],                               result := Ariadne.Ty.void,                               body := Ariadne.Stmt.block                                         [Ariadne.Stmt.expr                                            (Ariadne.Expr.call                                              (Ariadne.Expr.member                                                (Ariadne.Expr.member                                                  (Ariadne.Expr.var "this" { start := 567, stop := 571 })                                                  "items"                                                  { start := 567, stop := 577 })                                                "push"                                                { start := 567, stop := 582 })                                              [Ariadne.Expr.var "value" { start := 583, stop := 588 }]                                              { start := 567, stop := 589 })                                            { start := 567, stop := 589 }]                                         { start := 565, stop := 592 },                               exported := false,                               decreases := none,                               span := { start := 540, stop := 543 } }],                 constructor_ := none,                 span := { start := 492, stop := 497 } },               { name := "PublicBox",                 fields := [{ name := "items",                              ty := some (Ariadne.Ty.array (Ariadne.Ty.bigint)),                              value := Ariadne.Expr.array                                         [Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 719, stop := 721 }]                                         { start := 718, stop := 722 },                              private_ := false,                              readonly_ := false,                              span := { start := 700, stop := 705 } }],                 methods := [],                 constructor_ := none,                 span := { start := 680, stop := 685 } }] }
+{ functions := [{ name := "grow",                   params := [{ name := "rows",                                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.array (Ariadne.Ty.bigint))),                                span := { start := 21, stop := 25 } },                              { name := "items",                                ty := Ariadne.Ty.array (Ariadne.Ty.bigint),                                span := { start := 48, stop := 53 } }],                   result := Ariadne.Ty.void,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.expr                                (Ariadne.Expr.call                                  (Ariadne.Expr.member                                    (Ariadne.Expr.var "items" { start := 75, stop := 80 })                                    "push"                                    { start := 75, stop := 85 })                                  [Ariadne.Expr.literal (Ariadne.Literal.bigint 1) { start := 86, stop := 88 }]                                  { start := 75, stop := 89 })                                { start := 75, stop := 89 }]                             { start := 71, stop := 92 },                   exported := true,                   decreases := none,                   span := { start := 7, stop := 15 } },                 { name := "outer",                   params := [{ name := "rows",                                ty := Ariadne.Ty.array (Ariadne.Ty.array (Ariadne.Ty.bigint)),                                span := { start := 116, stop := 120 } },                              { name := "items",                                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.bigint)),                                span := { start := 134, stop := 139 } }],                   result := Ariadne.Ty.void,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.expr                                (Ariadne.Expr.call                                  (Ariadne.Expr.member                                    (Ariadne.Expr.var "rows" { start := 170, stop := 174 })                                    "push"                                    { start := 170, stop := 179 })                                  [Ariadne.Expr.array                                     [Ariadne.Expr.literal (Ariadne.Literal.bigint 2) { start := 181, stop := 183 }]                                     { start := 180, stop := 184 }]                                  { start := 170, stop := 185 })                                { start := 170, stop := 185 }]                             { start := 166, stop := 188 },                   exported := true,                   decreases := none,                   span := { start := 101, stop := 109 } },                 { name := "mapped",                   params := [{ name := "rows",                                ty := Ariadne.Ty.map (Ariadne.Ty.string) (Ariadne.Ty.array (Ariadne.Ty.bigint)),                                span := { start := 213, stop := 217 } },                              { name := "items",                                ty := Ariadne.Ty.array (Ariadne.Ty.bigint),                                span := { start := 242, stop := 247 } }],                   result := Ariadne.Ty.void,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.expr                                (Ariadne.Expr.call                                  (Ariadne.Expr.member                                    (Ariadne.Expr.var "items" { start := 269, stop := 274 })                                    "push"                                    { start := 269, stop := 279 })                                  [Ariadne.Expr.literal (Ariadne.Literal.bigint 3) { start := 280, stop := 282 }]                                  { start := 269, stop := 283 })                                { start := 269, stop := 283 }]                             { start := 265, stop := 286 },                   exported := true,                   decreases := none,                   span := { start := 197, stop := 205 } },                 { name := "flat",                   params := [{ name := "left",                                ty := Ariadne.Ty.array (Ariadne.Ty.bigint),                                span := { start := 309, stop := 313 } },                              { name := "right",                                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.bigint)),                                span := { start := 325, stop := 330 } }],                   result := Ariadne.Ty.void,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.expr                                (Ariadne.Expr.call                                  (Ariadne.Expr.member                                    (Ariadne.Expr.var "left" { start := 361, stop := 365 })                                    "push"                                    { start := 361, stop := 370 })                                  [Ariadne.Expr.literal (Ariadne.Literal.bigint 4) { start := 371, stop := 373 }]                                  { start := 361, stop := 374 })                                { start := 361, stop := 374 }]                             { start := 357, stop := 377 },                   exported := true,                   decreases := none,                   span := { start := 295, stop := 303 } },                 { name := "observations",                   params := [{ name := "left",                                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.bigint)),                                span := { start := 408, stop := 412 } },                              { name := "right",                                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.bigint)),                                span := { start := 433, stop := 438 } }],                   result := Ariadne.Ty.bigint,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.return_                                (Ariadne.Expr.literal (Ariadne.Literal.bigint 5) { start := 478, stop := 480 })                                { start := 471, stop := 477 }]                             { start := 467, stop := 483 },                   exported := true,                   decreases := none,                   span := { start := 386, stop := 394 } },                 { name := "encapsulated",                   params := [{ name := "left", ty := Ariadne.Ty.named "Box", span := { start := 625, stop := 629 } },                              { name := "right", ty := Ariadne.Ty.named "Box", span := { start := 636, stop := 641 } }],                   result := Ariadne.Ty.void,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.expr                                (Ariadne.Expr.call                                  (Ariadne.Expr.member                                    (Ariadne.Expr.var "left" { start := 656, stop := 660 })                                    "add"                                    { start := 656, stop := 664 })                                  [Ariadne.Expr.literal (Ariadne.Literal.bigint 6) { start := 665, stop := 667 }]                                  { start := 656, stop := 668 })                                { start := 656, stop := 668 }]                             { start := 654, stop := 671 },                   exported := true,                   decreases := none,                   span := { start := 603, stop := 611 } },                 { name := "exposed",                   params := [{ name := "box",                                ty := Ariadne.Ty.named "PublicBox",                                span := { start := 751, stop := 754 } },                              { name := "items",                                ty := Ariadne.Ty.array (Ariadne.Ty.bigint),                                span := { start := 767, stop := 772 } }],                   result := Ariadne.Ty.void,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.expr                                (Ariadne.Expr.call                                  (Ariadne.Expr.member                                    (Ariadne.Expr.var "items" { start := 792, stop := 797 })                                    "push"                                    { start := 792, stop := 802 })                                  [Ariadne.Expr.literal (Ariadne.Literal.bigint 7) { start := 803, stop := 805 }]                                  { start := 792, stop := 806 })                                { start := 792, stop := 806 }]                             { start := 790, stop := 809 },                   exported := true,                   decreases := none,                   span := { start := 734, stop := 742 } },                 { name := "names",                   params := [{ name := "__ariadne0_contains",                                ty := Ariadne.Ty.array (Ariadne.Ty.bigint),                                span := { start := 892, stop := 911 } },                              { name := "other",                                ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.bigint)),                                span := { start := 923, stop := 928 } }],                   result := Ariadne.Ty.void,                   body := Ariadne.Stmt.block                             [Ariadne.Stmt.expr                                (Ariadne.Expr.call                                  (Ariadne.Expr.member                                    (Ariadne.Expr.var "__ariadne0_contains" { start := 959, stop := 978 })                                    "push"                                    { start := 959, stop := 983 })                                  [Ariadne.Expr.literal (Ariadne.Literal.bigint 8) { start := 984, stop := 986 }]                                  { start := 959, stop := 987 })                                { start := 959, stop := 987 }]                             { start := 955, stop := 990 },                   exported := true,                   decreases := none,                   span := { start := 877, stop := 885 } }],   aliases := [],   classes := [{ name := "Box",                 fields := [{ name := "items",                              ty := some (Ariadne.Ty.array (Ariadne.Ty.bigint)),                              value := Ariadne.Expr.array                                         [Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 533, stop := 535 }]                                         { start := 532, stop := 536 },                              private_ := true,                              readonly_ := false,                              span := { start := 514, stop := 519 } }],                 methods := [{ name := "add",                               params := [{ name := "value",                                            ty := Ariadne.Ty.bigint,                                            span := { start := 544, stop := 549 } }],                               result := Ariadne.Ty.void,                               body := Ariadne.Stmt.block                                         [Ariadne.Stmt.expr                                            (Ariadne.Expr.call                                              (Ariadne.Expr.member                                                (Ariadne.Expr.member                                                  (Ariadne.Expr.var "this" { start := 567, stop := 571 })                                                  "items"                                                  { start := 567, stop := 577 })                                                "push"                                                { start := 567, stop := 582 })                                              [Ariadne.Expr.var "value" { start := 583, stop := 588 }]                                              { start := 567, stop := 589 })                                            { start := 567, stop := 589 }]                                         { start := 565, stop := 592 },                               exported := false,                               decreases := none,                               span := { start := 540, stop := 543 } }],                 constructor_ := none,                 span := { start := 492, stop := 497 } },               { name := "PublicBox",                 fields := [{ name := "items",                              ty := some (Ariadne.Ty.array (Ariadne.Ty.bigint)),                              value := Ariadne.Expr.array                                         [Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 719, stop := 721 }]                                         { start := 718, stop := 722 },                              private_ := false,                              readonly_ := false,                              span := { start := 700, stop := 705 } }],                 methods := [],                 constructor_ := none,                 span := { start := 680, stop := 685 } },               { name := "GuardedBox",                 fields := [{ name := "count",                              ty := none,                              value := Ariadne.Expr.literal (Ariadne.Literal.bigint 0) { start := 1036, stop := 1038 },                              private_ := true,                              readonly_ := false,                              span := { start := 1028, stop := 1033 } }],                 methods := [{ name := "append",                               params := [{ name := "left",                                            ty := Ariadne.Ty.array (Ariadne.Ty.bigint),                                            span := { start := 1049, stop := 1053 } },                                          { name := "right",                                            ty := Ariadne.Ty.readonly (Ariadne.Ty.array (Ariadne.Ty.bigint)),                                            span := { start := 1065, stop := 1070 } }],                               result := Ariadne.Ty.void,                               body := Ariadne.Stmt.block                                         [Ariadne.Stmt.expr                                            (Ariadne.Expr.call                                              (Ariadne.Expr.member                                                (Ariadne.Expr.var "left" { start := 1099, stop := 1103 })                                                "push"                                                { start := 1099, stop := 1108 })                                              [Ariadne.Expr.literal                                                 (Ariadne.Literal.bigint 9)                                                 { start := 1109, stop := 1111 }]                                              { start := 1099, stop := 1112 })                                            { start := 1099, stop := 1112 }]                                         { start := 1097, stop := 1115 },                               exported := false,                               decreases := none,                               span := { start := 1042, stop := 1048 } }],                 constructor_ := none,                 span := { start := 999, stop := 1004 } }] }
 
 theorem parse_checked : parse source = .ok program := by
   unfold parse
@@ -431,7 +474,7 @@ end Extracted_entryguards
 namespace Extracted_entryguards.Wrapper
 open Ariadne
 
-def source : String := "// Generated ownership entry wrappers. Requires the Ariadne pristine realm contract.\nfunction __ariadne1_contains(target: object, value: unknown, seen: Set<object> = new Set<object>()): boolean {\n  if (value === target) { return true; }\n  if (value === null || typeof value !== 'object' || seen.has(value)) { return false; }\n  seen.add(value);\n  if (Array.isArray(value)) {\n    for (const item of value) { if (__ariadne1_contains(target, item, seen)) { return true; } }\n    return false;\n  }\n  if (value instanceof Map) {\n    for (const item of value.values()) { if (__ariadne1_contains(target, item, seen)) { return true; } }\n    return false;\n  }\n  if (value instanceof Set) { return false; }\n  if (value instanceof Box) {\n    return false;\n  }\n  if (value instanceof PublicBox) {\n    if (__ariadne1_contains(target, value[\"items\"], seen)) { return true; }\n    return false;\n  }\n  for (const key of Object.keys(value)) {\n    if (__ariadne1_contains(target, (value as { [key: string]: unknown })[key], seen)) { return true; }\n  }\n  return false;\n}\n\nexport function grow(rows: readonly bigint[][], items: bigint[]): void {\n  if (rows !== null && typeof rows === 'object' && items !== null && typeof items === 'object' && ((rows as object) === (items as object) || __ariadne1_contains(items, rows))) {\n    throw new TypeError('overlapping borrowed arguments');\n  }\n  return __ariadne1_grow(rows, items);\n}\n\nfunction __ariadne1_grow(rows: readonly bigint[][], items: bigint[]): void {\n  items.push(1n);\n}\n\nexport function outer(rows: bigint[][], items: readonly bigint[]): void {\n  if (rows !== null && typeof rows === 'object' && items !== null && typeof items === 'object' && ((rows as object) === (items as object) || __ariadne1_contains(items, rows))) {\n    throw new TypeError('overlapping borrowed arguments');\n  }\n  return __ariadne1_outer(rows, items);\n}\n\nfunction __ariadne1_outer(rows: bigint[][], items: readonly bigint[]): void {\n  rows.push([2n]);\n}\n\nexport function mapped(rows: Map<string, bigint[]>, items: bigint[]): void {\n  if (rows !== null && typeof rows === 'object' && items !== null && typeof items === 'object' && ((rows as object) === (items as object) || __ariadne1_contains(items, rows))) {\n    throw new TypeError('overlapping borrowed arguments');\n  }\n  return __ariadne1_mapped(rows, items);\n}\n\nfunction __ariadne1_mapped(rows: Map<string, bigint[]>, items: bigint[]): void {\n  items.push(3n);\n}\n\nexport function flat(left: bigint[], right: readonly bigint[]): void {\n  if (left !== null && typeof left === 'object' && right !== null && typeof right === 'object' && ((left as object) === (right as object))) {\n    throw new TypeError('overlapping borrowed arguments');\n  }\n  return __ariadne1_flat(left, right);\n}\n\nfunction __ariadne1_flat(left: bigint[], right: readonly bigint[]): void {\n  left.push(4n);\n}\n\nexport function observations(left: readonly bigint[], right: readonly bigint[]): bigint {\n  return 5n;\n}\n\nexport class Box {\n  private items: bigint[] = [0n];\n  add(value: bigint): void { this.items.push(value); }\n}\n\nexport function encapsulated(left: Box, right: Box): void {\n  if (left !== null && typeof left === 'object' && right !== null && typeof right === 'object' && ((left as object) === (right as object))) {\n    throw new TypeError('overlapping borrowed arguments');\n  }\n  return __ariadne1_encapsulated(left, right);\n}\n\nfunction __ariadne1_encapsulated(left: Box, right: Box): void { left.add(6n); }\n\nexport class PublicBox {\n  items: bigint[] = [0n];\n}\n\nexport function exposed(box: PublicBox, items: bigint[]): void {\n  if (box !== null && typeof box === 'object' && items !== null && typeof items === 'object' && ((box as object) === (items as object) || __ariadne1_contains(items, box))) {\n    throw new TypeError('overlapping borrowed arguments');\n  }\n  return __ariadne1_exposed(box, items);\n}\n\nfunction __ariadne1_exposed(box: PublicBox, items: bigint[]): void { items.push(7n); }\n\n// Generated helper names must not shadow source bindings.\nexport function names(__ariadne0_contains: bigint[], other: readonly bigint[]): void {\n  if (__ariadne0_contains !== null && typeof __ariadne0_contains === 'object' && other !== null && typeof other === 'object' && ((__ariadne0_contains as object) === (other as object))) {\n    throw new TypeError('overlapping borrowed arguments');\n  }\n  return __ariadne1_names(__ariadne0_contains, other);\n}\n\nfunction __ariadne1_names(__ariadne0_contains: bigint[], other: readonly bigint[]): void {\n  __ariadne0_contains.push(8n);\n}\n"
+def source : String := "// Generated ownership entry wrappers. Requires the Ariadne pristine realm contract.\nfunction __ariadne1_contains(target: object, value: unknown, seen: Set<object> = new Set<object>()): boolean {\n  if (value === target) { return true; }\n  if (value === null || typeof value !== 'object' || seen.has(value)) { return false; }\n  seen.add(value);\n  if (Array.isArray(value)) {\n    for (const item of value) { if (__ariadne1_contains(target, item, seen)) { return true; } }\n    return false;\n  }\n  if (value instanceof Map) {\n    for (const item of value.values()) { if (__ariadne1_contains(target, item, seen)) { return true; } }\n    return false;\n  }\n  if (value instanceof Set) { return false; }\n  if (value instanceof Box) {\n    return false;\n  }\n  if (value instanceof PublicBox) {\n    if (__ariadne1_contains(target, value[\"items\"], seen)) { return true; }\n    return false;\n  }\n  if (value instanceof GuardedBox) {\n    return false;\n  }\n  for (const key of Object.keys(value)) {\n    if (__ariadne1_contains(target, (value as { [key: string]: unknown })[key], seen)) { return true; }\n  }\n  return false;\n}\n\nexport function grow(rows: readonly bigint[][], items: bigint[]): void {\n  if (rows !== null && typeof rows === 'object' && items !== null && typeof items === 'object' && ((rows as object) === (items as object) || __ariadne1_contains(items, rows))) {\n    throw new TypeError('overlapping borrowed arguments');\n  }\n  return __ariadne1_grow(rows, items);\n}\n\nfunction __ariadne1_grow(rows: readonly bigint[][], items: bigint[]): void {\n  items.push(1n);\n}\n\nexport function outer(rows: bigint[][], items: readonly bigint[]): void {\n  if (rows !== null && typeof rows === 'object' && items !== null && typeof items === 'object' && ((rows as object) === (items as object) || __ariadne1_contains(items, rows))) {\n    throw new TypeError('overlapping borrowed arguments');\n  }\n  return __ariadne1_outer(rows, items);\n}\n\nfunction __ariadne1_outer(rows: bigint[][], items: readonly bigint[]): void {\n  rows.push([2n]);\n}\n\nexport function mapped(rows: Map<string, bigint[]>, items: bigint[]): void {\n  if (rows !== null && typeof rows === 'object' && items !== null && typeof items === 'object' && ((rows as object) === (items as object) || __ariadne1_contains(items, rows))) {\n    throw new TypeError('overlapping borrowed arguments');\n  }\n  return __ariadne1_mapped(rows, items);\n}\n\nfunction __ariadne1_mapped(rows: Map<string, bigint[]>, items: bigint[]): void {\n  items.push(3n);\n}\n\nexport function flat(left: bigint[], right: readonly bigint[]): void {\n  if (left !== null && typeof left === 'object' && right !== null && typeof right === 'object' && ((left as object) === (right as object))) {\n    throw new TypeError('overlapping borrowed arguments');\n  }\n  return __ariadne1_flat(left, right);\n}\n\nfunction __ariadne1_flat(left: bigint[], right: readonly bigint[]): void {\n  left.push(4n);\n}\n\nexport function observations(left: readonly bigint[], right: readonly bigint[]): bigint {\n  return 5n;\n}\n\nexport class Box {\n  private items: bigint[] = [0n];\n  add(value: bigint): void { this.items.push(value); }\n}\n\nexport function encapsulated(left: Box, right: Box): void {\n  if (left !== null && typeof left === 'object' && right !== null && typeof right === 'object' && ((left as object) === (right as object))) {\n    throw new TypeError('overlapping borrowed arguments');\n  }\n  return __ariadne1_encapsulated(left, right);\n}\n\nfunction __ariadne1_encapsulated(left: Box, right: Box): void { left.add(6n); }\n\nexport class PublicBox {\n  items: bigint[] = [0n];\n}\n\nexport function exposed(box: PublicBox, items: bigint[]): void {\n  if (box !== null && typeof box === 'object' && items !== null && typeof items === 'object' && ((box as object) === (items as object) || __ariadne1_contains(items, box))) {\n    throw new TypeError('overlapping borrowed arguments');\n  }\n  return __ariadne1_exposed(box, items);\n}\n\nfunction __ariadne1_exposed(box: PublicBox, items: bigint[]): void { items.push(7n); }\n\n// Generated helper names must not shadow source bindings.\nexport function names(__ariadne0_contains: bigint[], other: readonly bigint[]): void {\n  if (__ariadne0_contains !== null && typeof __ariadne0_contains === 'object' && other !== null && typeof other === 'object' && ((__ariadne0_contains as object) === (other as object))) {\n    throw new TypeError('overlapping borrowed arguments');\n  }\n  return __ariadne1_names(__ariadne0_contains, other);\n}\n\nfunction __ariadne1_names(__ariadne0_contains: bigint[], other: readonly bigint[]): void {\n  __ariadne0_contains.push(8n);\n}\n\nexport class GuardedBox {\n  private count = 0n;\n  append(left: bigint[], right: readonly bigint[]): void {\n  if (this !== null && typeof this === 'object' && left !== null && typeof left === 'object' && ((this as object) === (left as object))) {\n    throw new TypeError('overlapping borrowed arguments');\n  }\n  if (left !== null && typeof left === 'object' && right !== null && typeof right === 'object' && ((left as object) === (right as object))) {\n    throw new TypeError('overlapping borrowed arguments');\n  }\n  const __ariadne1_implementation = () => { left.push(9n); };\n  return __ariadne1_implementation();\n}\n}\n"
 
 def characters : List Char := ['/', '/', ' ', 'G', 'e', 'n', 'e', 'r', 'a', 't', 'e', 'd', ' ', 'o', 'w', 'n', 'e', 'r', 's', 'h', 'i', 'p', ' ', 'e',
  'n', 't', 'r', 'y', ' ', 'w', 'r', 'a', 'p', 'p', 'e', 'r', 's', '.', ' ', 'R', 'e', 'q', 'u', 'i', 'r', 'e', 's', ' ',
@@ -470,162 +513,191 @@ def characters : List Char := ['/', '/', ' ', 'G', 'e', 'n', 'e', 'r', 'a', 't',
  'e', '1', '_', 'c', 'o', 'n', 't', 'a', 'i', 'n', 's', '(', 't', 'a', 'r', 'g', 'e', 't', ',', ' ', 'v', 'a', 'l', 'u',
  'e', '[', '\"', 'i', 't', 'e', 'm', 's', '\"', ']', ',', ' ', 's', 'e', 'e', 'n', ')', ')', ' ', '{', ' ', 'r', 'e',
  't', 'u', 'r', 'n', ' ', 't', 'r', 'u', 'e', ';', ' ', '}', '\n', ' ', ' ', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n',
- ' ', 'f', 'a', 'l', 's', 'e', ';', '\n', ' ', ' ', '}', '\n', ' ', ' ', 'f', 'o', 'r', ' ', '(', 'c', 'o', 'n', 's',
- 't', ' ', 'k', 'e', 'y', ' ', 'o', 'f', ' ', 'O', 'b', 'j', 'e', 'c', 't', '.', 'k', 'e', 'y', 's', '(', 'v', 'a', 'l',
- 'u', 'e', ')', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', 'i', 'f', ' ', '(', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n',
- 'e', '1', '_', 'c', 'o', 'n', 't', 'a', 'i', 'n', 's', '(', 't', 'a', 'r', 'g', 'e', 't', ',', ' ', '(', 'v', 'a', 'l',
- 'u', 'e', ' ', 'a', 's', ' ', '{', ' ', '[', 'k', 'e', 'y', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ']', ':', ' ', 'u',
- 'n', 'k', 'n', 'o', 'w', 'n', ' ', '}', ')', '[', 'k', 'e', 'y', ']', ',', ' ', 's', 'e', 'e', 'n', ')', ')', ' ', '{',
- ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 't', 'r', 'u', 'e', ';', ' ', '}', '\n', ' ', ' ', '}', '\n', ' ', ' ', 'r',
- 'e', 't', 'u', 'r', 'n', ' ', 'f', 'a', 'l', 's', 'e', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ',
- 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'g', 'r', 'o', 'w', '(', 'r', 'o', 'w', 's', ':', ' ', 'r', 'e', 'a', 'd',
- 'o', 'n', 'l', 'y', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', '[', ']', ',', ' ', 'i', 't', 'e', 'm', 's', ':', ' ',
+ ' ', 'f', 'a', 'l', 's', 'e', ';', '\n', ' ', ' ', '}', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'v', 'a', 'l', 'u', 'e',
+ ' ', 'i', 'n', 's', 't', 'a', 'n', 'c', 'e', 'o', 'f', ' ', 'G', 'u', 'a', 'r', 'd', 'e', 'd', 'B', 'o', 'x', ')', ' ',
+ '{', '\n', ' ', ' ', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'f', 'a', 'l', 's', 'e', ';', '\n', ' ', ' ', '}',
+ '\n', ' ', ' ', 'f', 'o', 'r', ' ', '(', 'c', 'o', 'n', 's', 't', ' ', 'k', 'e', 'y', ' ', 'o', 'f', ' ', 'O', 'b',
+ 'j', 'e', 'c', 't', '.', 'k', 'e', 'y', 's', '(', 'v', 'a', 'l', 'u', 'e', ')', ')', ' ', '{', '\n', ' ', ' ', ' ',
+ ' ', 'i', 'f', ' ', '(', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'c', 'o', 'n', 't', 'a', 'i', 'n', 's',
+ '(', 't', 'a', 'r', 'g', 'e', 't', ',', ' ', '(', 'v', 'a', 'l', 'u', 'e', ' ', 'a', 's', ' ', '{', ' ', '[', 'k', 'e',
+ 'y', ':', ' ', 's', 't', 'r', 'i', 'n', 'g', ']', ':', ' ', 'u', 'n', 'k', 'n', 'o', 'w', 'n', ' ', '}', ')', '[', 'k',
+ 'e', 'y', ']', ',', ' ', 's', 'e', 'e', 'n', ')', ')', ' ', '{', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 't', 'r', 'u',
+ 'e', ';', ' ', '}', '\n', ' ', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 'f', 'a', 'l', 's', 'e',
+ ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'g', 'r',
+ 'o', 'w', '(', 'r', 'o', 'w', 's', ':', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'b', 'i', 'g', 'i', 'n', 't',
+ '[', ']', '[', ']', ',', ' ', 'i', 't', 'e', 'm', 's', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ')', ':', ' ',
+ 'v', 'o', 'i', 'd', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'r', 'o', 'w', 's', ' ', '!', '=', '=', ' ', 'n',
+ 'u', 'l', 'l', ' ', '&', '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ', 'r', 'o', 'w', 's', ' ', '=', '=', '=', ' ',
+ '\'', 'o', 'b', 'j', 'e', 'c', 't', '\'', ' ', '&', '&', ' ', 'i', 't', 'e', 'm', 's', ' ', '!', '=', '=', ' ', 'n',
+ 'u', 'l', 'l', ' ', '&', '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ', 'i', 't', 'e', 'm', 's', ' ', '=', '=', '=', ' ',
+ '\'', 'o', 'b', 'j', 'e', 'c', 't', '\'', ' ', '&', '&', ' ', '(', '(', 'r', 'o', 'w', 's', ' ', 'a', 's', ' ', 'o',
+ 'b', 'j', 'e', 'c', 't', ')', ' ', '=', '=', '=', ' ', '(', 'i', 't', 'e', 'm', 's', ' ', 'a', 's', ' ', 'o', 'b', 'j',
+ 'e', 'c', 't', ')', ' ', '|', '|', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'c', 'o', 'n', 't', 'a',
+ 'i', 'n', 's', '(', 'i', 't', 'e', 'm', 's', ',', ' ', 'r', 'o', 'w', 's', ')', ')', ')', ' ', '{', '\n', ' ', ' ',
+ ' ', ' ', 't', 'h', 'r', 'o', 'w', ' ', 'n', 'e', 'w', ' ', 'T', 'y', 'p', 'e', 'E', 'r', 'r', 'o', 'r', '(', '\'',
+ 'o', 'v', 'e', 'r', 'l', 'a', 'p', 'p', 'i', 'n', 'g', ' ', 'b', 'o', 'r', 'r', 'o', 'w', 'e', 'd', ' ', 'a', 'r', 'g',
+ 'u', 'm', 'e', 'n', 't', 's', '\'', ')', ';', '\n', ' ', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ',
+ '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'g', 'r', 'o', 'w', '(', 'r', 'o', 'w', 's', ',', ' ', 'i', 't',
+ 'e', 'm', 's', ')', ';', '\n', '}', '\n', '\n', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', '_', '_', 'a', 'r', 'i',
+ 'a', 'd', 'n', 'e', '1', '_', 'g', 'r', 'o', 'w', '(', 'r', 'o', 'w', 's', ':', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l',
+ 'y', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', '[', ']', ',', ' ', 'i', 't', 'e', 'm', 's', ':', ' ', 'b', 'i', 'g',
+ 'i', 'n', 't', '[', ']', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{', '\n', ' ', ' ', 'i', 't', 'e', 'm', 's', '.',
+ 'p', 'u', 's', 'h', '(', '1', 'n', ')', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n',
+ 'c', 't', 'i', 'o', 'n', ' ', 'o', 'u', 't', 'e', 'r', '(', 'r', 'o', 'w', 's', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't',
+ '[', ']', '[', ']', ',', ' ', 'i', 't', 'e', 'm', 's', ':', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'b', 'i',
+ 'g', 'i', 'n', 't', '[', ']', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'r',
+ 'o', 'w', 's', ' ', '!', '=', '=', ' ', 'n', 'u', 'l', 'l', ' ', '&', '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ', 'r',
+ 'o', 'w', 's', ' ', '=', '=', '=', ' ', '\'', 'o', 'b', 'j', 'e', 'c', 't', '\'', ' ', '&', '&', ' ', 'i', 't', 'e',
+ 'm', 's', ' ', '!', '=', '=', ' ', 'n', 'u', 'l', 'l', ' ', '&', '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ', 'i', 't',
+ 'e', 'm', 's', ' ', '=', '=', '=', ' ', '\'', 'o', 'b', 'j', 'e', 'c', 't', '\'', ' ', '&', '&', ' ', '(', '(', 'r',
+ 'o', 'w', 's', ' ', 'a', 's', ' ', 'o', 'b', 'j', 'e', 'c', 't', ')', ' ', '=', '=', '=', ' ', '(', 'i', 't', 'e', 'm',
+ 's', ' ', 'a', 's', ' ', 'o', 'b', 'j', 'e', 'c', 't', ')', ' ', '|', '|', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n',
+ 'e', '1', '_', 'c', 'o', 'n', 't', 'a', 'i', 'n', 's', '(', 'i', 't', 'e', 'm', 's', ',', ' ', 'r', 'o', 'w', 's', ')',
+ ')', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', 't', 'h', 'r', 'o', 'w', ' ', 'n', 'e', 'w', ' ', 'T', 'y', 'p', 'e',
+ 'E', 'r', 'r', 'o', 'r', '(', '\'', 'o', 'v', 'e', 'r', 'l', 'a', 'p', 'p', 'i', 'n', 'g', ' ', 'b', 'o', 'r', 'r',
+ 'o', 'w', 'e', 'd', ' ', 'a', 'r', 'g', 'u', 'm', 'e', 'n', 't', 's', '\'', ')', ';', '\n', ' ', ' ', '}', '\n', ' ',
+ ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'o', 'u', 't', 'e', 'r',
+ '(', 'r', 'o', 'w', 's', ',', ' ', 'i', 't', 'e', 'm', 's', ')', ';', '\n', '}', '\n', '\n', 'f', 'u', 'n', 'c', 't',
+ 'i', 'o', 'n', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'o', 'u', 't', 'e', 'r', '(', 'r', 'o', 'w',
+ 's', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', '[', ']', ',', ' ', 'i', 't', 'e', 'm', 's', ':', ' ', 'r', 'e',
+ 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{',
+ '\n', ' ', ' ', 'r', 'o', 'w', 's', '.', 'p', 'u', 's', 'h', '(', '[', '2', 'n', ']', ')', ';', '\n', '}', '\n', '\n',
+ 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'm', 'a', 'p', 'p', 'e', 'd', '(', 'r',
+ 'o', 'w', 's', ':', ' ', 'M', 'a', 'p', '<', 's', 't', 'r', 'i', 'n', 'g', ',', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[',
+ ']', '>', ',', ' ', 'i', 't', 'e', 'm', 's', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ')', ':', ' ', 'v', 'o',
+ 'i', 'd', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'r', 'o', 'w', 's', ' ', '!', '=', '=', ' ', 'n', 'u', 'l',
+ 'l', ' ', '&', '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ', 'r', 'o', 'w', 's', ' ', '=', '=', '=', ' ', '\'', 'o',
+ 'b', 'j', 'e', 'c', 't', '\'', ' ', '&', '&', ' ', 'i', 't', 'e', 'm', 's', ' ', '!', '=', '=', ' ', 'n', 'u', 'l',
+ 'l', ' ', '&', '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ', 'i', 't', 'e', 'm', 's', ' ', '=', '=', '=', ' ', '\'',
+ 'o', 'b', 'j', 'e', 'c', 't', '\'', ' ', '&', '&', ' ', '(', '(', 'r', 'o', 'w', 's', ' ', 'a', 's', ' ', 'o', 'b',
+ 'j', 'e', 'c', 't', ')', ' ', '=', '=', '=', ' ', '(', 'i', 't', 'e', 'm', 's', ' ', 'a', 's', ' ', 'o', 'b', 'j', 'e',
+ 'c', 't', ')', ' ', '|', '|', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'c', 'o', 'n', 't', 'a', 'i',
+ 'n', 's', '(', 'i', 't', 'e', 'm', 's', ',', ' ', 'r', 'o', 'w', 's', ')', ')', ')', ' ', '{', '\n', ' ', ' ', ' ',
+ ' ', 't', 'h', 'r', 'o', 'w', ' ', 'n', 'e', 'w', ' ', 'T', 'y', 'p', 'e', 'E', 'r', 'r', 'o', 'r', '(', '\'', 'o',
+ 'v', 'e', 'r', 'l', 'a', 'p', 'p', 'i', 'n', 'g', ' ', 'b', 'o', 'r', 'r', 'o', 'w', 'e', 'd', ' ', 'a', 'r', 'g', 'u',
+ 'm', 'e', 'n', 't', 's', '\'', ')', ';', '\n', ' ', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '_',
+ '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'm', 'a', 'p', 'p', 'e', 'd', '(', 'r', 'o', 'w', 's', ',', ' ', 'i',
+ 't', 'e', 'm', 's', ')', ';', '\n', '}', '\n', '\n', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', '_', '_', 'a', 'r',
+ 'i', 'a', 'd', 'n', 'e', '1', '_', 'm', 'a', 'p', 'p', 'e', 'd', '(', 'r', 'o', 'w', 's', ':', ' ', 'M', 'a', 'p', '<',
+ 's', 't', 'r', 'i', 'n', 'g', ',', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', '>', ',', ' ', 'i', 't', 'e', 'm', 's',
+ ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{', '\n', ' ', ' ', 'i',
+ 't', 'e', 'm', 's', '.', 'p', 'u', 's', 'h', '(', '3', 'n', ')', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r',
+ 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'f', 'l', 'a', 't', '(', 'l', 'e', 'f', 't', ':', ' ', 'b', 'i',
+ 'g', 'i', 'n', 't', '[', ']', ',', ' ', 'r', 'i', 'g', 'h', 't', ':', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ',
  'b', 'i', 'g', 'i', 'n', 't', '[', ']', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ',
- '(', 'r', 'o', 'w', 's', ' ', '!', '=', '=', ' ', 'n', 'u', 'l', 'l', ' ', '&', '&', ' ', 't', 'y', 'p', 'e', 'o', 'f',
- ' ', 'r', 'o', 'w', 's', ' ', '=', '=', '=', ' ', '\'', 'o', 'b', 'j', 'e', 'c', 't', '\'', ' ', '&', '&', ' ', 'i',
- 't', 'e', 'm', 's', ' ', '!', '=', '=', ' ', 'n', 'u', 'l', 'l', ' ', '&', '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ',
- 'i', 't', 'e', 'm', 's', ' ', '=', '=', '=', ' ', '\'', 'o', 'b', 'j', 'e', 'c', 't', '\'', ' ', '&', '&', ' ', '(',
- '(', 'r', 'o', 'w', 's', ' ', 'a', 's', ' ', 'o', 'b', 'j', 'e', 'c', 't', ')', ' ', '=', '=', '=', ' ', '(', 'i', 't',
- 'e', 'm', 's', ' ', 'a', 's', ' ', 'o', 'b', 'j', 'e', 'c', 't', ')', ' ', '|', '|', ' ', '_', '_', 'a', 'r', 'i', 'a',
- 'd', 'n', 'e', '1', '_', 'c', 'o', 'n', 't', 'a', 'i', 'n', 's', '(', 'i', 't', 'e', 'm', 's', ',', ' ', 'r', 'o', 'w',
- 's', ')', ')', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', 't', 'h', 'r', 'o', 'w', ' ', 'n', 'e', 'w', ' ', 'T', 'y',
- 'p', 'e', 'E', 'r', 'r', 'o', 'r', '(', '\'', 'o', 'v', 'e', 'r', 'l', 'a', 'p', 'p', 'i', 'n', 'g', ' ', 'b', 'o',
- 'r', 'r', 'o', 'w', 'e', 'd', ' ', 'a', 'r', 'g', 'u', 'm', 'e', 'n', 't', 's', '\'', ')', ';', '\n', ' ', ' ', '}',
- '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'g', 'r',
- 'o', 'w', '(', 'r', 'o', 'w', 's', ',', ' ', 'i', 't', 'e', 'm', 's', ')', ';', '\n', '}', '\n', '\n', 'f', 'u', 'n',
- 'c', 't', 'i', 'o', 'n', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'g', 'r', 'o', 'w', '(', 'r', 'o',
- 'w', 's', ':', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', '[', ']', ',',
- ' ', 'i', 't', 'e', 'm', 's', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ',
- '{', '\n', ' ', ' ', 'i', 't', 'e', 'm', 's', '.', 'p', 'u', 's', 'h', '(', '1', 'n', ')', ';', '\n', '}', '\n', '\n',
- 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'o', 'u', 't', 'e', 'r', '(', 'r', 'o',
- 'w', 's', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', '[', ']', ',', ' ', 'i', 't', 'e', 'm', 's', ':', ' ', 'r',
- 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ',
- '{', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'r', 'o', 'w', 's', ' ', '!', '=', '=', ' ', 'n', 'u', 'l', 'l', ' ', '&',
- '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ', 'r', 'o', 'w', 's', ' ', '=', '=', '=', ' ', '\'', 'o', 'b', 'j', 'e',
- 'c', 't', '\'', ' ', '&', '&', ' ', 'i', 't', 'e', 'm', 's', ' ', '!', '=', '=', ' ', 'n', 'u', 'l', 'l', ' ', '&',
- '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ', 'i', 't', 'e', 'm', 's', ' ', '=', '=', '=', ' ', '\'', 'o', 'b', 'j',
- 'e', 'c', 't', '\'', ' ', '&', '&', ' ', '(', '(', 'r', 'o', 'w', 's', ' ', 'a', 's', ' ', 'o', 'b', 'j', 'e', 'c',
- 't', ')', ' ', '=', '=', '=', ' ', '(', 'i', 't', 'e', 'm', 's', ' ', 'a', 's', ' ', 'o', 'b', 'j', 'e', 'c', 't', ')',
- ' ', '|', '|', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'c', 'o', 'n', 't', 'a', 'i', 'n', 's', '(',
- 'i', 't', 'e', 'm', 's', ',', ' ', 'r', 'o', 'w', 's', ')', ')', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', 't', 'h',
- 'r', 'o', 'w', ' ', 'n', 'e', 'w', ' ', 'T', 'y', 'p', 'e', 'E', 'r', 'r', 'o', 'r', '(', '\'', 'o', 'v', 'e', 'r',
- 'l', 'a', 'p', 'p', 'i', 'n', 'g', ' ', 'b', 'o', 'r', 'r', 'o', 'w', 'e', 'd', ' ', 'a', 'r', 'g', 'u', 'm', 'e', 'n',
- 't', 's', '\'', ')', ';', '\n', ' ', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '_', '_', 'a', 'r',
- 'i', 'a', 'd', 'n', 'e', '1', '_', 'o', 'u', 't', 'e', 'r', '(', 'r', 'o', 'w', 's', ',', ' ', 'i', 't', 'e', 'm', 's',
- ')', ';', '\n', '}', '\n', '\n', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n',
- 'e', '1', '_', 'o', 'u', 't', 'e', 'r', '(', 'r', 'o', 'w', 's', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', '[',
- ']', ',', ' ', 'i', 't', 'e', 'm', 's', ':', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'b', 'i', 'g', 'i', 'n',
- 't', '[', ']', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{', '\n', ' ', ' ', 'r', 'o', 'w', 's', '.', 'p', 'u', 's',
- 'h', '(', '[', '2', 'n', ']', ')', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c',
- 't', 'i', 'o', 'n', ' ', 'm', 'a', 'p', 'p', 'e', 'd', '(', 'r', 'o', 'w', 's', ':', ' ', 'M', 'a', 'p', '<', 's', 't',
- 'r', 'i', 'n', 'g', ',', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', '>', ',', ' ', 'i', 't', 'e', 'm', 's', ':', ' ',
- 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ',
- '(', 'r', 'o', 'w', 's', ' ', '!', '=', '=', ' ', 'n', 'u', 'l', 'l', ' ', '&', '&', ' ', 't', 'y', 'p', 'e', 'o', 'f',
- ' ', 'r', 'o', 'w', 's', ' ', '=', '=', '=', ' ', '\'', 'o', 'b', 'j', 'e', 'c', 't', '\'', ' ', '&', '&', ' ', 'i',
- 't', 'e', 'm', 's', ' ', '!', '=', '=', ' ', 'n', 'u', 'l', 'l', ' ', '&', '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ',
- 'i', 't', 'e', 'm', 's', ' ', '=', '=', '=', ' ', '\'', 'o', 'b', 'j', 'e', 'c', 't', '\'', ' ', '&', '&', ' ', '(',
- '(', 'r', 'o', 'w', 's', ' ', 'a', 's', ' ', 'o', 'b', 'j', 'e', 'c', 't', ')', ' ', '=', '=', '=', ' ', '(', 'i', 't',
- 'e', 'm', 's', ' ', 'a', 's', ' ', 'o', 'b', 'j', 'e', 'c', 't', ')', ' ', '|', '|', ' ', '_', '_', 'a', 'r', 'i', 'a',
- 'd', 'n', 'e', '1', '_', 'c', 'o', 'n', 't', 'a', 'i', 'n', 's', '(', 'i', 't', 'e', 'm', 's', ',', ' ', 'r', 'o', 'w',
- 's', ')', ')', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', 't', 'h', 'r', 'o', 'w', ' ', 'n', 'e', 'w', ' ', 'T', 'y',
- 'p', 'e', 'E', 'r', 'r', 'o', 'r', '(', '\'', 'o', 'v', 'e', 'r', 'l', 'a', 'p', 'p', 'i', 'n', 'g', ' ', 'b', 'o',
- 'r', 'r', 'o', 'w', 'e', 'd', ' ', 'a', 'r', 'g', 'u', 'm', 'e', 'n', 't', 's', '\'', ')', ';', '\n', ' ', ' ', '}',
- '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'm', 'a',
- 'p', 'p', 'e', 'd', '(', 'r', 'o', 'w', 's', ',', ' ', 'i', 't', 'e', 'm', 's', ')', ';', '\n', '}', '\n', '\n', 'f',
- 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'm', 'a', 'p', 'p', 'e',
- 'd', '(', 'r', 'o', 'w', 's', ':', ' ', 'M', 'a', 'p', '<', 's', 't', 'r', 'i', 'n', 'g', ',', ' ', 'b', 'i', 'g', 'i',
- 'n', 't', '[', ']', '>', ',', ' ', 'i', 't', 'e', 'm', 's', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ')', ':',
- ' ', 'v', 'o', 'i', 'd', ' ', '{', '\n', ' ', ' ', 'i', 't', 'e', 'm', 's', '.', 'p', 'u', 's', 'h', '(', '3', 'n',
- ')', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'f',
- 'l', 'a', 't', '(', 'l', 'e', 'f', 't', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ',', ' ', 'r', 'i', 'g', 'h',
- 't', ':', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ')', ':', ' ', 'v',
- 'o', 'i', 'd', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'l', 'e', 'f', 't', ' ', '!', '=', '=', ' ', 'n', 'u',
- 'l', 'l', ' ', '&', '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ', 'l', 'e', 'f', 't', ' ', '=', '=', '=', ' ', '\'',
- 'o', 'b', 'j', 'e', 'c', 't', '\'', ' ', '&', '&', ' ', 'r', 'i', 'g', 'h', 't', ' ', '!', '=', '=', ' ', 'n', 'u',
- 'l', 'l', ' ', '&', '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ', 'r', 'i', 'g', 'h', 't', ' ', '=', '=', '=', ' ',
- '\'', 'o', 'b', 'j', 'e', 'c', 't', '\'', ' ', '&', '&', ' ', '(', '(', 'l', 'e', 'f', 't', ' ', 'a', 's', ' ', 'o',
- 'b', 'j', 'e', 'c', 't', ')', ' ', '=', '=', '=', ' ', '(', 'r', 'i', 'g', 'h', 't', ' ', 'a', 's', ' ', 'o', 'b', 'j',
+ '(', 'l', 'e', 'f', 't', ' ', '!', '=', '=', ' ', 'n', 'u', 'l', 'l', ' ', '&', '&', ' ', 't', 'y', 'p', 'e', 'o', 'f',
+ ' ', 'l', 'e', 'f', 't', ' ', '=', '=', '=', ' ', '\'', 'o', 'b', 'j', 'e', 'c', 't', '\'', ' ', '&', '&', ' ', 'r',
+ 'i', 'g', 'h', 't', ' ', '!', '=', '=', ' ', 'n', 'u', 'l', 'l', ' ', '&', '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ',
+ 'r', 'i', 'g', 'h', 't', ' ', '=', '=', '=', ' ', '\'', 'o', 'b', 'j', 'e', 'c', 't', '\'', ' ', '&', '&', ' ', '(',
+ '(', 'l', 'e', 'f', 't', ' ', 'a', 's', ' ', 'o', 'b', 'j', 'e', 'c', 't', ')', ' ', '=', '=', '=', ' ', '(', 'r', 'i',
+ 'g', 'h', 't', ' ', 'a', 's', ' ', 'o', 'b', 'j', 'e', 'c', 't', ')', ')', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ',
+ 't', 'h', 'r', 'o', 'w', ' ', 'n', 'e', 'w', ' ', 'T', 'y', 'p', 'e', 'E', 'r', 'r', 'o', 'r', '(', '\'', 'o', 'v',
+ 'e', 'r', 'l', 'a', 'p', 'p', 'i', 'n', 'g', ' ', 'b', 'o', 'r', 'r', 'o', 'w', 'e', 'd', ' ', 'a', 'r', 'g', 'u', 'm',
+ 'e', 'n', 't', 's', '\'', ')', ';', '\n', ' ', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '_', '_',
+ 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'f', 'l', 'a', 't', '(', 'l', 'e', 'f', 't', ',', ' ', 'r', 'i', 'g', 'h',
+ 't', ')', ';', '\n', '}', '\n', '\n', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd',
+ 'n', 'e', '1', '_', 'f', 'l', 'a', 't', '(', 'l', 'e', 'f', 't', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ',',
+ ' ', 'r', 'i', 'g', 'h', 't', ':', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[',
+ ']', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{', '\n', ' ', ' ', 'l', 'e', 'f', 't', '.', 'p', 'u', 's', 'h', '(',
+ '4', 'n', ')', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n',
+ ' ', 'o', 'b', 's', 'e', 'r', 'v', 'a', 't', 'i', 'o', 'n', 's', '(', 'l', 'e', 'f', 't', ':', ' ', 'r', 'e', 'a', 'd',
+ 'o', 'n', 'l', 'y', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ',', ' ', 'r', 'i', 'g', 'h', 't', ':', ' ', 'r', 'e',
+ 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't',
+ ' ', '{', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '5', 'n', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o',
+ 'r', 't', ' ', 'c', 'l', 'a', 's', 's', ' ', 'B', 'o', 'x', ' ', '{', '\n', ' ', ' ', 'p', 'r', 'i', 'v', 'a', 't',
+ 'e', ' ', 'i', 't', 'e', 'm', 's', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ' ', '=', ' ', '[', '0', 'n', ']',
+ ';', '\n', ' ', ' ', 'a', 'd', 'd', '(', 'v', 'a', 'l', 'u', 'e', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':',
+ ' ', 'v', 'o', 'i', 'd', ' ', '{', ' ', 't', 'h', 'i', 's', '.', 'i', 't', 'e', 'm', 's', '.', 'p', 'u', 's', 'h', '(',
+ 'v', 'a', 'l', 'u', 'e', ')', ';', ' ', '}', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n',
+ 'c', 't', 'i', 'o', 'n', ' ', 'e', 'n', 'c', 'a', 'p', 's', 'u', 'l', 'a', 't', 'e', 'd', '(', 'l', 'e', 'f', 't', ':',
+ ' ', 'B', 'o', 'x', ',', ' ', 'r', 'i', 'g', 'h', 't', ':', ' ', 'B', 'o', 'x', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ',
+ '{', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'l', 'e', 'f', 't', ' ', '!', '=', '=', ' ', 'n', 'u', 'l', 'l', ' ', '&',
+ '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ', 'l', 'e', 'f', 't', ' ', '=', '=', '=', ' ', '\'', 'o', 'b', 'j', 'e',
+ 'c', 't', '\'', ' ', '&', '&', ' ', 'r', 'i', 'g', 'h', 't', ' ', '!', '=', '=', ' ', 'n', 'u', 'l', 'l', ' ', '&',
+ '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ', 'r', 'i', 'g', 'h', 't', ' ', '=', '=', '=', ' ', '\'', 'o', 'b', 'j',
+ 'e', 'c', 't', '\'', ' ', '&', '&', ' ', '(', '(', 'l', 'e', 'f', 't', ' ', 'a', 's', ' ', 'o', 'b', 'j', 'e', 'c',
+ 't', ')', ' ', '=', '=', '=', ' ', '(', 'r', 'i', 'g', 'h', 't', ' ', 'a', 's', ' ', 'o', 'b', 'j', 'e', 'c', 't', ')',
+ ')', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', 't', 'h', 'r', 'o', 'w', ' ', 'n', 'e', 'w', ' ', 'T', 'y', 'p', 'e',
+ 'E', 'r', 'r', 'o', 'r', '(', '\'', 'o', 'v', 'e', 'r', 'l', 'a', 'p', 'p', 'i', 'n', 'g', ' ', 'b', 'o', 'r', 'r',
+ 'o', 'w', 'e', 'd', ' ', 'a', 'r', 'g', 'u', 'm', 'e', 'n', 't', 's', '\'', ')', ';', '\n', ' ', ' ', '}', '\n', ' ',
+ ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'e', 'n', 'c', 'a', 'p',
+ 's', 'u', 'l', 'a', 't', 'e', 'd', '(', 'l', 'e', 'f', 't', ',', ' ', 'r', 'i', 'g', 'h', 't', ')', ';', '\n', '}',
+ '\n', '\n', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'e',
+ 'n', 'c', 'a', 'p', 's', 'u', 'l', 'a', 't', 'e', 'd', '(', 'l', 'e', 'f', 't', ':', ' ', 'B', 'o', 'x', ',', ' ', 'r',
+ 'i', 'g', 'h', 't', ':', ' ', 'B', 'o', 'x', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{', ' ', 'l', 'e', 'f', 't', '.',
+ 'a', 'd', 'd', '(', '6', 'n', ')', ';', ' ', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'c', 'l', 'a', 's',
+ 's', ' ', 'P', 'u', 'b', 'l', 'i', 'c', 'B', 'o', 'x', ' ', '{', '\n', ' ', ' ', 'i', 't', 'e', 'm', 's', ':', ' ',
+ 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ' ', '=', ' ', '[', '0', 'n', ']', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p',
+ 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'e', 'x', 'p', 'o', 's', 'e', 'd', '(', 'b', 'o', 'x',
+ ':', ' ', 'P', 'u', 'b', 'l', 'i', 'c', 'B', 'o', 'x', ',', ' ', 'i', 't', 'e', 'm', 's', ':', ' ', 'b', 'i', 'g', 'i',
+ 'n', 't', '[', ']', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'b', 'o', 'x',
+ ' ', '!', '=', '=', ' ', 'n', 'u', 'l', 'l', ' ', '&', '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ', 'b', 'o', 'x', ' ',
+ '=', '=', '=', ' ', '\'', 'o', 'b', 'j', 'e', 'c', 't', '\'', ' ', '&', '&', ' ', 'i', 't', 'e', 'm', 's', ' ', '!',
+ '=', '=', ' ', 'n', 'u', 'l', 'l', ' ', '&', '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ', 'i', 't', 'e', 'm', 's', ' ',
+ '=', '=', '=', ' ', '\'', 'o', 'b', 'j', 'e', 'c', 't', '\'', ' ', '&', '&', ' ', '(', '(', 'b', 'o', 'x', ' ', 'a',
+ 's', ' ', 'o', 'b', 'j', 'e', 'c', 't', ')', ' ', '=', '=', '=', ' ', '(', 'i', 't', 'e', 'm', 's', ' ', 'a', 's', ' ',
+ 'o', 'b', 'j', 'e', 'c', 't', ')', ' ', '|', '|', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'c', 'o',
+ 'n', 't', 'a', 'i', 'n', 's', '(', 'i', 't', 'e', 'm', 's', ',', ' ', 'b', 'o', 'x', ')', ')', ')', ' ', '{', '\n',
+ ' ', ' ', ' ', ' ', 't', 'h', 'r', 'o', 'w', ' ', 'n', 'e', 'w', ' ', 'T', 'y', 'p', 'e', 'E', 'r', 'r', 'o', 'r', '(',
+ '\'', 'o', 'v', 'e', 'r', 'l', 'a', 'p', 'p', 'i', 'n', 'g', ' ', 'b', 'o', 'r', 'r', 'o', 'w', 'e', 'd', ' ', 'a',
+ 'r', 'g', 'u', 'm', 'e', 'n', 't', 's', '\'', ')', ';', '\n', ' ', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r',
+ 'n', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'e', 'x', 'p', 'o', 's', 'e', 'd', '(', 'b', 'o', 'x',
+ ',', ' ', 'i', 't', 'e', 'm', 's', ')', ';', '\n', '}', '\n', '\n', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', '_',
+ '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'e', 'x', 'p', 'o', 's', 'e', 'd', '(', 'b', 'o', 'x', ':', ' ', 'P',
+ 'u', 'b', 'l', 'i', 'c', 'B', 'o', 'x', ',', ' ', 'i', 't', 'e', 'm', 's', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[',
+ ']', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{', ' ', 'i', 't', 'e', 'm', 's', '.', 'p', 'u', 's', 'h', '(', '7', 'n',
+ ')', ';', ' ', '}', '\n', '\n', '/', '/', ' ', 'G', 'e', 'n', 'e', 'r', 'a', 't', 'e', 'd', ' ', 'h', 'e', 'l', 'p',
+ 'e', 'r', ' ', 'n', 'a', 'm', 'e', 's', ' ', 'm', 'u', 's', 't', ' ', 'n', 'o', 't', ' ', 's', 'h', 'a', 'd', 'o', 'w',
+ ' ', 's', 'o', 'u', 'r', 'c', 'e', ' ', 'b', 'i', 'n', 'd', 'i', 'n', 'g', 's', '.', '\n', 'e', 'x', 'p', 'o', 'r',
+ 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'n', 'a', 'm', 'e', 's', '(', '_', '_', 'a', 'r', 'i', 'a', 'd',
+ 'n', 'e', '0', '_', 'c', 'o', 'n', 't', 'a', 'i', 'n', 's', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ',', ' ',
+ 'o', 't', 'h', 'e', 'r', ':', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']',
+ ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(', '_', '_', 'a', 'r', 'i', 'a', 'd',
+ 'n', 'e', '0', '_', 'c', 'o', 'n', 't', 'a', 'i', 'n', 's', ' ', '!', '=', '=', ' ', 'n', 'u', 'l', 'l', ' ', '&', '&',
+ ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '0', '_', 'c', 'o', 'n', 't', 'a',
+ 'i', 'n', 's', ' ', '=', '=', '=', ' ', '\'', 'o', 'b', 'j', 'e', 'c', 't', '\'', ' ', '&', '&', ' ', 'o', 't', 'h',
+ 'e', 'r', ' ', '!', '=', '=', ' ', 'n', 'u', 'l', 'l', ' ', '&', '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ', 'o', 't',
+ 'h', 'e', 'r', ' ', '=', '=', '=', ' ', '\'', 'o', 'b', 'j', 'e', 'c', 't', '\'', ' ', '&', '&', ' ', '(', '(', '_',
+ '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '0', '_', 'c', 'o', 'n', 't', 'a', 'i', 'n', 's', ' ', 'a', 's', ' ', 'o', 'b',
+ 'j', 'e', 'c', 't', ')', ' ', '=', '=', '=', ' ', '(', 'o', 't', 'h', 'e', 'r', ' ', 'a', 's', ' ', 'o', 'b', 'j', 'e',
+ 'c', 't', ')', ')', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', 't', 'h', 'r', 'o', 'w', ' ', 'n', 'e', 'w', ' ', 'T',
+ 'y', 'p', 'e', 'E', 'r', 'r', 'o', 'r', '(', '\'', 'o', 'v', 'e', 'r', 'l', 'a', 'p', 'p', 'i', 'n', 'g', ' ', 'b',
+ 'o', 'r', 'r', 'o', 'w', 'e', 'd', ' ', 'a', 'r', 'g', 'u', 'm', 'e', 'n', 't', 's', '\'', ')', ';', '\n', ' ', ' ',
+ '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'n',
+ 'a', 'm', 'e', 's', '(', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '0', '_', 'c', 'o', 'n', 't', 'a', 'i', 'n', 's',
+ ',', ' ', 'o', 't', 'h', 'e', 'r', ')', ';', '\n', '}', '\n', '\n', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', '_',
+ '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'n', 'a', 'm', 'e', 's', '(', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n',
+ 'e', '0', '_', 'c', 'o', 'n', 't', 'a', 'i', 'n', 's', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ',', ' ', 'o',
+ 't', 'h', 'e', 'r', ':', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ')',
+ ':', ' ', 'v', 'o', 'i', 'd', ' ', '{', '\n', ' ', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '0', '_', 'c',
+ 'o', 'n', 't', 'a', 'i', 'n', 's', '.', 'p', 'u', 's', 'h', '(', '8', 'n', ')', ';', '\n', '}', '\n', '\n', 'e', 'x',
+ 'p', 'o', 'r', 't', ' ', 'c', 'l', 'a', 's', 's', ' ', 'G', 'u', 'a', 'r', 'd', 'e', 'd', 'B', 'o', 'x', ' ', '{',
+ '\n', ' ', ' ', 'p', 'r', 'i', 'v', 'a', 't', 'e', ' ', 'c', 'o', 'u', 'n', 't', ' ', '=', ' ', '0', 'n', ';', '\n',
+ ' ', ' ', 'a', 'p', 'p', 'e', 'n', 'd', '(', 'l', 'e', 'f', 't', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ',',
+ ' ', 'r', 'i', 'g', 'h', 't', ':', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[',
+ ']', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(', 't', 'h', 'i', 's', ' ', '!',
+ '=', '=', ' ', 'n', 'u', 'l', 'l', ' ', '&', '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ', 't', 'h', 'i', 's', ' ', '=',
+ '=', '=', ' ', '\'', 'o', 'b', 'j', 'e', 'c', 't', '\'', ' ', '&', '&', ' ', 'l', 'e', 'f', 't', ' ', '!', '=', '=',
+ ' ', 'n', 'u', 'l', 'l', ' ', '&', '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ', 'l', 'e', 'f', 't', ' ', '=', '=', '=',
+ ' ', '\'', 'o', 'b', 'j', 'e', 'c', 't', '\'', ' ', '&', '&', ' ', '(', '(', 't', 'h', 'i', 's', ' ', 'a', 's', ' ',
+ 'o', 'b', 'j', 'e', 'c', 't', ')', ' ', '=', '=', '=', ' ', '(', 'l', 'e', 'f', 't', ' ', 'a', 's', ' ', 'o', 'b', 'j',
  'e', 'c', 't', ')', ')', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', 't', 'h', 'r', 'o', 'w', ' ', 'n', 'e', 'w', ' ',
  'T', 'y', 'p', 'e', 'E', 'r', 'r', 'o', 'r', '(', '\'', 'o', 'v', 'e', 'r', 'l', 'a', 'p', 'p', 'i', 'n', 'g', ' ',
  'b', 'o', 'r', 'r', 'o', 'w', 'e', 'd', ' ', 'a', 'r', 'g', 'u', 'm', 'e', 'n', 't', 's', '\'', ')', ';', '\n', ' ',
- ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_',
- 'f', 'l', 'a', 't', '(', 'l', 'e', 'f', 't', ',', ' ', 'r', 'i', 'g', 'h', 't', ')', ';', '\n', '}', '\n', '\n', 'f',
- 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'f', 'l', 'a', 't', '(',
- 'l', 'e', 'f', 't', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ',', ' ', 'r', 'i', 'g', 'h', 't', ':', ' ', 'r',
- 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ',
- '{', '\n', ' ', ' ', 'l', 'e', 'f', 't', '.', 'p', 'u', 's', 'h', '(', '4', 'n', ')', ';', '\n', '}', '\n', '\n', 'e',
- 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'o', 'b', 's', 'e', 'r', 'v', 'a', 't', 'i',
- 'o', 'n', 's', '(', 'l', 'e', 'f', 't', ':', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'b', 'i', 'g', 'i', 'n',
- 't', '[', ']', ',', ' ', 'r', 'i', 'g', 'h', 't', ':', ' ', 'r', 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'b', 'i', 'g',
- 'i', 'n', 't', '[', ']', ')', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ' ', '{', '\n', ' ', ' ', 'r', 'e', 't', 'u',
- 'r', 'n', ' ', '5', 'n', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'c', 'l', 'a', 's', 's', ' ',
- 'B', 'o', 'x', ' ', '{', '\n', ' ', ' ', 'p', 'r', 'i', 'v', 'a', 't', 'e', ' ', 'i', 't', 'e', 'm', 's', ':', ' ',
- 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ' ', '=', ' ', '[', '0', 'n', ']', ';', '\n', ' ', ' ', 'a', 'd', 'd', '(',
- 'v', 'a', 'l', 'u', 'e', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{', ' ', 't',
- 'h', 'i', 's', '.', 'i', 't', 'e', 'm', 's', '.', 'p', 'u', 's', 'h', '(', 'v', 'a', 'l', 'u', 'e', ')', ';', ' ', '}',
- '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', 'e', 'n', 'c',
- 'a', 'p', 's', 'u', 'l', 'a', 't', 'e', 'd', '(', 'l', 'e', 'f', 't', ':', ' ', 'B', 'o', 'x', ',', ' ', 'r', 'i', 'g',
- 'h', 't', ':', ' ', 'B', 'o', 'x', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(',
- 'l', 'e', 'f', 't', ' ', '!', '=', '=', ' ', 'n', 'u', 'l', 'l', ' ', '&', '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ',
- 'l', 'e', 'f', 't', ' ', '=', '=', '=', ' ', '\'', 'o', 'b', 'j', 'e', 'c', 't', '\'', ' ', '&', '&', ' ', 'r', 'i',
- 'g', 'h', 't', ' ', '!', '=', '=', ' ', 'n', 'u', 'l', 'l', ' ', '&', '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ', 'r',
- 'i', 'g', 'h', 't', ' ', '=', '=', '=', ' ', '\'', 'o', 'b', 'j', 'e', 'c', 't', '\'', ' ', '&', '&', ' ', '(', '(',
- 'l', 'e', 'f', 't', ' ', 'a', 's', ' ', 'o', 'b', 'j', 'e', 'c', 't', ')', ' ', '=', '=', '=', ' ', '(', 'r', 'i', 'g',
- 'h', 't', ' ', 'a', 's', ' ', 'o', 'b', 'j', 'e', 'c', 't', ')', ')', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', 't',
- 'h', 'r', 'o', 'w', ' ', 'n', 'e', 'w', ' ', 'T', 'y', 'p', 'e', 'E', 'r', 'r', 'o', 'r', '(', '\'', 'o', 'v', 'e',
- 'r', 'l', 'a', 'p', 'p', 'i', 'n', 'g', ' ', 'b', 'o', 'r', 'r', 'o', 'w', 'e', 'd', ' ', 'a', 'r', 'g', 'u', 'm', 'e',
- 'n', 't', 's', '\'', ')', ';', '\n', ' ', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '_', '_', 'a',
- 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'e', 'n', 'c', 'a', 'p', 's', 'u', 'l', 'a', 't', 'e', 'd', '(', 'l', 'e', 'f',
- 't', ',', ' ', 'r', 'i', 'g', 'h', 't', ')', ';', '\n', '}', '\n', '\n', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ',
- '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'e', 'n', 'c', 'a', 'p', 's', 'u', 'l', 'a', 't', 'e', 'd', '(',
- 'l', 'e', 'f', 't', ':', ' ', 'B', 'o', 'x', ',', ' ', 'r', 'i', 'g', 'h', 't', ':', ' ', 'B', 'o', 'x', ')', ':', ' ',
- 'v', 'o', 'i', 'd', ' ', '{', ' ', 'l', 'e', 'f', 't', '.', 'a', 'd', 'd', '(', '6', 'n', ')', ';', ' ', '}', '\n',
- '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'c', 'l', 'a', 's', 's', ' ', 'P', 'u', 'b', 'l', 'i', 'c', 'B', 'o', 'x',
- ' ', '{', '\n', ' ', ' ', 'i', 't', 'e', 'm', 's', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ' ', '=', ' ',
- '[', '0', 'n', ']', ';', '\n', '}', '\n', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o',
- 'n', ' ', 'e', 'x', 'p', 'o', 's', 'e', 'd', '(', 'b', 'o', 'x', ':', ' ', 'P', 'u', 'b', 'l', 'i', 'c', 'B', 'o', 'x',
- ',', ' ', 'i', 't', 'e', 'm', 's', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ')', ':', ' ', 'v', 'o', 'i', 'd',
- ' ', '{', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'b', 'o', 'x', ' ', '!', '=', '=', ' ', 'n', 'u', 'l', 'l', ' ', '&',
- '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ', 'b', 'o', 'x', ' ', '=', '=', '=', ' ', '\'', 'o', 'b', 'j', 'e', 'c',
- 't', '\'', ' ', '&', '&', ' ', 'i', 't', 'e', 'm', 's', ' ', '!', '=', '=', ' ', 'n', 'u', 'l', 'l', ' ', '&', '&',
- ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ', 'i', 't', 'e', 'm', 's', ' ', '=', '=', '=', ' ', '\'', 'o', 'b', 'j', 'e',
- 'c', 't', '\'', ' ', '&', '&', ' ', '(', '(', 'b', 'o', 'x', ' ', 'a', 's', ' ', 'o', 'b', 'j', 'e', 'c', 't', ')',
- ' ', '=', '=', '=', ' ', '(', 'i', 't', 'e', 'm', 's', ' ', 'a', 's', ' ', 'o', 'b', 'j', 'e', 'c', 't', ')', ' ', '|',
- '|', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'c', 'o', 'n', 't', 'a', 'i', 'n', 's', '(', 'i', 't',
- 'e', 'm', 's', ',', ' ', 'b', 'o', 'x', ')', ')', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', 't', 'h', 'r', 'o', 'w',
- ' ', 'n', 'e', 'w', ' ', 'T', 'y', 'p', 'e', 'E', 'r', 'r', 'o', 'r', '(', '\'', 'o', 'v', 'e', 'r', 'l', 'a', 'p',
- 'p', 'i', 'n', 'g', ' ', 'b', 'o', 'r', 'r', 'o', 'w', 'e', 'd', ' ', 'a', 'r', 'g', 'u', 'm', 'e', 'n', 't', 's',
- '\'', ')', ';', '\n', ' ', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', '_', '_', 'a', 'r', 'i', 'a',
- 'd', 'n', 'e', '1', '_', 'e', 'x', 'p', 'o', 's', 'e', 'd', '(', 'b', 'o', 'x', ',', ' ', 'i', 't', 'e', 'm', 's', ')',
- ';', '\n', '}', '\n', '\n', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e',
- '1', '_', 'e', 'x', 'p', 'o', 's', 'e', 'd', '(', 'b', 'o', 'x', ':', ' ', 'P', 'u', 'b', 'l', 'i', 'c', 'B', 'o', 'x',
- ',', ' ', 'i', 't', 'e', 'm', 's', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ')', ':', ' ', 'v', 'o', 'i', 'd',
- ' ', '{', ' ', 'i', 't', 'e', 'm', 's', '.', 'p', 'u', 's', 'h', '(', '7', 'n', ')', ';', ' ', '}', '\n', '\n', '/',
- '/', ' ', 'G', 'e', 'n', 'e', 'r', 'a', 't', 'e', 'd', ' ', 'h', 'e', 'l', 'p', 'e', 'r', ' ', 'n', 'a', 'm', 'e', 's',
- ' ', 'm', 'u', 's', 't', ' ', 'n', 'o', 't', ' ', 's', 'h', 'a', 'd', 'o', 'w', ' ', 's', 'o', 'u', 'r', 'c', 'e', ' ',
- 'b', 'i', 'n', 'd', 'i', 'n', 'g', 's', '.', '\n', 'e', 'x', 'p', 'o', 'r', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i',
- 'o', 'n', ' ', 'n', 'a', 'm', 'e', 's', '(', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '0', '_', 'c', 'o', 'n', 't',
- 'a', 'i', 'n', 's', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ',', ' ', 'o', 't', 'h', 'e', 'r', ':', ' ', 'r',
- 'e', 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ',
- '{', '\n', ' ', ' ', 'i', 'f', ' ', '(', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '0', '_', 'c', 'o', 'n', 't',
- 'a', 'i', 'n', 's', ' ', '!', '=', '=', ' ', 'n', 'u', 'l', 'l', ' ', '&', '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ',
- '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '0', '_', 'c', 'o', 'n', 't', 'a', 'i', 'n', 's', ' ', '=', '=', '=', ' ',
- '\'', 'o', 'b', 'j', 'e', 'c', 't', '\'', ' ', '&', '&', ' ', 'o', 't', 'h', 'e', 'r', ' ', '!', '=', '=', ' ', 'n',
- 'u', 'l', 'l', ' ', '&', '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ', 'o', 't', 'h', 'e', 'r', ' ', '=', '=', '=', ' ',
- '\'', 'o', 'b', 'j', 'e', 'c', 't', '\'', ' ', '&', '&', ' ', '(', '(', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e',
- '0', '_', 'c', 'o', 'n', 't', 'a', 'i', 'n', 's', ' ', 'a', 's', ' ', 'o', 'b', 'j', 'e', 'c', 't', ')', ' ', '=', '=',
- '=', ' ', '(', 'o', 't', 'h', 'e', 'r', ' ', 'a', 's', ' ', 'o', 'b', 'j', 'e', 'c', 't', ')', ')', ')', ' ', '{',
- '\n', ' ', ' ', ' ', ' ', 't', 'h', 'r', 'o', 'w', ' ', 'n', 'e', 'w', ' ', 'T', 'y', 'p', 'e', 'E', 'r', 'r', 'o',
- 'r', '(', '\'', 'o', 'v', 'e', 'r', 'l', 'a', 'p', 'p', 'i', 'n', 'g', ' ', 'b', 'o', 'r', 'r', 'o', 'w', 'e', 'd',
- ' ', 'a', 'r', 'g', 'u', 'm', 'e', 'n', 't', 's', '\'', ')', ';', '\n', ' ', ' ', '}', '\n', ' ', ' ', 'r', 'e', 't',
- 'u', 'r', 'n', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'n', 'a', 'm', 'e', 's', '(', '_', '_', 'a',
- 'r', 'i', 'a', 'd', 'n', 'e', '0', '_', 'c', 'o', 'n', 't', 'a', 'i', 'n', 's', ',', ' ', 'o', 't', 'h', 'e', 'r', ')',
- ';', '\n', '}', '\n', '\n', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e',
- '1', '_', 'n', 'a', 'm', 'e', 's', '(', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '0', '_', 'c', 'o', 'n', 't', 'a',
- 'i', 'n', 's', ':', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ',', ' ', 'o', 't', 'h', 'e', 'r', ':', ' ', 'r', 'e',
- 'a', 'd', 'o', 'n', 'l', 'y', ' ', 'b', 'i', 'g', 'i', 'n', 't', '[', ']', ')', ':', ' ', 'v', 'o', 'i', 'd', ' ', '{',
- '\n', ' ', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '0', '_', 'c', 'o', 'n', 't', 'a', 'i', 'n', 's', '.',
- 'p', 'u', 's', 'h', '(', '8', 'n', ')', ';', '\n', '}', '\n']
+ ' ', '}', '\n', ' ', ' ', 'i', 'f', ' ', '(', 'l', 'e', 'f', 't', ' ', '!', '=', '=', ' ', 'n', 'u', 'l', 'l', ' ',
+ '&', '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ', 'l', 'e', 'f', 't', ' ', '=', '=', '=', ' ', '\'', 'o', 'b', 'j',
+ 'e', 'c', 't', '\'', ' ', '&', '&', ' ', 'r', 'i', 'g', 'h', 't', ' ', '!', '=', '=', ' ', 'n', 'u', 'l', 'l', ' ',
+ '&', '&', ' ', 't', 'y', 'p', 'e', 'o', 'f', ' ', 'r', 'i', 'g', 'h', 't', ' ', '=', '=', '=', ' ', '\'', 'o', 'b',
+ 'j', 'e', 'c', 't', '\'', ' ', '&', '&', ' ', '(', '(', 'l', 'e', 'f', 't', ' ', 'a', 's', ' ', 'o', 'b', 'j', 'e',
+ 'c', 't', ')', ' ', '=', '=', '=', ' ', '(', 'r', 'i', 'g', 'h', 't', ' ', 'a', 's', ' ', 'o', 'b', 'j', 'e', 'c', 't',
+ ')', ')', ')', ' ', '{', '\n', ' ', ' ', ' ', ' ', 't', 'h', 'r', 'o', 'w', ' ', 'n', 'e', 'w', ' ', 'T', 'y', 'p',
+ 'e', 'E', 'r', 'r', 'o', 'r', '(', '\'', 'o', 'v', 'e', 'r', 'l', 'a', 'p', 'p', 'i', 'n', 'g', ' ', 'b', 'o', 'r',
+ 'r', 'o', 'w', 'e', 'd', ' ', 'a', 'r', 'g', 'u', 'm', 'e', 'n', 't', 's', '\'', ')', ';', '\n', ' ', ' ', '}', '\n',
+ ' ', ' ', 'c', 'o', 'n', 's', 't', ' ', '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'i', 'm', 'p', 'l', 'e',
+ 'm', 'e', 'n', 't', 'a', 't', 'i', 'o', 'n', ' ', '=', ' ', '(', ')', ' ', '=', '>', ' ', '{', ' ', 'l', 'e', 'f', 't',
+ '.', 'p', 'u', 's', 'h', '(', '9', 'n', ')', ';', ' ', '}', ';', '\n', ' ', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ',
+ '_', '_', 'a', 'r', 'i', 'a', 'd', 'n', 'e', '1', '_', 'i', 'm', 'p', 'l', 'e', 'm', 'e', 'n', 't', 'a', 't', 'i', 'o',
+ 'n', '(', ')', ';', '\n', '}', '\n', '}', '\n']
 
 theorem characters_encoded : String.ofList characters = source := by kernel_rfl
 
@@ -690,9 +762,77 @@ def NativeRepresentations.«PublicBox#state» : Named.Representation (({ name :=
     cases value
     rfl
 
-def Interpretation.value : Named.Interp := (Named.Interp.insert (Named.Interp.insert Named.canonical ({ name := "Box#state",   shape := Ariadne.Shallow.Named.Shape.pair              (Ariadne.Shallow.Named.Shape.list (Ariadne.Shallow.Named.Shape.int))              (Ariadne.Shallow.Named.Shape.unit) }) NativeRepresentations.«Box#state») ({ name := "PublicBox#state",   shape := Ariadne.Shallow.Named.Shape.pair              (Ariadne.Shallow.Named.Shape.list (Ariadne.Shallow.Named.Shape.int))              (Ariadne.Shallow.Named.Shape.unit) }) NativeRepresentations.«PublicBox#state»)
+structure NativeTypes.«GuardedBox#state» where
+  «count» : _root_.Int
+
+@[simp] def NativeConstruct.«GuardedBox#state» (_payload : (_root_.Int × _root_.Unit)) : NativeTypes.«GuardedBox#state» :=
+  NativeTypes.«GuardedBox#state».mk (_payload.1)
+
+@[simp] def NativeDestruct.«GuardedBox#state» (_value : NativeTypes.«GuardedBox#state») : (_root_.Int × _root_.Unit) :=
+  (_value.«count», ())
+
+def NativeRepresentations.«GuardedBox#state» : Named.Representation (({ name := "GuardedBox#state",   shape := Ariadne.Shallow.Named.Shape.pair (Ariadne.Shallow.Named.Shape.int) (Ariadne.Shallow.Named.Shape.unit) } : Named.Declaration).shape) where
+  Native := NativeTypes.«GuardedBox#state»
+  construct := NativeConstruct.«GuardedBox#state»
+  destruct := NativeDestruct.«GuardedBox#state»
+  destruct_construct := by
+    intro value
+    rcases value with ⟨_field0, ⟨⟩⟩
+    rfl
+  construct_destruct := by
+    intro value
+    cases value
+    rfl
+
+def Interpretation.value : Named.Interp := (Named.Interp.insert (Named.Interp.insert (Named.Interp.insert Named.canonical ({ name := "Box#state",   shape := Ariadne.Shallow.Named.Shape.pair              (Ariadne.Shallow.Named.Shape.list (Ariadne.Shallow.Named.Shape.int))              (Ariadne.Shallow.Named.Shape.unit) }) NativeRepresentations.«Box#state») ({ name := "PublicBox#state",   shape := Ariadne.Shallow.Named.Shape.pair              (Ariadne.Shallow.Named.Shape.list (Ariadne.Shallow.Named.Shape.int))              (Ariadne.Shallow.Named.Shape.unit) }) NativeRepresentations.«PublicBox#state») ({ name := "GuardedBox#state",   shape := Ariadne.Shallow.Named.Shape.pair (Ariadne.Shallow.Named.Shape.int) (Ariadne.Shallow.Named.Shape.unit) }) NativeRepresentations.«GuardedBox#state»)
 
 theorem Interpretation.lawful : Named.Lawful Interpretation.value := Named.lawful _
+
+def MethodEntries.lowered : Program := (ClassPlan.lower _root_.Extracted_entryguards.program).toOption.getD default
+
+theorem MethodEntries.lowered_checked : ClassPlan.lower _root_.Extracted_entryguards.program = .ok MethodEntries.lowered := by kernel_rfl
+
+def MethodEntries.«Box».class_ : Ariadne.Class := _root_.Extracted_entryguards.program.classes[0]!
+
+def MethodEntries.«Box».«add».method : Ariadne.Function := MethodEntries.«Box».class_.methods[0]!
+
+def MethodEntries.«Box».«add».plan : List Ownership.ArgumentCheck := []
+
+theorem MethodEntries.«Box».«add».lowered_plan : Ownership.Wrap.methodPlan MethodEntries.lowered "Box" MethodEntries.«Box».«add».method = .ok MethodEntries.«Box».«add».plan := by kernel_rfl
+
+theorem MethodEntries.«Box».«add».planned : Ownership.methodEntryPlan _root_.Extracted_entryguards.program "Box" MethodEntries.«Box».«add».method = .ok MethodEntries.«Box».«add».plan :=
+  Ownership.methodEntryPlan_of_lowered MethodEntries.lowered_checked MethodEntries.«Box».«add».lowered_plan
+
+def MethodEntries.«Box».«add».certificate : Ownership.MethodEntryCertificate _root_.Extracted_entryguards.Wrapper.certificate "Box" "add" :=
+  ⟨MethodEntries.«Box».class_, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Box».«add».method, (by kernel_rfl), (by kernel_rfl), MethodEntries.«Box».«add».plan, MethodEntries.«Box».«add».planned⟩
+
+def «Box#add».entrySafe (heap : Heap) (address : Nat) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_entryguards.program MethodEntries.«Box».«add».plan heap (.ref address :: args)
+
+def «Box#add».wrapper (fuel : Nat) (state : State) (address : Nat) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedMethodApply _root_.Extracted_entryguards.program MethodEntries.«Box».«add».plan fuel state address "add" args
+
+def MethodEntries.«PublicBox».class_ : Ariadne.Class := _root_.Extracted_entryguards.program.classes[1]!
+
+def MethodEntries.«GuardedBox».class_ : Ariadne.Class := _root_.Extracted_entryguards.program.classes[2]!
+
+def MethodEntries.«GuardedBox».«append».method : Ariadne.Function := MethodEntries.«GuardedBox».class_.methods[0]!
+
+def MethodEntries.«GuardedBox».«append».plan : List Ownership.ArgumentCheck := [{ left := 0,    right := 1,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root,    projection := none },  { left := 1,    right := 2,    leftTraversal := Ariadne.Ownership.Traversal.root,    rightTraversal := Ariadne.Ownership.Traversal.root,    projection := none }]
+
+theorem MethodEntries.«GuardedBox».«append».lowered_plan : Ownership.Wrap.methodPlan MethodEntries.lowered "GuardedBox" MethodEntries.«GuardedBox».«append».method = .ok MethodEntries.«GuardedBox».«append».plan := by kernel_rfl
+
+theorem MethodEntries.«GuardedBox».«append».planned : Ownership.methodEntryPlan _root_.Extracted_entryguards.program "GuardedBox" MethodEntries.«GuardedBox».«append».method = .ok MethodEntries.«GuardedBox».«append».plan :=
+  Ownership.methodEntryPlan_of_lowered MethodEntries.lowered_checked MethodEntries.«GuardedBox».«append».lowered_plan
+
+def MethodEntries.«GuardedBox».«append».certificate : Ownership.MethodEntryCertificate _root_.Extracted_entryguards.Wrapper.certificate "GuardedBox" "append" :=
+  ⟨MethodEntries.«GuardedBox».class_, (by kernel_rfl), (by kernel_rfl), MethodEntries.«GuardedBox».«append».method, (by kernel_rfl), (by kernel_rfl), MethodEntries.«GuardedBox».«append».plan, MethodEntries.«GuardedBox».«append».planned⟩
+
+def «GuardedBox#append».entrySafe (heap : Heap) (address : Nat) (args : List Value) : Bool :=
+  Ownership.entrySafe _root_.Extracted_entryguards.program MethodEntries.«GuardedBox».«append».plan heap (.ref address :: args)
+
+def «GuardedBox#append».wrapper (fuel : Nat) (state : State) (address : Nat) (args : List Value) : Result (Value × State) :=
+  Ownership.checkedMethodApply _root_.Extracted_entryguards.program MethodEntries.«GuardedBox».«append».plan fuel state address "append" args
 
 def CoreArtifacts.«grow» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int)),  Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int)], result := Ariadne.Shallow.Core.Ty.pair   (Ariadne.Shallow.Core.Ty.unit)   (Ariadne.Shallow.Core.Ty.pair     (Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int))     (Ariadne.Shallow.Core.Ty.unit)), body := (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int)) "#loan:items" (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int)) "items" (Core.Term.binary (Ariadne.Shallow.Core.Binary.append) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) (Core.Term.cons (Core.Term.int (1)) Core.Term.nil)) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int)) "#loan:items" (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.unit) "#returned:7" Core.Term.unit (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) Core.Term.unit)))))) }
 
@@ -1063,5 +1203,43 @@ theorem DenotationChecks.«PublicBox##new» :
       Denote.function (interp := Interpretation.value) CoreArtifacts.«PublicBox##new» := by
   unfold Extracted_entryguards.Shallow.«PublicBox##new»
   simp only [Denote.function, CoreArtifacts.«PublicBox##new», Denote.term, Core.Var.get] <;> rfl
+
+def CoreArtifacts.«GuardedBox#append» : Core.Function := { params := [Ariadne.Shallow.Core.Ty.named    { name := "GuardedBox#state",      shape := Ariadne.Shallow.Named.Shape.pair (Ariadne.Shallow.Named.Shape.int) (Ariadne.Shallow.Named.Shape.unit) },  Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int),  Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int)], result := Ariadne.Shallow.Core.Ty.pair   (Ariadne.Shallow.Core.Ty.unit)   (Ariadne.Shallow.Core.Ty.pair     (Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int))     (Ariadne.Shallow.Core.Ty.unit)), body := (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int)) "#loan:left" (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int)) "left" (Core.Term.binary (Ariadne.Shallow.Core.Binary.append) (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here)))) (Core.Term.cons (Core.Term.int (9)) Core.Term.nil)) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.list (Ariadne.Shallow.Core.Ty.int)) "#loan:left" (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.let_ (a := Ariadne.Shallow.Core.Ty.unit) "#returned:1042" Core.Term.unit (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.here)) (Core.Term.pair (Core.Term.var (Ariadne.Shallow.Core.Var.there (Ariadne.Shallow.Core.Var.here))) Core.Term.unit)))))) }
+
+theorem ElaborationChecks.«GuardedBox#append» :
+    Elaborate.function _root_.Extracted_entryguards.program "GuardedBox#append" = .ok CoreArtifacts.«GuardedBox#append» := by kernel_rfl
+
+def «GuardedBox#append» («_this#arg» : NativeTypes.«GuardedBox#state») («_left#arg» : (_root_.List _root_.Int)) («_right#arg» : (_root_.List _root_.Int)) : (_root_.Unit × ((_root_.List _root_.Int) × _root_.Unit)) :=
+  (let «_#loan:left#0» : (_root_.List _root_.Int) := «_left#arg»;
+  (let «_left#1» : (_root_.List _root_.Int) := («_left#arg» ++ ((9 : _root_.Int) :: []));
+  (let «_#loan:left#2» : (_root_.List _root_.Int) := «_left#1»;
+  (let «_#returned:1042#3» : _root_.Unit := ();
+  («_#returned:1042#3», («_#loan:left#2», ()))))))
+
+abbrev «GuardedBox#append».safe («_this#arg» : NativeTypes.«GuardedBox#state») («_left#arg» : (_root_.List _root_.Int)) («_right#arg» : (_root_.List _root_.Int)) : Prop :=
+  Safety.function (interp := Interpretation.value) CoreArtifacts.«GuardedBox#append» (by decide) («_this#arg», («_left#arg», («_right#arg», ())))
+
+theorem DenotationChecks.«GuardedBox#append» :
+    (fun env : Core.Env CoreArtifacts.«GuardedBox#append».params Interpretation.value => «GuardedBox#append» (env.1) (env.2.1) (env.2.2.1)) =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«GuardedBox#append» := by
+  unfold Extracted_entryguards.Shallow.«GuardedBox#append»
+  simp only [Denote.function, CoreArtifacts.«GuardedBox#append», Denote.term, Core.Var.get] <;> rfl
+
+def CoreArtifacts.«GuardedBox##new» : Core.Function := { params := [], result := Ariadne.Shallow.Core.Ty.named   { name := "GuardedBox#state",     shape := Ariadne.Shallow.Named.Shape.pair (Ariadne.Shallow.Named.Shape.int) (Ariadne.Shallow.Named.Shape.unit) }, body := (Core.Term.pack ({ name := "GuardedBox#state",   shape := Ariadne.Shallow.Named.Shape.pair (Ariadne.Shallow.Named.Shape.int) (Ariadne.Shallow.Named.Shape.unit) }) (Core.Term.pair (Core.Term.int (0)) Core.Term.unit)) }
+
+theorem ElaborationChecks.«GuardedBox##new» :
+    Elaborate.function _root_.Extracted_entryguards.program "GuardedBox##new" = .ok CoreArtifacts.«GuardedBox##new» := by kernel_rfl
+
+def «GuardedBox##new» : NativeTypes.«GuardedBox#state» :=
+  (NativeConstruct.«GuardedBox#state» ((0 : _root_.Int), ()))
+
+abbrev «GuardedBox##new».safe : Prop :=
+  Safety.function (interp := Interpretation.value) CoreArtifacts.«GuardedBox##new» (by decide) ()
+
+theorem DenotationChecks.«GuardedBox##new» :
+    (fun _env : Core.Env CoreArtifacts.«GuardedBox##new».params Interpretation.value => «GuardedBox##new») =
+      Denote.function (interp := Interpretation.value) CoreArtifacts.«GuardedBox##new» := by
+  unfold Extracted_entryguards.Shallow.«GuardedBox##new»
+  simp only [Denote.function, CoreArtifacts.«GuardedBox##new», Denote.term, Core.Var.get] <;> rfl
 
 end Extracted_entryguards.Shallow

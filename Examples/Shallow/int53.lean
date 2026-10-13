@@ -8,6 +8,7 @@ import Ariadne.Shallow.Adequacy.JoinsContext
 import Ariadne.Shallow.Adequacy.GuardedJoinsContext
 import Ariadne.Shallow.Adequacy.ProjectionSource
 import Ariadne.Ownership.Source
+import Ariadne.Ownership.MethodGuard
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0

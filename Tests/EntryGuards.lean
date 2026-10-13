@@ -1,5 +1,6 @@
 import Ariadne.Ownership.Wrap
 import Ariadne.Ownership.Forest
+import Ariadne.Ownership.MethodGuard
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
@@ -75,5 +76,10 @@ theorem dangling_reference_fails_before_implementation :
     checkedApply noFunctions [nested] 0 {heap := [.array [.ref 4], .array []]}
       "implementation" [.ref 0, .ref 1] =
       .error (.typeError "entry guard encountered a dangling reference") := by kernel_rfl
+
+theorem method_alias_fails_before_body :
+    checkedMethodApply noFunctions [⟨1, 2, .root, .root, none⟩] 0
+      {heap := [.instance_ "GuardedBox" [], .array []]} 0 "append" [.ref 1, .ref 1] =
+      .error (.typeError "overlapping borrowed arguments") := by kernel_rfl
 
 end Tests.EntryGuards
