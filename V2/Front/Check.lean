@@ -444,10 +444,7 @@ mutual
         let (n, path) ← s.nullNarrowing span x
         let narrowed := s.narrow n.index n.narrow
         let (sa, sb) := if isNull then (s, narrowed) else (narrowed, s)
-        let a ← match expected with
-          | some τ => checkExpr T sa a (some τ)
-          | none => inferExpr T sa a none
-        let b ← checkExpr T sb b (some a.ty)
+        let (a, b) ← checkBranches T sa a sb b expected
         let ctor := if isNull then "condNull" else "condNotNull"
         let arms (ra rb : String) := if isNull then
             s!"match {ident x} with | none => {ra} | some {ident x} => {rb}"
@@ -457,10 +454,7 @@ mutual
                  safe := arms (paren a.ok) (paren b.ok) }
       | none => do
         let c ← checkExpr T s c (some .bool)
-        let a ← match expected with
-          | some τ => checkExpr T s a (some τ)
-          | none => inferExpr T s a none
-        let b ← checkExpr T s b (some a.ty)
+        let (a, b) ← checkBranches T s a s b expected
         return { ty := a.ty, typed := s!"(.cond {c.typed} {a.typed} {b.typed})",
                  readable := s!"if {c.readable} then {a.readable} else {b.readable}",
                  trivial := c.trivial && a.trivial && b.trivial,
@@ -524,7 +518,7 @@ mutual
       let typed := outs.foldr (fun (sp, o) acc => s!"(.{if sp then "spread" else "cons"} {o.typed} {acc})") ".nil"
       let readable := elemsText (outs.map fun (sp, o) => (sp, o.term))
       let (t, safe) := foldSafe (outs.map (·.2))
-      return { ty := .array τ, typed := s!"(.array {typed})", readable, trivial := t, safe }
+      return { ty := .array τ, typed := s!"(.array (τ := {T.print τ}) {typed})", readable, trivial := t, safe }
     | .record entries span => do
       match expected, entries with
       | some τ, _ => checkRecord T s entries span τ
@@ -534,6 +528,30 @@ mutual
         checkRecord T s entries span o.ty
       | none, _ => mismatch span "an object literal needs a known type here"
     | e => unsupportedTy e.span "this expression"
+
+  /-- The branches of `c ? a : b` at one type: the expected one, else the type of the
+  branch that is not a nullish literal (made optional for the other). -/
+  partial def checkBranches (T : Types) (sa : Scope) (a : Parse.Expr) (sb : Scope) (b : Parse.Expr)
+      (expected : Option Ty) : Checked (Out × Out) := do
+    if let some τ := expected then return (← checkExpr T sa a (some τ), ← checkExpr T sb b (some τ))
+    let nullish : Parse.Expr → Option Nullish
+      | .literal .undefined _ => some .undef
+      | .literal .null _ => some .null
+      | _ => none
+    match nullish a with
+    | some n => do
+      let b ← inferExpr T sb b none
+      let τ := match b.ty with
+        | .option m σ => .option (if m == n then m else .both) σ
+        | σ => .option n σ
+      return (← checkExpr T sa a (some τ), ← coerce T {} b τ)
+    | none => do
+      let a ← inferExpr T sa a none
+      let τ := match nullish b, a.ty with
+        | some n, .option m σ => .option (if m == n then m else .both) σ
+        | some n, σ => .option n σ
+        | none, σ => σ
+      return (← coerce T {} a τ, ← checkExpr T sb b (some τ))
 
   /-- An array method with a callback, or `includes`. -/
   partial def checkMethod (T : Types) (s : Scope) (recv : Parse.Expr) (m : String) (args : List Parse.Expr)
@@ -734,6 +752,9 @@ mutual
         let (esT, esS) := foldSafe (src.map (·.2))
         return { ty := τ, typed := s!"(.record {typedEntries} {sel.1} (by decide))",
                  readable := "(" ++ ", ".intercalate (sel.2 ++ ["()"]) ++ ")", trivial := esT, safe := esS }
+    | τ@(.option _ σ) => do
+      let r ← checkRecord T s entries span σ
+      coerce T span r τ
     | τ => mismatch span s!"an object literal where {τ.ts} is expected"
 end
 
@@ -857,8 +878,8 @@ mutual
       let v ← checkExpr T s e expected
       let rest ← checkStmts T (← declare s span x v.ty) result rest
       pure { typed := s!"(.const {leanString x} {v.typed}\n  {rest.typed})",
-             readable := fun i k => s!"let {ident x} := {v.readable}\n{i}{rest.readable i k}",
-             safe := fun i k => andText v.ok s!"let {ident x} := {v.readable}\n{i}{rest.safe i k}",
+             readable := fun i k => s!"let {ident x} : {T.lean v.ty} := {v.readable}\n{i}{rest.readable i k}",
+             safe := fun i k => andText v.ok s!"let {ident x} : {T.lean v.ty} := {v.readable}\n{i}{rest.safe i k}",
              trivial := v.trivial && rest.trivial,
              falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
     | .let_ true x annotation e span :: rest => do
@@ -867,8 +888,8 @@ mutual
       let s' ← declare s span x v.ty
       let rest ← checkStmts T { s' with mutables := x :: s'.mutables } result rest
       pure { typed := s!"(.let_ {leanString x} {v.typed}\n  {rest.typed})",
-             readable := fun i k => s!"let {ident x} := {v.readable}\n{i}{rest.readable i k}",
-             safe := fun i k => andText v.ok s!"let {ident x} := {v.readable}\n{i}{rest.safe i k}",
+             readable := fun i k => s!"let {ident x} : {T.lean v.ty} := {v.readable}\n{i}{rest.readable i k}",
+             safe := fun i k => andText v.ok s!"let {ident x} : {T.lean v.ty} := {v.readable}\n{i}{rest.safe i k}",
              trivial := v.trivial && rest.trivial,
              falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
     | .assign (.var x _) e span :: rest => do
@@ -877,8 +898,8 @@ mutual
       let v ← checkExpr T s e (some τ)
       let rest ← checkStmts T s result rest
       pure { typed := s!"(.assign {s.varPath j} {v.typed}\n  {rest.typed})",
-             readable := fun i k => s!"let {ident x} := {v.readable}\n{i}{rest.readable i k}",
-             safe := fun i k => andText v.ok s!"let {ident x} := {v.readable}\n{i}{rest.safe i k}",
+             readable := fun i k => s!"let {ident x} : {T.lean v.ty} := {v.readable}\n{i}{rest.readable i k}",
+             safe := fun i k => andText v.ok s!"let {ident x} : {T.lean v.ty} := {v.readable}\n{i}{rest.safe i k}",
              trivial := v.trivial && rest.trivial,
              falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
     | .continue_ _ :: rest => do

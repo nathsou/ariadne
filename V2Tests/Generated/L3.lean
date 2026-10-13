@@ -219,12 +219,12 @@ def body.«countTagged» : TStmts [sig.«indexOf», sig.«firstLarge», sig.«su
   (.ret (.var .here) .nil)))
 
 def body.«prefixUntil» : TStmts [sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«prefixUntil».params sig.«prefixUntil».result :=
-  (.let_ "out" (.array .nil)
+  (.let_ "out" (.array (τ := .number) .nil)
   (.forOf "x" (.var (.there ne.«xs».«out» .here))
   (.ite (.eq (by decide) (.var .here) (.var (.there ne.«stop».«x» (.there ne.«stop».«out» (.there ne.«stop».«xs» .here)))))
   (.brk .nil)
   .nil
-  (.assign (.there ne.«out».«x» .here) (.array (.spread (.var (.there ne.«out».«x» .here)) (.cons (.var .here) .nil)))
+  (.assign (.there ne.«out».«x» .here) (.array (τ := .number) (.spread (.var (.there ne.«out».«x» .here)) (.cons (.var .here) .nil)))
   .nil))
   (.ret (.var .here) .nil)))
 
@@ -293,7 +293,7 @@ def body.«perimeters» : TStmts [sig.«grid», sig.«bump», sig.«classify», 
 def body.«steps» : TStmts [sig.«perimeters», sig.«grid», sig.«bump», sig.«classify», sig.«largest», sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«steps».params sig.«steps».result :=
   (.let_ "count" (.num 0)
   (.let_ "k" (.var (.there ne.«n».«count» .here))
-  (.forOf "_" (.array (.cons (.num 1) (.cons (.num 2) (.cons (.num 3) (.cons (.num 4) (.cons (.num 5) (.cons (.num 6) (.cons (.num 7) (.cons (.num 8) .nil)))))))))
+  (.forOf "_" (.array (τ := .number) (.cons (.num 1) (.cons (.num 2) (.cons (.num 3) (.cons (.num 4) (.cons (.num 5) (.cons (.num 6) (.cons (.num 7) (.cons (.num 8) .nil)))))))))
   (.ite (.nle (.var (.there ne.«k».«_» .here)) (.num 1))
   (.brk .nil)
   .nil
@@ -327,11 +327,11 @@ theorem wf : typed.WF := by decide +kernel
 /-! ## Readable definitions -/
 
 def «sum» («xs» : List (Int)) : Int :=
-  let «total» := (0 : Int)
+  let «total» : Int := (0 : Int)
   V2.forIn «xs» (fun «x» next2' exit2' s2' =>
     let «total» := s2'.1
     let «xs» := s2'.2.1
-    let «total» := «total» + «x»
+    let «total» : Int := «total» + «x»
     next2' («total», «xs», ()))
     (fun s2' =>
     let «total» := s2'.1
@@ -340,11 +340,11 @@ def «sum» («xs» : List (Int)) : Int :=
 
 /-- The inputs on which `sum` stays within what the model covers. -/
 def «sum».safe («xs» : List (Int)) : Bool :=
-  let «total» := (0 : Int)
+  let «total» : Int := (0 : Int)
   V2.forIn «xs» (fun «x» next2' exit2' s2' =>
     let «total» := s2'.1
     let «xs» := s2'.2.1
-    V2.inRange («total» + «x») && (let «total» := «total» + «x»
+    V2.inRange («total» + «x») && (let «total» : Int := «total» + «x»
     next2' («total», «xs», ())))
     (fun s2' =>
     true)
@@ -377,7 +377,7 @@ def «indexOf» («xs» : List (JSString)) («target» : JSString) : Int :=
     («xs», «target», ())
 
 def «countTagged» («items» : List (ty.«Item».denote)) («tag» : JSString) : Int :=
-  let «n» := (0 : Int)
+  let «n» : Int := (0 : Int)
   V2.forIn «items» (fun «it» next2' exit2' s2' =>
     let «n» := s2'.1
     let «items» := s2'.2.1
@@ -385,7 +385,7 @@ def «countTagged» («items» : List (ty.«Item».denote)) («tag» : JSString)
     if !(List.any («it».2.2.1) (fun y' => y' == «tag»)) then
       next2' («n», «items», «tag», ())
     else
-      let «n» := «n» + (1 : Int)
+      let «n» : Int := «n» + (1 : Int)
       next2' («n», «items», «tag», ()))
     (fun s2' =>
     let «n» := s2'.1
@@ -394,7 +394,7 @@ def «countTagged» («items» : List (ty.«Item».denote)) («tag» : JSString)
 
 /-- The inputs on which `countTagged` stays within what the model covers. -/
 def «countTagged».safe («items» : List (ty.«Item».denote)) («tag» : JSString) : Bool :=
-  let «n» := (0 : Int)
+  let «n» : Int := (0 : Int)
   V2.forIn «items» (fun «it» next2' exit2' s2' =>
     let «n» := s2'.1
     let «items» := s2'.2.1
@@ -402,14 +402,14 @@ def «countTagged».safe («items» : List (ty.«Item».denote)) («tag» : JSSt
     if !(List.any («it».2.2.1) (fun y' => y' == «tag»)) then
       next2' («n», «items», «tag», ())
     else
-      V2.inRange («n» + (1 : Int)) && (let «n» := «n» + (1 : Int)
+      V2.inRange («n» + (1 : Int)) && (let «n» : Int := «n» + (1 : Int)
       next2' («n», «items», «tag», ())))
     (fun s2' =>
     true)
     («n», «items», «tag», ())
 
 def «prefixUntil» («xs» : List (Int)) («stop» : Int) : List (Int) :=
-  let «out» := []
+  let «out» : List (Int) := []
   V2.forIn «xs» (fun «x» next2' exit2' s2' =>
     let «out» := s2'.1
     let «xs» := s2'.2.1
@@ -417,7 +417,7 @@ def «prefixUntil» («xs» : List (Int)) («stop» : Int) : List (Int) :=
     if «x» == «stop» then
       exit2' («out», «xs», «stop», ())
     else
-      let «out» := «out» ++ ([«x»])
+      let «out» : List (Int) := «out» ++ ([«x»])
       next2' («out», «xs», «stop», ()))
     (fun s2' =>
     let «out» := s2'.1
@@ -425,17 +425,17 @@ def «prefixUntil» («xs» : List (Int)) («stop» : Int) : List (Int) :=
     («out», «xs», «stop», ())
 
 def «largest» («items» : List (ty.«Item».denote)) : Option (ty.«Item».denote) :=
-  let «best» := none
+  let «best» : Option (ty.«Item».denote) := none
   V2.forIn «items» (fun «it» next2' exit2' s2' =>
     let «best» := s2'.1
     let «items» := s2'.2.1
     match «best» with
     | none =>
-      let «best» := some «it»
+      let «best» : Option (ty.«Item».denote) := some «it»
       next2' («best», «items», ())
     | some «best» =>
       if decide ((«it».2.1) > («best».2.1)) then
-        let «best» := «it»
+        let «best» : ty.«Item».denote := «it»
         let «best» := some «best»
         next2' («best», «items», ())
       else
@@ -447,18 +447,18 @@ def «largest» («items» : List (ty.«Item».denote)) : Option (ty.«Item».de
     («best», «items», ())
 
 def «classify» («xs» : List (Int)) : JSString :=
-  let «pos» := (0 : Int)
-  let «neg» := (0 : Int)
+  let «pos» : Int := (0 : Int)
+  let «neg» : Int := (0 : Int)
   V2.forIn «xs» (fun «x» next2' exit2' s2' =>
     let «neg» := s2'.1
     let «pos» := s2'.2.1
     let «xs» := s2'.2.2.1
     if decide («x» > (0 : Int)) then
-      let «pos» := «pos» + (1 : Int)
+      let «pos» : Int := «pos» + (1 : Int)
       next2' («neg», «pos», «xs», ())
     else
       if decide («x» < (0 : Int)) then
-        let «neg» := «neg» + (1 : Int)
+        let «neg» : Int := «neg» + (1 : Int)
         next2' («neg», «pos», «xs», ())
       else
         next2' («neg», «pos», «xs», ()))
@@ -476,18 +476,18 @@ def «classify» («xs» : List (Int)) : JSString :=
 
 /-- The inputs on which `classify` stays within what the model covers. -/
 def «classify».safe («xs» : List (Int)) : Bool :=
-  let «pos» := (0 : Int)
-  let «neg» := (0 : Int)
+  let «pos» : Int := (0 : Int)
+  let «neg» : Int := (0 : Int)
   V2.forIn «xs» (fun «x» next2' exit2' s2' =>
     let «neg» := s2'.1
     let «pos» := s2'.2.1
     let «xs» := s2'.2.2.1
     if decide («x» > (0 : Int)) then
-      V2.inRange («pos» + (1 : Int)) && (let «pos» := «pos» + (1 : Int)
+      V2.inRange («pos» + (1 : Int)) && (let «pos» : Int := «pos» + (1 : Int)
       next2' («neg», «pos», «xs», ()))
     else
       if decide («x» < (0 : Int)) then
-        V2.inRange («neg» + (1 : Int)) && (let «neg» := «neg» + (1 : Int)
+        V2.inRange («neg» + (1 : Int)) && (let «neg» : Int := «neg» + (1 : Int)
         next2' («neg», «pos», «xs», ()))
       else
         next2' («neg», «pos», «xs», ()))
@@ -504,16 +504,16 @@ def «classify».safe («xs» : List (Int)) : Bool :=
     («neg», «pos», «xs», ())
 
 def «bump» («n» : Int) : Int :=
-  let «n» := «n» + (1 : Int)
+  let «n» : Int := «n» + (1 : Int)
   «n» * (2 : Int)
 
 /-- The inputs on which `bump` stays within what the model covers. -/
 def «bump».safe («n» : Int) : Bool :=
-  V2.inRange («n» + (1 : Int)) && (let «n» := «n» + (1 : Int)
+  V2.inRange («n» + (1 : Int)) && (let «n» : Int := «n» + (1 : Int)
   V2.inRange («n» * (2 : Int)))
 
 def «grid» («rows» : List (List (Int))) : Int :=
-  let «total» := (0 : Int)
+  let «total» : Int := (0 : Int)
   V2.forIn «rows» (fun «row» next2' exit2' s2' =>
     let «total» := s2'.1
     let «rows» := s2'.2.1
@@ -526,7 +526,7 @@ def «grid» («rows» : List (List (Int))) : Int :=
       if decide («j» > (2 : Int)) then
         exit4' («row», «total», «rows», ())
       else
-        let «total» := «total» + «v»
+        let «total» : Int := «total» + «v»
         next4' («row», «total», «rows», ()))
       (fun s4' =>
       let «total» := s4'.2.1
@@ -540,7 +540,7 @@ def «grid» («rows» : List (List (Int))) : Int :=
 
 /-- The inputs on which `grid` stays within what the model covers. -/
 def «grid».safe («rows» : List (List (Int))) : Bool :=
-  let «total» := (0 : Int)
+  let «total» : Int := (0 : Int)
   V2.forIn «rows» (fun «row» next2' exit2' s2' =>
     let «total» := s2'.1
     let «rows» := s2'.2.1
@@ -553,7 +553,7 @@ def «grid».safe («rows» : List (List (Int))) : Bool :=
       if decide («j» > (2 : Int)) then
         exit4' («row», «total», «rows», ())
       else
-        V2.inRange («total» + «v») && (let «total» := «total» + «v»
+        V2.inRange («total» + «v») && (let «total» : Int := «total» + «v»
         next4' («row», «total», «rows», ())))
       (fun s4' =>
       let «total» := s4'.2.1
@@ -565,19 +565,19 @@ def «grid».safe («rows» : List (List (Int))) : Bool :=
     («total», «rows», ())
 
 def «perimeters» («shapes» : List (ty.«Shape».denote)) : Int :=
-  let «t» := (0 : Int)
+  let «t» : Int := (0 : Int)
   V2.forIn «shapes» (fun «sh» next2' exit2' s2' =>
     let «t» := s2'.1
     let «shapes» := s2'.2.1
     match «sh» with
     | Sum.inl p' =>
       let «sh» := ((), p')
-      let «t» := «t» + ((6 : Int) * («sh».2.1))
+      let «t» : Int := «t» + ((6 : Int) * («sh».2.1))
       let «sh» := ((Sum.inl «sh».2) : ty.«Shape».denote)
       next2' («t», «shapes», ())
     | Sum.inr p' =>
       let «sh» := ((), p')
-      let «t» := «t» + ((4 : Int) * («sh».2.1))
+      let «t» : Int := «t» + ((4 : Int) * («sh».2.1))
       let «sh» := ((Sum.inr «sh».2) : ty.«Shape».denote)
       next2' («t», «shapes», ()))
     (fun s2' =>
@@ -587,19 +587,19 @@ def «perimeters» («shapes» : List (ty.«Shape».denote)) : Int :=
 
 /-- The inputs on which `perimeters` stays within what the model covers. -/
 def «perimeters».safe («shapes» : List (ty.«Shape».denote)) : Bool :=
-  let «t» := (0 : Int)
+  let «t» : Int := (0 : Int)
   V2.forIn «shapes» (fun «sh» next2' exit2' s2' =>
     let «t» := s2'.1
     let «shapes» := s2'.2.1
     match «sh» with
     | Sum.inl p' =>
       let «sh» := ((), p')
-      (V2.inRange ((6 : Int) * («sh».2.1)) && V2.inRange («t» + ((6 : Int) * («sh».2.1)))) && (let «t» := «t» + ((6 : Int) * («sh».2.1))
+      (V2.inRange ((6 : Int) * («sh».2.1)) && V2.inRange («t» + ((6 : Int) * («sh».2.1)))) && (let «t» : Int := «t» + ((6 : Int) * («sh».2.1))
       let «sh» := ((Sum.inl «sh».2) : ty.«Shape».denote)
       next2' («t», «shapes», ()))
     | Sum.inr p' =>
       let «sh» := ((), p')
-      (V2.inRange ((4 : Int) * («sh».2.1)) && V2.inRange («t» + ((4 : Int) * («sh».2.1)))) && (let «t» := «t» + ((4 : Int) * («sh».2.1))
+      (V2.inRange ((4 : Int) * («sh».2.1)) && V2.inRange («t» + ((4 : Int) * («sh».2.1)))) && (let «t» : Int := «t» + ((4 : Int) * («sh».2.1))
       let «sh» := ((Sum.inr «sh».2) : ty.«Shape».denote)
       next2' («t», «shapes», ())))
     (fun s2' =>
@@ -607,8 +607,8 @@ def «perimeters».safe («shapes» : List (ty.«Shape».denote)) : Bool :=
     («t», «shapes», ())
 
 def «steps» («n» : Int) : Int :=
-  let «count» := (0 : Int)
-  let «k» := «n»
+  let «count» : Int := (0 : Int)
+  let «k» : Int := «n»
   V2.forIn ([(1 : Int), (2 : Int), (3 : Int), (4 : Int), (5 : Int), (6 : Int), (7 : Int), (8 : Int)]) (fun «_» next2' exit2' s2' =>
     let «k» := s2'.1
     let «count» := s2'.2.1
@@ -616,8 +616,8 @@ def «steps» («n» : Int) : Int :=
     if decide («k» ≤ (1 : Int)) then
       exit2' («k», «count», «n», ())
     else
-      let «k» := if decide («k» > (100 : Int)) then «k» - (100 : Int) else «k» - (1 : Int)
-      let «count» := «count» + (1 : Int)
+      let «k» : Int := if decide («k» > (100 : Int)) then «k» - (100 : Int) else «k» - (1 : Int)
+      let «count» : Int := «count» + (1 : Int)
       next2' («k», «count», «n», ()))
     (fun s2' =>
     let «count» := s2'.2.1
@@ -626,8 +626,8 @@ def «steps» («n» : Int) : Int :=
 
 /-- The inputs on which `steps` stays within what the model covers. -/
 def «steps».safe («n» : Int) : Bool :=
-  let «count» := (0 : Int)
-  let «k» := «n»
+  let «count» : Int := (0 : Int)
+  let «k» : Int := «n»
   V2.forIn ([(1 : Int), (2 : Int), (3 : Int), (4 : Int), (5 : Int), (6 : Int), (7 : Int), (8 : Int)]) (fun «_» next2' exit2' s2' =>
     let «k» := s2'.1
     let «count» := s2'.2.1
@@ -635,15 +635,15 @@ def «steps».safe («n» : Int) : Bool :=
     if decide («k» ≤ (1 : Int)) then
       exit2' («k», «count», «n», ())
     else
-      (if decide («k» > (100 : Int)) then V2.inRange («k» - (100 : Int)) else V2.inRange («k» - (1 : Int))) && (let «k» := if decide («k» > (100 : Int)) then «k» - (100 : Int) else «k» - (1 : Int)
-      V2.inRange («count» + (1 : Int)) && (let «count» := «count» + (1 : Int)
+      (if decide («k» > (100 : Int)) then V2.inRange («k» - (100 : Int)) else V2.inRange («k» - (1 : Int))) && (let «k» : Int := if decide («k» > (100 : Int)) then «k» - (100 : Int) else «k» - (1 : Int)
+      V2.inRange («count» + (1 : Int)) && (let «count» : Int := «count» + (1 : Int)
       next2' («k», «count», «n», ()))))
     (fun s2' =>
     true)
     («k», «count», «n», ())
 
 def «score» («a» : Int) («b» : Int) : Int :=
-  let «s» := (0 : Int)
+  let «s» : Int := (0 : Int)
   let after2' := fun s2' =>
     let «s» := s2'.1
     let «a» := s2'.2.1
@@ -652,20 +652,20 @@ def «score» («a» : Int) («b» : Int) : Int :=
       let «s» := s4'.1
       «s»
     if decide («b» > (0 : Int)) then
-      let «s» := «s» * (2 : Int)
+      let «s» : Int := «s» * (2 : Int)
       after4' («s», «a», «b», ())
     else
       after4' («s», «a», «b», ())
   if decide («a» > (0 : Int)) then
-    let «s» := «s» + (1 : Int)
+    let «s» : Int := «s» + (1 : Int)
     after2' («s», «a», «b», ())
   else
-    let «s» := «s» - (1 : Int)
+    let «s» : Int := «s» - (1 : Int)
     after2' («s», «a», «b», ())
 
 /-- The inputs on which `score` stays within what the model covers. -/
 def «score».safe («a» : Int) («b» : Int) : Bool :=
-  let «s» := (0 : Int)
+  let «s» : Int := (0 : Int)
   let after2' := fun s2' =>
     let «s» := s2'.1
     let «a» := s2'.2.1
@@ -673,15 +673,15 @@ def «score».safe («a» : Int) («b» : Int) : Bool :=
     let after4' := fun s4' =>
       true
     if decide («b» > (0 : Int)) then
-      V2.inRange («s» * (2 : Int)) && (let «s» := «s» * (2 : Int)
+      V2.inRange («s» * (2 : Int)) && (let «s» : Int := «s» * (2 : Int)
       after4' («s», «a», «b», ()))
     else
       after4' («s», «a», «b», ())
   if decide («a» > (0 : Int)) then
-    V2.inRange («s» + (1 : Int)) && (let «s» := «s» + (1 : Int)
+    V2.inRange («s» + (1 : Int)) && (let «s» : Int := «s» + (1 : Int)
     after2' («s», «a», «b», ()))
   else
-    V2.inRange («s» - (1 : Int)) && (let «s» := «s» - (1 : Int)
+    V2.inRange («s» - (1 : Int)) && (let «s» : Int := «s» - (1 : Int)
     after2' («s», «a», «b», ()))
 
 /-! ## Denotation

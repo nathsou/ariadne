@@ -151,7 +151,7 @@ def «max» («a» : Int) («b» : Int) : Int :=
     «a»
 
 def «clamp» («x» : Int) («lo» : Int) («hi» : Int) : Int :=
-  let «y» := «max» «x» «lo»
+  let «y» : Int := «max» «x» «lo»
   if decide («y» > «hi») then «hi» else «y»
 
 def «sign» («n» : Int) : Int :=
@@ -164,12 +164,12 @@ def «sign» («n» : Int) : Int :=
       (1 : Int)
 
 def «describe» («n» : Int) («label» : JSString) : JSString :=
-  let «s» := «sign» «n»
-  let «prefix» := «label» ++ (js ": ")
+  let «s» : Int := «sign» «n»
+  let «prefix» : JSString := «label» ++ (js ": ")
   if «s» == (0 : Int) then
     «prefix» ++ (js "zero")
   else
-    let «kind» := if decide («s» > (0 : Int)) then (js "positive") else (js "negative")
+    let «kind» : JSString := if decide («s» > (0 : Int)) then (js "positive") else (js "negative")
     if («label» == (js "")) || (V2.strLe «label» (js "a")) then
       «kind»
     else
@@ -179,13 +179,13 @@ def «between» («lo» : JSString) («x» : JSString) («hi» : JSString) : Boo
   ((!(V2.strLt «x» «lo»)) && (V2.strLe «x» «hi»)) && («lo» != «hi»)
 
 def «polynomial» («x» : Int) : Int :=
-  let «square» := «x» * «x»
-  let «cube» := «square» * «x»
+  let «square» : Int := «x» * «x»
+  let «cube» : Int := «square» * «x»
   ((«cube» - ((2 : Int) * «square»)) + ((3 : Int) * «x»)) - (4 : Int)
 
 def «implies» («a» : Bool) («b» : Bool) : Bool :=
   if «a» then
-    let «t» := «b» == true
+    let «t» : Bool := «b» == true
     if «t» then
       true
     else

@@ -223,7 +223,7 @@ def «labelOf» («p» : ty.«Point».denote) : JSString :=
   match «p».2.2.1 with | some v' => v' | none => (js "unnamed")
 
 def «hasLabel» («p» : ty.«Point».denote) : Bool :=
-  let «l» := «p».2.2.1
+  let «l» : Option (JSString) := «p».2.2.1
   match «l» with
   | none =>
     false
@@ -242,8 +242,8 @@ def «describe» («f» : ty.«Fact».denote) : JSString :=
       (js "d")
     | Sum.inr p' =>
       let «f» := ((), p')
-      let «k» := «f».2.2.2.1
-      let «suffix» := match «k» with | none => (js "-") | some «k» => «k»
+      let «k» : Option (JSString) := «f».2.2.2.1
+      let «suffix» : JSString := match «k» with | none => (js "-") | some «k» => «k»
       if («f».2.2.1) == (3 : Fin 4) then
         (js "o!") ++ «suffix»
       else
@@ -290,7 +290,7 @@ def «orDefault» («c» : ty.«Choice».denote) : Int :=
     (-(1 : Int))
 
 def «pick» («a» : ty.«Point».denote) («b» : ty.«Point».denote) («preferA» : Bool) : ty.«Point».denote :=
-  let «chosen» := if «preferA» then «a» else «b»
+  let «chosen» : ty.«Point».denote := if «preferA» then «a» else «b»
   let r' := «chosen»; (r'.1, r'.2.1, (some (match «chosen».2.2.1 with | some v' => v' | none => (js "picked"))), ())
 
 def «rank» («f» : ty.«Fact».denote) : Int :=
@@ -318,20 +318,20 @@ def «isOpened» («f» : ty.«Fact».denote) : Bool :=
       true
 
 def «weight» («f» : ty.«Fact».denote) : Int :=
-  let «w» := (0 : Int)
+  let «w» : Int := (0 : Int)
   match «f» with
   | Sum.inl p' =>
-    let «w» := (1 : Int)
+    let «w» : Int := (1 : Int)
     «w»
   | Sum.inr p' =>
     match p' with
     | Sum.inl p' =>
       let «f» := ((), p')
-      let «w» := (5 : Int)
+      let «w» : Int := (5 : Int)
       let «f» := ((Sum.inr (Sum.inl «f».2)) : ty.«Fact».denote)
       «w»
     | Sum.inr p' =>
-      let «w» := (1 : Int)
+      let «w» : Int := (1 : Int)
       «w»
 
 /-! ## Denotation

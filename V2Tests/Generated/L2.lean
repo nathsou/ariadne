@@ -153,7 +153,7 @@ def body.«byName» : TStmts [sig.«bySize», sig.«allNamed», sig.«anyLarge»
   (.ret (.sorted (.var .here) (.arrow "a" "b" (.cond (.slt (.field (.var .here) (.there (.there .here)) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there .here)) (by decide))) (.negNum 1 (by decide)) (.cond (.sgt (.field (.var .here) (.there (.there .here)) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there .here)) (by decide))) (.num 1) (.num 0))))) .nil)
 
 def body.«ids» : TStmts [sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«ids».params sig.«ids».result :=
-  (.ret (.array (.cons (.num 0) (.spread (.map (.var .here) (.arrow "e" (.field (.var .here) .here (by decide)))) (.cons (.negNum 1 (by decide)) .nil)))) .nil)
+  (.ret (.array (τ := .number) (.cons (.num 0) (.spread (.map (.var .here) (.arrow "e" (.field (.var .here) .here (by decide)))) (.cons (.negNum 1 (by decide)) .nil)))) .nil)
 
 def body.«firstName» : TStmts [sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«firstName».params sig.«firstName».result :=
   (.const "e" (.index (.var .here) (.num 0))
@@ -192,7 +192,7 @@ def body.«flags» : TStmts [sig.«ranked», sig.«large», sig.«bySizeDesc», 
   (.ret (.map (.var .here) (.const (.bool false))) .nil)
 
 def body.«summaries» : TStmts [sig.«flags», sig.«ranked», sig.«large», sig.«bySizeDesc», sig.«isLarge», sig.«totalOf», sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«summaries».params sig.«summaries».result :=
-  (.ret (.map (.var .here) (.arrow "e" (.record (.cons "id" (.field (.var .here) .here (by decide)) (.cons "size" (.nadd (.field (.var .here) (.there .here) (by decide)) (.num 1)) (.cons "name" (.field (.var .here) (.there (.there .here)) (by decide)) (.cons "tags" (.array .nil) .nil)))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) .nil)))) (by decide)))) .nil)
+  (.ret (.map (.var .here) (.arrow "e" (.record (.cons "id" (.field (.var .here) .here (by decide)) (.cons "size" (.nadd (.field (.var .here) (.there .here) (by decide)) (.num 1)) (.cons "name" (.field (.var .here) (.there (.there .here)) (by decide)) (.cons "tags" (.array (τ := .string) .nil) .nil)))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) .nil)))) (by decide)))) .nil)
 
 abbrev sigs : Sigs := [sig.«summaries», sig.«flags», sig.«ranked», sig.«large», sig.«bySizeDesc», sig.«isLarge», sig.«totalOf», sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»]
 
@@ -274,7 +274,7 @@ def «ids» («es» : List (ty.«Entry».denote)) : List (Int) :=
   (0 : Int) :: ((List.map (fun «e» => «e».1) «es») ++ ([(-(1 : Int))]))
 
 def «firstName» («es» : List (ty.«Entry».denote)) : JSString :=
-  let «e» := V2.listIndex «es» (0 : Int)
+  let «e» : Option (ty.«Entry».denote) := V2.listIndex «es» (0 : Int)
   match «e» with
   | none =>
     (js "")
