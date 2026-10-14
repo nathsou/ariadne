@@ -8,3 +8,4 @@ import V2.Proof.Expr
 import V2.Proof.Stmt
 import V2.Proof.Trivial
 import V2.Proof.Adequacy
+import V2.Lib.Sort

@@ -18,7 +18,7 @@ structure FnsOK {Φ : Sigs} (prog : Program) (fs : Φ.denote) (ss : Φ.safety) :
   conv : ∀ {f s} (v : FVar Φ f s) (xs : s.params.denote) (vs : List JSValue), ArgsRep s.params vs xs →
     v.safe ss xs = true → ∃ w, Converges (fun n => call prog n f vs) (.ok w) ∧ s.result.Rep w (v.get fs xs)
   /-- Each function in scope is declared in the program (so its name evaluates to it). -/
-  mem : ∀ {f s} (v : FVar Φ f s), prog.any (·.name == f) = true
+  mem : ∀ {f s} (_v : FVar Φ f s), prog.any (·.name == f) = true
 
 theorem EnvRel.lookup_none : ∀ {Γ : Ctx} {env : Env} {ρ : Γ.denote} {f : String}, EnvRel Γ env ρ →
     (Γ.map Prod.fst).contains f = false → env.lookup f = none

@@ -37,7 +37,7 @@ theorem TProgram.fnsOK {prog : Program} : ∀ {Φ : Sigs} (P : TProgram Φ), Loo
     case refine_2 =>
       cases v with
       | there v => exact ih.mem v
-      | here => exact List.any_eq_true.mpr ⟨_, List.mem_of_find?_eq_some hfind, by simpa using List.find?_some hfind⟩
+      | here => exact List.any_eq_true.mpr ⟨_, List.mem_of_find?_eq_some hfind, by simp [List.find?_some hfind]⟩
     cases v with
     | there v => exact ih.conv v xs vs hargs hsafe
     | here =>
