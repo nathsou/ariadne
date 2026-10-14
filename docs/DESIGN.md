@@ -320,6 +320,33 @@ readable definitions and transfer them to every run.
 - Remaining superlinear terms per file: the static check compares names pairwise, and each source
   theorem resolves a function index of length up to the number of functions.
 
+## Why the kernel does not run the parser
+
+The parser and converter are trusted as compiled code: `ast` in a generated file is what the `ariadne`
+binary produced, not a theorem about the source text. Asking the kernel to check
+`Parse.parse source >>= convertProgram = .ok ast` was measured (Lean 4.35, `kernel_rfl`) and is not
+practical:
+
+| Input | Kernel time |
+| --- | --- |
+| lexing `basics.ts` (1.3 KB) | about 4 s |
+| parsing the first 98, 218 and 345 characters of `basics.ts` | 4 s, 13 s, 30 s |
+| parsing its first 643 characters | out of memory (8 GB) |
+| a loop of `peek`, `accept` and `identifier` over 200 and 400 tokens | 6 s, 18 s |
+
+The cost is in the parser's monadic style (state threaded through `StateT` over `Except`), which the
+kernel's call-by-need reduction evaluates in quadratic time with large intermediate terms; neither the
+token array (a list of remaining tokens costs the same) nor string comparisons are the cause. Drive's
+kernel files are 11 to 14 KB.
+
+What would work is a certificate the kernel checks rather than a computation it replays: the translator
+emits the tokens and a lossless parse tree (keeping parentheses and the source's forms), and the kernel
+checks that lexing the source gives the tokens, that printing the tree gives them back (a structural
+recursion, with precedence checked where a child has no parentheses), and that converting the tree gives
+`ast`. The printer would replace the parser in the trusted base, and be cross-checked against the
+TypeScript compiler as the parser is now. Until then, the trust in the front end rests on that
+cross-check (`scripts/crosscheck.mjs`), and on the regeneration check in CI.
+
 ## Practical rules
 
 - Anything the kernel must reduce must be structurally recursive, and must not recurse on large
