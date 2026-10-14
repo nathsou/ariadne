@@ -271,7 +271,445 @@ macro "errs'" hyp:ident : tactic => `(tactic|
   ((try clear ihS ihs ihL ihC hp) <;> constructor <;> (try intro r h) <;>
     simp [$hyp:ident, bind, Except.bind, Except.map, pure, Except.pure] at *))
 
+/-- Agreement at fuel `n`: for statement lists, one statement, loops and method calls
+(the four parts of `agree`, proved one fuel step at a time so that the step's cases
+are separate lemmas, checked in parallel). -/
+def AgS (p : Program) (n : Nat) : Prop :=
+  ∀ σ env ss, stmtsThisFree ss = true → Unique env →
+    execStmts p n (fill σ env) ss = (sExecStmts p n σ env ss).map RMap ∧
+    ∀ r, sExecStmts p n σ env ss = .ok r → Unique r.1.env
+
+def AgOne (p : Program) (n : Nat) (s : Stmt) : Prop :=
+  ∀ σ env, stmtThisFree s = true → Unique env →
+    execStmt p n (fill σ env) s = (sExecStmt p n σ env s).map RMap ∧
+    ∀ r, sExecStmt p n σ env s = .ok r → Unique r.1.env
+
+def AgL (p : Program) (n : Nat) : Prop :=
+  ∀ σ env bss body, stmtsThisFree body = true → (∀ bs ∈ bss, bs.all (·.1 != "this") = true) → Unique env →
+    loop p n (fill σ env) bss body = (sLoop p n σ env bss body).map RMap ∧
+    ∀ r, sLoop p n σ env bss body = .ok r → Unique r.1.env
+
+def AgC (p : Program) (n : Nat) : Prop := ∀ m σ vs, callState p n m (σ :: vs) = sCallState p n m σ vs
+
+def Ag (p : Program) (n : Nat) : Prop :=
+  AgS p n ∧
+    (∀ σ env s, stmtThisFree s = true → Unique env →
+      execStmt p n (fill σ env) s = (sExecStmt p n σ env s).map RMap ∧
+      ∀ r, sExecStmt p n σ env s = .ok r → Unique r.1.env) ∧
+    AgL p n ∧ AgC p n
+
 set_option maxHeartbeats 2000000 in
+set_option linter.unusedVariables false in
+theorem agree_stmts {p : Program} (hp : p.storeOk) {n : Nat} (ih : Ag p n) :
+    AgS p (n + 1) := by
+  obtain ⟨ihS, ihs, ihL, ihC⟩ := ih
+  unfold AgS AgL AgC at *
+  intro σ env ss hf hu
+  cases ss with
+  | nil =>
+    refine ⟨by simp [execStmts, sExecStmts, Except.map, RMap, Outcome.fill], ?_⟩
+    intro r h; simp [sExecStmts] at h; subst h; exact hu
+  | cons s rest =>
+    simp only [stmtsThisFree, Bool.and_eq_true] at hf
+    obtain ⟨h1, h2⟩ := ihs σ env s hf.1 hu
+    simp only [execStmts, sExecStmts]
+    rw [h1]
+    cases hs : sExecStmt p n σ env s with
+    | error e => exact ⟨by simp [Except.map, bind, Except.bind], by simp [bind, Except.bind]⟩
+    | ok r =>
+      obtain ⟨o, σ'⟩ := r
+      have hu' := h2 _ hs
+      cases o with
+      | normal e =>
+        obtain ⟨h3, h4⟩ := ihS σ' e rest hf.2 hu'
+        simp only [Except.map, bind, Except.bind, RMap, Outcome.fill]
+        exact ⟨h3, h4⟩
+      | returned v e =>
+        simp only [Except.map, bind, Except.bind, RMap, Outcome.fill]
+        exact ⟨trivial, fun r h => by cases h; exact hu'⟩
+      | broke e =>
+        simp only [Except.map, bind, Except.bind, RMap, Outcome.fill]
+        exact ⟨trivial, fun r h => by cases h; exact hu'⟩
+      | continued e =>
+        simp only [Except.map, bind, Except.bind, RMap, Outcome.fill]
+        exact ⟨trivial, fun r h => by cases h; exact hu'⟩
+
+set_option maxHeartbeats 2000000 in
+set_option linter.unusedVariables false in
+theorem agree_const {p : Program} (hp : p.storeOk) {n : Nat} (ih : Ag p n) (x : String) (e : Expr) :
+    AgOne p (n + 1) (.const x e) := by
+  obtain ⟨ihS, ihs, ihL, ihC⟩ := ih
+  unfold AgS AgOne AgL AgC at *
+  intro σ env hf hu
+  have hx : x ≠ "this" := by simpa [stmtThisFree] using hf
+  simp only [execStmt, sExecStmt]
+  cases he : evalExpr p n (fill σ env) e with
+  | error err => errs
+  | ok v =>
+    refine ⟨by simp [bind, Except.bind, pure, Except.pure, Except.map, RMap, Outcome.fill, fill_cons σ x v env hx], ?_⟩
+    intro r h; simp [bind, Except.bind, pure, Except.pure] at h; subst h; exact unique_cons x v env hx hu
+
+set_option maxHeartbeats 2000000 in
+set_option linter.unusedVariables false in
+theorem agree_let {p : Program} (hp : p.storeOk) {n : Nat} (ih : Ag p n) (x : String) (e : Expr) :
+    AgOne p (n + 1) (.let_ x e) := by
+  obtain ⟨ihS, ihs, ihL, ihC⟩ := ih
+  unfold AgS AgOne AgL AgC at *
+  intro σ env hf hu
+  have hx : x ≠ "this" := by simpa [stmtThisFree] using hf
+  simp only [execStmt, sExecStmt]
+  cases he : evalExpr p n (fill σ env) e with
+  | error err => errs
+  | ok v =>
+    refine ⟨by simp [bind, Except.bind, pure, Except.pure, Except.map, RMap, Outcome.fill, fill_cons σ x v env hx], ?_⟩
+    intro r h; simp [bind, Except.bind, pure, Except.pure] at h; subst h; exact unique_cons x v env hx hu
+
+set_option maxHeartbeats 2000000 in
+set_option linter.unusedVariables false in
+theorem agree_assign {p : Program} (hp : p.storeOk) {n : Nat} (ih : Ag p n) (x : String) (e : Expr) :
+    AgOne p (n + 1) (.assign x e) := by
+  obtain ⟨ihS, ihs, ihL, ihC⟩ := ih
+  unfold AgS AgOne AgL AgC at *
+  intro σ env hf hu
+  have hx : x ≠ "this" := by simpa [stmtThisFree] using hf
+  simp only [execStmt, sExecStmt]
+  cases he : evalExpr p n (fill σ env) e with
+  | error err => errs
+  | ok v =>
+    rw [show (do let v ← Except.ok v; return Outcome.normal (← assign x v (fill σ env)) : Except Fault Outcome) =
+        (do return Outcome.normal (← assign x v (fill σ env))) from rfl, assign_fill σ x v hx]
+    cases ha : assign x v env with
+    | error err => errs' ha
+    | ok env' =>
+      refine ⟨by simp [ha, bind, Except.bind, pure, Except.pure, Except.map, RMap, Outcome.fill], ?_⟩
+      intro r h; simp [ha, bind, Except.bind, pure, Except.pure] at h; subst h
+      exact unique_assign x v env env' ha hu
+
+set_option maxHeartbeats 2000000 in
+set_option linter.unusedVariables false in
+theorem agree_ret {p : Program} (hp : p.storeOk) {n : Nat} (ih : Ag p n) (e : Expr) :
+    AgOne p (n + 1) (.ret e) := by
+  obtain ⟨ihS, ihs, ihL, ihC⟩ := ih
+  unfold AgS AgOne AgL AgC at *
+  intro σ env hf hu
+  simp only [execStmt, sExecStmt]
+  cases he : evalExpr p n (fill σ env) e with
+  | error err => errs
+  | ok v =>
+    refine ⟨by simp [bind, Except.bind, pure, Except.pure, Except.map, RMap, Outcome.fill], ?_⟩
+    intro r h; simp [bind, Except.bind, pure, Except.pure] at h; subst h; exact hu
+
+set_option maxHeartbeats 2000000 in
+set_option linter.unusedVariables false in
+theorem agree_brk {p : Program} (hp : p.storeOk) {n : Nat} (ih : Ag p n) :
+    AgOne p (n + 1) (.brk) := by
+  obtain ⟨ihS, ihs, ihL, ihC⟩ := ih
+  unfold AgS AgOne AgL AgC at *
+  intro σ env hf hu
+  exact ⟨by simp [execStmt, sExecStmt, Except.map, RMap, Outcome.fill],
+    fun r h => by simp [sExecStmt] at h; subst h; exact hu⟩
+
+set_option maxHeartbeats 2000000 in
+set_option linter.unusedVariables false in
+theorem agree_cont {p : Program} (hp : p.storeOk) {n : Nat} (ih : Ag p n) :
+    AgOne p (n + 1) (.cont) := by
+  obtain ⟨ihS, ihs, ihL, ihC⟩ := ih
+  unfold AgS AgOne AgL AgC at *
+  intro σ env hf hu
+  exact ⟨by simp [execStmt, sExecStmt, Except.map, RMap, Outcome.fill],
+    fun r h => by simp [sExecStmt] at h; subst h; exact hu⟩
+
+set_option maxHeartbeats 2000000 in
+set_option linter.unusedVariables false in
+theorem agree_block {p : Program} (hp : p.storeOk) {n : Nat} (ih : Ag p n) (ss : List Stmt) :
+    AgOne p (n + 1) (.block ss) := by
+  obtain ⟨ihS, ihs, ihL, ihC⟩ := ih
+  unfold AgS AgOne AgL AgC at *
+  intro σ env hf hu
+  simp only [stmtThisFree] at hf
+  simp only [execStmt, sExecStmt]
+  obtain ⟨h1, h2⟩ := ihS σ env ss hf hu
+  rw [h1]
+  cases hs : sExecStmts p n σ env ss with
+  | error err => errs
+  | ok r =>
+    obtain ⟨o, σ'⟩ := r
+    refine ⟨by simp [bind, Except.bind, pure, Except.pure, Except.map, RMap, Outcome.restore_fill], ?_⟩
+    intro r h; simp [bind, Except.bind, pure, Except.pure] at h; subst h
+    have := h2 _ hs
+    cases o <;> simp [Outcome.restore, Outcome.env] at this ⊢ <;> first | exact this | exact unique_restore _ _ this
+
+set_option maxHeartbeats 2000000 in
+set_option linter.unusedVariables false in
+theorem agree_ite {p : Program} (hp : p.storeOk) {n : Nat} (ih : Ag p n) (c : Expr) (yes no : List Stmt) :
+    AgOne p (n + 1) (.ite c yes no) := by
+  obtain ⟨ihS, ihs, ihL, ihC⟩ := ih
+  unfold AgS AgOne AgL AgC at *
+  intro σ env hf hu
+  simp only [stmtThisFree, Bool.and_eq_true] at hf
+  simp only [execStmt, sExecStmt]
+  cases hc : evalExpr p n (fill σ env) c with
+  | error err => errs
+  | ok cv =>
+    have branchCase : ∀ b, stmtsThisFree b = true →
+        (do let o ← execStmts p n (fill σ env) b; pure (o.restore (fill σ env)) : Except Fault Outcome) =
+          (do let (o, σ') ← sExecStmts p n σ env b; pure (o.restore env, σ')).map RMap ∧
+        ∀ r, (do let (o, σ') ← sExecStmts p n σ env b; pure (o.restore env, σ') : Except Fault _) = .ok r →
+          Unique r.1.env := by
+      intro b hb
+      obtain ⟨h1, h2⟩ := ihS σ env b hb hu
+      rw [h1]
+      cases hs : sExecStmts p n σ env b with
+      | error err => errs
+      | ok r =>
+        obtain ⟨o, σ'⟩ := r
+        refine ⟨by simp [bind, Except.bind, pure, Except.pure, Except.map, RMap, Outcome.restore_fill], ?_⟩
+        intro r h; simp [bind, Except.bind, pure, Except.pure] at h; subst h
+        have := h2 _ hs
+        cases o <;> simp [Outcome.restore, Outcome.env] at this ⊢ <;>
+          first | exact this | exact unique_restore _ _ this
+    cases cv
+    case bool b =>
+      cases b
+      · exact branchCase no hf.2
+      · exact branchCase yes hf.1
+    all_goals errs
+
+set_option maxHeartbeats 2000000 in
+set_option linter.unusedVariables false in
+theorem agree_switch {p : Program} (hp : p.storeOk) {n : Nat} (ih : Ag p n) (e : Expr) (cases : List (Option Expr × List Stmt)) :
+    AgOne p (n + 1) (.switch e cases) := by
+  obtain ⟨ihS, ihs, ihL, ihC⟩ := ih
+  unfold AgS AgOne AgL AgC at *
+  intro σ env hf hu
+  simp only [stmtThisFree] at hf
+  simp only [execStmt, sExecStmt]
+  cases he : evalExpr p n (fill σ env) e with
+  | error err => errs
+  | ok v =>
+    simp only [bind, Except.bind]
+    cases hfc : findCase p n (fill σ env) v cases 0 with
+    | error err => errs
+    | ok oi =>
+      cases oi with
+      | none =>
+        exact ⟨by simp [Except.map, RMap, Outcome.fill], fun r h => by simp at h; subst h; exact hu⟩
+      | some i =>
+        obtain ⟨h1, h2⟩ := ihS σ env _ (casesThisFree_drop cases i hf) hu
+        simp only
+        rw [h1]
+        cases hs : sExecStmts p n σ env ((cases.drop i).flatMap (·.2)) with
+        | error err => errs
+        | ok r =>
+          obtain ⟨o, σ'⟩ := r
+          have hu' := h2 _ hs
+          simp only [Except.map, RMap]
+          rw [Outcome.restore_fill]
+          cases ho : o.restore env with
+          | broke e' =>
+            have : Unique e' := by
+              cases o <;> simp [Outcome.restore] at ho <;> subst ho <;> exact unique_restore _ _ hu'
+            exact ⟨by simp [Outcome.fill], fun r h => by simp at h; subst h; exact this⟩
+          | normal e' =>
+            have : Unique e' := by
+              cases o <;> simp [Outcome.restore] at ho <;> subst ho <;> exact unique_restore _ _ hu'
+            exact ⟨by simp [Outcome.fill], fun r h => by simp at h; subst h; exact this⟩
+          | continued e' =>
+            have : Unique e' := by
+              cases o <;> simp [Outcome.restore] at ho <;> subst ho <;> exact unique_restore _ _ hu'
+            exact ⟨by simp [Outcome.fill], fun r h => by simp at h; subst h; exact this⟩
+          | returned w e' =>
+            have : Unique e' := by
+              cases o <;> simp [Outcome.restore] at ho <;> (try subst ho) <;> simp_all [Outcome.env]
+            exact ⟨by simp [Outcome.fill], fun r h => by simp at h; subst h; exact this⟩
+
+set_option maxHeartbeats 2000000 in
+set_option linter.unusedVariables false in
+theorem agree_forOf {p : Program} (hp : p.storeOk) {n : Nat} (ih : Ag p n) (x : String) (e : Expr) (body : List Stmt) :
+    AgOne p (n + 1) (.forOf x e body) := by
+  obtain ⟨ihS, ihs, ihL, ihC⟩ := ih
+  unfold AgS AgOne AgL AgC at *
+  intro σ env hf hu
+  simp only [stmtThisFree, Bool.and_eq_true, bne_iff_ne, ne_eq] at hf
+  simp only [execStmt, sExecStmt]
+  cases he : evalExpr p n (fill σ env) e with
+  | error err => errs
+  | ok v =>
+    simp only [bind, Except.bind]
+    cases v
+    case array xs =>
+      exact ihL σ env _ body hf.2 (fun bs hb => by
+        simp only [List.mem_map] at hb; obtain ⟨w, _, rfl⟩ := hb; exact free_singleton x w hf.1) hu
+    all_goals errs
+
+set_option maxHeartbeats 2000000 in
+set_option linter.unusedVariables false in
+theorem agree_forEntries {p : Program} (hp : p.storeOk) {n : Nat} (ih : Ag p n) (i x : String) (e : Expr) (body : List Stmt) :
+    AgOne p (n + 1) (.forEntries i x e body) := by
+  obtain ⟨ihS, ihs, ihL, ihC⟩ := ih
+  unfold AgS AgOne AgL AgC at *
+  intro σ env hf hu
+  simp only [stmtThisFree, Bool.and_eq_true, bne_iff_ne, ne_eq] at hf
+  simp only [execStmt, sExecStmt]
+  cases he : evalExpr p n (fill σ env) e with
+  | error err => errs
+  | ok v =>
+    simp only [bind, Except.bind]
+    cases v
+    case array xs =>
+      exact ihL σ env _ body hf.2 (fun bs hb => by
+        simp only [entryBindings, List.mem_map] at hb; obtain ⟨w, _, rfl⟩ := hb
+        simp [hf.1.1, hf.1.2]) hu
+    all_goals errs
+
+set_option maxHeartbeats 2000000 in
+set_option linter.unusedVariables false in
+theorem agree_forRange {p : Program} (hp : p.storeOk) {n : Nat} (ih : Ag p n) (i k : String) (body : List Stmt) :
+    AgOne p (n + 1) (.forRange i k body) := by
+  obtain ⟨ihS, ihs, ihL, ihC⟩ := ih
+  unfold AgS AgOne AgL AgC at *
+  intro σ env hf hu
+  simp only [stmtThisFree, Bool.and_eq_true, bne_iff_ne, ne_eq] at hf
+  simp only [execStmt, sExecStmt]
+  cases hl : (fill σ env).lookup k with
+  | none => errs
+  | some v =>
+    cases v
+    case number m =>
+      exact ihL σ env _ body hf.2 (fun bs hb => by
+        simp only [rangeBindings, List.mem_map] at hb; obtain ⟨w, _, rfl⟩ := hb
+        exact free_singleton i _ hf.1) hu
+    all_goals errs
+
+set_option maxHeartbeats 2000000 in
+set_option linter.unusedVariables false in
+theorem agree_stateSet {p : Program} (hp : p.storeOk) {n : Nat} (ih : Ag p n) (f : String) (k v : Expr) :
+    AgOne p (n + 1) (.stateSet f k v) := by
+  obtain ⟨ihS, ihs, ihL, ihC⟩ := ih
+  unfold AgS AgOne AgL AgC at *
+  intro σ env hf hu
+  simp only [execStmt, sExecStmt]
+  refine ⟨?_, ?_⟩
+  · refine bind_map _ fun kvs _ => bind_map _ fun kv _ => bind_map _ fun key _ => bind_map _ fun w _ => ?_
+    show (setStateMap (fill σ env) f (mapPut kvs key w) >>= fun e => pure (Outcome.normal e)) =
+      (storeSet σ env f (mapPut kvs key w) >>= fun σ' => pure (Outcome.normal env, σ')).map RMap
+    rw [setStateMap_fill σ env f _ hu]
+    cases storeSet σ env f (mapPut kvs key w) <;> rfl
+  · refine bind_ok _ fun kvs _ => bind_ok _ fun kv _ => bind_ok _ fun key _ => bind_ok _ fun w _ => ?_
+    intro r h
+    cases hs : storeSet σ env f (mapPut kvs key w) <;> simp [hs, bind, Except.bind, pure, Except.pure] at h
+    subst h; exact hu
+
+set_option maxHeartbeats 2000000 in
+set_option linter.unusedVariables false in
+theorem agree_stateDelete {p : Program} (hp : p.storeOk) {n : Nat} (ih : Ag p n) (f : String) (k : Expr) :
+    AgOne p (n + 1) (.stateDelete f k) := by
+  obtain ⟨ihS, ihs, ihL, ihC⟩ := ih
+  unfold AgS AgOne AgL AgC at *
+  intro σ env hf hu
+  simp only [execStmt, sExecStmt]
+  refine ⟨?_, ?_⟩
+  · refine bind_map _ fun kvs _ => bind_map _ fun kv _ => bind_map _ fun key _ => ?_
+    show (setStateMap (fill σ env) f (mapDel kvs key) >>= fun e => pure (Outcome.normal e)) =
+      (storeSet σ env f (mapDel kvs key) >>= fun σ' => pure (Outcome.normal env, σ')).map RMap
+    rw [setStateMap_fill σ env f _ hu]
+    cases storeSet σ env f (mapDel kvs key) <;> rfl
+  · refine bind_ok _ fun kvs _ => bind_ok _ fun kv _ => bind_ok _ fun key _ => ?_
+    intro r h
+    cases hs : storeSet σ env f (mapDel kvs key) <;> simp [hs, bind, Except.bind, pure, Except.pure] at h
+    subst h; exact hu
+
+set_option maxHeartbeats 2000000 in
+set_option linter.unusedVariables false in
+theorem agree_callThis {p : Program} (hp : p.storeOk) {n : Nat} (ih : Ag p n) (m : String) (args : List Expr) :
+    AgOne p (n + 1) (.callThis m args) := by
+  obtain ⟨ihS, ihs, ihL, ihC⟩ := ih
+  unfold AgS AgOne AgL AgC at *
+  intro σ env hf hu
+  simp only [execStmt, sExecStmt, thisOf_fill, ihC]
+  refine ⟨?_, ?_⟩
+  · refine bind_map _ fun vs _ => bind_map _ fun t ht => bind_map _ fun r _ => ?_
+    obtain ⟨rfl, hpres⟩ := storeOf_ok ht
+    show (assign "this" r.2 (fill t env) >>= fun e => pure (Outcome.normal e)) = (pure (Outcome.normal env, r.2) : Except Fault _).map RMap
+    rw [assign_fill_this t r.2 env hu hpres]; rfl
+  · refine bind_ok _ fun vs _ => bind_ok _ fun t _ => bind_ok _ fun r _ => ?_
+    intro r' h; simp [pure, Except.pure] at h; subst h; exact hu
+
+set_option maxHeartbeats 2000000 in
+set_option linter.unusedVariables false in
+theorem agree_loop {p : Program} (hp : p.storeOk) {n : Nat} (ih : Ag p n) :
+    AgL p (n + 1) := by
+  obtain ⟨ihS, ihs, ihL, ihC⟩ := ih
+  unfold AgS AgL AgC at *
+  intro σ env bss body hf hb hu
+  cases bss with
+  | nil =>
+    refine ⟨by simp [loop, sLoop, Except.map, RMap, Outcome.fill], ?_⟩
+    intro r h; simp [sLoop] at h; subst h; exact hu
+  | cons bs rest =>
+    have hbs := hb bs (by simp)
+    have hrest : ∀ b ∈ rest, b.all (·.1 != "this") = true := fun b h => hb b (by simp [h])
+    simp only [loop, sLoop]
+    rw [← fill_append σ bs env hbs]
+    obtain ⟨h1, h2⟩ := ihS σ (bs ++ env) body hf (unique_append bs env hbs hu)
+    rw [h1]
+    cases hs : sExecStmts p n σ (bs ++ env) body with
+    | error e => exact ⟨by simp [Except.map, bind, Except.bind], by simp [bind, Except.bind]⟩
+    | ok r =>
+      obtain ⟨o, σ'⟩ := r
+      have hu' := h2 _ hs
+      simp only [Except.map, bind, Except.bind, RMap]
+      rw [Outcome.restore_fill]
+      cases ho : o.restore env with
+      | returned v e =>
+        have : Unique e := by
+          have := congrArg Outcome.env ho; cases o <;> simp_all [Outcome.restore, Outcome.env]
+        simp only [Outcome.fill]; exact ⟨trivial, fun r h => by cases h; exact this⟩
+      | broke e =>
+        have : Unique e := by
+          cases o <;> simp [Outcome.restore] at ho <;> subst ho <;> exact unique_restore _ _ hu'
+        simp only [Outcome.fill]; exact ⟨trivial, fun r h => by cases h; exact this⟩
+      | normal e =>
+        have : Unique e := by
+          cases o <;> simp [Outcome.restore] at ho <;> subst ho <;> exact unique_restore _ _ hu'
+        simp only [Outcome.fill]
+        exact ihL σ' e rest body hf hrest this
+      | continued e =>
+        have : Unique e := by
+          cases o <;> simp [Outcome.restore] at ho <;> subst ho <;> exact unique_restore _ _ hu'
+        simp only [Outcome.fill]
+        exact ihL σ' e rest body hf hrest this
+
+set_option maxHeartbeats 2000000 in
+set_option linter.unusedVariables false in
+theorem agree_call {p : Program} (hp : p.storeOk) {n : Nat} (ih : Ag p n) :
+    AgC p (n + 1) := by
+  obtain ⟨ihS, ihs, ihL, ihC⟩ := ih
+  unfold AgS AgL AgC at *
+  intro m σ vs
+  simp only [callState, sCallState]
+  cases hfind : p.find? (·.name == m) with
+  | none => rfl
+  | some fn =>
+    simp only
+    by_cases hm : fn.method = true
+    · obtain ⟨⟨rest, hps, hnt⟩, hbody⟩ := hp fn (List.mem_of_find?_eq_some hfind) hm
+      simp only [hm, ite_true]
+      have hfree := bindParams_free rest vs hnt
+      have henv : bindParams fn.params (σ :: vs) = fill σ (bindParams fn.params (.undefined :: vs)) := by
+        rw [hps]; simp only [bindParams]; rw [fill_cons_this, fill_free σ _ hfree]
+      have hu : Unique (bindParams fn.params (.undefined :: vs)) := by
+        rw [hps]; simp only [bindParams]
+        unfold Unique; simp only [List.map_cons, uniq, ite_true, bindParams_keys]
+        simpa using hnt
+      rw [henv, (ihS σ _ fn.body hbody hu).1]
+      cases sExecStmts p n σ (bindParams fn.params (.undefined :: vs)) fn.body with
+      | error e => rfl
+      | ok r =>
+        obtain ⟨o, σ'⟩ := r
+        cases o <;> simp [Except.map, RMap, Outcome.fill, bind, Except.bind, thisOf_fill]
+    · simp [hm]
+
 /-- Fuel by fuel, the value model running in `fill σ env` gives what the store model
 gives in `env` with store `σ`, its environments seen with `this` the final store. -/
 theorem agree {p : Program} (hp : p.storeOk) : ∀ n : Nat,
@@ -290,301 +728,25 @@ theorem agree {p : Program} (hp : p.storeOk) : ∀ n : Nat,
       fun _ _ _ _ _ _ _ => ⟨by simp [loop, sLoop, Except.map], by simp [sLoop]⟩,
       fun _ _ _ => by simp [callState, sCallState]⟩
   | n + 1 => by
-    obtain ⟨ihS, ihs, ihL, ihC⟩ := agree hp n
-    refine ⟨?stmts, ?stmt, ?loop, ?call⟩
-    case stmts =>
-      intro σ env ss hf hu
-      cases ss with
-      | nil =>
-        refine ⟨by simp [execStmts, sExecStmts, Except.map, RMap, Outcome.fill], ?_⟩
-        intro r h; simp [sExecStmts] at h; subst h; exact hu
-      | cons s rest =>
-        simp only [stmtsThisFree, Bool.and_eq_true] at hf
-        obtain ⟨h1, h2⟩ := ihs σ env s hf.1 hu
-        simp only [execStmts, sExecStmts]
-        rw [h1]
-        cases hs : sExecStmt p n σ env s with
-        | error e => exact ⟨by simp [Except.map, bind, Except.bind], by simp [bind, Except.bind]⟩
-        | ok r =>
-          obtain ⟨o, σ'⟩ := r
-          have hu' := h2 _ hs
-          cases o with
-          | normal e =>
-            obtain ⟨h3, h4⟩ := ihS σ' e rest hf.2 hu'
-            simp only [Except.map, bind, Except.bind, RMap, Outcome.fill]
-            exact ⟨h3, h4⟩
-          | returned v e =>
-            simp only [Except.map, bind, Except.bind, RMap, Outcome.fill]
-            exact ⟨trivial, fun r h => by cases h; exact hu'⟩
-          | broke e =>
-            simp only [Except.map, bind, Except.bind, RMap, Outcome.fill]
-            exact ⟨trivial, fun r h => by cases h; exact hu'⟩
-          | continued e =>
-            simp only [Except.map, bind, Except.bind, RMap, Outcome.fill]
-            exact ⟨trivial, fun r h => by cases h; exact hu'⟩
-    case stmt =>
-      intro σ env s hf hu
-      cases s with
-      | const x e =>
-        have hx : x ≠ "this" := by simpa [stmtThisFree] using hf
-        simp only [execStmt, sExecStmt]
-        cases he : evalExpr p n (fill σ env) e with
-        | error err => errs
-        | ok v =>
-          refine ⟨by simp [bind, Except.bind, pure, Except.pure, Except.map, RMap, Outcome.fill, fill_cons σ x v env hx], ?_⟩
-          intro r h; simp [bind, Except.bind, pure, Except.pure] at h; subst h; exact unique_cons x v env hx hu
-      | let_ x e =>
-        have hx : x ≠ "this" := by simpa [stmtThisFree] using hf
-        simp only [execStmt, sExecStmt]
-        cases he : evalExpr p n (fill σ env) e with
-        | error err => errs
-        | ok v =>
-          refine ⟨by simp [bind, Except.bind, pure, Except.pure, Except.map, RMap, Outcome.fill, fill_cons σ x v env hx], ?_⟩
-          intro r h; simp [bind, Except.bind, pure, Except.pure] at h; subst h; exact unique_cons x v env hx hu
-      | assign x e =>
-        have hx : x ≠ "this" := by simpa [stmtThisFree] using hf
-        simp only [execStmt, sExecStmt]
-        cases he : evalExpr p n (fill σ env) e with
-        | error err => errs
-        | ok v =>
-          rw [show (do let v ← Except.ok v; return Outcome.normal (← assign x v (fill σ env)) : Except Fault Outcome) =
-              (do return Outcome.normal (← assign x v (fill σ env))) from rfl, assign_fill σ x v hx]
-          cases ha : assign x v env with
-          | error err => errs' ha
-          | ok env' =>
-            refine ⟨by simp [ha, bind, Except.bind, pure, Except.pure, Except.map, RMap, Outcome.fill], ?_⟩
-            intro r h; simp [ha, bind, Except.bind, pure, Except.pure] at h; subst h
-            exact unique_assign x v env env' ha hu
-      | ret e =>
-        simp only [execStmt, sExecStmt]
-        cases he : evalExpr p n (fill σ env) e with
-        | error err => errs
-        | ok v =>
-          refine ⟨by simp [bind, Except.bind, pure, Except.pure, Except.map, RMap, Outcome.fill], ?_⟩
-          intro r h; simp [bind, Except.bind, pure, Except.pure] at h; subst h; exact hu
-      | brk =>
-        exact ⟨by simp [execStmt, sExecStmt, Except.map, RMap, Outcome.fill],
-          fun r h => by simp [sExecStmt] at h; subst h; exact hu⟩
-      | cont =>
-        exact ⟨by simp [execStmt, sExecStmt, Except.map, RMap, Outcome.fill],
-          fun r h => by simp [sExecStmt] at h; subst h; exact hu⟩
-      | block ss =>
-        simp only [stmtThisFree] at hf
-        simp only [execStmt, sExecStmt]
-        obtain ⟨h1, h2⟩ := ihS σ env ss hf hu
-        rw [h1]
-        cases hs : sExecStmts p n σ env ss with
-        | error err => errs
-        | ok r =>
-          obtain ⟨o, σ'⟩ := r
-          refine ⟨by simp [bind, Except.bind, pure, Except.pure, Except.map, RMap, Outcome.restore_fill], ?_⟩
-          intro r h; simp [bind, Except.bind, pure, Except.pure] at h; subst h
-          have := h2 _ hs
-          cases o <;> simp [Outcome.restore, Outcome.env] at this ⊢ <;> first | exact this | exact unique_restore _ _ this
-      | ite c yes no =>
-        simp only [stmtThisFree, Bool.and_eq_true] at hf
-        simp only [execStmt, sExecStmt]
-        cases hc : evalExpr p n (fill σ env) c with
-        | error err => errs
-        | ok cv =>
-          have branchCase : ∀ b, stmtsThisFree b = true →
-              (do let o ← execStmts p n (fill σ env) b; pure (o.restore (fill σ env)) : Except Fault Outcome) =
-                (do let (o, σ') ← sExecStmts p n σ env b; pure (o.restore env, σ')).map RMap ∧
-              ∀ r, (do let (o, σ') ← sExecStmts p n σ env b; pure (o.restore env, σ') : Except Fault _) = .ok r →
-                Unique r.1.env := by
-            intro b hb
-            obtain ⟨h1, h2⟩ := ihS σ env b hb hu
-            rw [h1]
-            cases hs : sExecStmts p n σ env b with
-            | error err => errs
-            | ok r =>
-              obtain ⟨o, σ'⟩ := r
-              refine ⟨by simp [bind, Except.bind, pure, Except.pure, Except.map, RMap, Outcome.restore_fill], ?_⟩
-              intro r h; simp [bind, Except.bind, pure, Except.pure] at h; subst h
-              have := h2 _ hs
-              cases o <;> simp [Outcome.restore, Outcome.env] at this ⊢ <;>
-                first | exact this | exact unique_restore _ _ this
-          cases cv
-          case bool b =>
-            cases b
-            · exact branchCase no hf.2
-            · exact branchCase yes hf.1
-          all_goals errs
-      | switch e cases =>
-        simp only [stmtThisFree] at hf
-        simp only [execStmt, sExecStmt]
-        cases he : evalExpr p n (fill σ env) e with
-        | error err => errs
-        | ok v =>
-          simp only [bind, Except.bind]
-          cases hfc : findCase p n (fill σ env) v cases 0 with
-          | error err => errs
-          | ok oi =>
-            cases oi with
-            | none =>
-              exact ⟨by simp [Except.map, RMap, Outcome.fill], fun r h => by simp at h; subst h; exact hu⟩
-            | some i =>
-              obtain ⟨h1, h2⟩ := ihS σ env _ (casesThisFree_drop cases i hf) hu
-              simp only
-              rw [h1]
-              cases hs : sExecStmts p n σ env ((cases.drop i).flatMap (·.2)) with
-              | error err => errs
-              | ok r =>
-                obtain ⟨o, σ'⟩ := r
-                have hu' := h2 _ hs
-                simp only [Except.map, RMap]
-                rw [Outcome.restore_fill]
-                cases ho : o.restore env with
-                | broke e' =>
-                  have : Unique e' := by
-                    cases o <;> simp [Outcome.restore] at ho <;> subst ho <;> exact unique_restore _ _ hu'
-                  exact ⟨by simp [Outcome.fill], fun r h => by simp at h; subst h; exact this⟩
-                | normal e' =>
-                  have : Unique e' := by
-                    cases o <;> simp [Outcome.restore] at ho <;> subst ho <;> exact unique_restore _ _ hu'
-                  exact ⟨by simp [Outcome.fill], fun r h => by simp at h; subst h; exact this⟩
-                | continued e' =>
-                  have : Unique e' := by
-                    cases o <;> simp [Outcome.restore] at ho <;> subst ho <;> exact unique_restore _ _ hu'
-                  exact ⟨by simp [Outcome.fill], fun r h => by simp at h; subst h; exact this⟩
-                | returned w e' =>
-                  have : Unique e' := by
-                    cases o <;> simp [Outcome.restore] at ho <;> (try subst ho) <;> simp_all [Outcome.env]
-                  exact ⟨by simp [Outcome.fill], fun r h => by simp at h; subst h; exact this⟩
-      | forOf x e body =>
-        simp only [stmtThisFree, Bool.and_eq_true, bne_iff_ne, ne_eq] at hf
-        simp only [execStmt, sExecStmt]
-        cases he : evalExpr p n (fill σ env) e with
-        | error err => errs
-        | ok v =>
-          simp only [bind, Except.bind]
-          cases v
-          case array xs =>
-            exact ihL σ env _ body hf.2 (fun bs hb => by
-              simp only [List.mem_map] at hb; obtain ⟨w, _, rfl⟩ := hb; exact free_singleton x w hf.1) hu
-          all_goals errs
-      | forEntries i x e body =>
-        simp only [stmtThisFree, Bool.and_eq_true, bne_iff_ne, ne_eq] at hf
-        simp only [execStmt, sExecStmt]
-        cases he : evalExpr p n (fill σ env) e with
-        | error err => errs
-        | ok v =>
-          simp only [bind, Except.bind]
-          cases v
-          case array xs =>
-            exact ihL σ env _ body hf.2 (fun bs hb => by
-              simp only [entryBindings, List.mem_map] at hb; obtain ⟨w, _, rfl⟩ := hb
-              simp [hf.1.1, hf.1.2]) hu
-          all_goals errs
-      | forRange i k body =>
-        simp only [stmtThisFree, Bool.and_eq_true, bne_iff_ne, ne_eq] at hf
-        simp only [execStmt, sExecStmt]
-        cases hl : (fill σ env).lookup k with
-        | none => errs
-        | some v =>
-          cases v
-          case number m =>
-            exact ihL σ env _ body hf.2 (fun bs hb => by
-              simp only [rangeBindings, List.mem_map] at hb; obtain ⟨w, _, rfl⟩ := hb
-              exact free_singleton i _ hf.1) hu
-          all_goals errs
-      | stateSet f k v =>
-        simp only [execStmt, sExecStmt]
-        refine ⟨?_, ?_⟩
-        · refine bind_map _ fun kvs _ => bind_map _ fun kv _ => bind_map _ fun key _ => bind_map _ fun w _ => ?_
-          show (setStateMap (fill σ env) f (mapPut kvs key w) >>= fun e => pure (Outcome.normal e)) =
-            (storeSet σ env f (mapPut kvs key w) >>= fun σ' => pure (Outcome.normal env, σ')).map RMap
-          rw [setStateMap_fill σ env f _ hu]
-          cases storeSet σ env f (mapPut kvs key w) <;> rfl
-        · refine bind_ok _ fun kvs _ => bind_ok _ fun kv _ => bind_ok _ fun key _ => bind_ok _ fun w _ => ?_
-          intro r h
-          cases hs : storeSet σ env f (mapPut kvs key w) <;> simp [hs, bind, Except.bind, pure, Except.pure] at h
-          subst h; exact hu
-      | stateDelete f k =>
-        simp only [execStmt, sExecStmt]
-        refine ⟨?_, ?_⟩
-        · refine bind_map _ fun kvs _ => bind_map _ fun kv _ => bind_map _ fun key _ => ?_
-          show (setStateMap (fill σ env) f (mapDel kvs key) >>= fun e => pure (Outcome.normal e)) =
-            (storeSet σ env f (mapDel kvs key) >>= fun σ' => pure (Outcome.normal env, σ')).map RMap
-          rw [setStateMap_fill σ env f _ hu]
-          cases storeSet σ env f (mapDel kvs key) <;> rfl
-        · refine bind_ok _ fun kvs _ => bind_ok _ fun kv _ => bind_ok _ fun key _ => ?_
-          intro r h
-          cases hs : storeSet σ env f (mapDel kvs key) <;> simp [hs, bind, Except.bind, pure, Except.pure] at h
-          subst h; exact hu
-      | callThis m args =>
-        simp only [execStmt, sExecStmt, thisOf_fill, ihC]
-        refine ⟨?_, ?_⟩
-        · refine bind_map _ fun vs _ => bind_map _ fun t ht => bind_map _ fun r _ => ?_
-          obtain ⟨rfl, hpres⟩ := storeOf_ok ht
-          show (assign "this" r.2 (fill t env) >>= fun e => pure (Outcome.normal e)) = (pure (Outcome.normal env, r.2) : Except Fault _).map RMap
-          rw [assign_fill_this t r.2 env hu hpres]; rfl
-        · refine bind_ok _ fun vs _ => bind_ok _ fun t _ => bind_ok _ fun r _ => ?_
-          intro r' h; simp [pure, Except.pure] at h; subst h; exact hu
-
-    case loop =>
-      intro σ env bss body hf hb hu
-      cases bss with
-      | nil =>
-        refine ⟨by simp [loop, sLoop, Except.map, RMap, Outcome.fill], ?_⟩
-        intro r h; simp [sLoop] at h; subst h; exact hu
-      | cons bs rest =>
-        have hbs := hb bs (by simp)
-        have hrest : ∀ b ∈ rest, b.all (·.1 != "this") = true := fun b h => hb b (by simp [h])
-        simp only [loop, sLoop]
-        rw [← fill_append σ bs env hbs]
-        obtain ⟨h1, h2⟩ := ihS σ (bs ++ env) body hf (unique_append bs env hbs hu)
-        rw [h1]
-        cases hs : sExecStmts p n σ (bs ++ env) body with
-        | error e => exact ⟨by simp [Except.map, bind, Except.bind], by simp [bind, Except.bind]⟩
-        | ok r =>
-          obtain ⟨o, σ'⟩ := r
-          have hu' := h2 _ hs
-          simp only [Except.map, bind, Except.bind, RMap]
-          rw [Outcome.restore_fill]
-          cases ho : o.restore env with
-          | returned v e =>
-            have : Unique e := by
-              have := congrArg Outcome.env ho; cases o <;> simp_all [Outcome.restore, Outcome.env]
-            simp only [Outcome.fill]; exact ⟨trivial, fun r h => by cases h; exact this⟩
-          | broke e =>
-            have : Unique e := by
-              cases o <;> simp [Outcome.restore] at ho <;> subst ho <;> exact unique_restore _ _ hu'
-            simp only [Outcome.fill]; exact ⟨trivial, fun r h => by cases h; exact this⟩
-          | normal e =>
-            have : Unique e := by
-              cases o <;> simp [Outcome.restore] at ho <;> subst ho <;> exact unique_restore _ _ hu'
-            simp only [Outcome.fill]
-            exact ihL σ' e rest body hf hrest this
-          | continued e =>
-            have : Unique e := by
-              cases o <;> simp [Outcome.restore] at ho <;> subst ho <;> exact unique_restore _ _ hu'
-            simp only [Outcome.fill]
-            exact ihL σ' e rest body hf hrest this
-    case call =>
-      intro m σ vs
-      simp only [callState, sCallState]
-      cases hfind : p.find? (·.name == m) with
-      | none => rfl
-      | some fn =>
-        simp only
-        by_cases hm : fn.method = true
-        · obtain ⟨⟨rest, hps, hnt⟩, hbody⟩ := hp fn (List.mem_of_find?_eq_some hfind) hm
-          simp only [hm, ite_true]
-          have hfree := bindParams_free rest vs hnt
-          have henv : bindParams fn.params (σ :: vs) = fill σ (bindParams fn.params (.undefined :: vs)) := by
-            rw [hps]; simp only [bindParams]; rw [fill_cons_this, fill_free σ _ hfree]
-          have hu : Unique (bindParams fn.params (.undefined :: vs)) := by
-            rw [hps]; simp only [bindParams]
-            unfold Unique; simp only [List.map_cons, uniq, ite_true, bindParams_keys]
-            simpa using hnt
-          rw [henv, (ihS σ _ fn.body hbody hu).1]
-          cases sExecStmts p n σ (bindParams fn.params (.undefined :: vs)) fn.body with
-          | error e => rfl
-          | ok r =>
-            obtain ⟨o, σ'⟩ := r
-            cases o <;> simp [Except.map, RMap, Outcome.fill, bind, Except.bind, thisOf_fill]
-        · simp [hm]
+    have ih : Ag p n := agree hp n
+    refine ⟨agree_stmts hp ih, ?_, agree_loop hp ih, agree_call hp ih⟩
+    intro σ env s
+    cases s with
+    | const x e => exact agree_const hp ih x e σ env
+    | let_ x e => exact agree_let hp ih x e σ env
+    | assign x e => exact agree_assign hp ih x e σ env
+    | ret e => exact agree_ret hp ih e σ env
+    | brk => exact agree_brk hp ih σ env
+    | cont => exact agree_cont hp ih σ env
+    | block ss => exact agree_block hp ih ss σ env
+    | ite c yes no => exact agree_ite hp ih c yes no σ env
+    | switch e cases => exact agree_switch hp ih e cases σ env
+    | forOf x e body => exact agree_forOf hp ih x e body σ env
+    | forEntries i x e body => exact agree_forEntries hp ih i x e body σ env
+    | forRange i k body => exact agree_forRange hp ih i k body σ env
+    | stateSet f k v => exact agree_stateSet hp ih f k v σ env
+    | stateDelete f k => exact agree_stateDelete hp ih f k σ env
+    | callThis m args => exact agree_callThis hp ih m args σ env
 
 theorem Program.storeOk_of_scoped {p : Program} (h : p.scoped = true) : p.storeOk := by
   intro fn hfn hm
