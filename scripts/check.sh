@@ -25,6 +25,13 @@ lake exe audit
 (cd examples/quickstart && lake build Quickstart audit && lake exe audit)
 
 "$js" scripts/differential.mjs
+# The same calls on the fixtures as a production build emits them (bundled, minified).
+if [ "$js" = bun ]; then
+  compiled=$(mktemp -d)
+  bun build Tests/fixtures/*.ts --root Tests/fixtures --outdir "$compiled" --target browser --format esm --minify >/dev/null
+  bun scripts/differential.mjs Tests/fixtures 300 "$compiled"
+  rm -rf "$compiled"
+fi
 "$js" scripts/negative.mjs
 "$js" scripts/fuzz-model.mjs
 

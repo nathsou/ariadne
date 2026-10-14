@@ -16,6 +16,11 @@ Ariadne follows semantic versioning: a minor version may change generated files 
 **Trusted base**
 - `trusted.lock`: `UnOp.inc`, `UnOp.dec` and their evaluation.
 
+**Checks**
+- `scripts/differential.mjs` takes a directory of compiled modules: JavaScript then runs the file as a
+  production build emits it (bundled, minified) while the model runs the source. CI runs the fixtures both
+  ways.
+
 ## v0.4.0
 
 **Language**
