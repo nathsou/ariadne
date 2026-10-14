@@ -204,17 +204,24 @@ theorem «f».source (x : Int) … (vs : List JSValue) (args : ArgsRep …) (saf
     ∃ w, Converges (fun fuel => run ast fuel "f" vs) (.ok w) ∧ Ty.Rep … w («f» x …) := …
 ```
 
-Each named type of the source also gets readable Lean names, so that statements about the definitions
-read like the TypeScript:
+Each named type of the source also gets readable Lean names, so that the definitions and statements about
+them read like the TypeScript:
 - an alias, written as the Lean type it denotes (`Floor := Int × JSString × … × Unit`, `Commit := Fin 4`);
-- an accessor per record field (`fl.seed`);
+- for a record, an accessor per field (`fl.seed`), a constructor (`Candidate.mk index committed …`) and a
+  setter per field (`a.withName n`, for `{ ...a, name: n }`), unless a field takes one of those names;
 - a constant per literal of a literal union (`Commit.bad`);
-- for a union of records, a payload type per variant (`CopyFact.Variant.opened`, with its accessors) and
-  a constructor (`CopyFact.opened f`, `CopyFact.damaged`).
+- for a union of records, a constructor per variant, usable as a pattern: of nothing (`CopyFact.damaged`),
+  of the variant's one field (`Choice.true order`), or of its payload (`CopyFact.opened f`, where
+  `f : CopyFact.Variant.opened` has accessors).
 
 They are reducible definitions in the simp set `readable`, so `simp [readable]` unfolds them to the
-projections, numerals and injections the readable definitions use. A type whose name a function or method
-uses gets none.
+projections, numerals and injections of the denotation. A type whose name a function or method uses gets
+none.
+
+The readable definitions use these names: fields are read and set by name, a `switch` is a `match` on the
+union's constructors that binds the narrowed variable to its payload, and a loop's or a join point's state
+is taken apart by a pattern (`fun (older, notOwner, …, ()) => …`). All of it is definitionally the
+denotation, which is what the per-file `body_eq` checks.
 
 Each `body_eq` compares one function's denotation with its readable definition, with callees taken as
 the earlier readable definitions, so no check unfolds a callee. The source theorems mention only `run`,

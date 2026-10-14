@@ -362,17 +362,29 @@ abbrev «Spot» : Type := JSString × JSString × (Option JSString) × (Option J
 @[reducible, readable] def «Spot».«name» (r : «Spot») : JSString := r.2.1
 @[reducible, readable] def «Spot».«pos» (r : «Spot») : Option JSString := r.2.2.1
 @[reducible, readable] def «Spot».«made» (r : «Spot») : Option JSString := r.2.2.2.1
+@[reducible, readable] def «Spot».mk («want» : JSString) («name» : JSString) («pos» : Option JSString) («made» : Option JSString) : «Spot» := («want», «name», «pos», «made», ())
+@[reducible, readable] def «Spot».«withWant» (r : «Spot») (v : JSString) : «Spot» := (v, r.2)
+@[reducible, readable] def «Spot».«withName» (r : «Spot») (v : JSString) : «Spot» := (r.1, v, r.2.2)
+@[reducible, readable] def «Spot».«withPos» (r : «Spot») (v : Option JSString) : «Spot» := (r.1, r.2.1, v, r.2.2.2)
+@[reducible, readable] def «Spot».«withMade» (r : «Spot») (v : Option JSString) : «Spot» := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
 
 /-- The source's `Link`. -/
 abbrev «Link» : Type := JSString × (Option JSString) × (Option JSString) × Unit
 @[reducible, readable] def «Link».«parent» (r : «Link») : JSString := r.1
 @[reducible, readable] def «Link».«prev» (r : «Link») : Option JSString := r.2.1
 @[reducible, readable] def «Link».«next» (r : «Link») : Option JSString := r.2.2.1
+@[reducible, readable] def «Link».mk («parent» : JSString) («prev» : Option JSString) («next» : Option JSString) : «Link» := («parent», «prev», «next», ())
+@[reducible, readable] def «Link».«withParent» (r : «Link») (v : JSString) : «Link» := (v, r.2)
+@[reducible, readable] def «Link».«withPrev» (r : «Link») (v : Option JSString) : «Link» := (r.1, v, r.2.2)
+@[reducible, readable] def «Link».«withNext» (r : «Link») (v : Option JSString) : «Link» := (r.1, r.2.1, v, r.2.2.2)
 
 /-- The source's `Ends`. -/
 abbrev «Ends» : Type := JSString × JSString × Unit
 @[reducible, readable] def «Ends».«first» (r : «Ends») : JSString := r.1
 @[reducible, readable] def «Ends».«last» (r : «Ends») : JSString := r.2.1
+@[reducible, readable] def «Ends».mk («first» : JSString) («last» : JSString) : «Ends» := («first», «last», ())
+@[reducible, readable] def «Ends».«withFirst» (r : «Ends») (v : JSString) : «Ends» := (v, r.2)
+@[reducible, readable] def «Ends».«withLast» (r : «Ends») (v : JSString) : «Ends» := (r.1, v, r.2.2)
 
 /-- The source's `Tree`. -/
 abbrev «Tree» : Type := (List (JSString × «Spot»)) × (List (JSString × «Link»)) × (List (JSString × «Ends»)) × (List (JSString × Bool)) × (List (JSString × Bool)) × (List (JSString × JSString)) × (List (JSString × JSString)) × (List (JSString × Bool)) × Unit
@@ -384,6 +396,15 @@ abbrev «Tree» : Type := (List (JSString × «Spot»)) × (List (JSString × «
 @[reducible, readable] def «Tree».«purged» (r : «Tree») : List (JSString × JSString) := r.2.2.2.2.2.1
 @[reducible, readable] def «Tree».«buried» (r : «Tree») : List (JSString × JSString) := r.2.2.2.2.2.2.1
 @[reducible, readable] def «Tree».«changed» (r : «Tree») : List (JSString × Bool) := r.2.2.2.2.2.2.2.1
+@[reducible, readable] def «Tree».mk («spots» : List (JSString × «Spot»)) («links» : List (JSString × «Link»)) («ends» : List (JSString × «Ends»)) («detached» : List (JSString × Bool)) («waiting» : List (JSString × Bool)) («purged» : List (JSString × JSString)) («buried» : List (JSString × JSString)) («changed» : List (JSString × Bool)) : «Tree» := («spots», «links», «ends», «detached», «waiting», «purged», «buried», «changed», ())
+@[reducible, readable] def «Tree».«withSpots» (r : «Tree») (v : List (JSString × «Spot»)) : «Tree» := (v, r.2)
+@[reducible, readable] def «Tree».«withLinks» (r : «Tree») (v : List (JSString × «Link»)) : «Tree» := (r.1, v, r.2.2)
+@[reducible, readable] def «Tree».«withEnds» (r : «Tree») (v : List (JSString × «Ends»)) : «Tree» := (r.1, r.2.1, v, r.2.2.2)
+@[reducible, readable] def «Tree».«withDetached» (r : «Tree») (v : List (JSString × Bool)) : «Tree» := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
+@[reducible, readable] def «Tree».«withWaiting» (r : «Tree») (v : List (JSString × Bool)) : «Tree» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, v, r.2.2.2.2.2)
+@[reducible, readable] def «Tree».«withPurged» (r : «Tree») (v : List (JSString × JSString)) : «Tree» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, v, r.2.2.2.2.2.2)
+@[reducible, readable] def «Tree».«withBuried» (r : «Tree») (v : List (JSString × JSString)) : «Tree» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, r.2.2.2.2.2.1, v, r.2.2.2.2.2.2.2)
+@[reducible, readable] def «Tree».«withChanged» (r : «Tree») (v : List (JSString × Bool)) : «Tree» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, r.2.2.2.2.2.1, r.2.2.2.2.2.2.1, v, r.2.2.2.2.2.2.2.2)
 
 noncomputable def sig.«root» : Sig := { name := "root", params := [], result := .string, trivial := true }
 noncomputable def sig.«newer» : Sig := { name := "newer", params := [("s", (.option .undef .string)), ("stamp", .string)], result := .bool, trivial := true }
@@ -936,74 +957,54 @@ def «orNone» («s» : Option JSString) : JSString :=
   match «s» with | none => (js "") | some «s» => «s»
 
 def «key» («s» : «Spot») («id» : JSString) : JSString :=
-  let «pos» : Option JSString := «s».2.2.1
-  let «stamp» : JSString := match «pos» with | none => «orNone» («s».2.2.2.1) | some «pos» => «pos»
+  let «pos» : Option JSString := «s».«pos»
+  let «stamp» : JSString := match «pos» with | none => «orNone» «s».«made» | some «pos» => «pos»
   («stamp» ++ ([10] : JSString)) ++ «id»
 
 def «new Tree»  : «Tree» :=
-  (([] : List (JSString × «Spot»)), ([] : List (JSString × «Link»)), ([] : List (JSString × «Ends»)), ([] : List (JSString × Bool)), ([] : List (JSString × Bool)), ([] : List (JSString × JSString)), ([] : List (JSString × JSString)), ([] : List (JSString × Bool)), ())
+  («Tree».mk ([] : List (JSString × «Spot»)) ([] : List (JSString × «Link»)) ([] : List (JSString × «Ends»)) ([] : List (JSString × Bool)) ([] : List (JSString × Bool)) ([] : List (JSString × JSString)) ([] : List (JSString × JSString)) ([] : List (JSString × Bool)))
 
 def «cycleOf» («this» : «Tree») («id» : JSString) : List JSString :=
-  let «steps» : Int := (List.length «this».1 : Int)
+  let «steps» : Int := (List.length «this».«spots» : Int)
   let «cur» : JSString := «id»
   let «on» : Bool := false
-  Ariadne.forIn (Ariadne.range «steps») (fun «_step» next2' exit2' s2' =>
-    let «on» := s2'.1
-    let «cur» := s2'.2.1
-    let «steps» := s2'.2.2.1
-    let «this» := s2'.2.2.2.1
-    let «id» := s2'.2.2.2.2.1
-    let «s» : Option «Spot» := Ariadne.mapGet «this».1 «cur»
+  Ariadne.forIn (Ariadne.range «steps») (fun «_step» next2' exit2' («on», «cur», «steps», «this», «id», ()) =>
+    let «s» : Option «Spot» := Ariadne.mapGet «this».«spots» «cur»
     match «s» with
     | none =>
       []
     | some «s» =>
-      let «cur» : JSString := «s».1
+      let «cur» : JSString := «s».«want»
       if «cur» == «id» then
         let «on» : Bool := true
-        let «s» := some «s»
         exit2' («on», «cur», «steps», «this», «id», ())
       else
-        let «s» := some «s»
         next2' («on», «cur», «steps», «this», «id», ()))
-    (fun s2' =>
-    let «on» := s2'.1
-    let «cur» := s2'.2.1
-    let «steps» := s2'.2.2.1
-    let «this» := s2'.2.2.2.1
-    let «id» := s2'.2.2.2.2.1
+    (fun («on», «cur», «steps», «this», «id», ()) =>
     if !«on» then
       []
     else
       let «path» : List JSString := [«id»]
       let «cur» : JSString := «id»
-      Ariadne.forIn (Ariadne.range «steps») (fun «_step» next6' exit6' s6' =>
-        let «path» := s6'.1
-        let «on» := s6'.2.1
-        let «cur» := s6'.2.2.1
-        let «steps» := s6'.2.2.2.1
-        let «this» := s6'.2.2.2.2.1
-        let «id» := s6'.2.2.2.2.2.1
-        let «s» : Option «Spot» := Ariadne.mapGet «this».1 «cur»
+      Ariadne.forIn (Ariadne.range «steps») (fun «_step» next6' exit6' («path», «on», «cur», «steps», «this», «id», ()) =>
+        let «s» : Option «Spot» := Ariadne.mapGet «this».«spots» «cur»
         match «s» with
         | none =>
           «path»
         | some «s» =>
-          if («s».1) == «id» then
+          if «s».«want» == «id» then
             «path»
           else
-            let «cur» : JSString := «s».1
+            let «cur» : JSString := «s».«want»
             let «path» : List JSString := «path» ++ ([«cur»])
-            let «s» := some «s»
             next6' («path», «on», «cur», «steps», «this», «id», ()))
-        (fun s6' =>
-        let «path» := s6'.1
+        (fun («path», _, _, _, _, _, ()) =>
         «path»)
         («path», «on», «cur», «steps», «this», «id», ()))
     («on», «cur», «steps», «this», «id», ())
 
 def «keyOf» («this» : «Tree») («id» : JSString) : JSString :=
-  let «s» : Option «Spot» := Ariadne.mapGet «this».1 «id»
+  let «s» : Option «Spot» := Ariadne.mapGet «this».«spots» «id»
   match «s» with
   | none =>
     (js "")
@@ -1011,166 +1012,137 @@ def «keyOf» («this» : «Tree») («id» : JSString) : JSString :=
     «key» «s» «id»
 
 def «setNext» («this» : «Tree») («id» : JSString) («next» : Option JSString) : «Tree» :=
-  let «l» : Option «Link» := Ariadne.mapGet «this».2.1 «id»
+  let «l» : Option «Link» := Ariadne.mapGet «this».«links» «id»
   match «l» with
   | none =>
     «this»
   | some «l» =>
-    let «this» : «Tree» := («this».1, Ariadne.mapPut «this».2.1 «id» (let r' := «l»; (r'.1, r'.2.1, «next», ())), «this».2.2)
+    let «this» : «Tree» := «this».«withLinks» (Ariadne.mapPut «this».«links» «id» ((«l».«withNext» «next»)))
     «this»
 
 def «setPrev» («this» : «Tree») («id» : JSString) («prev» : Option JSString) : «Tree» :=
-  let «l» : Option «Link» := Ariadne.mapGet «this».2.1 «id»
+  let «l» : Option «Link» := Ariadne.mapGet «this».«links» «id»
   match «l» with
   | none =>
     «this»
   | some «l» =>
-    let «this» : «Tree» := («this».1, Ariadne.mapPut «this».2.1 «id» (let r' := «l»; (r'.1, «prev», r'.2.2.1, ())), «this».2.2)
+    let «this» : «Tree» := «this».«withLinks» (Ariadne.mapPut «this».«links» «id» ((«l».«withPrev» «prev»)))
     «this»
 
 def «unlink» («this» : «Tree») («id» : JSString) : «Tree» :=
-  let «l» : Option «Link» := Ariadne.mapGet «this».2.1 «id»
+  let «l» : Option «Link» := Ariadne.mapGet «this».«links» «id»
   match «l» with
   | none =>
     «this»
   | some «l» =>
-    let «this» : «Tree» := («this».1, Ariadne.mapDel «this».2.1 «id», «this».2.2)
-    let «e» : Option «Ends» := Ariadne.mapGet «this».2.2.1 («l».1)
+    let «this» : «Tree» := «this».«withLinks» (Ariadne.mapDel «this».«links» «id»)
+    let «e» : Option «Ends» := Ariadne.mapGet «this».«ends» «l».«parent»
     match «e» with
     | none =>
       «this»
     | some «e» =>
-      let «prev» : JSString := «orNone» («l».2.1)
-      let «next» : JSString := «orNone» («l».2.2.1)
+      let «prev» : JSString := «orNone» «l».«prev»
+      let «next» : JSString := «orNone» «l».«next»
       if («prev» == (js "")) && («next» == (js "")) then
-        let «this» : «Tree» := («this».1, «this».2.1, Ariadne.mapDel «this».2.2.1 («l».1), «this».2.2.2)
-        let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, Ariadne.mapDel «this».2.2.2.2.1 («l».1), «this».2.2.2.2.2)
+        let «this» : «Tree» := «this».«withEnds» (Ariadne.mapDel «this».«ends» «l».«parent»)
+        let «this» : «Tree» := «this».«withWaiting» (Ariadne.mapDel «this».«waiting» «l».«parent»)
         «this»
       else
-        let after8' := fun s8' =>
-          let «next» := s8'.1
-          let «prev» := s8'.2.1
-          let «e» := s8'.2.2.1
-          let «l» := s8'.2.2.2.1
-          let «this» := s8'.2.2.2.2.1
-          let «id» := s8'.2.2.2.2.2.1
-          let after10' := fun s10' =>
-            let «next» := s10'.1
-            let «prev» := s10'.2.1
-            let «e» := s10'.2.2.1
-            let «l» := s10'.2.2.2.1
-            let «this» := s10'.2.2.2.2.1
-            let «this» : «Tree» := («this».1, «this».2.1, Ariadne.mapPut «this».2.2.1 («l».1) (((if «prev» == (js "") then «next» else «e».1), (if «next» == (js "") then «prev» else «e».2.1), ())), «this».2.2.2)
+        let after8' := fun («next», «prev», «e», «l», «this», «id», ()) =>
+          let after10' := fun («next», «prev», «e», «l», «this», _, ()) =>
+            let «this» : «Tree» := «this».«withEnds» (Ariadne.mapPut «this».«ends» «l».«parent» («Ends».mk (if «prev» == (js "") then «next» else «e».«first») (if «next» == (js "") then «prev» else «e».«last»)))
             «this»
           if «next» != (js "") then
-            let «this» : «Tree» := «setPrev» «this» «next» («l».2.1)
+            let «this» : «Tree» := «setPrev» «this» «next» «l».«prev»
             after10' («next», «prev», «e», «l», «this», «id», ())
           else
             after10' («next», «prev», «e», «l», «this», «id», ())
         if «prev» != (js "") then
-          let «this» : «Tree» := «setNext» «this» «prev» («l».2.2.1)
+          let «this» : «Tree» := «setNext» «this» «prev» «l».«next»
           after8' («next», «prev», «e», «l», «this», «id», ())
         else
           after8' («next», «prev», «e», «l», «this», «id», ())
 
 def «bury» («this» : «Tree») («id» : JSString) («by» : JSString) : «Tree» :=
-  let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.2.1 «id» true, «this».2.2.2.2.2.2.2.2)
-  let after2' := fun s2' =>
-    let «this» := s2'.1
+  let «this» : «Tree» := «this».«withChanged» (Ariadne.mapPut «this».«changed» «id» true)
+  let after2' := fun («this», _, _, ()) =>
     «this»
   if «by» == (js "") then
-    let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, Ariadne.mapDel «this».2.2.2.2.2.2.1 «id», «this».2.2.2.2.2.2.2)
+    let «this» : «Tree» := «this».«withBuried» (Ariadne.mapDel «this».«buried» «id»)
     after2' («this», «id», «by», ())
   else
-    let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.1 «id» «by», «this».2.2.2.2.2.2.2)
+    let «this» : «Tree» := «this».«withBuried» (Ariadne.mapPut «this».«buried» «id» «by»)
     after2' («this», «id», «by», ())
 
 def «loadSpot» («this» : «Tree») («id» : JSString) («s» : «Spot») : «Tree» :=
   if «id» == «root» then
     «this»
   else
-    let «this» : «Tree» := (Ariadne.mapPut «this».1 «id» «s», «this».2)
-    let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.2.1 «id» true, «this».2.2.2.2.2.2.2.2)
+    let «this» : «Tree» := «this».«withSpots» (Ariadne.mapPut «this».«spots» «id» «s»)
+    let «this» : «Tree» := «this».«withChanged» (Ariadne.mapPut «this».«changed» «id» true)
     «this»
 
 def «loadPurge» («this» : «Tree») («id» : JSString) («stamp» : JSString) : «Tree» :=
-  let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.1 «id» «stamp», «this».2.2.2.2.2.2)
+  let «this» : «Tree» := «this».«withPurged» (Ariadne.mapPut «this».«purged» «id» «stamp»)
   «this»
 
 def «spotOf» («this» : «Tree») («id» : JSString) : Option «Spot» :=
-  Ariadne.mapGet «this».1 «id»
+  Ariadne.mapGet «this».«spots» «id»
 
 def «parentOf» («this» : «Tree») («id» : JSString) : JSString :=
-  let «l» : Option «Link» := Ariadne.mapGet «this».2.1 «id»
-  match «l» with | none => (js "") | some «l» => «l».1
+  let «l» : Option «Link» := Ariadne.mapGet «this».«links» «id»
+  match «l» with | none => (js "") | some «l» => «l».«parent»
 
 def «burialOf» («this» : «Tree») («id» : JSString) : JSString :=
   let «p» : JSString := «parentOf» «this» «id»
-  let «above» : JSString := if («p» == (js "")) || («p» == «root») then (js "") else «orNone» (if (Ariadne.mapGet «this».1 «p»).isSome then Ariadne.mapGet «this».2.2.2.2.2.2.1 «p» else Ariadne.mapGet «this».2.2.2.2.2.1 «p»)
-  «minStamp» («orNone» (Ariadne.mapGet «this».2.2.2.2.2.1 «id»)) «above»
+  let «above» : JSString := if («p» == (js "")) || («p» == «root») then (js "") else «orNone» (if (Ariadne.mapGet «this».«spots» «p»).isSome then Ariadne.mapGet «this».«buried» «p» else Ariadne.mapGet «this».«purged» «p»)
+  «minStamp» («orNone» (Ariadne.mapGet «this».«purged» «id»)) «above»
 
 def «firstChild» («this» : «Tree») («id» : JSString) : JSString :=
-  let «e» : Option «Ends» := Ariadne.mapGet «this».2.2.1 «id»
-  match «e» with | none => (js "") | some «e» => «e».1
+  let «e» : Option «Ends» := Ariadne.mapGet «this».«ends» «id»
+  match «e» with | none => (js "") | some «e» => «e».«first»
 
 def «lastChild» («this» : «Tree») («id» : JSString) : JSString :=
-  let «e» : Option «Ends» := Ariadne.mapGet «this».2.2.1 «id»
-  match «e» with | none => (js "") | some «e» => «e».2.1
+  let «e» : Option «Ends» := Ariadne.mapGet «this».«ends» «id»
+  match «e» with | none => (js "") | some «e» => «e».«last»
 
 def «link» («this» : «Tree») («id» : JSString) («parent» : JSString) : «Tree» :=
   let «last» : JSString := «lastChild» «this» «parent»
-  let after2' := fun s2' =>
-    let «last» := s2'.1
-    let «this» := s2'.2.1
-    let «id» := s2'.2.2.1
-    let «parent» := s2'.2.2.2.1
-    let after4' := fun s4' =>
-      let «this» := s4'.2.1
+  let after2' := fun («last», «this», «id», «parent», ()) =>
+    let after4' := fun (_, «this», _, _, ()) =>
       «this»
-    if ((«parent» != «root») && (!((Ariadne.mapGet «this».1 «parent»).isSome))) && (!((Ariadne.mapGet «this».2.2.2.2.2.1 «parent»).isSome)) then
-      let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, Ariadne.mapPut «this».2.2.2.2.1 «parent» true, «this».2.2.2.2.2)
+    if ((«parent» != «root») && (!((Ariadne.mapGet «this».«spots» «parent»).isSome))) && (!((Ariadne.mapGet «this».«purged» «parent»).isSome)) then
+      let «this» : «Tree» := «this».«withWaiting» (Ariadne.mapPut «this».«waiting» «parent» true)
       after4' («last», «this», «id», «parent», ())
     else
       after4' («last», «this», «id», «parent», ())
   if «last» == (js "") then
-    let «this» : «Tree» := («this».1, «this».2.1, Ariadne.mapPut «this».2.2.1 «parent» ((«id», «id», ())), «this».2.2.2)
-    let «this» : «Tree» := («this».1, Ariadne.mapPut «this».2.1 «id» ((«parent», none, none, ())), «this».2.2)
+    let «this» : «Tree» := «this».«withEnds» (Ariadne.mapPut «this».«ends» «parent» («Ends».mk «id» «id»))
+    let «this» : «Tree» := «this».«withLinks» (Ariadne.mapPut «this».«links» «id» («Link».mk «parent» none none))
     after2' («last», «this», «id», «parent», ())
   else
     let «this» : «Tree» := «setNext» «this» «last» (some «id»)
-    let «this» : «Tree» := («this».1, Ariadne.mapPut «this».2.1 «id» ((«parent», (some «last»), none, ())), «this».2.2)
-    let «this» : «Tree» := («this».1, «this».2.1, Ariadne.mapPut «this».2.2.1 «parent» (((«firstChild» «this» «parent»), «id», ())), «this».2.2.2)
+    let «this» : «Tree» := «this».«withLinks» (Ariadne.mapPut «this».«links» «id» («Link».mk «parent» (some «last») none))
+    let «this» : «Tree» := «this».«withEnds» (Ariadne.mapPut «this».«ends» «parent» («Ends».mk («firstChild» «this» «parent») «id»))
     after2' («last», «this», «id», «parent», ())
 
 def «loadLink» («this» : «Tree») («id» : JSString) («parent» : JSString) : «Tree» :=
-  if (!((Ariadne.mapGet «this».1 «id»).isSome)) || ((Ariadne.mapGet «this».2.1 «id»).isSome) then
+  if (!((Ariadne.mapGet «this».«spots» «id»).isSome)) || ((Ariadne.mapGet «this».«links» «id»).isSome) then
     «this»
   else
     let «this» : «Tree» := «link» «this» «id» «parent»
     «this»
 
 def «nextSibling» («this» : «Tree») («id» : JSString) : JSString :=
-  let «l» : Option «Link» := Ariadne.mapGet «this».2.1 «id»
-  match «l» with | none => (js "") | some «l» => «orNone» («l».2.2.1)
+  let «l» : Option «Link» := Ariadne.mapGet «this».«links» «id»
+  match «l» with | none => (js "") | some «l» => «orNone» «l».«next»
 
 def «settle» («this» : «Tree») («start» : JSString) («all» : Bool) : «Tree» :=
-  let «steps» : Int := ((2 : Int) * (List.length «this».2.1 : Int)) + (2 : Int)
+  let «steps» : Int := ((2 : Int) * (List.length «this».«links» : Int)) + (2 : Int)
   let «cur» : JSString := «start»
   let «down» : Bool := true
-  Ariadne.forIn (Ariadne.range «steps») (fun «_step» next2' exit2' s2' =>
-    let «down» := s2'.1
-    let «cur» := s2'.2.1
-    let «steps» := s2'.2.2.1
-    let «this» := s2'.2.2.2.1
-    let «start» := s2'.2.2.2.2.1
-    let «all» := s2'.2.2.2.2.2.1
-    let after4' := fun s4' =>
-      let «down» := s4'.2.1
-      let «cur» := s4'.2.2.1
-      let «steps» := s4'.2.2.2.1
-      let «this» := s4'.2.2.2.2.1
-      let «start» := s4'.2.2.2.2.2.1
-      let «all» := s4'.2.2.2.2.2.2.1
+  Ariadne.forIn (Ariadne.range «steps») (fun «_step» next2' exit2' («down», «cur», «steps», «this», «start», «all», ()) =>
+    let after4' := fun (_, «down», «cur», «steps», «this», «start», «all», ()) =>
       if «cur» == «start» then
         «this»
       else
@@ -1184,15 +1156,7 @@ def «settle» («this» : «Tree») («start» : JSString) («all» : Bool) : �
           next2' («down», «cur», «steps», «this», «start», «all», ())
     if «down» then
       let «deeper» : Bool := true
-      let after6' := fun s6' =>
-        let «deeper» := s6'.1
-        let «_step» := s6'.2.1
-        let «down» := s6'.2.2.1
-        let «cur» := s6'.2.2.2.1
-        let «steps» := s6'.2.2.2.2.1
-        let «this» := s6'.2.2.2.2.2.1
-        let «start» := s6'.2.2.2.2.2.2.1
-        let «all» := s6'.2.2.2.2.2.2.2.1
+      let after6' := fun («deeper», «_step», «down», «cur», «steps», «this», «start», «all», ()) =>
         let «first» : JSString := if «deeper» then «firstChild» «this» «cur» else (js "")
         if «first» != (js "") then
           let «cur» : JSString := «first»
@@ -1200,9 +1164,9 @@ def «settle» («this» : «Tree») («start» : JSString) («all» : Bool) : �
         else
           let «down» : Bool := false
           after4' («_step», «down», «cur», «steps», «this», «start», «all», ())
-      if («cur» != «root») && ((Ariadne.mapGet «this».1 «cur»).isSome) then
+      if («cur» != «root») && ((Ariadne.mapGet «this».«spots» «cur»).isSome) then
         let «by» : JSString := «burialOf» «this» «cur»
-        if «by» != («orNone» (Ariadne.mapGet «this».2.2.2.2.2.2.1 «cur»)) then
+        if «by» != («orNone» (Ariadne.mapGet «this».«buried» «cur»)) then
           let «this» : «Tree» := «bury» «this» «cur» «by»
           after6' («deeper», «_step», «down», «cur», «steps», «this», «start», «all», ())
         else
@@ -1212,30 +1176,17 @@ def «settle» («this» : «Tree») («start» : JSString) («all» : Bool) : �
         after6' («deeper», «_step», «down», «cur», «steps», «this», «start», «all», ())
     else
       after4' («_step», «down», «cur», «steps», «this», «start», «all», ()))
-    (fun s2' =>
-    let «this» := s2'.2.2.2.1
+    (fun (_, _, _, «this», _, _, ()) =>
     «this»)
     («down», «cur», «steps», «this», «start», «all», ())
 
 /-- The inputs on which `settle` stays within what the model covers. -/
 def «settle».safe («this» : «Tree») («start» : JSString) («all» : Bool) : Bool :=
-  (Ariadne.inRange ((2 : Int) * (List.length «this».2.1 : Int)) && Ariadne.inRange (((2 : Int) * (List.length «this».2.1 : Int)) + (2 : Int))) && (let «steps» : Int := ((2 : Int) * (List.length «this».2.1 : Int)) + (2 : Int)
+  (Ariadne.inRange ((2 : Int) * (List.length «this».«links» : Int)) && Ariadne.inRange (((2 : Int) * (List.length «this».«links» : Int)) + (2 : Int))) && (let «steps» : Int := ((2 : Int) * (List.length «this».«links» : Int)) + (2 : Int)
   let «cur» : JSString := «start»
   let «down» : Bool := true
-  Ariadne.forIn (Ariadne.range «steps») (fun «_step» next2' exit2' s2' =>
-    let «down» := s2'.1
-    let «cur» := s2'.2.1
-    let «steps» := s2'.2.2.1
-    let «this» := s2'.2.2.2.1
-    let «start» := s2'.2.2.2.2.1
-    let «all» := s2'.2.2.2.2.2.1
-    let after4' := fun s4' =>
-      let «down» := s4'.2.1
-      let «cur» := s4'.2.2.1
-      let «steps» := s4'.2.2.2.1
-      let «this» := s4'.2.2.2.2.1
-      let «start» := s4'.2.2.2.2.2.1
-      let «all» := s4'.2.2.2.2.2.2.1
+  Ariadne.forIn (Ariadne.range «steps») (fun «_step» next2' exit2' («down», «cur», «steps», «this», «start», «all», ()) =>
+    let after4' := fun (_, «down», «cur», «steps», «this», «start», «all», ()) =>
       if «cur» == «start» then
         true
       else
@@ -1249,15 +1200,7 @@ def «settle».safe («this» : «Tree») («start» : JSString) («all» : Bool
           next2' («down», «cur», «steps», «this», «start», «all», ())
     if «down» then
       let «deeper» : Bool := true
-      let after6' := fun s6' =>
-        let «deeper» := s6'.1
-        let «_step» := s6'.2.1
-        let «down» := s6'.2.2.1
-        let «cur» := s6'.2.2.2.1
-        let «steps» := s6'.2.2.2.2.1
-        let «this» := s6'.2.2.2.2.2.1
-        let «start» := s6'.2.2.2.2.2.2.1
-        let «all» := s6'.2.2.2.2.2.2.2.1
+      let after6' := fun («deeper», «_step», «down», «cur», «steps», «this», «start», «all», ()) =>
         let «first» : JSString := if «deeper» then «firstChild» «this» «cur» else (js "")
         if «first» != (js "") then
           let «cur» : JSString := «first»
@@ -1265,9 +1208,9 @@ def «settle».safe («this» : «Tree») («start» : JSString) («all» : Bool
         else
           let «down» : Bool := false
           after4' («_step», «down», «cur», «steps», «this», «start», «all», ())
-      if («cur» != «root») && ((Ariadne.mapGet «this».1 «cur»).isSome) then
+      if («cur» != «root») && ((Ariadne.mapGet «this».«spots» «cur»).isSome) then
         let «by» : JSString := «burialOf» «this» «cur»
-        if «by» != («orNone» (Ariadne.mapGet «this».2.2.2.2.2.2.1 «cur»)) then
+        if «by» != («orNone» (Ariadne.mapGet «this».«buried» «cur»)) then
           let «this» : «Tree» := «bury» «this» «cur» «by»
           after6' («deeper», «_step», «down», «cur», «steps», «this», «start», «all», ())
         else
@@ -1277,12 +1220,12 @@ def «settle».safe («this» : «Tree») («start» : JSString) («all» : Bool
         after6' («deeper», «_step», «down», «cur», «steps», «this», «start», «all», ())
     else
       after4' («_step», «down», «cur», «steps», «this», «start», «all», ()))
-    (fun s2' =>
+    (fun _ =>
     true)
     («down», «cur», «steps», «this», «start», «all», ()))
 
 def «attach» («this» : «Tree») («id» : JSString) : «Tree» :=
-  let «s» : Option «Spot» := Ariadne.mapGet «this».1 «id»
+  let «s» : Option «Spot» := Ariadne.mapGet «this».«spots» «id»
   match «s» with
   | none =>
     «this»
@@ -1290,30 +1233,26 @@ def «attach» («this» : «Tree») («id» : JSString) : «Tree» :=
     let «cycle» : List JSString := «cycleOf» «this» «id»
     let «mine» : JSString := «key» «s» «id»
     let «detach» : Bool := (decide ((List.length «cycle» : Int) > (0 : Int))) && (List.all «cycle» (fun «c» => («c» == «id») || (Ariadne.strLt («keyOf» «this» «c») «mine»)))
-    let after4' := fun s4' =>
-      let «detach» := s4'.1
-      let «s» := s4'.2.2.2.1
-      let «this» := s4'.2.2.2.2.1
-      let «id» := s4'.2.2.2.2.2.1
-      let «parent» : JSString := if «detach» then «root» else «s».1
+    let after4' := fun («detach», _, _, «s», «this», «id», ()) =>
+      let «parent» : JSString := if «detach» then «root» else «s».«want»
       if («parentOf» «this» «id») == «parent» then
         «this»
       else
         let «this» : «Tree» := «unlink» «this» «id»
         let «this» : «Tree» := «link» «this» «id» «parent»
-        let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.2.1 «id» true, «this».2.2.2.2.2.2.2.2)
+        let «this» : «Tree» := «this».«withChanged» (Ariadne.mapPut «this».«changed» «id» true)
         let «this» : «Tree» := «settle» «this» «id» false
         «this»
     if «detach» then
-      let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, Ariadne.mapPut «this».2.2.2.1 «id» true, «this».2.2.2.2)
+      let «this» : «Tree» := «this».«withDetached» (Ariadne.mapPut «this».«detached» «id» true)
       after4' («detach», «mine», «cycle», «s», «this», «id», ())
     else
-      let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, Ariadne.mapDel «this».2.2.2.1 «id», «this».2.2.2.2)
+      let «this» : «Tree» := «this».«withDetached» (Ariadne.mapDel «this».«detached» «id»)
       after4' («detach», «mine», «cycle», «s», «this», «id», ())
 
 /-- The inputs on which `attach` stays within what the model covers. -/
 def «attach».safe («this» : «Tree») («id» : JSString) : Bool :=
-  let «s» : Option «Spot» := Ariadne.mapGet «this».1 «id»
+  let «s» : Option «Spot» := Ariadne.mapGet «this».«spots» «id»
   match «s» with
   | none =>
     true
@@ -1321,52 +1260,35 @@ def «attach».safe («this» : «Tree») («id» : JSString) : Bool :=
     let «cycle» : List JSString := «cycleOf» «this» «id»
     let «mine» : JSString := «key» «s» «id»
     let «detach» : Bool := (decide ((List.length «cycle» : Int) > (0 : Int))) && (List.all «cycle» (fun «c» => («c» == «id») || (Ariadne.strLt («keyOf» «this» «c») «mine»)))
-    let after4' := fun s4' =>
-      let «detach» := s4'.1
-      let «s» := s4'.2.2.2.1
-      let «this» := s4'.2.2.2.2.1
-      let «id» := s4'.2.2.2.2.2.1
-      let «parent» : JSString := if «detach» then «root» else «s».1
+    let after4' := fun («detach», _, _, «s», «this», «id», ()) =>
+      let «parent» : JSString := if «detach» then «root» else «s».«want»
       if («parentOf» «this» «id») == «parent» then
         true
       else
         let «this» : «Tree» := «unlink» «this» «id»
         let «this» : «Tree» := «link» «this» «id» «parent»
-        let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.2.1 «id» true, «this».2.2.2.2.2.2.2.2)
+        let «this» : «Tree» := «this».«withChanged» (Ariadne.mapPut «this».«changed» «id» true)
         «settle».safe «this» «id» false && (let «this» : «Tree» := «settle» «this» «id» false
         true)
     if «detach» then
-      let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, Ariadne.mapPut «this».2.2.2.1 «id» true, «this».2.2.2.2)
+      let «this» : «Tree» := «this».«withDetached» (Ariadne.mapPut «this».«detached» «id» true)
       after4' («detach», «mine», «cycle», «s», «this», «id», ())
     else
-      let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, Ariadne.mapDel «this».2.2.2.1 «id», «this».2.2.2.2)
+      let «this» : «Tree» := «this».«withDetached» (Ariadne.mapDel «this».«detached» «id»)
       after4' («detach», «mine», «cycle», «s», «this», «id», ())
 
 def «rearrange» («this» : «Tree») («id» : JSString) : «Tree» :=
   let «cycle» : List JSString := «cycleOf» «this» «id»
-  let «detached» : List JSString := (List.map Prod.fst «this».2.2.2.1) ++ ([])
+  let «detached» : List JSString := (List.map Prod.fst «this».«detached») ++ ([])
   let «this» : «Tree» := «attach» «this» «id»
-  Ariadne.forIn «cycle» (fun «x» next2' exit2' s2' =>
-    let «detached» := s2'.1
-    let «cycle» := s2'.2.1
-    let «this» := s2'.2.2.1
-    let «id» := s2'.2.2.2.1
+  Ariadne.forIn «cycle» (fun «x» next2' exit2' («detached», «cycle», «this», «id», ()) =>
     let «this» : «Tree» := «attach» «this» «x»
     next2' («detached», «cycle», «this», «id», ()))
-    (fun s2' =>
-    let «detached» := s2'.1
-    let «cycle» := s2'.2.1
-    let «this» := s2'.2.2.1
-    let «id» := s2'.2.2.2.1
-    Ariadne.forIn «detached» (fun «x» next4' exit4' s4' =>
-      let «detached» := s4'.1
-      let «cycle» := s4'.2.1
-      let «this» := s4'.2.2.1
-      let «id» := s4'.2.2.2.1
+    (fun («detached», «cycle», «this», «id», ()) =>
+    Ariadne.forIn «detached» (fun «x» next4' exit4' («detached», «cycle», «this», «id», ()) =>
       let «this» : «Tree» := «attach» «this» «x»
       next4' («detached», «cycle», «this», «id», ()))
-      (fun s4' =>
-      let «this» := s4'.2.2.1
+      (fun (_, _, «this», _, ()) =>
       «this»)
       («detached», «cycle», «this», «id», ()))
     («detached», «cycle», «this», «id», ())
@@ -1374,123 +1296,107 @@ def «rearrange» («this» : «Tree») («id» : JSString) : «Tree» :=
 /-- The inputs on which `rearrange` stays within what the model covers. -/
 def «rearrange».safe («this» : «Tree») («id» : JSString) : Bool :=
   let «cycle» : List JSString := «cycleOf» «this» «id»
-  let «detached» : List JSString := (List.map Prod.fst «this».2.2.2.1) ++ ([])
+  let «detached» : List JSString := (List.map Prod.fst «this».«detached») ++ ([])
   «attach».safe «this» «id» && (let «this» : «Tree» := «attach» «this» «id»
-  Ariadne.forIn «cycle» (fun «x» next2' exit2' s2' =>
-    let «detached» := s2'.1
-    let «cycle» := s2'.2.1
-    let «this» := s2'.2.2.1
-    let «id» := s2'.2.2.2.1
+  Ariadne.forIn «cycle» (fun «x» next2' exit2' («detached», «cycle», «this», «id», ()) =>
     «attach».safe «this» «x» && (let «this» : «Tree» := «attach» «this» «x»
     next2' («detached», «cycle», «this», «id», ())))
-    (fun s2' =>
-    let «detached» := s2'.1
-    let «cycle» := s2'.2.1
-    let «this» := s2'.2.2.1
-    let «id» := s2'.2.2.2.1
-    Ariadne.forIn «detached» (fun «x» next4' exit4' s4' =>
-      let «detached» := s4'.1
-      let «cycle» := s4'.2.1
-      let «this» := s4'.2.2.1
-      let «id» := s4'.2.2.2.1
+    (fun («detached», «cycle», «this», «id», ()) =>
+    Ariadne.forIn «detached» (fun «x» next4' exit4' («detached», «cycle», «this», «id», ()) =>
       «attach».safe «this» «x» && (let «this» : «Tree» := «attach» «this» «x»
       next4' («detached», «cycle», «this», «id», ())))
-      (fun s4' =>
+      (fun _ =>
       true)
       («detached», «cycle», «this», «id», ()))
     («detached», «cycle», «this», «id», ()))
 
 def «create» («this» : «Tree») («id» : JSString) («parent» : JSString) («name» : JSString) («stamp» : JSString) : «Tree» :=
-  if («id» == «root») || ((Ariadne.mapGet «this».1 «id»).isSome) then
+  if («id» == «root») || ((Ariadne.mapGet «this».«spots» «id»).isSome) then
     «this»
   else
-    let «this» : «Tree» := (Ariadne.mapPut «this».1 «id» ((«parent», «name», none, (some «stamp»), ())), «this».2)
-    let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, Ariadne.mapDel «this».2.2.2.2.1 «id», «this».2.2.2.2.2)
-    let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.2.1 «id» true, «this».2.2.2.2.2.2.2.2)
+    let «this» : «Tree» := «this».«withSpots» (Ariadne.mapPut «this».«spots» «id» («Spot».mk «parent» «name» none (some «stamp»)))
+    let «this» : «Tree» := «this».«withWaiting» (Ariadne.mapDel «this».«waiting» «id»)
+    let «this» : «Tree» := «this».«withChanged» (Ariadne.mapPut «this».«changed» «id» true)
     let «this» : «Tree» := «rearrange» «this» «id»
     «this»
 
 /-- The inputs on which `create` stays within what the model covers. -/
 def «create».safe («this» : «Tree») («id» : JSString) («parent» : JSString) («name» : JSString) («stamp» : JSString) : Bool :=
-  if («id» == «root») || ((Ariadne.mapGet «this».1 «id»).isSome) then
+  if («id» == «root») || ((Ariadne.mapGet «this».«spots» «id»).isSome) then
     true
   else
-    let «this» : «Tree» := (Ariadne.mapPut «this».1 «id» ((«parent», «name», none, (some «stamp»), ())), «this».2)
-    let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, Ariadne.mapDel «this».2.2.2.2.1 «id», «this».2.2.2.2.2)
-    let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.2.1 «id» true, «this».2.2.2.2.2.2.2.2)
+    let «this» : «Tree» := «this».«withSpots» (Ariadne.mapPut «this».«spots» «id» («Spot».mk «parent» «name» none (some «stamp»)))
+    let «this» : «Tree» := «this».«withWaiting» (Ariadne.mapDel «this».«waiting» «id»)
+    let «this» : «Tree» := «this».«withChanged» (Ariadne.mapPut «this».«changed» «id» true)
     «rearrange».safe «this» «id» && (let «this» : «Tree» := «rearrange» «this» «id»
     true)
 
 def «position» («this» : «Tree») («id» : JSString) («parent» : JSString) («name» : JSString) («stamp» : JSString) («move» : Bool) : «Tree» :=
-  let «s» : Option «Spot» := Ariadne.mapGet «this».1 «id»
+  let «s» : Option «Spot» := Ariadne.mapGet «this».«spots» «id»
   match «s» with
   | none =>
     «this»
   | some «s» =>
-    let after4' := fun s4' =>
-      let «this» := s4'.2.1
-      let «id» := s4'.2.2.1
-      let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.2.1 «id» true, «this».2.2.2.2.2.2.2.2)
+    let after4' := fun (_, «this», «id», _, _, _, _, ()) =>
+      let «this» : «Tree» := «this».«withChanged» (Ariadne.mapPut «this».«changed» «id» true)
       let «this» : «Tree» := «rearrange» «this» «id»
       «this»
     if «move» then
-      if !(«newer» («s».2.2.1) «stamp») then
+      if !(«newer» «s».«pos» «stamp») then
         «this»
       else
-        let «this» : «Tree» := (Ariadne.mapPut «this».1 «id» (let r' := «s»; («parent», «name», (some «stamp»), r'.2.2.2.1, ())), «this».2)
+        let «this» : «Tree» := «this».«withSpots» (Ariadne.mapPut «this».«spots» «id» ((((«s».«withWant» «parent»).«withName» «name»).«withPos» (some «stamp»))))
         after4' («s», «this», «id», «parent», «name», «stamp», «move», ())
     else
-      if !(«earlier» («s».2.2.2.1) «stamp») then
+      if !(«earlier» «s».«made» «stamp») then
         «this»
       else
-        if («orNone» («s».2.2.1)) != (js "") then
-          let «this» : «Tree» := (Ariadne.mapPut «this».1 «id» (let r' := «s»; (r'.1, r'.2.1, r'.2.2.1, (some «stamp»), ())), «this».2)
-          let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.2.1 «id» true, «this».2.2.2.2.2.2.2.2)
+        if («orNone» «s».«pos») != (js "") then
+          let «this» : «Tree» := «this».«withSpots» (Ariadne.mapPut «this».«spots» «id» ((«s».«withMade» (some «stamp»))))
+          let «this» : «Tree» := «this».«withChanged» (Ariadne.mapPut «this».«changed» «id» true)
           «this»
         else
-          let «this» : «Tree» := (Ariadne.mapPut «this».1 «id» (let r' := «s»; («parent», «name», r'.2.2.1, (some «stamp»), ())), «this».2)
+          let «this» : «Tree» := «this».«withSpots» (Ariadne.mapPut «this».«spots» «id» ((((«s».«withWant» «parent»).«withName» «name»).«withMade» (some «stamp»))))
           after4' («s», «this», «id», «parent», «name», «stamp», «move», ())
 
 /-- The inputs on which `position` stays within what the model covers. -/
 def «position».safe («this» : «Tree») («id» : JSString) («parent» : JSString) («name» : JSString) («stamp» : JSString) («move» : Bool) : Bool :=
-  let «s» : Option «Spot» := Ariadne.mapGet «this».1 «id»
+  let «s» : Option «Spot» := Ariadne.mapGet «this».«spots» «id»
   match «s» with
   | none =>
     true
   | some «s» =>
-    let after4' := fun s4' =>
-      let «this» := s4'.2.1
-      let «id» := s4'.2.2.1
-      let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.2.1 «id» true, «this».2.2.2.2.2.2.2.2)
+    let after4' := fun (_, «this», «id», _, _, _, _, ()) =>
+      let «this» : «Tree» := «this».«withChanged» (Ariadne.mapPut «this».«changed» «id» true)
       «rearrange».safe «this» «id» && (let «this» : «Tree» := «rearrange» «this» «id»
       true)
     if «move» then
-      if !(«newer» («s».2.2.1) «stamp») then
+      if !(«newer» «s».«pos» «stamp») then
         true
       else
-        let «this» : «Tree» := (Ariadne.mapPut «this».1 «id» (let r' := «s»; («parent», «name», (some «stamp»), r'.2.2.2.1, ())), «this».2)
+        let «this» : «Tree» := «this».«withSpots» (Ariadne.mapPut «this».«spots» «id» ((((«s».«withWant» «parent»).«withName» «name»).«withPos» (some «stamp»))))
         after4' («s», «this», «id», «parent», «name», «stamp», «move», ())
     else
-      if !(«earlier» («s».2.2.2.1) «stamp») then
+      if !(«earlier» «s».«made» «stamp») then
         true
       else
-        if («orNone» («s».2.2.1)) != (js "") then
-          let «this» : «Tree» := (Ariadne.mapPut «this».1 «id» (let r' := «s»; (r'.1, r'.2.1, r'.2.2.1, (some «stamp»), ())), «this».2)
-          let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.2.1 «id» true, «this».2.2.2.2.2.2.2.2)
+        if («orNone» «s».«pos») != (js "") then
+          let «this» : «Tree» := «this».«withSpots» (Ariadne.mapPut «this».«spots» «id» ((«s».«withMade» (some «stamp»))))
+          let «this» : «Tree» := «this».«withChanged» (Ariadne.mapPut «this».«changed» «id» true)
           true
         else
-          let «this» : «Tree» := (Ariadne.mapPut «this».1 «id» (let r' := «s»; («parent», «name», r'.2.2.1, (some «stamp»), ())), «this».2)
+          let «this» : «Tree» := «this».«withSpots» (Ariadne.mapPut «this».«spots» «id» ((((«s».«withWant» «parent»).«withName» «name»).«withMade» (some «stamp»))))
           after4' («s», «this», «id», «parent», «name», «stamp», «move», ())
 
 def «purge» («this» : «Tree») («id» : JSString) («stamp» : JSString) : «Tree» :=
   if «id» == «root» then
     «this»
   else
-    if !(«earlier» (Ariadne.mapGet «this».2.2.2.2.2.1 «id») «stamp») then
+    if !(«earlier» (Ariadne.mapGet «this».«purged» «id») «stamp») then
       «this»
     else
-      let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.1 «id» «stamp», «this».2.2.2.2.2.2)
-      let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, Ariadne.mapDel «this».2.2.2.2.1 «id», «this».2.2.2.2.2)
+      let «this» : «Tree» := «this».«withPurged» (Ariadne.mapPut «this».«purged» «id» «stamp»)
+      let «this» : «Tree» := «this».«withWaiting» (Ariadne.mapDel «this».«waiting» «id»)
       let «this» : «Tree» := «settle» «this» «id» false
       «this»
 
@@ -1499,107 +1405,94 @@ def «purge».safe («this» : «Tree») («id» : JSString) («stamp» : JSStri
   if «id» == «root» then
     true
   else
-    if !(«earlier» (Ariadne.mapGet «this».2.2.2.2.2.1 «id») «stamp») then
+    if !(«earlier» (Ariadne.mapGet «this».«purged» «id») «stamp») then
       true
     else
-      let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.1 «id» «stamp», «this».2.2.2.2.2.2)
-      let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, Ariadne.mapDel «this».2.2.2.2.1 «id», «this».2.2.2.2.2)
+      let «this» : «Tree» := «this».«withPurged» (Ariadne.mapPut «this».«purged» «id» «stamp»)
+      let «this» : «Tree» := «this».«withWaiting» (Ariadne.mapDel «this».«waiting» «id»)
       «settle».safe «this» «id» false && (let «this» : «Tree» := «settle» «this» «id» false
       true)
 
 def «untangle» («this» : «Tree») : «Tree» :=
-  Ariadne.forIn ((List.map Prod.fst «this».1) ++ ([])) (fun «id» next2' exit2' s2' =>
-    let «this» := s2'.1
-    let «s» : Option «Spot» := Ariadne.mapGet «this».1 «id»
+  Ariadne.forIn ((List.map Prod.fst «this».«spots») ++ ([])) (fun «id» next2' exit2' («this», ()) =>
+    let «s» : Option «Spot» := Ariadne.mapGet «this».«spots» «id»
     match «s» with
     | none =>
       next2' («this», ())
     | some «s» =>
-      if ((«parentOf» «this» «id») != («s».1)) || (decide ((List.length («cycleOf» «this» «id») : Int) > (0 : Int))) then
+      if ((«parentOf» «this» «id») != «s».«want») || (decide ((List.length («cycleOf» «this» «id») : Int) > (0 : Int))) then
         let «this» : «Tree» := «attach» «this» «id»
-        let «s» := some «s»
         next2' («this», ())
       else
-        let «s» := some «s»
         next2' («this», ()))
-    (fun s2' =>
-    let «this» := s2'.1
+    (fun («this», ()) =>
     let «this» : «Tree» := «settle» «this» «root» true
-    Ariadne.forIn ((List.map Prod.fst «this».2.2.1) ++ ([])) (fun «p» next4' exit4' s4' =>
-      let «this» := s4'.1
-      if («p» != «root») && (!((Ariadne.mapGet «this».1 «p»).isSome)) then
+    Ariadne.forIn ((List.map Prod.fst «this».«ends») ++ ([])) (fun «p» next4' exit4' («this», ()) =>
+      if («p» != «root») && (!((Ariadne.mapGet «this».«spots» «p»).isSome)) then
         let «this» : «Tree» := «settle» «this» «p» true
         next4' («this», ())
       else
         next4' («this», ()))
-      (fun s4' =>
-      let «this» := s4'.1
+      (fun («this», ()) =>
       «this»)
       («this», ()))
     («this», ())
 
 /-- The inputs on which `untangle` stays within what the model covers. -/
 def «untangle».safe («this» : «Tree») : Bool :=
-  Ariadne.forIn ((List.map Prod.fst «this».1) ++ ([])) (fun «id» next2' exit2' s2' =>
-    let «this» := s2'.1
-    let «s» : Option «Spot» := Ariadne.mapGet «this».1 «id»
+  Ariadne.forIn ((List.map Prod.fst «this».«spots») ++ ([])) (fun «id» next2' exit2' («this», ()) =>
+    let «s» : Option «Spot» := Ariadne.mapGet «this».«spots» «id»
     match «s» with
     | none =>
       next2' («this», ())
     | some «s» =>
-      if ((«parentOf» «this» «id») != («s».1)) || (decide ((List.length («cycleOf» «this» «id») : Int) > (0 : Int))) then
+      if ((«parentOf» «this» «id») != «s».«want») || (decide ((List.length («cycleOf» «this» «id») : Int) > (0 : Int))) then
         «attach».safe «this» «id» && (let «this» : «Tree» := «attach» «this» «id»
-        let «s» := some «s»
         next2' («this», ()))
       else
-        let «s» := some «s»
         next2' («this», ()))
-    (fun s2' =>
-    let «this» := s2'.1
+    (fun («this», ()) =>
     «settle».safe «this» «root» true && (let «this» : «Tree» := «settle» «this» «root» true
-    Ariadne.forIn ((List.map Prod.fst «this».2.2.1) ++ ([])) (fun «p» next4' exit4' s4' =>
-      let «this» := s4'.1
-      if («p» != «root») && (!((Ariadne.mapGet «this».1 «p»).isSome)) then
+    Ariadne.forIn ((List.map Prod.fst «this».«ends») ++ ([])) (fun «p» next4' exit4' («this», ()) =>
+      if («p» != «root») && (!((Ariadne.mapGet «this».«spots» «p»).isSome)) then
         «settle».safe «this» «p» true && (let «this» : «Tree» := «settle» «this» «p» true
         next4' («this», ()))
       else
         next4' («this», ()))
-      (fun s4' =>
+      (fun _ =>
       true)
       («this», ())))
     («this», ())
 
 def «isDetached» («this» : «Tree») («id» : JSString) : Bool :=
-  (Ariadne.mapGet «this».2.2.2.1 «id»).isSome
+  (Ariadne.mapGet «this».«detached» «id»).isSome
 
 def «burial» («this» : «Tree») («id» : JSString) : Option JSString :=
-  Ariadne.mapGet «this».2.2.2.2.2.2.1 «id»
+  Ariadne.mapGet «this».«buried» «id»
 
 def «isPurged» («this» : «Tree») («id» : JSString) : Bool :=
-  (Ariadne.mapGet «this».2.2.2.2.2.1 «id»).isSome
+  (Ariadne.mapGet «this».«purged» «id»).isSome
 
 def «purgeOf» («this» : «Tree») («id» : JSString) : Option JSString :=
-  Ariadne.mapGet «this».2.2.2.2.2.1 «id»
+  Ariadne.mapGet «this».«purged» «id»
 
 def «purgedIds» («this» : «Tree») : List JSString :=
-  (List.map Prod.fst «this».2.2.2.2.2.1) ++ ([])
+  (List.map Prod.fst «this».«purged») ++ ([])
 
 def «waitingIds» («this» : «Tree») : List JSString :=
-  (List.map Prod.fst «this».2.2.2.2.1) ++ ([])
+  (List.map Prod.fst «this».«waiting») ++ ([])
 
 def «hasWaiting» («this» : «Tree») : Bool :=
-  decide ((List.length «this».2.2.2.2.1 : Int) > (0 : Int))
+  decide ((List.length «this».«waiting» : Int) > (0 : Int))
 
 def «changes» («this» : «Tree») : List JSString :=
-  (List.map Prod.fst «this».2.2.2.2.2.2.2.1) ++ ([])
+  (List.map Prod.fst «this».«changed») ++ ([])
 
 def «clearChanges» («this» : «Tree») : «Tree» :=
-  Ariadne.forIn ((List.map Prod.fst «this».2.2.2.2.2.2.2.1) ++ ([])) (fun «id» next2' exit2' s2' =>
-    let «this» := s2'.1
-    let «this» : «Tree» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, Ariadne.mapDel «this».2.2.2.2.2.2.2.1 «id», «this».2.2.2.2.2.2.2.2)
+  Ariadne.forIn ((List.map Prod.fst «this».«changed») ++ ([])) (fun «id» next2' exit2' («this», ()) =>
+    let «this» : «Tree» := «this».«withChanged» (Ariadne.mapDel «this».«changed» «id»)
     next2' («this», ()))
-    (fun s2' =>
-    let «this» := s2'.1
+    (fun («this», ()) =>
     «this»)
     («this», ())
 

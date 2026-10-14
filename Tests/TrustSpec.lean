@@ -51,11 +51,11 @@ theorem repairs_exact (copies : List StoredCopy) (own : Int) (stale readOnly : B
   · rename_i h
     simp only [Bool.or_eq_true] at h
     simp only [List.getElem?_map, hc, Option.map_some, Option.some.injEq, Bool.false_eq_true, false_iff]
-    rcases c with _ | _ | _ | _ | _ | _ <;> rcases h with h | h <;> simp [MayOverwrite, h]
+    rcases c with _ | _ | _ | _ | _ | _ <;> rcases h with h | h <;> simp_all [MayOverwrite, readable]
   · rename_i h
     simp only [Bool.or_eq_true, not_or, Bool.not_eq_true] at h
     simp only [List.getElem?_map, hc, Option.map_some, Option.some.injEq]
-    rcases c with _ | _ | _ | _ | _ | _ <;> simp [«repairOne», MayOverwrite, h, hall]
+    rcases c with _ | _ | _ | _ | _ | _ <;> simp_all [«repairOne», MayOverwrite, hall, readable]
 
 /-! ## The ranking is a total preorder -/
 
@@ -96,19 +96,13 @@ theorem chooseVaultCopy_safe (facts : List ty.«CopyFact».denote) (floor : Opti
     «chooseVaultCopy».safe facts floor = true := by
   unfold «chooseVaultCopy».safe
   refine forIn_true (fun p next exit st hn _ => ?_) (fun st => ?_) _ _
-  · dsimp only
-    split
-    · exact hn _
-    · split
-      · exact hn _
-      · split
-        · exact hn _
-        · split
-          · exact hn _
-          · split
-            · exact hn _
-            · exact hn _
-  · dsimp only
+  · obtain ⟨_, _⟩ := p
+    obtain ⟨_, _, _, _, _, _, _, _, _, _, ⟨⟩⟩ := st
+    dsimp only
+    repeat' split
+    all_goals exact hn _
+  · obtain ⟨_, _, _, _, _, _, _, _, _, _, ⟨⟩⟩ := st
+    dsimp only
     split
     · simp [consistent_of_laws byRank_laws]
     · rfl

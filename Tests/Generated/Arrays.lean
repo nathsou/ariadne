@@ -83,6 +83,11 @@ abbrev «Entry» : Type := Int × Int × JSString × (List JSString) × Unit
 @[reducible, readable] def «Entry».«size» (r : «Entry») : Int := r.2.1
 @[reducible, readable] def «Entry».«name» (r : «Entry») : JSString := r.2.2.1
 @[reducible, readable] def «Entry».«tags» (r : «Entry») : List JSString := r.2.2.2.1
+@[reducible, readable] def «Entry».mk («id» : Int) («size» : Int) («name» : JSString) («tags» : List JSString) : «Entry» := («id», «size», «name», «tags», ())
+@[reducible, readable] def «Entry».«withId» (r : «Entry») (v : Int) : «Entry» := (v, r.2)
+@[reducible, readable] def «Entry».«withSize» (r : «Entry») (v : Int) : «Entry» := (r.1, v, r.2.2)
+@[reducible, readable] def «Entry».«withName» (r : «Entry») (v : JSString) : «Entry» := (r.1, r.2.1, v, r.2.2.2)
+@[reducible, readable] def «Entry».«withTags» (r : «Entry») (v : List JSString) : «Entry» := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
 
 noncomputable def sig.«total» : Sig := { name := "total", params := [("a", .number), ("b", .number)], result := .number, trivial := false }
 noncomputable def sig.«negate» : Sig := { name := "negate", params := [("x", .number)], result := .number, trivial := false }
@@ -254,36 +259,36 @@ def «count» («es» : List «Entry») : Int :=
   (List.length «es» : Int)
 
 def «sizes» («es» : List «Entry») : List Int :=
-  List.map (fun «e» => «e».2.1) «es»
+  List.map (fun «e» => «e».«size») «es»
 
 def «named» («es» : List «Entry») («name» : JSString) : Option «Entry» :=
-  List.find? (fun «e» => («e».2.2.1) == «name») «es»
+  List.find? (fun «e» => «e».«name» == «name») «es»
 
 def «tagged» («es» : List «Entry») («tag» : JSString) : List «Entry» :=
-  List.filter (fun «e» => List.any («e».2.2.2.1) (fun y' => y' == «tag»)) «es»
+  List.filter (fun «e» => List.any «e».«tags» (fun y' => y' == «tag»)) «es»
 
 def «anyLarge» («es» : List «Entry») («limit» : Int) : Bool :=
-  List.any «es» (fun «e» => decide ((«e».2.1) > «limit»))
+  List.any «es» (fun «e» => decide («e».«size» > «limit»))
 
 def «allNamed» («es» : List «Entry») : Bool :=
-  List.all «es» (fun «e» => decide ((List.length («e».2.2.1) : Int) > (0 : Int)))
+  List.all «es» (fun «e» => decide ((List.length «e».«name» : Int) > (0 : Int)))
 
 def «bySize» («es» : List «Entry») : List «Entry» :=
-  Ariadne.sortedBy (fun «a» «b» => («a».2.1) - («b».2.1)) «es»
+  Ariadne.sortedBy (fun «a» «b» => «a».«size» - «b».«size») «es»
 
 /-- The inputs on which `bySize` stays within what the model covers. -/
 def «bySize».safe («es» : List «Entry») : Bool :=
-  Ariadne.sortSafe (fun «a» «b» => («a».2.1) - («b».2.1)) false (fun «a» «b» => Ariadne.inRange ((«a».2.1) - («b».2.1))) «es»
+  Ariadne.sortSafe (fun «a» «b» => «a».«size» - «b».«size») false (fun «a» «b» => Ariadne.inRange («a».«size» - «b».«size»)) «es»
 
 def «byName» («es» : List «Entry») : List «Entry» :=
-  Ariadne.sortedBy (fun «a» «b» => if Ariadne.strLt («a».2.2.1) («b».2.2.1) then (-(1 : Int)) else if Ariadne.strLt («b».2.2.1) («a».2.2.1) then (1 : Int) else (0 : Int)) «es»
+  Ariadne.sortedBy (fun «a» «b» => if Ariadne.strLt «a».«name» «b».«name» then (-(1 : Int)) else if Ariadne.strLt «b».«name» «a».«name» then (1 : Int) else (0 : Int)) «es»
 
 /-- The inputs on which `byName` stays within what the model covers. -/
 def «byName».safe («es» : List «Entry») : Bool :=
-  Ariadne.consistent (Ariadne.signs (fun «a» «b» => if Ariadne.strLt («a».2.2.1) («b».2.2.1) then (-(1 : Int)) else if Ariadne.strLt («b».2.2.1) («a».2.2.1) then (1 : Int) else (0 : Int)) «es»)
+  Ariadne.consistent (Ariadne.signs (fun «a» «b» => if Ariadne.strLt «a».«name» «b».«name» then (-(1 : Int)) else if Ariadne.strLt «b».«name» «a».«name» then (1 : Int) else (0 : Int)) «es»)
 
 def «ids» («es» : List «Entry») : List Int :=
-  (0 : Int) :: ((List.map (fun «e» => «e».1) «es») ++ ([(-(1 : Int))]))
+  (0 : Int) :: ((List.map (fun «e» => «e».«id») «es») ++ ([(-(1 : Int))]))
 
 def «firstName» («es» : List «Entry») : JSString :=
   let «e» : Option «Entry» := Ariadne.listIndex «es» (0 : Int)
@@ -291,14 +296,14 @@ def «firstName» («es» : List «Entry») : JSString :=
   | none =>
     (js "")
   | some «e» =>
-    «e».2.2.1
+    «e».«name»
 
 def «grow» («es» : List «Entry») («by» : Int) : List «Entry» :=
-  List.map (fun «e» => let r' := «e»; (r'.1, ((«e».2.1) + «by»), r'.2.2.1, r'.2.2.2.1, ())) «es»
+  List.map (fun «e» => («e».«withSize» («e».«size» + «by»))) «es»
 
 /-- The inputs on which `grow` stays within what the model covers. -/
 def «grow».safe («es» : List «Entry») («by» : Int) : Bool :=
-  List.all «es» (fun «e» => Ariadne.inRange ((«e».2.1) + «by»))
+  List.all «es» (fun «e» => Ariadne.inRange («e».«size» + «by»))
 
 def «signs» («xs» : List Int) : List JSString :=
   List.map (fun «x» => if decide («x» > (0 : Int)) then (js "pos") else if «x» == (0 : Int) then (js "zero") else (js "neg")) «xs»
@@ -318,11 +323,11 @@ def «totalOf».safe («es» : List «Entry») : Bool :=
   «total».safe («count» «es») (1 : Int)
 
 def «isLarge» («e» : «Entry») : Bool :=
-  decide ((«e».2.1) > (100 : Int))
+  decide («e».«size» > (100 : Int))
 
 def «bySizeDesc» («a» : «Entry») («b» : «Entry») : Int :=
-  if («a».2.1) != («b».2.1) then
-    if decide ((«a».2.1) > («b».2.1)) then (-(1 : Int)) else (1 : Int)
+  if «a».«size» != «b».«size» then
+    if decide («a».«size» > «b».«size») then (-(1 : Int)) else (1 : Int)
   else
     (0 : Int)
 
@@ -340,11 +345,11 @@ def «flags» («es» : List «Entry») : List Bool :=
   List.map (fun _ => false) «es»
 
 def «summaries» («es» : List «Entry») : List «Entry» :=
-  List.map (fun «e» => ((«e».1), ((«e».2.1) + (1 : Int)), («e».2.2.1), ([]), ())) «es»
+  List.map (fun «e» => («Entry».mk «e».«id» («e».«size» + (1 : Int)) «e».«name» ([]))) «es»
 
 /-- The inputs on which `summaries` stays within what the model covers. -/
 def «summaries».safe («es» : List «Entry») : Bool :=
-  List.all «es» (fun «e» => Ariadne.inRange ((«e».2.1) + (1 : Int)))
+  List.all «es» (fun «e» => Ariadne.inRange («e».«size» + (1 : Int)))
 
 /-! ## Denotation
 

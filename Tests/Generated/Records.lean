@@ -102,6 +102,10 @@ abbrev «Point» : Type := Int × Int × (Option JSString) × Unit
 @[reducible, readable] def «Point».«x» (r : «Point») : Int := r.1
 @[reducible, readable] def «Point».«y» (r : «Point») : Int := r.2.1
 @[reducible, readable] def «Point».«label» (r : «Point») : Option JSString := r.2.2.1
+@[reducible, readable] def «Point».mk («x» : Int) («y» : Int) («label» : Option JSString) : «Point» := («x», «y», «label», ())
+@[reducible, readable] def «Point».«withX» (r : «Point») (v : Int) : «Point» := (v, r.2)
+@[reducible, readable] def «Point».«withY» (r : «Point») (v : Int) : «Point» := (r.1, v, r.2.2)
+@[reducible, readable] def «Point».«withLabel» (r : «Point») (v : Option JSString) : «Point» := (r.1, r.2.1, v, r.2.2.2)
 
 /-- The source's `Recovery`. -/
 abbrev «Recovery» : Type := Fin 4
@@ -111,23 +115,31 @@ abbrev «Recovery» : Type := Fin 4
 @[reducible, readable] def «Recovery».«bad» : «Recovery» := (3 : Fin 4)
 abbrev «Choice».Variant.«true» : Type := Int × Unit
 @[reducible, readable] def «Choice».Variant.«true».«value» (r : «Choice».Variant.«true») : Int := r.1
+@[reducible, readable] def «Choice».Variant.«true».mk («value» : Int) : «Choice».Variant.«true» := («value», ())
+@[reducible, readable] def «Choice».Variant.«true».«withValue» (r : «Choice».Variant.«true») (v : Int) : «Choice».Variant.«true» := (v, r.2)
 abbrev «Choice».Variant.«false» : Type := JSString × Unit
 @[reducible, readable] def «Choice».Variant.«false».«reason» (r : «Choice».Variant.«false») : JSString := r.1
+@[reducible, readable] def «Choice».Variant.«false».mk («reason» : JSString) : «Choice».Variant.«false» := («reason», ())
+@[reducible, readable] def «Choice».Variant.«false».«withReason» (r : «Choice».Variant.«false») (v : JSString) : «Choice».Variant.«false» := (v, r.2)
 
 /-- The source's `Choice`. -/
 abbrev «Choice» : Type := «Choice».Variant.«true» ⊕ «Choice».Variant.«false»
-@[reducible, readable] def «Choice».«true» (x : «Choice».Variant.«true») : «Choice» := (Sum.inl x)
-@[reducible, readable] def «Choice».«false» (x : «Choice».Variant.«false») : «Choice» := (Sum.inr x)
+@[reducible, readable, match_pattern] def «Choice».«true» («value» : Int) : «Choice» := (Sum.inl («value», ()))
+@[reducible, readable, match_pattern] def «Choice».«false» («reason» : JSString) : «Choice» := (Sum.inr («reason», ()))
 abbrev «Fact».Variant.«opened» : Type := Int × «Recovery» × (Option JSString) × Unit
 @[reducible, readable] def «Fact».Variant.«opened».«written» (r : «Fact».Variant.«opened») : Int := r.1
 @[reducible, readable] def «Fact».Variant.«opened».«recovery» (r : «Fact».Variant.«opened») : «Recovery» := r.2.1
 @[reducible, readable] def «Fact».Variant.«opened».«kid» (r : «Fact».Variant.«opened») : Option JSString := r.2.2.1
+@[reducible, readable] def «Fact».Variant.«opened».mk («written» : Int) («recovery» : «Recovery») («kid» : Option JSString) : «Fact».Variant.«opened» := («written», «recovery», «kid», ())
+@[reducible, readable] def «Fact».Variant.«opened».«withWritten» (r : «Fact».Variant.«opened») (v : Int) : «Fact».Variant.«opened» := (v, r.2)
+@[reducible, readable] def «Fact».Variant.«opened».«withRecovery» (r : «Fact».Variant.«opened») (v : «Recovery») : «Fact».Variant.«opened» := (r.1, v, r.2.2)
+@[reducible, readable] def «Fact».Variant.«opened».«withKid» (r : «Fact».Variant.«opened») (v : Option JSString) : «Fact».Variant.«opened» := (r.1, r.2.1, v, r.2.2.2)
 
 /-- The source's `Fact`. -/
 abbrev «Fact» : Type := Unit ⊕ Unit ⊕ «Fact».Variant.«opened»
-@[reducible, readable] def «Fact».«unopened» : «Fact» := (Sum.inl ())
-@[reducible, readable] def «Fact».«damaged» : «Fact» := (Sum.inr (Sum.inl ()))
-@[reducible, readable] def «Fact».«opened» (x : «Fact».Variant.«opened») : «Fact» := (Sum.inr (Sum.inr x))
+@[reducible, readable, match_pattern] def «Fact».«unopened» : «Fact» := (Sum.inl ())
+@[reducible, readable, match_pattern] def «Fact».«damaged» : «Fact» := (Sum.inr (Sum.inl ()))
+@[reducible, readable, match_pattern] def «Fact».«opened» (x : «Fact».Variant.«opened») : «Fact» := (Sum.inr (Sum.inr x))
 
 noncomputable def sig.«origin» : Sig := { name := "origin", params := [], result := ty.«Point», trivial := true }
 noncomputable def sig.«moved» : Sig := { name := "moved", params := [("p", ty.«Point»), ("dx", .int)], result := ty.«Point», trivial := true }
@@ -251,16 +263,16 @@ theorem wf : typed.WF := TProgram.wf_of typed erased bodies_ok ast_scoped
 /-! ## Readable definitions -/
 
 def «origin»  : «Point» :=
-  ((0 : Int), (0 : Int), none, ())
+  («Point».mk (0 : Int) (0 : Int) none)
 
 def «moved» («p» : «Point») («dx» : Int) : «Point» :=
-  let r' := «p»; (((«p».1) + «dx»), r'.2.1, (some (js "moved")), ())
+  ((«p».«withX» («p».«x» + «dx»)).«withLabel» (some (js "moved")))
 
 def «labelOf» («p» : «Point») : JSString :=
-  match «p».2.2.1 with | some v' => v' | none => (js "unnamed")
+  match «p».«label» with | some v' => v' | none => (js "unnamed")
 
 def «hasLabel» («p» : «Point») : Bool :=
-  let «l» : Option JSString := «p».2.2.1
+  let «l» : Option JSString := «p».«label»
   match «l» with
   | none =>
     false
@@ -269,107 +281,84 @@ def «hasLabel» («p» : «Point») : Bool :=
 
 def «describe» («f» : «Fact») : JSString :=
   match «f» with
-  | Sum.inl p' =>
-    let «f» := ((), p')
+  | «Fact».«unopened» =>
     (js "u")
-  | Sum.inr p' =>
-    match p' with
-    | Sum.inl p' =>
-      let «f» := ((), p')
-      (js "d")
-    | Sum.inr p' =>
-      let «f» := ((), p')
-      let «k» : Option JSString := «f».2.2.2.1
-      let «suffix» : JSString := match «k» with | none => (js "-") | some «k» => «k»
-      if («f».2.2.1) == (3 : Fin 4) then
-        (js "o!") ++ «suffix»
-      else
-        (js "o") ++ «suffix»
+  | «Fact».«damaged» =>
+    (js "d")
+  | «Fact».«opened» «f» =>
+    let «k» : Option JSString := «f».«kid»
+    let «suffix» : JSString := match «k» with | none => (js "-") | some «k» => «k»
+    if «f».«recovery» == «Recovery».«bad» then
+      (js "o!") ++ «suffix»
+    else
+      (js "o") ++ «suffix»
 
 def «trusted» («f» : «Fact») : Bool :=
   match «f» with
-  | Sum.inl p' =>
-    let «f» := ((), p')
+  | «Fact».«unopened» =>
     false
-  | Sum.inr p' =>
-    match p' with
-    | Sum.inl p' =>
-      let «f» := ((), p')
-      false
-    | Sum.inr p' =>
-      let «f» := ((), p')
-      ((«f».2.2.1) != (3 : Fin 4)) && ((«f».2.2.1) != (2 : Fin 4))
+  | «Fact».«damaged» =>
+    false
+  | «Fact».«opened» «f» =>
+    («f».«recovery» != «Recovery».«bad») && («f».«recovery» != «Recovery».«legacy»)
 
 def «choose» («n» : Int) («floor» : Option Int) : «Choice» :=
   match «floor» with
   | some «floor» =>
     if decide («n» < «floor») then
-      (Sum.inr (((), (js "older"), ())).2)
+      («Choice».«false» (js "older"))
     else
-      let «floor» := some «floor»
       if decide («n» > (0 : Int)) then
-        (Sum.inl (((), «n», ())).2)
+        («Choice».«true» «n»)
       else
-        (Sum.inr (((), (js "non-positive"), ())).2)
+        («Choice».«false» (js "non-positive"))
   | none =>
     if decide («n» > (0 : Int)) then
-      (Sum.inl (((), «n», ())).2)
+      («Choice».«true» «n»)
     else
-      (Sum.inr (((), (js "non-positive"), ())).2)
+      («Choice».«false» (js "non-positive"))
 
 def «orDefault» («c» : «Choice») : Int :=
   match «c» with
-  | Sum.inl p' =>
-    let «c» := ((), p')
-    «c».2.1
-  | Sum.inr p' =>
-    let «c» := ((), p')
+  | «Choice».«true» «c» =>
+    «c»
+  | «Choice».«false» «c» =>
     (-(1 : Int))
 
 def «pick» («a» : «Point») («b» : «Point») («preferA» : Bool) : «Point» :=
   let «chosen» : «Point» := if «preferA» then «a» else «b»
-  let r' := «chosen»; (r'.1, r'.2.1, (some (match «chosen».2.2.1 with | some v' => v' | none => (js "picked"))), ())
+  («chosen».«withLabel» (some (match «chosen».«label» with | some v' => v' | none => (js "picked"))))
 
 def «rank» («f» : «Fact») : Int :=
   match «f» with
-  | Sum.inl p' =>
+  | «Fact».«unopened» =>
     (-(1 : Int))
-  | Sum.inr p' =>
-    match p' with
-    | Sum.inl p' =>
-      (-(1 : Int))
-    | Sum.inr p' =>
-      let «f» := ((), p')
-      «f».2.1
+  | «Fact».«damaged» =>
+    (-(1 : Int))
+  | «Fact».«opened» «f» =>
+    «f».«written»
 
 def «isOpened» («f» : «Fact») : Bool :=
   match «f» with
-  | Sum.inl p' =>
+  | «Fact».«unopened» =>
     false
-  | Sum.inr p' =>
-    match p' with
-    | Sum.inl p' =>
-      false
-    | Sum.inr p' =>
-      let «f» := ((), p')
-      true
+  | «Fact».«damaged» =>
+    false
+  | «Fact».«opened» «f» =>
+    true
 
 def «weight» («f» : «Fact») : Int :=
   let «w» : Int := (0 : Int)
   match «f» with
-  | Sum.inl p' =>
+  | «Fact».«unopened» =>
     let «w» : Int := (1 : Int)
     «w»
-  | Sum.inr p' =>
-    match p' with
-    | Sum.inl p' =>
-      let «f» := ((), p')
-      let «w» : Int := (5 : Int)
-      let «f» := ((Sum.inr (Sum.inl «f».2)) : «Fact»)
-      «w»
-    | Sum.inr p' =>
-      let «w» : Int := (1 : Int)
-      «w»
+  | «Fact».«damaged» =>
+    let «w» : Int := (5 : Int)
+    «w»
+  | «Fact».«opened» _ =>
+    let «w» : Int := (1 : Int)
+    «w»
 
 /-! ## Denotation
 

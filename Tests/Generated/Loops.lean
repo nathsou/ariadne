@@ -152,15 +152,23 @@ abbrev «Item» : Type := Int × Int × (List JSString) × Unit
 @[reducible, readable] def «Item».«id» (r : «Item») : Int := r.1
 @[reducible, readable] def «Item».«size» (r : «Item») : Int := r.2.1
 @[reducible, readable] def «Item».«tags» (r : «Item») : List JSString := r.2.2.1
+@[reducible, readable] def «Item».mk («id» : Int) («size» : Int) («tags» : List JSString) : «Item» := («id», «size», «tags», ())
+@[reducible, readable] def «Item».«withId» (r : «Item») (v : Int) : «Item» := (v, r.2)
+@[reducible, readable] def «Item».«withSize» (r : «Item») (v : Int) : «Item» := (r.1, v, r.2.2)
+@[reducible, readable] def «Item».«withTags» (r : «Item») (v : List JSString) : «Item» := (r.1, r.2.1, v, r.2.2.2)
 abbrev «Shape».Variant.«circle» : Type := Int × Unit
 @[reducible, readable] def «Shape».Variant.«circle».«r» (r : «Shape».Variant.«circle») : Int := r.1
+@[reducible, readable] def «Shape».Variant.«circle».mk («r» : Int) : «Shape».Variant.«circle» := («r», ())
+@[reducible, readable] def «Shape».Variant.«circle».«withR» (r : «Shape».Variant.«circle») (v : Int) : «Shape».Variant.«circle» := (v, r.2)
 abbrev «Shape».Variant.«square» : Type := Int × Unit
 @[reducible, readable] def «Shape».Variant.«square».«side» (r : «Shape».Variant.«square») : Int := r.1
+@[reducible, readable] def «Shape».Variant.«square».mk («side» : Int) : «Shape».Variant.«square» := («side», ())
+@[reducible, readable] def «Shape».Variant.«square».«withSide» (r : «Shape».Variant.«square») (v : Int) : «Shape».Variant.«square» := (v, r.2)
 
 /-- The source's `Shape`. -/
 abbrev «Shape» : Type := «Shape».Variant.«circle» ⊕ «Shape».Variant.«square»
-@[reducible, readable] def «Shape».«circle» (x : «Shape».Variant.«circle») : «Shape» := (Sum.inl x)
-@[reducible, readable] def «Shape».«square» (x : «Shape».Variant.«square») : «Shape» := (Sum.inr x)
+@[reducible, readable, match_pattern] def «Shape».«circle» («r» : Int) : «Shape» := (Sum.inl («r», ()))
+@[reducible, readable, match_pattern] def «Shape».«square» («side» : Int) : «Shape» := (Sum.inr («side», ()))
 
 noncomputable def sig.«sum» : Sig := { name := "sum", params := [("xs", (.array .number))], result := .number, trivial := false }
 noncomputable def sig.«firstLarge» : Sig := { name := "firstLarge", params := [("items", (.array ty.«Item»)), ("limit", .number)], result := (.option .undef ty.«Item»), trivial := true }
@@ -383,131 +391,104 @@ theorem wf : typed.WF := TProgram.wf_of typed erased bodies_ok ast_scoped
 
 def «sum» («xs» : List Int) : Int :=
   let «total» : Int := (0 : Int)
-  Ariadne.forIn «xs» (fun «x» next2' exit2' s2' =>
-    let «total» := s2'.1
-    let «xs» := s2'.2.1
+  Ariadne.forIn «xs» (fun «x» next2' exit2' («total», «xs», ()) =>
     let «total» : Int := «total» + «x»
     next2' («total», «xs», ()))
-    (fun s2' =>
-    let «total» := s2'.1
+    (fun («total», _, ()) =>
     «total»)
     («total», «xs», ())
 
 /-- The inputs on which `sum` stays within what the model covers. -/
 def «sum».safe («xs» : List Int) : Bool :=
   let «total» : Int := (0 : Int)
-  Ariadne.forIn «xs» (fun «x» next2' exit2' s2' =>
-    let «total» := s2'.1
-    let «xs» := s2'.2.1
+  Ariadne.forIn «xs» (fun «x» next2' exit2' («total», «xs», ()) =>
     Ariadne.inRange («total» + «x») && (let «total» : Int := «total» + «x»
     next2' («total», «xs», ())))
-    (fun s2' =>
+    (fun _ =>
     true)
     («total», «xs», ())
 
 def «firstLarge» («items» : List «Item») («limit» : Int) : Option «Item» :=
-  Ariadne.forIn «items» (fun «it» next2' exit2' s2' =>
-    let «items» := s2'.1
-    let «limit» := s2'.2.1
-    if decide ((«it».2.1) > «limit») then
+  Ariadne.forIn «items» (fun «it» next2' exit2' («items», «limit», ()) =>
+    if decide («it».«size» > «limit») then
       some «it»
     else
       next2' («items», «limit», ()))
-    (fun s2' =>
+    (fun _ =>
     none)
     («items», «limit», ())
 
 def «indexOf» («xs» : List JSString) («target» : JSString) : Int :=
-  Ariadne.forIn (List.zipIdx «xs») (fun p2' next2' exit2' s2' =>
-    let «x» := p2'.1
-    let «i» := (p2'.2 : Int)
-    let «xs» := s2'.1
-    let «target» := s2'.2.1
+  Ariadne.forIn (List.zipIdx «xs») (fun («x», n2') next2' exit2' («xs», «target», ()) =>
+    let «i» := (n2' : Int)
     if «x» == «target» then
       «i»
     else
       next2' («xs», «target», ()))
-    (fun s2' =>
+    (fun _ =>
     (-(1 : Int)))
     («xs», «target», ())
 
 def «countTagged» («items» : List «Item») («tag» : JSString) : Int :=
   let «n» : Int := (0 : Int)
-  Ariadne.forIn «items» (fun «it» next2' exit2' s2' =>
-    let «n» := s2'.1
-    let «items» := s2'.2.1
-    let «tag» := s2'.2.2.1
-    if !(List.any («it».2.2.1) (fun y' => y' == «tag»)) then
+  Ariadne.forIn «items» (fun «it» next2' exit2' («n», «items», «tag», ()) =>
+    if !(List.any «it».«tags» (fun y' => y' == «tag»)) then
       next2' («n», «items», «tag», ())
     else
       let «n» : Int := «n» + (1 : Int)
       next2' («n», «items», «tag», ()))
-    (fun s2' =>
-    let «n» := s2'.1
+    (fun («n», _, _, ()) =>
     «n»)
     («n», «items», «tag», ())
 
 /-- The inputs on which `countTagged` stays within what the model covers. -/
 def «countTagged».safe («items» : List «Item») («tag» : JSString) : Bool :=
   let «n» : Int := (0 : Int)
-  Ariadne.forIn «items» (fun «it» next2' exit2' s2' =>
-    let «n» := s2'.1
-    let «items» := s2'.2.1
-    let «tag» := s2'.2.2.1
-    if !(List.any («it».2.2.1) (fun y' => y' == «tag»)) then
+  Ariadne.forIn «items» (fun «it» next2' exit2' («n», «items», «tag», ()) =>
+    if !(List.any «it».«tags» (fun y' => y' == «tag»)) then
       next2' («n», «items», «tag», ())
     else
       Ariadne.inRange («n» + (1 : Int)) && (let «n» : Int := «n» + (1 : Int)
       next2' («n», «items», «tag», ())))
-    (fun s2' =>
+    (fun _ =>
     true)
     («n», «items», «tag», ())
 
 def «prefixUntil» («xs» : List Int) («stop» : Int) : List Int :=
   let «out» : List Int := []
-  Ariadne.forIn «xs» (fun «x» next2' exit2' s2' =>
-    let «out» := s2'.1
-    let «xs» := s2'.2.1
-    let «stop» := s2'.2.2.1
+  Ariadne.forIn «xs» (fun «x» next2' exit2' («out», «xs», «stop», ()) =>
     if «x» == «stop» then
       exit2' («out», «xs», «stop», ())
     else
       let «out» : List Int := «out» ++ ([«x»])
       next2' («out», «xs», «stop», ()))
-    (fun s2' =>
-    let «out» := s2'.1
+    (fun («out», _, _, ()) =>
     «out»)
     («out», «xs», «stop», ())
 
 def «largest» («items» : List «Item») : Option «Item» :=
   let «best» : Option «Item» := none
-  Ariadne.forIn «items» (fun «it» next2' exit2' s2' =>
-    let «best» := s2'.1
-    let «items» := s2'.2.1
+  Ariadne.forIn «items» (fun «it» next2' exit2' («best», «items», ()) =>
     match «best» with
     | none =>
       let «best» : Option «Item» := some «it»
       next2' («best», «items», ())
     | some «best» =>
-      if decide ((«it».2.1) > («best».2.1)) then
+      if decide («it».«size» > «best».«size») then
         let «best» : «Item» := «it»
         let «best» := some «best»
         next2' («best», «items», ())
       else
         let «best» := some «best»
         next2' («best», «items», ()))
-    (fun s2' =>
-    let «best» := s2'.1
+    (fun («best», _, ()) =>
     «best»)
     («best», «items», ())
 
 def «classify» («xs» : List Int) : JSString :=
   let «pos» : Int := (0 : Int)
   let «neg» : Int := (0 : Int)
-  Ariadne.forIn «xs» (fun «x» next2' exit2' s2' =>
-    let «neg» := s2'.1
-    let «pos» := s2'.2.1
-    let «xs» := s2'.2.2.1
+  Ariadne.forIn «xs» (fun «x» next2' exit2' («neg», «pos», «xs», ()) =>
     if decide («x» > (0 : Int)) then
       let «pos» : Int := «pos» + (1 : Int)
       next2' («neg», «pos», «xs», ())
@@ -517,9 +498,7 @@ def «classify» («xs» : List Int) : JSString :=
         next2' («neg», «pos», «xs», ())
       else
         next2' («neg», «pos», «xs», ()))
-    (fun s2' =>
-    let «neg» := s2'.1
-    let «pos» := s2'.2.1
+    (fun («neg», «pos», _, ()) =>
     if decide («pos» > «neg») then
       (js "pos")
     else
@@ -533,10 +512,7 @@ def «classify» («xs» : List Int) : JSString :=
 def «classify».safe («xs» : List Int) : Bool :=
   let «pos» : Int := (0 : Int)
   let «neg» : Int := (0 : Int)
-  Ariadne.forIn «xs» (fun «x» next2' exit2' s2' =>
-    let «neg» := s2'.1
-    let «pos» := s2'.2.1
-    let «xs» := s2'.2.2.1
+  Ariadne.forIn «xs» (fun «x» next2' exit2' («neg», «pos», «xs», ()) =>
     if decide («x» > (0 : Int)) then
       Ariadne.inRange («pos» + (1 : Int)) && (let «pos» : Int := «pos» + (1 : Int)
       next2' («neg», «pos», «xs», ()))
@@ -546,9 +522,7 @@ def «classify».safe («xs» : List Int) : Bool :=
         next2' («neg», «pos», «xs», ()))
       else
         next2' («neg», «pos», «xs», ()))
-    (fun s2' =>
-    let «neg» := s2'.1
-    let «pos» := s2'.2.1
+    (fun («neg», «pos», _, ()) =>
     if decide («pos» > «neg») then
       true
     else
@@ -569,113 +543,79 @@ def «bump».safe («n» : Int) : Bool :=
 
 def «grid» («rows» : List (List Int)) : Int :=
   let «total» : Int := (0 : Int)
-  Ariadne.forIn «rows» (fun «row» next2' exit2' s2' =>
-    let «total» := s2'.1
-    let «rows» := s2'.2.1
-    Ariadne.forIn (List.zipIdx «row») (fun p3' next4' exit4' s4' =>
-      let «v» := p3'.1
-      let «j» := (p3'.2 : Int)
-      let «row» := s4'.1
-      let «total» := s4'.2.1
-      let «rows» := s4'.2.2.1
+  Ariadne.forIn «rows» (fun «row» next2' exit2' («total», «rows», ()) =>
+    Ariadne.forIn (List.zipIdx «row») (fun («v», n3') next4' exit4' («row», «total», «rows», ()) =>
+      let «j» := (n3' : Int)
       if decide («j» > (2 : Int)) then
         exit4' («row», «total», «rows», ())
       else
         let «total» : Int := «total» + «v»
         next4' («row», «total», «rows», ()))
-      (fun s4' =>
-      let «total» := s4'.2.1
-      let «rows» := s4'.2.2.1
+      (fun (_, «total», «rows», ()) =>
       next2' («total», «rows», ()))
       («row», «total», «rows», ()))
-    (fun s2' =>
-    let «total» := s2'.1
+    (fun («total», _, ()) =>
     «total»)
     («total», «rows», ())
 
 /-- The inputs on which `grid` stays within what the model covers. -/
 def «grid».safe («rows» : List (List Int)) : Bool :=
   let «total» : Int := (0 : Int)
-  Ariadne.forIn «rows» (fun «row» next2' exit2' s2' =>
-    let «total» := s2'.1
-    let «rows» := s2'.2.1
-    Ariadne.forIn (List.zipIdx «row») (fun p3' next4' exit4' s4' =>
-      let «v» := p3'.1
-      let «j» := (p3'.2 : Int)
-      let «row» := s4'.1
-      let «total» := s4'.2.1
-      let «rows» := s4'.2.2.1
+  Ariadne.forIn «rows» (fun «row» next2' exit2' («total», «rows», ()) =>
+    Ariadne.forIn (List.zipIdx «row») (fun («v», n3') next4' exit4' («row», «total», «rows», ()) =>
+      let «j» := (n3' : Int)
       if decide («j» > (2 : Int)) then
         exit4' («row», «total», «rows», ())
       else
         Ariadne.inRange («total» + «v») && (let «total» : Int := «total» + «v»
         next4' («row», «total», «rows», ())))
-      (fun s4' =>
-      let «total» := s4'.2.1
-      let «rows» := s4'.2.2.1
+      (fun (_, «total», «rows», ()) =>
       next2' («total», «rows», ()))
       («row», «total», «rows», ()))
-    (fun s2' =>
+    (fun _ =>
     true)
     («total», «rows», ())
 
 def «perimeters» («shapes» : List «Shape») : Int :=
   let «t» : Int := (0 : Int)
-  Ariadne.forIn «shapes» (fun «sh» next2' exit2' s2' =>
-    let «t» := s2'.1
-    let «shapes» := s2'.2.1
+  Ariadne.forIn «shapes» (fun «sh» next2' exit2' («t», «shapes», ()) =>
     match «sh» with
-    | Sum.inl p' =>
-      let «sh» := ((), p')
-      let «t» : Int := «t» + ((6 : Int) * («sh».2.1))
-      let «sh» := ((Sum.inl «sh».2) : «Shape»)
+    | «Shape».«circle» «sh» =>
+      let «t» : Int := «t» + ((6 : Int) * «sh»)
       next2' («t», «shapes», ())
-    | Sum.inr p' =>
-      let «sh» := ((), p')
-      let «t» : Int := «t» + ((4 : Int) * («sh».2.1))
-      let «sh» := ((Sum.inr «sh».2) : «Shape»)
+    | «Shape».«square» «sh» =>
+      let «t» : Int := «t» + ((4 : Int) * «sh»)
       next2' («t», «shapes», ()))
-    (fun s2' =>
-    let «t» := s2'.1
+    (fun («t», _, ()) =>
     «t»)
     («t», «shapes», ())
 
 /-- The inputs on which `perimeters` stays within what the model covers. -/
 def «perimeters».safe («shapes» : List «Shape») : Bool :=
   let «t» : Int := (0 : Int)
-  Ariadne.forIn «shapes» (fun «sh» next2' exit2' s2' =>
-    let «t» := s2'.1
-    let «shapes» := s2'.2.1
+  Ariadne.forIn «shapes» (fun «sh» next2' exit2' («t», «shapes», ()) =>
     match «sh» with
-    | Sum.inl p' =>
-      let «sh» := ((), p')
-      (Ariadne.inRange ((6 : Int) * («sh».2.1)) && Ariadne.inRange («t» + ((6 : Int) * («sh».2.1)))) && (let «t» : Int := «t» + ((6 : Int) * («sh».2.1))
-      let «sh» := ((Sum.inl «sh».2) : «Shape»)
+    | «Shape».«circle» «sh» =>
+      (Ariadne.inRange ((6 : Int) * «sh») && Ariadne.inRange («t» + ((6 : Int) * «sh»))) && (let «t» : Int := «t» + ((6 : Int) * «sh»)
       next2' («t», «shapes», ()))
-    | Sum.inr p' =>
-      let «sh» := ((), p')
-      (Ariadne.inRange ((4 : Int) * («sh».2.1)) && Ariadne.inRange («t» + ((4 : Int) * («sh».2.1)))) && (let «t» : Int := «t» + ((4 : Int) * («sh».2.1))
-      let «sh» := ((Sum.inr «sh».2) : «Shape»)
+    | «Shape».«square» «sh» =>
+      (Ariadne.inRange ((4 : Int) * «sh») && Ariadne.inRange («t» + ((4 : Int) * «sh»))) && (let «t» : Int := «t» + ((4 : Int) * «sh»)
       next2' («t», «shapes», ())))
-    (fun s2' =>
+    (fun _ =>
     true)
     («t», «shapes», ())
 
 def «steps» («n» : Int) : Int :=
   let «count» : Int := (0 : Int)
   let «k» : Int := «n»
-  Ariadne.forIn ([(1 : Int), (2 : Int), (3 : Int), (4 : Int), (5 : Int), (6 : Int), (7 : Int), (8 : Int)]) (fun «_» next2' exit2' s2' =>
-    let «k» := s2'.1
-    let «count» := s2'.2.1
-    let «n» := s2'.2.2.1
+  Ariadne.forIn ([(1 : Int), (2 : Int), (3 : Int), (4 : Int), (5 : Int), (6 : Int), (7 : Int), (8 : Int)]) (fun «_» next2' exit2' («k», «count», «n», ()) =>
     if decide («k» ≤ (1 : Int)) then
       exit2' («k», «count», «n», ())
     else
       let «k» : Int := if decide («k» > (100 : Int)) then «k» - (100 : Int) else «k» - (1 : Int)
       let «count» : Int := «count» + (1 : Int)
       next2' («k», «count», «n», ()))
-    (fun s2' =>
-    let «count» := s2'.2.1
+    (fun (_, «count», _, ()) =>
     «count»)
     («k», «count», «n», ())
 
@@ -683,28 +623,21 @@ def «steps» («n» : Int) : Int :=
 def «steps».safe («n» : Int) : Bool :=
   let «count» : Int := (0 : Int)
   let «k» : Int := «n»
-  Ariadne.forIn ([(1 : Int), (2 : Int), (3 : Int), (4 : Int), (5 : Int), (6 : Int), (7 : Int), (8 : Int)]) (fun «_» next2' exit2' s2' =>
-    let «k» := s2'.1
-    let «count» := s2'.2.1
-    let «n» := s2'.2.2.1
+  Ariadne.forIn ([(1 : Int), (2 : Int), (3 : Int), (4 : Int), (5 : Int), (6 : Int), (7 : Int), (8 : Int)]) (fun «_» next2' exit2' («k», «count», «n», ()) =>
     if decide («k» ≤ (1 : Int)) then
       exit2' («k», «count», «n», ())
     else
       (if decide («k» > (100 : Int)) then Ariadne.inRange («k» - (100 : Int)) else Ariadne.inRange («k» - (1 : Int))) && (let «k» : Int := if decide («k» > (100 : Int)) then «k» - (100 : Int) else «k» - (1 : Int)
       Ariadne.inRange («count» + (1 : Int)) && (let «count» : Int := «count» + (1 : Int)
       next2' («k», «count», «n», ()))))
-    (fun s2' =>
+    (fun _ =>
     true)
     («k», «count», «n», ())
 
 def «score» («a» : Int) («b» : Int) : Int :=
   let «s» : Int := (0 : Int)
-  let after2' := fun s2' =>
-    let «s» := s2'.1
-    let «a» := s2'.2.1
-    let «b» := s2'.2.2.1
-    let after4' := fun s4' =>
-      let «s» := s4'.1
+  let after2' := fun («s», «a», «b», ()) =>
+    let after4' := fun («s», _, _, ()) =>
       «s»
     if decide («b» > (0 : Int)) then
       let «s» : Int := «s» * (2 : Int)
@@ -721,11 +654,8 @@ def «score» («a» : Int) («b» : Int) : Int :=
 /-- The inputs on which `score` stays within what the model covers. -/
 def «score».safe («a» : Int) («b» : Int) : Bool :=
   let «s» : Int := (0 : Int)
-  let after2' := fun s2' =>
-    let «s» := s2'.1
-    let «a» := s2'.2.1
-    let «b» := s2'.2.2.1
-    let after4' := fun s4' =>
+  let after2' := fun («s», «a», «b», ()) =>
+    let after4' := fun _ =>
       true
     if decide («b» > (0 : Int)) then
       Ariadne.inRange («s» * (2 : Int)) && (let «s» : Int := «s» * (2 : Int)
@@ -742,11 +672,7 @@ def «score».safe («a» : Int) («b» : Int) : Bool :=
 def «triangle» («n» : Int) («cap» : Int) : Int :=
   let «m» : Int := if decide («n» < (1000 : Int)) then «n» else (1000 : Int)
   let «t» : Int := (0 : Int)
-  Ariadne.forIn (Ariadne.range «m») (fun «i» next2' exit2' s2' =>
-    let «t» := s2'.1
-    let «m» := s2'.2.1
-    let «n» := s2'.2.2.1
-    let «cap» := s2'.2.2.2.1
+  Ariadne.forIn (Ariadne.range «m») (fun «i» next2' exit2' («t», «m», «n», «cap», ()) =>
     if decide («i» > «cap») then
       exit2' («t», «m», «n», «cap», ())
     else
@@ -755,8 +681,7 @@ def «triangle» («n» : Int) («cap» : Int) : Int :=
       else
         let «t» : Int := «t» + «i»
         next2' («t», «m», «n», «cap», ()))
-    (fun s2' =>
-    let «t» := s2'.1
+    (fun («t», _, _, _, ()) =>
     «t»)
     («t», «m», «n», «cap», ())
 
@@ -764,11 +689,7 @@ def «triangle» («n» : Int) («cap» : Int) : Int :=
 def «triangle».safe («n» : Int) («cap» : Int) : Bool :=
   let «m» : Int := if decide («n» < (1000 : Int)) then «n» else (1000 : Int)
   let «t» : Int := (0 : Int)
-  Ariadne.forIn (Ariadne.range «m») (fun «i» next2' exit2' s2' =>
-    let «t» := s2'.1
-    let «m» := s2'.2.1
-    let «n» := s2'.2.2.1
-    let «cap» := s2'.2.2.2.1
+  Ariadne.forIn (Ariadne.range «m») (fun «i» next2' exit2' («t», «m», «n», «cap», ()) =>
     if decide («i» > «cap») then
       exit2' («t», «m», «n», «cap», ())
     else
@@ -777,7 +698,7 @@ def «triangle».safe («n» : Int) («cap» : Int) : Bool :=
       else
         Ariadne.inRange («t» + «i») && (let «t» : Int := «t» + «i»
         next2' («t», «m», «n», «cap», ())))
-    (fun s2' =>
+    (fun _ =>
     true)
     («t», «m», «n», «cap», ())
 

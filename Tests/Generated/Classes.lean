@@ -74,12 +74,20 @@ abbrev «Entry» : Type := Int × JSString × (Option JSString) × Unit
 @[reducible, readable] def «Entry».«at» (r : «Entry») : Int := r.1
 @[reducible, readable] def «Entry».«s» (r : «Entry») : JSString := r.2.1
 @[reducible, readable] def «Entry».«tag» (r : «Entry») : Option JSString := r.2.2.1
+@[reducible, readable] def «Entry».mk («at» : Int) («s» : JSString) («tag» : Option JSString) : «Entry» := («at», «s», «tag», ())
+@[reducible, readable] def «Entry».«withAt» (r : «Entry») (v : Int) : «Entry» := (v, r.2)
+@[reducible, readable] def «Entry».«withS» (r : «Entry») (v : JSString) : «Entry» := (r.1, v, r.2.2)
+@[reducible, readable] def «Entry».«withTag» (r : «Entry») (v : Option JSString) : «Entry» := (r.1, r.2.1, v, r.2.2.2)
 
 /-- The source's `Book`. -/
 abbrev «Book» : Type := (List (JSString × «Entry»)) × (List (JSString × JSString)) × (List (JSString × Int)) × Unit
 @[reducible, readable] def «Book».«items» (r : «Book») : List (JSString × «Entry») := r.1
 @[reducible, readable] def «Book».«names» (r : «Book») : List (JSString × JSString) := r.2.1
 @[reducible, readable] def «Book».«counts» (r : «Book») : List (JSString × Int) := r.2.2.1
+@[reducible, readable] def «Book».mk («items» : List (JSString × «Entry»)) («names» : List (JSString × JSString)) («counts» : List (JSString × Int)) : «Book» := («items», «names», «counts», ())
+@[reducible, readable] def «Book».«withItems» (r : «Book») (v : List (JSString × «Entry»)) : «Book» := (v, r.2)
+@[reducible, readable] def «Book».«withNames» (r : «Book») (v : List (JSString × JSString)) : «Book» := (r.1, v, r.2.2)
+@[reducible, readable] def «Book».«withCounts» (r : «Book») (v : List (JSString × Int)) : «Book» := (r.1, r.2.1, v, r.2.2.2)
 
 noncomputable def sig.«newer» : Sig := { name := "newer", params := [("s", .string), ("stamp", .string)], result := .bool, trivial := true }
 noncomputable def sig.«new Book» : Sig := { name := "new Book", params := [], result := ty.«Book», trivial := true }
@@ -199,120 +207,109 @@ def «newer» («s» : JSString) («stamp» : JSString) : Bool :=
   («s» == (js "")) || (Ariadne.strLt «s» «stamp»)
 
 def «new Book»  : «Book» :=
-  (([] : List (JSString × «Entry»)), ([] : List (JSString × JSString)), ([] : List (JSString × Int)), ())
+  («Book».mk ([] : List (JSString × «Entry»)) ([] : List (JSString × JSString)) ([] : List (JSString × Int)))
 
 def «bump» («this» : «Book») («k» : JSString) : «Book» :=
-  let «c» : Option Int := Ariadne.mapGet «this».2.2.1 «k»
-  let «this» : «Book» := («this».1, «this».2.1, Ariadne.mapPut «this».2.2.1 «k» (match «c» with | none => (1 : Int) | some «c» => «c» + (1 : Int)), «this».2.2.2)
+  let «c» : Option Int := Ariadne.mapGet «this».«counts» «k»
+  let «this» : «Book» := «this».«withCounts» (Ariadne.mapPut «this».«counts» «k» (match «c» with | none => (1 : Int) | some «c» => «c» + (1 : Int)))
   «this»
 
 /-- The inputs on which `bump` stays within what the model covers. -/
 def «bump».safe («this» : «Book») («k» : JSString) : Bool :=
-  let «c» : Option Int := Ariadne.mapGet «this».2.2.1 «k»
-  (match «c» with | none => true | some «c» => Ariadne.inRange («c» + (1 : Int))) && (let «this» : «Book» := («this».1, «this».2.1, Ariadne.mapPut «this».2.2.1 «k» (match «c» with | none => (1 : Int) | some «c» => «c» + (1 : Int)), «this».2.2.2)
+  let «c» : Option Int := Ariadne.mapGet «this».«counts» «k»
+  (match «c» with | none => true | some «c» => Ariadne.inRange («c» + (1 : Int))) && (let «this» : «Book» := «this».«withCounts» (Ariadne.mapPut «this».«counts» «k» (match «c» with | none => (1 : Int) | some «c» => «c» + (1 : Int)))
   true)
 
 def «put» («this» : «Book») («k» : JSString) («e» : «Entry») : «Book» :=
-  let «cur» : Option «Entry» := Ariadne.mapGet «this».1 «k»
+  let «cur» : Option «Entry» := Ariadne.mapGet «this».«items» «k»
   match «cur» with
   | some «cur» =>
-    if !(«newer» («cur».2.1) («e».2.1)) then
+    if !(«newer» «cur».«s» «e».«s») then
       «this»
     else
-      let «cur» := some «cur»
-      let «this» : «Book» := (Ariadne.mapPut «this».1 «k» «e», «this».2)
+      let «this» : «Book» := «this».«withItems» (Ariadne.mapPut «this».«items» «k» «e»)
       let «this» : «Book» := «bump» «this» «k»
       «this»
   | none =>
-    let «this» : «Book» := (Ariadne.mapPut «this».1 «k» «e», «this».2)
+    let «this» : «Book» := «this».«withItems» (Ariadne.mapPut «this».«items» «k» «e»)
     let «this» : «Book» := «bump» «this» «k»
     «this»
 
 /-- The inputs on which `put` stays within what the model covers. -/
 def «put».safe («this» : «Book») («k» : JSString) («e» : «Entry») : Bool :=
-  let «cur» : Option «Entry» := Ariadne.mapGet «this».1 «k»
+  let «cur» : Option «Entry» := Ariadne.mapGet «this».«items» «k»
   match «cur» with
   | some «cur» =>
-    if !(«newer» («cur».2.1) («e».2.1)) then
+    if !(«newer» «cur».«s» «e».«s») then
       true
     else
-      let «cur» := some «cur»
-      let «this» : «Book» := (Ariadne.mapPut «this».1 «k» «e», «this».2)
+      let «this» : «Book» := «this».«withItems» (Ariadne.mapPut «this».«items» «k» «e»)
       «bump».safe «this» «k» && (let «this» : «Book» := «bump» «this» «k»
       true)
   | none =>
-    let «this» : «Book» := (Ariadne.mapPut «this».1 «k» «e», «this».2)
+    let «this» : «Book» := «this».«withItems» (Ariadne.mapPut «this».«items» «k» «e»)
     «bump».safe «this» «k» && (let «this» : «Book» := «bump» «this» «k»
     true)
 
 def «rename» («this» : «Book») («k» : JSString) («n» : JSString) : «Book» :=
-  let «this» : «Book» := («this».1, Ariadne.mapPut «this».2.1 «k» «n», «this».2.2)
-  let after2' := fun s2' =>
-    let «this» := s2'.1
+  let «this» : «Book» := «this».«withNames» (Ariadne.mapPut «this».«names» «k» «n»)
+  let after2' := fun («this», _, _, ()) =>
     «this»
-  if !((Ariadne.mapGet «this».1 «k»).isSome) then
-    let «this» : «Book» := (Ariadne.mapPut «this».1 «k» (((0 : Int), (js ""), none, ())), «this».2)
+  if !((Ariadne.mapGet «this».«items» «k»).isSome) then
+    let «this» : «Book» := «this».«withItems» (Ariadne.mapPut «this».«items» «k» («Entry».mk (0 : Int) (js "") none))
     after2' («this», «k», «n», ())
   else
     after2' («this», «k», «n», ())
 
 def «drop» («this» : «Book») («k» : JSString) : «Book» :=
-  let «this» : «Book» := (Ariadne.mapDel «this».1 «k», «this».2)
-  let «this» : «Book» := («this».1, Ariadne.mapDel «this».2.1 «k», «this».2.2)
+  let «this» : «Book» := «this».«withItems» (Ariadne.mapDel «this».«items» «k»)
+  let «this» : «Book» := «this».«withNames» (Ariadne.mapDel «this».«names» «k»)
   «this»
 
 def «touchAll» («this» : «Book») («ks» : List JSString) : «Book» :=
-  Ariadne.forIn «ks» (fun «k» next2' exit2' s2' =>
-    let «this» := s2'.1
-    let «ks» := s2'.2.1
+  Ariadne.forIn «ks» (fun «k» next2' exit2' («this», «ks», ()) =>
     let «this» : «Book» := «bump» «this» «k»
     next2' («this», «ks», ()))
-    (fun s2' =>
-    let «this» := s2'.1
+    (fun («this», _, ()) =>
     «this»)
     («this», «ks», ())
 
 /-- The inputs on which `touchAll` stays within what the model covers. -/
 def «touchAll».safe («this» : «Book») («ks» : List JSString) : Bool :=
-  Ariadne.forIn «ks» (fun «k» next2' exit2' s2' =>
-    let «this» := s2'.1
-    let «ks» := s2'.2.1
+  Ariadne.forIn «ks» (fun «k» next2' exit2' («this», «ks», ()) =>
     «bump».safe «this» «k» && (let «this» : «Book» := «bump» «this» «k»
     next2' («this», «ks», ())))
-    (fun s2' =>
+    (fun _ =>
     true)
     («this», «ks», ())
 
 def «get» («this» : «Book») («k» : JSString) : Option «Entry» :=
-  Ariadne.mapGet «this».1 «k»
+  Ariadne.mapGet «this».«items» «k»
 
 def «count» («this» : «Book») : Int :=
-  (List.length «this».1 : Int)
+  (List.length «this».«items» : Int)
 
 def «keys» («this» : «Book») : List JSString :=
-  (List.map Prod.fst «this».1) ++ ([])
+  (List.map Prod.fst «this».«items») ++ ([])
 
 def «latest» («this» : «Book») : Int :=
   let «best» : Int := (0 : Int)
-  Ariadne.forIn ((List.map Prod.snd «this».1) ++ ([])) (fun «e» next2' exit2' s2' =>
-    let «best» := s2'.1
-    let «this» := s2'.2.1
-    if decide ((«e».1) > «best») then
-      let «best» : Int := «e».1
+  Ariadne.forIn ((List.map Prod.snd «this».«items») ++ ([])) (fun «e» next2' exit2' («best», «this», ()) =>
+    if decide («e».«at» > «best») then
+      let «best» : Int := «e».«at»
       next2' («best», «this», ())
     else
       next2' («best», «this», ()))
-    (fun s2' =>
-    let «best» := s2'.1
+    (fun («best», _, ()) =>
     «best»)
     («best», «this», ())
 
 def «nameOf» («this» : «Book») («k» : JSString) : JSString :=
-  let «n» : Option JSString := Ariadne.mapGet «this».2.1 «k»
+  let «n» : Option JSString := Ariadne.mapGet «this».«names» «k»
   match «n» with | none => «k» | some «n» => «n»
 
 def «labels» («this» : «Book») : List JSString :=
-  List.map (fun «k» => («nameOf» «this» «k») ++ (js "!")) ((List.map Prod.fst «this».2.1) ++ ([]))
+  List.map (fun «k» => («nameOf» «this» «k») ++ (js "!")) ((List.map Prod.fst «this».«names») ++ ([]))
 
 /-! ## Denotation
 

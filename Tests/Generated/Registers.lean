@@ -281,6 +281,13 @@ abbrev «Placed» : Type := JSString × JSString × Int × JSString × Bool × (
 @[reducible, readable] def «Placed».«s» (r : «Placed») : JSString := r.2.2.2.1
 @[reducible, readable] def «Placed».«gone» (r : «Placed») : Bool := r.2.2.2.2.1
 @[reducible, readable] def «Placed».«u» (r : «Placed») : Option JSString := r.2.2.2.2.2.1
+@[reducible, readable] def «Placed».mk («p» : JSString) («cls» : JSString) («at» : Int) («s» : JSString) («gone» : Bool) («u» : Option JSString) : «Placed» := («p», «cls», «at», «s», «gone», «u», ())
+@[reducible, readable] def «Placed».«withP» (r : «Placed») (v : JSString) : «Placed» := (v, r.2)
+@[reducible, readable] def «Placed».«withCls» (r : «Placed») (v : JSString) : «Placed» := (r.1, v, r.2.2)
+@[reducible, readable] def «Placed».«withAt» (r : «Placed») (v : Int) : «Placed» := (r.1, r.2.1, v, r.2.2.2)
+@[reducible, readable] def «Placed».«withS» (r : «Placed») (v : JSString) : «Placed» := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
+@[reducible, readable] def «Placed».«withGone» (r : «Placed») (v : Bool) : «Placed» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, v, r.2.2.2.2.2)
+@[reducible, readable] def «Placed».«withU» (r : «Placed») (v : Option JSString) : «Placed» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, v, r.2.2.2.2.2.2)
 
 /-- The source's `Mark`. -/
 abbrev «Mark» : Type := JSString × JSString × Int × JSString × Bool × (Option JSString) × Unit
@@ -290,6 +297,13 @@ abbrev «Mark» : Type := JSString × JSString × Int × JSString × Bool × (Op
 @[reducible, readable] def «Mark».«s» (r : «Mark») : JSString := r.2.2.2.1
 @[reducible, readable] def «Mark».«on» (r : «Mark») : Bool := r.2.2.2.2.1
 @[reducible, readable] def «Mark».«reason» (r : «Mark») : Option JSString := r.2.2.2.2.2.1
+@[reducible, readable] def «Mark».mk («ref» : JSString) («p» : JSString) («since» : Int) («s» : JSString) («on» : Bool) («reason» : Option JSString) : «Mark» := («ref», «p», «since», «s», «on», «reason», ())
+@[reducible, readable] def «Mark».«withRef» (r : «Mark») (v : JSString) : «Mark» := (v, r.2)
+@[reducible, readable] def «Mark».«withP» (r : «Mark») (v : JSString) : «Mark» := (r.1, v, r.2.2)
+@[reducible, readable] def «Mark».«withSince» (r : «Mark») (v : Int) : «Mark» := (r.1, r.2.1, v, r.2.2.2)
+@[reducible, readable] def «Mark».«withS» (r : «Mark») (v : JSString) : «Mark» := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
+@[reducible, readable] def «Mark».«withOn» (r : «Mark») (v : Bool) : «Mark» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, v, r.2.2.2.2.2)
+@[reducible, readable] def «Mark».«withReason» (r : «Mark») (v : Option JSString) : «Mark» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, v, r.2.2.2.2.2.2)
 
 /-- The source's `Pack`. -/
 abbrev «Pack» : Type := JSString × Int × Int × Int × (Option JSString) × (Option JSString) × Unit
@@ -299,6 +313,13 @@ abbrev «Pack» : Type := JSString × Int × Int × Int × (Option JSString) × 
 @[reducible, readable] def «Pack».«at» (r : «Pack») : Int := r.2.2.2.1
 @[reducible, readable] def «Pack».«s» (r : «Pack») : Option JSString := r.2.2.2.2.1
 @[reducible, readable] def «Pack».«hn» (r : «Pack») : Option JSString := r.2.2.2.2.2.1
+@[reducible, readable] def «Pack».mk («id» : JSString) («size» : Int) («csize» : Int) («at» : Int) («s» : Option JSString) («hn» : Option JSString) : «Pack» := («id», «size», «csize», «at», «s», «hn», ())
+@[reducible, readable] def «Pack».«withId» (r : «Pack») (v : JSString) : «Pack» := (v, r.2)
+@[reducible, readable] def «Pack».«withSize» (r : «Pack») (v : Int) : «Pack» := (r.1, v, r.2.2)
+@[reducible, readable] def «Pack».«withCsize» (r : «Pack») (v : Int) : «Pack» := (r.1, r.2.1, v, r.2.2.2)
+@[reducible, readable] def «Pack».«withAt» (r : «Pack») (v : Int) : «Pack» := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
+@[reducible, readable] def «Pack».«withS» (r : «Pack») (v : Option JSString) : «Pack» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, v, r.2.2.2.2.2)
+@[reducible, readable] def «Pack».«withHn» (r : «Pack») (v : Option JSString) : «Pack» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, v, r.2.2.2.2.2.2)
 
 /-- The source's `Counters`. -/
 abbrev «Counters» : Type := Int × Int × Int × Int × Int × Int × Int × Int × Int × Unit
@@ -311,12 +332,26 @@ abbrev «Counters» : Type := Int × Int × Int × Int × Int × Int × Int × I
 @[reducible, readable] def «Counters».«restore» (r : «Counters») : Int := r.2.2.2.2.2.2.1
 @[reducible, readable] def «Counters».«ingress» (r : «Counters») : Int := r.2.2.2.2.2.2.2.1
 @[reducible, readable] def «Counters».«egress» (r : «Counters») : Int := r.2.2.2.2.2.2.2.2.1
+@[reducible, readable] def «Counters».mk («put» : Int) («get» : Int) («list» : Int) («head» : Int) («delete» : Int) («copy» : Int) («restore» : Int) («ingress» : Int) («egress» : Int) : «Counters» := («put», «get», «list», «head», «delete», «copy», «restore», «ingress», «egress», ())
+@[reducible, readable] def «Counters».«withPut» (r : «Counters») (v : Int) : «Counters» := (v, r.2)
+@[reducible, readable] def «Counters».«withGet» (r : «Counters») (v : Int) : «Counters» := (r.1, v, r.2.2)
+@[reducible, readable] def «Counters».«withList» (r : «Counters») (v : Int) : «Counters» := (r.1, r.2.1, v, r.2.2.2)
+@[reducible, readable] def «Counters».«withHead» (r : «Counters») (v : Int) : «Counters» := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
+@[reducible, readable] def «Counters».«withDelete» (r : «Counters») (v : Int) : «Counters» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, v, r.2.2.2.2.2)
+@[reducible, readable] def «Counters».«withCopy» (r : «Counters») (v : Int) : «Counters» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, v, r.2.2.2.2.2.2)
+@[reducible, readable] def «Counters».«withRestore» (r : «Counters») (v : Int) : «Counters» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, r.2.2.2.2.2.1, v, r.2.2.2.2.2.2.2)
+@[reducible, readable] def «Counters».«withIngress» (r : «Counters») (v : Int) : «Counters» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, r.2.2.2.2.2.1, r.2.2.2.2.2.2.1, v, r.2.2.2.2.2.2.2.2)
+@[reducible, readable] def «Counters».«withEgress» (r : «Counters») (v : Int) : «Counters» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, r.2.2.2.2.2.1, r.2.2.2.2.2.2.1, r.2.2.2.2.2.2.2.1, v, r.2.2.2.2.2.2.2.2.2)
 
 /-- The source's `Period`. -/
 abbrev «Period» : Type := JSString × JSString × (List JSString) × Unit
 @[reducible, readable] def «Period».«p» (r : «Period») : JSString := r.1
 @[reducible, readable] def «Period».«month» (r : «Period») : JSString := r.2.1
 @[reducible, readable] def «Period».«devices» (r : «Period») : List JSString := r.2.2.1
+@[reducible, readable] def «Period».mk («p» : JSString) («month» : JSString) («devices» : List JSString) : «Period» := («p», «month», «devices», ())
+@[reducible, readable] def «Period».«withP» (r : «Period») (v : JSString) : «Period» := (v, r.2)
+@[reducible, readable] def «Period».«withMonth» (r : «Period») (v : JSString) : «Period» := (r.1, v, r.2.2)
+@[reducible, readable] def «Period».«withDevices» (r : «Period») (v : List JSString) : «Period» := (r.1, r.2.1, v, r.2.2.2)
 
 /-- The source's `AlbumRec`. -/
 abbrev «AlbumRec» : Type := JSString × JSString × Int × (Option JSString) × (Option JSString) × (Option JSString) × (Option JSString) × Unit
@@ -327,6 +362,14 @@ abbrev «AlbumRec» : Type := JSString × JSString × Int × (Option JSString) �
 @[reducible, readable] def «AlbumRec».«deleted» (r : «AlbumRec») : Option JSString := r.2.2.2.2.1
 @[reducible, readable] def «AlbumRec».«nameS» (r : «AlbumRec») : Option JSString := r.2.2.2.2.2.1
 @[reducible, readable] def «AlbumRec».«coverS» (r : «AlbumRec») : Option JSString := r.2.2.2.2.2.2.1
+@[reducible, readable] def «AlbumRec».mk («id» : JSString) («name» : JSString) («created» : Int) («cover» : Option JSString) («deleted» : Option JSString) («nameS» : Option JSString) («coverS» : Option JSString) : «AlbumRec» := («id», «name», «created», «cover», «deleted», «nameS», «coverS», ())
+@[reducible, readable] def «AlbumRec».«withId» (r : «AlbumRec») (v : JSString) : «AlbumRec» := (v, r.2)
+@[reducible, readable] def «AlbumRec».«withName» (r : «AlbumRec») (v : JSString) : «AlbumRec» := (r.1, v, r.2.2)
+@[reducible, readable] def «AlbumRec».«withCreated» (r : «AlbumRec») (v : Int) : «AlbumRec» := (r.1, r.2.1, v, r.2.2.2)
+@[reducible, readable] def «AlbumRec».«withCover» (r : «AlbumRec») (v : Option JSString) : «AlbumRec» := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
+@[reducible, readable] def «AlbumRec».«withDeleted» (r : «AlbumRec») (v : Option JSString) : «AlbumRec» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, v, r.2.2.2.2.2)
+@[reducible, readable] def «AlbumRec».«withNameS» (r : «AlbumRec») (v : Option JSString) : «AlbumRec» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, v, r.2.2.2.2.2.2)
+@[reducible, readable] def «AlbumRec».«withCoverS» (r : «AlbumRec») (v : Option JSString) : «AlbumRec» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, r.2.2.2.2.2.1, v, r.2.2.2.2.2.2.2)
 
 /-- The source's `AlbumItem`. -/
 abbrev «AlbumItem» : Type := JSString × JSString × JSString × Bool × Unit
@@ -334,6 +377,11 @@ abbrev «AlbumItem» : Type := JSString × JSString × JSString × Bool × Unit
 @[reducible, readable] def «AlbumItem».«id» (r : «AlbumItem») : JSString := r.2.1
 @[reducible, readable] def «AlbumItem».«s» (r : «AlbumItem») : JSString := r.2.2.1
 @[reducible, readable] def «AlbumItem».«present» (r : «AlbumItem») : Bool := r.2.2.2.1
+@[reducible, readable] def «AlbumItem».mk («aid» : JSString) («id» : JSString) («s» : JSString) («present» : Bool) : «AlbumItem» := («aid», «id», «s», «present», ())
+@[reducible, readable] def «AlbumItem».«withAid» (r : «AlbumItem») (v : JSString) : «AlbumItem» := (v, r.2)
+@[reducible, readable] def «AlbumItem».«withId» (r : «AlbumItem») (v : JSString) : «AlbumItem» := (r.1, v, r.2.2)
+@[reducible, readable] def «AlbumItem».«withS» (r : «AlbumItem») (v : JSString) : «AlbumItem» := (r.1, r.2.1, v, r.2.2.2)
+@[reducible, readable] def «AlbumItem».«withPresent» (r : «AlbumItem») (v : Bool) : «AlbumItem» := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
 
 /-- The source's `Total`. -/
 abbrev «Total» : Type := JSString × JSString × JSString × «Counters» × Unit
@@ -341,18 +389,31 @@ abbrev «Total» : Type := JSString × JSString × JSString × «Counters» × U
 @[reducible, readable] def «Total».«month» (r : «Total») : JSString := r.2.1
 @[reducible, readable] def «Total».«device» (r : «Total») : JSString := r.2.2.1
 @[reducible, readable] def «Total».«c» (r : «Total») : «Counters» := r.2.2.2.1
+@[reducible, readable] def «Total».mk («p» : JSString) («month» : JSString) («device» : JSString) («c» : «Counters») : «Total» := («p», «month», «device», «c», ())
+@[reducible, readable] def «Total».«withP» (r : «Total») (v : JSString) : «Total» := (v, r.2)
+@[reducible, readable] def «Total».«withMonth» (r : «Total») (v : JSString) : «Total» := (r.1, v, r.2.2)
+@[reducible, readable] def «Total».«withDevice» (r : «Total») (v : JSString) : «Total» := (r.1, r.2.1, v, r.2.2.2)
+@[reducible, readable] def «Total».«withC» (r : «Total») (v : «Counters») : «Total» := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
 
 /-- The source's `Increments`. -/
 abbrev «Increments» : Type := JSString × JSString × «Counters» × Unit
 @[reducible, readable] def «Increments».«p» (r : «Increments») : JSString := r.1
 @[reducible, readable] def «Increments».«month» (r : «Increments») : JSString := r.2.1
 @[reducible, readable] def «Increments».«c» (r : «Increments») : «Counters» := r.2.2.1
+@[reducible, readable] def «Increments».mk («p» : JSString) («month» : JSString) («c» : «Counters») : «Increments» := («p», «month», «c», ())
+@[reducible, readable] def «Increments».«withP» (r : «Increments») (v : JSString) : «Increments» := (v, r.2)
+@[reducible, readable] def «Increments».«withMonth» (r : «Increments») (v : JSString) : «Increments» := (r.1, v, r.2.2)
+@[reducible, readable] def «Increments».«withC» (r : «Increments») (v : «Counters») : «Increments» := (r.1, r.2.1, v, r.2.2.2)
 
 /-- The source's `Usage`. -/
 abbrev «Usage» : Type := JSString × JSString × «Counters» × Unit
 @[reducible, readable] def «Usage».«p» (r : «Usage») : JSString := r.1
 @[reducible, readable] def «Usage».«month» (r : «Usage») : JSString := r.2.1
 @[reducible, readable] def «Usage».«c» (r : «Usage») : «Counters» := r.2.2.1
+@[reducible, readable] def «Usage».mk («p» : JSString) («month» : JSString) («c» : «Counters») : «Usage» := («p», «month», «c», ())
+@[reducible, readable] def «Usage».«withP» (r : «Usage») (v : JSString) : «Usage» := (v, r.2)
+@[reducible, readable] def «Usage».«withMonth» (r : «Usage») (v : JSString) : «Usage» := (r.1, v, r.2.2)
+@[reducible, readable] def «Usage».«withC» (r : «Usage») (v : «Counters») : «Usage» := (r.1, r.2.1, v, r.2.2.2)
 
 /-- The source's `Registers`. -/
 abbrev «Registers» : Type := (List (JSString × «Placed»)) × (List (JSString × List JSString)) × (List (JSString × «Mark»)) × (List (JSString × «Pack»)) × (List (JSString × «Total»)) × (List (JSString × «Increments»)) × (List (JSString × «Period»)) × (List (JSString × «AlbumRec»)) × (List (JSString × «AlbumItem»)) × Unit
@@ -365,6 +426,16 @@ abbrev «Registers» : Type := (List (JSString × «Placed»)) × (List (JSStrin
 @[reducible, readable] def «Registers».«periods» (r : «Registers») : List (JSString × «Period») := r.2.2.2.2.2.2.1
 @[reducible, readable] def «Registers».«albums» (r : «Registers») : List (JSString × «AlbumRec») := r.2.2.2.2.2.2.2.1
 @[reducible, readable] def «Registers».«items» (r : «Registers») : List (JSString × «AlbumItem») := r.2.2.2.2.2.2.2.2.1
+@[reducible, readable] def «Registers».mk («placed» : List (JSString × «Placed»)) («providers» : List (JSString × List JSString)) («marks» : List (JSString × «Mark»)) («packs» : List (JSString × «Pack»)) («totals» : List (JSString × «Total»)) («increments» : List (JSString × «Increments»)) («periods» : List (JSString × «Period»)) («albums» : List (JSString × «AlbumRec»)) («items» : List (JSString × «AlbumItem»)) : «Registers» := («placed», «providers», «marks», «packs», «totals», «increments», «periods», «albums», «items», ())
+@[reducible, readable] def «Registers».«withPlaced» (r : «Registers») (v : List (JSString × «Placed»)) : «Registers» := (v, r.2)
+@[reducible, readable] def «Registers».«withProviders» (r : «Registers») (v : List (JSString × List JSString)) : «Registers» := (r.1, v, r.2.2)
+@[reducible, readable] def «Registers».«withMarks» (r : «Registers») (v : List (JSString × «Mark»)) : «Registers» := (r.1, r.2.1, v, r.2.2.2)
+@[reducible, readable] def «Registers».«withPacks» (r : «Registers») (v : List (JSString × «Pack»)) : «Registers» := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
+@[reducible, readable] def «Registers».«withTotals» (r : «Registers») (v : List (JSString × «Total»)) : «Registers» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, v, r.2.2.2.2.2)
+@[reducible, readable] def «Registers».«withIncrements» (r : «Registers») (v : List (JSString × «Increments»)) : «Registers» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, v, r.2.2.2.2.2.2)
+@[reducible, readable] def «Registers».«withPeriods» (r : «Registers») (v : List (JSString × «Period»)) : «Registers» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, r.2.2.2.2.2.1, v, r.2.2.2.2.2.2.2)
+@[reducible, readable] def «Registers».«withAlbums» (r : «Registers») (v : List (JSString × «AlbumRec»)) : «Registers» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, r.2.2.2.2.2.1, r.2.2.2.2.2.2.1, v, r.2.2.2.2.2.2.2.2)
+@[reducible, readable] def «Registers».«withItems» (r : «Registers») (v : List (JSString × «AlbumItem»)) : «Registers» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, r.2.2.2.2.2.1, r.2.2.2.2.2.2.1, r.2.2.2.2.2.2.2.1, v, r.2.2.2.2.2.2.2.2.2)
 
 noncomputable def sig.«key» : Sig := { name := "key", params := [("a", .string), ("b", .string)], result := .string, trivial := true }
 noncomputable def sig.«byString» : Sig := { name := "byString", params := [("a", .string), ("b", .string)], result := .number, trivial := true }
@@ -951,70 +1022,62 @@ def «described» («cur» : Option «Pack») («stamp» : JSString) («at» : I
   | none =>
     false
   | some «cur» =>
-    let «s» : Option JSString := «cur».2.2.2.2.1
+    let «s» : Option JSString := «cur».«s»
     match «s» with
     | none =>
-      decide ((«cur».2.2.2.1) ≤ «at»)
+      decide («cur».«at» ≤ «at»)
     | some «s» =>
-      if «s» == (js "") then decide ((«cur».2.2.2.1) ≤ «at») else !(Ariadne.strLt «stamp» «s»)
+      if «s» == (js "") then decide («cur».«at» ≤ «at») else !(Ariadne.strLt «stamp» «s»)
 
 def «larger» («a» : Int) («b» : Int) : Int :=
   if decide («a» > «b») then «a» else «b»
 
 def «zero»  : «Counters» :=
-  ((0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), ())
+  («Counters».mk (0 : Int) (0 : Int) (0 : Int) (0 : Int) (0 : Int) (0 : Int) (0 : Int) (0 : Int) (0 : Int))
 
 def «highest» («a» : «Counters») («b» : «Counters») : «Counters» :=
-  ((«larger» («a».1) («b».1)), («larger» («a».2.1) («b».2.1)), («larger» («a».2.2.1) («b».2.2.1)), («larger» («a».2.2.2.1) («b».2.2.2.1)), («larger» («a».2.2.2.2.1) («b».2.2.2.2.1)), («larger» («a».2.2.2.2.2.1) («b».2.2.2.2.2.1)), («larger» («a».2.2.2.2.2.2.1) («b».2.2.2.2.2.2.1)), («larger» («a».2.2.2.2.2.2.2.1) («b».2.2.2.2.2.2.2.1)), («larger» («a».2.2.2.2.2.2.2.2.1) («b».2.2.2.2.2.2.2.2.1)), ())
+  («Counters».mk («larger» «a».«put» «b».«put») («larger» «a».«get» «b».«get») («larger» «a».«list» «b».«list») («larger» «a».«head» «b».«head») («larger» «a».«delete» «b».«delete») («larger» «a».«copy» «b».«copy») («larger» «a».«restore» «b».«restore») («larger» «a».«ingress» «b».«ingress») («larger» «a».«egress» «b».«egress»))
 
 def «sum» («a» : «Counters») («b» : «Counters») : «Counters» :=
-  (((«a».1) + («b».1)), ((«a».2.1) + («b».2.1)), ((«a».2.2.1) + («b».2.2.1)), ((«a».2.2.2.1) + («b».2.2.2.1)), ((«a».2.2.2.2.1) + («b».2.2.2.2.1)), ((«a».2.2.2.2.2.1) + («b».2.2.2.2.2.1)), ((«a».2.2.2.2.2.2.1) + («b».2.2.2.2.2.2.1)), ((«a».2.2.2.2.2.2.2.1) + («b».2.2.2.2.2.2.2.1)), ((«a».2.2.2.2.2.2.2.2.1) + («b».2.2.2.2.2.2.2.2.1)), ())
+  («Counters».mk («a».«put» + «b».«put») («a».«get» + «b».«get») («a».«list» + «b».«list») («a».«head» + «b».«head») («a».«delete» + «b».«delete») («a».«copy» + «b».«copy») («a».«restore» + «b».«restore») («a».«ingress» + «b».«ingress») («a».«egress» + «b».«egress»))
 
 /-- The inputs on which `sum` stays within what the model covers. -/
 def «sum».safe («a» : «Counters») («b» : «Counters») : Bool :=
-  Ariadne.inRange ((«a».1) + («b».1)) && (Ariadne.inRange ((«a».2.1) + («b».2.1)) && (Ariadne.inRange ((«a».2.2.1) + («b».2.2.1)) && (Ariadne.inRange ((«a».2.2.2.1) + («b».2.2.2.1)) && (Ariadne.inRange ((«a».2.2.2.2.1) + («b».2.2.2.2.1)) && (Ariadne.inRange ((«a».2.2.2.2.2.1) + («b».2.2.2.2.2.1)) && (Ariadne.inRange ((«a».2.2.2.2.2.2.1) + («b».2.2.2.2.2.2.1)) && (Ariadne.inRange ((«a».2.2.2.2.2.2.2.1) + («b».2.2.2.2.2.2.2.1)) && Ariadne.inRange ((«a».2.2.2.2.2.2.2.2.1) + («b».2.2.2.2.2.2.2.2.1)))))))))
+  Ariadne.inRange («a».«put» + «b».«put») && (Ariadne.inRange («a».«get» + «b».«get») && (Ariadne.inRange («a».«list» + «b».«list») && (Ariadne.inRange («a».«head» + «b».«head») && (Ariadne.inRange («a».«delete» + «b».«delete») && (Ariadne.inRange («a».«copy» + «b».«copy») && (Ariadne.inRange («a».«restore» + «b».«restore») && (Ariadne.inRange («a».«ingress» + «b».«ingress») && Ariadne.inRange («a».«egress» + «b».«egress»))))))))
 
 def «new Registers»  : «Registers» :=
-  (([] : List (JSString × «Placed»)), ([] : List (JSString × List JSString)), ([] : List (JSString × «Mark»)), ([] : List (JSString × «Pack»)), ([] : List (JSString × «Total»)), ([] : List (JSString × «Increments»)), ([] : List (JSString × «Period»)), ([] : List (JSString × «AlbumRec»)), ([] : List (JSString × «AlbumItem»)), ())
+  («Registers».mk ([] : List (JSString × «Placed»)) ([] : List (JSString × List JSString)) ([] : List (JSString × «Mark»)) ([] : List (JSString × «Pack»)) ([] : List (JSString × «Total»)) ([] : List (JSString × «Increments»)) ([] : List (JSString × «Period»)) ([] : List (JSString × «AlbumRec»)) ([] : List (JSString × «AlbumItem»)))
 
 def «noteUnplace» («this» : «Registers») («ref» : JSString) («p» : JSString) («u» : JSString) : «Registers» :=
-  let «cur» : Option «Placed» := Ariadne.mapGet «this».1 («key» «ref» «p»)
+  let «cur» : Option «Placed» := Ariadne.mapGet «this».«placed» («key» «ref» «p»)
   match «cur» with
   | none =>
     «this»
   | some «cur» =>
-    let «this» : «Registers» := (Ariadne.mapPut «this».1 («key» «ref» «p») (let r' := «cur»; (r'.1, r'.2.1, r'.2.2.1, r'.2.2.2.1, r'.2.2.2.2.1, (some «u»), ())), «this».2)
+    let «this» : «Registers» := «this».«withPlaced» (Ariadne.mapPut «this».«placed» («key» «ref» «p») ((«cur».«withU» (some «u»))))
     «this»
 
 def «providersOf» («this» : «Registers») («ref» : JSString) : List JSString :=
-  let «ps» : Option (List JSString) := Ariadne.mapGet «this».2.1 «ref»
+  let «ps» : Option (List JSString) := Ariadne.mapGet «this».«providers» «ref»
   match «ps» with | none => [] | some «ps» => «ps»
 
 def «put» («this» : «Registers») («ref» : JSString) («p» : JSString) («e» : «Placed») : «Registers» :=
-  let after2' := fun s2' =>
-    let «this» := s2'.1
-    let «ref» := s2'.2.1
-    let «p» := s2'.2.2.1
-    let «e» := s2'.2.2.2.1
-    let «this» : «Registers» := (Ariadne.mapPut «this».1 («key» «ref» «p») «e», «this».2)
+  let after2' := fun («this», «ref», «p», «e», ()) =>
+    let «this» : «Registers» := «this».«withPlaced» (Ariadne.mapPut «this».«placed» («key» «ref» «p») «e»)
     «this»
-  if !((Ariadne.mapGet «this».1 («key» «ref» «p»)).isSome) then
-    let «this» : «Registers» := («this».1, Ariadne.mapPut «this».2.1 «ref» (Ariadne.sortedBy «byString» ((«providersOf» «this» «ref») ++ ([«p»]))), «this».2.2)
+  if !((Ariadne.mapGet «this».«placed» («key» «ref» «p»)).isSome) then
+    let «this» : «Registers» := «this».«withProviders» (Ariadne.mapPut «this».«providers» «ref» (Ariadne.sortedBy «byString» ((«providersOf» «this» «ref») ++ ([«p»]))))
     after2' («this», «ref», «p», «e», ())
   else
     after2' («this», «ref», «p», «e», ())
 
 /-- The inputs on which `put` stays within what the model covers. -/
 def «put».safe («this» : «Registers») («ref» : JSString) («p» : JSString) («e» : «Placed») : Bool :=
-  let after2' := fun s2' =>
-    let «this» := s2'.1
-    let «ref» := s2'.2.1
-    let «p» := s2'.2.2.1
-    let «e» := s2'.2.2.2.1
-    let «this» : «Registers» := (Ariadne.mapPut «this».1 («key» «ref» «p») «e», «this».2)
+  let after2' := fun («this», «ref», «p», «e», ()) =>
+    let «this» : «Registers» := «this».«withPlaced» (Ariadne.mapPut «this».«placed» («key» «ref» «p») «e»)
     true
-  if !((Ariadne.mapGet «this».1 («key» «ref» «p»)).isSome) then
-    Ariadne.consistent (Ariadne.signs «byString» ((«providersOf» «this» «ref») ++ ([«p»]))) && (let «this» : «Registers» := («this».1, Ariadne.mapPut «this».2.1 «ref» (Ariadne.sortedBy «byString» ((«providersOf» «this» «ref») ++ ([«p»]))), «this».2.2)
+  if !((Ariadne.mapGet «this».«placed» («key» «ref» «p»)).isSome) then
+    Ariadne.consistent (Ariadne.signs «byString» ((«providersOf» «this» «ref») ++ ([«p»]))) && (let «this» : «Registers» := «this».«withProviders» (Ariadne.mapPut «this».«providers» «ref» (Ariadne.sortedBy «byString» ((«providersOf» «this» «ref») ++ ([«p»]))))
     after2' («this», «ref», «p», «e», ()))
   else
     after2' («this», «ref», «p», «e», ())
@@ -1024,25 +1087,24 @@ def «dropMarkBefore» («this» : «Registers») («ref» : JSString) («p» : 
   | none =>
     «this»
   | some «u» =>
-    let «mark» : Option «Mark» := Ariadne.mapGet «this».2.2.1 («key» «ref» «p»)
+    let «mark» : Option «Mark» := Ariadne.mapGet «this».«marks» («key» «ref» «p»)
     match «mark» with
     | none =>
       «this»
     | some «mark» =>
-      if («u» == (js "")) || (Ariadne.strLt «u» («mark».2.2.2.1)) then
+      if («u» == (js "")) || (Ariadne.strLt «u» «mark».«s») then
         «this»
       else
-        let «this» : «Registers» := («this».1, «this».2.1, Ariadne.mapDel «this».2.2.1 («key» «ref» «p»), «this».2.2.2)
+        let «this» : «Registers» := «this».«withMarks» (Ariadne.mapDel «this».«marks» («key» «ref» «p»))
         «this»
 
 def «place» («this» : «Registers») («ref» : JSString) («p» : JSString) («placed» : Bool) («cls» : JSString) («stamp» : JSString) («at» : Int) : «Registers» :=
-  let «cur» : Option «Placed» := Ariadne.mapGet «this».1 («key» «ref» «p»)
-  let «seen» : Option JSString := match «cur» with | none => none | some «cur» => «cur».2.2.2.2.2.1
+  let «cur» : Option «Placed» := Ariadne.mapGet «this».«placed» («key» «ref» «p»)
+  let «seen» : Option JSString := match «cur» with | none => none | some «cur» => «cur».«u»
   let «u» : Option JSString := if «placed» then «seen» else some («newest» «seen» «stamp»)
   let «this» : «Registers» := «dropMarkBefore» «this» «ref» «p» «u»
-  if !(«newer» (match «cur» with | none => none | some «cur» => some («cur».2.2.2.1)) «stamp») then
-    let after4' := fun s4' =>
-      let «this» := s4'.2.2.2.1
+  if !(«newer» (match «cur» with | none => none | some «cur» => some «cur».«s») «stamp») then
+    let after4' := fun (_, _, _, «this», _, _, _, _, _, _, ()) =>
       «this»
     if !«placed» then
       let «this» : «Registers» := «noteUnplace» «this» «ref» «p» («newest» «seen» «stamp»)
@@ -1050,24 +1112,23 @@ def «place» («this» : «Registers») («ref» : JSString) («p» : JSString)
     else
       after4' («u», «seen», «cur», «this», «ref», «p», «placed», «cls», «stamp», «at», ())
   else
-    let after4' := fun s4' =>
-      let «this» := s4'.2.2.2.1
+    let after4' := fun (_, _, _, «this», _, _, _, _, _, _, ()) =>
       «this»
     if «placed» then
-      let «this» : «Registers» := «put» «this» «ref» «p» ((«p», «cls», «at», «stamp», false, «u», ()))
+      let «this» : «Registers» := «put» «this» «ref» «p» («Placed».mk «p» «cls» «at» «stamp» false «u»)
       after4' («u», «seen», «cur», «this», «ref», «p», «placed», «cls», «stamp», «at», ())
     else
-      let «this» : «Registers» := «put» «this» «ref» «p» ((«p», (js ""), «at», «stamp», true, «u», ()))
+      let «this» : «Registers» := «put» «this» «ref» «p» («Placed».mk «p» (js "") «at» «stamp» true «u»)
       after4' («u», «seen», «cur», «this», «ref», «p», «placed», «cls», «stamp», «at», ())
 
 /-- The inputs on which `place` stays within what the model covers. -/
 def «place».safe («this» : «Registers») («ref» : JSString) («p» : JSString) («placed» : Bool) («cls» : JSString) («stamp» : JSString) («at» : Int) : Bool :=
-  let «cur» : Option «Placed» := Ariadne.mapGet «this».1 («key» «ref» «p»)
-  let «seen» : Option JSString := match «cur» with | none => none | some «cur» => «cur».2.2.2.2.2.1
+  let «cur» : Option «Placed» := Ariadne.mapGet «this».«placed» («key» «ref» «p»)
+  let «seen» : Option JSString := match «cur» with | none => none | some «cur» => «cur».«u»
   let «u» : Option JSString := if «placed» then «seen» else some («newest» «seen» «stamp»)
   let «this» : «Registers» := «dropMarkBefore» «this» «ref» «p» «u»
-  if !(«newer» (match «cur» with | none => none | some «cur» => some («cur».2.2.2.1)) «stamp») then
-    let after4' := fun s4' =>
+  if !(«newer» (match «cur» with | none => none | some «cur» => some «cur».«s») «stamp») then
+    let after4' := fun _ =>
       true
     if !«placed» then
       let «this» : «Registers» := «noteUnplace» «this» «ref» «p» («newest» «seen» «stamp»)
@@ -1075,311 +1136,270 @@ def «place».safe («this» : «Registers») («ref» : JSString) («p» : JSSt
     else
       after4' («u», «seen», «cur», «this», «ref», «p», «placed», «cls», «stamp», «at», ())
   else
-    let after4' := fun s4' =>
+    let after4' := fun _ =>
       true
     if «placed» then
-      «put».safe «this» «ref» «p» ((«p», «cls», «at», «stamp», false, «u», ())) && (let «this» : «Registers» := «put» «this» «ref» «p» ((«p», «cls», «at», «stamp», false, «u», ()))
+      «put».safe «this» «ref» «p» («Placed».mk «p» «cls» «at» «stamp» false «u») && (let «this» : «Registers» := «put» «this» «ref» «p» («Placed».mk «p» «cls» «at» «stamp» false «u»)
       after4' («u», «seen», «cur», «this», «ref», «p», «placed», «cls», «stamp», «at», ()))
     else
-      «put».safe «this» «ref» «p» ((«p», (js ""), «at», «stamp», true, «u», ())) && (let «this» : «Registers» := «put» «this» «ref» «p» ((«p», (js ""), «at», «stamp», true, «u», ()))
+      «put».safe «this» «ref» «p» («Placed».mk «p» (js "") «at» «stamp» true «u») && (let «this» : «Registers» := «put» «this» «ref» «p» («Placed».mk «p» (js "") «at» «stamp» true «u»)
       after4' («u», «seen», «cur», «this», «ref», «p», «placed», «cls», «stamp», «at», ()))
 
 def «mark» («this» : «Registers») («ref» : JSString) («p» : JSString) («on» : Bool) («reason» : Option JSString) («stamp» : JSString) («at» : Int) : «Registers» :=
-  let «placed» : Option «Placed» := Ariadne.mapGet «this».1 («key» «ref» «p»)
-  if «before» «stamp» (match «placed» with | none => none | some «placed» => «placed».2.2.2.2.2.1) then
+  let «placed» : Option «Placed» := Ariadne.mapGet «this».«placed» («key» «ref» «p»)
+  if «before» «stamp» (match «placed» with | none => none | some «placed» => «placed».«u») then
     «this»
   else
-    let «cur» : Option «Mark» := Ariadne.mapGet «this».2.2.1 («key» «ref» «p»)
-    if !(«newer» (match «cur» with | none => none | some «cur» => some («cur».2.2.2.1)) «stamp») then
+    let «cur» : Option «Mark» := Ariadne.mapGet «this».«marks» («key» «ref» «p»)
+    if !(«newer» (match «cur» with | none => none | some «cur» => some «cur».«s») «stamp») then
       «this»
     else
-      let «this» : «Registers» := («this».1, «this».2.1, Ariadne.mapPut «this».2.2.1 («key» «ref» «p») ((«ref», «p», «at», «stamp», «on», «reason», ())), «this».2.2.2)
+      let «this» : «Registers» := «this».«withMarks» (Ariadne.mapPut «this».«marks» («key» «ref» «p») («Mark».mk «ref» «p» «at» «stamp» «on» «reason»))
       «this»
 
 def «placements» («this» : «Registers») («ref» : JSString) : List «Placed» :=
   let «out» : List «Placed» := []
-  Ariadne.forIn («providersOf» «this» «ref») (fun «p» next2' exit2' s2' =>
-    let «out» := s2'.1
-    let «this» := s2'.2.1
-    let «ref» := s2'.2.2.1
-    let «e» : Option «Placed» := Ariadne.mapGet «this».1 («key» «ref» «p»)
+  Ariadne.forIn («providersOf» «this» «ref») (fun «p» next2' exit2' («out», «this», «ref», ()) =>
+    let «e» : Option «Placed» := Ariadne.mapGet «this».«placed» («key» «ref» «p»)
     match «e» with
     | none =>
       next2' («out», «this», «ref», ())
     | some «e» =>
       let «out» : List «Placed» := «out» ++ ([«e»])
-      let «e» := some «e»
       next2' («out», «this», «ref», ()))
-    (fun s2' =>
-    let «out» := s2'.1
+    (fun («out», _, _, ()) =>
     «out»)
     («out», «this», «ref», ())
 
 def «isPlaced» («this» : «Registers») («ref» : JSString) : Bool :=
-  (Ariadne.mapGet «this».2.1 «ref»).isSome
+  (Ariadne.mapGet «this».«providers» «ref»).isSome
 
 def «placedRefs» («this» : «Registers») : List JSString :=
-  (List.map Prod.fst «this».2.1) ++ ([])
+  (List.map Prod.fst «this».«providers») ++ ([])
 
 def «markOf» («this» : «Registers») («ref» : JSString) («p» : JSString) : Option «Mark» :=
-  Ariadne.mapGet «this».2.2.1 («key» «ref» «p»)
+  Ariadne.mapGet «this».«marks» («key» «ref» «p»)
 
 def «markList» («this» : «Registers») : List «Mark» :=
-  (List.map Prod.snd «this».2.2.1) ++ ([])
+  (List.map Prod.snd «this».«marks») ++ ([])
 
 def «pack» («this» : «Registers») («id» : JSString) («size» : Int) («csize» : Int) («stamp» : JSString) («at» : Int) («hn» : Option JSString) : «Registers» :=
-  if «described» (Ariadne.mapGet «this».2.2.2.1 «id») «stamp» «at» then
+  if «described» (Ariadne.mapGet «this».«packs» «id») «stamp» «at» then
     «this»
   else
-    let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, Ariadne.mapPut «this».2.2.2.1 «id» ((«id», «size», «csize», «at», (some «stamp»), «hn», ())), «this».2.2.2.2)
+    let «this» : «Registers» := «this».«withPacks» (Ariadne.mapPut «this».«packs» «id» («Pack».mk «id» «size» «csize» «at» (some «stamp») «hn»))
     «this»
 
 def «packOf» («this» : «Registers») («id» : JSString) : Option «Pack» :=
-  Ariadne.mapGet «this».2.2.2.1 «id»
+  Ariadne.mapGet «this».«packs» «id»
 
 def «packList» («this» : «Registers») : List «Pack» :=
-  (List.map Prod.snd «this».2.2.2.1) ++ ([])
+  (List.map Prod.snd «this».«packs») ++ ([])
 
 def «track» («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («total» : Bool) : «Registers» :=
-  let «cur» : Option «Period» := Ariadne.mapGet «this».2.2.2.2.2.2.1 («key» «p» «month»)
-  let «devices» : List JSString := match «cur» with | none => [] | some «cur» => «cur».2.2.1
-  let after2' := fun s2' =>
-    let «this» := s2'.2.2.1
+  let «cur» : Option «Period» := Ariadne.mapGet «this».«periods» («key» «p» «month»)
+  let «devices» : List JSString := match «cur» with | none => [] | some «cur» => «cur».«devices»
+  let after2' := fun (_, _, «this», _, _, _, _, ()) =>
     «this»
   if «total» && (!(List.any «devices» (fun y' => y' == «device»))) then
-    let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.1 («key» «p» «month») ((«p», «month», (Ariadne.sortedBy «byString» («devices» ++ ([«device»]))), ())), «this».2.2.2.2.2.2.2)
+    let «this» : «Registers» := «this».«withPeriods» (Ariadne.mapPut «this».«periods» («key» «p» «month») («Period».mk «p» «month» (Ariadne.sortedBy «byString» («devices» ++ ([«device»])))))
     after2' («devices», «cur», «this», «p», «month», «device», «total», ())
   else
-    if !((Ariadne.mapGet «this».2.2.2.2.2.2.1 («key» «p» «month»)).isSome) then
-      let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.1 («key» «p» «month») ((«p», «month», «devices», ())), «this».2.2.2.2.2.2.2)
+    if !((Ariadne.mapGet «this».«periods» («key» «p» «month»)).isSome) then
+      let «this» : «Registers» := «this».«withPeriods» (Ariadne.mapPut «this».«periods» («key» «p» «month») («Period».mk «p» «month» «devices»))
       after2' («devices», «cur», «this», «p», «month», «device», «total», ())
     else
       after2' («devices», «cur», «this», «p», «month», «device», «total», ())
 
 /-- The inputs on which `track` stays within what the model covers. -/
 def «track».safe («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («total» : Bool) : Bool :=
-  let «cur» : Option «Period» := Ariadne.mapGet «this».2.2.2.2.2.2.1 («key» «p» «month»)
-  let «devices» : List JSString := match «cur» with | none => [] | some «cur» => «cur».2.2.1
-  let after2' := fun s2' =>
+  let «cur» : Option «Period» := Ariadne.mapGet «this».«periods» («key» «p» «month»)
+  let «devices» : List JSString := match «cur» with | none => [] | some «cur» => «cur».«devices»
+  let after2' := fun _ =>
     true
   if «total» && (!(List.any «devices» (fun y' => y' == «device»))) then
-    Ariadne.consistent (Ariadne.signs «byString» («devices» ++ ([«device»]))) && (let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.1 («key» «p» «month») ((«p», «month», (Ariadne.sortedBy «byString» («devices» ++ ([«device»]))), ())), «this».2.2.2.2.2.2.2)
+    Ariadne.consistent (Ariadne.signs «byString» («devices» ++ ([«device»]))) && (let «this» : «Registers» := «this».«withPeriods» (Ariadne.mapPut «this».«periods» («key» «p» «month») («Period».mk «p» «month» (Ariadne.sortedBy «byString» («devices» ++ ([«device»])))))
     after2' («devices», «cur», «this», «p», «month», «device», «total», ()))
   else
-    if !((Ariadne.mapGet «this».2.2.2.2.2.2.1 («key» «p» «month»)).isSome) then
-      let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.1 («key» «p» «month») ((«p», «month», «devices», ())), «this».2.2.2.2.2.2.2)
+    if !((Ariadne.mapGet «this».«periods» («key» «p» «month»)).isSome) then
+      let «this» : «Registers» := «this».«withPeriods» (Ariadne.mapPut «this».«periods» («key» «p» «month») («Period».mk «p» «month» «devices»))
       after2' («devices», «cur», «this», «p», «month», «device», «total», ())
     else
       after2' («devices», «cur», «this», «p», «month», «device», «total», ())
 
 def «total» («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («c» : «Counters») : «Registers» :=
-  let «cur» : Option «Total» := Ariadne.mapGet «this».2.2.2.2.1 («key» («key» «p» «month») «device»)
-  let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, Ariadne.mapPut «this».2.2.2.2.1 («key» («key» «p» «month») «device») ((«p», «month», «device», («highest» (match «cur» with | none => «zero» | some «cur» => «cur».2.2.2.1) «c»), ())), «this».2.2.2.2.2)
+  let «cur» : Option «Total» := Ariadne.mapGet «this».«totals» («key» («key» «p» «month») «device»)
+  let «this» : «Registers» := «this».«withTotals» (Ariadne.mapPut «this».«totals» («key» («key» «p» «month») «device») («Total».mk «p» «month» «device» («highest» (match «cur» with | none => «zero» | some «cur» => «cur».«c») «c»)))
   let «this» : «Registers» := «track» «this» «p» «month» «device» true
   «this»
 
 /-- The inputs on which `total` stays within what the model covers. -/
 def «total».safe («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («c» : «Counters») : Bool :=
-  let «cur» : Option «Total» := Ariadne.mapGet «this».2.2.2.2.1 («key» («key» «p» «month») «device»)
-  let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, Ariadne.mapPut «this».2.2.2.2.1 («key» («key» «p» «month») «device») ((«p», «month», «device», («highest» (match «cur» with | none => «zero» | some «cur» => «cur».2.2.2.1) «c»), ())), «this».2.2.2.2.2)
+  let «cur» : Option «Total» := Ariadne.mapGet «this».«totals» («key» («key» «p» «month») «device»)
+  let «this» : «Registers» := «this».«withTotals» (Ariadne.mapPut «this».«totals» («key» («key» «p» «month») «device») («Total».mk «p» «month» «device» («highest» (match «cur» with | none => «zero» | some «cur» => «cur».«c») «c»)))
   «track».safe «this» «p» «month» «device» true && (let «this» : «Registers» := «track» «this» «p» «month» «device» true
   true)
 
 def «add» («this» : «Registers») («p» : JSString) («month» : JSString) («c» : «Counters») : «Registers» :=
-  let «cur» : Option «Increments» := Ariadne.mapGet «this».2.2.2.2.2.1 («key» «p» «month»)
-  let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.1 («key» «p» «month») ((«p», «month», («sum» (match «cur» with | none => «zero» | some «cur» => «cur».2.2.1) «c»), ())), «this».2.2.2.2.2.2)
+  let «cur» : Option «Increments» := Ariadne.mapGet «this».«increments» («key» «p» «month»)
+  let «this» : «Registers» := «this».«withIncrements» (Ariadne.mapPut «this».«increments» («key» «p» «month») («Increments».mk «p» «month» («sum» (match «cur» with | none => «zero» | some «cur» => «cur».«c») «c»)))
   let «this» : «Registers» := «track» «this» «p» «month» (js "") false
   «this»
 
 /-- The inputs on which `add` stays within what the model covers. -/
 def «add».safe («this» : «Registers») («p» : JSString) («month» : JSString) («c» : «Counters») : Bool :=
-  let «cur» : Option «Increments» := Ariadne.mapGet «this».2.2.2.2.2.1 («key» «p» «month»)
-  («sum».safe (match «cur» with | none => «zero» | some «cur» => «cur».2.2.1) «c») && (let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.1 («key» «p» «month») ((«p», «month», («sum» (match «cur» with | none => «zero» | some «cur» => «cur».2.2.1) «c»), ())), «this».2.2.2.2.2.2)
+  let «cur» : Option «Increments» := Ariadne.mapGet «this».«increments» («key» «p» «month»)
+  («sum».safe (match «cur» with | none => «zero» | some «cur» => «cur».«c») «c») && (let «this» : «Registers» := «this».«withIncrements» (Ariadne.mapPut «this».«increments» («key» «p» «month») («Increments».mk «p» «month» («sum» (match «cur» with | none => «zero» | some «cur» => «cur».«c») «c»)))
   «track».safe «this» «p» «month» (js "") false && (let «this» : «Registers» := «track» «this» «p» «month» (js "") false
   true))
 
 def «totalOf» («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) : «Counters» :=
-  let «t» : Option «Total» := Ariadne.mapGet «this».2.2.2.2.1 («key» («key» «p» «month») «device»)
-  match «t» with | none => «zero» | some «t» => «t».2.2.2.1
+  let «t» : Option «Total» := Ariadne.mapGet «this».«totals» («key» («key» «p» «month») «device»)
+  match «t» with | none => «zero» | some «t» => «t».«c»
 
 def «usageOf» («this» : «Registers») («p» : JSString) («month» : JSString) : «Counters» :=
-  let «inc» : Option «Increments» := Ariadne.mapGet «this».2.2.2.2.2.1 («key» «p» «month»)
-  let «out» : «Counters» := match «inc» with | none => «zero» | some «inc» => «inc».2.2.1
-  let «period» : Option «Period» := Ariadne.mapGet «this».2.2.2.2.2.2.1 («key» «p» «month»)
+  let «inc» : Option «Increments» := Ariadne.mapGet «this».«increments» («key» «p» «month»)
+  let «out» : «Counters» := match «inc» with | none => «zero» | some «inc» => «inc».«c»
+  let «period» : Option «Period» := Ariadne.mapGet «this».«periods» («key» «p» «month»)
   match «period» with
   | none =>
     «out»
   | some «period» =>
-    Ariadne.forIn («period».2.2.1) (fun «d» next4' exit4' s4' =>
-      let «period» := s4'.1
-      let «out» := s4'.2.1
-      let «inc» := s4'.2.2.1
-      let «this» := s4'.2.2.2.1
-      let «p» := s4'.2.2.2.2.1
-      let «month» := s4'.2.2.2.2.2.1
-      let «t» : Option «Total» := Ariadne.mapGet «this».2.2.2.2.1 («key» («key» «p» «month») «d»)
+    Ariadne.forIn «period».«devices» (fun «d» next4' exit4' («period», «out», «inc», «this», «p», «month», ()) =>
+      let «t» : Option «Total» := Ariadne.mapGet «this».«totals» («key» («key» «p» «month») «d»)
       match «t» with
       | none =>
         next4' («period», «out», «inc», «this», «p», «month», ())
       | some «t» =>
-        let «out» : «Counters» := «sum» «out» («t».2.2.2.1)
-        let «t» := some «t»
+        let «out» : «Counters» := «sum» «out» «t».«c»
         next4' («period», «out», «inc», «this», «p», «month», ()))
-      (fun s4' =>
-      let «out» := s4'.2.1
+      (fun (_, «out», _, _, _, _, ()) =>
       «out»)
       («period», «out», «inc», «this», «p», «month», ())
 
 /-- The inputs on which `usageOf` stays within what the model covers. -/
 def «usageOf».safe («this» : «Registers») («p» : JSString) («month» : JSString) : Bool :=
-  let «inc» : Option «Increments» := Ariadne.mapGet «this».2.2.2.2.2.1 («key» «p» «month»)
-  let «out» : «Counters» := match «inc» with | none => «zero» | some «inc» => «inc».2.2.1
-  let «period» : Option «Period» := Ariadne.mapGet «this».2.2.2.2.2.2.1 («key» «p» «month»)
+  let «inc» : Option «Increments» := Ariadne.mapGet «this».«increments» («key» «p» «month»)
+  let «out» : «Counters» := match «inc» with | none => «zero» | some «inc» => «inc».«c»
+  let «period» : Option «Period» := Ariadne.mapGet «this».«periods» («key» «p» «month»)
   match «period» with
   | none =>
     true
   | some «period» =>
-    Ariadne.forIn («period».2.2.1) (fun «d» next4' exit4' s4' =>
-      let «period» := s4'.1
-      let «out» := s4'.2.1
-      let «inc» := s4'.2.2.1
-      let «this» := s4'.2.2.2.1
-      let «p» := s4'.2.2.2.2.1
-      let «month» := s4'.2.2.2.2.2.1
-      let «t» : Option «Total» := Ariadne.mapGet «this».2.2.2.2.1 («key» («key» «p» «month») «d»)
+    Ariadne.forIn «period».«devices» (fun «d» next4' exit4' («period», «out», «inc», «this», «p», «month», ()) =>
+      let «t» : Option «Total» := Ariadne.mapGet «this».«totals» («key» («key» «p» «month») «d»)
       match «t» with
       | none =>
         next4' («period», «out», «inc», «this», «p», «month», ())
       | some «t» =>
-        «sum».safe «out» («t».2.2.2.1) && (let «out» : «Counters» := «sum» «out» («t».2.2.2.1)
-        let «t» := some «t»
+        «sum».safe «out» «t».«c» && (let «out» : «Counters» := «sum» «out» «t».«c»
         next4' («period», «out», «inc», «this», «p», «month», ())))
-      (fun s4' =>
+      (fun _ =>
       true)
       («period», «out», «inc», «this», «p», «month», ())
 
 def «usageList» («this» : «Registers») : List «Increments» :=
-  List.map (fun «x» => ((«x».1), («x».2.1), («usageOf» «this» («x».1) («x».2.1)), ())) ((List.map Prod.snd «this».2.2.2.2.2.2.1) ++ ([]))
+  List.map (fun «x» => («Increments».mk «x».«p» «x».«month» («usageOf» «this» «x».«p» «x».«month»))) ((List.map Prod.snd «this».«periods») ++ ([]))
 
 /-- The inputs on which `usageList` stays within what the model covers. -/
 def «usageList».safe («this» : «Registers») : Bool :=
-  List.all ((List.map Prod.snd «this».2.2.2.2.2.2.1) ++ ([])) (fun «x» => «usageOf».safe «this» («x».1) («x».2.1))
+  List.all ((List.map Prod.snd «this».«periods») ++ ([])) (fun «x» => «usageOf».safe «this» «x».«p» «x».«month»)
 
 def «totalList» («this» : «Registers») : List «Total» :=
-  (List.map Prod.snd «this».2.2.2.2.1) ++ ([])
+  (List.map Prod.snd «this».«totals») ++ ([])
 
 def «touchAlbum» («this» : «Registers») («aid» : JSString) («at» : Int) : «Registers» :=
-  let «a» : Option «AlbumRec» := Ariadne.mapGet «this».2.2.2.2.2.2.2.1 «aid»
-  let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.2.1 «aid» (match «a» with | none => («aid», (js "Untitled album"), «at», none, none, none, none, ()) | some «a» => if decide («at» < («a».2.2.1)) then let r' := «a»; (r'.1, r'.2.1, «at», r'.2.2.2.1, r'.2.2.2.2.1, r'.2.2.2.2.2.1, r'.2.2.2.2.2.2.1, ()) else «a»), «this».2.2.2.2.2.2.2.2)
+  let «a» : Option «AlbumRec» := Ariadne.mapGet «this».«albums» «aid»
+  let «this» : «Registers» := «this».«withAlbums» (Ariadne.mapPut «this».«albums» «aid» (match «a» with | none => («AlbumRec».mk «aid» (js "Untitled album") «at» none none none none) | some «a» => if decide («at» < «a».«created») then («a».«withCreated» «at») else «a»))
   «this»
 
 def «album» («this» : «Registers») («aid» : JSString) («stamp» : JSString) («at» : Int) («name» : Option JSString) («cover» : Option JSString) («deleted» : Bool) : «Registers» :=
   let «this» : «Registers» := «touchAlbum» «this» «aid» «at»
-  let «a» : Option «AlbumRec» := Ariadne.mapGet «this».2.2.2.2.2.2.2.1 «aid»
+  let «a» : Option «AlbumRec» := Ariadne.mapGet «this».«albums» «aid»
   match «a» with
   | none =>
     «this»
   | some «a» =>
-    let «renamed» : Bool := («given» «name») && («newer» («a».2.2.2.2.2.1) «stamp»)
-    let «covered» : Bool := («given» «cover») && («newer» («a».2.2.2.2.2.2.1) «stamp»)
-    let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.2.1 «aid» (let r' := «a»; (r'.1, (if «renamed» then «otherwise» «name» («a».2.1) else «a».2.1), r'.2.2.1, (if «covered» then «cover» else «a».2.2.2.1), (if «deleted» && («earlier» («a».2.2.2.2.1) «stamp») then some «stamp» else «a».2.2.2.2.1), (if «renamed» then some «stamp» else «a».2.2.2.2.2.1), (if «covered» then some «stamp» else «a».2.2.2.2.2.2.1), ())), «this».2.2.2.2.2.2.2.2)
+    let «renamed» : Bool := («given» «name») && («newer» «a».«nameS» «stamp»)
+    let «covered» : Bool := («given» «cover») && («newer» «a».«coverS» «stamp»)
+    let «this» : «Registers» := «this».«withAlbums» (Ariadne.mapPut «this».«albums» «aid» ((((((«a».«withName» (if «renamed» then «otherwise» «name» «a».«name» else «a».«name»)).«withNameS» (if «renamed» then some «stamp» else «a».«nameS»)).«withCover» (if «covered» then «cover» else «a».«cover»)).«withCoverS» (if «covered» then some «stamp» else «a».«coverS»)).«withDeleted» (if «deleted» && («earlier» «a».«deleted» «stamp») then some «stamp» else «a».«deleted»))))
     «this»
 
 def «item» («this» : «Registers») («aid» : JSString) («id» : JSString) («stamp» : JSString) («present» : Bool) : «Registers» :=
-  let «cur» : Option «AlbumItem» := Ariadne.mapGet «this».2.2.2.2.2.2.2.2.1 («key» «aid» «id»)
-  let after2' := fun s2' =>
-    let «this» := s2'.2.1
+  let «cur» : Option «AlbumItem» := Ariadne.mapGet «this».«items» («key» «aid» «id»)
+  let after2' := fun (_, «this», _, _, _, _, ()) =>
     «this»
-  if «newer» (match «cur» with | none => none | some «cur» => some («cur».2.2.1)) «stamp» then
-    let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, «this».2.2.2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.2.2.1 («key» «aid» «id») ((«aid», «id», «stamp», «present», ())), «this».2.2.2.2.2.2.2.2.2)
+  if «newer» (match «cur» with | none => none | some «cur» => some «cur».«s») «stamp» then
+    let «this» : «Registers» := «this».«withItems» (Ariadne.mapPut «this».«items» («key» «aid» «id») («AlbumItem».mk «aid» «id» «stamp» «present»))
     after2' («cur», «this», «aid», «id», «stamp», «present», ())
   else
     after2' («cur», «this», «aid», «id», «stamp», «present», ())
 
 def «albumItems» («this» : «Registers») («aid» : JSString) («stamp» : JSString) («at» : Int) («add» : List JSString) («remove» : List JSString) : «Registers» :=
   let «this» : «Registers» := «touchAlbum» «this» «aid» «at»
-  Ariadne.forIn «add» (fun «id» next2' exit2' s2' =>
-    let «this» := s2'.1
-    let «aid» := s2'.2.1
-    let «stamp» := s2'.2.2.1
-    let «at» := s2'.2.2.2.1
-    let «add» := s2'.2.2.2.2.1
-    let «remove» := s2'.2.2.2.2.2.1
+  Ariadne.forIn «add» (fun «id» next2' exit2' («this», «aid», «stamp», «at», «add», «remove», ()) =>
     let «this» : «Registers» := «item» «this» «aid» «id» «stamp» true
     next2' («this», «aid», «stamp», «at», «add», «remove», ()))
-    (fun s2' =>
-    let «this» := s2'.1
-    let «aid» := s2'.2.1
-    let «stamp» := s2'.2.2.1
-    let «at» := s2'.2.2.2.1
-    let «add» := s2'.2.2.2.2.1
-    let «remove» := s2'.2.2.2.2.2.1
-    Ariadne.forIn «remove» (fun «id» next4' exit4' s4' =>
-      let «this» := s4'.1
-      let «aid» := s4'.2.1
-      let «stamp» := s4'.2.2.1
-      let «at» := s4'.2.2.2.1
-      let «add» := s4'.2.2.2.2.1
-      let «remove» := s4'.2.2.2.2.2.1
+    (fun («this», «aid», «stamp», «at», «add», «remove», ()) =>
+    Ariadne.forIn «remove» (fun «id» next4' exit4' («this», «aid», «stamp», «at», «add», «remove», ()) =>
       let «this» : «Registers» := «item» «this» «aid» «id» «stamp» false
       next4' («this», «aid», «stamp», «at», «add», «remove», ()))
-      (fun s4' =>
-      let «this» := s4'.1
+      (fun («this», _, _, _, _, _, ()) =>
       «this»)
       («this», «aid», «stamp», «at», «add», «remove», ()))
     («this», «aid», «stamp», «at», «add», «remove», ())
 
 def «albumList» («this» : «Registers») : List «AlbumRec» :=
-  (List.map Prod.snd «this».2.2.2.2.2.2.2.1) ++ ([])
+  (List.map Prod.snd «this».«albums») ++ ([])
 
 def «itemList» («this» : «Registers») : List «AlbumItem» :=
-  (List.map Prod.snd «this».2.2.2.2.2.2.2.2.1) ++ ([])
+  (List.map Prod.snd «this».«items») ++ ([])
 
 def «loadPlacement» («this» : «Registers») («ref» : JSString) («e» : «Placed») : «Registers» :=
-  let «this» : «Registers» := «put» «this» «ref» («e».1) «e»
+  let «this» : «Registers» := «put» «this» «ref» «e».«p» «e»
   «this»
 
 /-- The inputs on which `loadPlacement` stays within what the model covers. -/
 def «loadPlacement».safe («this» : «Registers») («ref» : JSString) («e» : «Placed») : Bool :=
-  «put».safe «this» «ref» («e».1) «e» && (let «this» : «Registers» := «put» «this» «ref» («e».1) «e»
+  «put».safe «this» «ref» «e».«p» «e» && (let «this» : «Registers» := «put» «this» «ref» «e».«p» «e»
   true)
 
 def «loadMark» («this» : «Registers») («m» : «Mark») : «Registers» :=
-  let «this» : «Registers» := («this».1, «this».2.1, Ariadne.mapPut «this».2.2.1 («key» («m».1) («m».2.1)) «m», «this».2.2.2)
+  let «this» : «Registers» := «this».«withMarks» (Ariadne.mapPut «this».«marks» («key» «m».«ref» «m».«p») «m»)
   «this»
 
 def «loadPack» («this» : «Registers») («pk» : «Pack») : «Registers» :=
-  let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, Ariadne.mapPut «this».2.2.2.1 («pk».1) «pk», «this».2.2.2.2)
+  let «this» : «Registers» := «this».«withPacks» (Ariadne.mapPut «this».«packs» «pk».«id» «pk»)
   «this»
 
 def «loadTotal» («this» : «Registers») («t» : «Total») : «Registers» :=
-  let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, Ariadne.mapPut «this».2.2.2.2.1 («key» («key» («t».1) («t».2.1)) («t».2.2.1)) «t», «this».2.2.2.2.2)
-  let «this» : «Registers» := «track» «this» («t».1) («t».2.1) («t».2.2.1) true
+  let «this» : «Registers» := «this».«withTotals» (Ariadne.mapPut «this».«totals» («key» («key» «t».«p» «t».«month») «t».«device») «t»)
+  let «this» : «Registers» := «track» «this» «t».«p» «t».«month» «t».«device» true
   «this»
 
 /-- The inputs on which `loadTotal` stays within what the model covers. -/
 def «loadTotal».safe («this» : «Registers») («t» : «Total») : Bool :=
-  let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, Ariadne.mapPut «this».2.2.2.2.1 («key» («key» («t».1) («t».2.1)) («t».2.2.1)) «t», «this».2.2.2.2.2)
-  «track».safe «this» («t».1) («t».2.1) («t».2.2.1) true && (let «this» : «Registers» := «track» «this» («t».1) («t».2.1) («t».2.2.1) true
+  let «this» : «Registers» := «this».«withTotals» (Ariadne.mapPut «this».«totals» («key» («key» «t».«p» «t».«month») «t».«device») «t»)
+  «track».safe «this» «t».«p» «t».«month» «t».«device» true && (let «this» : «Registers» := «track» «this» «t».«p» «t».«month» «t».«device» true
   true)
 
 def «loadIncrements» («this» : «Registers») («i» : «Increments») : «Registers» :=
-  let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.1 («key» («i».1) («i».2.1)) «i», «this».2.2.2.2.2.2)
-  let «this» : «Registers» := «track» «this» («i».1) («i».2.1) (js "") false
+  let «this» : «Registers» := «this».«withIncrements» (Ariadne.mapPut «this».«increments» («key» «i».«p» «i».«month») «i»)
+  let «this» : «Registers» := «track» «this» «i».«p» «i».«month» (js "") false
   «this»
 
 /-- The inputs on which `loadIncrements` stays within what the model covers. -/
 def «loadIncrements».safe («this» : «Registers») («i» : «Increments») : Bool :=
-  let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.1 («key» («i».1) («i».2.1)) «i», «this».2.2.2.2.2.2)
-  «track».safe «this» («i».1) («i».2.1) (js "") false && (let «this» : «Registers» := «track» «this» («i».1) («i».2.1) (js "") false
+  let «this» : «Registers» := «this».«withIncrements» (Ariadne.mapPut «this».«increments» («key» «i».«p» «i».«month») «i»)
+  «track».safe «this» «i».«p» «i».«month» (js "") false && (let «this» : «Registers» := «track» «this» «i».«p» «i».«month» (js "") false
   true)
 
 def «loadAlbum» («this» : «Registers») («a» : «AlbumRec») : «Registers» :=
-  let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.2.1 («a».1) «a», «this».2.2.2.2.2.2.2.2)
+  let «this» : «Registers» := «this».«withAlbums» (Ariadne.mapPut «this».«albums» «a».«id» «a»)
   «this»
 
 def «loadItem» («this» : «Registers») («i» : «AlbumItem») : «Registers» :=
-  let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, «this».2.2.2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.2.2.1 («key» («i».1) («i».2.1)) «i», «this».2.2.2.2.2.2.2.2.2)
+  let «this» : «Registers» := «this».«withItems» (Ariadne.mapPut «this».«items» («key» «i».«aid» «i».«id») «i»)
   «this»
 
 /-! ## Denotation
