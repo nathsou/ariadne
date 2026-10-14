@@ -87,6 +87,8 @@ statement is a visible change in review.
 
 ## Documentation
 
+- [Playground: translate TypeScript in the browser, and step through proofs](https://nathsou.github.io/ariadne/)
+  ([source](playground/README.md))
 - [Guide: a project from TypeScript to proved properties](docs/GUIDE.md)
 - [Design: the model, the typed syntax, the theorem and the per-file checks](docs/DESIGN.md)
 - [Language: what is accepted, what is refused, and drive's kernel](docs/LANGUAGE.md)
