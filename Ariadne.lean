@@ -11,4 +11,5 @@ import Ariadne.Proof.Trivial
 import Ariadne.Proof.Store
 import Ariadne.Proof.Adequacy
 import Ariadne.Lib.Sort
+import Ariadne.Lib.Loop
 import Ariadne.Audit
