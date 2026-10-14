@@ -83,6 +83,21 @@ theorem countTagged_foldl (items : List «Item») (tag : JSString) :
   obtain ⟨n, is, t, ⟨⟩⟩ := s
   by_cases h : y.tags.any (· == t) <;> simp [h]
 
+/-- `firstAbove`'s `while` loop ends, and its index stays exact, on arrays shorter than 2^53: the
+measure is the number of elements left. -/
+theorem firstAbove_safe (xs : List Int) (limit : Int) (h : xs.length < 2 ^ 53) : «firstAbove».safe xs limit = true := by
+  unfold «firstAbove».safe
+  refine whileSafe_of_measure (fun s => s.2.1 = xs ∧ 0 ≤ s.1) (fun s => ((xs.length : Int) - s.1).toNat) ?_
+    (fun _ _ => rfl) _ ⟨rfl, Int.le_refl 0⟩ (by simp [loopBound]; omega)
+  rintro next ex ⟨i, ys, l, ⟨⟩⟩ ⟨rfl, hi⟩ hc hn -
+  simp only [decide_eq_true_eq] at hc hi h
+  have hr : inRange (i + 1) = true := by simp only [inRange, Nat.ble_eq]; omega
+  dsimp only
+  split <;> split
+  all_goals first
+    | rfl
+    | rw [hr, Bool.true_and]; exact hn _ ⟨rfl, by omega⟩ (by simp only; omega)
+
 /-- Every run of `sum` on an input where it stays exact returns the sum. -/
 theorem sum_run (xs : List Int) (vs : List JSValue) (args : ArgsRep sig.«sum».params vs (xs, ()))
     (safe : «sum».safe xs = true) :

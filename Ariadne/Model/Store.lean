@@ -100,6 +100,7 @@ mutual
       | some (.number m) => sLoop p n σ env (rangeBindings i (min m n)) body
       | some _ => .error (.unsupported "a counted loop's bound that is not a number")
       | none => .error (.referenceError k)
+    | n + 1, σ, env, .while_ c body => sLoop p n σ env (List.replicate n []) (.ite c [] [.brk] :: body)
     | n + 1, σ, env, .stateSet f k v => do
       let kvs ← stateMap (fill σ env) f
       let key ← mapKey (← evalExpr p n (fill σ env) k)

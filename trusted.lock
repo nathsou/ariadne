@@ -81,6 +81,9 @@ Ariadne.BinOp : Type
   | Ariadne.BinOp.add : Ariadne.BinOp
   | Ariadne.BinOp.sub : Ariadne.BinOp
   | Ariadne.BinOp.mul : Ariadne.BinOp
+  | Ariadne.BinOp.div : Ariadne.BinOp
+  | Ariadne.BinOp.mod : Ariadne.BinOp
+  | Ariadne.BinOp.floorDiv : Ariadne.BinOp
   | Ariadne.BinOp.eq : Ariadne.BinOp
   | Ariadne.BinOp.ne : Ariadne.BinOp
   | Ariadne.BinOp.lt : Ariadne.BinOp
@@ -198,6 +201,7 @@ Ariadne.Stmt : Type
   | Ariadne.Stmt.forOf : String → Ariadne.Expr → List Ariadne.Stmt → Ariadne.Stmt
   | Ariadne.Stmt.forEntries : String → String → Ariadne.Expr → List Ariadne.Stmt → Ariadne.Stmt
   | Ariadne.Stmt.forRange : String → String → List Ariadne.Stmt → Ariadne.Stmt
+  | Ariadne.Stmt.while_ : Ariadne.Expr → List Ariadne.Stmt → Ariadne.Stmt
   | Ariadne.Stmt.stateSet : String → Ariadne.Expr → Ariadne.Expr → Ariadne.Stmt
   | Ariadne.Stmt.stateDelete : String → Ariadne.Expr → Ariadne.Stmt
   | Ariadne.Stmt.callThis : String → List Ariadne.Expr → Ariadne.Stmt
@@ -240,6 +244,23 @@ Ariadne.binary : Ariadne.BinOp → Ariadne.JSValue → Ariadne.JSValue → Excep
   | Ariadne.BinOp.sub, Ariadne.JSValue.bigint a, Ariadne.JSValue.bigint b => Except.ok (Ariadne.JSValue.bigint (a - b))
   | Ariadne.BinOp.mul, Ariadne.JSValue.number a, Ariadne.JSValue.number b => Ariadne.number (a * b)
   | Ariadne.BinOp.mul, Ariadne.JSValue.bigint a, Ariadne.JSValue.bigint b => Except.ok (Ariadne.JSValue.bigint (a * b))
+  | Ariadne.BinOp.div, Ariadne.JSValue.bigint a, Ariadne.JSValue.bigint b =>
+    if b = 0 then Except.error (Ariadne.Fault.unsupported "division by zero")
+    else Except.ok (Ariadne.JSValue.bigint (a.tdiv b))
+  | Ariadne.BinOp.mod, Ariadne.JSValue.bigint a, Ariadne.JSValue.bigint b =>
+    if b = 0 then Except.error (Ariadne.Fault.unsupported "division by zero")
+    else Except.ok (Ariadne.JSValue.bigint (a.tmod b))
+  | Ariadne.BinOp.div, Ariadne.JSValue.number n, Ariadne.JSValue.number n_1 =>
+    Except.error (Ariadne.Fault.unsupported "number division")
+  | Ariadne.BinOp.mod, Ariadne.JSValue.number a, Ariadne.JSValue.number b =>
+    if b = 0 then Except.error (Ariadne.Fault.unsupported "remainder by zero") else Ariadne.number (a.tmod b)
+  | Ariadne.BinOp.floorDiv, Ariadne.JSValue.number a, Ariadne.JSValue.number b =>
+    if
+        (Decidable.decide (b = 0) || !Decidable.decide (-Ariadne.maxSafe ≤ a ∧ a ≤ Ariadne.maxSafe) ||
+            !Decidable.decide (-Ariadne.maxSafe ≤ b ∧ b ≤ Ariadne.maxSafe)) =
+          Bool.true then
+      Except.error (Ariadne.Fault.unsupported "floor division outside the safe integers")
+    else Except.ok (Ariadne.JSValue.number (a.fdiv b))
   | Ariadne.BinOp.eq, a, b => do
     let __do_lift ← Ariadne.strictEq a b
     Pure.pure (Ariadne.JSValue.bool __do_lift)
@@ -440,6 +461,9 @@ Ariadne.sign : Int → Int :=
 Ariadne.signAt : List (List Int) → Nat → Nat → Int :=
   fun signs i j => (signs[i]?.bind fun x => x[j]?).getD 0
 
+Ariadne.sliceBound : Nat → Int → Nat :=
+  fun len i => if i < 0 then (↑len + i).toNat else Min.min i.toNat len
+
 Ariadne.sortIndices : List (List Int) → Nat → List Nat :=
   fun signs n => List.foldl (fun acc i => Ariadne.insertBy signs i acc) [] (List.range n)
 
@@ -497,11 +521,28 @@ Ariadne.storeSet : Ariadne.JSValue →
     else Except.error (Ariadne.Fault.referenceError "this")
   | x => Except.error (Ariadne.Fault.referenceError "this")
 
+Ariadne.strEndsWith : Ariadne.JSString → Ariadne.JSString → Bool :=
+  fun s t => List.isSuffixOf t s
+
+Ariadne.strIncludes : Ariadne.JSString → Ariadne.JSString → Bool :=
+  fun s t => Ariadne.strIndexOf s t != -1
+
+Ariadne.strIndexOf : Ariadne.JSString → Ariadne.JSString → Int :=
+  fun s t => Ariadne.strIndexOf.go t s 0
+
 Ariadne.strLe : Ariadne.JSString → Ariadne.JSString → Bool :=
   fun a b => !Ariadne.strLt b a
 
 Ariadne.strLt : Ariadne.JSString → Ariadne.JSString → Bool :=
   -- recursive; fingerprint 99338914
+
+Ariadne.strSlice : Ariadne.JSString → Int → Int → Ariadne.JSString :=
+  fun s a b =>
+  have i := Ariadne.sliceBound (List.length s) a;
+  List.take (Ariadne.sliceBound (List.length s) b - i) (List.drop i s)
+
+Ariadne.strStartsWith : Ariadne.JSString → Ariadne.JSString → Bool :=
+  fun s t => List.isPrefixOf t s
 
 Ariadne.strictEq : Ariadne.JSValue → Ariadne.JSValue → Except Ariadne.Fault Bool :=
   fun x x_1 =>
@@ -535,13 +576,17 @@ Ariadne.BinOp.add : Ariadne.BinOp
 
 Ariadne.BinOp.and : Ariadne.BinOp
 
-Ariadne.BinOp.casesOn -- derived; fingerprint 2393448435 939039655
+Ariadne.BinOp.casesOn -- derived; fingerprint 2327451265 3814967880
 
 Ariadne.BinOp.coalesce : Ariadne.BinOp
 
-Ariadne.BinOp.ctorIdx -- derived; fingerprint 1183067720 580531265
+Ariadne.BinOp.ctorIdx -- derived; fingerprint 1183067720 1403545331
+
+Ariadne.BinOp.div : Ariadne.BinOp
 
 Ariadne.BinOp.eq : Ariadne.BinOp
+
+Ariadne.BinOp.floorDiv : Ariadne.BinOp
 
 Ariadne.BinOp.ge : Ariadne.BinOp
 
@@ -555,13 +600,15 @@ Ariadne.BinOp.looseNe : Ariadne.BinOp
 
 Ariadne.BinOp.lt : Ariadne.BinOp
 
+Ariadne.BinOp.mod : Ariadne.BinOp
+
 Ariadne.BinOp.mul : Ariadne.BinOp
 
 Ariadne.BinOp.ne : Ariadne.BinOp
 
 Ariadne.BinOp.or : Ariadne.BinOp
 
-Ariadne.BinOp.rec -- derived; fingerprint 4089293616 0
+Ariadne.BinOp.rec -- derived; fingerprint 3200204534 0
 
 Ariadne.BinOp.sub : Ariadne.BinOp
 
@@ -850,13 +897,13 @@ Ariadne.Scope.pure : Ariadne.Scope → List String :=
 
 Ariadne.Stmt.assign : String → Ariadne.Expr → Ariadne.Stmt
 
-Ariadne.Stmt.below -- derived; fingerprint 492047466 3276453698
+Ariadne.Stmt.below -- derived; fingerprint 492047466 4154525817
 
-Ariadne.Stmt.below_1 -- derived; fingerprint 4157540173 3242330179
+Ariadne.Stmt.below_1 -- derived; fingerprint 4157540173 2278023909
 
-Ariadne.Stmt.below_2 -- derived; fingerprint 2769311281 3909897407
+Ariadne.Stmt.below_2 -- derived; fingerprint 2769311281 3665727469
 
-Ariadne.Stmt.below_3 -- derived; fingerprint 1829797755 3470594019
+Ariadne.Stmt.below_3 -- derived; fingerprint 1829797755 3596711248
 
 Ariadne.Stmt.block : List Ariadne.Stmt → Ariadne.Stmt
 
@@ -866,13 +913,13 @@ Ariadne.Stmt.brk : Ariadne.Stmt
 
 Ariadne.Stmt.callThis : String → List Ariadne.Expr → Ariadne.Stmt
 
-Ariadne.Stmt.casesOn -- derived; fingerprint 2824541321 616048178
+Ariadne.Stmt.casesOn -- derived; fingerprint 490186302 670209489
 
 Ariadne.Stmt.const : String → Ariadne.Expr → Ariadne.Stmt
 
 Ariadne.Stmt.cont : Ariadne.Stmt
 
-Ariadne.Stmt.ctorIdx -- derived; fingerprint 3875443309 4017566167
+Ariadne.Stmt.ctorIdx -- derived; fingerprint 3875443309 2490081173
 
 Ariadne.Stmt.declares : Ariadne.Stmt → List String :=
   fun x =>
@@ -891,13 +938,13 @@ Ariadne.Stmt.ite : Ariadne.Expr → List Ariadne.Stmt → List Ariadne.Stmt → 
 
 Ariadne.Stmt.let_ : String → Ariadne.Expr → Ariadne.Stmt
 
-Ariadne.Stmt.rec -- derived; fingerprint 1169636247 0
+Ariadne.Stmt.rec -- derived; fingerprint 1277612943 0
 
-Ariadne.Stmt.rec_1 -- derived; fingerprint 1780942904 0
+Ariadne.Stmt.rec_1 -- derived; fingerprint 2696194793 0
 
-Ariadne.Stmt.rec_2 -- derived; fingerprint 4166695625 0
+Ariadne.Stmt.rec_2 -- derived; fingerprint 1032070844 0
 
-Ariadne.Stmt.rec_3 -- derived; fingerprint 3891644615 0
+Ariadne.Stmt.rec_3 -- derived; fingerprint 3949753577 0
 
 Ariadne.Stmt.ret : Ariadne.Expr → Ariadne.Stmt
 
@@ -906,6 +953,8 @@ Ariadne.Stmt.stateDelete : String → Ariadne.Expr → Ariadne.Stmt
 Ariadne.Stmt.stateSet : String → Ariadne.Expr → Ariadne.Expr → Ariadne.Stmt
 
 Ariadne.Stmt.switch : Ariadne.Expr → List (Option Ariadne.Expr × List Ariadne.Stmt) → Ariadne.Stmt
+
+Ariadne.Stmt.while_ : Ariadne.Expr → List Ariadne.Stmt → Ariadne.Stmt
 
 Ariadne.TagLit.bool : Bool → Ariadne.TagLit
 
@@ -988,11 +1037,13 @@ Ariadne.assign._f -- derived; fingerprint 302390236 3249259387
 
 Ariadne.assign.match_1 -- derived; fingerprint 3875125105 1555188340
 
-Ariadne.binary._sparseCasesOn_1 -- derived; fingerprint 2215142472 1437033953
+Ariadne.binary._sparseCasesOn_1 -- derived; fingerprint 222894250 2531276584
 
 Ariadne.binary._sparseCasesOn_2 -- derived; fingerprint 2077976777 1880741730
 
-Ariadne.binary.match_1 -- derived; fingerprint 2731007073 536023912
+Ariadne.binary._sparseCasesOn_3 -- derived; fingerprint 3432384507 2633779747
+
+Ariadne.binary.match_1 -- derived; fingerprint 1155221799 3941367855
 
 Ariadne.bindParams._f -- derived; fingerprint 1759294040 2383813839
 
@@ -1034,27 +1085,29 @@ Ariadne.evalElems.match_3 -- derived; fingerprint 396054431 1614652800
 
 Ariadne.evalEntries.match_1 -- derived; fingerprint 1180409114 2948228222
 
-Ariadne.evalExpr._mutual -- derived; fingerprint 1280594224 2907597086
+Ariadne.evalExpr._mutual -- derived; fingerprint 1280594224 2727529939
 
-Ariadne.evalExpr._sparseCasesOn_5 -- derived; fingerprint 232071730 1208867370
+Ariadne.evalExpr._sparseCasesOn_10 -- derived; fingerprint 2227370605 725546018
 
-Ariadne.evalExpr._sparseCasesOn_6 -- derived; fingerprint 2511927106 3287480023
+Ariadne.evalExpr._sparseCasesOn_5 -- derived; fingerprint 2472139070 133659957
 
-Ariadne.evalExpr._sparseCasesOn_9 -- derived; fingerprint 606238090 559116739
+Ariadne.evalExpr._sparseCasesOn_6 -- derived; fingerprint 232071730 1208867370
+
+Ariadne.evalExpr._sparseCasesOn_7 -- derived; fingerprint 2511927106 3287480023
 
 Ariadne.evalExpr.match_1 -- derived; fingerprint 3639637760 3038618943
 
+Ariadne.evalExpr.match_10 -- derived; fingerprint 1431738322 3283764983
+
 Ariadne.evalExpr.match_3 -- derived; fingerprint 3654287206 1274956151
 
-Ariadne.evalExpr.match_5 -- derived; fingerprint 276962993 580884433
-
-Ariadne.evalExpr.match_9 -- derived; fingerprint 1431738322 2033184884
+Ariadne.evalExpr.match_5 -- derived; fingerprint 3509783626 2675833318
 
 Ariadne.execStmt._sparseCasesOn_1 -- derived; fingerprint 3751562238 3851833076
 
 Ariadne.execStmt.match_1 -- derived; fingerprint 2110041633 1665803234
 
-Ariadne.execStmt.match_10 -- derived; fingerprint 2303146455 785089256
+Ariadne.execStmt.match_10 -- derived; fingerprint 592406542 4053345445
 
 Ariadne.execStmt.match_4 -- derived; fingerprint 3175174048 749409309
 
@@ -1112,7 +1165,7 @@ Ariadne.sCallState.match_4 -- derived; fingerprint 4195751276 204190669
 
 Ariadne.sCallState.match_6 -- derived; fingerprint 2577469513 3761258914
 
-Ariadne.sExecStmt._f -- derived; fingerprint 1753191207 3973947338
+Ariadne.sExecStmt._f -- derived; fingerprint 1753191207 3606106865
 
 Ariadne.sExecStmt._sparseCasesOn_1 -- derived; fingerprint 3400284381 3708648107
 
@@ -1130,7 +1183,7 @@ Ariadne.sExecStmt.match_14 -- derived; fingerprint 3549148299 612196162
 
 Ariadne.sExecStmt.match_17 -- derived; fingerprint 1592278413 2600188683
 
-Ariadne.sExecStmt.match_19 -- derived; fingerprint 1743015475 2715658038
+Ariadne.sExecStmt.match_19 -- derived; fingerprint 1396982399 3637774366
 
 Ariadne.sExecStmt.match_4 -- derived; fingerprint 2950862158 4175362568
 
@@ -1170,19 +1223,19 @@ Ariadne.stateMap.match_1 -- derived; fingerprint 2508087821 3193746759
 
 Ariadne.stateMap.match_5 -- derived; fingerprint 2501826635 3599904916
 
-Ariadne.stmtMutates._f -- derived; fingerprint 398259384 3120435439
+Ariadne.stmtMutates._f -- derived; fingerprint 398259384 3232037900
 
-Ariadne.stmtMutates._sparseCasesOn_1 -- derived; fingerprint 1912177492 132657023
+Ariadne.stmtMutates._sparseCasesOn_1 -- derived; fingerprint 587703636 3799192656
 
-Ariadne.stmtMutates.match_1 -- derived; fingerprint 3529047481 3633782082
+Ariadne.stmtMutates.match_1 -- derived; fingerprint 271906276 2689367936
 
-Ariadne.stmtScoped._f -- derived; fingerprint 2012742382 313795381
+Ariadne.stmtScoped._f -- derived; fingerprint 2012742382 2933727942
 
-Ariadne.stmtScoped.match_1 -- derived; fingerprint 3874976293 3771039639
+Ariadne.stmtScoped.match_1 -- derived; fingerprint 2235654970 1009259868
 
-Ariadne.stmtThisFree._f -- derived; fingerprint 398259384 3444710236
+Ariadne.stmtThisFree._f -- derived; fingerprint 398259384 3270805371
 
-Ariadne.stmtThisFree.match_1 -- derived; fingerprint 64750647 2834589318
+Ariadne.stmtThisFree.match_1 -- derived; fingerprint 3383360956 3688218373
 
 Ariadne.stmtsMutate._f -- derived; fingerprint 2900673771 1565904124
 
@@ -1195,6 +1248,9 @@ Ariadne.stmtsThisFree._f -- derived; fingerprint 2900673771 2735768858
 Ariadne.storeSet._sparseCasesOn_1 -- derived; fingerprint 2559946931 1001586084
 
 Ariadne.storeSet.match_1 -- derived; fingerprint 4084780308 4821436
+
+Ariadne.strIndexOf.go : Ariadne.JSString → Ariadne.JSString → Nat → Int :=
+  -- recursive; fingerprint 33922914
 
 Ariadne.strLt._f -- derived; fingerprint 1149918337 1606091249
 
@@ -1367,7 +1423,7 @@ Ariadne.Lit.value.match_1 -- derived; fingerprint 2283321709 3033039865
 
 Ariadne.Nullish.admits.match_1 -- derived; fingerprint 85098668 252544257
 
-Ariadne.Scope.after._sparseCasesOn_1 -- derived; fingerprint 1091005323 1223947724
+Ariadne.Scope.after._sparseCasesOn_1 -- derived; fingerprint 1091005323 4132622530
 
 Ariadne.Scope.after.match_1 -- derived; fingerprint 448628438 4272469971
 
@@ -1393,6 +1449,7 @@ Ariadne.Stmt.brecOn_1.go : {motive_1 : Ariadne.Stmt → Sort u} →
     (fun x e body body_ih => ⟨F_1 (Ariadne.Stmt.forOf x e body) body_ih, body_ih⟩)
     (fun i x e body body_ih => ⟨F_1 (Ariadne.Stmt.forEntries i x e body) body_ih, body_ih⟩)
     (fun i n body body_ih => ⟨F_1 (Ariadne.Stmt.forRange i n body) body_ih, body_ih⟩)
+    (fun c body body_ih => ⟨F_1 (Ariadne.Stmt.while_ c body) body_ih, body_ih⟩)
     (fun f k v => ⟨F_1 (Ariadne.Stmt.stateSet f k v) PUnit.unit, PUnit.unit⟩)
     (fun f k => ⟨F_1 (Ariadne.Stmt.stateDelete f k) PUnit.unit, PUnit.unit⟩)
     (fun m args => ⟨F_1 (Ariadne.Stmt.callThis m args) PUnit.unit, PUnit.unit⟩) ⟨F_2 [] PUnit.unit, PUnit.unit⟩
@@ -1401,7 +1458,7 @@ Ariadne.Stmt.brecOn_1.go : {motive_1 : Ariadne.Stmt → Sort u} →
     (fun head tail head_ih tail_ih => ⟨F_3 (head :: tail) ⟨head_ih, tail_ih⟩, head_ih, tail_ih⟩)
     (fun fst snd snd_ih => ⟨F_4 (fst, snd) snd_ih, snd_ih⟩) t
 
-Ariadne.Stmt.declares._sparseCasesOn_1 -- derived; fingerprint 1265484666 879334869
+Ariadne.Stmt.declares._sparseCasesOn_1 -- derived; fingerprint 1265484666 2343645290
 
 Ariadne.Stmt.declares.match_1 -- derived; fingerprint 130878895 3715996736
 
@@ -1466,3 +1523,9 @@ Ariadne.instReprTy.repr_1.match_1 -- derived; fingerprint 1842768674 3300640549
 Ariadne.instReprTy.repr_2.match_1 -- derived; fingerprint 1866816181 633654238
 
 Ariadne.instReprTy.repr_3.match_1 -- derived; fingerprint 3390360757 2882060450
+
+Ariadne.strIndexOf.go._f -- derived; fingerprint 1762922487 1129968125
+
+Ariadne.strIndexOf.go.match_1 -- derived; fingerprint 3157881596 4111989979
+
+Ariadne.strIndexOf.go.match_3 -- derived; fingerprint 493932383 2763316008

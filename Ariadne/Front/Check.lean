@@ -688,6 +688,12 @@ mutual
       return { ty := sig.result, typed := s!"(.call (s := sig.{ident f}) {fnPath (s.fns.length - 1 - j)} (by decide +kernel) {typedArgs})",
                readable, atomic := readableArgs.isEmpty, trivial := argsT && sig.trivial,
                safe := andTText argsT argsS sig.trivial calleeSafe }
+    | .call (.member (.var "Math" _) "floor" _) [.binary "/" a b _] _ => do
+      let a ← checkExpr T s a (some .number)
+      let b ← checkExpr T s b (some .number)
+      return { ty := .number, typed := s!"(.bin .ndiv {a.typed} {b.typed})", readable := s!"Int.fdiv {a.term} {b.term}",
+               trivial := false,
+               safe := andText (both a b) s!"{b.term} != 0 && Ariadne.inRange {a.term} && Ariadne.inRange {b.term}" }
     | .call (.member recv m _) args span => checkMethod T s recv m args span expected
     | .member a f span => do
       let a ← inferExpr T s a none
@@ -788,6 +794,30 @@ mutual
   partial def checkMethod (T : Types) (s : Scope) (recv : Parse.Expr) (m : String) (args : List Parse.Expr)
       (span : Span) (expected : Option Ty) : Checked Out := do
     let a ← inferExpr T s recv none
+    if a.ty == .string then
+      match m, args with
+      | "startsWith", [t] | "endsWith", [t] | "includes", [t] | "indexOf", [t] =>
+        let t ← checkExpr T s t (some .string)
+        let (ty, fn) : Ty × String := match m with
+          | "startsWith" => (.bool, "Ariadne.strStartsWith")
+          | "endsWith" => (.bool, "Ariadne.strEndsWith")
+          | "includes" => (.bool, "Ariadne.strIncludes")
+          | _ => (.number, "Ariadne.strIndexOf")
+        return { ty, typed := s!"(.smethod .{m} {a.typed} {t.typed})", readable := s!"{fn} {a.term} {t.term}",
+                 trivial := a.trivial && t.trivial, safe := both a t }
+      | "slice", [i] =>
+        let i ← checkExpr T s i (some .number)
+        return { ty := .string, typed := s!"(.slice1 {a.typed} {i.typed})",
+                 readable := s!"Ariadne.strSlice {a.term} {i.term} (List.length {a.term} : Int)",
+                 trivial := a.trivial && i.trivial, safe := both a i }
+      | "slice", [i, j] =>
+        let i ← checkExpr T s i (some .number)
+        let j ← checkExpr T s j (some .number)
+        return { ty := .string, typed := s!"(.slice2 {a.typed} {i.typed} {j.typed})",
+                 readable := s!"Ariadne.strSlice {a.term} {i.term} {j.term}",
+                 trivial := a.trivial && i.trivial && j.trivial,
+                 safe := andTText a.trivial a.safe (i.trivial && j.trivial) (both i j) }
+      | _, _ => unsupportedTy span s!"the string method '{m}' with these arguments"
     let .array τ := a.ty | unsupportedTy span s!"the method '{m}' of {a.ty.ts}"
     let [arg] := args | unsupportedTy span s!"'{m}' with other than one argument"
     match m with
@@ -918,6 +948,14 @@ mutual
       | "-", .number => pure (arith "nsub" "-")
       | "*", .number => pure (arith "nmul" "*")
       | "+", .string => pure (mk .string "concat" s!"{a.term} ++ {b.term}")
+      -- Division and remainder: the divisor must not be zero (a `RangeError` or `NaN`).
+      | "/", .int => pure { mk .int "idiv" s!"Int.tdiv {a.term} {b.term}" with
+          trivial := false, safe := andText (both a b) s!"{b.term} != 0" }
+      | "%", .int => pure { mk .int "imod" s!"Int.tmod {a.term} {b.term}" with
+          trivial := false, safe := andText (both a b) s!"{b.term} != 0" }
+      | "%", .number => pure { mk .number "nmod" s!"Int.tmod {a.term} {b.term}" with
+          trivial := false, safe := andText (both a b) s!"{b.term} != 0 && Ariadne.inRange (Int.tmod {a.term} {b.term})" }
+      | "/", .number => mismatch span "'/' on numbers gives fractions (use Math.floor(a / b))"
       | "<", .int => pure (mk .bool "lt" s!"decide ({a.term} < {b.term})")
       | "<=", .int => pure (mk .bool "le" s!"decide ({a.term} ≤ {b.term})")
       | ">", .int => pure (mk .bool "gt" s!"decide ({a.term} > {b.term})")
@@ -1153,6 +1191,20 @@ def loopText (render : Block → String → KText → String) (s : Scope) (items
   s!"Ariadne.forIn {items} (fun {binder} {nx} {ex} {statePattern s bodyText} =>\n{j}{bodyText})\n{i}  " ++
     s!"(fun {statePattern s restText} =>\n{j}{restText})\n{i}  {tup}"
 
+/-- A `while` loop: `Ariadne.whileDo (fun state => c) (fun next exit state => body) (fun state => rest) tuple`,
+and `Ariadne.whileSafe` for the safety condition. -/
+def whileText (render : Block → String → KText → String) (s : Scope) (fn c : String) (body rest : Block)
+    (i : String) (k : KText) : String :=
+  let d := i.length
+  let (nx, ex) := (s!"next{d}'", s!"exit{d}'")
+  let tup := tupleText s
+  let j := i ++ "  "
+  let kb : KText := ⟨fun _ => s!"{nx} {tup}", fun _ => s!"{ex} {tup}", fun _ => s!"{nx} {tup}"⟩
+  let bodyText := render body j kb
+  let restText := render rest j k
+  s!"{fn} (fun {statePattern s c} => {c})\n{i}  (fun {nx} {ex} {statePattern s bodyText} =>\n{j}{bodyText})\n{i}  " ++
+    s!"(fun {statePattern s restText} =>\n{j}{restText})\n{i}  {tup}"
+
 def flagsIte (yes no rest : Block) : Bool × Bool × Bool :=
   ((yes.falls || no.falls) && rest.falls,
    yes.breaks || no.breaks || ((yes.falls || no.falls) && rest.breaks),
@@ -1204,6 +1256,16 @@ mutual
       let rest ← checkStmts T s result rest
       pure { typed := s!"(.cont {rest.typed})", readable := (fun i k => k.cont i), safe := (fun i k => k.cont i),
              trivial := rest.trivial, falls := false, breaks := false, continues := true }
+    | .while_ c body span :: rest => do
+      let c ← checkExpr T s c (some .bool)
+      -- The condition is evaluated at every iteration; its safety would join the loop's.
+      if !c.trivial then unsupportedTy span "a while condition with number arithmetic or calls of unsafe functions"
+      let body ← checkStmts T s result (branchStmts body)
+      let rest ← checkStmts T s result rest
+      pure { typed := s!"(.whileLoop {c.typed}\n  {body.typed}\n  {rest.typed})",
+             readable := whileText (·.readable) s "Ariadne.whileDo" c.readable body rest,
+             safe := whileText (·.safe) s "Ariadne.whileSafe" c.readable body rest,
+             trivial := false, falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
     | .forOf false x e body span :: rest => do
       let body := branchStmts body
       let a ← inferExpr T s e none
@@ -1538,7 +1600,8 @@ def printUnOp : UnOp → String
   | .not => ".not" | .neg => ".neg"
 
 def printBinOp : BinOp → String
-  | .add => ".add" | .sub => ".sub" | .mul => ".mul" | .eq => ".eq" | .ne => ".ne"
+  | .add => ".add" | .sub => ".sub" | .mul => ".mul" | .div => ".div" | .mod => ".mod" | .floorDiv => ".floorDiv"
+  | .eq => ".eq" | .ne => ".ne"
   | .lt => ".lt" | .le => ".le" | .gt => ".gt" | .ge => ".ge" | .and => ".and" | .or => ".or"
   | .coalesce => ".coalesce" | .looseEq => ".looseEq" | .looseNe => ".looseNe"
 
@@ -1582,6 +1645,7 @@ mutual
     | .brk => ".brk"
     | .cont => ".cont"
     | .forOf x e body => s!".forOf {leanString x} {printExpr e} {printStmts (indent ++ "  ") body}"
+    | .while_ c body => s!".while_ {printExpr c} {printStmts (indent ++ "  ") body}"
     | .forEntries i x e body =>
       s!".forEntries {leanString i} {leanString x} {printExpr e} {printStmts (indent ++ "  ") body}"
     | .forRange i n body => s!".forRange {leanString i} {leanString n} {printStmts (indent ++ "  ") body}"
@@ -1677,7 +1741,7 @@ partial def stmtsEffects (ss : List Stmt) : List String × List String :=
       | .stateSet f _ _ | .stateDelete f _ => ([f], [])
       | .callThis m _ => ([], [m])
       | .ite _ yes no => stmtsEffects (yes ++ no)
-      | .block body | .forOf _ _ body | .forEntries _ _ _ body | .forRange _ _ body => stmtsEffects body
+      | .block body | .forOf _ _ body | .forEntries _ _ _ body | .forRange _ _ body | .while_ _ body => stmtsEffects body
       | .switch _ cases => stmtsEffects (cases.flatMap (·.2))
       | _ => ([], [])
     (w ++ w', c ++ c')) ([], [])

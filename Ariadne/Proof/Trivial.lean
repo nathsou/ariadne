@@ -57,6 +57,7 @@ mutual
       simp only [TStmts.trivial, Bool.and_eq_true] at h
       simp [TStmts.safe, h.1]
     | _, _, .retVoid _ _, _, _, _, _ => rfl
+    | _, _, .whileLoop .., _, _, _, h => by simp [TStmts.trivial] at h
     | _, _, .forRange _ _ body rest, ks, ρ, hk, h => by
       simp only [TStmts.trivial, Bool.and_eq_true] at h
       simp only [TStmts.safe]

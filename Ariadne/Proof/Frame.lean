@@ -54,6 +54,7 @@ mutual
       let r := rest.keeps g known nk bk ck
       x != "this" && r && arms.keeps g known r r ck
     | .forRange i _ body rest, nk, bk, ck => i != "this" && rest.keeps g known nk bk ck && body.keeps g known true true true
+    | .whileLoop _ body rest, nk, bk, ck => rest.keeps g known nk bk ck && body.keeps g known true true true
     | .stateSet (f := f) _ _ _ _ _ rest, nk, bk, ck | .stateDelete (f := f) _ _ _ _ rest, nk, bk, ck =>
       f != g && rest.keeps g known nk bk ck
     | .callVoid fn _ _ rest, nk, bk, ck => fn.flag known && rest.keeps g known nk bk ck
@@ -214,6 +215,14 @@ mutual
           (fun ρ'' hρ'' => ⟨fun _ => hn _ hρ''.2, fun _ => hx _ hρ''.2, fun _ => hn _ hρ''.2⟩)
           ⟨fun h' => absurd h' h.1.1, hρ'⟩
       · exact fun ρ' hρ' => TStmts.keeps_spec rest nk bk ck k ρ' h.1.2 hk hρ'
+    | _, _, .whileLoop _ body rest, nk, bk, ck, k, ρ, h, hk, hρ => by
+      simp only [TStmts.keeps, Bool.and_eq_true] at h
+      simp only [TStmts.denote]
+      have hx := fun ρ' hρ' => TStmts.keeps_spec rest nk bk ck k ρ' h.1 hk hρ'
+      refine whileDo_inv (Ctx.Keeps j c _) (Ty.Keeps j c _) ?_ hx ρ hρ
+      intro next ex ρ' hρ' _ hn hx'
+      exact TStmts.keeps_spec body true true true _ _ h.2
+        (fun ρ'' hρ'' => ⟨fun _ => hn _ hρ'', fun _ => hx' _ hρ'', fun _ => hn _ hρ''⟩) hρ'
     | _, _, .ifNull v _ yes no rest, nk, bk, ck, k, ρ, h, hk, hρ => by
       simp only [TStmts.keeps, Bool.and_eq_true, bne_iff_ne, ne_eq] at h
       have hk' : K.Keeps j c (rest.keeps g known nk bk ck) bk ck { k with normal := rest.denote fs k } :=

@@ -1,7 +1,8 @@
 // expect: A1001
-export function f(x: bigint): bigint {
-  while (x > 0n) {
-    return x;
+export function f(n: number): number {
+  let i = 0;
+  while (i + 1 < n) {
+    i++;
   }
-  return 0n;
+  return i;
 }

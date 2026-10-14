@@ -2,6 +2,7 @@ import Ariadne.Proof.Expr
 import Ariadne.Eqns.Stmt
 import Ariadne.Eqns.Flags
 import Ariadne.Eqns.Checks
+import Ariadne.Lib.Loop
 
 /-!
 # Adequacy of statements
@@ -530,6 +531,115 @@ theorem conv_loop {prog : Program} {Γ : Ctx} {τ : Ty} {vd : Bool} {α : Type} 
       · show SRel Γ τ vd env (step y (forIn ys step k.normal) k.normal ρ) k ks true false false o2
         rw [hr']; exact hr2.relen hx.restore_length
 
+/-- One iteration of `loop`, whose body ran to `o`. -/
+theorem loop_step {prog : Program} {n : Nat} {env : Env} {bs : Env} {rest : List Env} {B : List Stmt} {o : Outcome}
+    (h : execStmts prog n (bs ++ env) B = .ok o) :
+    loop prog (n + 1) env (bs :: rest) B = match o.restore env with
+      | .returned v env' => .ok (.returned v env')
+      | .broke env' => .ok (.normal env')
+      | .normal env' | .continued env' => loop prog n env' rest B := by
+  simp only [loop, h, bind, Except.bind]
+  cases o.restore env <;> rfl
+
+/-- A `while` loop, as the model runs it: `loop` over iterations binding nothing, each starting with
+`if (!c) break`. Iterations beyond those it runs are never built, so any long enough list of them gives
+the same outcome. -/
+theorem conv_while {prog : Program} {Γ : Ctx} {τ : Ty} {vd : Bool} {c : Expr} {body : List Stmt}
+    {cond : Γ.denote → Bool} {step : (Γ.denote → τ.denote) → (Γ.denote → τ.denote) → Γ.denote → τ.denote}
+    {stepS : (Γ.denote → Bool) → (Γ.denote → Bool) → Γ.denote → Bool} {k : K Γ τ.denote} {ks : K Γ Bool}
+    (hcond : ∀ env ρ, EnvRel Γ env ρ → Converges (fun n => evalExpr prog n env c) (.ok (.bool (cond ρ))))
+    (hbody : ∀ env ρ (next : Γ.denote → τ.denote) (nextS : Γ.denote → Bool), EnvRel Γ env ρ →
+      stepS nextS ks.normal ρ = true →
+      ∃ o, Converges (fun n => execStmts prog n env body) (.ok o) ∧
+        SRel Γ τ vd env (step next k.normal ρ) ⟨next, k.normal, next⟩ ⟨nextS, ks.normal, nextS⟩ true true true o) :
+    ∀ (m : Nat) {env : Env} {ρ : Γ.denote}, EnvRel Γ env ρ →
+      whileIn m cond stepS ks.normal (fun _ => false) ρ = true →
+      ∃ o N, (∀ n (bss : List Env), N ≤ n → N ≤ bss.length → (∀ bs ∈ bss, bs = []) →
+          loop prog n env bss (.ite c [] [.brk] :: body) = .ok o) ∧
+        SRel Γ τ vd env (whileIn m cond step k.normal k.normal ρ) k ks true false false o ∧
+        (∀ e, o = .normal e → e.length = env.length)
+  | 0, _, _, _, hs => by simp [whileIn] at hs
+  | m + 1, env, ρ, he, hs => by
+    rw [whileIn_succ] at hs ⊢
+    have hc := hcond env ρ he
+    have hself : Ariadne.restore env env = env := by simp [Ariadne.restore]
+    have shape : ∀ (N n : Nat) (bss : List Env), N + 1 ≤ n → N + 1 ≤ bss.length → (∀ bs ∈ bss, bs = []) →
+        ∃ n' rest, n = n' + 1 ∧ bss = [] :: rest ∧ N ≤ n' ∧ N ≤ rest.length ∧ (∀ bs ∈ rest, bs = []) := by
+      intro N n bss hn hl hbs
+      obtain ⟨n', rfl⟩ : ∃ n', n = n' + 1 := ⟨n - 1, by omega⟩
+      cases bss with
+      | nil => simp at hl
+      | cons bs rest =>
+        have h0 : bs = [] := hbs bs (by simp only [List.mem_cons, true_or])
+        subst h0
+        exact ⟨n', rest, rfl, rfl, by omega, by simp at hl; omega,
+          fun b hb' => hbs b (by simp only [List.mem_cons, hb', or_true])⟩
+    cases hb : cond ρ with
+    | false =>
+      simp only [hb, Bool.false_eq_true, ↓reduceIte] at hs ⊢
+      rw [hb] at hc
+      have hi : Converges (fun n => execStmts prog n env (.ite c [] [.brk] :: body)) (.ok (.broke env)) := by
+        have := conv_cons_exit (rest := body)
+          (conv_ite (yes := []) (no := [.brk]) hc (conv_cons_exit (rest := []) conv_brk (by simp)))
+          (by simp [Outcome.restore])
+        simpa [Outcome.restore, hself] using this
+      obtain ⟨N1, h1⟩ := hi
+      refine ⟨.normal env, N1 + 1, fun n bss hn hl hbs => ?_, ⟨rfl, [], env, ρ, rfl, rfl, he, rfl, hs⟩,
+        fun e h => by cases h; rfl⟩
+      obtain ⟨n', rest, rfl, rfl, hn', -, -⟩ := shape N1 n bss hn hl hbs
+      rw [loop_step (by simpa using h1 n' hn')]
+      simp [Outcome.restore, hself]
+    | true =>
+      simp only [hb, ↓reduceIte] at hs ⊢
+      rw [hb] at hc
+      obtain ⟨o, hcb, hr⟩ := hbody env ρ (whileIn m cond step k.normal k.normal)
+        (whileIn m cond stepS ks.normal (fun _ => false)) he hs
+      have hi : Converges (fun n => execStmts prog n env (.ite c [] [.brk] :: body)) (.ok o) := by
+        refine conv_cons_normal ?_ hcb
+        have := conv_ite (yes := []) (no := [.brk]) hc (conv_nil (prog := prog) (env := env))
+        simpa [Outcome.restore, hself] using this
+      obtain ⟨N1, h1⟩ := hi
+      cases o with
+      | returned w e0 =>
+        refine ⟨.returned w e0, N1 + 1, fun n bss hn hl hbs => ?_, hr, by simp⟩
+        obtain ⟨n', rest, rfl, rfl, hn', -, -⟩ := shape N1 n bss hn hl hbs
+        rw [loop_step (by simpa using h1 n' hn')]
+        rfl
+      | broke e0 =>
+        obtain ⟨-, hx⟩ := hr
+        refine ⟨.normal (Ariadne.restore env e0), N1 + 1, fun n bss hn hl hbs => ?_, ⟨rfl, hx.restore.1⟩,
+          fun e h => by cases h; exact hx.restore_length⟩
+        obtain ⟨n', rest, rfl, rfl, hn', -, -⟩ := shape N1 n bss hn hl hbs
+        rw [loop_step (by simpa using h1 n' hn')]
+        rfl
+      | normal e0 | continued e0 =>
+        obtain ⟨-, hx⟩ := hr
+        obtain ⟨ρ', he', hr', hs'⟩ := hx.restore.2
+        obtain ⟨o2, N2, h2, hr2, hl2⟩ := conv_while hcond hbody m he' hs'
+        refine ⟨o2, max N1 N2 + 1, fun n bss hn hl hbs => ?_, ?_, fun e h => (hl2 e h).trans hx.restore_length⟩
+        · obtain ⟨n', rest, rfl, rfl, hn', hl', hbs'⟩ := shape (max N1 N2) n bss hn hl hbs
+          rw [loop_step (by simpa using h1 n' (by omega))]
+          exact h2 n' rest (by omega) (by omega) hbs'
+        · rw [hr']; exact hr2.relen hx.restore_length
+
+/-- `conv_while`, stated with the readable loop. -/
+theorem conv_whileDo {prog : Program} {Γ : Ctx} {τ : Ty} {vd : Bool} {c : Expr} {body : List Stmt}
+    {cond : Γ.denote → Bool} {step : (Γ.denote → τ.denote) → (Γ.denote → τ.denote) → Γ.denote → τ.denote}
+    {stepS : (Γ.denote → Bool) → (Γ.denote → Bool) → Γ.denote → Bool} {k : K Γ τ.denote} {ks : K Γ Bool}
+    (hcond : ∀ env ρ, EnvRel Γ env ρ → Converges (fun n => evalExpr prog n env c) (.ok (.bool (cond ρ))))
+    (hbody : ∀ env ρ (next : Γ.denote → τ.denote) (nextS : Γ.denote → Bool), EnvRel Γ env ρ →
+      stepS nextS ks.normal ρ = true →
+      ∃ o, Converges (fun n => execStmts prog n env body) (.ok o) ∧
+        SRel Γ τ vd env (step next k.normal ρ) ⟨next, k.normal, next⟩ ⟨nextS, ks.normal, nextS⟩ true true true o)
+    {env : Env} {ρ : Γ.denote} (he : EnvRel Γ env ρ) (hs : whileSafe cond stepS ks.normal ρ = true) :
+    ∃ o N, (∀ n (bss : List Env), N ≤ n → N ≤ bss.length → (∀ bs ∈ bss, bs = []) →
+        loop prog n env bss (.ite c [] [.brk] :: body) = .ok o) ∧
+      SRel Γ τ vd env (whileDo cond step k.normal ρ) k ks true false false o ∧
+      (∀ e, o = .normal e → e.length = env.length) := by
+  rw [whileSafe_def] at hs
+  rw [whileDo_def]
+  exact conv_while hcond hbody loopBound he hs
+
 section
 variable {prog : Program} {Φ : Sigs} {fs : Φ.denote} {ss : Φ.safety} (hfs : FnsOK prog fs ss)
 include hfs
@@ -652,6 +762,31 @@ mutual
           exact ⟨o, hc, (SRel.pop hr).mono (fun _ => rfl) (fun _ => rfl) (fun _ => rfl)⟩)
         (hvs.map_left fun w y h => ⟨w, rfl, h⟩) he hs.2
       obtain ⟨out, h, hr⟩ := then_rest hfs hrest (conv_forOf ha hl) hro hlen
+      refine ⟨out, h, ?_⟩
+      simp only [TStmts.denote, TStmts.falls, TStmts.breaks, TStmts.continues]
+      exact hr.mono (by flags) (by flags) (by flags)
+    | Γ, τ, .whileLoop c body rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.wf, Bool.and_eq_true] at hw
+      simp only [TStmts.safe] at hs
+      have hrest := fun envM ρ' (_ : envM.length = env.length) hrel hsafe =>
+        TStmts.adequate rest k ks (env := envM) (ρ := ρ') hrel hsafe hw.2
+      obtain ⟨o, N, hl, hro, hlen⟩ := conv_whileDo (prog := prog) (body := body.erase) (c := c.erase)
+        (k := { k with normal := rest.denote fs k }) (ks := { ks with normal := rest.safe fs ss ks })
+        (cond := fun ρ' => c.denote fs ρ')
+        (step := fun next exit ρ' => body.denote fs ⟨next, exit, next⟩ ρ')
+        (stepS := fun next exit ρ' => body.safe fs ss ⟨next, exit, next⟩ ρ')
+        (fun env ρ he => by
+          obtain ⟨w, hcw, hw'⟩ := TExpr.adequate hfs hss c he (c.safe_of_trivial ρ hw.1.1)
+          simp only [Ty.Rep] at hw'; subst hw'; exact hcw)
+        (fun env ρ next nextS he hs => by
+          obtain ⟨o, hc, hr⟩ := TStmts.adequate body ⟨next, rest.denote fs k, next⟩ _ he hs hw.1.2
+          exact ⟨o, hc, hr.mono (fun _ => rfl) (fun _ => rfl) (fun _ => rfl)⟩)
+        he hs
+      have hconv : Converges (fun n => execStmt prog n env (.while_ c.erase body.erase)) (.ok o) :=
+        Converges.of_succ N fun n hn => by
+          simp only [execStmt]
+          exact hl n _ hn (by simp; omega) (fun bs h => (List.mem_replicate.mp h).2)
+      obtain ⟨out, h, hr⟩ := then_rest hfs hrest hconv hro hlen
       refine ⟨out, h, ?_⟩
       simp only [TStmts.denote, TStmts.falls, TStmts.breaks, TStmts.continues]
       exact hr.mono (by flags) (by flags) (by flags)

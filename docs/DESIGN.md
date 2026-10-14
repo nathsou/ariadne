@@ -95,9 +95,28 @@ called inside expressions that change no state. Reading a name before its declar
 ### Numbers
 
 `number` denotes `Int` restricted to ±(2^53 − 1), where binary64 arithmetic is exact. `+`, `-`, `*`
-and negation fault outside that range; the frontend refuses `/`, `%`, `**`, bitwise operators and
-literals that are not safe integers. Negative zero is not distinguished from zero: within the subset
-(no division, no `Object.is`) the two cannot be told apart. `bigint` denotes `Int` exactly.
+and negation fault outside that range. `%` is exact on integers (truncated, with the dividend's sign)
+and faults on a zero divisor. `/` on numbers gives fractions, so only `Math.floor(a / b)` is accepted, as
+one form (`floorDiv`): on safe integers the quotient's rounding error is below `|a| / |b| · 2^-53`, less
+than `1 / |b|`, the distance from a non-integer quotient to the nearest integer, so rounding never
+crosses an integer and the result is floor division (`Int.fdiv`). The model faults on a zero divisor or
+an unsafe operand. The frontend refuses `**`, bitwise operators and literals that are not safe
+integers. Negative zero is not distinguished from zero: within the subset (no `Object.is`, no division
+whose result is a fraction) the two cannot be told apart. `bigint` denotes `Int` exactly; its `/`
+truncates (`Int.tdiv`) and `%` is `Int.tmod`, faulting on a zero divisor (JavaScript throws).
+
+### Strings
+
+Strings are lists of UTF-16 code units. `startsWith`, `endsWith`, `includes` and `indexOf` take a string;
+`slice` takes one or two integers, counted from the end when negative and clamped to the string. All
+are total.
+
+### `while` loops
+
+`while (c) body` runs as `loop` over iterations that bind nothing, each starting with
+`if (!c) break;`. Like a counted loop, the model builds no more iterations than its fuel, so a loop
+that does not end is a timeout. The store model runs the same iterations through `sLoop`, so its
+agreement with the value model is the loop case already proved.
 
 ### Records, optionals and arrays
 
@@ -140,7 +159,10 @@ inductive TStmts (Φ : Sigs) : Ctx → Ty → Type  -- statement lists; declarat
   function) and `TCmp` (a two-parameter comparator).
 - **`switch`** takes a list of arms (`TArms`): cases in any order, grouped labels, `default`,
   fall-through.
-- **Binary operators** are one constructor indexed by an operator (`TExpr.bin (op : Op σ τ)`).
+- **Binary operators** are one constructor indexed by an operator (`TExpr.bin (op : Op σ τ)`); string
+  methods taking a string are one constructor indexed by the method (`TExpr.smethod`).
+- **`while`** (`TStmts.whileLoop`) needs a trivially safe condition, so a loop's safety is that of its
+  iterations and that it ends.
 - **Well-formedness** is a decidable predicate the kernel checks per file: `bodiesOk` (every path
   returns; no stray `break`/`continue`; state changes only in `void` methods) and the model's own
   `Program.scoped` on the parsed program, which also requires distinct names.
@@ -154,6 +176,13 @@ inductive TStmts (Φ : Sigs) : Ctx → Ty → Type  -- statement lists; declarat
   the readable `if c then a else b` definitionally equal to the denotation.
 - Loops denote through one combinator, `forIn items step exit` (a `foldr` building the continuation
   chain). Counted loops iterate over `range n`.
+- A `while` loop denotes `whileDo cond step exit`: up to `loopBound` (2^64) iterations, leaving after
+  that. Its safety condition, `whileSafe`, says that it ends within them, each iteration safe, so
+  termination is a proof obligation, met with a measure (`whileSafe_of_measure`). `whileDo` and
+  `whileSafe` carry the kernel's lowest unfolding priority: comparing a readable definition with the
+  denotation, the kernel unfolds the side with the greater definitional height first, and the
+  denotation reaches the loop through `&&` and other small definitions; with an ordinary height, it
+  would unroll the readable side's loop instead, through `loopBound` iterations.
 - The denotation is total. Where JavaScript can fault, a separate **safety condition** (computed from
   the same syntax) says that no fault occurs. Conjuncts from syntax that cannot fault are left out by
   definition, so a printed condition mentions only operations that can leave the model, for example

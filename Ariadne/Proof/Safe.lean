@@ -57,11 +57,12 @@ mutual
       simp [TExpr.safe, op.guard_total h.1.1, andT, TExpr.safe_of_trivial a ρ h.1.2, TExpr.safe_of_trivial b ρ h.2]
     | _, _, .and a b, ρ, h | _, _, .or a b, ρ, h
     | _, _, .coalesce _ a b, ρ, h | _, _, .index a b, ρ, h | _, _, .includes _ a b, ρ, h
+    | _, _, .smethod _ a b, ρ, h | _, _, .slice1 a b, ρ, h
     | _, _, .any a b, ρ, h | _, _, .all a b, ρ, h | _, _, .find a b, ρ, h | _, _, .filter a b, ρ, h
     | _, _, .map a b, ρ, h => by
       simp only [TExpr.trivial, Bool.and_eq_true] at h
       simp [TExpr.safe, andT, h.1, h.2]
-    | _, _, .cond c a b, ρ, h => by
+    | _, _, .slice2 c a b, ρ, h | _, _, .cond c a b, ρ, h => by
       simp only [TExpr.trivial, Bool.and_eq_true] at h
       simp [TExpr.safe, andT, h.1.1, h.1.2, h.2]
     | _, _, .condNull v _ a b, ρ, h | _, _, .condNotNull v _ a b, ρ, h => by

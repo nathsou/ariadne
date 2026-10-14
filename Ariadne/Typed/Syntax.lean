@@ -165,12 +165,21 @@ inductive Op : Ty → Ty → Type where
   | nle : Op .number .bool
   | ngt : Op .number .bool
   | nge : Op .number .bool
+  /-- `/` and `%` on bigints (truncating). -/
+  | idiv : Op .int .int
+  | imod : Op .int .int
+  /-- `Math.floor(a / b)` and `%` on numbers. -/
+  | ndiv : Op .number .number
+  | nmod : Op .number .number
 
 /-- The model's operator. -/
 def Op.js : Op σ τ → BinOp
   | .add | .nadd | .concat => .add
   | .sub | .nsub => .sub
   | .mul | .nmul => .mul
+  | .idiv => .div
+  | .imod | .nmod => .mod
+  | .ndiv => .floorDiv
   | .eq _ => .eq
   | .ne _ => .ne
   | .lt | .slt | .nlt => .lt
@@ -181,8 +190,21 @@ def Op.js : Op σ τ → BinOp
 /-- Whether the operator never leaves the model (`number` arithmetic can leave the
 safe integers). -/
 def Op.total : Op σ τ → Bool
-  | .nadd | .nsub | .nmul => false
+  | .nadd | .nsub | .nmul | .idiv | .imod | .ndiv | .nmod => false
   | _ => true
+
+/-- String methods taking a string: `s.m(t)`. -/
+inductive SMethod : Ty → Type where
+  | startsWith : SMethod .bool
+  | endsWith : SMethod .bool
+  | includes : SMethod .bool
+  | indexOf : SMethod .number
+
+def SMethod.name : SMethod τ → String
+  | .startsWith => "startsWith"
+  | .endsWith => "endsWith"
+  | .includes => "includes"
+  | .indexOf => "indexOf"
 
 mutual
   inductive TExpr (Φ : Sigs) : Ctx → Ty → Type where
@@ -239,6 +261,12 @@ mutual
     | length (a : TExpr Φ Γ (.array τ)) : TExpr Φ Γ .number
     /-- `s.length` on a string (UTF-16 code units). -/
     | slength (s : TExpr Φ Γ .string) : TExpr Φ Γ .number
+    /-- `s.startsWith(t)`, `s.endsWith(t)`, `s.includes(t)`, `s.indexOf(t)`. -/
+    | smethod (m : SMethod τ) (s t : TExpr Φ Γ .string) : TExpr Φ Γ τ
+    /-- `s.slice(a)`. -/
+    | slice1 (s : TExpr Φ Γ .string) (a : TExpr Φ Γ .number) : TExpr Φ Γ .string
+    /-- `s.slice(a, b)`. -/
+    | slice2 (s : TExpr Φ Γ .string) (a b : TExpr Φ Γ .number) : TExpr Φ Γ .string
     /-- `a[i]`: `undefined` out of bounds. -/
     | index (a : TExpr Φ Γ (.array τ)) (i : TExpr Φ Γ .number) : TExpr Φ Γ (.option .undef τ)
     /-- `a.includes(x)`. -/
@@ -361,6 +389,8 @@ mutual
     /-- `for (let i = 0; i < n; i++) body` on a constant `n`. -/
     | forRange (i : String) {n : String} (v : Var Γ n .number) (body : TStmts Φ ((i, .number) :: Γ) τ)
         (rest : TStmts Φ Γ τ) : TStmts Φ Γ τ
+    /-- `while (c) body`, with a condition that cannot leave the model (`TStmts.wf`). -/
+    | whileLoop (c : TExpr Φ Γ .bool) (body : TStmts Φ Γ τ) (rest : TStmts Φ Γ τ) : TStmts Φ Γ τ
     /-- `this.f.set(k, e);` (the state's field names are distinct). -/
     | stateSet {f : String} {fs : Fields} {σ : Ty} (v : Var Γ "this" (.record fs)) (i : FIdx fs f (.map σ))
         (h : fs.names.Nodup) (k : TExpr Φ Γ .string) (e : TExpr Φ Γ σ) (rest : TStmts Φ Γ τ) : TStmts Φ Γ τ
@@ -432,6 +462,9 @@ mutual
     | .array es => .array es.erase
     | .length a => .field a.erase "length"
     | .slength s => .field s.erase "length"
+    | .smethod m s t => .method s.erase m.name [t.erase]
+    | .slice1 s a => .method s.erase "slice" [a.erase]
+    | .slice2 s a b => .method s.erase "slice" [a.erase, b.erase]
     | .index a i => .index a.erase i.erase
     | .includes _ a e => .method a.erase "includes" [e.erase]
     | .any a p => .method a.erase "some" [p.erase]
@@ -490,6 +523,7 @@ mutual
     | @TStmts.ifNotNull _ _ _ _ _ x _ _ yes no rest => .ite (notNullTest x) yes.erase no.erase :: rest.erase
     | @TStmts.switchG _ _ _ x key _ _ _ arms rest => .switch (.field (.var x) key) arms.erase :: rest.erase
     | .forRange (n := n) i _ body rest => .forRange i n body.erase :: rest.erase
+    | .whileLoop c body rest => .while_ c.erase body.erase :: rest.erase
     | .stateSet (f := f) _ _ _ k e rest => .stateSet f k.erase e.erase :: rest.erase
     | .stateDelete (f := f) _ _ _ k rest => .stateDelete f k.erase :: rest.erase
     | .callVoid (m := m) _ _ args rest => .callThis m args.erase :: rest.erase
@@ -520,6 +554,57 @@ def TArms.labels {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Varian
 def TArms.covers {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} (arms : TArms Φ Γ τ v) : Bool :=
   arms.labels.contains none || vs0.tags.all fun t => arms.labels.contains (some t)
 
+/-! ## Trivially safe syntax
+
+No operation that can leave what the model covers, and calls only to trivially
+safe functions. -/
+
+mutual
+  def TExpr.trivial : TExpr Φ Γ τ → Bool
+    | .bool _ | .int _ | .str _ | .tagLit _ | .litIn .. | .undef .. | .null .. | .var _ => true
+    | .widen _ e | .not e | .neg e | .isNull _ e | .notNull _ e | .field e _ _ => e.trivial
+    | .and a b | .or a b | .coalesce _ a b => a.trivial && b.trivial
+    | .bin op a b => op.total && a.trivial && b.trivial
+    | .cond c a b => c.trivial && a.trivial && b.trivial
+    | .condNull _ _ a b | .condNotNull _ _ a b => a.trivial && b.trivial
+    | @TExpr.call _ _ _ s _ _ args => s.trivial && args.trivial
+    | .record es _ _ => es.trivial
+    | .update r es _ _ => r.trivial && es.trivial
+    | .num _ | .negNum .. => true
+    | .nneg _ | .sorted .. => false
+    | .index a b => a.trivial && b.trivial
+    | .includes _ a e => a.trivial && e.trivial
+    | .any a p | .all a p | .find a p | .filter a p | .map a p => a.trivial && p.trivial
+    | .array es => es.trivial
+    | .length e | .slength e => e.trivial
+    | .smethod _ s t | .slice1 s t => s.trivial && t.trivial
+    | .slice2 s a b => s.trivial && a.trivial && b.trivial
+    | .newMap _ | .stateSize _ _ => true
+    | .stateGet _ _ _ k | .stateHas _ _ k => k.trivial
+    | .callThis (t := t) _ _ args => t && args.trivial
+
+  def TArgs.trivial : TArgs Φ Γ ps → Bool
+    | .nil | .omitted _ => true
+    | .cons e rest => e.trivial && rest.trivial
+
+  def TEntries.trivial : TEntries Φ Γ src → Bool
+    | .nil => true
+    | .cons _ e rest => e.trivial && rest.trivial
+
+  def TFn.trivial : TFn Φ Γ τ σ → Bool
+    | .arrow _ body | .const body => body.trivial
+    | @TFn.ref _ _ _ _ _ _ _ t _ _ => t
+
+  def TCmp.trivial : TCmp Φ Γ τ → Bool
+    | .arrow _ _ body => body.trivial
+    | @TCmp.ref _ _ _ _ _ _ _ t _ _ => t
+
+  def TElems.trivial : TElems Φ Γ τ → Bool
+    | .nil => true
+    | .cons e rest | .spread e rest => e.trivial && rest.trivial
+    | .spreadKeys _ _ rest | .spreadValues _ _ rest => rest.trivial
+end
+
 /-! ## Control flow
 
 Conservative facts about how a statement list can end, used to rule out outcomes
@@ -535,7 +620,7 @@ mutual
       (yes.falls || no.falls) && rest.falls
     | .block body rest => body.falls && rest.falls
     | .brk _ | .cont _ => false
-    | .let_ _ _ rest | .assign _ _ rest | .forOf _ _ _ rest | .forEntries _ _ _ _ rest => rest.falls
+    | .let_ _ _ rest | .assign _ _ rest | .forOf _ _ _ rest | .forEntries _ _ _ _ rest | .whileLoop _ _ rest => rest.falls
     | .stateSet _ _ _ _ _ rest | .stateDelete _ _ _ _ rest | .callVoid _ _ _ rest | .forRange _ _ _ rest => rest.falls
     | .retVoid _ _ => false
     | .ifNullExit _ _ _ rest => rest.falls
@@ -550,7 +635,7 @@ mutual
     | .block body rest => body.breaks || (body.falls && rest.breaks)
     | .brk _ => true
     | .cont _ => false
-    | .let_ _ _ rest | .assign _ _ rest | .forOf _ _ _ rest | .forEntries _ _ _ _ rest => rest.breaks
+    | .let_ _ _ rest | .assign _ _ rest | .forOf _ _ _ rest | .forEntries _ _ _ _ rest | .whileLoop _ _ rest => rest.breaks
     | .stateSet _ _ _ _ _ rest | .stateDelete _ _ _ _ rest | .callVoid _ _ _ rest | .forRange _ _ _ rest => rest.breaks
     | .retVoid _ _ => false
     | .ifNullExit _ _ yes rest => yes.breaks || rest.breaks
@@ -565,7 +650,7 @@ mutual
     | .block body rest => body.continues || (body.falls && rest.continues)
     | .brk _ => false
     | .cont _ => true
-    | .let_ _ _ rest | .assign _ _ rest | .forOf _ _ _ rest | .forEntries _ _ _ _ rest => rest.continues
+    | .let_ _ _ rest | .assign _ _ rest | .forOf _ _ _ rest | .forEntries _ _ _ _ rest | .whileLoop _ _ rest => rest.continues
     | .stateSet _ _ _ _ _ rest | .stateDelete _ _ _ _ rest | .callVoid _ _ _ rest | .forRange _ _ _ rest =>
       rest.continues
     | .retVoid _ _ => false
@@ -602,6 +687,7 @@ mutual
     | .retVoid _ rest | .stateSet _ _ _ _ _ rest | .stateDelete _ _ _ _ rest | .callVoid _ _ _ rest => vd && rest.wf vd
     | .const _ _ rest | .brk rest | .let_ _ _ rest | .assign _ _ rest | .cont rest => rest.wf vd
     | .forOf _ _ body rest | .forEntries _ _ _ body rest | .forRange _ _ body rest => body.wf vd && rest.wf vd
+    | .whileLoop c body rest => c.trivial && body.wf vd && rest.wf vd
     | .ite _ yes no rest | .ifNull _ _ yes no rest | .ifNotNull _ _ yes no rest =>
       yes.wf vd && no.wf vd && rest.wf vd
     | .block body rest => body.wf vd && rest.wf vd
@@ -624,54 +710,6 @@ mutual
 
 end
 
-/-! ## Trivially safe syntax
-
-No operation that can leave what the model covers, and calls only to trivially
-safe functions. -/
-
-mutual
-  def TExpr.trivial : TExpr Φ Γ τ → Bool
-    | .bool _ | .int _ | .str _ | .tagLit _ | .litIn .. | .undef .. | .null .. | .var _ => true
-    | .widen _ e | .not e | .neg e | .isNull _ e | .notNull _ e | .field e _ _ => e.trivial
-    | .and a b | .or a b | .coalesce _ a b => a.trivial && b.trivial
-    | .bin op a b => op.total && a.trivial && b.trivial
-    | .cond c a b => c.trivial && a.trivial && b.trivial
-    | .condNull _ _ a b | .condNotNull _ _ a b => a.trivial && b.trivial
-    | @TExpr.call _ _ _ s _ _ args => s.trivial && args.trivial
-    | .record es _ _ => es.trivial
-    | .update r es _ _ => r.trivial && es.trivial
-    | .num _ | .negNum .. => true
-    | .nneg _ | .sorted .. => false
-    | .index a b => a.trivial && b.trivial
-    | .includes _ a e => a.trivial && e.trivial
-    | .any a p | .all a p | .find a p | .filter a p | .map a p => a.trivial && p.trivial
-    | .array es => es.trivial
-    | .length e | .slength e => e.trivial
-    | .newMap _ | .stateSize _ _ => true
-    | .stateGet _ _ _ k | .stateHas _ _ k => k.trivial
-    | .callThis (t := t) _ _ args => t && args.trivial
-
-  def TArgs.trivial : TArgs Φ Γ ps → Bool
-    | .nil | .omitted _ => true
-    | .cons e rest => e.trivial && rest.trivial
-
-  def TEntries.trivial : TEntries Φ Γ src → Bool
-    | .nil => true
-    | .cons _ e rest => e.trivial && rest.trivial
-
-  def TFn.trivial : TFn Φ Γ τ σ → Bool
-    | .arrow _ body | .const body => body.trivial
-    | @TFn.ref _ _ _ _ _ _ _ t _ _ => t
-
-  def TCmp.trivial : TCmp Φ Γ τ → Bool
-    | .arrow _ _ body => body.trivial
-    | @TCmp.ref _ _ _ _ _ _ _ t _ _ => t
-
-  def TElems.trivial : TElems Φ Γ τ → Bool
-    | .nil => true
-    | .cons e rest | .spread e rest => e.trivial && rest.trivial
-    | .spreadKeys _ _ rest | .spreadValues _ _ rest => rest.trivial
-end
 
 mutual
   def TStmts.trivial : TStmts Φ Γ τ → Bool
@@ -686,6 +724,8 @@ mutual
     | .ifNullExit _ _ yes rest => yes.trivial && rest.trivial
     | .switchG _ _ cases rest => cases.trivial && rest.trivial
     | .forRange _ _ body rest => body.trivial && rest.trivial
+    -- A `while` loop's safety condition says that it ends.
+    | .whileLoop .. => false
     | .stateSet _ _ _ k e rest => k.trivial && e.trivial && rest.trivial
     | .stateDelete _ _ _ k rest => k.trivial && rest.trivial
     | .callVoid (t := t) _ _ args rest => t && args.trivial && rest.trivial

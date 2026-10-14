@@ -30,6 +30,10 @@ inductive UnOp where
 
 inductive BinOp where
   | add | sub | mul
+  /-- `/` and `%`. -/
+  | div | mod
+  /-- `Math.floor(a / b)`. -/
+  | floorDiv
   /-- `===` and `!==`. -/
   | eq | ne
   | lt | le | gt | ge
@@ -94,6 +98,8 @@ inductive Stmt where
   /-- `for (let i = 0; i < n; i++) { body }` where `n` is a constant holding a number
   and `body` does not assign `i` (`stmtScoped`): one iteration per `i` in `0 … n-1`. -/
   | forRange (i n : String) (body : List Stmt)
+  /-- `while (c) { body }`. -/
+  | while_ (c : Expr) (body : List Stmt)
   /-- `this.f.set(k, v);` and `this.f.delete(k);` on a `Map` field. -/
   | stateSet (f : String) (k v : Expr)
   | stateDelete (f : String) (k : Expr)

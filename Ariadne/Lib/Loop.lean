@@ -56,4 +56,64 @@ theorem forIn_prefix {α σ R : Type} (P : List α → σ → Prop) (Q : R → P
     intro pre s he hs
     exact hstep pre y ys _ exit s he hs fun s' hs' => ih (pre ++ [y]) s' (by simp [he]) hs'
 
+/-! ## `while` loops
+
+Readable definitions run a `while` loop through `Ariadne.whileDo cond step exit s`, and its safety
+condition is `Ariadne.whileSafe cond step exit s`: the loop ends within `loopBound` iterations, each of
+them safe. Both unfold to `whileIn`. -/
+
+theorem whileIn_zero {σ R : Type} (cond : σ → Bool) (step : (σ → R) → (σ → R) → σ → R) (exit stuck : σ → R)
+    (s : σ) : whileIn 0 cond step exit stuck s = stuck s := rfl
+
+theorem whileIn_succ {σ R : Type} (n : Nat) (cond : σ → Bool) (step : (σ → R) → (σ → R) → σ → R)
+    (exit stuck : σ → R) (s : σ) :
+    whileIn (n + 1) cond step exit stuck s = if cond s then step (whileIn n cond step exit stuck) exit s else exit s :=
+  rfl
+
+/-- An invariant of a `while` loop: if every iteration from a state satisfying `P` (where the condition
+holds) ends in `Q` provided continuing and leaving do, and leaving (or running out of iterations) from `P`
+ends in `Q`, then the loop does. -/
+theorem whileIn_inv {σ R : Type} (P : σ → Prop) (Q : R → Prop) {cond : σ → Bool}
+    {step : (σ → R) → (σ → R) → σ → R} {exit stuck : σ → R}
+    (hstep : ∀ next ex s, P s → cond s = true → (∀ s', P s' → Q (next s')) → (∀ s', P s' → Q (ex s')) →
+      Q (step next ex s))
+    (hexit : ∀ s, P s → Q (exit s)) (hstuck : ∀ s, P s → Q (stuck s)) : ∀ (n : Nat) s, P s → Q (whileIn n cond step exit stuck s)
+  | 0, s, h => hstuck s h
+  | n + 1, s, h => by
+    rw [whileIn_succ]
+    split
+    · exact hstep _ exit s h (by assumption) (fun s' h' => whileIn_inv P Q hstep hexit hstuck n s' h') hexit
+    · exact hexit s h
+
+/-- An invariant of a readable `while` loop (see `whileIn_inv`). -/
+theorem whileDo_inv {σ R : Type} (P : σ → Prop) (Q : R → Prop) {cond : σ → Bool}
+    {step : (σ → R) → (σ → R) → σ → R} {exit : σ → R}
+    (hstep : ∀ next ex s, P s → cond s = true → (∀ s', P s' → Q (next s')) → (∀ s', P s' → Q (ex s')) →
+      Q (step next ex s))
+    (hexit : ∀ s, P s → Q (exit s)) (s : σ) (h : P s) : Q (whileDo cond step exit s) := by
+  rw [whileDo_def]; exact whileIn_inv P Q hstep hexit hexit _ s h
+
+/-- A `while` loop's safety condition, from a measure: an invariant `P` whose iterations are safe and
+continue only to states of smaller measure, from a state whose measure is below `n`. -/
+theorem whileIn_true {σ : Type} (P : σ → Prop) (μ : σ → Nat) {cond : σ → Bool}
+    {step : (σ → Bool) → (σ → Bool) → σ → Bool} {exit : σ → Bool}
+    (hstep : ∀ next ex s, P s → cond s = true → (∀ s', P s' → μ s' < μ s → next s' = true) →
+      (∀ s', P s' → ex s' = true) → step next ex s = true)
+    (hexit : ∀ s, P s → exit s = true) : ∀ (n : Nat) s, P s → μ s < n → whileIn n cond step exit (fun _ => false) s = true
+  | 0, _, _, hn => absurd hn (Nat.not_lt_zero _)
+  | n + 1, s, h, hn => by
+    rw [whileIn_succ]
+    split
+    · exact hstep _ exit s h (by assumption)
+        (fun s' h' hm => whileIn_true P μ hstep hexit n s' h' (by omega)) hexit
+    · exact hexit s h
+
+/-- A readable `while` loop's safety condition, from a measure below `loopBound` (see `whileIn_true`). -/
+theorem whileSafe_of_measure {σ : Type} (P : σ → Prop) (μ : σ → Nat) {cond : σ → Bool}
+    {step : (σ → Bool) → (σ → Bool) → σ → Bool} {exit : σ → Bool}
+    (hstep : ∀ next ex s, P s → cond s = true → (∀ s', P s' → μ s' < μ s → next s' = true) →
+      (∀ s', P s' → ex s' = true) → step next ex s = true)
+    (hexit : ∀ s, P s → exit s = true) (s : σ) (h : P s) (hμ : μ s < loopBound) : whileSafe cond step exit s = true := by
+  rw [whileSafe_def]; exact whileIn_true P μ hstep hexit _ s h hμ
+
 end Ariadne

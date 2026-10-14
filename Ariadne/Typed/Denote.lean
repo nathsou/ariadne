@@ -85,6 +85,15 @@ def Op.apply : Op σ τ → σ.denote → σ.denote → τ.denote
   | .sle, a, b => strLe a b
   | .sgt, a, b => strLt b a
   | .sge, a, b => strLe b a
+  | .idiv, a, b => a.tdiv b
+  | .imod, a, b | .nmod, a, b => a.tmod b
+  | .ndiv, a, b => a.fdiv b
+
+def SMethod.apply : SMethod τ → JSString → JSString → τ.denote
+  | .startsWith, s, t => strStartsWith s t
+  | .endsWith, s, t => strEndsWith s t
+  | .includes, s, t => strIncludes s t
+  | .indexOf, s, t => strIndexOf s t
 
 /-- An operator's safety condition, given its operands' condition `s`: `number`
 arithmetic must stay within the safe integers. -/
@@ -92,6 +101,9 @@ def Op.guard : Op σ τ → Bool → σ.denote → σ.denote → Bool
   | .nadd, s, a, b => s && inRange (a + b)
   | .nsub, s, a, b => s && inRange (a - b)
   | .nmul, s, a, b => s && inRange (a * b)
+  | .idiv, s, _, b | .imod, s, _, b => s && b != 0
+  | .ndiv, s, a, b => s && (b != 0 && inRange a && inRange b)
+  | .nmod, s, a, b => s && (b != 0 && inRange (a.tmod b))
   | _, s, _, _ => s
 
 mutual
@@ -132,6 +144,9 @@ mutual
     | .array es, ρ => es.denote fs ρ
     | .length a, ρ => ((a.denote fs ρ).length : Int)
     | .slength s, ρ => ((s.denote fs ρ).length : Int)
+    | .smethod m s t, ρ => m.apply (s.denote fs ρ) (t.denote fs ρ)
+    | .slice1 s a, ρ => strSlice (s.denote fs ρ) (a.denote fs ρ) (s.denote fs ρ).length
+    | .slice2 s a b, ρ => strSlice (s.denote fs ρ) (a.denote fs ρ) (b.denote fs ρ)
     | .index a i, ρ => listIndex (a.denote fs ρ) (i.denote fs ρ)
     | .includes _ a e, ρ => (a.denote fs ρ).any fun y => Ty.beq _ y (e.denote fs ρ)
     | .any a p, ρ => (a.denote fs ρ).any (p.denote fs ρ)
@@ -187,7 +202,10 @@ mutual
     | .num _, _ | .negNum .., _ => true
     | .widen _ e, ρ | .not e, ρ | .neg e, ρ | .isNull _ e, ρ | .notNull _ e, ρ | .field e _ _, ρ
     | .length e, ρ | .slength e, ρ => e.safe fs ss ρ
-    | .index a b, ρ | .includes _ a b, ρ => andT a.trivial (a.safe fs ss ρ) b.trivial (b.safe fs ss ρ)
+    | .index a b, ρ | .includes _ a b, ρ | .smethod _ a b, ρ | .slice1 a b, ρ =>
+      andT a.trivial (a.safe fs ss ρ) b.trivial (b.safe fs ss ρ)
+    | .slice2 s a b, ρ => andT s.trivial (s.safe fs ss ρ) (a.trivial && b.trivial)
+      (andT a.trivial (a.safe fs ss ρ) b.trivial (b.safe fs ss ρ))
     | .bin op a b, ρ => op.guard (andT a.trivial (a.safe fs ss ρ) b.trivial (b.safe fs ss ρ))
       (a.denote fs ρ) (b.denote fs ρ)
     | .nneg e, ρ => (e.trivial || e.safe fs ss ρ) && inRange (-e.denote fs ρ)
@@ -250,6 +268,47 @@ loop with `exit`; after the last iteration, `exit`. The state is the environment
 def forIn {α σ R : Type} (items : List α) (step : α → (σ → R) → (σ → R) → σ → R) (exit : σ → R) : σ → R :=
   items.foldr (fun y next => step y next exit) exit
 
+/-- A `while` loop in continuation-passing style, for at most `n` more iterations: while `cond`
+holds, `step next exit` runs an iteration, continuing with `next` or leaving with `exit`; once `cond`
+fails, `exit`. A loop still running after `n` iterations gives `stuck`. -/
+def whileIn {σ R : Type} : Nat → (σ → Bool) → ((σ → R) → (σ → R) → σ → R) → (σ → R) → (σ → R) → σ → R
+  | 0, _, _, _, stuck, s => stuck s
+  | n + 1, cond, step, exit, stuck, s => if cond s then step (whileIn n cond step exit stuck) exit s else exit s
+
+/-- The iterations a `while` loop may run: its safety condition says that it ends within them. -/
+def loopBound : Nat := 2 ^ 64
+
+/-- A `while` loop's result. Should it run past `loopBound` iterations it leaves (which its safety
+condition excludes). -/
+def whileDo.def {σ R : Type} (cond : σ → Bool) (step : (σ → R) → (σ → R) → σ → R) (exit : σ → R) (s : σ) : R :=
+  whileIn loopBound cond step exit exit s
+
+/-- A `while` loop's safety condition: every iteration is safe, and it ends within `loopBound`. -/
+def whileSafe.def {σ : Type} (cond : σ → Bool) (step : (σ → Bool) → (σ → Bool) → σ → Bool) (exit : σ → Bool)
+    (s : σ) : Bool :=
+  whileIn loopBound cond step exit (fun _ => false) s
+
+/- `whileDo` and `whileSafe` are these definitions with the kernel's lowest unfolding priority. A per-file
+check compares a readable definition with the denotation; the kernel unfolds the side whose head has the
+greater height first, and the denotation reaches the loop through `&&` and other small definitions. With
+an ordinary height, the kernel would unfold the readable side's loop first, through `loopBound` iterations;
+with the lowest, it unfolds the denotation until both sides are the same loop, and compares the
+arguments. -/
+open Lean in
+run_meta do
+  for (n, src) in [(`Ariadne.whileDo, ``whileDo.def), (`Ariadne.whileSafe, ``whileSafe.def)] do
+    let info ← getConstInfoDefn src
+    let decl := Declaration.defnDecl { info with name := n, value := mkConst src, hints := .opaque }
+    addDecl decl
+    compileDecl decl
+
+theorem whileDo_def {σ R : Type} (cond : σ → Bool) (step : (σ → R) → (σ → R) → σ → R) (exit : σ → R) (s : σ) :
+    whileDo cond step exit s = whileIn loopBound cond step exit exit s := rfl
+
+theorem whileSafe_def {σ : Type} (cond : σ → Bool) (step : (σ → Bool) → (σ → Bool) → σ → Bool)
+    (exit : σ → Bool) (s : σ) : whileSafe cond step exit s = whileIn loopBound cond step exit (fun _ => false) s :=
+  rfl
+
 /-- `0 … n-1`, the values a counted loop's index takes. -/
 def range (n : Int) : List Int := (List.range n.toNat).map Int.ofNat
 
@@ -288,6 +347,8 @@ mutual
     | .forRange _ v body rest, k, ρ =>
       forIn (range (v.get ρ)) (fun j next exit ρ' => body.denote fs (K.map Prod.snd ⟨next, exit, next⟩) (j, ρ'))
         (rest.denote fs k) ρ
+    | .whileLoop c body rest, k, ρ =>
+      whileDo (fun ρ' => c.denote fs ρ') (fun next exit ρ' => body.denote fs ⟨next, exit, next⟩ ρ') (rest.denote fs k) ρ
     | .stateSet v i _ key e rest, k, ρ =>
       rest.denote fs k (v.set ρ (i.set (v.get ρ) (mapPut (i.get (v.get ρ)) (key.denote fs ρ) (e.denote fs ρ))))
     | .stateDelete v i _ key rest, k, ρ =>
@@ -351,6 +412,8 @@ mutual
     | .forRange _ v body rest, k, ρ =>
       forIn (range (v.get ρ)) (fun j next exit ρ' => body.safe fs ss (K.map Prod.snd ⟨next, exit, next⟩) (j, ρ'))
         (rest.safe fs ss k) ρ
+    | .whileLoop c body rest, k, ρ =>
+      whileSafe (fun ρ' => c.denote fs ρ') (fun next exit ρ' => body.safe fs ss ⟨next, exit, next⟩ ρ') (rest.safe fs ss k) ρ
     | .stateSet v i _ key e rest, k, ρ => andT key.trivial (key.safe fs ss ρ) e.trivial (e.safe fs ss ρ) &&
       rest.safe fs ss k (v.set ρ (i.set (v.get ρ) (mapPut (i.get (v.get ρ)) (key.denote fs ρ) (e.denote fs ρ))))
     | .stateDelete v i _ key rest, k, ρ => (key.trivial || key.safe fs ss ρ) &&
