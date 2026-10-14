@@ -69,7 +69,8 @@ rev = "<commit>"
 
 Translate each TypeScript file with `lake exe ariadne translate`, check the generated files in, and
 prove properties of the readable definitions (`Ariadne/Lib` has lemmas for their loops, maps, string
-order and sorting). `Ariadne.Audit.run` gives the project the same soundness
+order and sorting; `cmp_laws` proves a comparator lawful, which `toSorted`'s safety condition needs; a
+class's file states which fields each method leaves alone, as `«m».keeps.«f»`). `Ariadne.Audit.run` gives the project the same soundness
 gate, with its own lock: for example, every proposition defined under `Spec` must be proved exactly by
 the theorem of the same name under `Proofs`, and the lock records every statement, so a changed
 statement is a visible change in review.

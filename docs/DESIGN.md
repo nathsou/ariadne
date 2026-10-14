@@ -51,8 +51,8 @@ Concluded per file:          every readable def is what the TypeScript function 
 | `Ariadne/Model/Store.lean` | Store model of classes (`runMethodStore`) | **Yes** |
 | `Ariadne/Typed/*` | Types, typed syntax, erasure, denotation, safety conditions, well-formedness | No |
 | `Ariadne/Eqns/*` | Equation lemmas of the typed syntax's large definitions (see Build time) | No |
-| `Ariadne/Proof/*` | The adequacy proof, and the store model's agreement with the value model | No |
-| `Ariadne/Lib/*` | Lemmas for proofs about readable definitions: loops, maps, string order, `toSorted` (its consistency conditions, and what it returns), the `readable` simp set | No |
+| `Ariadne/Proof/*` | The adequacy proof, the store model's agreement with the value model, and frames (which fields a method leaves) | No |
+| `Ariadne/Lib/*` | Lemmas for proofs about readable definitions: loops (invariants, folds), maps, string order, `toSorted` (its consistency conditions, what it returns, and `cmp_laws` for comparators), the `readable` simp set | No |
 | `Ariadne/Kernel.lean` | `kernel_rfl`: closed equations checked by the kernel alone | No |
 | `Ariadne/Audit.lean`, `Audit.lean` | The soundness gate, and its configuration for Ariadne (`trusted.lock`) | No |
 | `Ariadne/Front/Check.lean` | Type checker and printer | No |
@@ -222,6 +222,21 @@ The readable definitions use these names: fields are read and set by name, a `sw
 union's constructors that binds the narrowed variable to its payload, and a loop's or a join point's state
 is taken apart by a pattern (`fun (older, notOwner, …, ()) => …`). All of it is definitionally the
 denotation, which is what the per-file `body_eq` checks.
+
+A class's file also says which fields each method leaves alone:
+
+```lean
+theorem frames.«marks» : typed.frames "marks" = [false, true, …] := by decide +kernel
+theorem «pack».keeps.«marks» (this : Registers) … : («pack» this …).marks = this.marks :=
+  frame_of … denote_eq frames.«marks» …
+```
+
+`TProgram.frames g` marks a method that neither sets nor deletes in `this.g` and calls only marked
+methods; it is a syntactic check over the typed program, evaluated by the kernel. `TProgram.frame`
+(`Ariadne/Proof/Frame.lean`) proves once that a marked method returns a state with the same `g`: over
+any run of its body, every variable named `this` keeps `g`'s value, through loops, `switch` and the
+methods it calls. The translator predicts the marks to know which lemmas to write; a wrong prediction
+fails `frames.«g»`, never a lemma.
 
 Each `body_eq` compares one function's denotation with its readable definition, with callees taken as
 the earlier readable definitions, so no check unfolds a callee. The source theorems mention only `run`,

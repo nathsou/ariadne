@@ -22,6 +22,14 @@ theorem forIn_fold {α σ R : Type} (g : α → σ → σ) (exit : σ → R) :
   | [], _ => rfl
   | y :: ys, s => forIn_fold g exit ys (g y s)
 
+/-- A loop whose iterations all continue, each updating the state by `g`, is a fold. Show `h` by
+splitting the iteration's cases (`intro y next exit s; split <;> rfl`). -/
+theorem forIn_continue {α σ R : Type} {step : α → (σ → R) → (σ → R) → σ → R} {exit : σ → R} (g : α → σ → σ)
+    (h : ∀ y next ex s, step y next ex s = next (g y s)) :
+    ∀ (items : List α) (s : σ), forIn items step exit s = exit (items.foldl (fun s y => g y s) s)
+  | [], _ => rfl
+  | y :: ys, s => by rw [forIn_cons, h]; exact forIn_continue g h ys (g y s)
+
 /-- An invariant of a loop: if every iteration, from a state satisfying `P`, ends in `Q` provided continuing
 and leaving do, and leaving from `P` ends in `Q`, then the loop does. -/
 theorem forIn_inv {α σ R : Type} (P : σ → Prop) (Q : R → Prop) {step : α → (σ → R) → (σ → R) → σ → R}

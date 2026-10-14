@@ -10,9 +10,11 @@ import Ariadne.Proof.Stmt
 import Ariadne.Proof.Trivial
 import Ariadne.Proof.Store
 import Ariadne.Proof.Adequacy
+import Ariadne.Proof.Frame
 import Ariadne.Lib.Sort
 import Ariadne.Lib.Loop
 import Ariadne.Lib.Map
 import Ariadne.Lib.String
+import Ariadne.Lib.Cmp
 import Ariadne.Lib.Readable
 import Ariadne.Audit

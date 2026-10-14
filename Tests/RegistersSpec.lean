@@ -14,6 +14,8 @@ they hold of every run of the compiled methods.
   which is what lets a log be applied twice.
 - Album items converge: two `item` operations on the same item, applied in either
   order, leave the same register (the later stamp wins).
+- An operation on one register leaves the others, by the generated frame lemmas
+  (`«m».keeps.«f»`: method `m` never writes the map `f`).
 -/
 
 namespace Tests.RegistersSpec
@@ -144,5 +146,22 @@ theorem item_converges (r : State) (aid id s₁ s₂ : JSString) (p₁ p₂ : Bo
       have t : strLt c.2.2.1 s₂ = true → strLt c.2.2.1 s₁ = true := fun h => strLt_trans _ _ _ h hl
       by_cases hc1 : («newer» (some c.2.2.1) s₁) = true <;> by_cases hc2 : («newer» (some c.2.2.1) s₂) = true <;>
         simp_all [«newer»]
+
+/-! ## Operations leave the other registers -/
+
+/-- Marking a placement changes no pack. -/
+theorem packOf_mark (r : State) (ref p : JSString) (on : Bool) (reason : Option JSString) (stamp : JSString) (t : Int)
+    (id : JSString) : «packOf» («mark» r ref p on reason stamp t) id = «packOf» r id := by
+  simp only [«packOf», «mark».keeps.«packs»]
+
+/-- Placing or unplacing changes no pack. -/
+theorem packOf_place (r : State) (ref p : JSString) (placed : Bool) (cls stamp : JSString) (t : Int) (id : JSString) :
+    «packOf» («place» r ref p placed cls stamp t) id = «packOf» r id := by
+  simp only [«packOf», «place».keeps.«packs»]
+
+/-- Album operations leave which references are placed. -/
+theorem isPlaced_album (r : State) (aid stamp : JSString) (t : Int) (name cover : Option JSString) (deleted : Bool)
+    (ref : JSString) : «isPlaced» («album» r aid stamp t name cover deleted) ref = «isPlaced» r ref := by
+  simp only [«isPlaced», «album».keeps.«providers»]
 
 end Tests.RegistersSpec
