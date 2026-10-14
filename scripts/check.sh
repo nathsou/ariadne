@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # All checks: the general theorem, regenerated fixtures (kernel-checked),
-# the model against JavaScript, differential execution, and negative fixtures.
+# the model against JavaScript (cases, differential execution, random programs),
+# negative fixtures, and the parser against the TypeScript compiler.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -21,3 +22,12 @@ lake exe audit
 
 "$js" scripts/differential.mjs
 "$js" scripts/negative.mjs
+"$js" scripts/fuzz-model.mjs
+
+# The TypeScript compiler, pinned by bun.lock (with its integrity hash), for the parser cross-check.
+if [ "$js" = bun ]; then
+  bun install --frozen-lockfile --silent
+  bun scripts/crosscheck.mjs
+else
+  echo "Parser cross-check skipped: it needs Bun (bun.lock pins the TypeScript compiler)."
+fi
