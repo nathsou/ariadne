@@ -1,4 +1,6 @@
 import V2.Proof.Safe
+import V2.Eqns.Denote
+import V2.Eqns.Erase
 
 /-!
 # Adequacy of expressions

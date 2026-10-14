@@ -1,4 +1,7 @@
 import V2.Proof.Expr
+import V2.Eqns.Stmt
+import V2.Eqns.Flags
+import V2.Eqns.Checks
 
 /-!
 # Adequacy of statements

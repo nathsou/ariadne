@@ -1,4 +1,6 @@
 import V2.Proof.State
+import V2.Eqns.Safe
+import V2.Eqns.Trivial
 
 /-!
 # Trivially safe expressions
