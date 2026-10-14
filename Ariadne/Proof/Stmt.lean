@@ -1,0 +1,1036 @@
+import Ariadne.Proof.Expr
+import Ariadne.Eqns.Stmt
+import Ariadne.Eqns.Flags
+import Ariadne.Eqns.Checks
+
+/-!
+# Adequacy of statements
+
+A statement list run by the model from an environment related to `ρ` converges to
+an outcome related to its continuation-passing denotation: a `return` carries a
+value representing the result; completing normally, `break` and `continue` leave
+the list's declarations on top of an environment related to some `ρ'` where the
+denotation is the corresponding continuation at `ρ'`.
+-/
+
+set_option linter.unusedSimpArgs false
+set_option linter.unusedSectionVars false
+
+namespace Ariadne
+
+/-- How a list ended without returning: its declarations `bs` on top of an
+environment of the starting length related to `ρ'`, where the result is `kk ρ'` and
+what follows is safe. -/
+def Exit {Γ : Ctx} {α : Type} (env0 env : Env) (kk : Γ.denote → α) (ks : Γ.denote → Bool) (r : α) : Prop :=
+  ∃ bs envM ρ', env = bs ++ envM ∧ envM.length = env0.length ∧ EnvRel Γ envM ρ' ∧ r = kk ρ' ∧ ks ρ' = true
+
+/-- What a `return` gives: a value representing the result, or, in a method that
+changes the state (`vd`), a final state representing it. -/
+def RetRel (τ : Ty) : Bool → JSValue → Env → τ.denote → Prop
+  | false, w, _, r => τ.Rep w r
+  | true, _, env, r => ∃ t, env.lookup "this" = some t ∧ τ.Rep t r
+
+def SRel (Γ : Ctx) (τ : Ty) (vd : Bool) (env0 : Env) (r : τ.denote) (k : K Γ τ.denote) (ks : K Γ Bool)
+    (falls breaks conts : Bool) : Outcome → Prop
+  | .returned w env => RetRel τ vd w env r
+  | .normal env => falls = true ∧ Exit env0 env k.normal ks.normal r
+  | .broke env => breaks = true ∧ Exit env0 env k.brk ks.brk r
+  | .continued env => conts = true ∧ Exit env0 env k.cont ks.cont r
+
+/-- Discharge implications between control-flow flags. -/
+macro "flags" : tactic => `(tactic| ((try intro h) <;> (try simp only [Bool.or_eq_true, Bool.and_eq_true] at *) <;>
+  (try rcases h with h | ⟨h1, h2⟩) <;> (try rcases h with ⟨h1, h2⟩) <;> simp_all))
+
+theorem TagLit.lit_value (t : TagLit) : t.lit.value = t.value := by cases t <;> rfl
+
+/-! ## Outcomes -/
+
+theorem Exit.restore {Γ : Ctx} {α} {env0 env : Env} {kk : Γ.denote → α} {ks r} (h : Exit env0 env kk ks r) :
+    Exit env0 (Ariadne.restore env0 env) kk ks r ∧ ∃ ρ', EnvRel Γ (Ariadne.restore env0 env) ρ' ∧ r = kk ρ' ∧ ks ρ' = true := by
+  obtain ⟨bs, envM, ρ', rfl, hl, he, hr, hk⟩ := h
+  have : Ariadne.restore env0 (bs ++ envM) = envM := by simp [Ariadne.restore, hl]
+  rw [this]
+  exact ⟨⟨[], envM, ρ', rfl, hl, he, hr, hk⟩, ρ', he, hr, hk⟩
+
+theorem SRel.restore {Γ τ vd env r k ks f b c o} (h : SRel Γ τ vd env r k ks f b c o) :
+    SRel Γ τ vd env r k ks f b c (o.restore env) := by
+  cases o with
+  | returned => exact h
+  | normal e => exact ⟨h.1, h.2.restore.1⟩
+  | broke e => exact ⟨h.1, h.2.restore.1⟩
+  | continued e => exact ⟨h.1, h.2.restore.1⟩
+
+theorem SRel.mono {Γ τ vd env r k ks f b c f' b' c' o} (h : SRel Γ τ vd env r k ks f b c o)
+    (hf : f = true → f' = true) (hb : b = true → b' = true) (hc : c = true → c' = true) :
+    SRel Γ τ vd env r k ks f' b' c' o := by
+  cases o with
+  | returned => exact h
+  | normal e => exact ⟨hf h.1, h.2⟩
+  | broke e => exact ⟨hb h.1, h.2⟩
+  | continued e => exact ⟨hc h.1, h.2⟩
+
+theorem SRel.relen {Γ τ vd env env' r k ks f b c o} (h : SRel Γ τ vd env r k ks f b c o) (hl : env.length = env'.length) :
+    SRel Γ τ vd env' r k ks f b c o := by
+  cases o with
+  | returned => exact h
+  | normal e | broke e | continued e =>
+    obtain ⟨hf, bs, envM, ρ', h1, h2, h3, h4, h5⟩ := h
+    exact ⟨hf, bs, envM, ρ', h1, h2.trans hl, h3, h4, h5⟩
+
+theorem Exit.pop {Γ : Ctx} {x σ} {α} {w : JSValue} {env env' : Env} {kk : Γ.denote → α} {ks r}
+    (h : Exit (Γ := (x, σ) :: Γ) ((x, w) :: env) env' (kk ∘ Prod.snd) (ks ∘ Prod.snd) r) : Exit env env' kk ks r := by
+  obtain ⟨bs, envM, ⟨a, ρ'⟩, rfl, hl, ⟨w', envM', rfl, _, he⟩, hr, hk⟩ := h
+  exact ⟨bs ++ [(x, w')], envM', ρ', by simp, by simpa using hl, he, hr, hk⟩
+
+/-- Leaving a declaration's scope. -/
+theorem SRel.pop {Γ x σ τ vd w env r k ks f b c o}
+    (h : SRel ((x, σ) :: Γ) τ vd ((x, w) :: env) r (k.map Prod.snd) (ks.map Prod.snd) f b c o) :
+    SRel Γ τ vd env r k ks f b c o := by
+  cases o with
+  | returned => exact h
+  | normal e | broke e | continued e => exact ⟨h.1, h.2.pop⟩
+
+/-- Leaving a narrowed context. -/
+theorem SRel.widen {Γ τ vd x τ0 σ} {v : Var Γ x τ0} {e : σ.denote → τ0.denote} {env r k ks f b c o}
+    (he : ∀ w y, σ.Rep w y → τ0.Rep w (e y))
+    (h : SRel (v.narrow σ) τ vd env r (k.map (v.widen e)) (ks.map (v.widen e)) f b c o) :
+    SRel Γ τ vd env r k ks f b c o := by
+  cases o with
+  | returned => exact h
+  | normal _ | broke _ | continued _ =>
+    obtain ⟨hf, bs, envM, ρ', h1, h2, h3, h4, h5⟩ := h
+    exact ⟨hf, bs, envM, v.widen e ρ', h1, h2, v.widenRel e he h3, h4, h5⟩
+
+/-- The outcome of a `switch`: a `break` aimed at it completes it normally. -/
+def switchOutcome : Outcome → Outcome
+  | .broke env => .normal env
+  | o => o
+
+theorem SRel.switch {Γ τ vd env r} {k : K Γ τ.denote} {ks : K Γ Bool} {R RS f b c o}
+    (h : SRel Γ τ vd env r { k with normal := R, brk := R } { ks with normal := RS, brk := RS } f b c o) :
+    SRel Γ τ vd env r { k with normal := R } { ks with normal := RS } (f || b) false c (switchOutcome o) := by
+  cases o with
+  | returned => exact h
+  | normal e => exact ⟨by simp [h.1], h.2⟩
+  | broke e => exact ⟨by simp [h.1], h.2⟩
+  | continued e => exact h
+
+/-! ## Fuel -/
+
+section
+variable {prog : Program}
+
+theorem conv_cons_normal {s : Stmt} {rest : List Stmt} {env env' : Env} {o : Outcome}
+    (h1 : Converges (fun n => execStmt prog n env s) (.ok (.normal env')))
+    (h2 : Converges (fun n => execStmts prog n env' rest) (.ok o)) :
+    Converges (fun n => execStmts prog n env (s :: rest)) (.ok o) := by
+  obtain ⟨N1, h1⟩ := h1
+  obtain ⟨N2, h2⟩ := h2
+  exact Converges.of_succ (max N1 N2) fun m hm => by
+    simp [execStmts, h1 m (by omega), h2 m (by omega), bind, Except.bind]
+
+theorem conv_cons_exit {s : Stmt} {rest : List Stmt} {env : Env} {o : Outcome}
+    (h1 : Converges (fun n => execStmt prog n env s) (.ok o)) (h : ∀ e, o ≠ .normal e) :
+    Converges (fun n => execStmts prog n env (s :: rest)) (.ok o) := by
+  obtain ⟨N1, h1⟩ := h1
+  exact Converges.of_succ N1 fun m hm => by
+    cases o with
+    | normal e => exact absurd rfl (h e)
+    | _ => simp [execStmts, h1 m hm, bind, Except.bind]
+
+/-- A statement followed by the rest of its list. -/
+theorem conv_seq {s : Stmt} {rest : List Stmt} {env : Env} {o out : Outcome}
+    (h1 : Converges (fun n => execStmt prog n env s) (.ok o))
+    (h2 : ∀ e, o = .normal e → Converges (fun n => execStmts prog n e rest) (.ok out))
+    (h3 : ∀ e, o ≠ .normal e → out = o) :
+    Converges (fun n => execStmts prog n env (s :: rest)) (.ok out) := by
+  cases o with
+  | normal e => exact conv_cons_normal h1 (h2 e rfl)
+  | _ => rw [h3 [] (by simp)]; exact conv_cons_exit h1 (by simp)
+
+theorem execStmts_append : ∀ (m : Nat) (env : Env) (A B : List Stmt) (o : Outcome),
+    execStmts prog m env A = .ok o → (∀ e, o ≠ .normal e) → execStmts prog m env (A ++ B) = .ok o
+  | 0, _, _, _, _, h, _ => by simp [execStmts] at h
+  | _ + 1, env, [], _, o, h, hn => by simp [execStmts] at h; subst h; exact absurd rfl (hn env)
+  | m + 1, env, s :: A, B, o, h, hn => by
+    simp only [execStmts, List.cons_append, bind, Except.bind] at h ⊢
+    cases hs : execStmt prog m env s with
+    | error e => simp [hs] at h
+    | ok o' =>
+      simp only [hs] at h ⊢
+      cases o' with
+      | normal e => exact execStmts_append m e A B o h hn
+      | _ => exact h
+
+theorem conv_append {env : Env} {A B : List Stmt} {o : Outcome}
+    (h : Converges (fun n => execStmts prog n env A) (.ok o)) (hn : ∀ e, o ≠ .normal e) :
+    Converges (fun n => execStmts prog n env (A ++ B)) (.ok o) := by
+  obtain ⟨N, h⟩ := h
+  exact ⟨N, fun m hm => execStmts_append m env A B o (h m hm) hn⟩
+
+theorem conv_ite {c : Expr} {yes no : List Stmt} {env : Env} {b : Bool} {o : Outcome}
+    (hc : Converges (fun n => evalExpr prog n env c) (.ok (.bool b)))
+    (hb : Converges (fun n => execStmts prog n env (if b then yes else no)) (.ok o)) :
+    Converges (fun n => execStmt prog n env (.ite c yes no)) (.ok (o.restore env)) := by
+  obtain ⟨Nc, hc⟩ := hc
+  obtain ⟨Nb, hb⟩ := hb
+  refine Converges.of_succ (max Nc Nb) fun m hm => ?_
+  cases b
+  · simp only [Bool.false_eq_true, ↓reduceIte] at hb
+    simp [execStmt, hc m (by omega), hb m (by omega), bind, Except.bind, pure, Except.pure]
+  · simp only [↓reduceIte] at hb
+    simp [execStmt, hc m (by omega), hb m (by omega), bind, Except.bind, pure, Except.pure]
+
+theorem conv_block {ss : List Stmt} {env : Env} {o : Outcome}
+    (hb : Converges (fun n => execStmts prog n env ss) (.ok o)) :
+    Converges (fun n => execStmt prog n env (.block ss)) (.ok (o.restore env)) := by
+  obtain ⟨Nb, hb⟩ := hb
+  exact Converges.of_succ Nb fun m hm => by
+    simp [execStmt, hb m hm, bind, Except.bind, pure, Except.pure]
+
+end
+
+/-! ## Tags -/
+
+theorem TagLit.strictEq_value {a b : TagLit} (h : a.isStr = b.isStr) :
+    strictEq a.value b.value = .ok (decide (a = b)) := by
+  cases a with
+  | str s => cases b with
+    | str s' => by_cases hs : s = s' <;> simp [TagLit.value, strictEq, hs]
+    | bool _ => simp [TagLit.isStr] at h
+  | bool c => cases b with
+    | bool c' => by_cases hs : c = c' <;> simp [TagLit.value, strictEq, hs]
+    | str _ => simp [TagLit.isStr] at h
+
+/-- A union value's tag is one of the union's tags. -/
+theorem Variants.rep_tag : ∀ {vs : Variants} {key kvs} {u : vs.denote}, vs.Rep key kvs u →
+    ∃ t ∈ vs.tags, fieldOf kvs key = t.value
+  | .one t _, _, _, _, ⟨h, _⟩ => ⟨t, by simp [Variants.tags], h⟩
+  | .cons t _ _, _, _, .inl _, ⟨h, _⟩ => ⟨t, by simp [Variants.tags], h⟩
+  | .cons _ _ rest, _, _, .inr _, h => by
+    obtain ⟨t, ht, h⟩ := Variants.rep_tag (vs := rest) h
+    exact ⟨t, by simp [Variants.tags, ht], h⟩
+
+theorem Variants.tagsOk_cons {t : TagLit} {fs : Fields} {rest : Variants} (h : (Variants.cons t fs rest).tagsOk = true) :
+    rest.tagsOk = true ∧ t ∉ rest.tags ∧ ∀ t' ∈ rest.tags, t'.isStr = t.isStr := by
+  simp only [Variants.tagsOk, Variants.tags, Bool.and_eq_true, Bool.or_eq_true, List.all_cons,
+    Variants.tagsOk.distinctTagList, Bool.not_eq_true'] at h
+  obtain ⟨hk, hc, hd⟩ := h
+  refine ⟨?_, by simpa using hc, ?_⟩
+  · simp only [Variants.tagsOk, Bool.and_eq_true, Bool.or_eq_true]
+    refine ⟨?_, hd⟩
+    rcases hk with ⟨_, h⟩ | ⟨_, h⟩
+    · exact .inl h
+    · exact .inr h
+  · intro t' ht'
+    rcases hk with ⟨h1, h⟩ | ⟨h1, h⟩
+    · have := List.all_eq_true.mp h t' ht'; simp_all
+    · have := List.all_eq_true.mp h t' ht'; cases t <;> cases t' <;> simp_all [TagLit.isStr]
+
+theorem Variants.tagsOk_mem {vs : Variants} (h : vs.tagsOk = true) {a b : TagLit} (ha : a ∈ vs.tags)
+    (hb : b ∈ vs.tags) : a.isStr = b.isStr := by
+  simp only [Variants.tagsOk, Bool.and_eq_true, Bool.or_eq_true] at h
+  rcases h.1 with h | h
+  · rw [List.all_eq_true.mp h a ha, List.all_eq_true.mp h b hb]
+  · have h1 := List.all_eq_true.mp h a ha
+    have h2 := List.all_eq_true.mp h b hb
+    simp at h1 h2; rw [h1, h2]
+
+theorem Variants.head_mem {t : TagLit} {fs : Fields} {rest : Variants} : t ∈ (Variants.cons t fs rest).tags := by
+  simp [Variants.tags]
+
+theorem Variants.one_mem {t : TagLit} {fs : Fields} : t ∈ (Variants.one t fs).tags := by
+  simp [Variants.tags]
+
+/-- A variant's record represents the narrowed variable. -/
+theorem vrec_rep {key t fs kvs} {y : fs.denote} (hn : (kvs.map Prod.fst).Nodup) (ht : fieldOf kvs key = t.value)
+    (hy : fs.Rep kvs y) : (vrec key t fs).Rep (.record kvs) ((), y) :=
+  ⟨kvs, rfl, hn, ht, hy⟩
+
+/-! ## General `switch` -/
+
+theorem TagLit.value_inj : ∀ {a b : TagLit}, a.value = b.value → a = b
+  | .str _, .str _, h | .bool _, .bool _, h => by simp_all [TagLit.value]
+  | .str _, .bool _, h | .bool _, .str _, h => by simp [TagLit.value] at h
+
+theorem VIdx.mem_tags : ∀ {vs t fs}, VIdx vs t fs → t ∈ vs.tags
+  | _, _, _, .one => by simp [Variants.tags]
+  | _, _, _, .head => by simp [Variants.tags]
+  | _, _, _, .there i => by simp [Variants.tags, i.mem_tags]
+
+theorem Variants.strTags_of_mem {vs : Variants} (hok : vs.tagsOk = true) {t : TagLit} (ht : t ∈ vs.tags) :
+    t.isStr = vs.strTags := by
+  simp only [Variants.tagsOk, Bool.and_eq_true, Bool.or_eq_true] at hok
+  rcases hok.1 with h | h
+  · rw [List.all_eq_true.mp h t ht, Variants.strTags, h]
+  · have h1 := List.all_eq_true.mp h t ht
+    simp at h1
+    have h2 : vs.strTags = false := by
+      simp only [Variants.strTags, List.all_eq_false]
+      exact ⟨t, ht, by simp [h1]⟩
+    rw [h1, h2]
+
+theorem VIdx.decomp : ∀ (vs : Variants) (u : vs.denote), ∃ t fs, ∃ (i : VIdx vs t fs) (y : fs.denote), u = i.inj y
+  | .one t fs, y => ⟨t, fs, .one, y, rfl⟩
+  | .cons t fs _, .inl y => ⟨t, fs, .head, y, rfl⟩
+  | .cons _ _ rest, .inr w => by
+    obtain ⟨t, fs, i, y, h⟩ := VIdx.decomp rest w
+    exact ⟨t, fs, .there i, y, by simp [VIdx.inj, h]⟩
+
+theorem Variants.elim_inj {R : Type} : ∀ {vs t fs} (i : VIdx vs t fs) (y : fs.denote)
+    (h : ∀ {t fs}, VIdx vs t fs → fs.denote → R), Variants.elim vs (i.inj y) h = h i y
+  | _, _, _, .one, _, _ => rfl
+  | _, _, _, .head, _, _ => rfl
+  | _, _, _, .there i, y, h => Variants.elim_inj i y (fun i' y' => h (.there i') y')
+
+theorem VIdx.rep_inj : ∀ {vs t fs} (i : VIdx vs t fs) {key kvs} {y : fs.denote}, vs.Rep key kvs (i.inj y) →
+    fieldOf kvs key = t.value ∧ fs.Rep kvs y
+  | _, _, _, .one, _, _, _, h | _, _, _, .head, _, _, _, h => h
+  | _, _, _, .there i, _, _, _, h => i.rep_inj h
+
+theorem VIdx.rep_proj : ∀ {vs t fs} (i : VIdx vs t fs) {key kvs} {u : vs.denote} {y : fs.denote},
+    vs.Rep key kvs u → i.proj u = some y → fieldOf kvs key = t.value ∧ fs.Rep kvs y
+  | _, _, _, .one, _, _, _, _, h, hp => by simp only [VIdx.proj, Option.some.injEq] at hp; subst hp; exact h
+  | _, _, _, .head, _, _, .inl _, _, h, hp => by simp only [VIdx.proj, Option.some.injEq] at hp; subst hp; exact h
+  | _, _, _, .head, _, _, .inr _, _, _, hp | _, _, _, .there _, _, _, .inl _, _, _, hp => by simp [VIdx.proj] at hp
+  | _, _, _, .there i, _, _, .inr _, _, h, hp => i.rep_proj h hp
+
+theorem VIdx.proj_none : ∀ {vs t fs} (i : VIdx vs t fs) {key kvs} {u : vs.denote}, vs.tagsOk = true →
+    vs.Rep key kvs u → i.proj u = none → fieldOf kvs key ≠ t.value
+  | _, _, _, .one, _, _, _, _, _, hp | _, _, _, .head, _, _, .inl _, _, _, hp => by simp [VIdx.proj] at hp
+  | .cons _ _ rest, _, _, .head, _, _, .inr _, hok, h, _ => by
+    obtain ⟨t', ht', hf⟩ := Variants.rep_tag (vs := rest) h
+    rw [hf]; intro he
+    exact (Variants.tagsOk_cons hok).2.1 (TagLit.value_inj he ▸ ht')
+  | .cons _ _ _, _, _, .there i, _, _, .inl _, hok, h, _ => by
+    rw [h.1]; intro he
+    exact (Variants.tagsOk_cons hok).2.1 (TagLit.value_inj he ▸ i.mem_tags)
+  | .cons _ _ _, _, _, .there i, _, _, .inr _, hok, h, hp => i.proj_none (Variants.tagsOk_cons hok).1 h hp
+
+section
+variable {prog : Program}
+
+/-- A `case t:` label: `===` against the scrutinee decides. -/
+theorem findCase_label {env : Env} {tv : JSValue} {t : TagLit} {body : List Stmt}
+    {rest : List (Option Expr × List Stmt)} {i0 : Nat} {b : Bool} {r : Option Nat} (hb : strictEq tv t.value = .ok b)
+    (hr : b = false → Converges (fun n => findCase prog n env tv rest (i0 + 1)) (.ok r)) :
+    Converges (fun n => findCase prog n env tv ((some (tagLabel t), body) :: rest) i0)
+      (.ok (if b then some i0 else r)) := by
+  cases b with
+  | true =>
+    refine Converges.of_succ 1 fun m hm => ?_
+    obtain ⟨m, rfl⟩ : ∃ k, m = k + 1 := ⟨m - 1, by omega⟩
+    simp [findCase, tagLabel, evalExpr, TagLit.lit_value, hb, bind, Except.bind, pure, Except.pure]
+  | false =>
+    obtain ⟨N, h⟩ := hr rfl
+    refine Converges.of_succ (N + 1) fun m hm => ?_
+    obtain ⟨m, rfl⟩ : ∃ k, m = k + 1 := ⟨m - 1, by omega⟩
+    simp [findCase, tagLabel, evalExpr, TagLit.lit_value, hb, h (m + 1) (by omega), bind, Except.bind]
+
+/-- `default:` is taken when no label after it matches either. -/
+theorem findCase_default {env : Env} {tv : JSValue} {body : List Stmt} {rest : List (Option Expr × List Stmt)}
+    {i0 : Nat} {r : Option Nat} (hr : Converges (fun n => findCase prog n env tv rest (i0 + 1)) (.ok r)) :
+    Converges (fun n => findCase prog n env tv ((none, body) :: rest) i0) (.ok (some (r.getD i0))) := by
+  obtain ⟨N, h⟩ := hr
+  refine Converges.of_succ N fun m hm => ?_
+  cases r <;> simp [findCase, h m hm, bind, Except.bind, pure, Except.pure]
+
+theorem conv_switch_none {d : Expr} {cases : List (Option Expr × List Stmt)} {env : Env} {v : JSValue}
+    (hd : Converges (fun n => evalExpr prog n env d) (.ok v))
+    (hf : Converges (fun n => findCase prog n env v cases 0) (.ok none)) :
+    Converges (fun n => execStmt prog n env (.switch d cases)) (.ok (.normal env)) := by
+  obtain ⟨Nd, hd⟩ := hd
+  obtain ⟨Nf, hf⟩ := hf
+  exact Converges.of_succ (max Nd Nf) fun m hm => by
+    simp [execStmt, hd m (by omega), hf m (by omega), bind, Except.bind]
+
+end
+
+/-! ## The induction -/
+
+theorem SRel.restore_len {Γ τ vd env r k ks f b c o} (h : SRel Γ τ vd env r k ks f b c o) :
+    ∀ e, o.restore env = .normal e → e.length = env.length := by
+  intro e he
+  cases o with
+  | normal e0 =>
+    simp only [Outcome.restore, Outcome.normal.injEq] at he; subst he
+    obtain ⟨-, bs, envM, _, rfl, hl, -⟩ := h
+    simp [Ariadne.restore, hl]
+  | _ => simp [Outcome.restore] at he
+
+theorem switchOutcome_len {env : Env} {o : Outcome} (h : ∀ e, o.restore env = .normal e → e.length = env.length)
+    (hb : ∀ e, o.restore env = .broke e → e.length = env.length) :
+    ∀ e, switchOutcome (o.restore env) = .normal e → e.length = env.length := by
+  intro e he
+  cases ho : o.restore env with
+  | normal e' => rw [ho] at he; simp [switchOutcome] at he; subst he; exact h e' ho
+  | broke e' => rw [ho] at he; simp [switchOutcome] at he; subst he; exact hb e' ho
+  | _ => rw [ho] at he; simp [switchOutcome] at he
+
+theorem SRel.restore_len_broke {Γ τ vd env r k ks f b c o} (h : SRel Γ τ vd env r k ks f b c o) :
+    ∀ e, o.restore env = .broke e → e.length = env.length := by
+  intro e he
+  cases o with
+  | broke e0 =>
+    simp only [Outcome.restore, Outcome.broke.injEq] at he; subst he
+    obtain ⟨-, bs, envM, _, rfl, hl, -⟩ := h
+    simp [Ariadne.restore, hl]
+  | _ => simp [Outcome.restore] at he
+
+theorem conv_switch {prog : Program} {d : Expr} {cases : List (Option Expr × List Stmt)} {env : Env} {v : JSValue}
+    {j : Nat} {o : Outcome}
+    (hd : Converges (fun n => evalExpr prog n env d) (.ok v))
+    (hf : Converges (fun n => findCase prog n env v cases 0) (.ok (some j)))
+    (hb : Converges (fun n => execStmts prog n env ((cases.drop j).flatMap (·.2))) (.ok o)) :
+    Converges (fun n => execStmt prog n env (.switch d cases)) (.ok (switchOutcome (o.restore env))) := by
+  obtain ⟨Nd, hd⟩ := hd
+  obtain ⟨Nf, hf⟩ := hf
+  obtain ⟨Nb, hb⟩ := hb
+  refine Converges.of_succ (max Nd (max Nf Nb)) fun m hm => ?_
+  simp only [execStmt, hd m (by omega), hf m (by omega), hb m (by omega), bind, Except.bind]
+  cases o.restore env <;> rfl
+
+theorem conv_const {prog : Program} {e : Expr} {x : String} {env : Env} {w : JSValue}
+    (h : Converges (fun n => evalExpr prog n env e) (.ok w)) :
+    Converges (fun n => execStmt prog n env (.const x e)) (.ok (.normal ((x, w) :: env))) := by
+  obtain ⟨N, h⟩ := h
+  exact Converges.of_succ N fun m hm => by simp [execStmt, h m hm, bind, Except.bind, pure, Except.pure]
+
+theorem conv_ret {prog : Program} {e : Expr} {env : Env} {w : JSValue}
+    (h : Converges (fun n => evalExpr prog n env e) (.ok w)) :
+    Converges (fun n => execStmt prog n env (.ret e)) (.ok (.returned w env)) := by
+  obtain ⟨N, h⟩ := h
+  exact Converges.of_succ N fun m hm => by simp [execStmt, h m hm, bind, Except.bind, pure, Except.pure]
+
+theorem conv_brk {prog : Program} {env : Env} : Converges (fun n => execStmt prog n env .brk) (.ok (.broke env)) :=
+  Converges.of_succ 0 fun m _ => by simp [execStmt]
+
+theorem conv_nil {prog : Program} {env : Env} : Converges (fun n => execStmts prog n env []) (.ok (.normal env)) :=
+  Converges.of_succ 0 fun m _ => by simp [execStmts]
+
+/-- A branch in a context narrowed by `x != null`. -/
+theorem some_embed {σ : Ty} {n : Nullish} : ∀ w (y : σ.denote), σ.Rep w y → (Ty.option n σ).Rep w (some y) :=
+  fun _ _ h => h
+
+theorem conv_let {prog : Program} {e : Expr} {x : String} {env : Env} {w : JSValue}
+    (h : Converges (fun n => evalExpr prog n env e) (.ok w)) :
+    Converges (fun n => execStmt prog n env (.let_ x e)) (.ok (.normal ((x, w) :: env))) := by
+  obtain ⟨N, h⟩ := h
+  exact Converges.of_succ N fun m hm => by simp [execStmt, h m hm, bind, Except.bind, pure, Except.pure]
+
+theorem conv_assign {prog : Program} {e : Expr} {x : String} {env env' : Env} {w : JSValue}
+    (h : Converges (fun n => evalExpr prog n env e) (.ok w)) (ha : assign x w env = .ok env') :
+    Converges (fun n => execStmt prog n env (.assign x e)) (.ok (.normal env')) := by
+  obtain ⟨N, h⟩ := h
+  exact Converges.of_succ N fun m hm => by simp [execStmt, h m hm, ha, bind, Except.bind, pure, Except.pure]
+
+theorem conv_stateSet {prog : Program} {f : String} {k v : Expr} {env env' : Env} {kvs : List (JSString × JSValue)}
+    {s : JSString} {w : JSValue} (hsm : stateMap env f = .ok kvs)
+    (hk : Converges (fun n => evalExpr prog n env k) (.ok (.string s)))
+    (hv : Converges (fun n => evalExpr prog n env v) (.ok w)) (hset : setStateMap env f (mapPut kvs s w) = .ok env') :
+    Converges (fun n => execStmt prog n env (.stateSet f k v)) (.ok (.normal env')) := by
+  obtain ⟨N1, h1⟩ := hk
+  obtain ⟨N2, h2⟩ := hv
+  exact Converges.of_succ (max N1 N2) fun m hm => by
+    simp [execStmt, hsm, h1 m (by omega), h2 m (by omega), mapKey, hset, bind, Except.bind, pure, Except.pure]
+
+theorem conv_stateDelete {prog : Program} {f : String} {k : Expr} {env env' : Env} {kvs : List (JSString × JSValue)}
+    {s : JSString} (hsm : stateMap env f = .ok kvs) (hk : Converges (fun n => evalExpr prog n env k) (.ok (.string s)))
+    (hset : setStateMap env f (mapDel kvs s) = .ok env') :
+    Converges (fun n => execStmt prog n env (.stateDelete f k)) (.ok (.normal env')) := by
+  obtain ⟨N1, h1⟩ := hk
+  exact Converges.of_succ N1 fun m hm => by
+    simp [execStmt, hsm, h1 m hm, mapKey, hset, bind, Except.bind, pure, Except.pure]
+
+theorem conv_callThis {prog : Program} {m : String} {args : List Expr} {env env' : Env} {vs : List JSValue}
+    {t w t' : JSValue} (ha : Converges (fun n => evalArgs prog n env args) (.ok vs)) (ht : thisOf env = .ok t)
+    (hc : Converges (fun n => callState prog n m (t :: vs)) (.ok (w, t'))) (hasg : assign "this" t' env = .ok env') :
+    Converges (fun n => execStmt prog n env (.callThis m args)) (.ok (.normal env')) := by
+  obtain ⟨N1, h1⟩ := ha
+  obtain ⟨N2, h2⟩ := hc
+  exact Converges.of_succ (max N1 N2) fun n hn => by
+    simp [execStmt, h1 n (by omega), ht, h2 n (by omega), hasg, bind, Except.bind, pure, Except.pure]
+
+theorem conv_cont {prog : Program} {env : Env} : Converges (fun n => execStmt prog n env .cont) (.ok (.continued env)) :=
+  Converges.of_succ 0 fun m _ => by simp [execStmt]
+
+theorem conv_forOf {prog : Program} {e : Expr} {x : String} {body : List Stmt} {env : Env} {vs : List JSValue}
+    {o : Outcome} (ha : Converges (fun n => evalExpr prog n env e) (.ok (.array vs)))
+    (hl : Converges (fun n => loop prog n env (vs.map fun v => [(x, v)]) body) (.ok o)) :
+    Converges (fun n => execStmt prog n env (.forOf x e body)) (.ok o) := by
+  obtain ⟨Na, ha⟩ := ha
+  obtain ⟨Nl, hl⟩ := hl
+  exact Converges.of_succ (max Na Nl) fun m hm => by
+    simp [execStmt, ha m (by omega), hl m (by omega), bind, Except.bind]
+
+theorem conv_forEntries {prog : Program} {e : Expr} {i x : String} {body : List Stmt} {env : Env}
+    {vs : List JSValue} {o : Outcome} (ha : Converges (fun n => evalExpr prog n env e) (.ok (.array vs)))
+    (hl : Converges (fun n => loop prog n env (entryBindings i x vs) body) (.ok o)) :
+    Converges (fun n => execStmt prog n env (.forEntries i x e body)) (.ok o) := by
+  obtain ⟨Na, ha⟩ := ha
+  obtain ⟨Nl, hl⟩ := hl
+  exact Converges.of_succ (max Na Nl) fun m hm => by
+    simp [execStmt, ha m (by omega), hl m (by omega), bind, Except.bind]
+
+theorem conv_forRange {prog : Program} {i n : String} {body : List Stmt} {env : Env} {m : Int} {o : Outcome}
+    (hl : env.lookup n = some (.number m))
+    (hlp : Converges (fun k => loop prog k env (rangeBindings i m) body) (.ok o)) :
+    Converges (fun k => execStmt prog k env (.forRange i n body)) (.ok o) := by
+  obtain ⟨N, h⟩ := hlp
+  exact Converges.of_succ (max N m.toNat) fun k hk => by
+    have : min m (k : Int) = m := by omega
+    simp [execStmt, hl, this, h k (by omega)]
+
+theorem range_bindings (i : String) (m : Int) :
+    Forall2 (fun bs (y : Int) => bs = [(i, JSValue.number y)]) (rangeBindings i m) (range m) := by
+  unfold rangeBindings range
+  induction List.range m.toNat with
+  | nil => exact .nil
+  | cons j js ih => exact .cons rfl ih
+
+theorem Exit.restore_length {Γ : Ctx} {α} {env0 env : Env} {kk : Γ.denote → α} {ks r} (h : Exit env0 env kk ks r) :
+    (Ariadne.restore env0 env).length = env0.length := by
+  obtain ⟨bs, envM, ρ', rfl, hl, -⟩ := h
+  simp [Ariadne.restore, hl]
+
+/-- A loop: each iteration binds `bs` on top of the environment and runs the body;
+`break` leaves the loop, `continue` and completing go to the next iteration. -/
+theorem conv_loop {prog : Program} {Γ : Ctx} {τ : Ty} {vd : Bool} {α : Type} {body : List Stmt} {P : Env → α → Prop}
+    {step : α → (Γ.denote → τ.denote) → (Γ.denote → τ.denote) → Γ.denote → τ.denote}
+    {stepS : α → (Γ.denote → Bool) → (Γ.denote → Bool) → Γ.denote → Bool} {k : K Γ τ.denote} {ks : K Γ Bool}
+    (hbody : ∀ bs y env ρ (next : Γ.denote → τ.denote) (nextS : Γ.denote → Bool), P bs y → EnvRel Γ env ρ →
+      stepS y nextS ks.normal ρ = true →
+      ∃ o, Converges (fun n => execStmts prog n (bs ++ env) body) (.ok o) ∧
+        SRel Γ τ vd env (step y next k.normal ρ) ⟨next, k.normal, next⟩ ⟨nextS, ks.normal, nextS⟩ true true true o) :
+    ∀ {bss : List Env} {items : List α}, Forall2 P bss items → ∀ {env : Env} {ρ : Γ.denote}, EnvRel Γ env ρ →
+      forIn items stepS ks.normal ρ = true →
+      ∃ o, Converges (fun n => loop prog n env bss body) (.ok o) ∧
+        SRel Γ τ vd env (forIn items step k.normal ρ) k ks true false false o ∧
+        (∀ e, o = .normal e → e.length = env.length)
+  | _, _, .nil, env, ρ, he, hs =>
+    ⟨.normal env, Converges.of_succ 0 fun m _ => by simp [loop], ⟨rfl, [], env, ρ, rfl, rfl, he, rfl, hs⟩,
+      fun e h => by cases h; rfl⟩
+  | bs :: _, y :: ys, .cons hp rest, env, ρ, he, hs => by
+    obtain ⟨o, ⟨N1, h1⟩, hr⟩ := hbody bs y env ρ (forIn ys step k.normal) (forIn ys stepS ks.normal) hp he hs
+    cases o with
+    | returned w e0 =>
+      exact ⟨.returned w e0, Converges.of_succ N1 fun m hm => by simp [loop, h1 m hm, Outcome.restore, bind, Except.bind],
+        hr, by simp⟩
+    | broke e0 =>
+      obtain ⟨-, hx⟩ := hr
+      exact ⟨.normal (Ariadne.restore env e0),
+        Converges.of_succ N1 fun m hm => by simp [loop, h1 m hm, Outcome.restore, bind, Except.bind],
+        ⟨rfl, hx.restore.1⟩, fun e h => by cases h; exact hx.restore_length⟩
+    | normal e0 | continued e0 =>
+      obtain ⟨-, hx⟩ := hr
+      obtain ⟨ρ', he', hr', hs'⟩ := hx.restore.2
+      obtain ⟨o2, ⟨N2, h2⟩, hr2, hl2⟩ := conv_loop hbody rest he' hs'
+      refine ⟨o2, Converges.of_succ (max N1 N2) fun m hm => ?_, ?_, fun e h => (hl2 e h).trans hx.restore_length⟩
+      · simp [loop, h1 m (by omega), h2 m (by omega), Outcome.restore, bind, Except.bind]
+      · show SRel Γ τ vd env (step y (forIn ys step k.normal) k.normal ρ) k ks true false false o2
+        rw [hr']; exact hr2.relen hx.restore_length
+
+section
+variable {prog : Program} {Φ : Sigs} {fs : Φ.denote} {ss : Φ.safety} (hfs : FnsOK prog fs ss)
+include hfs
+
+/-- A compound statement, then the rest of its list as its normal continuation. -/
+theorem then_rest {Γ τ vd} {s : Stmt} {rest : TStmts Φ Γ τ} {k : K Γ τ.denote} {ks : K Γ Bool} {env : Env}
+    {r : τ.denote} {o : Outcome} {f b c : Bool}
+    (hrest : ∀ envM ρ', envM.length = env.length → EnvRel Γ envM ρ' → rest.safe fs ss ks ρ' = true →
+      ∃ o2, Converges (fun n => execStmts prog n envM rest.erase) (.ok o2) ∧
+        SRel Γ τ vd envM (rest.denote fs k ρ') k ks rest.falls rest.breaks rest.continues o2)
+    (h1 : Converges (fun n => execStmt prog n env s) (.ok o))
+    (ho : SRel Γ τ vd env r { k with normal := rest.denote fs k } { ks with normal := rest.safe fs ss ks } f b c o)
+    (hlen : ∀ e, o = .normal e → e.length = env.length) :
+    ∃ out, Converges (fun n => execStmts prog n env (s :: rest.erase)) (.ok out) ∧
+      SRel Γ τ vd env r k ks (f && rest.falls) (b || (f && rest.breaks)) (c || (f && rest.continues)) out := by
+  cases o with
+  | normal e =>
+    obtain ⟨hf, bs, envM, ρ', rfl, hl, hrel, hr, hsafe⟩ := ho
+    have hbs : bs = [] := by
+      have h' := hlen _ rfl
+      rw [List.length_append, hl] at h'
+      exact List.eq_nil_of_length_eq_zero (by omega)
+    subst hbs
+    obtain ⟨o2, hc2, hr2⟩ := hrest envM ρ' hl hrel hsafe
+    refine ⟨o2, conv_cons_normal h1 hc2, ?_⟩
+    rw [hr]
+    exact (hr2.relen hl).mono (by simp [hf]) (by simp [hf]; exact .inr) (by simp [hf]; exact .inr)
+  | returned w => exact ⟨_, conv_cons_exit h1 (by simp), ho⟩
+  | broke e => exact ⟨_, conv_cons_exit h1 (by simp), by simp [ho.1], ho.2⟩
+  | continued e => exact ⟨_, conv_cons_exit h1 (by simp), by simp [ho.1], ho.2⟩
+
+variable (hss : SafeSigs ss)
+include hss
+variable {vd : Bool}
+
+mutual
+  theorem TStmts.adequate : ∀ {Γ : Ctx} {τ : Ty} (st : TStmts Φ Γ τ) (k : K Γ τ.denote) (ks : K Γ Bool)
+      {env : Env} {ρ : Γ.denote}, EnvRel Γ env ρ → st.safe fs ss ks ρ = true → st.wf vd = true →
+      ∃ out, Converges (fun n => execStmts prog n env st.erase) (.ok out) ∧
+        SRel Γ τ vd env (st.denote fs k ρ) k ks st.falls st.breaks st.continues out
+    | _, _, .nil, k, ks, env, ρ, he, hs, _ =>
+      ⟨_, conv_nil, rfl, [], env, ρ, rfl, rfl, he, rfl, hs⟩
+    | _, _, .const x e rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.safe, Bool.and_eq_true] at hs
+      obtain ⟨w, hc, hrep⟩ := TExpr.adequate hfs hss e he (TExpr.ok hs.1)
+      obtain ⟨o, hc2, hr⟩ := TStmts.adequate rest (k.map Prod.snd) (ks.map Prod.snd)
+        (env := (x, w) :: env) (ρ := (e.denote fs ρ, ρ)) ⟨w, env, rfl, hrep, he⟩ hs.2 hw
+      exact ⟨o, conv_cons_normal (conv_const hc) hc2, hr.pop⟩
+    | _, _, .ret e rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.wf, Bool.and_eq_true, Bool.not_eq_true'] at hw
+      obtain ⟨w, hc, hrep⟩ := TExpr.adequate hfs hss e he (TExpr.ok hs)
+      exact ⟨_, conv_cons_exit (conv_ret hc) (by simp), by simp only [SRel, hw.1, RetRel]; exact hrep⟩
+    | _, _, .retVoid v rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.wf, Bool.and_eq_true] at hw
+      obtain ⟨t, hl, ht⟩ := v.lookup he
+      have hu : Converges (fun n => evalExpr prog n env (.lit .undefined)) (.ok .undefined) :=
+        Converges.of_succ 0 fun m _ => by simp [evalExpr, Lit.value]
+      exact ⟨_, conv_cons_exit (conv_ret hu) (by simp), by simp only [SRel, hw.1, RetRel]; exact ⟨t, hl, ht⟩⟩
+    | _, _, .stateSet v i nd key e rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.safe, Bool.and_eq_true] at hs
+      simp only [TStmts.wf, Bool.and_eq_true] at hw
+      have hke := andT_elim hs.1 (key.safe_of_trivial ρ) (e.safe_of_trivial ρ)
+      obtain ⟨kvs, hsm, hrel⟩ := stateMap_rep v i he
+      obtain ⟨wk, hck, hwk⟩ := TExpr.adequate hfs hss key he hke.1
+      simp only [Ty.Rep] at hwk; subst hwk
+      obtain ⟨w, hce, hw'⟩ := TExpr.adequate hfs hss e he hke.2
+      obtain ⟨env', hset, hlen, he'⟩ := setStateMap_rep v i nd he (mapPut_rep (key.denote fs ρ) hw' hrel)
+      obtain ⟨o, hc2, hr⟩ := TStmts.adequate rest k ks he' hs.2 hw.2
+      exact ⟨o, conv_cons_normal (conv_stateSet hsm hck hce hset) hc2, hr.relen hlen⟩
+    | _, _, .stateDelete v i nd key rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.safe, Bool.and_eq_true] at hs
+      simp only [TStmts.wf, Bool.and_eq_true] at hw
+      obtain ⟨kvs, hsm, hrel⟩ := stateMap_rep v i he
+      obtain ⟨wk, hck, hwk⟩ := TExpr.adequate hfs hss key he (TExpr.ok hs.1)
+      simp only [Ty.Rep] at hwk; subst hwk
+      obtain ⟨env', hset, hlen, he'⟩ := setStateMap_rep v i nd he (mapDel_rep (key.denote fs ρ) hrel)
+      obtain ⟨o, hc2, hr⟩ := TStmts.adequate rest k ks he' hs.2 hw.2
+      exact ⟨o, conv_cons_normal (conv_stateDelete hsm hck hset) hc2, hr.relen hlen⟩
+    | _, _, .callVoid fn v args rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.safe, Bool.and_eq_true] at hs
+      simp only [TStmts.wf, Bool.and_eq_true] at hw
+      have ha := andT_elim hs.1 (args.safe_of_trivial ρ) (hss fn _)
+      obtain ⟨vs, hca, hvs⟩ := TArgs.adequate hfs hss args he ha.1
+      obtain ⟨t, ht, hwt⟩ := thisOf_rep v he
+      obtain ⟨w, t', hc, hw'⟩ := hfs.convState fn (v.get ρ, args.denote fs ρ) (t :: vs) rfl ⟨t, _, rfl, hwt, hvs⟩ ha.2
+      obtain ⟨env', hasg, hlen, he'⟩ := v.assignRel he hw'
+      obtain ⟨o, hc2, hr⟩ := TStmts.adequate rest k ks he' hs.2 hw.2
+      exact ⟨o, conv_cons_normal (conv_callThis hca ht hc hasg) hc2, hr.relen hlen⟩
+    | _, _, .brk rest, k, ks, env, ρ, he, hs, _ =>
+      ⟨_, conv_cons_exit conv_brk (by simp), rfl, [], env, ρ, rfl, rfl, he, rfl, hs⟩
+    | _, _, .cont rest, k, ks, env, ρ, he, hs, _ =>
+      ⟨_, conv_cons_exit conv_cont (by simp), rfl, [], env, ρ, rfl, rfl, he, rfl, hs⟩
+    | _, _, .let_ x e rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.safe, Bool.and_eq_true] at hs
+      obtain ⟨w, hc, hrep⟩ := TExpr.adequate hfs hss e he (TExpr.ok hs.1)
+      obtain ⟨o, hc2, hr⟩ := TStmts.adequate rest (k.map Prod.snd) (ks.map Prod.snd)
+        (env := (x, w) :: env) (ρ := (e.denote fs ρ, ρ)) ⟨w, env, rfl, hrep, he⟩ hs.2 hw
+      exact ⟨o, conv_cons_normal (conv_let hc) hc2, hr.pop⟩
+    | _, _, .assign v e rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.safe, Bool.and_eq_true] at hs
+      obtain ⟨w, hc, hrep⟩ := TExpr.adequate hfs hss e he (TExpr.ok hs.1)
+      obtain ⟨env', hasg, hlen, he'⟩ := v.assignRel he hrep
+      obtain ⟨o, hc2, hr⟩ := TStmts.adequate rest k ks he' hs.2 hw
+      exact ⟨o, conv_cons_normal (conv_assign hc hasg) hc2, hr.relen hlen⟩
+    | Γ, τ, .forOf x a body rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.safe, Bool.and_eq_true] at hs
+      simp only [TStmts.wf, Bool.and_eq_true] at hw
+      obtain ⟨_, ha, vs, rfl, hvs⟩ := TExpr.adequate hfs hss a he (TExpr.ok hs.1)
+      have hrest := fun envM ρ' (_ : envM.length = env.length) hrel hsafe =>
+        TStmts.adequate rest k ks (env := envM) (ρ := ρ') hrel hsafe hw.2
+      obtain ⟨o, hl, hro, hlen⟩ := conv_loop (prog := prog) (body := body.erase)
+        (k := { k with normal := rest.denote fs k }) (ks := { ks with normal := rest.safe fs ss ks })
+        (step := fun y next exit ρ' => body.denote fs (K.map Prod.snd ⟨next, exit, next⟩) (y, ρ'))
+        (stepS := fun y next exit ρ' => body.safe fs ss (K.map Prod.snd ⟨next, exit, next⟩) (y, ρ'))
+        (P := fun bs y => ∃ w, bs = [(x, w)] ∧ Ty.Rep _ w y)
+        (fun bs y env ρ next nextS ⟨w, hbs, hw'⟩ he hs => by
+          subst hbs
+          obtain ⟨o, hc, hr⟩ := TStmts.adequate body _ _ (env := (x, w) :: env) (ρ := (y, ρ)) ⟨w, env, rfl, hw', he⟩
+            hs hw.1
+          exact ⟨o, hc, (SRel.pop hr).mono (fun _ => rfl) (fun _ => rfl) (fun _ => rfl)⟩)
+        (hvs.map_left fun w y h => ⟨w, rfl, h⟩) he hs.2
+      obtain ⟨out, h, hr⟩ := then_rest hfs hrest (conv_forOf ha hl) hro hlen
+      refine ⟨out, h, ?_⟩
+      simp only [TStmts.denote, TStmts.falls, TStmts.breaks, TStmts.continues]
+      exact hr.mono (by flags) (by flags) (by flags)
+    | Γ, τ, .forRange i v body rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.wf, Bool.and_eq_true] at hw
+      obtain ⟨w, hl, hwv⟩ := v.lookup he
+      simp only [Ty.Rep] at hwv; subst hwv
+      have hrest := fun envM ρ' (_ : envM.length = env.length) hrel hsafe =>
+        TStmts.adequate rest k ks (env := envM) (ρ := ρ') hrel hsafe hw.2
+      obtain ⟨o, hlp, hro, hlen⟩ := conv_loop (prog := prog) (body := body.erase)
+        (k := { k with normal := rest.denote fs k }) (ks := { ks with normal := rest.safe fs ss ks })
+        (step := fun y next exit ρ' => body.denote fs (K.map Prod.snd ⟨next, exit, next⟩) (y, ρ'))
+        (stepS := fun y next exit ρ' => body.safe fs ss (K.map Prod.snd ⟨next, exit, next⟩) (y, ρ'))
+        (P := fun bs (y : Int) => bs = [(i, .number y)])
+        (fun bs y env ρ next nextS hbs he hs => by
+          subst hbs
+          obtain ⟨o, hc, hr⟩ := TStmts.adequate body _ _ (env := (i, .number y) :: env) (ρ := (y, ρ))
+            ⟨_, env, rfl, rfl, he⟩ hs hw.1
+          exact ⟨o, hc, (SRel.pop hr).mono (fun _ => rfl) (fun _ => rfl) (fun _ => rfl)⟩)
+        (range_bindings i (v.get ρ)) he hs
+      obtain ⟨out, h, hr⟩ := then_rest hfs hrest (conv_forRange hl hlp) hro hlen
+      refine ⟨out, h, ?_⟩
+      simp only [TStmts.denote, TStmts.falls, TStmts.breaks, TStmts.continues]
+      exact hr.mono (by flags) (by flags) (by flags)
+    | Γ, τ, .forEntries i x a body rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.safe, Bool.and_eq_true] at hs
+      simp only [TStmts.wf, Bool.and_eq_true] at hw
+      obtain ⟨_, ha, vs, rfl, hvs⟩ := TExpr.adequate hfs hss a he (TExpr.ok hs.1)
+      have hrest := fun envM ρ' (_ : envM.length = env.length) hrel hsafe =>
+        TStmts.adequate rest k ks (env := envM) (ρ := ρ') hrel hsafe hw.2
+      obtain ⟨o, hl, hro, hlen⟩ := conv_loop (prog := prog) (body := body.erase)
+        (k := { k with normal := rest.denote fs k }) (ks := { ks with normal := rest.safe fs ss ks })
+        (step := fun p next exit ρ' =>
+          body.denote fs (K.map Prod.snd (K.map Prod.snd ⟨next, exit, next⟩)) (p.1, (p.2 : Int), ρ'))
+        (stepS := fun p next exit ρ' =>
+          body.safe fs ss (K.map Prod.snd (K.map Prod.snd ⟨next, exit, next⟩)) (p.1, (p.2 : Int), ρ'))
+        (P := fun bs p => ∃ w, bs = [(x, w), (i, .number p.2)] ∧ Ty.Rep _ w p.1)
+        (fun bs p env ρ next nextS ⟨w, hbs, hw'⟩ he hs => by
+          subst hbs
+          obtain ⟨o, hc, hr⟩ := TStmts.adequate body _ _ (env := (x, w) :: (i, .number p.2) :: env)
+            (ρ := (p.1, (p.2 : Int), ρ)) ⟨w, _, rfl, hw', _, env, rfl, rfl, he⟩ hs hw.1
+          exact ⟨o, hc, (SRel.pop (SRel.pop hr)).mono (fun _ => rfl) (fun _ => rfl) (fun _ => rfl)⟩)
+        (bss := entryBindings i x vs) ((hvs.zipIdx 0).map_left fun q p ⟨h, h2⟩ => ⟨q.1, by rw [← h2], h⟩) he hs.2
+      obtain ⟨out, h, hr⟩ := then_rest hfs hrest (conv_forEntries ha hl) hro hlen
+      refine ⟨out, h, ?_⟩
+      simp only [TStmts.denote, TStmts.falls, TStmts.breaks, TStmts.continues]
+      exact hr.mono (by flags) (by flags) (by flags)
+    | Γ, τ, .ite c yes no rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.safe, Bool.and_eq_true] at hs
+      simp only [TStmts.wf, Bool.and_eq_true] at hw
+      obtain ⟨wc, hcc, hwc⟩ := TExpr.adequate hfs hss c he (TExpr.ok hs.1)
+      simp only [Ty.Rep] at hwc; subst hwc
+      have hrest := fun envM ρ' (_ : envM.length = env.length) hrel hsafe =>
+        TStmts.adequate rest k ks (env := envM) (ρ := ρ') hrel hsafe hw.2
+      cases hb : c.denote fs ρ
+      · simp only [hb] at hs hcc
+        obtain ⟨o, hco, hro⟩ := TStmts.adequate no { k with normal := rest.denote fs k }
+          { ks with normal := rest.safe fs ss ks } he (by simpa using hs.2) hw.1.2
+        obtain ⟨out, h, hr⟩ := then_rest hfs hrest (conv_ite hcc (by simpa using hco)) hro.restore hro.restore_len
+        refine ⟨out, h, ?_⟩
+        simp only [TStmts.denote, hb, TStmts.falls, TStmts.breaks, TStmts.continues]
+        exact hr.mono (by flags) (by flags) (by flags)
+      · simp only [hb] at hs hcc
+        obtain ⟨o, hco, hro⟩ := TStmts.adequate yes { k with normal := rest.denote fs k }
+          { ks with normal := rest.safe fs ss ks } he (by simpa using hs.2) hw.1.1
+        obtain ⟨out, h, hr⟩ := then_rest hfs hrest (conv_ite hcc (by simpa using hco)) hro.restore hro.restore_len
+        refine ⟨out, h, ?_⟩
+        simp only [TStmts.denote, hb, TStmts.falls, TStmts.breaks, TStmts.continues]
+        exact hr.mono (by flags) (by flags) (by flags)
+    | Γ, τ, .block body rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.wf, Bool.and_eq_true] at hw
+      have hrest := fun envM ρ' (_ : envM.length = env.length) hrel hsafe =>
+        TStmts.adequate rest k ks (env := envM) (ρ := ρ') hrel hsafe hw.2
+      obtain ⟨o, hco, hro⟩ := TStmts.adequate body { k with normal := rest.denote fs k }
+        { ks with normal := rest.safe fs ss ks } he hs hw.1
+      exact then_rest hfs hrest (conv_block hco) hro.restore hro.restore_len
+    | Γ, τ, .ifNull v hσ yes no rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.wf, Bool.and_eq_true] at hw
+      have hcc := nullTest_converges hfs v hσ he
+      have hrest := fun envM ρ' (_ : envM.length = env.length) hrel hsafe =>
+        TStmts.adequate rest k ks (env := envM) (ρ := ρ') hrel hsafe hw.2
+      cases hx : v.get ρ with
+      | none =>
+        simp only [TStmts.safe, hx] at hs
+        simp only [hx, Option.isNone_none] at hcc
+        obtain ⟨o, hco, hro⟩ := TStmts.adequate yes { k with normal := rest.denote fs k }
+          { ks with normal := rest.safe fs ss ks } he hs hw.1.1
+        obtain ⟨out, h, hr⟩ := then_rest hfs hrest (conv_ite hcc (by simpa using hco)) hro.restore hro.restore_len
+        refine ⟨out, h, ?_⟩
+        simp only [TStmts.denote, hx, TStmts.falls, TStmts.breaks, TStmts.continues]
+        exact hr.mono (by flags) (by flags) (by flags)
+      | some y =>
+        simp only [TStmts.safe, hx] at hs
+        simp only [hx, Option.isNone_some] at hcc
+        obtain ⟨o, hco, hro⟩ := TStmts.adequate no (K.map (v.widen some) { k with normal := rest.denote fs k })
+          (K.map (v.widen some) { ks with normal := rest.safe fs ss ks }) (narrow_some hfs v he hx) hs hw.1.2
+        have hro' := SRel.widen some_embed hro
+        obtain ⟨out, h, hr⟩ := then_rest hfs hrest (conv_ite hcc (by simpa using hco)) hro'.restore
+          hro'.restore_len
+        refine ⟨out, h, ?_⟩
+        simp only [TStmts.denote, hx, TStmts.falls, TStmts.breaks, TStmts.continues]
+        exact hr.mono (by flags) (by flags) (by flags)
+    | Γ, τ, .ifNotNull v hσ yes no rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.wf, Bool.and_eq_true] at hw
+      have hcc := notNullTest_converges hfs v hσ he
+      have hrest := fun envM ρ' (_ : envM.length = env.length) hrel hsafe =>
+        TStmts.adequate rest k ks (env := envM) (ρ := ρ') hrel hsafe hw.2
+      cases hx : v.get ρ with
+      | none =>
+        simp only [TStmts.safe, hx] at hs
+        simp only [hx, Option.isSome_none] at hcc
+        obtain ⟨o, hco, hro⟩ := TStmts.adequate no { k with normal := rest.denote fs k }
+          { ks with normal := rest.safe fs ss ks } he hs hw.1.2
+        obtain ⟨out, h, hr⟩ := then_rest hfs hrest (conv_ite hcc (by simpa using hco)) hro.restore hro.restore_len
+        refine ⟨out, h, ?_⟩
+        simp only [TStmts.denote, hx, TStmts.falls, TStmts.breaks, TStmts.continues]
+        exact hr.mono (by flags) (by flags) (by flags)
+      | some y =>
+        simp only [TStmts.safe, hx] at hs
+        simp only [hx, Option.isSome_some] at hcc
+        obtain ⟨o, hco, hro⟩ := TStmts.adequate yes (K.map (v.widen some) { k with normal := rest.denote fs k })
+          (K.map (v.widen some) { ks with normal := rest.safe fs ss ks }) (narrow_some hfs v he hx) hs hw.1.1
+        have hro' := SRel.widen some_embed hro
+        obtain ⟨out, h, hr⟩ := then_rest hfs hrest (conv_ite hcc (by simpa using hco)) hro'.restore
+          hro'.restore_len
+        refine ⟨out, h, ?_⟩
+        simp only [TStmts.denote, hx, TStmts.falls, TStmts.breaks, TStmts.continues]
+        exact hr.mono (by flags) (by flags) (by flags)
+    | Γ, τ, .ifNullExit (x := x) v hσ yes rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.wf, Bool.and_eq_true, Bool.not_eq_true'] at hw
+      have hcc := nullTest_converges hfs v hσ he
+      cases hx : v.get ρ with
+      | none =>
+        simp only [TStmts.safe, hx] at hs
+        simp only [hx, Option.isNone_none] at hcc
+        obtain ⟨o, hco, hro⟩ := TStmts.adequate yes k ks he hs hw.1.2
+        have hn : ∀ e, o.restore env ≠ .normal e := by
+          intro e he'; cases o with
+          | normal _ => simp [SRel, hw.1.1] at hro
+          | _ => simp [Outcome.restore] at he'
+        refine ⟨_, conv_cons_exit (conv_ite hcc (by simpa using hco)) hn, ?_⟩
+        simp only [TStmts.denote, hx, TStmts.falls, TStmts.breaks, TStmts.continues]
+        exact hro.restore.mono (by flags) (by flags) (by flags)
+      | some y =>
+        simp only [TStmts.safe, hx] at hs
+        simp only [hx, Option.isNone_some] at hcc
+        obtain ⟨o, hco, hro⟩ := TStmts.adequate rest (k.map (v.widen some)) (ks.map (v.widen some))
+          (narrow_some hfs v he hx) hs hw.2
+        have hite : Converges (fun n => execStmt prog n env (.ite (nullTest x) yes.erase [])) (.ok (.normal env)) := by
+          have := conv_ite hcc (yes := yes.erase) (no := []) (by simpa using conv_nil (prog := prog) (env := env))
+          simpa [Outcome.restore, Ariadne.restore] using this
+        refine ⟨o, conv_cons_normal hite hco, ?_⟩
+        simp only [TStmts.denote, hx, TStmts.falls, TStmts.breaks, TStmts.continues]
+        exact (SRel.widen some_embed hro).mono (by flags) (by flags) (by flags)
+    | Γ, τ, .switchG (x := x) (key := key) (vs := vs) v hok arms rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.wf, Bool.and_eq_true] at hw
+      simp only [Bool.and_eq_true, Bool.not_eq_true'] at hok
+      have hrest := fun envM ρ' (_ : envM.length = env.length) hrel hsafe =>
+        TStmts.adequate rest k ks (env := envM) (ρ := ρ') hrel hsafe hw.2
+      obtain ⟨w, hl, kvs, rfl, hnd, hrep⟩ := v.lookup he
+      have hd : Converges (fun n => evalExpr prog n env (.field (.var x) key)) (.ok (fieldOf kvs key)) :=
+        Converges.of_succ 1 fun m hm => by
+          obtain ⟨m, rfl⟩ : ∃ k, m = k + 1 := ⟨m - 1, by omega⟩
+          simp [evalExpr, hl, bind, Except.bind, getField_record hok.2]
+      obtain ⟨t, fds, i, y, hu⟩ := VIdx.decomp vs (v.get ρ)
+      rw [hu] at hrep
+      rw [(i.rep_inj hrep).1] at hd
+      simp only [TStmts.safe, hu, Variants.elim_inj] at hs
+      rcases TArms.adequate arms { k with normal := rest.denote fs k, brk := rest.denote fs k }
+          { ks with normal := rest.safe fs ss ks, brk := rest.safe fs ss ks } i y kvs 0 (rest.denote fs k ρ)
+          (rest.safe fs ss ks ρ) he hl hnd hrep hok.1 hs hw.1 with
+        ⟨j, o, hf, hb, hro⟩ | ⟨hf, hden, hsafe, hnt, hnn⟩
+      · simp only [Nat.zero_add] at hf
+        obtain ⟨out, h, hr⟩ := then_rest hfs hrest (conv_switch hd hf hb) hro.restore.switch
+          (switchOutcome_len hro.restore_len hro.restore_len_broke)
+        refine ⟨out, h, ?_⟩
+        simp only [TStmts.denote, hu, Variants.elim_inj, TStmts.falls, TStmts.breaks, TStmts.continues]
+        exact hr.mono (by flags) (by flags) (by flags)
+      · have hcov : arms.covers = false := by
+          simp only [TArms.covers, Bool.or_eq_false_iff, List.all_eq_false]
+          exact ⟨by simpa using hnn, t, i.mem_tags, by simpa using hnt⟩
+        have ho : SRel Γ τ vd env (rest.denote fs k ρ) { k with normal := rest.denote fs k }
+            { ks with normal := rest.safe fs ss ks } true false false (.normal env) :=
+          ⟨rfl, [], env, ρ, rfl, rfl, he, rfl, show rest.safe fs ss ks ρ = true by rw [← hsafe]; exact hs⟩
+        obtain ⟨out, h, hr⟩ := then_rest hfs hrest (conv_switch_none hd hf) ho (fun e he' => by cases he'; rfl)
+        refine ⟨out, h, ?_⟩
+        simp only [TStmts.denote, hu, Variants.elim_inj, hden, TStmts.falls, TStmts.breaks, TStmts.continues, hcov]
+        exact hr.mono (by flags) (by flags) (by flags)
+
+  theorem TArms.first_adequate {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} :
+      ∀ (arms : TArms Φ Γ τ v) (k : K Γ τ.denote) (ks : K Γ Bool) {env : Env} {ρ : Γ.denote}, EnvRel Γ env ρ →
+        arms.firstSafe fs ss ks ρ = true → arms.wf vd = true → arms.nextOk = true →
+        ∃ out, Converges (fun n => execStmts prog n env (arms.erase.flatMap (·.2))) (.ok out) ∧
+          SRel Γ τ vd env (arms.first fs k ρ) k ks (arms.isNil || arms.falls) arms.breaks arms.continues out
+    | .nil, k, ks, env, ρ, he, hs, _, _ => ⟨_, conv_nil, rfl, [], env, ρ, rfl, rfl, he, rfl, hs⟩
+    | .empty l rest, k, ks, env, ρ, he, hs, hw, _ => by
+      simp only [TArms.wf, Bool.and_eq_true] at hw
+      obtain ⟨out, hc, hr⟩ := TArms.first_adequate rest k ks he hs hw.2 hw.1.2
+      exact ⟨out, by simpa [TArms.erase] using hc,
+        hr.mono (fun h => show (false || (rest.isNil || rest.falls)) = true by simpa using h) id id⟩
+    | .wide l body rest, k, ks, env, ρ, he, hs, hw, _ => by
+      simp only [TArms.wf, Bool.and_eq_true, Bool.or_eq_true, Bool.not_eq_true'] at hw
+      obtain ⟨o, hc, hr⟩ := TStmts.adequate body k ks he hs hw.1.2
+      refine ⟨o, ?_, ?_⟩
+      · rcases hw.1.1.2 with hnil | hnf
+        · cases rest with
+          | nil => simpa [TArms.erase] using hc
+          | _ => simp [TArms.isNil] at hnil
+        · have hn : ∀ e, o ≠ .normal e := fun e h => by subst h; simp [SRel, hnf] at hr
+          simpa [TArms.erase] using conv_append hc hn
+      · simp only [TArms.first, TArms.isNil, TArms.falls, TArms.breaks, TArms.continues]
+        exact hr.mono (by flags) (by flags) (by flags)
+    | .narrow .., _, _, _, _, _, _, _, hn => by simp [TArms.nextOk] at hn
+
+  /-- The case a variant selects: the first labelled with its tag, else the last
+  `default` (whose run is `d`), else none. -/
+  theorem TArms.adequate {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} :
+      ∀ (arms : TArms Φ Γ τ v) (k : K Γ τ.denote) (ks : K Γ Bool) {env : Env} {ρ : Γ.denote} {t : TagLit}
+        {fds : Fields} (i : VIdx vs0 t fds) (y : fds.denote) (kvs : List (String × JSValue)) (i0 : Nat)
+        (d : τ.denote) (dS : Bool),
+        EnvRel Γ env ρ → env.lookup x = some (.record kvs) → (kvs.map Prod.fst).Nodup →
+        vs0.Rep key kvs (i.inj y) → vs0.tagsOk = true → arms.safe fs ss ks ρ i y dS = true → arms.wf vd = true →
+        (∃ j out, Converges (fun n => findCase prog n env t.value arms.erase i0) (.ok (some (i0 + j))) ∧
+            Converges (fun n => execStmts prog n env ((arms.erase.drop j).flatMap (·.2))) (.ok out) ∧
+            SRel Γ τ vd env (arms.denote fs k ρ i y d) k ks arms.falls arms.breaks arms.continues out) ∨
+          (Converges (fun n => findCase prog n env t.value arms.erase i0) (.ok none) ∧
+            arms.denote fs k ρ i y d = d ∧ arms.safe fs ss ks ρ i y dS = dS ∧
+            some t ∉ arms.labels ∧ none ∉ arms.labels)
+    | .nil, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ =>
+      .inr ⟨Converges.of_succ 0 fun m _ => by simp [findCase, TArms.erase], rfl, rfl, by simp [TArms.labels],
+        by simp [TArms.labels]⟩
+    | .empty l rest, k, ks, env, ρ, t, fds, i, y, kvs, i0, d, dS, he, hl, hnd, hrep, hok, hs, hw => by
+      simp only [TArms.wf, Bool.and_eq_true] at hw
+      have hts := Variants.strTags_of_mem hok i.mem_tags
+      rcases l with _ | t'
+      · simp only [TArms.safe, TArms.denote, reduceCtorEq, ↓reduceIte] at hs ⊢
+        rcases TArms.adequate rest k ks i y kvs (i0 + 1) (rest.first fs k ρ) (rest.firstSafe fs ss ks ρ) he hl hnd hrep
+            hok hs hw.2 with ⟨j, out, hf, hb, hr⟩ | ⟨hf, hden, hsafe, _, _⟩
+        · have hf' := findCase_default (body := []) hf
+          simp only [Option.getD_some] at hf'
+          refine .inl ⟨j + 1, out, ?_, by simpa [TArms.erase] using hb, ?_⟩
+          · rw [show i0 + (j + 1) = i0 + 1 + j by omega]; simpa [TArms.erase] using hf'
+          · simp only [TArms.falls, TArms.breaks, TArms.continues]
+            exact hr.mono (by flags) (by flags) (by flags)
+        · have hf' := findCase_default (body := []) hf
+          simp only [Option.getD_none] at hf'
+          obtain ⟨out, hc, hr⟩ := TArms.first_adequate rest k ks he (by rw [← hsafe]; exact hs) hw.2 hw.1.2
+          refine .inl ⟨0, out, by simpa [TArms.erase] using hf', by simpa [TArms.erase] using hc, ?_⟩
+          rw [hden]
+          simp only [TArms.falls, TArms.breaks, TArms.continues]
+          exact hr.mono (by flags) (by flags) (by flags)
+      · have hlab : t'.isStr = vs0.strTags := by simpa using hw.1.1
+        have hb := TagLit.strictEq_value (a := t) (b := t') (by rw [hts, hlab])
+        by_cases heq : t = t'
+        · subst heq
+          simp only [TArms.safe, TArms.denote, ↓reduceIte] at hs ⊢
+          obtain ⟨out, hc, hr⟩ := TArms.first_adequate rest k ks he hs hw.2 hw.1.2
+          have hf := findCase_label (prog := prog) (env := env) (body := []) (rest := rest.erase) (i0 := i0) (r := none) hb
+            (fun h => by simp at h)
+          refine .inl ⟨0, out, by simpa [TArms.erase] using hf, by simpa [TArms.erase] using hc, ?_⟩
+          simp only [TArms.falls, TArms.breaks, TArms.continues]
+          exact hr.mono (by flags) (by flags) (by flags)
+        · have hne : (some t' = some t) = False := by simp [Ne.symm heq]
+          simp only [TArms.safe, TArms.denote, hne, reduceCtorEq, ↓reduceIte] at hs ⊢
+          rcases TArms.adequate rest k ks i y kvs (i0 + 1) d dS he hl hnd hrep hok hs hw.2 with
+            ⟨j, out, hf, hb', hr⟩ | ⟨hf, hden, hsafe, hnt, hnn⟩
+          · have hf' := findCase_label (prog := prog) (env := env) (body := []) hb (fun _ => hf)
+            simp only [heq, decide_false, Bool.false_eq_true, ↓reduceIte] at hf'
+            refine .inl ⟨j + 1, out, ?_, by simpa [TArms.erase] using hb', ?_⟩
+            · rw [show i0 + (j + 1) = i0 + 1 + j by omega]; simpa [TArms.erase] using hf'
+            · simp only [TArms.falls, TArms.breaks, TArms.continues]
+              exact hr.mono (by flags) (by flags) (by flags)
+          · have hf' := findCase_label (prog := prog) (env := env) (body := []) hb (fun _ => hf)
+            simp only [heq, decide_false, Bool.false_eq_true, ↓reduceIte] at hf'
+            exact .inr ⟨by simpa [TArms.erase] using hf', hden, hsafe, by simp [TArms.labels, heq, hnt],
+              by simp [TArms.labels, hnn]⟩
+    | .wide l body rest, k, ks, env, ρ, t, fds, i, y, kvs, i0, d, dS, he, hl, hnd, hrep, hok, hs, hw => by
+      simp only [TArms.wf, Bool.and_eq_true, Bool.or_eq_true, Bool.not_eq_true'] at hw
+      have hts := Variants.strTags_of_mem hok i.mem_tags
+      -- Running this case's body (and, if it is the last, nothing after it).
+      have hrun : body.safe fs ss ks ρ = true → ∃ out,
+          Converges (fun n => execStmts prog n env ((TArms.wide l body rest).erase.flatMap (·.2))) (.ok out) ∧
+          SRel Γ τ vd env (body.denote fs k ρ) k ks (TArms.wide l body rest).falls (TArms.wide l body rest).breaks
+            (TArms.wide l body rest).continues out := fun hsb => by
+        obtain ⟨o, hco, hro⟩ := TStmts.adequate body k ks he hsb hw.1.2
+        refine ⟨o, ?_, hro.mono (fun h => by simp [TArms.falls, h]) (fun h => by simp [TArms.breaks, h])
+          (fun h => by simp [TArms.continues, h])⟩
+        rcases hw.1.1.2 with hnil | hnf
+        · cases rest with
+          | nil => simpa [TArms.erase] using hco
+          | _ => simp [TArms.isNil] at hnil
+        · have hn : ∀ e, o ≠ .normal e := fun e h => by subst h; simp [SRel, hnf] at hro
+          simpa [TArms.erase] using conv_append hco hn
+      rcases l with _ | t'
+      · simp only [TArms.safe, TArms.denote, reduceCtorEq, ↓reduceIte] at hs ⊢
+        rcases TArms.adequate rest k ks i y kvs (i0 + 1) (body.denote fs k ρ) (body.safe fs ss ks ρ) he hl hnd hrep
+            hok hs hw.2 with ⟨j, out, hf, hb, hr⟩ | ⟨hf, hden, hsafe, _, _⟩
+        · have hf' := findCase_default (body := body.erase) hf
+          simp only [Option.getD_some] at hf'
+          refine .inl ⟨j + 1, out, ?_, by simpa [TArms.erase] using hb, ?_⟩
+          · rw [show i0 + (j + 1) = i0 + 1 + j by omega]; simpa [TArms.erase] using hf'
+          · simp only [TArms.falls, TArms.breaks, TArms.continues]
+            exact hr.mono (by flags) (by flags) (by flags)
+        · have hf' := findCase_default (body := body.erase) hf
+          simp only [Option.getD_none] at hf'
+          obtain ⟨out, hc, hr⟩ := hrun (by rw [← hsafe]; exact hs)
+          refine .inl ⟨0, out, by simpa [TArms.erase] using hf', by simpa using hc, ?_⟩
+          rw [hden]; exact hr
+      · have hlab : t'.isStr = vs0.strTags := by simpa using hw.1.1.1
+        have hb := TagLit.strictEq_value (a := t) (b := t') (by rw [hts, hlab])
+        by_cases heq : t = t'
+        · subst heq
+          simp only [TArms.safe, TArms.denote, ↓reduceIte] at hs ⊢
+          obtain ⟨out, hc, hr⟩ := hrun hs
+          have hf := findCase_label (prog := prog) (env := env) (body := body.erase) (rest := rest.erase) (i0 := i0) (r := none) hb
+            (fun h => by simp at h)
+          exact .inl ⟨0, out, by simpa [TArms.erase] using hf, by simpa using hc, hr⟩
+        · have hne : (some t' = some t) = False := by simp [Ne.symm heq]
+          simp only [TArms.safe, TArms.denote, hne, reduceCtorEq, ↓reduceIte] at hs ⊢
+          rcases TArms.adequate rest k ks i y kvs (i0 + 1) d dS he hl hnd hrep hok hs hw.2 with
+            ⟨j, out, hf, hb', hr⟩ | ⟨hf, hden, hsafe, hnt, hnn⟩
+          · have hf' := findCase_label (prog := prog) (env := env) (body := body.erase) hb (fun _ => hf)
+            simp only [heq, decide_false, Bool.false_eq_true, ↓reduceIte] at hf'
+            refine .inl ⟨j + 1, out, ?_, by simpa [TArms.erase] using hb', ?_⟩
+            · rw [show i0 + (j + 1) = i0 + 1 + j by omega]; simpa [TArms.erase] using hf'
+            · simp only [TArms.falls, TArms.breaks, TArms.continues]
+              exact hr.mono (by flags) (by flags) (by flags)
+          · have hf' := findCase_label (prog := prog) (env := env) (body := body.erase) hb (fun _ => hf)
+            simp only [heq, decide_false, Bool.false_eq_true, ↓reduceIte] at hf'
+            exact .inr ⟨by simpa [TArms.erase] using hf', hden, hsafe, by simp [TArms.labels, heq, hnt],
+              by simp [TArms.labels, hnn]⟩
+    | .narrow (t := t') (fs := fs') i' body rest, k, ks, env, ρ, t, fds, i, y, kvs, i0, d, dS, he, hl, hnd, hrep,
+        hok, hs, hw => by
+      simp only [TArms.wf, Bool.and_eq_true, Bool.or_eq_true, Bool.not_eq_true'] at hw
+      have hts := Variants.strTags_of_mem hok i.mem_tags
+      have hts' := Variants.strTags_of_mem hok i'.mem_tags
+      have hb := TagLit.strictEq_value (a := t) (b := t') (by rw [hts, hts'])
+      have ht := (i.rep_inj hrep).1
+      cases hp : i'.proj (i.inj y) with
+      | some y' =>
+        obtain ⟨ht', hy'⟩ := i'.rep_proj hrep hp
+        have heq : t = t' := TagLit.value_inj (ht.symm.trans ht')
+        simp only [TArms.safe, TArms.denote, hp] at hs ⊢
+        have hrel : EnvRel (v.narrow (vrec key t' fs')) env (v.narrowVal ρ ((), y')) :=
+          v.narrowRel he fun w hw' _ => by rw [hl] at hw'; cases hw'; exact vrec_rep hnd ht' hy'
+        obtain ⟨o, hco, hro⟩ := TStmts.adequate body (k.map (v.widen fun z => i'.inj z.2))
+          (ks.map (v.widen fun z => i'.inj z.2)) hrel hs hw.1.2
+        have hf := findCase_label (prog := prog) (env := env) (body := body.erase) (rest := rest.erase) (i0 := i0) (r := none) hb
+          (fun h => by simp [heq] at h)
+        refine .inl ⟨0, o, by simpa [TArms.erase, heq] using hf, ?_, ?_⟩
+        · rcases hw.1.1 with hnil | hnf
+          · cases rest with
+            | nil => simpa [TArms.erase] using hco
+            | _ => simp [TArms.isNil] at hnil
+          · have hn : ∀ e, o ≠ .normal e := fun e h => by subst h; simp [SRel, hnf] at hro
+            simpa [TArms.erase] using conv_append hco hn
+        · have := SRel.widen (fun w z hz => by
+            obtain ⟨kvs', rfl, hnd', ht'', hz'⟩ := hz
+            exact ⟨kvs', rfl, hnd', i'.rep ht'' hz'⟩) hro
+          simp only [TArms.falls, TArms.breaks, TArms.continues]
+          exact this.mono (by flags) (by flags) (by flags)
+      | none =>
+        have hne := i'.proj_none hok hrep hp
+        have heq : t ≠ t' := fun h => hne (h ▸ ht)
+        simp only [TArms.safe, TArms.denote, hp] at hs ⊢
+        rcases TArms.adequate rest k ks i y kvs (i0 + 1) d dS he hl hnd hrep hok hs hw.2 with
+          ⟨j, out, hf, hb', hr⟩ | ⟨hf, hden, hsafe, hnt, hnn⟩
+        · have hf' := findCase_label (prog := prog) (env := env) (body := body.erase) hb (fun _ => hf)
+          simp only [heq, decide_false, Bool.false_eq_true, ↓reduceIte] at hf'
+          refine .inl ⟨j + 1, out, ?_, by simpa [TArms.erase] using hb', ?_⟩
+          · rw [show i0 + (j + 1) = i0 + 1 + j by omega]; simpa [TArms.erase] using hf'
+          · simp only [TArms.falls, TArms.breaks, TArms.continues]
+            exact hr.mono (by flags) (by flags) (by flags)
+        · have hf' := findCase_label (prog := prog) (env := env) (body := body.erase) hb (fun _ => hf)
+          simp only [heq, decide_false, Bool.false_eq_true, ↓reduceIte] at hf'
+          exact .inr ⟨by simpa [TArms.erase] using hf', hden, hsafe, by simp [TArms.labels, heq, hnt],
+            by simp [TArms.labels, hnn]⟩
+end
+
+end
+
+end Ariadne

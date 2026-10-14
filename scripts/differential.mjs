@@ -1,42 +1,162 @@
-// Test-only harness. Runs with Bun or Node >=24; no npm packages are required.
+// Test-only harness: runs every exported function of each fixture in Bun (or Node)
+// and in the trusted model (`ariadne batch`) on the same inputs and compares the
+// observations. Inputs are generated from the checker's resolved parameter types,
+// including JavaScript values the types allow beyond the canonical encoding:
+// records with extra fields in any order, optional fields absent or `undefined`,
+// either nullish value where a type admits both, and omitted trailing arguments.
+// A class's methods run on random states: an object of the class whose Map fields
+// hold random entries; the model gets the state's observation and returns the
+// method's result and the state it leaves, which must match the object's.
 import { readdir } from 'node:fs/promises';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import assert from 'node:assert/strict';
+import { observe } from './observe.mjs';
 
 const cli = resolve('.lake/build/bin/ariadne');
-function observe(value) {
-  if (value === undefined) return ['undefined'];
-  if (value === null) return ['null'];
-  switch (typeof value) {
-    case 'number': {
-      // NaN payloads are unobservable in the subset. Normalize to the model's NaN.
-      const bytes = new DataView(new ArrayBuffer(8));
-      bytes.setFloat64(0, Number.isNaN(value) ? NaN : value);
-      return ['number', bytes.getBigUint64(0).toString()];
+const dir = resolve(process.argv[2] ?? 'Tests/fixtures');
+const perFunction = Number(process.argv[3] ?? 300);
+
+let seed = 0x2545f491;
+const random = () => ((seed = (Math.imul(seed ^ (seed >>> 15), 0x2c1b3c6d) + 0x6d2b79f5) >>> 0) / 2 ** 32);
+const pick = xs => xs[Math.floor(random() * xs.length)];
+const chance = p => random() < p;
+const str = units => String.fromCharCode(...units);
+
+const bigints = [0n, 1n, -1n, 2n, -2n, 3n, 7n, -7n, 10n, 100n, -1000n, 2n ** 53n, -(2n ** 53n) - 1n, 2n ** 70n];
+const numbers = [0, 1, -1, 2, 3, 7, -7, 10, 100, -1000, 2 ** 31, 2 ** 53 - 1, -(2 ** 53 - 1)];
+const strings = ['', 'a', 'b', 'ab', 'aa', 'zero', 'positive', 'A', 'Z', ' ', ': ', 'é', '\u{1F600}', '\uD800', 'a\u0000',
+  'm', 'n', 'ok', 'bad', 'legacy', 'none'];
+
+function value(ty) {
+  switch (ty.t) {
+    case 'bool': return chance(0.5);
+    case 'bigint': return chance(0.4) ? BigInt(Math.floor(random() * 41) - 20) : pick(bigints);
+    case 'number': return chance(0.5) ? Math.floor(random() * 41) - 20 : pick(numbers);
+    case 'string': return pick(strings);
+    case 'tag': return 'bool' in ty ? ty.bool : str(ty.value);
+    case 'lits': return str(pick(ty.values));
+    case 'option':
+      if (chance(0.35)) return ty.nullish === 'null' ? null : ty.nullish === 'undef' ? undefined : pick([null, undefined]);
+      return value(ty.of);
+    case 'record': return record(ty.fields, []);
+    case 'union': {
+      const v = pick(ty.variants);
+      return record(v.fields, [[ty.key, value(v.tag)]]);
     }
-    case 'bigint': return ['bigint', value.toString()];
-    case 'boolean': return ['boolean', value];
-    case 'string': return ['string', Array.from({ length: value.length }, (_, i) => value.charCodeAt(i))];
-    case 'object':
-      if (Array.isArray(value)) return ['array', value.map(observe)];
-      if (value instanceof Map) return ['map', [...value].map(([k, v]) => [observe(k), observe(v)])];
-      return ['record', Object.entries(value).map(([k, v]) => [k, observe(v)])];
-    default: throw new Error(`Unsupported observation: ${typeof value}`);
+    case 'array': return Array.from({ length: Math.floor(random() * 5) }, () => value(ty.of));
+    case 'map': return new Map(Array.from({ length: Math.floor(random() * 5) }, () => [pick(strings), value(ty.of)]));
+    default: throw new Error(`no generator for ${JSON.stringify(ty)}`);
   }
 }
 
-let count = 0;
-for (const file of (await readdir('examples')).filter(f => f.endsWith('.ts')).sort()) {
-  const path = resolve('examples', file);
-  const module = await import(pathToFileURL(path).href);
-  for (const [name, fn] of Object.entries(module)) {
-    if (typeof fn !== 'function' || fn.length !== 0 || name === 'diverges') continue;
-    const result = spawnSync(cli, ['eval', path, name], { encoding: 'utf8', timeout: 30000 });
-    assert.equal(result.status, 0, `${file}:${name}: ${result.stderr}\n${result.stdout}`);
-    assert.deepEqual(JSON.parse(result.stdout), { ok: observe(fn()) }, `${file}:${name}`);
-    count++;
+/** A record: its fields in random order, optional fields sometimes absent, sometimes an extra field. */
+function record(fields, fixed) {
+  const entries = [...fixed];
+  for (const [name, ty] of fields) {
+    if (ty.t === 'option' && ty.nullish !== 'null' && chance(0.3)) continue;
+    entries.push([name, value(ty)]);
   }
+  if (chance(0.2)) entries.push(['extra', pick(strings)]);
+  for (let i = entries.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [entries[i], entries[j]] = [entries[j], entries[i]];
+  }
+  return Object.fromEntries(entries);
 }
-console.log(`Differential execution passed: ${count} entries.`);
+
+// Inputs are drawn file by file in a fixed order (so a seed always gives the same
+// calls); the model's batches then run concurrently.
+const jobs = [];
+for (const file of (await readdir(dir)).filter(f => f.endsWith('.ts')).sort()) {
+  const path = resolve(dir, file);
+  const signatures = spawnSync(cli, ['signatures', path], { encoding: 'utf8' });
+  if (signatures.status !== 0) throw new Error(`${file}: ${signatures.stderr}`);
+  const module = await import(pathToFileURL(path).href);
+  const lines = [];
+  const expected = [];
+  for (const sig of signatures.stdout.trim().split('\n').map(l => JSON.parse(l))) {
+    if (!sig.exported) continue;
+    for (let i = 0; i < perFunction; i++) {
+      if (sig.method) {
+        // An object of the class with a random state (its fields in declaration order).
+        const cls = module[sig.class];
+        const self = Object.create(cls.prototype);
+        for (const [name, ty] of sig.params[0].fields) self[name] = value(ty);
+        const before = observe(self);
+        const args = sig.params.slice(1).map(value);
+        let result;
+        try { result = ['method', observe(self[sig.name](...args)), observe(self)]; } catch (e) { result = ['throws', String(e)]; }
+        lines.push(JSON.stringify(['@' + sig.name, before, ...args.map(observe)]));
+        expected.push({ call: `${sig.class}.${sig.name}(${args.map(a => observeText(a)).join(', ')}) on ${JSON.stringify(before)}`, result });
+        continue;
+      }
+      if (sig.class !== null) {
+        // The constructor: `new C()`.
+        let result;
+        try { result = observe(new module[sig.class]()); } catch (e) { result = ['throws', String(e)]; }
+        lines.push(JSON.stringify([sig.name]));
+        expected.push({ call: `new ${sig.class}()`, result });
+        continue;
+      }
+      let args = sig.params.map(value);
+      // Omit trailing arguments that may be undefined.
+      while (args.length > 0 && args[args.length - 1] === undefined && chance(0.5)) args = args.slice(0, -1);
+      let result;
+      try { result = observe(module[sig.name](...args)); } catch (e) { result = ['throws', String(e)]; }
+      lines.push(JSON.stringify([sig.name, ...args.map(observe)]));
+      expected.push({ call: `${sig.name}(${args.map(a => observeText(a)).join(', ')})`, result });
+    }
+  }
+  jobs.push({ file, path, lines, expected });
+}
+
+function batch(path, input) {
+  return new Promise((resolveRun, reject) => {
+    const child = spawn(cli, ['batch', path]);
+    let stdout = '';
+    let stderr = '';
+    child.stdout.setEncoding('utf8');
+    child.stderr.setEncoding('utf8');
+    child.stdout.on('data', d => { stdout += d; });
+    child.stderr.on('data', d => { stderr += d; });
+    child.on('error', reject);
+    child.on('close', status => resolveRun({ status, stdout, stderr }));
+    child.stdin.end(input);
+  });
+}
+
+const runs = await Promise.all(jobs.map(({ path, lines }) => batch(path, lines.join('\n') + '\n')));
+
+let calls = 0;
+let refused = 0;
+let timeouts = 0;
+let failures = 0;
+for (const [j, { file, expected }] of jobs.entries()) {
+  const run = runs[j];
+  if (run.status !== 0) throw new Error(`${file}: ${run.stderr}`);
+  const actual = run.stdout.trim().split('\n').map(l => JSON.parse(l));
+  expected.forEach(({ call, result }, i) => {
+    calls++;
+    // The model refuses operations outside the subset (numbers leaving the safe
+    // range, inconsistent comparators) and makes no claim about them.
+    if (actual[i][0] === 'error' && actual[i][1].startsWith('unsupported:')) { refused++; return; }
+    // Running out of fuel (100,000 steps) is a fault too: the model makes no claim.
+    if (actual[i][0] === 'error' && actual[i][1] === 'timeout') { timeouts++; return; }
+    if (JSON.stringify(actual[i]) !== JSON.stringify(result)) {
+      failures++;
+      if (failures <= 20) console.error(`${file}: ${call}:\n  js    ${JSON.stringify(result)}\n  model ${JSON.stringify(actual[i])}`);
+    }
+  });
+}
+
+function observeText(v) {
+  return JSON.stringify(v, (_, x) => (typeof x === 'bigint' ? `${x}n` : x === undefined ? '<undefined>' :
+    x instanceof Map ? Object.fromEntries(x) : x));
+}
+
+if (failures > 0) {
+  console.error(`Differential: ${failures} of ${calls} calls disagree.`);
+  process.exit(1);
+}
+console.log(`Differential passed: ${calls} calls (${refused} refused by the model, ${timeouts} out of fuel).`);

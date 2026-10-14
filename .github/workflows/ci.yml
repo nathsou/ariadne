@@ -7,19 +7,16 @@ permissions:
   contents: read
 
 jobs:
+  # The general theorem, kernel-checked fixtures, the model against JavaScript,
+  # differential and negative tests, and the axiom audit.
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
-      - name: Install the pinned Lean toolchain
-        shell: bash
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -o /tmp/elan-init.sh
-          sh /tmp/elan-init.sh -y --default-toolchain none
-          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: '1.3.5'
-      - name: Kernel proofs, regeneration, axiom audit, and native differential tests
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Install checksum-pinned Lean and Bun
+        run: bash scripts/install-ci-tools.sh
+      # No build cache: Lean imports compiled modules without re-checking their
+      # proofs, so every module this run reports as checked is built here.
+      - name: Check
         run: scripts/check.sh

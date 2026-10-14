@@ -1,82 +1,79 @@
 # Ariadne
 
-A dependency-free Lean 4 frontend, scalar compiler, and executable-model translator
-for a restricted TypeScript dialect. The lexer, parser, checker, heap model, command-line
-tool, and proof library are written in Lean. Native JavaScript is used only by tests
-and the optional host bootstrap.
+Ariadne translates a subset of TypeScript into readable Lean 4 definitions, together with
+**one correctness theorem, proved once in Lean**: for every program it accepts, running the
+TypeScript (in a small, executable model of JavaScript) gives exactly what the generated
+definitions compute. Properties proved about the definitions therefore hold of the TypeScript
+code, with no proof work per program.
 
-**Status:** experimental, with a verified scalar compiler and a larger source-bound
-operational translation. The frontend accepts functions, local mutation, `while`/`for`, native dense arrays and Maps, typed callbacks,
-`number`, `bigint`, UTF-16 strings, booleans, optional values, records, and tuples.
-`compile` emits proved-correct Lean function combinators for a smaller scalar
-fragment; `translate`/`certify` emit the larger operational model. The compiler still
-uses explicit cells and fuel. Read [the proof boundary](docs/TRUST.md) before using
-its theorems as claims about a deployed JavaScript program.
+Each translated file carries, for every function `f`, a kernel-checked theorem `«f».source`
+about the source text itself: on any JavaScript arguments representing its inputs, and when
+`f`'s safety condition holds (integer arithmetic stays within ±(2^53 − 1); sort comparators are
+consistent), every run of `f` converges to a value representing the readable definition's
+result.
+
+The motivating user is the verified kernel of [nathsou/drive](https://github.com/nathsou/drive):
+its `trust.ts`, `registers.ts` and `tree.ts` translate (the last two unchanged), and their main
+properties are proved in `Tests/*Spec.lean`.
 
 ## Build and use
 
-Install [elan](https://github.com/leanprover/elan); the repository pins Lean 4.34.1.
-There are no Lake or npm dependencies.
+The repository pins Lean 4.35.0 (`lean-toolchain`) and has no Lake or npm dependencies. CI
+downloads Lean and Bun 1.4.3 with reviewed SHA-256 hashes (`scripts/install-ci-tools.sh`).
 
 ```sh
 lake build ariadne
-.lake/build/bin/ariadne check examples/fibonacci.ts
-.lake/build/bin/ariadne check examples/negative/alias.ts --json
-.lake/build/bin/ariadne eval examples/fibonacci.ts demo
-.lake/build/bin/ariadne certify examples/fibonacci.ts \
-  --out work/Fibonacci.lean --namespace Fibonacci
-.lake/build/bin/ariadne compile examples/scalar/multiply.ts multiply \
-  --out work/Multiply.lean --namespace Multiply
+.lake/build/bin/ariadne translate file.ts --out Out.lean --namespace Out
+lake env lean Out.lean      # kernel-checks the translation and its theorems
+scripts/check.sh            # everything CI runs (needs Bun, or Node 24+)
 ```
 
-Run commands from this repository's root. `compile` and `certify` need `lake` on
-`PATH` and invoke `lake env lean` to check its output. `translate` only writes an **uncertified candidate**;
-`check` only accepts or rejects the subset. Neither silently claims certification.
-The original TypeScript can run directly in a conforming controlled JavaScript realm.
+`translate` writes the source's syntax tree, its typed version, readable definitions, safety
+conditions and one source theorem per function. `ariadne batch FILE` evaluates calls in the
+model (a test oracle), and `ariadne signatures FILE` prints the exported signatures.
 
-For all checks, install Bun (CI pins 1.3.5), or use Node 24+:
+## What is proved, and what is trusted
 
-```sh
-scripts/check.sh
+`Ariadne.adequacy` (`Ariadne/Proof/Adequacy.lean`) is proved by induction on typed syntax, once
+for every program. Per file, the kernel only checks structural equations: that the typed program
+erases to the parsed one, that it is well formed, and that the printed definitions are its
+denotation.
+
+`lake exe audit` is the soundness gate:
+- every declaration re-checks with Lean's kernel;
+- every theorem uses only `propext`, `Classical.choice` and `Quot.sound` (no `sorry`);
+- nothing a theorem depends on is `partial`, `unsafe`, `implemented_by` or `extern`;
+- the trusted base is exactly what `trusted.lock` records: the model, the relations the theorems state
+  results in, and the theorems' statements. A change to any of it is a change to that file, to review.
+
+Trusted:
+
+- Lean's kernel;
+- the model of JavaScript (`Ariadne/Model`), tested against Bun on 41,700 calls
+  (`scripts/differential.mjs`) and on hand-written cases (`scripts/model.mjs`);
+- the parser and the converter to the model's syntax (`Ariadne/Parse`, `Ariadne/Front/Convert.lean`).
+
+The type checker, the printer and every tactic are untrusted: a bug in any of them makes a
+per-file check fail, never a wrong theorem.
+
+## Using Ariadne in a project
+
+Require it in the project's `lakefile.toml`, pinned to a commit:
+
+```toml
+[[require]]
+name = "ariadne"
+git = "https://github.com/nathsou/ariadne"
+rev = "<commit>"
 ```
 
-The script builds certificates serially to bound peak memory, checks generated files
-against their sources, audits theorem dependencies, and runs native comparisons.
-No JavaScript engine is needed to build the translator or check Lean proofs.
-
-## What is proved
-
-Each generated module embeds the exact source, characters, tokens, and AST. Its kernel-checked
-lexer, parser, and checker equations establish that these artifacts belong together.
-Transfer theorems connect properties of its operational model to that source text.
-The printer and native translator executable are outside this correctness chain.
-
-The scalar compiler carries semantic equality proofs for every successful result.
-Its emitted function is kernel-checked against that compiler result. The
-[compiled multiplication proof](Examples/Proofs/Compiled.lean) covers arbitrary
-integers, an explicit termination bound, and every larger fuel budget.
-
-The proof library also proves fuel stability and deterministic completed outcomes
-for the full evaluator, a general loop-invariant rule, Map lookup/update laws,
-and conditional equivalences from modeled `Array.map`/`reduce` to Lean
-`List.map`/`foldl`. The [arithmetic examples](Examples/Proofs/Arithmetic.lean) prove
-absolute value, maximum, and clamp properties for arbitrary integers. The
-[execution examples](Examples/Proofs/Executions.lean) prove concrete terminating runs
-of Fibonacci, Euclid, exponentiation, binary search, insertion sort, histograms,
-callbacks, and Unicode operations, including final collection contents.
-
-This does **not** prove that the handwritten grammar is the ECMAScript specification,
-that the checker is sound for all accepted programs, or that a JavaScript engine
-implements the model. Fuel exhaustion is inconclusive. Dynamic array bounds and
-incoming heap/realm assumptions remain explicit obligations.
+Translate each TypeScript file with `lake exe ariadne translate`, check the generated files in, and
+prove properties of the readable definitions. `Ariadne.Audit.run` gives the project the same soundness
+gate, with its own lock: for example, every proposition defined under `Spec` must be proved exactly by
+the theorem of the same name under `Proofs`, and the lock records every statement, so a changed
+statement is a visible change in review.
 
 ## Documentation
 
-- [Language and supported operations](docs/LANGUAGE.md)
-- [Scalar compiler and proof workflow](docs/COMPILER.md)
-- [Native runtime and ownership contract](docs/RUNTIME.md)
-- [Proof coverage and trusted boundary](docs/TRUST.md)
-- [Diagnostics and editor payloads](docs/DIAGNOSTICS.md)
-- [Architecture and development](docs/ARCHITECTURE.md)
-- [Performance consequences](docs/PERFORMANCE.md)
-- [Implementation stages and remaining research](docs/IMPLEMENTATION.md)
+- [Design: the model, the typed syntax, the theorem and the per-file checks](docs/DESIGN.md)
+- [Language: what is accepted, what is refused, and drive's kernel](docs/LANGUAGE.md)

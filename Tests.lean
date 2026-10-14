@@ -1,3 +1,12 @@
-import Tests.Frontend
-import Tests.Scalars
-import Tests.Fuel
+import Tests.Generated.Basics
+import Tests.Generated.Records
+import Tests.Generated.Arrays
+import Tests.Generated.Loops
+import Tests.Generated.Classes
+import Tests.Generated.Registers
+import Tests.Generated.Tree
+import Tests.Generated.Trust
+import Tests.Properties
+import Tests.RegistersSpec
+import Tests.TreeSpec
+import Tests.TrustSpec
