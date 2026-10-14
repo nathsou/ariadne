@@ -219,4 +219,34 @@ theorem sortedBy_strict {α : Type} {cmp : α → α → Int} (h : CmpLaws cmp) 
   · exact hlt
   · exact absurd (hz _ _ heq) hne
 
+/-- Two lists ordered by an antisymmetric relation that hold the same elements are the same list. -/
+theorem eq_of_perm_of_pairwise {α : Type} {r : α → α → Prop} (anti : ∀ a b, r a b → r b a → a = b) :
+    ∀ {l1 l2 : List α}, l1.Perm l2 → l1.Pairwise r → l2.Pairwise r → l1 = l2
+  | [], [], _, _, _ => rfl
+  | [], _ :: _, h, _, _ => by have := h.length_eq; simp at this
+  | _ :: _, [], h, _, _ => by have := h.length_eq; simp at this
+  | a :: t1, b :: t2, h, h1, h2 => by
+    have hab : a = b := by
+      have ha : a ∈ b :: t2 := h.subset (List.mem_cons_self ..)
+      have hb : b ∈ a :: t1 := h.symm.subset (List.mem_cons_self ..)
+      rcases List.mem_cons.mp ha with e | ha'
+      · exact e
+      rcases List.mem_cons.mp hb with e | hb'
+      · exact e.symm
+      exact anti a b (List.rel_of_pairwise_cons h1 hb') (List.rel_of_pairwise_cons h2 ha')
+    subst hab
+    rw [eq_of_perm_of_pairwise anti ((List.perm_cons a).mp h) h1.of_cons h2.of_cons]
+
+/-- When the comparator tells distinct elements apart, `toSorted` of an array without repeats only
+depends on which elements it holds. -/
+theorem sortedBy_congr {α : Type} {cmp : α → α → Int} (h : CmpLaws cmp) (hz : ∀ a b, cmp a b = 0 → a = b)
+    {xs ys : List α} (hp : xs.Perm ys) (hnd : xs.Nodup) : sortedBy cmp xs = sortedBy cmp ys := by
+  refine eq_of_perm_of_pairwise (r := fun a b => cmp a b < 0) (fun a b h1 h2 => ?_)
+    ((sortedBy_perm cmp xs).trans (hp.trans (sortedBy_perm cmp ys).symm))
+    (sortedBy_strict h hz hnd) (sortedBy_strict h hz (hp.nodup_iff.mp hnd))
+  have := h.antisymm a b
+  rw [show sign (cmp a b) = -1 from by unfold sign; simp [h1], show sign (cmp b a) = -1 from by unfold sign; simp [h2]]
+    at this
+  omega
+
 end Ariadne

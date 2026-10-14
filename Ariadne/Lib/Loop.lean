@@ -16,6 +16,12 @@ theorem forIn_nil {α σ R : Type} (step : α → (σ → R) → (σ → R) → 
 theorem forIn_cons {α σ R : Type} (y : α) (ys : List α) (step : α → (σ → R) → (σ → R) → σ → R)
     (exit : σ → R) (s : σ) : forIn (y :: ys) step exit s = step y (forIn ys step exit) exit s := rfl
 
+/-- A loop whose every iteration only updates the state and continues is a fold. -/
+theorem forIn_fold {α σ R : Type} (g : α → σ → σ) (exit : σ → R) :
+    ∀ (items : List α) (s : σ), forIn items (fun y next _ s => next (g y s)) exit s = exit (items.foldl (fun s y => g y s) s)
+  | [], _ => rfl
+  | y :: ys, s => forIn_fold g exit ys (g y s)
+
 /-- An invariant of a loop: if every iteration, from a state satisfying `P`, ends in `Q` provided continuing
 and leaving do, and leaving from `P` ends in `Q`, then the loop does. -/
 theorem forIn_inv {α σ R : Type} (P : σ → Prop) (Q : R → Prop) {step : α → (σ → R) → (σ → R) → σ → R}

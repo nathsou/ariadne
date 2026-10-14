@@ -1,6 +1,7 @@
 import Tests.Generated.Tree
 import Ariadne.Lib.Loop
-import Tests.RegistersSpec
+import Ariadne.Lib.Map
+import Ariadne.Lib.String
 
 /-!
 # Properties of drive's file tree
@@ -25,7 +26,6 @@ because a longer walk back to the node repeats a node and so has a shorter one.
 namespace Tests.TreeSpec
 
 open Ariadne Tests.Generated.Tree
-open Tests.RegistersSpec (strLt_irrefl strLt_asymm strLt_total strLt_trans mapGet_mapPut mapPut_mapPut)
 
 abbrev State := ty.«Tree».denote
 

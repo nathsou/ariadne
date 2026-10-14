@@ -91,14 +91,17 @@ def Types.name (T : Types) (τ : Ty) : Option String := (T.named.find? (·.2 == 
 
 def Types.print (T : Types) (τ : Ty) : String := printTyWith T.name τ
 
+/-- A type as an argument: parenthesized unless it is one word. -/
+def atomText (x : String) : String := if x.contains ' ' then s!"({x})" else x
+
 /-- The Lean type of a denoted value. -/
 partial def Types.lean (T : Types) : Ty → String
   | .bool => "Bool" | .int => "Int" | .number => "Int" | .string => "JSString"
   | τ => match (T.named.find? (·.2 == τ)).map (·.1), τ with
     | some n, _ => if T.readable.contains n then ident n else s!"ty.{ident n}.denote"
-    | none, .array σ => s!"List ({T.lean σ})"
+    | none, .array σ => s!"List {atomText (T.lean σ)}"
     | none, .map σ => s!"List (JSString × {T.lean σ})"
-    | none, .option _ σ => s!"Option ({T.lean σ})"
+    | none, .option _ σ => s!"Option {atomText (T.lean σ)}"
     | none, _ => s!"(({T.print τ} : Ty)).denote"
 
 def Fields.toList : Fields → List (String × Ty)
@@ -1390,38 +1393,58 @@ def tagName : TagLit → Option String
   | .str s => litName s
   | .bool b => some (toString b)
 
-/-- Readable names for the named types: an alias `«T»` for the denoted type; for a record, an accessor
-`«T».«f»` per field; for a literal union, a constant `«T».«lit»` per literal; for a union of records,
-a payload type `«T».Variant.«tag»` with its accessors, and a constructor `«T».«tag»` per variant.
-All are reducible, so they unfold to the projections and injections readable definitions use. -/
+/-- Readable names for the named types: an alias `«T»` for the denoted type, written as the product,
+sum or `Fin` it is; for a record, an accessor `«T».«f»` per field; for a literal union, a constant
+`«T».«lit»` per literal; for a union of records, a payload type `«T».Variant.«tag»` with its
+accessors, and a constructor `«T».«tag»` per variant.
+All are reducible and in the simp set `readable`, so they unfold to the projections, numerals and
+injections readable definitions use. -/
 def readableNames (T : Types) : String := Id.run do
+  -- A named type comes after the named types inside it, which its alias mentions.
+  let inside (σ τ : Ty) : Bool := σ != τ && ((printTy τ).splitOn (printTy σ)).length > 1
+  let mut order : List (String × Ty) := []
+  let mut todo := T.named.filter fun (n, _) => T.readable.contains n
+  while !todo.isEmpty do
+    let ready := todo.filter fun (_, τ) => !todo.any fun (_, σ) => inside σ τ
+    let next := if ready.isEmpty then todo else ready
+    order := order ++ next
+    todo := todo.filter fun (n, _) => !next.any (·.1 == n)
   let mut out := ""
-  for (n, τ) in T.named do
-    if !T.readable.contains n then continue
+  for (n, τ) in order do
     let N := ident n
-    out := out ++ s!"\n/-- The source's `{n}`. -/\nabbrev {N} : Type := ty.{N}.denote\n"
     let accessors (owner : String) (fs : Fields) : String := Id.run do
       let mut acc := ""
       for (k, (f, σ)) in (Fields.toList fs).zipIdx.map (fun ((f, σ), k) => (k, (f, σ))) do
-        acc := acc ++ s!"@[reducible] def {owner}.{ident f} (r : {owner}) : {T.lean σ} := {projText "r" k}\n"
+        acc := acc ++ s!"@[reducible, readable] def {owner}.{ident f} (r : {owner}) : {T.lean σ} := {projText "r" k}\n"
       return acc
+    -- The fields' product, with their readable names (so that `x.order.map (·.index)` works).
+    let product (fs : Fields) : String :=
+      (Fields.toList fs).foldr (fun (_, σ) acc => s!"{atomText (T.lean σ)} × {acc}") "Unit"
+    let doc := s!"\n/-- The source's `{n}`. -/\n"
     match τ with
-    | .record fs => out := out ++ accessors N fs
+    | .record fs => out := out ++ doc ++ s!"abbrev {N} : Type := {product fs}\n" ++ accessors N fs
     | .lits a as =>
+      out := out ++ doc ++ s!"abbrev {N} : Type := Fin {as.length + 1}\n"
       for (lit, i) in (a :: as).zipIdx do
         if let some l := litName lit then
-          out := out ++ s!"@[reducible] def {N}.{ident l} : {N} := ⟨{i}, by decide⟩\n"
+          out := out ++ s!"@[reducible, readable] def {N}.{ident l} : {N} := ({i} : Fin {as.length + 1})\n"
     | .union _ vs =>
       let variants := Variants.toList vs
+      let mut payloads : List String := []
+      let mut decls := ""
       for ((t, fs), i) in variants.zipIdx do
-        let some tn := tagName t | continue
+        let some tn := tagName t | payloads := payloads ++ [s!"({product fs})"]; continue
         if (Fields.toList fs).isEmpty then
-          out := out ++ s!"@[reducible] def {N}.{ident tn} : {N} := {injText i variants.length "()"}\n"
+          payloads := payloads ++ ["Unit"]
+          decls := decls ++ s!"@[reducible, readable] def {N}.{ident tn} : {N} := {injText i variants.length "()"}\n"
         else
           let V := s!"{N}.Variant.{ident tn}"
-          out := out ++ s!"abbrev {V} : Type := ({T.print (.record fs)} : Ty).denote\n" ++ accessors V fs ++
-            s!"@[reducible] def {N}.{ident tn} (x : {V}) : {N} := {injText i variants.length "x"}\n"
-    | _ => pure ()
+          payloads := payloads ++ [V]
+          out := out ++ s!"abbrev {V} : Type := {product fs}\n" ++ accessors V fs
+          decls := decls ++
+            s!"@[reducible, readable] def {N}.{ident tn} (x : {V}) : {N} := {injText i variants.length "x"}\n"
+      out := out ++ doc ++ s!"abbrev {N} : Type := {" ⊕ ".intercalate payloads}\n" ++ decls
+    | _ => out := out ++ doc ++ s!"abbrev {N} : Type := ty.{N}.denote\n"
   return out
 
 /-- The Lean source for a checked file: the AST, the typed program, readable
@@ -1429,7 +1452,7 @@ definitions, and per-function source theorems. -/
 def printFile (source namespace_ : String) (ast : Program) (T : Types) (fns : List CheckedFn) : String := Id.run do
   -- A line comment: a path may contain `/-`, which would open a block comment.
   let name := ((source.splitOn "/").getLast?.getD source).map fun c => if c == '\n' || c == '\r' then ' ' else c
-  let mut out := s!"import Ariadne.Proof.Adequacy\n\n-- Generated by ariadne from {name}. Do not edit.\n\n"
+  let mut out := s!"import Ariadne.Proof.Adequacy\nimport Ariadne.Lib.Readable\n\n-- Generated by ariadne from {name}. Do not edit.\n\n"
   out := out ++ s!"namespace {namespace_}\nopen Ariadne\n\nset_option maxRecDepth 8192\nset_option linter.unusedVariables false\n\n"
   out := out ++ "/-- The source file in the model's syntax. -/\nnoncomputable def ast : Program := [\n  " ++
     ",\n  ".intercalate (ast.map printFunction) ++ "]\n\n"

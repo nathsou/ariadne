@@ -52,7 +52,7 @@ Concluded per file:          every readable def is what the TypeScript function 
 | `Ariadne/Typed/*` | Types, typed syntax, erasure, denotation, safety conditions, well-formedness | No |
 | `Ariadne/Eqns/*` | Equation lemmas of the typed syntax's large definitions (see Build time) | No |
 | `Ariadne/Proof/*` | The adequacy proof, and the store model's agreement with the value model | No |
-| `Ariadne/Lib/Sort.lean` | Laws that make comparators consistent (for `toSorted` safety conditions) | No |
+| `Ariadne/Lib/*` | Lemmas for proofs about readable definitions: loops, maps, string order, `toSorted` (its consistency conditions, and what it returns), the `readable` simp set | No |
 | `Ariadne/Kernel.lean` | `kernel_rfl`: closed equations checked by the kernel alone | No |
 | `Ariadne/Audit.lean`, `Audit.lean` | The soundness gate, and its configuration for Ariadne (`trusted.lock`) | No |
 | `Ariadne/Front/Check.lean` | Type checker and printer | No |
@@ -206,14 +206,15 @@ theorem «f».source (x : Int) … (vs : List JSValue) (args : ArgsRep …) (saf
 
 Each named type of the source also gets readable Lean names, so that statements about the definitions
 read like the TypeScript:
-- an alias (`Floor` for `ty.«Floor».denote`);
+- an alias, written as the Lean type it denotes (`Floor := Int × JSString × … × Unit`, `Commit := Fin 4`);
 - an accessor per record field (`fl.seed`);
 - a constant per literal of a literal union (`Commit.bad`);
 - for a union of records, a payload type per variant (`CopyFact.Variant.opened`, with its accessors) and
   a constructor (`CopyFact.opened f`, `CopyFact.damaged`).
 
-They are reducible definitions, so they unfold to the projections and injections the readable definitions
-use. A type whose name a function or method uses gets none.
+They are reducible definitions in the simp set `readable`, so `simp [readable]` unfolds them to the
+projections, numerals and injections the readable definitions use. A type whose name a function or method
+uses gets none.
 
 Each `body_eq` compares one function's denotation with its readable definition, with callees taken as
 the earlier readable definitions, so no check unfolds a callee. The source theorems mention only `run`,
