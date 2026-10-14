@@ -14,6 +14,10 @@ replicated are two registers per node, and they converge whatever the tree does:
 The re-derivation (`rearrange`, `attach`, `link`, `unlink`, `settle`) never changes
 either register (`*_frame`), so the registers' laws are those of the operations
 that write them.
+
+Re-deriving where nodes sit starts from the cycles of wanted parents, found by
+`cycleOf`: what it returns is such a cycle through the node (`cycleOf_cycle`), and
+it finds every one no longer than the number of nodes (`cycleOf_finds`).
 -/
 
 namespace V2Tests.TreeSpec
@@ -278,5 +282,154 @@ theorem move_purge_commute (r : State) (id p n sm j sp : JSString) :
   · by_cases hr : j = «root»
     · simp [purgeOf, purge_purged, hr, position_purged]
     · simp [purgeOf, purge_purged, hr, position_purged]
+
+/-! ## Cycles of wanted parents -/
+
+/-- Each node of the list wants the next one as its parent. -/
+def Chain (sp : List (JSString × ty.«Spot».denote)) : List JSString → Prop
+  | x :: y :: rest => (∃ s, mapGet sp x = some s ∧ s.1 = y) ∧ Chain sp (y :: rest)
+  | _ => True
+
+theorem chain_snoc (sp : List (JSString × ty.«Spot».denote)) {c : JSString} {s : ty.«Spot».denote}
+    (hs : mapGet sp c = some s) : ∀ {path : List JSString}, Chain sp path → path.getLast? = some c →
+      Chain sp (path ++ [s.1])
+  | [], _, hl => by simp at hl
+  | [x], _, hl => by simp at hl; subst hl; exact ⟨⟨s, hs, rfl⟩, trivial⟩
+  | x :: y :: rest, ⟨h1, h2⟩, hl => ⟨h1, chain_snoc sp hs (path := y :: rest) h2 (by simpa using hl)⟩
+
+/-- A loop invariant indexed by how many iterations remain, with a separate
+condition for leaving early (`break`). -/
+theorem forIn_inv_len {α σ R : Type} (P : Nat → σ → Prop) (B : σ → Prop) (Q : R → Prop)
+    {step : α → (σ → R) → (σ → R) → σ → R} {exit : σ → R}
+    (hstep : ∀ y n next ex s, P (n + 1) s → (∀ s', P n s' → Q (next s')) → (∀ s', B s' → Q (ex s')) →
+      Q (step y next ex s))
+    (hend : ∀ s, P 0 s → Q (exit s)) (hbrk : ∀ s, B s → Q (exit s)) :
+    ∀ (items : List α) s, P items.length s → Q (forIn items step exit s)
+  | [], s, h => hend s h
+  | y :: ys, s, h => hstep y ys.length _ exit s h (fun s' h' => forIn_inv_len P B Q hstep hend hbrk ys s' h') hbrk
+
+/-- Where `k` steps up the wanted parents from `x` lead (none if a node on the way
+has no spot). -/
+def up (sp : List (JSString × ty.«Spot».denote)) : Nat → JSString → Option JSString
+  | 0, x => some x
+  | k + 1, x => (up sp k x).bind fun c => (mapGet sp c).map (·.1)
+
+theorem up_none (sp : List (JSString × ty.«Spot».denote)) (x : JSString) {j : Nat} (h : up sp j x = none) :
+    ∀ m, j ≤ m → up sp m x = none := by
+  intro m hm
+  induction m with
+  | zero => cases j <;> simp_all [up]
+  | succ m ih =>
+    rcases Nat.eq_or_lt_of_le hm with rfl | hlt
+    · exact h
+    · simp [up, ih (by omega)]
+
+/-- What `cycleOf` returns, when not empty: a cycle of wanted parents through `id`. -/
+def Cycle (r : State) (id : JSString) (path : List JSString) : Prop :=
+  path = [] ∨ (path.head? = some id ∧ Chain r.1 path ∧
+    ∃ c s, path.getLast? = some c ∧ mapGet r.1 c = some s ∧ s.1 = id)
+
+/-- **`cycleOf` returns a cycle**: its result is empty, or starts at `id`, each node
+on it wants the next as its parent, and the last wants `id`. -/
+theorem cycleOf_cycle (r : State) (id : JSString) : Cycle r id («cycleOf» r id) := by
+  unfold «cycleOf»; dsimp only
+  have hlen : (V2.range (List.length r.1 : Int)).length = r.1.length := by simp [V2.range]
+  refine forIn_inv_len
+    (fun n s => s.2.2.2.1 = r ∧ s.2.2.2.2.1 = id ∧ s.1 = false ∧ up r.1 (r.1.length - n) id = some s.2.1 ∧
+      n ≤ r.1.length ∧ s.2.2.1 = (r.1.length : Int))
+    (fun s => s.2.2.2.1 = r ∧ s.2.2.2.2.1 = id ∧ s.1 = true ∧ s.2.2.1 = (r.1.length : Int) ∧
+      ∃ k, 1 ≤ k ∧ k ≤ r.1.length ∧ up r.1 k id = some id)
+    (Cycle r id) ?_ ?_ ?_ _ _ ?_
+  · intro y n next ex s ⟨h1, h2, h3, h4, h5, h6⟩ hn hx
+    split
+    · exact Or.inl rfl
+    · rename_i sp hsp
+      rw [h1] at hsp
+      have hup : up r.1 (r.1.length - n) id = some sp.1 := by
+        have : r.1.length - n = (r.1.length - (n + 1)) + 1 := by omega
+        rw [this]; simp [up, h4, hsp]
+      split
+      · rename_i heq
+        refine hx _ ⟨h1, h2, rfl, h6, r.1.length - n, by omega, by omega, ?_⟩
+        rw [hup]; simpa [h2] using heq
+      · exact hn _ ⟨h1, h2, h3, hup, by omega, h6⟩
+  · intro s ⟨_, _, h3, _, _⟩; simp [h3]; exact Or.inl rfl
+  · intro s ⟨h1, h2, h3, h4, k, hk1, hk2, hk⟩
+    simp only [h3, Bool.not_true, Bool.false_eq_true, ite_false]
+    rw [h4]
+    refine forIn_inv_len
+      (fun n t => t.2.2.2.2.1 = r ∧ t.2.2.2.2.2.1 = id ∧ t.1.head? = some id ∧ Chain r.1 t.1 ∧
+        t.1.getLast? = some t.2.2.1 ∧ ∃ j, j + n = r.1.length ∧ j < k ∧ up r.1 j id = some t.2.2.1)
+      (fun _ => False) (Cycle r id) ?_ ?_ (fun _ h => h.elim) _ _ ?_
+    · intro y n next ex t ⟨g1, g2, g3, g4, g5, j, hj1, hj2, hj3⟩ hn _
+      split
+      · rename_i hsp
+        rw [g1] at hsp
+        have : up r.1 (j + 1) id = none := by simp [up, hj3, hsp]
+        rw [up_none r.1 id this k (by omega)] at hk; simp at hk
+      · rename_i sp hsp
+        rw [g1] at hsp
+        have hup : up r.1 (j + 1) id = some sp.1 := by simp [up, hj3, hsp]
+        split
+        · rename_i heq
+          exact Or.inr ⟨g3, g4, _, sp, g5, hsp, by simpa [g2] using heq⟩
+        · rename_i hne
+          refine hn _ ⟨g1, g2, ?_, ?_, by simp, j + 1, by omega, ?_, hup⟩
+          · cases hp : t.1 with
+            | nil => simp [hp] at g3
+            | cons a l => simp [hp] at g3 ⊢; exact g3
+          · exact chain_snoc _ hsp g4 g5
+          · rcases Nat.lt_or_ge (j + 1) k with h | h
+            · exact h
+            · have : j + 1 = k := by omega
+              subst this; rw [hup] at hk; simp [g2] at hne; simp at hk; exact absurd hk hne
+    · intro t ⟨_, _, _, _, _, j, hj1, hj2, _⟩; omega
+    · refine ⟨h1, h2, by simp [h2], trivial, by simp [h2], 0, ?_, by omega, by simp [up, h2]⟩
+      simp [V2.range]
+  · exact ⟨rfl, rfl, rfl, by simp [hlen, up], by simp [hlen], rfl⟩
+
+/-- **`cycleOf` finds every cycle** through `id` no longer than the number of nodes
+with a spot. -/
+theorem cycleOf_finds (r : State) (id : JSString) {k : Nat} (hk1 : 1 ≤ k) (hk2 : k ≤ r.1.length)
+    (hk : up r.1 k id = some id) : «cycleOf» r id ≠ [] := by
+  unfold «cycleOf»; dsimp only
+  have hlen : (V2.range (List.length r.1 : Int)).length = r.1.length := by simp [V2.range]
+  refine forIn_inv_len
+    (fun n s => s.2.2.2.1 = r ∧ s.2.2.2.2.1 = id ∧ up r.1 (r.1.length - n) id = some s.2.1 ∧
+      n ≤ r.1.length ∧ r.1.length - n < k)
+    (fun s => s.1 = true) (· ≠ []) ?_ ?_ ?_ _ _ ?_
+  · intro y n next ex s ⟨h1, h2, h4, h5, h6⟩ hn hx
+    split
+    · rename_i hsp
+      rw [h1] at hsp
+      have : up r.1 (r.1.length - n) id = none := by
+        have : r.1.length - n = (r.1.length - (n + 1)) + 1 := by omega
+        rw [this]; simp [up, h4, hsp]
+      rw [up_none r.1 id this k (by omega)] at hk; simp at hk
+    · rename_i sp hsp
+      rw [h1] at hsp
+      have hup : up r.1 (r.1.length - n) id = some sp.1 := by
+        have : r.1.length - n = (r.1.length - (n + 1)) + 1 := by omega
+        rw [this]; simp [up, h4, hsp]
+      split
+      · exact hx _ rfl
+      · rename_i hne
+        refine hn _ ⟨h1, h2, hup, by omega, ?_⟩
+        rcases Nat.lt_or_ge (r.1.length - n) k with h | h
+        · exact h
+        · have : r.1.length - n = k := by omega
+          rw [this] at hup; rw [hup] at hk; simp at hk; simp [h2, hk] at hne
+  · intro s ⟨_, _, _, _, h6⟩; omega
+  · intro s h3
+    simp only [h3, Bool.not_true, Bool.false_eq_true, ite_false]
+    refine forIn_inv_len (fun _ t => t.1 ≠ []) (fun _ => False) (· ≠ []) ?_ ?_ (fun _ h => h.elim) _ _ (by simp)
+    · intro y n next ex t g hn _
+      split
+      · exact g
+      · split
+        · exact g
+        · exact hn _ (by simp)
+    · intro t g; exact g
+  · exact ⟨rfl, rfl, by simp [hlen, up], by simp [hlen], by simp [hlen]; omega⟩
 
 end V2Tests.TreeSpec
