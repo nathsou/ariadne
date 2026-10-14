@@ -14,9 +14,6 @@ wrong theorem.
 namespace Ariadne.Front
 open Ariadne.Parse (Diagnostic Checked Span)
 
-def mismatch (span : Span) (message : String) : Checked α :=
-  throw { code := "A2002", message, span }
-
 def ident (x : String) : String := s!"«{x}»"
 
 def leanString (s : String) : String := Id.run do
@@ -182,12 +179,42 @@ def Variants.ofList : List (TagLit × Fields) → Option Variants
   | [(t, fs)] => some (.one t fs)
   | (t, fs) :: rest => (Variants.ofList rest).map (.cons t fs)
 
-def unsupportedTy (span : Span) (what : String) : Checked α :=
+/-! ## The checking monad
+
+Checking is `Except Diagnostic`, with a log on the side: what each checked expression, declaration and
+function denotes, for editors (the playground's hovers). The log never affects the result. -/
+
+/-- One logged fact: the type of the expression, variable or function at `span`, and for an expression
+the readable Lean term it denotes and, when it is not trivially safe, its safety condition. -/
+structure Hover where
+  span : Span
+  kind : String
+  name : String := ""
+  ty : Ty
+  term : String := ""
+  safe : String := ""
+  /-- For a function: its parameters' names and types. -/
+  params : List (String × Ty) := []
+  deriving Inhabited
+
+structure CheckLog where
+  hovers : Array Hover := #[]
+  /-- The named types, once resolved, to print the logged types with. -/
+  types : Option Types := none
+
+abbrev CheckM := ExceptT Diagnostic (StateM CheckLog)
+
+def logHover (h : Hover) : CheckM Unit := modify fun l => { l with hovers := l.hovers.push h }
+
+def mismatch (span : Span) (message : String) : CheckM α :=
+  throw { code := "A2002", message, span }
+
+def unsupportedTy (span : Span) (what : String) : CheckM α :=
   throw { code := "A1001", message := s!"{what} is outside the supported subset", span }
 
 mutual
   /-- Union members, with aliases of unions expanded. -/
-  partial def Types.members (T : Types) (span : Span) (fuel : Nat) : Parse.Ty → Checked (List Parse.Ty)
+  partial def Types.members (T : Types) (span : Span) (fuel : Nat) : Parse.Ty → CheckM (List Parse.Ty)
     | .union a b => return (← T.members span fuel a) ++ (← T.members span fuel b)
     | .fieldReadonly t => T.members span fuel t
     | t@(.named n) => match fuel, T.aliases.lookup n with
@@ -195,7 +222,7 @@ mutual
       | _, _ => pure [t]
     | t => pure [t]
 
-  partial def Types.resolve (T : Types) (span : Span) (fuel : Nat) (t : Parse.Ty) : Checked Ty := do
+  partial def Types.resolve (T : Types) (span : Span) (fuel : Nat) (t : Parse.Ty) : CheckM Ty := do
     let fuel ← match fuel with
       | 0 => unsupportedTy span "a recursive type"
       | f + 1 => pure f
@@ -216,7 +243,7 @@ mutual
     if core matches .option .. then unsupportedTy span "a nested optional"
     return .option (if hasU && hasN then .both else if hasN then .null else .undef) core
 
-  partial def Types.single (T : Types) (span : Span) (fuel : Nat) : Parse.Ty → Checked Ty
+  partial def Types.single (T : Types) (span : Span) (fuel : Nat) : Parse.Ty → CheckM Ty
     | .boolean => pure .bool
     | .bigint => pure .int
     | .number => pure .number
@@ -233,7 +260,7 @@ mutual
     | _ => unsupportedTy span "this type"
 
   /-- A union of records told apart by a literal field. -/
-  partial def Types.recordUnion (T : Types) (span : Span) (fuel : Nat) (ms : List Parse.Ty) : Checked Ty := do
+  partial def Types.recordUnion (T : Types) (span : Span) (fuel : Nat) (ms : List Parse.Ty) : CheckM Ty := do
     let records ← ms.mapM fun m => do
       match ← T.resolve span fuel m with
       | .record fs => pure (Fields.toList fs)
@@ -250,14 +277,14 @@ mutual
     return .union key vs
 end
 
-def Types.ofProgram (p : Parse.Program) : Checked Types := do
+def Types.ofProgram (p : Parse.Program) : CheckM Types := do
   let mut T : Types := { aliases := p.aliases }
   for (n, t) in p.aliases do
     let τ ← T.resolve {} 64 t
     T := { T with named := T.named ++ [(n, τ)] }
   return T
 
-def Types.param (T : Types) (p : Parse.Param) : Checked Ty := T.resolve p.span 64 p.ty
+def Types.param (T : Types) (p : Parse.Param) : CheckM Ty := T.resolve p.span 64 p.ty
 
 /-! ## Scopes -/
 
@@ -458,7 +485,7 @@ def payloadOf (τ : Ty) (i : Nat) (e : String) : Payload :=
   | _ => { kind := .multi, text := s!"{e}.2" }
 
 /-- Use a value of type `out.ty` at type `τ`: equal, or a no-op embedding. -/
-def coerce (T : Types) (span : Span) (out : Out) (τ : Ty) : Checked Out := do
+def coerce (T : Types) (span : Span) (out : Out) (τ : Ty) : CheckM Out := do
   if out.ty == τ then return out
   match τ with
   | .option n σ =>
@@ -482,7 +509,7 @@ def nullTestVar : Parse.Expr → Option (String × Bool)
   | _ => none
 
 /-- The narrowing a `x == null` / `x != null` test establishes on an optional local. -/
-def Scope.nullNarrowing (s : Scope) (span : Span) (x : String) : Checked (Narrowed × String) := do
+def Scope.nullNarrowing (s : Scope) (span : Span) (x : String) : CheckM (Narrowed × String) := do
   match s.lookup x with
   | some (i, τ@(.option _ σ)) =>
     if !σ.nonNullish then mismatch span "a nested optional"
@@ -492,10 +519,11 @@ def Scope.nullNarrowing (s : Scope) (span : Span) (x : String) : Checked (Narrow
 
 def protoName (f : String) : Bool := protoNames.contains f
 
-def declare (s : Scope) (span : Span) (x : String) (τ : Ty) : Checked Scope := do
+def declare (s : Scope) (span : Span) (x : String) (τ : Ty) : CheckM Scope := do
   if x == "this" || s.locals.any (·.1 == x) || s.fns.any (fun f => f.name == x && !f.method) then
     throw { code := "A2004", message := s!"'{x}' shadows a declaration in scope", span,
             help := some "Rename it: the model requires names in scope to be distinct." }
+  logHover { span, kind := "var", name := x, ty := τ }
   pure { s with locals := (x, τ) :: s.locals }
 
 /-- `a.trivial`/`a.safe` of a right-nested list (`TArgs`, `TEntries`, `TElems`). -/
@@ -520,7 +548,7 @@ structure Fn where
   ty : Ty
 
 /-- A declared function used as a value: its `FVar` path and signature. -/
-def Scope.fnRef (s : Scope) (span : Span) (f : String) : Checked (String × FnSig) := do
+def Scope.fnRef (s : Scope) (span : Span) (f : String) : CheckM (String × FnSig) := do
   if s.locals.any (·.1 == f) then mismatch span s!"'{f}' is a local, not a declared function"
   let some j := s.fns.findIdx? (fun g => g.name == f && !g.method)
     | throw { code := "A2001", message := s!"'{f}' is not a function declared earlier", span }
@@ -528,7 +556,7 @@ def Scope.fnRef (s : Scope) (span : Span) (f : String) : Checked (String × FnSi
 
 /-- The state (`this`) of the method being checked: its path, record fields, and
 the field `f` (a map) with its index and value type. -/
-def Scope.stateField (s : Scope) (span : Span) (f : String) : Checked (String × Fields × Nat × Ty) := do
+def Scope.stateField (s : Scope) (span : Span) (f : String) : CheckM (String × Fields × Nat × Ty) := do
   let some (i, .record fs) := s.lookup "this" | mismatch span "'this' outside a method"
   let fields := Fields.toList fs
   let some j := fields.findIdx? (·.1 == f) | mismatch span s!"no field '{f}'"
@@ -536,19 +564,26 @@ def Scope.stateField (s : Scope) (span : Span) (f : String) : Checked (String ×
   return (s.varPath i, fs, j, τ)
 
 /-- A method of the class, by name: its `FVar` path and signature. -/
-def Scope.methodRef (s : Scope) (span : Span) (m : String) : Checked (String × FnSig) := do
+def Scope.methodRef (s : Scope) (span : Span) (m : String) : CheckM (String × FnSig) := do
   let some j := s.fns.findIdx? (fun g => g.name == m && g.method)
     | throw { code := "A2001", message := s!"'{m}' is not a method declared earlier (or it calls itself)", span }
   return (fnPath (s.fns.length - 1 - j), s.fns[j]!)
 
 mutual
-  partial def checkExpr (T : Types) (s : Scope) (e : Parse.Expr) (expected : Option Ty) : Checked Out := do
+  partial def checkExpr (T : Types) (s : Scope) (e : Parse.Expr) (expected : Option Ty) : CheckM Out := do
     let out ← inferExpr T s e expected
     match expected with
     | some τ => coerce T e.span out τ
     | none => pure out
 
-  partial def inferExpr (T : Types) (s : Scope) (e : Parse.Expr) (expected : Option Ty) : Checked Out := do
+  /-- `inferExprCore`, logging what the expression denotes. -/
+  partial def inferExpr (T : Types) (s : Scope) (e : Parse.Expr) (expected : Option Ty) : CheckM Out := do
+    let out ← inferExprCore T s e expected
+    logHover { span := e.span, kind := "expr", ty := out.ty, term := out.readable,
+               safe := if out.trivial then "" else out.safe }
+    return out
+
+  partial def inferExprCore (T : Types) (s : Scope) (e : Parse.Expr) (expected : Option Ty) : CheckM Out := do
     match e with
     | .literal (.boolean b) _ =>
       if expected == some (.tag (.bool b)) then
@@ -777,7 +812,7 @@ mutual
   /-- The branches of `c ? a : b` at one type: the expected one, else the type of the
   branch that is not a nullish literal (made optional for the other). -/
   partial def checkBranches (T : Types) (sa : Scope) (a : Parse.Expr) (sb : Scope) (b : Parse.Expr)
-      (expected : Option Ty) : Checked (Out × Out) := do
+      (expected : Option Ty) : CheckM (Out × Out) := do
     if let some τ := expected then return (← checkExpr T sa a (some τ), ← checkExpr T sb b (some τ))
     let nullish : Parse.Expr → Option Nullish
       | .literal .undefined _ => some .undef
@@ -800,7 +835,7 @@ mutual
 
   /-- An array method with a callback, or `includes`. -/
   partial def checkMethod (T : Types) (s : Scope) (recv : Parse.Expr) (m : String) (args : List Parse.Expr)
-      (span : Span) (expected : Option Ty) : Checked Out := do
+      (span : Span) (expected : Option Ty) : CheckM Out := do
     let a ← inferExpr T s recv none
     if a.ty == .string then
       match m, args with
@@ -859,7 +894,7 @@ mutual
   /-- A callback on elements of type `τ`: `(x) => e`, `() => e`, or a declared function of
   one parameter. -/
   partial def checkFn (T : Types) (s : Scope) (span : Span) (arg : Parse.Expr) (τ : Ty) (result : Option Ty) :
-      Checked Fn := do
+      CheckM Fn := do
     match arg with
     | .lambda [p] (.return_ body _) _ => do
       let f ← checkExpr T (← declare s span p.name τ) body result
@@ -881,7 +916,7 @@ mutual
     | _ => unsupportedTy span "a callback other than an arrow function or a declared function"
 
   /-- A comparator: `(x, y) => e`, or a declared function of two parameters. -/
-  partial def checkCmp (T : Types) (s : Scope) (span : Span) (arg : Parse.Expr) (τ : Ty) : Checked Fn := do
+  partial def checkCmp (T : Types) (s : Scope) (span : Span) (arg : Parse.Expr) (τ : Ty) : CheckM Fn := do
     match arg with
     | .lambda [p, q] (.return_ body _) _ => do
       let (x, y) := (p.name, q.name)
@@ -900,7 +935,7 @@ mutual
     | _ => unsupportedTy span "a comparator other than an arrow function of two parameters or a declared function"
 
   partial def checkBinary (T : Types) (s : Scope) (op : String) (a b : Parse.Expr) (span : Span)
-      (_expected : Option Ty) : Checked Out := do
+      (_expected : Option Ty) : CheckM Out := do
     match op with
     | "&&" | "||" => do
       let a ← checkExpr T s a (some .bool)
@@ -980,7 +1015,7 @@ mutual
 
   /-- An object literal at a record or union type. -/
   partial def checkRecord (T : Types) (s : Scope) (entries : List (String × Parse.Expr)) (span : Span) :
-      Ty → Checked Out
+      Ty → CheckM Out
     | .union key vs => do
       let some tagExpr := entries.lookup key | mismatch span s!"the literal has no '{key}' field"
       let variants := Variants.toList vs
@@ -1219,7 +1254,7 @@ def flagsIte (yes no rest : Block) : Bool × Bool × Bool :=
    yes.continues || no.continues || ((yes.falls || no.falls) && rest.continues))
 
 mutual
-  partial def checkStmts (T : Types) (s : Scope) (result : Ty) : List Parse.Stmt → Checked Block
+  partial def checkStmts (T : Types) (s : Scope) (result : Ty) : List Parse.Stmt → CheckM Block
     | [] => pure blockNil
     | .let_ false x annotation e span :: rest => do
       let expected ← annotation.mapM (T.resolve span 64)
@@ -1401,7 +1436,7 @@ mutual
     | st :: _ => unsupportedTy st.span "this statement"
 
   partial def checkNullIf (T : Types) (s : Scope) (result : Ty) (x : String) (isNull : Bool)
-      (yesSs noSs : List Parse.Stmt) (span : Span) (rest : List Parse.Stmt) : Checked Block := do
+      (yesSs noSs : List Parse.Stmt) (span : Span) (rest : List Parse.Stmt) : CheckM Block := do
     let (n, path) ← s.nullNarrowing span x
     let narrowed := s.narrow n.index n.narrow
     if isNull then
@@ -1442,7 +1477,7 @@ mutual
   /-- `switch (x.key)` over a union-typed local: cases in any order, grouped labels and
   `default`. A case with one label (not reached by falling through) narrows `x`. -/
   partial def checkSwitch (T : Types) (s : Scope) (result : Ty) (e : Parse.Expr)
-      (cases : List (Option Parse.Expr × List Parse.Stmt)) (span : Span) (rest : List Parse.Stmt) : Checked Block := do
+      (cases : List (Option Parse.Expr × List Parse.Stmt)) (span : Span) (rest : List Parse.Stmt) : CheckM Block := do
     let .member (.var x _) key _ := e | unsupportedTy span "a switch other than on a union's tag field"
     let some (i, τ@(.union key' vs)) := s.lookup x | mismatch span s!"'{x}' is not a union"
     if key != key' then mismatch span s!"'{key}' is not the tag field of '{x}'"
@@ -1529,7 +1564,7 @@ structure CheckedFn where
 /-- A function, or a method of a class whose state has type `this` (a method
 returning `void` changes the state and denotes the state it leaves). -/
 def checkFunction (T : Types) (fns : List FnSig) (f : Parse.Function) (this : Option Ty := none) :
-    Checked CheckedFn := do
+    CheckM CheckedFn := do
   if fns.any (·.name == f.name) then
     throw { code := "A2004", message := s!"'{f.name}' is declared twice", span := f.span }
   let void := this.isSome && f.result matches .void
@@ -1545,6 +1580,7 @@ def checkFunction (T : Types) (fns : List FnSig) (f : Parse.Function) (this : Op
         (this.isNone && p.name == f.name) then
       throw { code := "A2004", message := s!"'{p.name}' shadows a declaration in scope", span := p.span }
     s := { s with locals := s.locals ++ [(p.name, τ)], mutables := p.name :: s.mutables }
+    logHover { span := p.span, kind := "var", name := p.name, ty := τ }
   let .block body _ := f.body | unsupportedTy f.span "this function body"
   -- Falling off the end of a `void` method returns, as the converted program says.
   let body := if void then body ++ [.return_ (.literal .undefined f.span) f.span] else body
@@ -1553,6 +1589,8 @@ def checkFunction (T : Types) (fns : List FnSig) (f : Parse.Function) (this : Op
     throw { code := "A2003", message := s!"'{f.name}' may finish without returning a value", span := f.span }
   if block.breaks || block.continues then
     throw { code := "A2003", message := "break or continue outside a loop or switch", span := f.span }
+  logHover { span := f.span, kind := if this.isSome then "method" else "function", name := f.name, ty := result,
+             params, safe := if block.trivial then "" else s!"{ident f.name}.safe" }
   pure { sig := { name := f.name, params, result, trivial := block.trivial, method := this.isSome, void },
          body := block }
 
@@ -1562,10 +1600,11 @@ def reservedNames (p : Parse.Program) : List String :=
   ["ast", "typed", "sigs", "erased", "wf", "bodies_ok", "ast_scoped", "denote_eq", "safety_eq", "ty", "sig",
     "body", "ne", "frames"] ++ p.functions.map (·.name) ++ p.classes.flatMap (fun c => c.methods.map (·.name))
 
-def checkProgram (p : Parse.Program) : Checked (Types × List CheckedFn) := do
+def checkProgramM (p : Parse.Program) : CheckM (Types × List CheckedFn) := do
   let mut T ← Types.ofProgram p
   let reserved := reservedNames p
   T := { T with readable := T.named.filterMap fun (n, _) => if reserved.contains n then none else some n }
+  modify fun l => { l with types := some T }
   let mut fns := []
   let mut out := []
   for f in p.functions do
@@ -1581,6 +1620,7 @@ def checkProgram (p : Parse.Program) : Checked (Types × List CheckedFn) := do
     let σ := Ty.record (Fields.ofList fields)
     T := { T with named := T.named ++ [(c.name, σ)],
                   readable := if reserved.contains c.name then T.readable else T.readable ++ [c.name] }
+    modify fun l => { l with types := some T }
     -- `new C()`: the state with every map empty.
     let initBody : List Parse.Stmt :=
       [.return_ (.record (c.fields.map fun fld => (fld.name, fld.value)) c.span) c.span]
@@ -1594,6 +1634,9 @@ def checkProgram (p : Parse.Program) : Checked (Types × List CheckedFn) := do
       fns := fns ++ [cm.sig]
       out := out ++ [cm]
   pure (T, out)
+
+def checkProgram (p : Parse.Program) : Checked (Types × List CheckedFn) :=
+  (checkProgramM p).run.run' {}
 
 /-! ## Printing the AST -/
 
@@ -1922,10 +1965,22 @@ def signatures (text : String) : Checked (List String) := do
       ",".intercalate (c.sig.params.map (tyJson ·.2)) ++ "],\"result\":" ++ tyJson c.sig.result ++ "}"
 
 /-- Parse, convert and check a TypeScript file, returning the generated Lean source. -/
-def translate (source namespace_ text : String) : Checked String := do
+def translateM (source namespace_ text : String) : CheckM String := do
   let parsed ← Parse.parse text
   let ast ← convertProgram parsed
-  let (T, fns) ← checkProgram parsed
+  let (T, fns) ← checkProgramM parsed
   pure (printFile source namespace_ ast T fns)
+
+def translate (source namespace_ text : String) : Checked String :=
+  (translateM source namespace_ text).run.run' {}
+
+/-- `translate`, with the log of what the checked parts of the program denote (up to the error, if any).
+When the conversion fails before the checker runs, the checker still runs for its log. -/
+def translateLogged (source namespace_ text : String) : Checked String × CheckLog :=
+  let (result, log) := (translateM source namespace_ text).run.run {}
+  if !log.hovers.isEmpty || result matches .ok _ then (result, log) else
+    match Parse.parse text with
+    | .ok parsed => (result, ((checkProgramM parsed).run.run {}).2)
+    | .error _ => (result, log)
 
 end Ariadne.Front
