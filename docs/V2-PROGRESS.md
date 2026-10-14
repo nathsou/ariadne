@@ -16,6 +16,8 @@ why, and measurements. Update it with each milestone.
 | M5 (L4): drive's `trust.ts` | Done: callbacks generalised (`TFn`, `TCmp`: arrows of 0, 1 or 2 parameters, declared functions as callbacks), general `switch` (cases in any order, grouped labels, `default`, fall-through), operators grouped into one constructor, comparator laws library. `trust.ts` translated with one rewrite and its spec proved (`V2Tests/TrustSpec.lean`). |
 | M6/M7 (L5/L6): classes with `Map` state | Done: a class whose fields are `Map<string, T>`s, `this.f.get/has/size`, `[...this.f.keys()/values()]`, `this.f.set/delete`, `this.m(…)`, `void` methods that change the state and value methods that read it. drive's `registers.ts` translated **unchanged** and properties proved (`V2Tests/RegistersSpec.lean`). |
 | L7 (part): counted `for` | Done: `for (let i = 0; i < n; i++)` on a constant `n`. drive's `tree.ts` translated **unchanged**. Measured `while`, recursion and `throw` not started (drive's kernel does not use them). |
+| Tree properties | Done: the tree's two replicated registers converge and re-deriving where nodes sit never changes them; `cycleOf` returns exactly the cycles of wanted parents (`V2Tests/TreeSpec.lean`). |
+| L8: store model of classes | Done: a model where the object is one store changed in place, proved equal to the value model for every program that passes the static check (`V2/Proof/Store.lean`). |
 
 ### Toolchain
 
@@ -152,6 +154,40 @@ own `checkout`/`upload-artifact` actions, pinned by commit, are CI infrastructur
   random `Map` states, runs every method in JavaScript and in the model, and compares results and final states
   (41,700 calls). 38 negative fixtures; 3,909 theorems audited.
 
+### Tree properties (drive's `tree.ts`)
+
+`V2Tests/TreeSpec.lean` (520 lines, 8 s), on the readable definitions generated from the unchanged source:
+
+- **Registers converge.** Positions: of two moves with distinct stamps, the later wins in either order
+  (`moves_converge`). Purges: the earliest wins (`purges_converge`). A move and a purge commute.
+- **Re-deriving keeps the registers.** `setNext/setPrev/bury/unlink/link/settle/attach/rearrange` leave both
+  registers unchanged (`*_keeps`, stated as `@[simp]` projection lemmas so they compose), via a generic loop
+  invariant for `V2.forIn`.
+- **Cycles.** What `cycleOf` returns is empty or a cycle of wanted parents through the node: it starts there, each
+  node wants the next as its parent, and the last wants the first (`cycleOf_cycle`). It finds every such cycle
+  (`cycleOf_finds_all`): the source's bound of one step per node is enough, because a longer walk back repeats a
+  node and so has a shorter one (a pigeonhole argument, `up_shorter`).
+- Not proved: that the links `rearrange` derives are acyclic and match the wanted parents outside cycles (the
+  tree-shape invariant). It needs an invariant over `settle`'s two-direction walk; the pieces above are its
+  base cases.
+
+### L8 notes: the store model
+
+- **Model** (`V2/Model/Store.lean`, 147 lines, trusted in place of the value model's treatment of `this`). The
+  object's state is a store threaded through statements: `stateSet/Delete` change it, and a method called as a
+  statement runs on the same store. Expressions are evaluated by the value model in `fill σ env` (every `this`
+  binding replaced by the store).
+- **Agreement** (`V2/Proof/Store.lean`, 835 lines, 47 s): `runMethod_store` proves that `runMethod` (value model)
+  and `runMethodStore` give the same result for every program that passes `Program.scoped`. The proof is by
+  induction on fuel over statements, loops and method calls at once, with two invariants: the environment binds
+  `this` at most once, and no statement binds or assigns `this` (`stmtsThisFree`, now part of `Program.scoped`).
+  `adequacy_state_store` restates the class theorem for the store model.
+- **Expressions need no store.** A method the static check lets an expression call has no state-changing
+  statement; run in the store model, it returns the store it was given (`scoped_pure_keeps`). So evaluating
+  expressions without threading the store is exact, not assumed.
+- **Tests:** the differential harness now runs class methods through `runMethodStore` (41,700 calls); 4,153 theorems
+  audited.
+
 ## Checkpoint after M4: is adding constructs viable?
 
 The design asked to compare the adequacy proof's size per construct and stop if it grew faster than linearly or a
@@ -218,11 +254,13 @@ environment relation. Plan changes from this checkpoint:
 | --- | --- | --- |
 | `V2/Model/Syntax.lean` | Source AST (`Expr`, `Stmt`, `Function`, `Program`), `js` string literals | **Yes** |
 | `V2/Model/Eval.lean` | Value-semantics evaluator, `Program.scoped`, `run`, `Converges` | **Yes** |
+| `V2/Model/Store.lean` | Store model of classes (`runMethodStore`) | **Yes** (for classes) |
 | `V2/Front/Convert.lean` | v1 parser AST → v2 AST (drops spans and annotations; refuses non-L0 forms) | **Yes** (with v1's lexer and parser) |
 | `V2/Typed/Syntax.lean` | `Ty`, `Ctx`, `Var`, `Sig`, `FVar`, `TExpr`/`TArgs`/`TStmts`/`TProgram`, erasure, `returns` | No (checked) |
 | `V2/Typed/Denote.lean` | Denotation, `TProgram.WF`, `TProgram.denote_cons` | No |
 | `V2/Proof/Basic.lean`, `Array.lean`, `Safe.lean`, `Expr.lean`, `Stmt.lean`, `Trivial.lean` | Environment relation, representation and assignment lemmas, array and callback lemmas, adequacy of expressions and statements (with loops) | No |
 | `V2/Proof/Adequacy.lean` | `V2.adequacy` (the general theorem) and `source_of` | No |
+| `V2/Proof/Store.lean` | Value model = store model (`runMethod_store`), pure methods keep the store | No |
 | `V2/Kernel.lean` | `kernel_rfl`: closed equations checked by the kernel only | No |
 | `V2/Front/Check.lean` | Untrusted type checker and printer | No |
 | `V2Main.lean` | CLI `ariadne2` (`translate`, `run`, `batch`, `signatures`) | `run`/`batch` are test oracles only |
@@ -304,9 +342,11 @@ definition (`clamp_le`) that transfers to every run via `clamp_source`.
   the parse of the file).
 - Not trusted: the type checker, the printer's typed term, readable definitions and proofs (all re-checked by the
   kernel).
-- Since L5/L6: that the model's value semantics of a class (state forms, `callState`, the static rules that `this` is
-  never a value and that expression calls change no state) agrees with JavaScript's objects; and that callers do not
-  mutate objects a method returns (they may share structure with the state, as in JavaScript).
+- Since L5/L6, reduced by L8: that the store model of a class (`V2/Model/Store.lean`: one object changed in place,
+  methods called as statements run on it) agrees with JavaScript's objects. The value model's copying of `this` is
+  now a theorem (`runMethod_store`), as is that expression calls leave the object unchanged (`scoped_pure_keeps`).
+  Still assumed: that callers do not mutate objects a method returns (they may share structure with the state, as
+  in JavaScript).
 
 ## Measurements (M0)
 
@@ -343,8 +383,9 @@ scripts/v2-check.sh      # everything CI runs for v2
 
 ## Next steps
 
-- drive's three kernel files now translate (two unchanged, `trust.ts` with one rewrite). Next, by value: prove more
-  of drive's specs on the generated definitions (the tree's invariants: no cycles, burial), then L8 (a heap
-  semantics agreeing with the value semantics, removing the class trust above).
+- drive's three kernel files now translate (two unchanged, `trust.ts` with one rewrite), with their main properties
+  proved, and L8 is done. Next, by value: use v2 in drive (run `scripts/v2-check.sh` on drive's kernel files in
+  drive's CI, so a change that breaks a proof fails there), then the tree-shape invariant (the links `rearrange`
+  derives are acyclic).
 - Remaining restrictions: block-bodied callbacks (they would put statements inside expressions' mutual family),
   measured `while`, recursion, `throw`, local maps, a constructor with code, more than one class per file.
