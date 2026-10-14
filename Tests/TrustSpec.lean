@@ -55,7 +55,7 @@ theorem repairs_exact (copies : List StoredCopy) (own : Int) (stale readOnly : B
   · rename_i h
     simp only [Bool.or_eq_true, not_or, Bool.not_eq_true] at h
     simp only [List.getElem?_map, hc, Option.map_some, Option.some.injEq]
-    rcases c with _ | _ | _ | _ | _ | _ <;> simp_all [«repairOne», MayOverwrite, hall, readable]
+    rcases c with _ | _ | _ | _ | _ | _ <;> simp_all [«repairOne», MayOverwrite, readable]
 
 /-! ## The ranking is a total preorder -/
 
