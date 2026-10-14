@@ -13,6 +13,7 @@ why, and measurements. Update it with each milestone.
 | M3: L2 | Done: integer-mode `number` with safety conditions, array literals with spreads, `length`, indexing, `includes`, `some`/`every`/`find`/`filter`/`map` with arrow callbacks, `toSorted` with a comparator. Theorem, frontend, fixture, property proof, differential and negative tests. |
 | M4: L3 | Done: `let`, assignment (including `+=`, `++`), `for…of`, `for (const [i, x] of xs.entries())`, `break`/`continue`, early `return` in loops, `switch` in loops. Theorem, frontend, fixture, property proof, differential and negative tests. Counted `for` deferred (see the checkpoint). |
 | Checkpoint after M4 | Written below: continue. |
+| M5 (L4): drive's `trust.ts` | Done: callbacks generalised (`TFn`, `TCmp`: arrows of 0, 1 or 2 parameters, declared functions as callbacks), general `switch` (cases in any order, grouped labels, `default`, fall-through), operators grouped into one constructor, comparator laws library. `trust.ts` translated with one rewrite and its spec proved (`V2Tests/TrustSpec.lean`). |
 
 ### Toolchain
 
@@ -89,6 +90,34 @@ own `checkout`/`upload-artifact` actions, pinned by commit, are CI infrastructur
 - **Tests:** `l3.ts` (12 functions, checked in about 6 s), 30 negative fixtures, differential 13,200 calls (292 refused,
   overflows).
 
+### M5 notes (L4: drive's `trust.ts`)
+
+- **Callbacks** are their own syntax: `TFn Φ Γ τ σ` is `(x) => e`, `() => e`, or a declared one-parameter function
+  `f` (no local named `f` in scope); `TCmp` is `(x, y) => e` or a declared two-parameter function. The array
+  methods take them, and one lemma per kind (`TFn.adequate`, `TCmp.adequate`) serves every method. `FnsOK` gained
+  a second field (every function in `Φ` is declared in the program, so its name evaluates to it).
+- **General `switch`:** `switchG` takes a list of arms (`TArms`): an empty case falling into the next, a case that
+  keeps the scrutinee wide, or a single-label case narrowing it to its variant. The denotation eliminates the union
+  once (`Variants.elim`) and gives each arm the variant's index; the proof matches the model's `findCase` to the
+  first arm whose labels include the tag, or `default` (`TArms.adequate`, 210 lines). It replaced the M2 `switch`,
+  which required cases in declaration order.
+- **Operator grouping:** `TExpr.bin (op : Op σ τ)` replaced 21 binary constructors; `Op.sound` (one case split)
+  replaced 21 adequacy cases. `Proof/Expr.lean` compiles in 28 s (was 53 s), `Proof/Safe.lean` in 19 s (was 34 s).
+- **`trust.ts`** (drive commit `1e41c79`, 255 lines) translates with one rewrite: the block-bodied callback in
+  `repairs` became a declared function (block bodies would put `TStmts` inside `TExpr`'s mutual family; recorded as a
+  restriction). It checks in 8 s.
+- **Spec:** `V2Tests/TrustSpec.lean` (130 lines) proves, about the generated readable definitions: the floor rule
+  (`may_change_from`), rotation (`rotated_past`), which copies count as answered, the exact set of copies `repairs`
+  may overwrite (`repairs_exact`), that `byRank` is a lexicographic comparison on a five-integer key (`byRank_eq`), and
+  that `chooseVaultCopy`'s safety condition holds on every input, so every compiled run converges to the readable
+  result with no precondition (`chooseVaultCopy_run`). The comparator condition is discharged by
+  `V2/Lib/Sort.lean`: antisymmetric, transitive comparators are `consistent` (`consistent_of_laws`), and lexicographic
+  integer-key comparators have those laws (`lexCmp_laws`).
+- **Kernel lessons:** an eliminator must match the value separately from its structural argument (matching both at
+  once left `Variants.elim` stuck on a symbolic value, so `body_eq` failed); printed array literals and readable
+  `let`s carry their types, since a metavariable left by elaboration blocks kernel reduction of narrowing.
+- **Tests:** 31 negative fixtures, differential 17,100 calls (278 refused), 2,598 theorems audited.
+
 ## Checkpoint after M4: is adding constructs viable?
 
 The design asked to compare the adequacy proof's size per construct and stop if it grew faster than linearly or a
@@ -124,6 +153,7 @@ What did not scale as well, and what to do about it:
    under 40 s together): structural recursion over `TExpr`, now 75 constructors, and its equation lemmas. It is paid
    once per build, not per file, but it grows with each constructor. Mitigation before L5: group operators into one
    constructor with an operator index (`arith op`, `cmp op`), which also removes most of the duplicated cases.
+   (Done in M5: `TExpr.bin`, halving both times.)
 2. **Per-file checking hazards are in the untrusted printer, not the proof.** Three failures this round were all
    caught by the kernel and fixed in the printer or in kernel-friendly definitions: `inRange` stated with `Int` order
    made the kernel recurse 2^53 deep on a partly symbolic argument; nested calls needed their signature printed; a
@@ -276,8 +306,9 @@ scripts/v2-check.sh      # everything CI runs for v2
 
 ## Next steps
 
-- M2 (L1): readonly records and unions, `switch` with narrowing, optionals. Start with `Ty.record`/`Ty.union` denoting
-  products and sums, field reads, `== null`. Integer-mode `number` (with the −0 relation) can be its own small level
-  before or after L1; drive needs it.
-- Keep `V2.adequacy` the single theorem; extend `TExpr`/`TStmts` and add cases. Watch the proof size per construct
-  (design §11 checkpoint).
+- L5/L6 together: drive's remaining kernel files (`registers.ts`, `tree.ts`) are classes whose state is private
+  `Map<string, T>` fields, with `void` methods that change it and value methods that read it. Plan: the class state
+  is a record bound to `this`; maps are values; the model has dedicated forms for `this.f.get/has/size`,
+  `[...this.f.keys()/values()]`, `this.f.set/delete` and `this.m(…)`, and refuses `this` as a plain value, so no map
+  can be aliased. A `void` method returns the final state (the model's `return` outcome carries its environment).
+- L7: counted `for` with a bound, as `tree.ts` uses (`for (let _step = 0; _step < steps; _step++)`).
