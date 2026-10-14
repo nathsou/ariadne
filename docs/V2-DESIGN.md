@@ -447,8 +447,8 @@ draft PR keep it).
 
 ## 14. Environment notes
 
-- Lean toolchain: `leanprover/lean4:v4.34.1` (`lean-toolchain`), installed with elan in `~/.elan/bin` (add it to
-  `PATH`). `lake build <Module>` builds one module.
+- Lean toolchain: `leanprover/lean4:v4.35.0` (`lean-toolchain`). CI downloads it and Bun 1.4.3 with pinned SHA-256
+  hashes (`scripts/install-ci-tools.sh`), with no toolchain manager. `lake build <Module>` builds one module.
 - JavaScript: Node 22 runs `.ts` files directly (type stripping), which v1's test scripts rely on; CI uses Bun.
 - The drive repository may not be in a new session's container; reference it on GitHub or attach it.
 

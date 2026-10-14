@@ -1,5 +1,8 @@
 # What the certificates mean
 
+This page describes v1 (`ariadne`). For v2 (`ariadne2`), which proves one general theorem
+instead of per-program certificates, see [its trusted base](V2-PROGRESS.md#trusted-base-l0).
+
 Ariadne takes a certifying approach. Its native executable writes Lean declarations;
 the Lean kernel then checks equations binding the original source to the generated
 model. No plugin-provided axiom or native decision procedure discharges those equations.

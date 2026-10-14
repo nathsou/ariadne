@@ -1,7 +1,12 @@
 # Ariadne
 
 A dependency-free Lean 4 frontend, scalar compiler, and executable-model translator
-for a restricted TypeScript dialect. The lexer, parser, checker, heap model, command-line
+for a restricted TypeScript dialect.
+
+**Ariadne v2** (`V2/`, the `ariadne2` tool) is the current approach: one general correctness
+theorem, proved once, instead of per-program certificates. It is described [below](#ariadne-v2) and in
+[the v2 design](docs/V2-DESIGN.md) and [progress](docs/V2-PROGRESS.md). The rest of this page
+describes v1. The lexer, parser, checker, heap model, command-line
 tool, and proof library are written in Lean. Native JavaScript is used only by tests
 and the optional host bootstrap.
 
@@ -15,8 +20,8 @@ its theorems as claims about a deployed JavaScript program.
 
 ## Build and use
 
-Install [elan](https://github.com/leanprover/elan); the repository pins Lean 4.34.1.
-There are no Lake or npm dependencies.
+The repository pins Lean 4.35.0 (`lean-toolchain`); CI downloads it and Bun 1.4.3 with
+reviewed SHA-256 hashes (`scripts/install-ci-tools.sh`). There are no Lake or npm dependencies.
 
 ```sh
 lake build ariadne
@@ -36,7 +41,7 @@ Run commands from this repository's root. `compile` and `certify` need `lake` on
 `check` only accepts or rejects the subset. Neither silently claims certification.
 The original TypeScript can run directly in a conforming controlled JavaScript realm.
 
-For all checks, install Bun (CI pins 1.3.5), or use Node 24+:
+For all checks, install Bun (CI pins 1.4.3), or use Node 24+:
 
 ```sh
 scripts/check.sh
@@ -96,7 +101,36 @@ that the checker is sound for all accepted programs, or that a JavaScript engine
 implements the model. Fuel exhaustion is inconclusive. Dynamic array bounds and
 incoming heap/realm assumptions remain explicit obligations.
 
+## Ariadne v2
+
+v2 translates a TypeScript file into Lean and proves, once for every program, that running
+the source in a reference model of JavaScript gives what the readable Lean definitions say
+(`V2.adequacy`). Each translated file carries, per function, a theorem `«f».source` stating
+this for the actual source text, checked by Lean's kernel. Properties proved about the
+readable definitions therefore hold of the TypeScript functions on every input that meets the
+function's safety condition (integer arithmetic stays within the safe-integer range;
+comparators are consistent).
+
+It covers booleans, `bigint`, strings, integer-valued `number`, records, unions and optionals,
+arrays with their usual methods and callbacks, `let` and loops, `switch`, and classes whose state
+is private `Map` fields. drive's kernel files `trust.ts`, `registers.ts` and `tree.ts` translate,
+with properties proved in `V2Tests/*Spec.lean`.
+
+```sh
+lake build ariadne2
+.lake/build/bin/ariadne2 translate file.ts --out Out.lean --namespace Out
+lake env lean Out.lean                # kernel-checks the translation and its theorems
+.lake/build/bin/ariadne2 run file.ts f 3n '"text"' true
+scripts/v2-check.sh                   # everything CI runs for v2
+```
+
+What is trusted: Lean's kernel, the model of JavaScript (`V2/Model`, tested against Bun on
+41,700 calls), and the parser and converter that turn the file into the model's syntax. See
+[the trusted base](docs/V2-PROGRESS.md#trusted-base-l0).
+
 ## Documentation
+
+- [Ariadne v2: design](docs/V2-DESIGN.md) and [progress](docs/V2-PROGRESS.md)
 
 - [Language and supported operations](docs/LANGUAGE.md)
 - [Scalar compiler and proof workflow](docs/COMPILER.md)
