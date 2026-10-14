@@ -1,4 +1,5 @@
 import V2.Proof.Trivial
+import V2.Proof.Store
 
 /-!
 # Adequacy
@@ -128,5 +129,14 @@ theorem source_state_of {Φ : Sigs} {P : TProgram Φ} {ast : Program} {fs : Φ.d
     ∃ w t, Converges (fun n => runMethod ast n f this vs) (.ok (w, t)) ∧ s.result.Rep t (v.get fs xs) := by
   subst erased; subst denote_eq; subst safety_eq
   exact adequacy_state P wf v hv xs this vs args safe
+
+/-- Adequacy for methods that change the state, in the store model: the object is
+changed in place and shared with the methods it calls (`runMethod_store`). -/
+theorem adequacy_state_store {Φ : Sigs} (P : TProgram Φ) (wf : P.WF) {f : String} {s : Sig} (v : FVar Φ f s)
+    (hv : s.void = true) (xs : s.params.denote) (this : JSValue) (vs : List JSValue)
+    (args : ArgsRep s.params (this :: vs) xs) (safe : v.safe P.safety xs = true) :
+    ∃ w t, Converges (fun n => runMethodStore P.erase n f this vs) (.ok (w, t)) ∧
+      s.result.Rep t (v.get P.denote xs) := by
+  simpa only [runMethod_store] using adequacy_state P wf v hv xs this vs args safe
 
 end V2

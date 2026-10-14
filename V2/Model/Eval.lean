@@ -377,6 +377,29 @@ mutual
     | (_, body) :: rest => stmtsMutate body || casesMutate rest
 end
 
+/- No statement binds or assigns `this` (implied by the scoping rules; checked
+directly so that the store model's agreement needs no further argument). -/
+
+mutual
+  def stmtsThisFree : List Stmt → Bool
+    | [] => true
+    | s :: rest => stmtThisFree s && stmtsThisFree rest
+
+  def stmtThisFree : Stmt → Bool
+    | .const x _ | .let_ x _ | .assign x _ => x != "this"
+    | .ite _ yes no => stmtsThisFree yes && stmtsThisFree no
+    | .block ss => stmtsThisFree ss
+    | .switch _ cases => casesThisFree cases
+    | .forOf x _ body => x != "this" && stmtsThisFree body
+    | .forEntries i x _ body => i != "this" && x != "this" && stmtsThisFree body
+    | .forRange i _ body => i != "this" && stmtsThisFree body
+    | .ret _ | .brk | .cont | .stateSet .. | .stateDelete .. | .callThis .. => true
+
+  def casesThisFree : List (Option Expr × List Stmt) → Bool
+    | [] => true
+    | (_, body) :: rest => stmtsThisFree body && casesThisFree rest
+end
+
 /-- A method's first parameter is `this`; other functions have no `this`. -/
 def Function.thisOk (fn : Function) : Bool :=
   if fn.method then fn.params.head? == some "this" else !fn.params.contains "this"
@@ -386,7 +409,7 @@ def Program.scoped (p : Program) : Bool :=
   let methods := (p.filter (·.method)).map (·.name)
   let pure := (p.filter fun fn => fn.method && !stmtsMutate fn.body).map (·.name)
   distinct (p.map (·.name)) && p.all fun fn =>
-    distinct fn.params && fn.params.all (!fns.contains ·) && fn.thisOk &&
+    distinct fn.params && fn.params.all (!fns.contains ·) && fn.thisOk && stmtsThisFree fn.body &&
       stmtsScoped { fns, names := fn.params, mutable := fn.params.filter (· != "this"), methods, pure } fn.body
 
 /-! ## Evaluation -/

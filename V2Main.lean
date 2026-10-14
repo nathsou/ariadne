@@ -1,5 +1,6 @@
 import V2.Front.Check
 import V2.Model.Eval
+import V2.Model.Store
 import Lean.Data.Json
 
 /-! The `ariadne2` command line. -/
@@ -101,7 +102,9 @@ def main (args : List String) : IO UInt32 := do
       | .ok (f, values) =>
         -- `@m`: method `m` on the state given first; the result and the state it leaves.
         if f.startsWith "@" then
-          stdout.putStrLn (match runMethod parsed 100000 (f.drop 1).toString (values.headD .undefined) values.tail with
+          -- In the store model (one object changed in place), which `runMethod_store` proves
+          -- equal to the value model the theorems are about.
+          stdout.putStrLn (match runMethodStore parsed 100000 (f.drop 1).toString (values.headD .undefined) values.tail with
             | .ok (v, t) => (Json.arr #["method", observe v, observe t]).compress
             | .error e => (showFault e).compress)
         else
