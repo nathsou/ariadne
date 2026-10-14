@@ -116,3 +116,15 @@ export function score(a: number, b: number): number {
   if (b > 0) s = s * 2;
   return s;
 }
+
+/** A counted loop over `0 … m-1` with a constant bound. */
+export function triangle(n: number, cap: number): number {
+  const m = n;
+  let t = 0;
+  for (let i = 0; i < m; i++) {
+    if (i > cap) break;
+    if (i === 3) continue;
+    t = t + i;
+  }
+  return t;
+}

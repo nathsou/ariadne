@@ -344,6 +344,8 @@ mutual
     | .forOf x e body => s.fresh x && e.scoped s && stmtsScoped { s.bind x false with inLoop := true } body
     | .forEntries i x e body => i != x && s.fresh i && s.fresh x && e.scoped s &&
         stmtsScoped { (s.bind i false).bind x false with inLoop := true } body
+    | .forRange i n body => s.fresh i && s.names.contains n && !s.mutable.contains n &&
+        stmtsScoped { s.bind i false with inLoop := true } body
     | .stateSet _ k v => k.scoped s && v.scoped s
     | .stateDelete _ k => k.scoped s
     | .callThis m args => s.methods.contains m && Expr.scopedList s args
@@ -366,7 +368,7 @@ mutual
   def stmtMutates : Stmt → Bool
     | .stateSet .. | .stateDelete .. | .callThis .. => true
     | .ite _ yes no => stmtsMutate yes || stmtsMutate no
-    | .block ss | .forOf _ _ ss | .forEntries _ _ _ ss => stmtsMutate ss
+    | .block ss | .forOf _ _ ss | .forEntries _ _ _ ss | .forRange _ _ ss => stmtsMutate ss
     | .switch _ cases => casesMutate cases
     | _ => false
 
@@ -420,6 +422,10 @@ def bindParams : List String → List JSValue → Env
 /-- The iterations of `for (const [i, x] of xs.entries())`: each element with its index. -/
 def entryBindings (i x : String) (xs : List JSValue) : List Env :=
   xs.zipIdx.map fun p => [(x, p.1), (i, .number p.2)]
+
+/-- The iterations of `for (let i = 0; i < m; i++)`. -/
+def rangeBindings (i : String) (m : Int) : List Env :=
+  (List.range m.toNat).map fun (j : Nat) => [(i, JSValue.number (Int.ofNat j))]
 
 /-- Leaving a block: discard its declarations, and turn `break`/`continue` aimed at
 an enclosing construct back into outcomes in the outer environment. -/
@@ -660,6 +666,13 @@ mutual
       match ← evalExpr p n env e with
       | .array xs => loop p n env (entryBindings i x xs) body
       | _ => .error (.unsupported "entries of a non-array")
+    | n + 1, env, .forRange i k body => do
+      match env.lookup k with
+      -- `loop` with fuel `n` times out before reaching iteration `n`, so iterations
+      -- beyond the fuel are not built.
+      | some (.number m) => loop p n env (rangeBindings i (min m n)) body
+      | some _ => .error (.unsupported "a counted loop's bound that is not a number")
+      | none => .error (.referenceError k)
     | n + 1, env, .stateSet f k v => do
       let kvs ← stateMap env f
       let key ← mapKey (← evalExpr p n env k)

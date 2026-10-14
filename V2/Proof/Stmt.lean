@@ -469,6 +469,22 @@ theorem conv_forEntries {prog : Program} {e : Expr} {i x : String} {body : List 
   exact Converges.of_succ (max Na Nl) fun m hm => by
     simp [execStmt, ha m (by omega), hl m (by omega), bind, Except.bind]
 
+theorem conv_forRange {prog : Program} {i n : String} {body : List Stmt} {env : Env} {m : Int} {o : Outcome}
+    (hl : env.lookup n = some (.number m))
+    (hlp : Converges (fun k => loop prog k env (rangeBindings i m) body) (.ok o)) :
+    Converges (fun k => execStmt prog k env (.forRange i n body)) (.ok o) := by
+  obtain ⟨N, h⟩ := hlp
+  exact Converges.of_succ (max N m.toNat) fun k hk => by
+    have : min m (k : Int) = m := by omega
+    simp [execStmt, hl, this, h k (by omega)]
+
+theorem range_bindings (i : String) (m : Int) :
+    Forall2 (fun bs (y : Int) => bs = [(i, JSValue.number y)]) (rangeBindings i m) (range m) := by
+  unfold rangeBindings range
+  induction List.range m.toNat with
+  | nil => exact .nil
+  | cons j js ih => exact .cons rfl ih
+
 theorem Exit.restore_length {Γ : Ctx} {α} {env0 env : Env} {kk : Γ.denote → α} {ks r} (h : Exit env0 env kk ks r) :
     (V2.restore env0 env).length = env0.length := by
   obtain ⟨bs, envM, ρ', rfl, hl, -⟩ := h
@@ -633,6 +649,27 @@ mutual
           exact ⟨o, hc, (SRel.pop hr).mono (fun _ => rfl) (fun _ => rfl) (fun _ => rfl)⟩)
         (hvs.map_left fun w y h => ⟨w, rfl, h⟩) he hs.2
       obtain ⟨out, h, hr⟩ := then_rest hfs hrest (conv_forOf ha hl) hro hlen
+      refine ⟨out, h, ?_⟩
+      simp only [TStmts.denote, TStmts.falls, TStmts.breaks, TStmts.continues]
+      exact hr.mono (by flags) (by flags) (by flags)
+    | Γ, τ, .forRange i v body rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.wf, Bool.and_eq_true] at hw
+      obtain ⟨w, hl, hwv⟩ := v.lookup he
+      simp only [Ty.Rep] at hwv; subst hwv
+      have hrest := fun envM ρ' (_ : envM.length = env.length) hrel hsafe =>
+        TStmts.adequate rest k ks (env := envM) (ρ := ρ') hrel hsafe hw.2
+      obtain ⟨o, hlp, hro, hlen⟩ := conv_loop (prog := prog) (body := body.erase)
+        (k := { k with normal := rest.denote fs k }) (ks := { ks with normal := rest.safe fs ss ks })
+        (step := fun y next exit ρ' => body.denote fs (K.map Prod.snd ⟨next, exit, next⟩) (y, ρ'))
+        (stepS := fun y next exit ρ' => body.safe fs ss (K.map Prod.snd ⟨next, exit, next⟩) (y, ρ'))
+        (P := fun bs (y : Int) => bs = [(i, .number y)])
+        (fun bs y env ρ next nextS hbs he hs => by
+          subst hbs
+          obtain ⟨o, hc, hr⟩ := TStmts.adequate body _ _ (env := (i, .number y) :: env) (ρ := (y, ρ))
+            ⟨_, env, rfl, rfl, he⟩ hs hw.1
+          exact ⟨o, hc, (SRel.pop hr).mono (fun _ => rfl) (fun _ => rfl) (fun _ => rfl)⟩)
+        (range_bindings i (v.get ρ)) he hs
+      obtain ⟨out, h, hr⟩ := then_rest hfs hrest (conv_forRange hl hlp) hro hlen
       refine ⟨out, h, ?_⟩
       simp only [TStmts.denote, TStmts.falls, TStmts.breaks, TStmts.continues]
       exact hr.mono (by flags) (by flags) (by flags)

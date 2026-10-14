@@ -91,6 +91,9 @@ inductive Stmt where
   | forOf (x : String) (e : Expr) (body : List Stmt)
   /-- `for (const [i, x] of e.entries()) { body }`. -/
   | forEntries (i x : String) (e : Expr) (body : List Stmt)
+  /-- `for (let i = 0; i < n; i++) { body }` where `n` is a constant holding a number
+  and `body` does not assign `i` (`stmtScoped`): one iteration per `i` in `0 … n-1`. -/
+  | forRange (i n : String) (body : List Stmt)
   /-- `this.f.set(k, v);` and `this.f.delete(k);` on a `Map` field. -/
   | stateSet (f : String) (k v : Expr)
   | stateDelete (f : String) (k : Expr)

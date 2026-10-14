@@ -250,6 +250,9 @@ loop with `exit`; after the last iteration, `exit`. The state is the environment
 def forIn {α σ R : Type} (items : List α) (step : α → (σ → R) → (σ → R) → σ → R) (exit : σ → R) : σ → R :=
   items.foldr (fun y next => step y next exit) exit
 
+/-- `0 … n-1`, the values a counted loop's index takes. -/
+def range (n : Int) : List Int := (List.range n.toNat).map Int.ofNat
+
 mutual
   def TStmts.denote (fs : Φ.denote) : TStmts Φ Γ τ → K Γ τ.denote → Γ.denote → τ.denote
     | .nil, k, ρ => k.normal ρ
@@ -282,6 +285,9 @@ mutual
     | .switchG v _ arms rest, k, ρ =>
       Variants.elim _ (v.get ρ) fun i y =>
         arms.denote fs { k with normal := rest.denote fs k, brk := rest.denote fs k } ρ i y (rest.denote fs k ρ)
+    | .forRange _ v body rest, k, ρ =>
+      forIn (range (v.get ρ)) (fun j next exit ρ' => body.denote fs (K.map Prod.snd ⟨next, exit, next⟩) (j, ρ'))
+        (rest.denote fs k) ρ
     | .stateSet v i _ key e rest, k, ρ =>
       rest.denote fs k (v.set ρ (i.set (v.get ρ) (mapPut (i.get (v.get ρ)) (key.denote fs ρ) (e.denote fs ρ))))
     | .stateDelete v i _ key rest, k, ρ =>
@@ -342,6 +348,9 @@ mutual
     | .switchG v _ arms rest, k, ρ =>
       Variants.elim _ (v.get ρ) fun i y =>
         arms.safe fs ss { k with normal := rest.safe fs ss k, brk := rest.safe fs ss k } ρ i y (rest.safe fs ss k ρ)
+    | .forRange _ v body rest, k, ρ =>
+      forIn (range (v.get ρ)) (fun j next exit ρ' => body.safe fs ss (K.map Prod.snd ⟨next, exit, next⟩) (j, ρ'))
+        (rest.safe fs ss k) ρ
     | .stateSet v i _ key e rest, k, ρ => andT key.trivial (key.safe fs ss ρ) e.trivial (e.safe fs ss ρ) &&
       rest.safe fs ss k (v.set ρ (i.set (v.get ρ) (mapPut (i.get (v.get ρ)) (key.denote fs ρ) (e.denote fs ρ))))
     | .stateDelete v i _ key rest, k, ρ => (key.trivial || key.safe fs ss ρ) &&

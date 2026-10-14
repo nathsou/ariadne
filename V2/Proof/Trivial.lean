@@ -57,6 +57,11 @@ mutual
       simp only [TStmts.trivial, Bool.and_eq_true] at h
       simp [TStmts.safe, h.1]
     | _, _, .retVoid _ _, _, _, _, _ => rfl
+    | _, _, .forRange _ _ body rest, ks, ρ, hk, h => by
+      simp only [TStmts.trivial, Bool.and_eq_true] at h
+      simp only [TStmts.safe]
+      exact forIn_true (fun y next exit ρ' hn hx => TStmts.safe_of_trivial body _ _
+        (fun ρ'' => ⟨hn _, hx _, hn _⟩) h.1) (fun ρ' => TStmts.safe_of_trivial rest ks ρ' hk h.2) _ _
     | _, _, .stateSet _ _ _ key e rest, ks, ρ, hk, h => by
       simp only [TStmts.trivial, Bool.and_eq_true] at h
       simp only [TStmts.safe, andT, h.1.1, h.1.2, ite_true, Bool.true_and]

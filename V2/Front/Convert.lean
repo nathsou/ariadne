@@ -16,6 +16,8 @@ typing decisions. The non-identity mappings, each with JavaScript's meaning:
   one-statement list (it is not a block, but a single non-declaration statement has
   no scope effect).
 - `for (const [i, x] of e.entries())` is `forEntries i x e`.
+- `for (let i = 0; i < n; i++) body` on a local `n` is `forRange i n body` (whose
+  static check requires `n` constant and `i` not assigned in `body`).
 - A class: `new C()` is the function `new C` returning a record of its fields, each
   a `new Map()` (field initializers run in order); a method `m(ps)` is the function
   `m` with parameters `this :: ps`, and a `void` method gets a final `return;`
@@ -115,6 +117,10 @@ mutual
     | .break_ _ => pure .brk
     | .continue_ _ => pure .cont
     | .forOf false x e body _ => return .forOf x (← convertExpr e) (← convertBranch body)
+    | .for_ (.let_ true i _ (.literal (.number 0 0) _) _) (.binary "<" (.var i₁ _) (.var n _) _)
+        (.assign (.var i₂ _) (.binary "+" (.var i₃ _) (.literal (.number 1 0) _) _) _) body span =>
+      if i₁ == i && i₂ == i && i₃ == i then return .forRange i n (← convertBranch body)
+      else unsupported span "this for loop"
     | .forOfPair false i x (.call (.member e "entries" _) [] _) (.block body _) _ =>
       return .forEntries i x (← convertExpr e) (← convertStmts body)
     | .expr (.call (.member (.member (.var "this" _) f _) "set" _) [k, v] _) _ =>

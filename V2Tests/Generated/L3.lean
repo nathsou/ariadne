@@ -127,7 +127,21 @@ def ast : Program := [
         [
           .assign "s" (.binary .mul (.var "s") (.lit (.number 2)))]
         [],
-      .ret (.var "s")] }]
+      .ret (.var "s")] },
+  { name := "triangle", params := ["n", "cap"], body := [
+      .const "m" (.var "n"),
+      .let_ "t" (.lit (.number 0)),
+      .forRange "i" "m" [
+          .ite (.binary .gt (.var "i") (.var "cap"))
+            [
+              .brk]
+            [],
+          .ite (.binary .eq (.var "i") (.lit (.number 3)))
+            [
+              .cont]
+            [],
+          .assign "t" (.binary .add (.var "t") (.var "i"))],
+      .ret (.var "t")] }]
 
 abbrev ty.«Item» : Ty := (.record (.cons "id" .number (.cons "size" .number (.cons "tags" (.array .string) .nil))))
 abbrev ty.«Shape» : Ty := (.union "kind" (.cons (.str (js "circle")) (.cons "r" .number .nil) (.one (.str (js "square")) (.cons "side" .number .nil))))
@@ -144,6 +158,7 @@ def sig.«grid» : Sig := { name := "grid", params := [("rows", (.array (.array 
 def sig.«perimeters» : Sig := { name := "perimeters", params := [("shapes", (.array ty.«Shape»))], result := .number, trivial := false }
 def sig.«steps» : Sig := { name := "steps", params := [("n", .number)], result := .number, trivial := false }
 def sig.«score» : Sig := { name := "score", params := [("a", .number), ("b", .number)], result := .number, trivial := false }
+def sig.«triangle» : Sig := { name := "triangle", params := [("n", .number), ("cap", .number)], result := .number, trivial := false }
 
 theorem ne.«xs».«total» : ("xs" : String) ≠ "total" := by decide
 theorem ne.«total».«x» : ("total" : String) ≠ "x" := by decide
@@ -184,6 +199,12 @@ theorem ne.«count».«k» : ("count" : String) ≠ "k" := by decide
 theorem ne.«a».«s» : ("a" : String) ≠ "s" := by decide
 theorem ne.«b».«s» : ("b" : String) ≠ "s" := by decide
 theorem ne.«b».«a» : ("b" : String) ≠ "a" := by decide
+theorem ne.«m».«t» : ("m" : String) ≠ "t" := by decide
+theorem ne.«cap».«i» : ("cap" : String) ≠ "i" := by decide
+theorem ne.«cap».«t» : ("cap" : String) ≠ "t" := by decide
+theorem ne.«cap».«m» : ("cap" : String) ≠ "m" := by decide
+theorem ne.«cap».«n» : ("cap" : String) ≠ "n" := by decide
+theorem ne.«t».«i» : ("t" : String) ≠ "i" := by decide
 
 def body.«sum» : TStmts [] sig.«sum».params sig.«sum».result :=
   (.let_ "total" (.num 0)
@@ -315,10 +336,24 @@ def body.«score» : TStmts [sig.«steps», sig.«perimeters», sig.«grid», si
   .nil
   (.ret (.var .here) .nil))))
 
-abbrev sigs : Sigs := [sig.«score», sig.«steps», sig.«perimeters», sig.«grid», sig.«bump», sig.«classify», sig.«largest», sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»]
+def body.«triangle» : TStmts [sig.«score», sig.«steps», sig.«perimeters», sig.«grid», sig.«bump», sig.«classify», sig.«largest», sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«triangle».params sig.«triangle».result :=
+  (.const "m" (.var .here)
+  (.let_ "t" (.num 0)
+  (.forRange "i" (.there ne.«m».«t» .here)
+  (.ite (.bin .ngt (.var .here) (.var (.there ne.«cap».«i» (.there ne.«cap».«t» (.there ne.«cap».«m» (.there ne.«cap».«n» .here))))))
+  (.brk .nil)
+  .nil
+  (.ite (.bin (.eq (by decide)) (.var .here) (.num 3))
+  (.cont .nil)
+  .nil
+  (.assign (.there ne.«t».«i» .here) (.bin .nadd (.var (.there ne.«t».«i» .here)) (.var .here))
+  .nil)))
+  (.ret (.var .here) .nil))))
+
+abbrev sigs : Sigs := [sig.«triangle», sig.«score», sig.«steps», sig.«perimeters», sig.«grid», sig.«bump», sig.«classify», sig.«largest», sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»]
 
 def typed : TProgram sigs :=
-  (.cons sig.«score» body.«score» (.cons sig.«steps» body.«steps» (.cons sig.«perimeters» body.«perimeters» (.cons sig.«grid» body.«grid» (.cons sig.«bump» body.«bump» (.cons sig.«classify» body.«classify» (.cons sig.«largest» body.«largest» (.cons sig.«prefixUntil» body.«prefixUntil» (.cons sig.«countTagged» body.«countTagged» (.cons sig.«indexOf» body.«indexOf» (.cons sig.«firstLarge» body.«firstLarge» (.cons sig.«sum» body.«sum» .nil))))))))))))
+  (.cons sig.«triangle» body.«triangle» (.cons sig.«score» body.«score» (.cons sig.«steps» body.«steps» (.cons sig.«perimeters» body.«perimeters» (.cons sig.«grid» body.«grid» (.cons sig.«bump» body.«bump» (.cons sig.«classify» body.«classify» (.cons sig.«largest» body.«largest» (.cons sig.«prefixUntil» body.«prefixUntil» (.cons sig.«countTagged» body.«countTagged» (.cons sig.«indexOf» body.«indexOf» (.cons sig.«firstLarge» body.«firstLarge» (.cons sig.«sum» body.«sum» .nil)))))))))))))
 
 theorem erased : typed.erase = ast := by kernel_rfl
 
@@ -684,6 +719,48 @@ def «score».safe («a» : Int) («b» : Int) : Bool :=
     V2.inRange («s» - (1 : Int)) && (let «s» : Int := «s» - (1 : Int)
     after2' («s», «a», «b», ()))
 
+def «triangle» («n» : Int) («cap» : Int) : Int :=
+  let «m» : Int := «n»
+  let «t» : Int := (0 : Int)
+  V2.forIn (V2.range «m») (fun «i» next2' exit2' s2' =>
+    let «t» := s2'.1
+    let «m» := s2'.2.1
+    let «n» := s2'.2.2.1
+    let «cap» := s2'.2.2.2.1
+    if decide («i» > «cap») then
+      exit2' («t», «m», «n», «cap», ())
+    else
+      if «i» == (3 : Int) then
+        next2' («t», «m», «n», «cap», ())
+      else
+        let «t» : Int := «t» + «i»
+        next2' («t», «m», «n», «cap», ()))
+    (fun s2' =>
+    let «t» := s2'.1
+    «t»)
+    («t», «m», «n», «cap», ())
+
+/-- The inputs on which `triangle` stays within what the model covers. -/
+def «triangle».safe («n» : Int) («cap» : Int) : Bool :=
+  let «m» : Int := «n»
+  let «t» : Int := (0 : Int)
+  V2.forIn (V2.range «m») (fun «i» next2' exit2' s2' =>
+    let «t» := s2'.1
+    let «m» := s2'.2.1
+    let «n» := s2'.2.2.1
+    let «cap» := s2'.2.2.2.1
+    if decide («i» > «cap») then
+      exit2' («t», «m», «n», «cap», ())
+    else
+      if «i» == (3 : Int) then
+        next2' («t», «m», «n», «cap», ())
+      else
+        V2.inRange («t» + «i») && (let «t» : Int := «t» + «i»
+        next2' («t», «m», «n», «cap», ())))
+    (fun s2' =>
+    true)
+    («t», «m», «n», «cap», ())
+
 /-! ## Denotation
 
 Each body is checked against its readable definition with the earlier functions'
@@ -837,11 +914,23 @@ theorem «score».safe_eq :
     body.«score».safeFn («steps».uncurried, «perimeters».uncurried, «grid».uncurried, «bump».uncurried, «classify».uncurried, «largest».uncurried, «prefixUntil».uncurried, «countTagged».uncurried, «indexOf».uncurried, «firstLarge».uncurried, «sum».uncurried, ()) («steps».safety, «perimeters».safety, «grid».safety, «bump».safety, «classify».safety, «largest».safety, «prefixUntil».safety, «countTagged».safety, «indexOf».safety, «firstLarge».safety, «sum».safety, ()) = «score».safety := by
   kernel_rfl
 
-theorem denote_eq : typed.denote = («score».uncurried, «steps».uncurried, «perimeters».uncurried, «grid».uncurried, «bump».uncurried, «classify».uncurried, «largest».uncurried, «prefixUntil».uncurried, «countTagged».uncurried, «indexOf».uncurried, «firstLarge».uncurried, «sum».uncurried, ()) :=
-  (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «sum».body_eq) «firstLarge».body_eq) «indexOf».body_eq) «countTagged».body_eq) «prefixUntil».body_eq) «largest».body_eq) «classify».body_eq) «bump».body_eq) «grid».body_eq) «perimeters».body_eq) «steps».body_eq) «score».body_eq)
+def «triangle».uncurried : sig.«triangle».denote := fun xs => «triangle» xs.1 xs.2.1
 
-theorem safety_eq : typed.safety = («score».safety, «steps».safety, «perimeters».safety, «grid».safety, «bump».safety, «classify».safety, «largest».safety, «prefixUntil».safety, «countTagged».safety, «indexOf».safety, «firstLarge».safety, «sum».safety, ()) :=
-  (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «sum».body_eq) «firstLarge».body_eq) «indexOf».body_eq) «countTagged».body_eq) «prefixUntil».body_eq) «largest».body_eq) «classify».body_eq) «bump».body_eq) «grid».body_eq) «perimeters».body_eq) «steps».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «sum».body_eq) «firstLarge».body_eq) «indexOf».body_eq) «countTagged».body_eq) «prefixUntil».body_eq) «largest».body_eq) «classify».body_eq) «bump».body_eq) «grid».body_eq) «perimeters».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «sum».body_eq) «firstLarge».body_eq) «indexOf».body_eq) «countTagged».body_eq) «prefixUntil».body_eq) «largest».body_eq) «classify».body_eq) «bump».body_eq) «grid».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «sum».body_eq) «firstLarge».body_eq) «indexOf».body_eq) «countTagged».body_eq) «prefixUntil».body_eq) «largest».body_eq) «classify».body_eq) «bump».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «sum».body_eq) «firstLarge».body_eq) «indexOf».body_eq) «countTagged».body_eq) «prefixUntil».body_eq) «largest».body_eq) «classify».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «sum».body_eq) «firstLarge».body_eq) «indexOf».body_eq) «countTagged».body_eq) «prefixUntil».body_eq) «largest».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «sum».body_eq) «firstLarge».body_eq) «indexOf».body_eq) «countTagged».body_eq) «prefixUntil».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «sum».body_eq) «firstLarge».body_eq) «indexOf».body_eq) «countTagged».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «sum».body_eq) «firstLarge».body_eq) «indexOf».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons rfl «sum».body_eq) «firstLarge».body_eq) (TProgram.safety_cons (TProgram.denote_cons rfl «sum».body_eq) (TProgram.safety_cons rfl rfl «sum».safe_eq) «firstLarge».safe_eq) «indexOf».safe_eq) «countTagged».safe_eq) «prefixUntil».safe_eq) «largest».safe_eq) «classify».safe_eq) «bump».safe_eq) «grid».safe_eq) «perimeters».safe_eq) «steps».safe_eq) «score».safe_eq)
+def «triangle».safety : sig.«triangle».params.denote → Bool := fun xs => «triangle».safe xs.1 xs.2.1
+
+theorem «triangle».body_eq :
+    body.«triangle».denoteFn («score».uncurried, «steps».uncurried, «perimeters».uncurried, «grid».uncurried, «bump».uncurried, «classify».uncurried, «largest».uncurried, «prefixUntil».uncurried, «countTagged».uncurried, «indexOf».uncurried, «firstLarge».uncurried, «sum».uncurried, ()) = «triangle».uncurried := by
+  kernel_rfl
+
+theorem «triangle».safe_eq :
+    body.«triangle».safeFn («score».uncurried, «steps».uncurried, «perimeters».uncurried, «grid».uncurried, «bump».uncurried, «classify».uncurried, «largest».uncurried, «prefixUntil».uncurried, «countTagged».uncurried, «indexOf».uncurried, «firstLarge».uncurried, «sum».uncurried, ()) («score».safety, «steps».safety, «perimeters».safety, «grid».safety, «bump».safety, «classify».safety, «largest».safety, «prefixUntil».safety, «countTagged».safety, «indexOf».safety, «firstLarge».safety, «sum».safety, ()) = «triangle».safety := by
+  kernel_rfl
+
+theorem denote_eq : typed.denote = («triangle».uncurried, «score».uncurried, «steps».uncurried, «perimeters».uncurried, «grid».uncurried, «bump».uncurried, «classify».uncurried, «largest».uncurried, «prefixUntil».uncurried, «countTagged».uncurried, «indexOf».uncurried, «firstLarge».uncurried, «sum».uncurried, ()) :=
+  (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «sum».body_eq) «firstLarge».body_eq) «indexOf».body_eq) «countTagged».body_eq) «prefixUntil».body_eq) «largest».body_eq) «classify».body_eq) «bump».body_eq) «grid».body_eq) «perimeters».body_eq) «steps».body_eq) «score».body_eq) «triangle».body_eq)
+
+theorem safety_eq : typed.safety = («triangle».safety, «score».safety, «steps».safety, «perimeters».safety, «grid».safety, «bump».safety, «classify».safety, «largest».safety, «prefixUntil».safety, «countTagged».safety, «indexOf».safety, «firstLarge».safety, «sum».safety, ()) :=
+  (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «sum».body_eq) «firstLarge».body_eq) «indexOf».body_eq) «countTagged».body_eq) «prefixUntil».body_eq) «largest».body_eq) «classify».body_eq) «bump».body_eq) «grid».body_eq) «perimeters».body_eq) «steps».body_eq) «score».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «sum».body_eq) «firstLarge».body_eq) «indexOf».body_eq) «countTagged».body_eq) «prefixUntil».body_eq) «largest».body_eq) «classify».body_eq) «bump».body_eq) «grid».body_eq) «perimeters».body_eq) «steps».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «sum».body_eq) «firstLarge».body_eq) «indexOf».body_eq) «countTagged».body_eq) «prefixUntil».body_eq) «largest».body_eq) «classify».body_eq) «bump».body_eq) «grid».body_eq) «perimeters».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «sum».body_eq) «firstLarge».body_eq) «indexOf».body_eq) «countTagged».body_eq) «prefixUntil».body_eq) «largest».body_eq) «classify».body_eq) «bump».body_eq) «grid».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «sum».body_eq) «firstLarge».body_eq) «indexOf».body_eq) «countTagged».body_eq) «prefixUntil».body_eq) «largest».body_eq) «classify».body_eq) «bump».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «sum».body_eq) «firstLarge».body_eq) «indexOf».body_eq) «countTagged».body_eq) «prefixUntil».body_eq) «largest».body_eq) «classify».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «sum».body_eq) «firstLarge».body_eq) «indexOf».body_eq) «countTagged».body_eq) «prefixUntil».body_eq) «largest».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «sum».body_eq) «firstLarge».body_eq) «indexOf».body_eq) «countTagged».body_eq) «prefixUntil».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «sum».body_eq) «firstLarge».body_eq) «indexOf».body_eq) «countTagged».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «sum».body_eq) «firstLarge».body_eq) «indexOf».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons rfl «sum».body_eq) «firstLarge».body_eq) (TProgram.safety_cons (TProgram.denote_cons rfl «sum».body_eq) (TProgram.safety_cons rfl rfl «sum».safe_eq) «firstLarge».safe_eq) «indexOf».safe_eq) «countTagged».safe_eq) «prefixUntil».safe_eq) «largest».safe_eq) «classify».safe_eq) «bump».safe_eq) «grid».safe_eq) «perimeters».safe_eq) «steps».safe_eq) «score».safe_eq) «triangle».safe_eq)
 
 /-! ## Source theorems -/
 
@@ -852,7 +941,7 @@ theorem «sum».source («xs» : List (Int)) (vs' : List JSValue)
     (safe' : «sum».safe «xs» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "sum" vs') (.ok w') ∧
       Ty.Rep .number w' («sum» «xs») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "sum" sig.«sum») rfl («xs», ()) vs' args' safe'
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "sum" sig.«sum») rfl («xs», ()) vs' args' safe'
 
 /-- Every run of `firstLarge` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -860,7 +949,7 @@ theorem «firstLarge».source («items» : List (ty.«Item».denote)) («limit»
     (args' : ArgsRep sig.«firstLarge».params vs' («items», «limit», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "firstLarge" vs') (.ok w') ∧
       Ty.Rep (.option .undef ty.«Item») w' («firstLarge» «items» «limit») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "firstLarge" sig.«firstLarge») rfl («items», «limit», ()) vs' args' rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "firstLarge" sig.«firstLarge») rfl («items», «limit», ()) vs' args' rfl
 
 /-- Every run of `indexOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -868,7 +957,7 @@ theorem «indexOf».source («xs» : List (JSString)) («target» : JSString) (v
     (args' : ArgsRep sig.«indexOf».params vs' («xs», «target», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "indexOf" vs') (.ok w') ∧
       Ty.Rep .number w' («indexOf» «xs» «target») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "indexOf" sig.«indexOf») rfl («xs», «target», ()) vs' args' rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "indexOf" sig.«indexOf») rfl («xs», «target», ()) vs' args' rfl
 
 /-- Every run of `countTagged` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -877,7 +966,7 @@ theorem «countTagged».source («items» : List (ty.«Item».denote)) («tag» 
     (safe' : «countTagged».safe «items» «tag» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "countTagged" vs') (.ok w') ∧
       Ty.Rep .number w' («countTagged» «items» «tag») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) : FVar sigs "countTagged" sig.«countTagged») rfl («items», «tag», ()) vs' args' safe'
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "countTagged" sig.«countTagged») rfl («items», «tag», ()) vs' args' safe'
 
 /-- Every run of `prefixUntil` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -885,7 +974,7 @@ theorem «prefixUntil».source («xs» : List (Int)) («stop» : Int) (vs' : Lis
     (args' : ArgsRep sig.«prefixUntil».params vs' («xs», «stop», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "prefixUntil" vs') (.ok w') ∧
       Ty.Rep (.array .number) w' («prefixUntil» «xs» «stop») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there .here))))))) : FVar sigs "prefixUntil" sig.«prefixUntil») rfl («xs», «stop», ()) vs' args' rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) : FVar sigs "prefixUntil" sig.«prefixUntil») rfl («xs», «stop», ()) vs' args' rfl
 
 /-- Every run of `largest` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -893,7 +982,7 @@ theorem «largest».source («items» : List (ty.«Item».denote)) (vs' : List J
     (args' : ArgsRep sig.«largest».params vs' («items», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "largest" vs') (.ok w') ∧
       Ty.Rep (.option .undef ty.«Item») w' («largest» «items») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "largest" sig.«largest») rfl («items», ()) vs' args' rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there .here))))))) : FVar sigs "largest" sig.«largest») rfl («items», ()) vs' args' rfl
 
 /-- Every run of `classify` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -902,7 +991,7 @@ theorem «classify».source («xs» : List (Int)) (vs' : List JSValue)
     (safe' : «classify».safe «xs» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "classify" vs') (.ok w') ∧
       Ty.Rep .string w' («classify» «xs») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "classify" sig.«classify») rfl («xs», ()) vs' args' safe'
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "classify" sig.«classify») rfl («xs», ()) vs' args' safe'
 
 /-- Every run of `bump` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -911,7 +1000,7 @@ theorem «bump».source («n» : Int) (vs' : List JSValue)
     (safe' : «bump».safe «n» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "bump" vs') (.ok w') ∧
       Ty.Rep .number w' («bump» «n») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "bump" sig.«bump») rfl («n», ()) vs' args' safe'
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "bump" sig.«bump») rfl («n», ()) vs' args' safe'
 
 /-- Every run of `grid` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -920,7 +1009,7 @@ theorem «grid».source («rows» : List (List (Int))) (vs' : List JSValue)
     (safe' : «grid».safe «rows» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "grid" vs') (.ok w') ∧
       Ty.Rep .number w' («grid» «rows») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "grid" sig.«grid») rfl («rows», ()) vs' args' safe'
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "grid" sig.«grid») rfl («rows», ()) vs' args' safe'
 
 /-- Every run of `perimeters` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -929,7 +1018,7 @@ theorem «perimeters».source («shapes» : List (ty.«Shape».denote)) (vs' : L
     (safe' : «perimeters».safe «shapes» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "perimeters" vs') (.ok w') ∧
       Ty.Rep .number w' («perimeters» «shapes») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "perimeters" sig.«perimeters») rfl («shapes», ()) vs' args' safe'
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "perimeters" sig.«perimeters») rfl («shapes», ()) vs' args' safe'
 
 /-- Every run of `steps` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -938,7 +1027,7 @@ theorem «steps».source («n» : Int) (vs' : List JSValue)
     (safe' : «steps».safe «n» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "steps" vs') (.ok w') ∧
       Ty.Rep .number w' («steps» «n») :=
-  source_of erased wf denote_eq safety_eq ((.there .here) : FVar sigs "steps" sig.«steps») rfl («n», ()) vs' args' safe'
+  source_of erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "steps" sig.«steps») rfl («n», ()) vs' args' safe'
 
 /-- Every run of `score` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -947,6 +1036,15 @@ theorem «score».source («a» : Int) («b» : Int) (vs' : List JSValue)
     (safe' : «score».safe «a» «b» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "score" vs') (.ok w') ∧
       Ty.Rep .number w' («score» «a» «b») :=
-  source_of erased wf denote_eq safety_eq (.here : FVar sigs "score" sig.«score») rfl («a», «b», ()) vs' args' safe'
+  source_of erased wf denote_eq safety_eq ((.there .here) : FVar sigs "score" sig.«score») rfl («a», «b», ()) vs' args' safe'
+
+/-- Every run of `triangle` on arguments representing its inputs converges to a value
+representing the readable definition's result. -/
+theorem «triangle».source («n» : Int) («cap» : Int) (vs' : List JSValue)
+    (args' : ArgsRep sig.«triangle».params vs' («n», «cap», ()))
+    (safe' : «triangle».safe «n» «cap» = true) :
+    ∃ w', Converges (fun fuel' => run ast fuel' "triangle" vs') (.ok w') ∧
+      Ty.Rep .number w' («triangle» «n» «cap») :=
+  source_of erased wf denote_eq safety_eq (.here : FVar sigs "triangle" sig.«triangle») rfl («n», «cap», ()) vs' args' safe'
 
 end V2Tests.Generated.L3

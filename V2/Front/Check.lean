@@ -1000,6 +1000,20 @@ mutual
              readable := text (·.readable), safe := fun i k => andText a.ok (text (·.safe) i k),
              trivial := a.trivial && body.trivial && rest.trivial,
              falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
+    | .for_ (.let_ true i _ (.literal (.number 0 0) _) _) (.binary "<" (.var i₁ _) (.var n _) _)
+        (.assign (.var i₂ _) (.binary "+" (.var i₃ _) (.literal (.number 1 0) _) _) _) body span :: rest => do
+      if !(i₁ == i && i₂ == i && i₃ == i) then unsupportedTy span "this for loop"
+      let some (j, τ) := s.lookup n | throw { code := "A2001", message := s!"unknown variable '{n}'", span }
+      if τ != .number then mismatch span s!"the bound '{n}' is {τ.ts}, not a number"
+      if s.mutables.contains n then mismatch span s!"the bound '{n}' must be a const"
+      -- The index is not assignable in the body (it is not added to the mutables).
+      let body ← checkStmts T (← declare s span i .number) result (branchStmts body)
+      let rest ← checkStmts T s result rest
+      let text (render : Block → String → KText → String) :=
+        loopText render s.locals s!"(V2.range {ident n})" (ident i) (fun _ => "") body rest
+      pure { typed := s!"(.forRange {leanString i} {s.varPath j}\n  {body.typed}\n  {rest.typed})",
+             readable := text (·.readable), safe := text (·.safe), trivial := body.trivial && rest.trivial,
+             falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
     | .forOfPair false ix x (.call (.member e "entries" _) [] _) (.block body _) span :: rest => do
       let a ← inferExpr T s e none
       let .array σ := a.ty | mismatch span s!"entries of {a.ty.ts}"
@@ -1336,6 +1350,7 @@ mutual
     | .forOf x e body => s!".forOf {leanString x} {printExpr e} {printStmts (indent ++ "  ") body}"
     | .forEntries i x e body =>
       s!".forEntries {leanString i} {leanString x} {printExpr e} {printStmts (indent ++ "  ") body}"
+    | .forRange i n body => s!".forRange {leanString i} {leanString n} {printStmts (indent ++ "  ") body}"
     | .stateSet f k v => s!".stateSet {leanString f} {printExpr k} {printExpr v}"
     | .stateDelete f k => s!".stateDelete {leanString f} {printExpr k}"
     | .callThis m args => s!".callThis {leanString m} [{", ".intercalate (args.map printExpr)}]"

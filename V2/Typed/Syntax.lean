@@ -358,6 +358,9 @@ mutual
     | switchG {x key : String} {vs : Variants} (v : Var Γ x (.union key vs))
         (h : (vs.tagsOk && !protoNames.contains key) = true)
         (arms : TArms Φ Γ τ v) (rest : TStmts Φ Γ τ) : TStmts Φ Γ τ
+    /-- `for (let i = 0; i < n; i++) body` on a constant `n`. -/
+    | forRange (i : String) {n : String} (v : Var Γ n .number) (body : TStmts Φ ((i, .number) :: Γ) τ)
+        (rest : TStmts Φ Γ τ) : TStmts Φ Γ τ
     /-- `this.f.set(k, e);` (the state's field names are distinct). -/
     | stateSet {f : String} {fs : Fields} {σ : Ty} (v : Var Γ "this" (.record fs)) (i : FIdx fs f (.map σ))
         (h : fs.names.Nodup) (k : TExpr Φ Γ .string) (e : TExpr Φ Γ σ) (rest : TStmts Φ Γ τ) : TStmts Φ Γ τ
@@ -486,6 +489,7 @@ mutual
     | @TStmts.ifNullExit _ _ _ _ _ x _ _ yes rest => .ite (nullTest x) yes.erase [] :: rest.erase
     | @TStmts.ifNotNull _ _ _ _ _ x _ _ yes no rest => .ite (notNullTest x) yes.erase no.erase :: rest.erase
     | @TStmts.switchG _ _ _ x key _ _ _ arms rest => .switch (.field (.var x) key) arms.erase :: rest.erase
+    | .forRange (n := n) i _ body rest => .forRange i n body.erase :: rest.erase
     | .stateSet (f := f) _ _ _ k e rest => .stateSet f k.erase e.erase :: rest.erase
     | .stateDelete (f := f) _ _ _ k rest => .stateDelete f k.erase :: rest.erase
     | .callVoid (m := m) _ _ args rest => .callThis m args.erase :: rest.erase
@@ -532,7 +536,7 @@ mutual
     | .block body rest => body.falls && rest.falls
     | .brk _ | .cont _ => false
     | .let_ _ _ rest | .assign _ _ rest | .forOf _ _ _ rest | .forEntries _ _ _ _ rest => rest.falls
-    | .stateSet _ _ _ _ _ rest | .stateDelete _ _ _ _ rest | .callVoid _ _ _ rest => rest.falls
+    | .stateSet _ _ _ _ _ rest | .stateDelete _ _ _ _ rest | .callVoid _ _ _ rest | .forRange _ _ _ rest => rest.falls
     | .retVoid _ _ => false
     | .ifNullExit _ _ _ rest => rest.falls
     | .switchG _ _ cases rest => (cases.falls || cases.breaks || !cases.covers) && rest.falls
@@ -547,7 +551,7 @@ mutual
     | .brk _ => true
     | .cont _ => false
     | .let_ _ _ rest | .assign _ _ rest | .forOf _ _ _ rest | .forEntries _ _ _ _ rest => rest.breaks
-    | .stateSet _ _ _ _ _ rest | .stateDelete _ _ _ _ rest | .callVoid _ _ _ rest => rest.breaks
+    | .stateSet _ _ _ _ _ rest | .stateDelete _ _ _ _ rest | .callVoid _ _ _ rest | .forRange _ _ _ rest => rest.breaks
     | .retVoid _ _ => false
     | .ifNullExit _ _ yes rest => yes.breaks || rest.breaks
     | .switchG _ _ cases rest => (cases.falls || cases.breaks || !cases.covers) && rest.breaks
@@ -562,7 +566,8 @@ mutual
     | .brk _ => false
     | .cont _ => true
     | .let_ _ _ rest | .assign _ _ rest | .forOf _ _ _ rest | .forEntries _ _ _ _ rest => rest.continues
-    | .stateSet _ _ _ _ _ rest | .stateDelete _ _ _ _ rest | .callVoid _ _ _ rest => rest.continues
+    | .stateSet _ _ _ _ _ rest | .stateDelete _ _ _ _ rest | .callVoid _ _ _ rest | .forRange _ _ _ rest =>
+      rest.continues
     | .retVoid _ _ => false
     | .ifNullExit _ _ yes rest => yes.continues || rest.continues
     | .switchG _ _ cases rest => cases.continues || ((cases.falls || cases.breaks || !cases.covers) && rest.continues)
@@ -596,7 +601,7 @@ mutual
     | .ret _ rest => !vd && rest.wf vd
     | .retVoid _ rest | .stateSet _ _ _ _ _ rest | .stateDelete _ _ _ _ rest | .callVoid _ _ _ rest => vd && rest.wf vd
     | .const _ _ rest | .brk rest | .let_ _ _ rest | .assign _ _ rest | .cont rest => rest.wf vd
-    | .forOf _ _ body rest | .forEntries _ _ _ body rest => body.wf vd && rest.wf vd
+    | .forOf _ _ body rest | .forEntries _ _ _ body rest | .forRange _ _ body rest => body.wf vd && rest.wf vd
     | .ite _ yes no rest | .ifNull _ _ yes no rest | .ifNotNull _ _ yes no rest =>
       yes.wf vd && no.wf vd && rest.wf vd
     | .block body rest => body.wf vd && rest.wf vd
@@ -680,6 +685,7 @@ mutual
     | .ifNull _ _ yes no rest | .ifNotNull _ _ yes no rest => yes.trivial && no.trivial && rest.trivial
     | .ifNullExit _ _ yes rest => yes.trivial && rest.trivial
     | .switchG _ _ cases rest => cases.trivial && rest.trivial
+    | .forRange _ _ body rest => body.trivial && rest.trivial
     | .stateSet _ _ _ k e rest => k.trivial && e.trivial && rest.trivial
     | .stateDelete _ _ _ k rest => k.trivial && rest.trivial
     | .callVoid (t := t) _ _ args rest => t && args.trivial && rest.trivial
