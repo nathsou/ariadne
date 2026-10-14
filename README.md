@@ -37,8 +37,14 @@ model (a test oracle), and `ariadne signatures FILE` prints the exported signatu
 `Ariadne.adequacy` (`Ariadne/Proof/Adequacy.lean`) is proved by induction on typed syntax, once
 for every program. Per file, the kernel only checks structural equations: that the typed program
 erases to the parsed one, that it is well formed, and that the printed definitions are its
-denotation. No `sorry`, and only Lean's standard axioms (`propext`, `Classical.choice`,
-`Quot.sound`), checked for every theorem by `scripts/Audit.lean`.
+denotation.
+
+`lake exe audit` is the soundness gate:
+- every declaration re-checks with Lean's kernel;
+- every theorem uses only `propext`, `Classical.choice` and `Quot.sound` (no `sorry`);
+- nothing a theorem depends on is `partial`, `unsafe`, `implemented_by` or `extern`;
+- the trusted base is exactly what `trusted.lock` records: the model, the relations the theorems state
+  results in, and the theorems' statements. A change to any of it is a change to that file, to review.
 
 Trusted:
 
@@ -49,6 +55,23 @@ Trusted:
 
 The type checker, the printer and every tactic are untrusted: a bug in any of them makes a
 per-file check fail, never a wrong theorem.
+
+## Using Ariadne in a project
+
+Require it in the project's `lakefile.toml`, pinned to a commit:
+
+```toml
+[[require]]
+name = "ariadne"
+git = "https://github.com/nathsou/ariadne"
+rev = "<commit>"
+```
+
+Translate each TypeScript file with `lake exe ariadne translate`, check the generated files in, and
+prove properties of the readable definitions. `Ariadne.Audit.run` gives the project the same soundness
+gate, with its own lock: for example, every proposition defined under `Spec` must be proved exactly by
+the theorem of the same name under `Proofs`, and the lock records every statement, so a changed
+statement is a visible change in review.
 
 ## Documentation
 

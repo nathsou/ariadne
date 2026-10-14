@@ -54,6 +54,7 @@ Concluded per file:          every readable def is what the TypeScript function 
 | `Ariadne/Proof/*` | The adequacy proof, and the store model's agreement with the value model | No |
 | `Ariadne/Lib/Sort.lean` | Laws that make comparators consistent (for `toSorted` safety conditions) | No |
 | `Ariadne/Kernel.lean` | `kernel_rfl`: closed equations checked by the kernel alone | No |
+| `Ariadne/Audit.lean`, `Audit.lean` | The soundness gate, and its configuration for Ariadne (`trusted.lock`) | No |
 | `Ariadne/Front/Check.lean` | Type checker and printer | No |
 | `Main.lean` | The `ariadne` command (`translate`, and the test oracles `batch` and `signatures`) | No |
 | `Tests/` | Fixtures and their generated files, model cases, negative fixtures, property proofs | — |
@@ -220,8 +221,16 @@ readable definitions and transfer them to every run.
 - **Regeneration**: each fixture's generated file must regenerate with no diff and kernel-check.
 - **Negative fixtures** (`scripts/negative.mjs`, `Tests/negative`): every refusal, with its diagnostic
   code.
-- **Axiom audit** (`scripts/Audit.lean`): every theorem uses only `propext`, `Classical.choice` and
-  `Quot.sound`; `sorry` and `native_decide` would show up as axioms.
+- **Audit** (`lake exe audit`, `Ariadne/Audit.lean`):
+  - every declaration is replayed through the kernel;
+  - every theorem uses only `propext`, `Classical.choice` and `Quot.sound` (`sorry` and `native_decide`
+    would show up as axioms);
+  - nothing theorems depend on is `partial`, `unsafe`, `implemented_by` or `extern`, so the compiled
+    evaluator the differential tests run is the one the proofs reason about;
+  - `trusted.lock` matches. It records the statements of the public theorems, and the definitions of
+    `run`, `runMethod`, `runMethodStore`, `Converges`, `Ty.Rep` and `ArgsRep` with everything they use:
+    bodies when short, fingerprints for recursive and derived definitions. A change to the trusted base
+    is a change to that file.
 - **CI** (`scripts/check.sh`): pinned tools and no build cache, since Lean imports compiled modules
   without re-checking their proofs.
 

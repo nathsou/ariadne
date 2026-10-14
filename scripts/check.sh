@@ -17,7 +17,7 @@ for source in Tests/fixtures/*.ts; do
 done
 git diff --exit-code -- Tests/Generated
 lake build Tests
-lake env lean scripts/Audit.lean
+lake exe audit
 
 "$js" scripts/differential.mjs
 "$js" scripts/negative.mjs

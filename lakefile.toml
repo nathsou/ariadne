@@ -11,3 +11,8 @@ name = "Tests"
 [[lean_exe]]
 name = "ariadne"
 root = "Main"
+
+[[lean_exe]]
+name = "audit"
+root = "Audit"
+supportInterpreter = true
