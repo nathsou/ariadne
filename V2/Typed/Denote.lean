@@ -69,6 +69,31 @@ def sortSafe (cmp : α → α → Int) (t : Bool) (s : α → α → Bool) (xs :
 
 /-! ## Expressions -/
 
+/-- An operator's result. -/
+def Op.apply : Op σ τ → σ.denote → σ.denote → τ.denote
+  | .add, a, b | .nadd, a, b => a + b
+  | .sub, a, b | .nsub, a, b => a - b
+  | .mul, a, b | .nmul, a, b => a * b
+  | .concat, a, b => a ++ b
+  | .eq _, a, b => Ty.beq _ a b
+  | .ne _, a, b => !Ty.beq _ a b
+  | .lt, a, b | .nlt, a, b => decide (a < b)
+  | .le, a, b | .nle, a, b => decide (a ≤ b)
+  | .gt, a, b | .ngt, a, b => decide (b < a)
+  | .ge, a, b | .nge, a, b => decide (b ≤ a)
+  | .slt, a, b => strLt a b
+  | .sle, a, b => strLe a b
+  | .sgt, a, b => strLt b a
+  | .sge, a, b => strLe b a
+
+/-- An operator's safety condition, given its operands' condition `s`: `number`
+arithmetic must stay within the safe integers. -/
+def Op.guard : Op σ τ → Bool → σ.denote → σ.denote → Bool
+  | .nadd, s, a, b => s && inRange (a + b)
+  | .nsub, s, a, b => s && inRange (a - b)
+  | .nmul, s, a, b => s && inRange (a * b)
+  | _, s, _, _ => s
+
 mutual
   def TExpr.denote (fs : Φ.denote) : TExpr Φ Γ τ → Γ.denote → τ.denote
     | .bool b, _ => b
@@ -82,20 +107,7 @@ mutual
     | .widen N e, ρ => N.embed (e.denote fs ρ)
     | .not e, ρ => !e.denote fs ρ
     | .neg e, ρ => -e.denote fs ρ
-    | .add a b, ρ => a.denote fs ρ + b.denote fs ρ
-    | .sub a b, ρ => a.denote fs ρ - b.denote fs ρ
-    | .mul a b, ρ => a.denote fs ρ * b.denote fs ρ
-    | .concat a b, ρ => a.denote fs ρ ++ b.denote fs ρ
-    | .eq _ a b, ρ => Ty.beq _ (a.denote fs ρ) (b.denote fs ρ)
-    | .ne _ a b, ρ => !Ty.beq _ (a.denote fs ρ) (b.denote fs ρ)
-    | .lt a b, ρ => decide (a.denote fs ρ < b.denote fs ρ)
-    | .le a b, ρ => decide (a.denote fs ρ ≤ b.denote fs ρ)
-    | .gt a b, ρ => decide (b.denote fs ρ < a.denote fs ρ)
-    | .ge a b, ρ => decide (b.denote fs ρ ≤ a.denote fs ρ)
-    | .slt a b, ρ => strLt (a.denote fs ρ) (b.denote fs ρ)
-    | .sle a b, ρ => strLe (a.denote fs ρ) (b.denote fs ρ)
-    | .sgt a b, ρ => strLt (b.denote fs ρ) (a.denote fs ρ)
-    | .sge a b, ρ => strLe (b.denote fs ρ) (a.denote fs ρ)
+    | .bin op a b, ρ => op.apply (a.denote fs ρ) (b.denote fs ρ)
     | .and a b, ρ => a.denote fs ρ && b.denote fs ρ
     | .or a b, ρ => a.denote fs ρ || b.denote fs ρ
     | .cond c a b, ρ => if c.denote fs ρ then a.denote fs ρ else b.denote fs ρ
@@ -117,13 +129,6 @@ mutual
     | .num n, _ => n
     | .negNum n _, _ => -n
     | .nneg e, ρ => -e.denote fs ρ
-    | .nadd a b, ρ => a.denote fs ρ + b.denote fs ρ
-    | .nsub a b, ρ => a.denote fs ρ - b.denote fs ρ
-    | .nmul a b, ρ => a.denote fs ρ * b.denote fs ρ
-    | .nlt a b, ρ => decide (a.denote fs ρ < b.denote fs ρ)
-    | .nle a b, ρ => decide (a.denote fs ρ ≤ b.denote fs ρ)
-    | .ngt a b, ρ => decide (b.denote fs ρ < a.denote fs ρ)
-    | .nge a b, ρ => decide (b.denote fs ρ ≤ a.denote fs ρ)
     | .array es, ρ => es.denote fs ρ
     | .length a, ρ => ((a.denote fs ρ).length : Int)
     | .slength s, ρ => ((s.denote fs ρ).length : Int)
@@ -175,18 +180,10 @@ mutual
     | .num _, _ | .negNum .., _ => true
     | .widen _ e, ρ | .not e, ρ | .neg e, ρ | .isNull _ e, ρ | .notNull _ e, ρ | .field e _ _, ρ
     | .length e, ρ | .slength e, ρ => e.safe fs ss ρ
-    | .add a b, ρ | .sub a b, ρ | .mul a b, ρ | .concat a b, ρ | .eq _ a b, ρ | .ne _ a b, ρ
-    | .lt a b, ρ | .le a b, ρ | .gt a b, ρ | .ge a b, ρ
-    | .slt a b, ρ | .sle a b, ρ | .sgt a b, ρ | .sge a b, ρ
-    | .nlt a b, ρ | .nle a b, ρ | .ngt a b, ρ | .nge a b, ρ | .index a b, ρ | .includes _ a b, ρ =>
-      andT a.trivial (a.safe fs ss ρ) b.trivial (b.safe fs ss ρ)
+    | .index a b, ρ | .includes _ a b, ρ => andT a.trivial (a.safe fs ss ρ) b.trivial (b.safe fs ss ρ)
+    | .bin op a b, ρ => op.guard (andT a.trivial (a.safe fs ss ρ) b.trivial (b.safe fs ss ρ))
+      (a.denote fs ρ) (b.denote fs ρ)
     | .nneg e, ρ => (e.trivial || e.safe fs ss ρ) && inRange (-e.denote fs ρ)
-    | .nadd a b, ρ => andT a.trivial (a.safe fs ss ρ) b.trivial (b.safe fs ss ρ) &&
-      inRange (a.denote fs ρ + b.denote fs ρ)
-    | .nsub a b, ρ => andT a.trivial (a.safe fs ss ρ) b.trivial (b.safe fs ss ρ) &&
-      inRange (a.denote fs ρ - b.denote fs ρ)
-    | .nmul a b, ρ => andT a.trivial (a.safe fs ss ρ) b.trivial (b.safe fs ss ρ) &&
-      inRange (a.denote fs ρ * b.denote fs ρ)
     | .and a b, ρ => andT a.trivial (a.safe fs ss ρ) b.trivial (if a.denote fs ρ then b.safe fs ss ρ else true)
     | .or a b, ρ => andT a.trivial (a.safe fs ss ρ) b.trivial (if a.denote fs ρ then true else b.safe fs ss ρ)
     | .cond c a b, ρ => andT c.trivial (c.safe fs ss ρ) (a.trivial && b.trivial)

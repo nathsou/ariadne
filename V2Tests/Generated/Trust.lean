@@ -269,23 +269,23 @@ def body.«listed» : TStmts [] sig.«listed».params sig.«listed».result :=
   (.ret (.bool false) .nil)
   (.ifNullExit (.there ne.«list».«kid» .here) (by decide)
   (.ret (.bool false) .nil)
-  (.ret (.and (.ne (by decide) (.var .here) (.str (js ""))) (.includes (by decide) (.var (.there ne.«list».«kid» .here)) (.var .here))) .nil)))
+  (.ret (.and (.bin (.ne (by decide)) (.var .here) (.str (js ""))) (.includes (by decide) (.var (.there ne.«list».«kid» .here)) (.var .here))) .nil)))
 
 def body.«byRank» : TStmts [sig.«listed»] sig.«byRank».params sig.«byRank».result :=
-  (.ite (.ne (by decide) (.field (.var .here) (.there .here) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there .here) (by decide)))
+  (.ite (.bin (.ne (by decide)) (.field (.var .here) (.there .here) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there .here) (by decide)))
   (.ret (.cond (.field (.var .here) (.there .here) (by decide)) (.negNum 1 (by decide)) (.num 1)) .nil)
   .nil
-  (.ite (.ne (by decide) (.field (.var .here) (.there (.there .here)) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there .here)) (by decide)))
+  (.ite (.bin (.ne (by decide)) (.field (.var .here) (.there (.there .here)) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there .here)) (by decide)))
   (.ret (.cond (.field (.var .here) (.there (.there .here)) (by decide)) (.negNum 1 (by decide)) (.num 1)) .nil)
   .nil
-  (.ite (.ne (by decide) (.field (.var .here) (.there (.there (.there .here))) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there .here))) (by decide)))
-  (.ret (.cond (.ngt (.field (.var .here) (.there (.there (.there .here))) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there .here))) (by decide))) (.negNum 1 (by decide)) (.num 1)) .nil)
+  (.ite (.bin (.ne (by decide)) (.field (.var .here) (.there (.there (.there .here))) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there .here))) (by decide)))
+  (.ret (.cond (.bin .ngt (.field (.var .here) (.there (.there (.there .here))) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there .here))) (by decide))) (.negNum 1 (by decide)) (.num 1)) .nil)
   .nil
-  (.ite (.ne (by decide) (.field (.var .here) (.there (.there (.there (.there .here)))) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there (.there .here)))) (by decide)))
-  (.ret (.cond (.ngt (.field (.var .here) (.there (.there (.there (.there .here)))) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there (.there .here)))) (by decide))) (.negNum 1 (by decide)) (.num 1)) .nil)
+  (.ite (.bin (.ne (by decide)) (.field (.var .here) (.there (.there (.there (.there .here)))) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there (.there .here)))) (by decide)))
+  (.ret (.cond (.bin .ngt (.field (.var .here) (.there (.there (.there (.there .here)))) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there (.there .here)))) (by decide))) (.negNum 1 (by decide)) (.num 1)) .nil)
   .nil
-  (.ite (.ne (by decide) (.field (.var .here) .here (by decide)) (.field (.var (.there ne.«b».«a» .here)) .here (by decide)))
-  (.ret (.cond (.nlt (.field (.var .here) .here (by decide)) (.field (.var (.there ne.«b».«a» .here)) .here (by decide))) (.negNum 1 (by decide)) (.num 1)) .nil)
+  (.ite (.bin (.ne (by decide)) (.field (.var .here) .here (by decide)) (.field (.var (.there ne.«b».«a» .here)) .here (by decide)))
+  (.ret (.cond (.bin .nlt (.field (.var .here) .here (by decide)) (.field (.var (.there ne.«b».«a» .here)) .here (by decide))) (.negNum 1 (by decide)) (.num 1)) .nil)
   .nil
   (.ret (.num 0) .nil))))))
 
@@ -304,40 +304,40 @@ def body.«chooseVaultCopy» : TStmts [sig.«byRank», sig.«listed»] sig.«cho
   (.narrow (.there .head) (.assign (.there ne.«damaged».«f» (.there ne.«damaged».«index» (.there ne.«damaged».«older» (.there ne.«damaged».«notOwner» .here)))) (.bool true)
   (.cont .nil))
   (.narrow (.there (.there .one)) (.block (.assign (.there ne.«opened».«f» (.there ne.«opened».«index» (.there ne.«opened».«older» (.there ne.«opened».«notOwner» (.there ne.«opened».«damaged» .here))))) (.bool true)
-  (.ite (.or (.eq (by decide) (.field (.var .here) (.there (.there (.there (.there .here)))) (by decide)) (.litIn (js "ok") [(js "legacy"), (js "bad"), (js "none")] 2)) (.eq (by decide) (.field (.var .here) (.there (.there (.there .here))) (by decide)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 3)))
+  (.ite (.or (.bin (.eq (by decide)) (.field (.var .here) (.there (.there (.there (.there .here)))) (by decide)) (.litIn (js "ok") [(js "legacy"), (js "bad"), (js "none")] 2)) (.bin (.eq (by decide)) (.field (.var .here) (.there (.there (.there .here))) (by decide)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 3)))
   (.assign (.there ne.«notOwner».«f» (.there ne.«notOwner».«index» (.there ne.«notOwner».«older» .here))) (.bool true)
   (.cont .nil))
   .nil
-  (.ite (.or (.and (.eq (by decide) (.field (.var .here) (.there (.there (.there (.there .here)))) (by decide)) (.litIn (js "ok") [(js "legacy"), (js "bad"), (js "none")] 1)) (.call (s := sig.«listed») (.there .here) (by decide) (.cons (.field (.var .here) (.there (.there (.there (.there (.there .here))))) (by decide)) (.cons (.var (.there ne.«committedFactors».«f» (.there ne.«committedFactors».«index» (.there ne.«committedFactors».«older» (.there ne.«committedFactors».«notOwner» (.there ne.«committedFactors».«damaged» (.there ne.«committedFactors».«opened» (.there ne.«committedFactors».«ok» (.there ne.«committedFactors».«floorSeed» (.there ne.«committedFactors».«taggedFactors» .here)))))))))) .nil)))) (.and (.eq (by decide) (.field (.var .here) (.there (.there (.there .here))) (by decide)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 2)) (.call (s := sig.«listed») (.there .here) (by decide) (.cons (.field (.var .here) (.there (.there (.there (.there (.there .here))))) (by decide)) (.cons (.var (.there ne.«taggedFactors».«f» (.there ne.«taggedFactors».«index» (.there ne.«taggedFactors».«older» (.there ne.«taggedFactors».«notOwner» (.there ne.«taggedFactors».«damaged» (.there ne.«taggedFactors».«opened» (.there ne.«taggedFactors».«ok» (.there ne.«taggedFactors».«floorSeed» .here))))))))) .nil)))))
+  (.ite (.or (.and (.bin (.eq (by decide)) (.field (.var .here) (.there (.there (.there (.there .here)))) (by decide)) (.litIn (js "ok") [(js "legacy"), (js "bad"), (js "none")] 1)) (.call (s := sig.«listed») (.there .here) (by decide) (.cons (.field (.var .here) (.there (.there (.there (.there (.there .here))))) (by decide)) (.cons (.var (.there ne.«committedFactors».«f» (.there ne.«committedFactors».«index» (.there ne.«committedFactors».«older» (.there ne.«committedFactors».«notOwner» (.there ne.«committedFactors».«damaged» (.there ne.«committedFactors».«opened» (.there ne.«committedFactors».«ok» (.there ne.«committedFactors».«floorSeed» (.there ne.«committedFactors».«taggedFactors» .here)))))))))) .nil)))) (.and (.bin (.eq (by decide)) (.field (.var .here) (.there (.there (.there .here))) (by decide)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 2)) (.call (s := sig.«listed») (.there .here) (by decide) (.cons (.field (.var .here) (.there (.there (.there (.there (.there .here))))) (by decide)) (.cons (.var (.there ne.«taggedFactors».«f» (.there ne.«taggedFactors».«index» (.there ne.«taggedFactors».«older» (.there ne.«taggedFactors».«notOwner» (.there ne.«taggedFactors».«damaged» (.there ne.«taggedFactors».«opened» (.there ne.«taggedFactors».«ok» (.there ne.«taggedFactors».«floorSeed» .here))))))))) .nil)))))
   (.assign (.there ne.«notOwner».«f» (.there ne.«notOwner».«index» (.there ne.«notOwner».«older» .here))) (.bool true)
   (.cont .nil))
   .nil
-  (.ite (.and (.ne (by decide) (.var (.there ne.«floorSeed».«f» (.there ne.«floorSeed».«index» (.there ne.«floorSeed».«older» (.there ne.«floorSeed».«notOwner» (.there ne.«floorSeed».«damaged» (.there ne.«floorSeed».«opened» (.there ne.«floorSeed».«ok» .here)))))))) (.str (js ""))) (.not (.includes (by decide) (.field (.var .here) (.there (.there .here)) (by decide)) (.var (.there ne.«floorSeed».«f» (.there ne.«floorSeed».«index» (.there ne.«floorSeed».«older» (.there ne.«floorSeed».«notOwner» (.there ne.«floorSeed».«damaged» (.there ne.«floorSeed».«opened» (.there ne.«floorSeed».«ok» .here)))))))))))
+  (.ite (.and (.bin (.ne (by decide)) (.var (.there ne.«floorSeed».«f» (.there ne.«floorSeed».«index» (.there ne.«floorSeed».«older» (.there ne.«floorSeed».«notOwner» (.there ne.«floorSeed».«damaged» (.there ne.«floorSeed».«opened» (.there ne.«floorSeed».«ok» .here)))))))) (.str (js ""))) (.not (.includes (by decide) (.field (.var .here) (.there (.there .here)) (by decide)) (.var (.there ne.«floorSeed».«f» (.there ne.«floorSeed».«index» (.there ne.«floorSeed».«older» (.there ne.«floorSeed».«notOwner» (.there ne.«floorSeed».«damaged» (.there ne.«floorSeed».«opened» (.there ne.«floorSeed».«ok» .here)))))))))))
   (.assign (.there ne.«older».«f» (.there ne.«older».«index» .here)) (.bool true)
   (.cont .nil))
   .nil
-  (.assign (.there ne.«ok».«f» (.there ne.«ok».«index» (.there ne.«ok».«older» (.there ne.«ok».«notOwner» (.there ne.«ok».«damaged» (.there ne.«ok».«opened» .here)))))) (.array (τ := ty.«Candidate») (.spread (.var (.there ne.«ok».«f» (.there ne.«ok».«index» (.there ne.«ok».«older» (.there ne.«ok».«notOwner» (.there ne.«ok».«damaged» (.there ne.«ok».«opened» .here))))))) (.cons (.record (.cons "index" (.var (.there ne.«index».«f» .here)) (.cons "committed" (.eq (by decide) (.field (.var .here) (.there (.there (.there (.there .here)))) (by decide)) (.litIn (js "ok") [(js "legacy"), (js "bad"), (js "none")] 0)) (.cons "tagged" (.ne (by decide) (.field (.var .here) (.there (.there (.there .here))) (by decide)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 2)) (.cons "seeds" (.length (.field (.var .here) (.there (.there .here)) (by decide))) (.cons "written" (.field (.var .here) (.there .here) (by decide)) .nil))))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) (.cons (.there (.there (.there (.there .here)))) .nil))))) (by decide)) .nil)))
+  (.assign (.there ne.«ok».«f» (.there ne.«ok».«index» (.there ne.«ok».«older» (.there ne.«ok».«notOwner» (.there ne.«ok».«damaged» (.there ne.«ok».«opened» .here)))))) (.array (τ := ty.«Candidate») (.spread (.var (.there ne.«ok».«f» (.there ne.«ok».«index» (.there ne.«ok».«older» (.there ne.«ok».«notOwner» (.there ne.«ok».«damaged» (.there ne.«ok».«opened» .here))))))) (.cons (.record (.cons "index" (.var (.there ne.«index».«f» .here)) (.cons "committed" (.bin (.eq (by decide)) (.field (.var .here) (.there (.there (.there (.there .here)))) (by decide)) (.litIn (js "ok") [(js "legacy"), (js "bad"), (js "none")] 0)) (.cons "tagged" (.bin (.ne (by decide)) (.field (.var .here) (.there (.there (.there .here))) (by decide)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 2)) (.cons "seeds" (.length (.field (.var .here) (.there (.there .here)) (by decide))) (.cons "written" (.field (.var .here) (.there .here) (by decide)) .nil))))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) (.cons (.there (.there (.there (.there .here)))) .nil))))) (by decide)) .nil)))
   .nil)))))
   .nil)
   .nil)))
   .nil)
-  (.ite (.ngt (.length (.var (.there ne.«ok».«older» (.there ne.«ok».«notOwner» (.there ne.«ok».«damaged» (.there ne.«ok».«opened» .here)))))) (.num 0))
+  (.ite (.bin .ngt (.length (.var (.there ne.«ok».«older» (.there ne.«ok».«notOwner» (.there ne.«ok».«damaged» (.there ne.«ok».«opened» .here)))))) (.num 0))
   (.const "ranked" (.sorted (.var (.there ne.«ok».«older» (.there ne.«ok».«notOwner» (.there ne.«ok».«damaged» (.there ne.«ok».«opened» .here))))) (.ref .here (by decide)))
   (.const "anyCommitted" (.any (.var .here) (.arrow "x" (.field (.var .here) (.there .here) (by decide))))
   (.ret (.widen (.variant .head) (.record (.cons "ok" (.tagLit (.bool true)) (.cons "order" (.map (.var (.there ne.«ranked».«anyCommitted» .here)) (.arrow "x" (.record (.cons "index" (.field (.var .here) .here (by decide)) (.cons "trusted" (.and (.field (.var .here) (.there (.there .here)) (by decide)) (.or (.field (.var .here) (.there .here) (by decide)) (.not (.var (.there ne.«anyCommitted».«x» .here))))) (.cons "committed" (.field (.var .here) (.there .here) (by decide)) .nil))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) .nil))) (by decide)))) .nil)) (.cons .here (.cons (.there .here) .nil)) (by decide))) .nil)))
   .nil
-  (.ret (.widen (.variant (.there .one)) (.record (.cons "ok" (.tagLit (.bool false)) (.cons "refused" (.cond (.var .here) (.litIn (js "none") [(js "wrong-key"), (js "damaged"), (js "not-owner"), (js "older")] 4) (.cond (.var (.there ne.«notOwner».«older» .here)) (.litIn (js "none") [(js "wrong-key"), (js "damaged"), (js "not-owner"), (js "older")] 3) (.cond (.var (.there ne.«damaged».«older» (.there ne.«damaged».«notOwner» .here))) (.litIn (js "none") [(js "wrong-key"), (js "damaged"), (js "not-owner"), (js "older")] 2) (.cond (.or (.var (.there ne.«opened».«older» (.there ne.«opened».«notOwner» (.there ne.«opened».«damaged» .here)))) (.ngt (.length (.var (.there ne.«facts».«older» (.there ne.«facts».«notOwner» (.there ne.«facts».«damaged» (.there ne.«facts».«opened» (.there ne.«facts».«ok» (.there ne.«facts».«floorSeed» (.there ne.«facts».«taggedFactors» (.there ne.«facts».«committedFactors» .here)))))))))) (.num 0))) (.litIn (js "none") [(js "wrong-key"), (js "damaged"), (js "not-owner"), (js "older")] 1) (.litIn (js "none") [(js "wrong-key"), (js "damaged"), (js "not-owner"), (js "older")] 0))))) .nil)) (.cons .here (.cons (.there .here) .nil)) (by decide))) .nil)))))))))))
+  (.ret (.widen (.variant (.there .one)) (.record (.cons "ok" (.tagLit (.bool false)) (.cons "refused" (.cond (.var .here) (.litIn (js "none") [(js "wrong-key"), (js "damaged"), (js "not-owner"), (js "older")] 4) (.cond (.var (.there ne.«notOwner».«older» .here)) (.litIn (js "none") [(js "wrong-key"), (js "damaged"), (js "not-owner"), (js "older")] 3) (.cond (.var (.there ne.«damaged».«older» (.there ne.«damaged».«notOwner» .here))) (.litIn (js "none") [(js "wrong-key"), (js "damaged"), (js "not-owner"), (js "older")] 2) (.cond (.or (.var (.there ne.«opened».«older» (.there ne.«opened».«notOwner» (.there ne.«opened».«damaged» .here)))) (.bin .ngt (.length (.var (.there ne.«facts».«older» (.there ne.«facts».«notOwner» (.there ne.«facts».«damaged» (.there ne.«facts».«opened» (.there ne.«facts».«ok» (.there ne.«facts».«floorSeed» (.there ne.«facts».«taggedFactors» (.there ne.«facts».«committedFactors» .here)))))))))) (.num 0))) (.litIn (js "none") [(js "wrong-key"), (js "damaged"), (js "not-owner"), (js "older")] 1) (.litIn (js "none") [(js "wrong-key"), (js "damaged"), (js "not-owner"), (js "older")] 0))))) .nil)) (.cons .here (.cons (.there .here) .nil)) (by decide))) .nil)))))))))))
 
 def body.«chooseKeysCopy» : TStmts [sig.«chooseVaultCopy», sig.«byRank», sig.«listed»] sig.«chooseKeysCopy».params sig.«chooseKeysCopy».result :=
   (.let_ "best" (.null .null ty.«BestKeys» (by decide))
   (.forEntries "index" "f" (.var (.there ne.«facts».«best» .here))
   (.switchG .here (by decide)
   (.empty (some (.str (js "unopened"))) (.wide (some (.str (js "damaged"))) (.cont .nil)
-  (.narrow (.there (.there .one)) (.block (.ite (.eq (by decide) (.field (.var .here) (.there (.there (.there .here))) (by decide)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 3))
+  (.narrow (.there (.there .one)) (.block (.ite (.bin (.eq (by decide)) (.field (.var .here) (.there (.there (.there .here))) (by decide)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 3))
   (.cont .nil)
   .nil
-  (.const "trusted" (.ne (by decide) (.field (.var .here) (.there (.there (.there .here))) (by decide)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 2))
-  (.const "better" (.condNull (.there ne.«best».«trusted» (.there ne.«best».«f» (.there ne.«best».«index» .here))) (by decide) (.bool true) (.or (.and (.var .here) (.not (.field (.var (.there ne.«best».«trusted» (.there ne.«best».«f» (.there ne.«best».«index» .here)))) (.there .here) (by decide)))) (.and (.eq (by decide) (.var .here) (.field (.var (.there ne.«best».«trusted» (.there ne.«best».«f» (.there ne.«best».«index» .here)))) (.there .here) (by decide))) (.ngt (.field (.var (.there ne.«f».«trusted» .here)) (.there .here) (by decide)) (.field (.var (.there ne.«best».«trusted» (.there ne.«best».«f» (.there ne.«best».«index» .here)))) (.there (.there .here)) (by decide))))))
+  (.const "trusted" (.bin (.ne (by decide)) (.field (.var .here) (.there (.there (.there .here))) (by decide)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 2))
+  (.const "better" (.condNull (.there ne.«best».«trusted» (.there ne.«best».«f» (.there ne.«best».«index» .here))) (by decide) (.bool true) (.or (.and (.var .here) (.not (.field (.var (.there ne.«best».«trusted» (.there ne.«best».«f» (.there ne.«best».«index» .here)))) (.there .here) (by decide)))) (.and (.bin (.eq (by decide)) (.var .here) (.field (.var (.there ne.«best».«trusted» (.there ne.«best».«f» (.there ne.«best».«index» .here)))) (.there .here) (by decide))) (.bin .ngt (.field (.var (.there ne.«f».«trusted» .here)) (.there .here) (by decide)) (.field (.var (.there ne.«best».«trusted» (.there ne.«best».«f» (.there ne.«best».«index» .here)))) (.there (.there .here)) (by decide))))))
   (.ite (.var .here)
   (.assign (.there ne.«best».«better» (.there ne.«best».«trusted» (.there ne.«best».«f» (.there ne.«best».«index» .here)))) (.widen (.some .null ty.«BestKeys») (.record (.cons "index" (.var (.there ne.«index».«better» (.there ne.«index».«trusted» (.there ne.«index».«f» .here)))) (.cons "trusted" (.var (.there ne.«trusted».«better» .here)) (.cons "written" (.field (.var (.there ne.«f».«better» (.there ne.«f».«trusted» .here))) (.there .here) (by decide)) .nil))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) .nil))) (by decide)))
   .nil)
@@ -354,7 +354,7 @@ def body.«newestOwnCopy» : TStmts [sig.«chooseKeysCopy», sig.«chooseVaultCo
   (.forEntries "i" "stamp" (.var (.there ne.«stamps».«newest» (.there ne.«stamps».«best» (.there ne.«stamps».«own» .here))))
   (.ifNullExit .here (by decide)
   (.cont .nil)
-  (.ite (.ngt (.var .here) (.var (.there ne.«newest».«stamp» (.there ne.«newest».«i» .here))))
+  (.ite (.bin .ngt (.var .here) (.var (.there ne.«newest».«stamp» (.there ne.«newest».«i» .here))))
   (.assign (.there ne.«best».«stamp» (.there ne.«best».«i» (.there ne.«best».«newest» .here))) (.var (.there ne.«i».«stamp» .here))
   (.assign (.there ne.«newest».«stamp» (.there ne.«newest».«i» .here)) (.var .here)
   .nil))
@@ -363,7 +363,7 @@ def body.«newestOwnCopy» : TStmts [sig.«chooseKeysCopy», sig.«chooseVaultCo
   (.ret (.var (.there ne.«best».«newest» .here)) .nil))))
 
 def body.«mayChangeFrom» : TStmts [sig.«newestOwnCopy», sig.«chooseKeysCopy», sig.«chooseVaultCopy», sig.«byRank», sig.«listed»] sig.«mayChangeFrom».params sig.«mayChangeFrom».result :=
-  (.ret (.nge (.var .here) (.var (.there ne.«floorWritten».«written» .here))) .nil)
+  (.ret (.bin .nge (.var .here) (.var (.there ne.«floorWritten».«written» .here))) .nil)
 
 def body.«answered» : TStmts [sig.«mayChangeFrom», sig.«newestOwnCopy», sig.«chooseKeysCopy», sig.«chooseVaultCopy», sig.«byRank», sig.«listed»] sig.«answered».params sig.«answered».result :=
   (.switchG .here (by decide)
@@ -375,7 +375,7 @@ def body.«answered» : TStmts [sig.«mayChangeFrom», sig.«newestOwnCopy», si
 def body.«repairOne» : TStmts [sig.«answered», sig.«mayChangeFrom», sig.«newestOwnCopy», sig.«chooseKeysCopy», sig.«chooseVaultCopy», sig.«byRank», sig.«listed»] sig.«repairOne».params sig.«repairOne».result :=
   (.switchG .here (by decide)
   (.narrow .head (.ret (.var (.there ne.«allAnswered».«c» (.there ne.«allAnswered».«own» .here))) .nil)
-  (.narrow (.there (.there .head)) (.ret (.nlt (.field (.var .here) (.there .here) (by decide)) (.var (.there ne.«own».«c» .here))) .nil)
+  (.narrow (.there (.there .head)) (.ret (.bin .nlt (.field (.var .here) (.there .here) (by decide)) (.var (.there ne.«own».«c» .here))) .nil)
   (.empty (some (.str (js "older"))) (.wide (some (.str (js "damaged"))) (.ret (.bool true) .nil)
   (.empty (some (.str (js "unknown"))) (.wide (some (.str (js "foreign"))) (.ret (.bool false) .nil)
   .nil))))))

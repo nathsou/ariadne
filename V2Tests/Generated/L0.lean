@@ -85,19 +85,19 @@ theorem ne.«square».«cube» : ("square" : String) ≠ "cube" := by decide
 theorem ne.«x».«cube» : ("x" : String) ≠ "cube" := by decide
 
 def body.«max» : TStmts [] sig.«max».params sig.«max».result :=
-  (.ite (.lt (.var .here) (.var (.there ne.«b».«a» .here)))
+  (.ite (.bin .lt (.var .here) (.var (.there ne.«b».«a» .here)))
   (.ret (.var (.there ne.«b».«a» .here)) .nil)
   .nil
   (.ret (.var .here) .nil))
 
 def body.«clamp» : TStmts [sig.«max»] sig.«clamp».params sig.«clamp».result :=
   (.const "y" (.call (s := sig.«max») .here (by decide) (.cons (.var .here) (.cons (.var (.there ne.«lo».«x» .here)) .nil)))
-  (.ret (.cond (.gt (.var .here) (.var (.there ne.«hi».«y» (.there ne.«hi».«x» (.there ne.«hi».«lo» .here))))) (.var (.there ne.«hi».«y» (.there ne.«hi».«x» (.there ne.«hi».«lo» .here)))) (.var .here)) .nil))
+  (.ret (.cond (.bin .gt (.var .here) (.var (.there ne.«hi».«y» (.there ne.«hi».«x» (.there ne.«hi».«lo» .here))))) (.var (.there ne.«hi».«y» (.there ne.«hi».«x» (.there ne.«hi».«lo» .here)))) (.var .here)) .nil))
 
 def body.«sign» : TStmts [sig.«clamp», sig.«max»] sig.«sign».params sig.«sign».result :=
-  (.ite (.lt (.var .here) (.int 0))
+  (.ite (.bin .lt (.var .here) (.int 0))
   (.ret (.neg (.int 1)) .nil)
-  (.ite (.eq (by decide) (.var .here) (.int 0))
+  (.ite (.bin (.eq (by decide)) (.var .here) (.int 0))
   (.ret (.int 0) .nil)
   .nil
   .nil)
@@ -105,27 +105,27 @@ def body.«sign» : TStmts [sig.«clamp», sig.«max»] sig.«sign».params sig.
 
 def body.«describe» : TStmts [sig.«sign», sig.«clamp», sig.«max»] sig.«describe».params sig.«describe».result :=
   (.const "s" (.call (s := sig.«sign») .here (by decide) (.cons (.var .here) .nil))
-  (.const "prefix" (.concat (.var (.there ne.«label».«s» (.there ne.«label».«n» .here))) (.str (js ": ")))
-  (.ite (.eq (by decide) (.var (.there ne.«s».«prefix» .here)) (.int 0))
-  (.ret (.concat (.var .here) (.str (js "zero"))) .nil)
+  (.const "prefix" (.bin .concat (.var (.there ne.«label».«s» (.there ne.«label».«n» .here))) (.str (js ": ")))
+  (.ite (.bin (.eq (by decide)) (.var (.there ne.«s».«prefix» .here)) (.int 0))
+  (.ret (.bin .concat (.var .here) (.str (js "zero"))) .nil)
   .nil
-  (.const "kind" (.cond (.gt (.var (.there ne.«s».«prefix» .here)) (.int 0)) (.str (js "positive")) (.str (js "negative")))
-  (.ite (.or (.eq (by decide) (.var (.there ne.«label».«kind» (.there ne.«label».«prefix» (.there ne.«label».«s» (.there ne.«label».«n» .here))))) (.str (js ""))) (.sle (.var (.there ne.«label».«kind» (.there ne.«label».«prefix» (.there ne.«label».«s» (.there ne.«label».«n» .here))))) (.str (js "a"))))
+  (.const "kind" (.cond (.bin .gt (.var (.there ne.«s».«prefix» .here)) (.int 0)) (.str (js "positive")) (.str (js "negative")))
+  (.ite (.or (.bin (.eq (by decide)) (.var (.there ne.«label».«kind» (.there ne.«label».«prefix» (.there ne.«label».«s» (.there ne.«label».«n» .here))))) (.str (js ""))) (.bin .sle (.var (.there ne.«label».«kind» (.there ne.«label».«prefix» (.there ne.«label».«s» (.there ne.«label».«n» .here))))) (.str (js "a"))))
   (.ret (.var .here) .nil)
   .nil
-  (.ret (.concat (.var (.there ne.«prefix».«kind» .here)) (.var .here)) .nil))))))
+  (.ret (.bin .concat (.var (.there ne.«prefix».«kind» .here)) (.var .here)) .nil))))))
 
 def body.«between» : TStmts [sig.«describe», sig.«sign», sig.«clamp», sig.«max»] sig.«between».params sig.«between».result :=
-  (.ret (.and (.and (.not (.slt (.var (.there ne.«x».«lo» .here)) (.var .here))) (.sle (.var (.there ne.«x».«lo» .here)) (.var (.there ne.«hi».«lo» (.there ne.«hi».«x» .here))))) (.ne (by decide) (.var .here) (.var (.there ne.«hi».«lo» (.there ne.«hi».«x» .here))))) .nil)
+  (.ret (.and (.and (.not (.bin .slt (.var (.there ne.«x».«lo» .here)) (.var .here))) (.bin .sle (.var (.there ne.«x».«lo» .here)) (.var (.there ne.«hi».«lo» (.there ne.«hi».«x» .here))))) (.bin (.ne (by decide)) (.var .here) (.var (.there ne.«hi».«lo» (.there ne.«hi».«x» .here))))) .nil)
 
 def body.«polynomial» : TStmts [sig.«between», sig.«describe», sig.«sign», sig.«clamp», sig.«max»] sig.«polynomial».params sig.«polynomial».result :=
-  (.const "square" (.mul (.var .here) (.var .here))
-  (.const "cube" (.mul (.var .here) (.var (.there ne.«x».«square» .here)))
-  (.ret (.sub (.add (.sub (.var .here) (.mul (.int 2) (.var (.there ne.«square».«cube» .here)))) (.mul (.int 3) (.var (.there ne.«x».«cube» (.there ne.«x».«square» .here))))) (.int 4)) .nil)))
+  (.const "square" (.bin .mul (.var .here) (.var .here))
+  (.const "cube" (.bin .mul (.var .here) (.var (.there ne.«x».«square» .here)))
+  (.ret (.bin .sub (.bin .add (.bin .sub (.var .here) (.bin .mul (.int 2) (.var (.there ne.«square».«cube» .here)))) (.bin .mul (.int 3) (.var (.there ne.«x».«cube» (.there ne.«x».«square» .here))))) (.int 4)) .nil)))
 
 def body.«implies» : TStmts [sig.«polynomial», sig.«between», sig.«describe», sig.«sign», sig.«clamp», sig.«max»] sig.«implies».params sig.«implies».result :=
   (.ite (.var .here)
-  (.const "t" (.eq (by decide) (.var (.there ne.«b».«a» .here)) (.bool true))
+  (.const "t" (.bin (.eq (by decide)) (.var (.there ne.«b».«a» .here)) (.bool true))
   (.ite (.var .here)
   (.ret (.bool true) .nil)
   .nil

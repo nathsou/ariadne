@@ -666,18 +666,18 @@ mutual
         | _ => do let a ← inferExpr T s a none; pure (a, ← checkExpr T s b (some a.ty))
       if !a.ty.prim then mismatch span s!"'{op}' on {a.ty.ts} (objects compare by identity)"
       let neg := op == "!=="
-      return { ty := .bool, typed := s!"(.{if neg then "ne" else "eq"} (by decide) {a.typed} {b.typed})",
+      return { ty := .bool, typed := s!"(.bin (.{if neg then "ne" else "eq"} (by decide)) {a.typed} {b.typed})",
                readable := s!"{a.term} {if neg then "!=" else "=="} {b.term}", trivial := a.trivial && b.trivial,
                safe := both a b }
     | _ => do
       let a ← inferExpr T s a none
       let b ← checkExpr T s b (some a.ty)
       let mk (ty : Ty) (ctor readable : String) : Out :=
-        { ty, typed := s!"(.{ctor} {a.typed} {b.typed})", readable, trivial := a.trivial && b.trivial,
+        { ty, typed := s!"(.bin .{ctor} {a.typed} {b.typed})", readable, trivial := a.trivial && b.trivial,
           safe := both a b }
       -- Number arithmetic stays exact only within the safe-integer range.
       let arith (ctor sym : String) : Out :=
-        { ty := .number, typed := s!"(.{ctor} {a.typed} {b.typed})", readable := s!"{a.term} {sym} {b.term}",
+        { ty := .number, typed := s!"(.bin .{ctor} {a.typed} {b.typed})", readable := s!"{a.term} {sym} {b.term}",
           trivial := false, safe := andText (both a b) s!"V2.inRange ({a.term} {sym} {b.term})" }
       match op, a.ty with
       | "+", .int => pure (mk .int "add" s!"{a.term} + {b.term}")

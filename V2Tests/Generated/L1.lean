@@ -122,7 +122,7 @@ def body.«origin» : TStmts [] sig.«origin».params sig.«origin».result :=
   (.ret (.record (.cons "x" (.int 0) (.cons "y" (.int 0) .nil)) (.cons .here (.cons (.there .here) (.absent (by decide) .nil))) (by decide)) .nil)
 
 def body.«moved» : TStmts [sig.«origin»] sig.«moved».params sig.«moved».result :=
-  (.ret (.update (.var .here) (.cons "x" (.add (.field (.var .here) .here (by decide)) (.var (.there ne.«dx».«p» .here))) (.cons "label" (.widen (.some .undef .string) (.str (js "moved"))) .nil)) (.set .here (.keep (by decide) (.set (.there .here) .nil))) (by decide)) .nil)
+  (.ret (.update (.var .here) (.cons "x" (.bin .add (.field (.var .here) .here (by decide)) (.var (.there ne.«dx».«p» .here))) (.cons "label" (.widen (.some .undef .string) (.str (js "moved"))) .nil)) (.set .here (.keep (by decide) (.set (.there .here) .nil))) (by decide)) .nil)
 
 def body.«labelOf» : TStmts [sig.«moved», sig.«origin»] sig.«labelOf».params sig.«labelOf».result :=
   (.ret (.coalesce (by decide) (.field (.var .here) (.there (.there .here)) (by decide)) (.str (js "unnamed"))) .nil)
@@ -131,7 +131,7 @@ def body.«hasLabel» : TStmts [sig.«labelOf», sig.«moved», sig.«origin»] 
   (.const "l" (.field (.var .here) (.there (.there .here)) (by decide))
   (.ifNullExit .here (by decide)
   (.ret (.bool false) .nil)
-  (.ret (.ne (by decide) (.var .here) (.str (js ""))) .nil)))
+  (.ret (.bin (.ne (by decide)) (.var .here) (.str (js ""))) .nil)))
 
 def body.«describe» : TStmts [sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«describe».params sig.«describe».result :=
   (.switchG .here (by decide)
@@ -139,10 +139,10 @@ def body.«describe» : TStmts [sig.«hasLabel», sig.«labelOf», sig.«moved»
   (.narrow (.there .head) (.ret (.str (js "d")) .nil)
   (.narrow (.there (.there .one)) (.block (.const "k" (.field (.var .here) (.there (.there (.there .here))) (by decide))
   (.const "suffix" (.condNull .here (by decide) (.str (js "-")) (.var .here))
-  (.ite (.eq (by decide) (.field (.var (.there ne.«f».«suffix» (.there ne.«f».«k» .here))) (.there (.there .here)) (by decide)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 3))
-  (.ret (.concat (.str (js "o!")) (.var .here)) .nil)
+  (.ite (.bin (.eq (by decide)) (.field (.var (.there ne.«f».«suffix» (.there ne.«f».«k» .here))) (.there (.there .here)) (by decide)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 3))
+  (.ret (.bin .concat (.str (js "o!")) (.var .here)) .nil)
   .nil
-  (.ret (.concat (.str (js "o")) (.var .here)) .nil))))
+  (.ret (.bin .concat (.str (js "o")) (.var .here)) .nil))))
   .nil)
   .nil)))
   .nil)
@@ -151,18 +151,18 @@ def body.«trusted» : TStmts [sig.«describe», sig.«hasLabel», sig.«labelOf
   (.switchG .here (by decide)
   (.narrow .head (.ret (.bool false) .nil)
   (.narrow (.there .head) (.ret (.bool false) .nil)
-  (.narrow (.there (.there .one)) (.ret (.and (.ne (by decide) (.field (.var .here) (.there (.there .here)) (by decide)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 3)) (.ne (by decide) (.field (.var .here) (.there (.there .here)) (by decide)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 2))) .nil)
+  (.narrow (.there (.there .one)) (.ret (.and (.bin (.ne (by decide)) (.field (.var .here) (.there (.there .here)) (by decide)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 3)) (.bin (.ne (by decide)) (.field (.var .here) (.there (.there .here)) (by decide)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 2))) .nil)
   .nil)))
   .nil)
 
 def body.«choose» : TStmts [sig.«trusted», sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«choose».params sig.«choose».result :=
   (.ifNotNull (.there ne.«floor».«n» .here) (by decide)
-  (.ite (.lt (.var .here) (.var (.there ne.«floor».«n» .here)))
+  (.ite (.bin .lt (.var .here) (.var (.there ne.«floor».«n» .here)))
   (.ret (.widen (.variant (.there .one)) (.record (.cons "ok" (.tagLit (.bool false)) (.cons "reason" (.str (js "older")) .nil)) (.cons .here (.cons (.there .here) .nil)) (by decide))) .nil)
   .nil
   .nil)
   .nil
-  (.ite (.gt (.var .here) (.int 0))
+  (.ite (.bin .gt (.var .here) (.int 0))
   (.ret (.widen (.variant .head) (.record (.cons "ok" (.tagLit (.bool true)) (.cons "value" (.var .here) .nil)) (.cons .here (.cons (.there .here) .nil)) (by decide))) .nil)
   .nil
   (.ret (.widen (.variant (.there .one)) (.record (.cons "ok" (.tagLit (.bool false)) (.cons "reason" (.str (js "non-positive")) .nil)) (.cons .here (.cons (.there .here) .nil)) (by decide))) .nil)))

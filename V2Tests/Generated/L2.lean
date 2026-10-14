@@ -114,17 +114,17 @@ theorem ne.«k».«x» : ("k" : String) ≠ "x" := by decide
 theorem ne.«k».«xs» : ("k" : String) ≠ "xs" := by decide
 
 def body.«total» : TStmts [] sig.«total».params sig.«total».result :=
-  (.ret (.nadd (.var .here) (.nmul (.var (.there ne.«b».«a» .here)) (.num 2))) .nil)
+  (.ret (.bin .nadd (.var .here) (.bin .nmul (.var (.there ne.«b».«a» .here)) (.num 2))) .nil)
 
 def body.«negate» : TStmts [sig.«total»] sig.«negate».params sig.«negate».result :=
   (.ret (.nneg (.var .here)) .nil)
 
 def body.«clampIndex» : TStmts [sig.«negate», sig.«total»] sig.«clampIndex».params sig.«clampIndex».result :=
-  (.ite (.nlt (.var .here) (.num 0))
+  (.ite (.bin .nlt (.var .here) (.num 0))
   (.ret (.num 0) .nil)
   .nil
-  (.ite (.nge (.var .here) (.var (.there ne.«n».«i» .here)))
-  (.ret (.nsub (.var (.there ne.«n».«i» .here)) (.num 1)) .nil)
+  (.ite (.bin .nge (.var .here) (.var (.there ne.«n».«i» .here)))
+  (.ret (.bin .nsub (.var (.there ne.«n».«i» .here)) (.num 1)) .nil)
   .nil
   (.ret (.var .here) .nil)))
 
@@ -135,22 +135,22 @@ def body.«sizes» : TStmts [sig.«count», sig.«clampIndex», sig.«negate», 
   (.ret (.map (.var .here) (.arrow "e" (.field (.var .here) (.there .here) (by decide)))) .nil)
 
 def body.«named» : TStmts [sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«named».params sig.«named».result :=
-  (.ret (.find (.var .here) (.arrow "e" (.eq (by decide) (.field (.var .here) (.there (.there .here)) (by decide)) (.var (.there ne.«name».«e» (.there ne.«name».«es» .here)))))) .nil)
+  (.ret (.find (.var .here) (.arrow "e" (.bin (.eq (by decide)) (.field (.var .here) (.there (.there .here)) (by decide)) (.var (.there ne.«name».«e» (.there ne.«name».«es» .here)))))) .nil)
 
 def body.«tagged» : TStmts [sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«tagged».params sig.«tagged».result :=
   (.ret (.filter (.var .here) (.arrow "e" (.includes (by decide) (.field (.var .here) (.there (.there (.there .here))) (by decide)) (.var (.there ne.«tag».«e» (.there ne.«tag».«es» .here)))))) .nil)
 
 def body.«anyLarge» : TStmts [sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«anyLarge».params sig.«anyLarge».result :=
-  (.ret (.any (.var .here) (.arrow "e" (.ngt (.field (.var .here) (.there .here) (by decide)) (.var (.there ne.«limit».«e» (.there ne.«limit».«es» .here)))))) .nil)
+  (.ret (.any (.var .here) (.arrow "e" (.bin .ngt (.field (.var .here) (.there .here) (by decide)) (.var (.there ne.«limit».«e» (.there ne.«limit».«es» .here)))))) .nil)
 
 def body.«allNamed» : TStmts [sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«allNamed».params sig.«allNamed».result :=
-  (.ret (.all (.var .here) (.arrow "e" (.ngt (.slength (.field (.var .here) (.there (.there .here)) (by decide))) (.num 0)))) .nil)
+  (.ret (.all (.var .here) (.arrow "e" (.bin .ngt (.slength (.field (.var .here) (.there (.there .here)) (by decide))) (.num 0)))) .nil)
 
 def body.«bySize» : TStmts [sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«bySize».params sig.«bySize».result :=
-  (.ret (.sorted (.var .here) (.arrow "a" "b" (.nsub (.field (.var .here) (.there .here) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there .here) (by decide))))) .nil)
+  (.ret (.sorted (.var .here) (.arrow "a" "b" (.bin .nsub (.field (.var .here) (.there .here) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there .here) (by decide))))) .nil)
 
 def body.«byName» : TStmts [sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«byName».params sig.«byName».result :=
-  (.ret (.sorted (.var .here) (.arrow "a" "b" (.cond (.slt (.field (.var .here) (.there (.there .here)) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there .here)) (by decide))) (.negNum 1 (by decide)) (.cond (.sgt (.field (.var .here) (.there (.there .here)) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there .here)) (by decide))) (.num 1) (.num 0))))) .nil)
+  (.ret (.sorted (.var .here) (.arrow "a" "b" (.cond (.bin .slt (.field (.var .here) (.there (.there .here)) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there .here)) (by decide))) (.negNum 1 (by decide)) (.cond (.bin .sgt (.field (.var .here) (.there (.there .here)) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there .here)) (by decide))) (.num 1) (.num 0))))) .nil)
 
 def body.«ids» : TStmts [sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«ids».params sig.«ids».result :=
   (.ret (.array (τ := .number) (.cons (.num 0) (.spread (.map (.var .here) (.arrow "e" (.field (.var .here) .here (by decide)))) (.cons (.negNum 1 (by decide)) .nil)))) .nil)
@@ -162,23 +162,23 @@ def body.«firstName» : TStmts [sig.«ids», sig.«byName», sig.«bySize», si
   (.ret (.field (.var .here) (.there (.there .here)) (by decide)) .nil)))
 
 def body.«grow» : TStmts [sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«grow».params sig.«grow».result :=
-  (.ret (.map (.var .here) (.arrow "e" (.update (.var .here) (.cons "size" (.nadd (.field (.var .here) (.there .here) (by decide)) (.var (.there ne.«by».«e» (.there ne.«by».«es» .here)))) .nil) (.keep (by decide) (.set .here (.keep (by decide) (.keep (by decide) .nil)))) (by decide)))) .nil)
+  (.ret (.map (.var .here) (.arrow "e" (.update (.var .here) (.cons "size" (.bin .nadd (.field (.var .here) (.there .here) (by decide)) (.var (.there ne.«by».«e» (.there ne.«by».«es» .here)))) .nil) (.keep (by decide) (.set .here (.keep (by decide) (.keep (by decide) .nil)))) (by decide)))) .nil)
 
 def body.«signs» : TStmts [sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«signs».params sig.«signs».result :=
-  (.ret (.map (.var .here) (.arrow "x" (.cond (.ngt (.var .here) (.num 0)) (.str (js "pos")) (.cond (.eq (by decide) (.var .here) (.num 0)) (.str (js "zero")) (.str (js "neg")))))) .nil)
+  (.ret (.map (.var .here) (.arrow "x" (.cond (.bin .ngt (.var .here) (.num 0)) (.str (js "pos")) (.cond (.bin (.eq (by decide)) (.var .here) (.num 0)) (.str (js "zero")) (.str (js "neg")))))) .nil)
 
 def body.«scaled» : TStmts [sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«scaled».params sig.«scaled».result :=
-  (.ret (.map (.filter (.var .here) (.arrow "x" (.ne (by decide) (.var .here) (.num 0)))) (.arrow "x" (.nmul (.var .here) (.var (.there ne.«k».«x» (.there ne.«k».«xs» .here)))))) .nil)
+  (.ret (.map (.filter (.var .here) (.arrow "x" (.bin (.ne (by decide)) (.var .here) (.num 0)))) (.arrow "x" (.bin .nmul (.var .here) (.var (.there ne.«k».«x» (.there ne.«k».«xs» .here)))))) .nil)
 
 def body.«totalOf» : TStmts [sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«totalOf».params sig.«totalOf».result :=
   (.ret (.call (s := sig.«total») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))) (by decide) (.cons (.call (s := sig.«count») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) (by decide) (.cons (.var .here) .nil)) (.cons (.num 1) .nil))) .nil)
 
 def body.«isLarge» : TStmts [sig.«totalOf», sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«isLarge».params sig.«isLarge».result :=
-  (.ret (.ngt (.field (.var .here) (.there .here) (by decide)) (.num 100)) .nil)
+  (.ret (.bin .ngt (.field (.var .here) (.there .here) (by decide)) (.num 100)) .nil)
 
 def body.«bySizeDesc» : TStmts [sig.«isLarge», sig.«totalOf», sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«bySizeDesc».params sig.«bySizeDesc».result :=
-  (.ite (.ne (by decide) (.field (.var .here) (.there .here) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there .here) (by decide)))
-  (.ret (.cond (.ngt (.field (.var .here) (.there .here) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there .here) (by decide))) (.negNum 1 (by decide)) (.num 1)) .nil)
+  (.ite (.bin (.ne (by decide)) (.field (.var .here) (.there .here) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there .here) (by decide)))
+  (.ret (.cond (.bin .ngt (.field (.var .here) (.there .here) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there .here) (by decide))) (.negNum 1 (by decide)) (.num 1)) .nil)
   .nil
   (.ret (.num 0) .nil))
 
@@ -192,7 +192,7 @@ def body.«flags» : TStmts [sig.«ranked», sig.«large», sig.«bySizeDesc», 
   (.ret (.map (.var .here) (.const (.bool false))) .nil)
 
 def body.«summaries» : TStmts [sig.«flags», sig.«ranked», sig.«large», sig.«bySizeDesc», sig.«isLarge», sig.«totalOf», sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«summaries».params sig.«summaries».result :=
-  (.ret (.map (.var .here) (.arrow "e" (.record (.cons "id" (.field (.var .here) .here (by decide)) (.cons "size" (.nadd (.field (.var .here) (.there .here) (by decide)) (.num 1)) (.cons "name" (.field (.var .here) (.there (.there .here)) (by decide)) (.cons "tags" (.array (τ := .string) .nil) .nil)))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) .nil)))) (by decide)))) .nil)
+  (.ret (.map (.var .here) (.arrow "e" (.record (.cons "id" (.field (.var .here) .here (by decide)) (.cons "size" (.bin .nadd (.field (.var .here) (.there .here) (by decide)) (.num 1)) (.cons "name" (.field (.var .here) (.there (.there .here)) (by decide)) (.cons "tags" (.array (τ := .string) .nil) .nil)))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) .nil)))) (by decide)))) .nil)
 
 abbrev sigs : Sigs := [sig.«summaries», sig.«flags», sig.«ranked», sig.«large», sig.«bySizeDesc», sig.«isLarge», sig.«totalOf», sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»]
 

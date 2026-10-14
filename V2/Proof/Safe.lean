@@ -26,6 +26,9 @@ theorem allSafe_true {p s : α → Bool} (h : ∀ x, s x = true) : ∀ xs, allSa
   | [] => rfl
   | x :: xs => by simp [allSafe, h x, allSafe_true h xs]
 
+theorem Op.guard_total (op : Op σ τ) {s : Bool} {x y : σ.denote} (h : op.total = true) : op.guard s x y = s := by
+  cases op <;> simp_all [Op.total, Op.guard]
+
 /-- The safety conditions of trivially safe functions hold everywhere. -/
 def SafeSigs {Φ : Sigs} (ss : Φ.safety) : Prop :=
   ∀ {f s} (v : FVar Φ f s) (xs : s.params.denote), s.trivial = true → v.safe ss xs = true
@@ -46,14 +49,12 @@ mutual
       simp only [TExpr.trivial] at h; simp [TExpr.safe, TEntries.safe_of_trivial es ρ h]
     | _, _, .array es, ρ, h => by
       simp only [TExpr.trivial] at h; simp [TExpr.safe, TElems.safe_of_trivial es ρ h]
-    | _, _, .nneg _, _, h | _, _, .nadd .., _, h | _, _, .nsub .., _, h | _, _, .nmul .., _, h
-    | _, _, .sorted .., _, h => by simp [TExpr.trivial] at h
-    | _, _, .add a b, ρ, h | _, _, .sub a b, ρ, h | _, _, .mul a b, ρ, h | _, _, .concat a b, ρ, h
-    | _, _, .eq _ a b, ρ, h | _, _, .ne _ a b, ρ, h | _, _, .lt a b, ρ, h | _, _, .le a b, ρ, h
-    | _, _, .gt a b, ρ, h | _, _, .ge a b, ρ, h | _, _, .slt a b, ρ, h | _, _, .sle a b, ρ, h
-    | _, _, .sgt a b, ρ, h | _, _, .sge a b, ρ, h | _, _, .and a b, ρ, h | _, _, .or a b, ρ, h
-    | _, _, .coalesce _ a b, ρ, h | _, _, .nlt a b, ρ, h | _, _, .nle a b, ρ, h | _, _, .ngt a b, ρ, h
-    | _, _, .nge a b, ρ, h | _, _, .index a b, ρ, h | _, _, .includes _ a b, ρ, h
+    | _, _, .nneg _, _, h | _, _, .sorted .., _, h => by simp [TExpr.trivial] at h
+    | _, _, .bin op a b, ρ, h => by
+      simp only [TExpr.trivial, Bool.and_eq_true] at h
+      simp [TExpr.safe, op.guard_total h.1.1, andT, TExpr.safe_of_trivial a ρ h.1.2, TExpr.safe_of_trivial b ρ h.2]
+    | _, _, .and a b, ρ, h | _, _, .or a b, ρ, h
+    | _, _, .coalesce _ a b, ρ, h | _, _, .index a b, ρ, h | _, _, .includes _ a b, ρ, h
     | _, _, .any a b, ρ, h | _, _, .all a b, ρ, h | _, _, .find a b, ρ, h | _, _, .filter a b, ρ, h
     | _, _, .map a b, ρ, h => by
       simp only [TExpr.trivial, Bool.and_eq_true] at h

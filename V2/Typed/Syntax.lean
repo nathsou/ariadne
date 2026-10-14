@@ -136,6 +136,48 @@ where
     | [] => true
     | t :: ts => !ts.contains t && distinctTagList ts
 
+/-- The binary operators that evaluate both operands: `Op σ τ` takes two `σ`s to a `τ`. -/
+inductive Op : Ty → Ty → Type where
+  | add : Op .int .int
+  | sub : Op .int .int
+  | mul : Op .int .int
+  | concat : Op .string .string
+  | eq (h : τ.prim = true) : Op τ .bool
+  | ne (h : τ.prim = true) : Op τ .bool
+  | lt : Op .int .bool
+  | le : Op .int .bool
+  | gt : Op .int .bool
+  | ge : Op .int .bool
+  | slt : Op .string .bool
+  | sle : Op .string .bool
+  | sgt : Op .string .bool
+  | sge : Op .string .bool
+  | nadd : Op .number .number
+  | nsub : Op .number .number
+  | nmul : Op .number .number
+  | nlt : Op .number .bool
+  | nle : Op .number .bool
+  | ngt : Op .number .bool
+  | nge : Op .number .bool
+
+/-- The model's operator. -/
+def Op.js : Op σ τ → BinOp
+  | .add | .nadd | .concat => .add
+  | .sub | .nsub => .sub
+  | .mul | .nmul => .mul
+  | .eq _ => .eq
+  | .ne _ => .ne
+  | .lt | .slt | .nlt => .lt
+  | .le | .sle | .nle => .le
+  | .gt | .sgt | .ngt => .gt
+  | .ge | .sge | .nge => .ge
+
+/-- Whether the operator never leaves the model (`number` arithmetic can leave the
+safe integers). -/
+def Op.total : Op σ τ → Bool
+  | .nadd | .nsub | .nmul => false
+  | _ => true
+
 mutual
   inductive TExpr (Φ : Sigs) : Ctx → Ty → Type where
     | bool (b : Bool) : TExpr Φ Γ .bool
@@ -152,20 +194,8 @@ mutual
     | widen (N : Narrowing σ τ) (e : TExpr Φ Γ σ) : TExpr Φ Γ τ
     | not (e : TExpr Φ Γ .bool) : TExpr Φ Γ .bool
     | neg (e : TExpr Φ Γ .int) : TExpr Φ Γ .int
-    | add (a b : TExpr Φ Γ .int) : TExpr Φ Γ .int
-    | sub (a b : TExpr Φ Γ .int) : TExpr Φ Γ .int
-    | mul (a b : TExpr Φ Γ .int) : TExpr Φ Γ .int
-    | concat (a b : TExpr Φ Γ .string) : TExpr Φ Γ .string
-    | eq (h : τ.prim = true) (a b : TExpr Φ Γ τ) : TExpr Φ Γ .bool
-    | ne (h : τ.prim = true) (a b : TExpr Φ Γ τ) : TExpr Φ Γ .bool
-    | lt (a b : TExpr Φ Γ .int) : TExpr Φ Γ .bool
-    | le (a b : TExpr Φ Γ .int) : TExpr Φ Γ .bool
-    | gt (a b : TExpr Φ Γ .int) : TExpr Φ Γ .bool
-    | ge (a b : TExpr Φ Γ .int) : TExpr Φ Γ .bool
-    | slt (a b : TExpr Φ Γ .string) : TExpr Φ Γ .bool
-    | sle (a b : TExpr Φ Γ .string) : TExpr Φ Γ .bool
-    | sgt (a b : TExpr Φ Γ .string) : TExpr Φ Γ .bool
-    | sge (a b : TExpr Φ Γ .string) : TExpr Φ Γ .bool
+    /-- `a op b` for an operator that evaluates both operands. -/
+    | bin (op : Op σ τ) (a b : TExpr Φ Γ σ) : TExpr Φ Γ τ
     | and (a b : TExpr Φ Γ .bool) : TExpr Φ Γ .bool
     | or (a b : TExpr Φ Γ .bool) : TExpr Φ Γ .bool
     | cond (c : TExpr Φ Γ .bool) (a b : TExpr Φ Γ τ) : TExpr Φ Γ τ
@@ -197,13 +227,6 @@ mutual
     /-- `-n` for a `number` literal `n`. -/
     | negNum (n : Int) (h : inRange n = true) : TExpr Φ Γ .number
     | nneg (e : TExpr Φ Γ .number) : TExpr Φ Γ .number
-    | nadd (a b : TExpr Φ Γ .number) : TExpr Φ Γ .number
-    | nsub (a b : TExpr Φ Γ .number) : TExpr Φ Γ .number
-    | nmul (a b : TExpr Φ Γ .number) : TExpr Φ Γ .number
-    | nlt (a b : TExpr Φ Γ .number) : TExpr Φ Γ .bool
-    | nle (a b : TExpr Φ Γ .number) : TExpr Φ Γ .bool
-    | ngt (a b : TExpr Φ Γ .number) : TExpr Φ Γ .bool
-    | nge (a b : TExpr Φ Γ .number) : TExpr Φ Γ .bool
     /-- `[e, ...a, …]`. -/
     | array (es : TElems Φ Γ τ) : TExpr Φ Γ (.array τ)
     /-- `a.length` on an array. -/
@@ -348,16 +371,7 @@ mutual
     | .widen _ e => e.erase
     | .not e => .unary .not e.erase
     | .neg e => .unary .neg e.erase
-    | .add a b => .binary .add a.erase b.erase
-    | .sub a b => .binary .sub a.erase b.erase
-    | .mul a b => .binary .mul a.erase b.erase
-    | .concat a b => .binary .add a.erase b.erase
-    | .eq _ a b => .binary .eq a.erase b.erase
-    | .ne _ a b => .binary .ne a.erase b.erase
-    | .lt a b | .slt a b => .binary .lt a.erase b.erase
-    | .le a b | .sle a b => .binary .le a.erase b.erase
-    | .gt a b | .sgt a b => .binary .gt a.erase b.erase
-    | .ge a b | .sge a b => .binary .ge a.erase b.erase
+    | .bin op a b => .binary op.js a.erase b.erase
     | .and a b => .binary .and a.erase b.erase
     | .or a b => .binary .or a.erase b.erase
     | .cond c a b => .cond c.erase a.erase b.erase
@@ -373,13 +387,6 @@ mutual
     | .num n => .lit (.number n)
     | .negNum n _ => .unary .neg (.lit (.number n))
     | .nneg e => .unary .neg e.erase
-    | .nadd a b => .binary .add a.erase b.erase
-    | .nsub a b => .binary .sub a.erase b.erase
-    | .nmul a b => .binary .mul a.erase b.erase
-    | .nlt a b => .binary .lt a.erase b.erase
-    | .nle a b => .binary .le a.erase b.erase
-    | .ngt a b => .binary .gt a.erase b.erase
-    | .nge a b => .binary .ge a.erase b.erase
     | .array es => .array es.erase
     | .length a => .field a.erase "length"
     | .slength s => .field s.erase "length"
@@ -559,17 +566,16 @@ mutual
   def TExpr.trivial : TExpr Φ Γ τ → Bool
     | .bool _ | .int _ | .str _ | .tagLit _ | .litIn .. | .undef .. | .null .. | .var _ => true
     | .widen _ e | .not e | .neg e | .isNull _ e | .notNull _ e | .field e _ _ => e.trivial
-    | .add a b | .sub a b | .mul a b | .concat a b | .eq _ a b | .ne _ a b | .lt a b | .le a b | .gt a b
-    | .ge a b | .slt a b | .sle a b | .sgt a b | .sge a b | .and a b | .or a b | .coalesce _ a b =>
-      a.trivial && b.trivial
+    | .and a b | .or a b | .coalesce _ a b => a.trivial && b.trivial
+    | .bin op a b => op.total && a.trivial && b.trivial
     | .cond c a b => c.trivial && a.trivial && b.trivial
     | .condNull _ _ a b | .condNotNull _ _ a b => a.trivial && b.trivial
     | @TExpr.call _ _ _ s _ _ args => s.trivial && args.trivial
     | .record es _ _ => es.trivial
     | .update r es _ _ => r.trivial && es.trivial
     | .num _ | .negNum .. => true
-    | .nneg _ | .nadd .. | .nsub .. | .nmul .. | .sorted .. => false
-    | .nlt a b | .nle a b | .ngt a b | .nge a b | .index a b => a.trivial && b.trivial
+    | .nneg _ | .sorted .. => false
+    | .index a b => a.trivial && b.trivial
     | .includes _ a e => a.trivial && e.trivial
     | .any a p | .all a p | .find a p | .filter a p | .map a p => a.trivial && p.trivial
     | .array es => es.trivial

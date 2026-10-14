@@ -188,13 +188,13 @@ theorem ne.«b».«a» : ("b" : String) ≠ "a" := by decide
 def body.«sum» : TStmts [] sig.«sum».params sig.«sum».result :=
   (.let_ "total" (.num 0)
   (.forOf "x" (.var (.there ne.«xs».«total» .here))
-  (.assign (.there ne.«total».«x» .here) (.nadd (.var (.there ne.«total».«x» .here)) (.var .here))
+  (.assign (.there ne.«total».«x» .here) (.bin .nadd (.var (.there ne.«total».«x» .here)) (.var .here))
   .nil)
   (.ret (.var .here) .nil)))
 
 def body.«firstLarge» : TStmts [sig.«sum»] sig.«firstLarge».params sig.«firstLarge».result :=
   (.forOf "it" (.var .here)
-  (.ite (.ngt (.field (.var .here) (.there .here) (by decide)) (.var (.there ne.«limit».«it» (.there ne.«limit».«items» .here))))
+  (.ite (.bin .ngt (.field (.var .here) (.there .here) (by decide)) (.var (.there ne.«limit».«it» (.there ne.«limit».«items» .here))))
   (.ret (.widen (.some .undef ty.«Item») (.var .here)) .nil)
   .nil
   .nil)
@@ -202,7 +202,7 @@ def body.«firstLarge» : TStmts [sig.«sum»] sig.«firstLarge».params sig.«f
 
 def body.«indexOf» : TStmts [sig.«firstLarge», sig.«sum»] sig.«indexOf».params sig.«indexOf».result :=
   (.forEntries "i" "x" (.var .here)
-  (.ite (.eq (by decide) (.var .here) (.var (.there ne.«target».«x» (.there ne.«target».«i» (.there ne.«target».«xs» .here)))))
+  (.ite (.bin (.eq (by decide)) (.var .here) (.var (.there ne.«target».«x» (.there ne.«target».«i» (.there ne.«target».«xs» .here)))))
   (.ret (.var (.there ne.«i».«x» .here)) .nil)
   .nil
   .nil)
@@ -214,14 +214,14 @@ def body.«countTagged» : TStmts [sig.«indexOf», sig.«firstLarge», sig.«su
   (.ite (.not (.includes (by decide) (.field (.var .here) (.there (.there .here)) (by decide)) (.var (.there ne.«tag».«it» (.there ne.«tag».«n» (.there ne.«tag».«items» .here))))))
   (.cont .nil)
   .nil
-  (.assign (.there ne.«n».«it» .here) (.nadd (.var (.there ne.«n».«it» .here)) (.num 1))
+  (.assign (.there ne.«n».«it» .here) (.bin .nadd (.var (.there ne.«n».«it» .here)) (.num 1))
   .nil))
   (.ret (.var .here) .nil)))
 
 def body.«prefixUntil» : TStmts [sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«prefixUntil».params sig.«prefixUntil».result :=
   (.let_ "out" (.array (τ := .number) .nil)
   (.forOf "x" (.var (.there ne.«xs».«out» .here))
-  (.ite (.eq (by decide) (.var .here) (.var (.there ne.«stop».«x» (.there ne.«stop».«out» (.there ne.«stop».«xs» .here)))))
+  (.ite (.bin (.eq (by decide)) (.var .here) (.var (.there ne.«stop».«x» (.there ne.«stop».«out» (.there ne.«stop».«xs» .here)))))
   (.brk .nil)
   .nil
   (.assign (.there ne.«out».«x» .here) (.array (τ := .number) (.spread (.var (.there ne.«out».«x» .here)) (.cons (.var .here) .nil)))
@@ -234,7 +234,7 @@ def body.«largest» : TStmts [sig.«prefixUntil», sig.«countTagged», sig.«i
   (.ifNullExit (.there ne.«best».«it» .here) (by decide)
   (.assign (.there ne.«best».«it» .here) (.widen (.some .undef ty.«Item») (.var .here))
   (.cont .nil))
-  (.ite (.ngt (.field (.var .here) (.there .here) (by decide)) (.field (.var (.there ne.«best».«it» .here)) (.there .here) (by decide)))
+  (.ite (.bin .ngt (.field (.var .here) (.there .here) (by decide)) (.field (.var (.there ne.«best».«it» .here)) (.there .here) (by decide)))
   (.assign (.there ne.«best».«it» .here) (.var .here)
   .nil)
   .nil
@@ -245,35 +245,35 @@ def body.«classify» : TStmts [sig.«largest», sig.«prefixUntil», sig.«coun
   (.let_ "pos" (.num 0)
   (.let_ "neg" (.num 0)
   (.forOf "x" (.var (.there ne.«xs».«neg» (.there ne.«xs».«pos» .here)))
-  (.ite (.ngt (.var .here) (.num 0))
-  (.assign (.there ne.«pos».«x» (.there ne.«pos».«neg» .here)) (.nadd (.var (.there ne.«pos».«x» (.there ne.«pos».«neg» .here))) (.num 1))
+  (.ite (.bin .ngt (.var .here) (.num 0))
+  (.assign (.there ne.«pos».«x» (.there ne.«pos».«neg» .here)) (.bin .nadd (.var (.there ne.«pos».«x» (.there ne.«pos».«neg» .here))) (.num 1))
   .nil)
-  (.ite (.nlt (.var .here) (.num 0))
-  (.assign (.there ne.«neg».«x» .here) (.nadd (.var (.there ne.«neg».«x» .here)) (.num 1))
+  (.ite (.bin .nlt (.var .here) (.num 0))
+  (.assign (.there ne.«neg».«x» .here) (.bin .nadd (.var (.there ne.«neg».«x» .here)) (.num 1))
   .nil)
   .nil
   .nil)
   .nil)
-  (.ite (.ngt (.var (.there ne.«pos».«neg» .here)) (.var .here))
+  (.ite (.bin .ngt (.var (.there ne.«pos».«neg» .here)) (.var .here))
   (.ret (.str (js "pos")) .nil)
   .nil
-  (.ite (.ngt (.var .here) (.var (.there ne.«pos».«neg» .here)))
+  (.ite (.bin .ngt (.var .here) (.var (.there ne.«pos».«neg» .here)))
   (.ret (.str (js "neg")) .nil)
   .nil
   (.ret (.str (js "even")) .nil))))))
 
 def body.«bump» : TStmts [sig.«classify», sig.«largest», sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«bump».params sig.«bump».result :=
-  (.assign .here (.nadd (.var .here) (.num 1))
-  (.ret (.nmul (.var .here) (.num 2)) .nil))
+  (.assign .here (.bin .nadd (.var .here) (.num 1))
+  (.ret (.bin .nmul (.var .here) (.num 2)) .nil))
 
 def body.«grid» : TStmts [sig.«bump», sig.«classify», sig.«largest», sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«grid».params sig.«grid».result :=
   (.let_ "total" (.num 0)
   (.forOf "row" (.var (.there ne.«rows».«total» .here))
   (.forEntries "j" "v" (.var .here)
-  (.ite (.ngt (.var (.there ne.«j».«v» .here)) (.num 2))
+  (.ite (.bin .ngt (.var (.there ne.«j».«v» .here)) (.num 2))
   (.brk .nil)
   .nil
-  (.assign (.there ne.«total».«v» (.there ne.«total».«j» (.there ne.«total».«row» .here))) (.nadd (.var (.there ne.«total».«v» (.there ne.«total».«j» (.there ne.«total».«row» .here)))) (.var .here))
+  (.assign (.there ne.«total».«v» (.there ne.«total».«j» (.there ne.«total».«row» .here))) (.bin .nadd (.var (.there ne.«total».«v» (.there ne.«total».«j» (.there ne.«total».«row» .here)))) (.var .here))
   .nil))
   .nil)
   (.ret (.var .here) .nil)))
@@ -282,9 +282,9 @@ def body.«perimeters» : TStmts [sig.«grid», sig.«bump», sig.«classify», 
   (.let_ "t" (.num 0)
   (.forOf "sh" (.var (.there ne.«shapes».«t» .here))
   (.switchG .here (by decide)
-  (.narrow .head (.assign (.there ne.«t».«sh» .here) (.nadd (.var (.there ne.«t».«sh» .here)) (.nmul (.num 6) (.field (.var .here) (.there .here) (by decide))))
+  (.narrow .head (.assign (.there ne.«t».«sh» .here) (.bin .nadd (.var (.there ne.«t».«sh» .here)) (.bin .nmul (.num 6) (.field (.var .here) (.there .here) (by decide))))
   (.brk .nil))
-  (.narrow (.there .one) (.assign (.there ne.«t».«sh» .here) (.nadd (.var (.there ne.«t».«sh» .here)) (.nmul (.num 4) (.field (.var .here) (.there .here) (by decide))))
+  (.narrow (.there .one) (.assign (.there ne.«t».«sh» .here) (.bin .nadd (.var (.there ne.«t».«sh» .here)) (.bin .nmul (.num 4) (.field (.var .here) (.there .here) (by decide))))
   (.brk .nil))
   .nil))
   .nil)
@@ -294,23 +294,23 @@ def body.«steps» : TStmts [sig.«perimeters», sig.«grid», sig.«bump», sig
   (.let_ "count" (.num 0)
   (.let_ "k" (.var (.there ne.«n».«count» .here))
   (.forOf "_" (.array (τ := .number) (.cons (.num 1) (.cons (.num 2) (.cons (.num 3) (.cons (.num 4) (.cons (.num 5) (.cons (.num 6) (.cons (.num 7) (.cons (.num 8) .nil)))))))))
-  (.ite (.nle (.var (.there ne.«k».«_» .here)) (.num 1))
+  (.ite (.bin .nle (.var (.there ne.«k».«_» .here)) (.num 1))
   (.brk .nil)
   .nil
-  (.assign (.there ne.«k».«_» .here) (.cond (.ngt (.var (.there ne.«k».«_» .here)) (.num 100)) (.nsub (.var (.there ne.«k».«_» .here)) (.num 100)) (.nsub (.var (.there ne.«k».«_» .here)) (.num 1)))
-  (.assign (.there ne.«count».«_» (.there ne.«count».«k» .here)) (.nadd (.var (.there ne.«count».«_» (.there ne.«count».«k» .here))) (.num 1))
+  (.assign (.there ne.«k».«_» .here) (.cond (.bin .ngt (.var (.there ne.«k».«_» .here)) (.num 100)) (.bin .nsub (.var (.there ne.«k».«_» .here)) (.num 100)) (.bin .nsub (.var (.there ne.«k».«_» .here)) (.num 1)))
+  (.assign (.there ne.«count».«_» (.there ne.«count».«k» .here)) (.bin .nadd (.var (.there ne.«count».«_» (.there ne.«count».«k» .here))) (.num 1))
   .nil)))
   (.ret (.var (.there ne.«count».«k» .here)) .nil))))
 
 def body.«score» : TStmts [sig.«steps», sig.«perimeters», sig.«grid», sig.«bump», sig.«classify», sig.«largest», sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«score».params sig.«score».result :=
   (.let_ "s" (.num 0)
-  (.ite (.ngt (.var (.there ne.«a».«s» .here)) (.num 0))
-  (.assign .here (.nadd (.var .here) (.num 1))
+  (.ite (.bin .ngt (.var (.there ne.«a».«s» .here)) (.num 0))
+  (.assign .here (.bin .nadd (.var .here) (.num 1))
   .nil)
-  (.assign .here (.nsub (.var .here) (.num 1))
+  (.assign .here (.bin .nsub (.var .here) (.num 1))
   .nil)
-  (.ite (.ngt (.var (.there ne.«b».«s» (.there ne.«b».«a» .here))) (.num 0))
-  (.assign .here (.nmul (.var .here) (.num 2))
+  (.ite (.bin .ngt (.var (.there ne.«b».«s» (.there ne.«b».«a» .here))) (.num 0))
+  (.assign .here (.bin .nmul (.var .here) (.num 2))
   .nil)
   .nil
   (.ret (.var .here) .nil))))
