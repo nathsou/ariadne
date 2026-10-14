@@ -255,6 +255,9 @@ mutual
     /-- `-n` for a `number` literal `n`. -/
     | negNum (n : Int) (h : inRange n = true) : TExpr Φ Γ .number
     | nneg (e : TExpr Φ Γ .number) : TExpr Φ Γ .number
+    /-- What `x++` (`up`) and `x--` assign: `x ± 1`, on bigints and on numbers. -/
+    | iinc (up : Bool) (e : TExpr Φ Γ .int) : TExpr Φ Γ .int
+    | ninc (up : Bool) (e : TExpr Φ Γ .number) : TExpr Φ Γ .number
     /-- `[e, ...a, …]`. -/
     | array (es : TElems Φ Γ τ) : TExpr Φ Γ (.array τ)
     /-- `a.length` on an array. -/
@@ -459,6 +462,7 @@ mutual
     | .num n => .lit (.number n)
     | .negNum n _ => .unary .neg (.lit (.number n))
     | .nneg e => .unary .neg e.erase
+    | .iinc up e | .ninc up e => .unary (if up then .inc else .dec) e.erase
     | .array es => .array es.erase
     | .length a => .field a.erase "length"
     | .slength s => .field s.erase "length"
@@ -562,7 +566,7 @@ safe functions. -/
 mutual
   def TExpr.trivial : TExpr Φ Γ τ → Bool
     | .bool _ | .int _ | .str _ | .tagLit _ | .litIn .. | .undef .. | .null .. | .var _ => true
-    | .widen _ e | .not e | .neg e | .isNull _ e | .notNull _ e | .field e _ _ => e.trivial
+    | .widen _ e | .not e | .neg e | .isNull _ e | .notNull _ e | .field e _ _ | .iinc _ e => e.trivial
     | .and a b | .or a b | .coalesce _ a b => a.trivial && b.trivial
     | .bin op a b => op.total && a.trivial && b.trivial
     | .cond c a b => c.trivial && a.trivial && b.trivial
@@ -571,7 +575,7 @@ mutual
     | .record es _ _ => es.trivial
     | .update r es _ _ => r.trivial && es.trivial
     | .num _ | .negNum .. => true
-    | .nneg _ | .sorted .. => false
+    | .nneg _ | .ninc .. | .sorted .. => false
     | .index a b => a.trivial && b.trivial
     | .includes _ a e => a.trivial && e.trivial
     | .any a p | .all a p | .find a p | .filter a p | .map a p => a.trivial && p.trivial

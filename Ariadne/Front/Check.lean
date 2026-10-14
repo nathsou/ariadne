@@ -611,6 +611,14 @@ mutual
                               trivial := a.trivial, safe := a.safe }
       | "-", .number => return { ty := .number, typed := s!"(.nneg {a.typed})", readable := s!"(-{a.term})",
                                  atomic := true, trivial := false, safe := andText a.ok s!"Ariadne.inRange (-{a.term})" }
+      | "++", .int | "--", .int =>
+        let sym := if op == "++" then "+" else "-"
+        return { ty := .int, typed := s!"(.iinc {op == "++"} {a.typed})", readable := s!"{a.term} {sym} 1",
+                 trivial := a.trivial, safe := a.safe }
+      | "++", .number | "--", .number =>
+        let sym := if op == "++" then "+" else "-"
+        return { ty := .number, typed := s!"(.ninc {op == "++"} {a.typed})", readable := s!"{a.term} {sym} 1",
+                 trivial := false, safe := andText a.ok s!"Ariadne.inRange ({a.term} {sym} 1)" }
       | op, τ => mismatch span s!"'{op}' does not apply to {τ.ts}"
     | .binary op a b span => checkBinary T s op a b span expected
     | .conditional c a b span =>
@@ -1279,8 +1287,8 @@ mutual
              trivial := a.trivial && body.trivial && rest.trivial,
              falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
     | .for_ (.let_ true i _ (.literal (.number 0 0) _) _) (.binary "<" (.var i₁ _) (.var n _) _)
-        (.assign (.var i₂ _) (.binary "+" (.var i₃ _) (.literal (.number 1 0) _) _) _) body span :: rest => do
-      if !(i₁ == i && i₂ == i && i₃ == i) then unsupportedTy span "this for loop"
+        update body span :: rest => do
+      if !(i₁ == i && incrementOf update == some i) then unsupportedTy span "this for loop"
       let some (j, τ) := s.lookup n | throw { code := "A2001", message := s!"unknown variable '{n}'", span }
       if τ != .number then mismatch span s!"the bound '{n}' is {τ.ts}, not a number"
       if s.mutables.contains n then mismatch span s!"the bound '{n}' must be a const"
@@ -1597,7 +1605,7 @@ def printLit : Lit → String
   | .string s => s!"(.string {jsString s})"
 
 def printUnOp : UnOp → String
-  | .not => ".not" | .neg => ".neg"
+  | .not => ".not" | .neg => ".neg" | .inc => ".inc" | .dec => ".dec"
 
 def printBinOp : BinOp → String
   | .add => ".add" | .sub => ".sub" | .mul => ".mul" | .div => ".div" | .mod => ".mod" | .floorDiv => ".floorDiv"

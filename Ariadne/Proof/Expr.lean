@@ -404,6 +404,19 @@ mutual
       simp only [Ty.Rep] at hw; subst hw
       exact ⟨.number (-e.denote fs ρ), Converges.of_succ N fun m hm => by
         simp [evalExpr, TExpr.erase, hc m hm, bind, Except.bind, unary, number_ok hs.2], rfl⟩
+    | _, _, .iinc up e, _, ρ, he, hs => by
+      obtain ⟨w, ⟨N, hc⟩, hw⟩ := TExpr.adequate e he hs
+      simp only [Ty.Rep] at hw; subst hw
+      exact ⟨.bigint (bif up then e.denote fs ρ + 1 else e.denote fs ρ - 1), Converges.of_succ N fun m hm => by
+        cases up <;> simp [evalExpr, TExpr.erase, hc m hm, bind, Except.bind, unary, pure, Except.pure], rfl⟩
+    | _, _, .ninc up e, _, ρ, he, hs => by
+      simp only [TExpr.safe, Bool.and_eq_true] at hs
+      obtain ⟨w, ⟨N, hc⟩, hw⟩ := TExpr.adequate e he (TExpr.ok hs.1)
+      simp only [Ty.Rep] at hw; subst hw
+      exact ⟨.number (bif up then e.denote fs ρ + 1 else e.denote fs ρ - 1), Converges.of_succ N fun m hm => by
+        have h2 := hs.2
+        cases up <;> simp only [Bool.cond_false, Bool.cond_true] at h2 <;>
+          simp [evalExpr, TExpr.erase, hc m hm, bind, Except.bind, unary, number_ok h2], rfl⟩
     | _, _, .array es, _, ρ, he, hs => by
       obtain ⟨ws, ⟨N, hc⟩, hws⟩ := TElems.adequate es he hs
       exact ⟨.array ws, Converges.of_succ N fun m hm => by

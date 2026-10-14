@@ -141,6 +141,7 @@ mutual
     | .num n, _ => n
     | .negNum n _, _ => -n
     | .nneg e, ρ => -e.denote fs ρ
+    | .iinc up e, ρ | .ninc up e, ρ => bif up then e.denote fs ρ + 1 else e.denote fs ρ - 1
     | .array es, ρ => es.denote fs ρ
     | .length a, ρ => ((a.denote fs ρ).length : Int)
     | .slength s, ρ => ((s.denote fs ρ).length : Int)
@@ -200,7 +201,7 @@ mutual
   def TExpr.safe (fs : Φ.denote) (ss : Φ.safety) : TExpr Φ Γ τ → Γ.denote → Bool
     | .bool _, _ | .int _, _ | .str _, _ | .tagLit _, _ | .litIn .., _ | .undef .., _ | .null .., _ | .var _, _
     | .num _, _ | .negNum .., _ => true
-    | .widen _ e, ρ | .not e, ρ | .neg e, ρ | .isNull _ e, ρ | .notNull _ e, ρ | .field e _ _, ρ
+    | .widen _ e, ρ | .not e, ρ | .neg e, ρ | .isNull _ e, ρ | .notNull _ e, ρ | .field e _ _, ρ | .iinc _ e, ρ
     | .length e, ρ | .slength e, ρ => e.safe fs ss ρ
     | .index a b, ρ | .includes _ a b, ρ | .smethod _ a b, ρ | .slice1 a b, ρ =>
       andT a.trivial (a.safe fs ss ρ) b.trivial (b.safe fs ss ρ)
@@ -209,6 +210,8 @@ mutual
     | .bin op a b, ρ => op.guard (andT a.trivial (a.safe fs ss ρ) b.trivial (b.safe fs ss ρ))
       (a.denote fs ρ) (b.denote fs ρ)
     | .nneg e, ρ => (e.trivial || e.safe fs ss ρ) && inRange (-e.denote fs ρ)
+    | .ninc up e, ρ => (e.trivial || e.safe fs ss ρ) &&
+      inRange (bif up then e.denote fs ρ + 1 else e.denote fs ρ - 1)
     | .and a b, ρ => andT a.trivial (a.safe fs ss ρ) b.trivial (if a.denote fs ρ then b.safe fs ss ρ else true)
     | .or a b, ρ => andT a.trivial (a.safe fs ss ρ) b.trivial (if a.denote fs ρ then true else b.safe fs ss ρ)
     | .cond c a b, ρ => andT c.trivial (c.safe fs ss ρ) (a.trivial && b.trivial)

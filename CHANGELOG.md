@@ -4,6 +4,18 @@ Ariadne follows semantic versioning: a minor version may change generated files 
 (`trusted.lock` shows how); a patch version changes neither. Projects pin a release tag (see
 [docs/GUIDE.md](docs/GUIDE.md)).
 
+## Unreleased
+
+**Language**
+- `x++` and `x--` on bigints. Increments are model operators (`inc`, `dec`) rather than `x = x + 1`,
+  which a bigint could not be written as.
+
+**Proof library**
+- `ariadne_safe [facts]`: proves a safety condition that holds on every input given the facts.
+
+**Trusted base**
+- `trusted.lock`: `UnOp.inc`, `UnOp.dec` and their evaluation.
+
 ## v0.4.0
 
 **Language**

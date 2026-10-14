@@ -82,7 +82,8 @@ def binOpName : BinOp → String
 partial def exprJson : Ariadne.Expr → Json
   | .lit l => Json.arr #["lit", litJson l]
   | .var x => Json.arr #["var", x]
-  | .unary op e => Json.arr #["unary", match op with | .not => "not" | .neg => "neg", exprJson e]
+  | .unary op e => Json.arr #["unary", match op with | .not => "not" | .neg => "neg" | .inc => "inc" | .dec => "dec",
+      exprJson e]
   | .binary op a b => Json.arr #["binary", binOpName op, exprJson a, exprJson b]
   | .cond c a b => Json.arr #["cond", exprJson c, exprJson a, exprJson b]
   | .call f args => Json.arr #["call", f, Json.arr (args.toArray.map exprJson)]

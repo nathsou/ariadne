@@ -52,3 +52,14 @@ export function implies(a: boolean, b: boolean): boolean {
   }
   return true;
 }
+
+/** `n` counted up `k` times, then down once: increments of bigints. */
+export function bump(n: bigint, times: number): bigint {
+  const k = times % 5;
+  let x = n;
+  for (let i = 0; i < k; i++) {
+    x++;
+  }
+  x--;
+  return x;
+}

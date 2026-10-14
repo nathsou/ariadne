@@ -179,8 +179,10 @@ function stmt(s) {
           [K.SlashEqualsToken]: 'div' }[t];
         if (op) return compound(e.left, op, expr(e.right));
       }
-      if (ts.isPostfixUnaryExpression(e))
-        return compound(e.operand, e.operator === K.PlusPlusToken ? 'add' : 'sub', ['lit', ['number', '1']]);
+      if (ts.isPostfixUnaryExpression(e)) {
+        if (!ts.isIdentifier(e.operand)) refuse(e, 'an increment of a non-variable');
+        return ['assign', e.operand.text, ['unary', e.operator === K.PlusPlusToken ? 'inc' : 'dec', ['var', e.operand.text]]];
+      }
       if (ts.isCallExpression(e) && ts.isPropertyAccessExpression(e.expression)) {
         const f = e.expression;
         if (isThisField(f.expression) && f.name.text === 'set' && e.arguments.length === 2)

@@ -226,6 +226,8 @@ Ariadne.Ty : Type
 Ariadne.UnOp : Type
   | Ariadne.UnOp.not : Ariadne.UnOp
   | Ariadne.UnOp.neg : Ariadne.UnOp
+  | Ariadne.UnOp.inc : Ariadne.UnOp
+  | Ariadne.UnOp.dec : Ariadne.UnOp
 
 Ariadne.Variants : Type
   | Ariadne.Variants.one : Ariadne.TagLit → Ariadne.Fields → Ariadne.Variants
@@ -567,6 +569,10 @@ Ariadne.unary : Ariadne.UnOp → Ariadne.JSValue → Except Ariadne.Fault Ariadn
   | Ariadne.UnOp.not, Ariadne.JSValue.bool b => Except.ok (Ariadne.JSValue.bool !b)
   | Ariadne.UnOp.neg, Ariadne.JSValue.number n => Ariadne.number (-n)
   | Ariadne.UnOp.neg, Ariadne.JSValue.bigint n => Except.ok (Ariadne.JSValue.bigint (-n))
+  | Ariadne.UnOp.inc, Ariadne.JSValue.number n => Ariadne.number (n + 1)
+  | Ariadne.UnOp.inc, Ariadne.JSValue.bigint n => Except.ok (Ariadne.JSValue.bigint (n + 1))
+  | Ariadne.UnOp.dec, Ariadne.JSValue.number n => Ariadne.number (n - 1)
+  | Ariadne.UnOp.dec, Ariadne.JSValue.bigint n => Except.ok (Ariadne.JSValue.bigint (n - 1))
   | x, x_2 => Except.error (Ariadne.Fault.typeError "unary operand")
 
 Ariadne.upsert : List (String × Ariadne.JSValue) → String → Ariadne.JSValue → List (String × Ariadne.JSValue) :=
@@ -1006,13 +1012,17 @@ Ariadne.Ty.tag : Ariadne.TagLit → Ariadne.Ty
 
 Ariadne.Ty.union : String → Ariadne.Variants → Ariadne.Ty
 
-Ariadne.UnOp.casesOn -- derived; fingerprint 1933525911 3239411450
+Ariadne.UnOp.casesOn -- derived; fingerprint 4210639477 2463103596
+
+Ariadne.UnOp.dec : Ariadne.UnOp
+
+Ariadne.UnOp.inc : Ariadne.UnOp
 
 Ariadne.UnOp.neg : Ariadne.UnOp
 
 Ariadne.UnOp.not : Ariadne.UnOp
 
-Ariadne.UnOp.rec -- derived; fingerprint 3649585697 0
+Ariadne.UnOp.rec -- derived; fingerprint 3042540611 0
 
 Ariadne.Variants.below -- derived; fingerprint 832290295 1808918156
 
@@ -1274,7 +1284,7 @@ Ariadne.unary._sparseCasesOn_1 -- derived; fingerprint 3400284381 3708648107
 
 Ariadne.unary._sparseCasesOn_2 -- derived; fingerprint 4012015748 405552933
 
-Ariadne.unary.match_1 -- derived; fingerprint 2459137200 3407370841
+Ariadne.unary.match_1 -- derived; fingerprint 212464746 1710293500
 
 Ariadne.upsert._f -- derived; fingerprint 1408526924 1580355621
 

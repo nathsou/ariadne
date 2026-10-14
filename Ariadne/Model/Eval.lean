@@ -101,6 +101,11 @@ def unary : UnOp → JSValue → Except Fault JSValue
   | .not, .bool b => .ok (.bool !b)
   | .neg, .number n => number (-n)
   | .neg, .bigint n => .ok (.bigint (-n))
+  -- `x++` adds `1` to a number and `1n` to a bigint.
+  | .inc, .number n => number (n + 1)
+  | .inc, .bigint n => .ok (.bigint (n + 1))
+  | .dec, .number n => number (n - 1)
+  | .dec, .bigint n => .ok (.bigint (n - 1))
   | _, _ => .error (.typeError "unary operand")
 
 /-- Strict equality of primitives of one type. Objects compare by identity in

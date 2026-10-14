@@ -74,8 +74,9 @@ that directly, as `freeze_runs` does.
 - **Sorting**: `cmp_laws` proves a comparator lawful; then `consistent_of_laws` discharges `toSorted`'s
   safety condition, and `sortedBy_perm`, `sortedBy_sorted` say what it returns.
 - **Names**: `simp [readable]` unfolds the generated names to tuples, when a proof needs to.
-- **Safety conditions**: unfold `«f».safe`, split its cases, and close each with what bounds the numbers
-  (`inRange`, `omega`).
+- **Safety conditions**: `ariadne_safe [facts]` (`Ariadne/Lib/Safe.lean`) unfolds `«f».safe`, splits its
+  cases and closes each by `simp` with the facts given (a comparator's laws, callees' `_safe` lemmas); what
+  it leaves bounds numbers, for `inRange` and `omega`.
 
 ## 5. Audit
 

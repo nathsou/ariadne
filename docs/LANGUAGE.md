@@ -25,7 +25,7 @@ Anything else is refused with a diagnostic; `Tests/negative` has one fixture per
 **Statements**
 
 - `const`, `let`, and assignment to `let`s and parameters.
-- `+=`, `-=`, `*=`, `x++` and `x--`, as statements on a variable.
+- `+=`, `-=`, `*=`, `x++` and `x--`, as statements on a variable (a number or a bigint).
 - `if`/`else`, with braced or single-statement branches.
 - `if (x == null) return …;`, narrowing `x` for the rest of the block.
 - `switch` on a union's tag or on a literal union: cases in any order, grouped labels, `default` and

@@ -44,14 +44,14 @@ mutual
     | _, _, .bool _, _, _ | _, _, .int _, _, _ | _, _, .str _, _, _ | _, _, .tagLit _, _, _
     | _, _, .litIn .., _, _ | _, _, .undef .., _, _ | _, _, .null .., _, _ | _, _, .var _, _, _
     | _, _, .num _, _, _ | _, _, .negNum .., _, _ => rfl
-    | _, _, .widen _ e, ρ, h | _, _, .not e, ρ, h | _, _, .neg e, ρ, h | _, _, .isNull _ e, ρ, h
+    | _, _, .widen _ e, ρ, h | _, _, .not e, ρ, h | _, _, .neg e, ρ, h | _, _, .isNull _ e, ρ, h | _, _, .iinc _ e, ρ, h
     | _, _, .notNull _ e, ρ, h | _, _, .field e _ _, ρ, h | _, _, .length e, ρ, h | _, _, .slength e, ρ, h => by
       simp only [TExpr.trivial] at h; simp [TExpr.safe, TExpr.safe_of_trivial e ρ h]
     | _, _, .record es _ _, ρ, h => by
       simp only [TExpr.trivial] at h; simp [TExpr.safe, TEntries.safe_of_trivial es ρ h]
     | _, _, .array es, ρ, h => by
       simp only [TExpr.trivial] at h; simp [TExpr.safe, TElems.safe_of_trivial es ρ h]
-    | _, _, .nneg _, _, h | _, _, .sorted .., _, h => by simp [TExpr.trivial] at h
+    | _, _, .nneg _, _, h | _, _, .ninc .., _, h | _, _, .sorted .., _, h => by simp [TExpr.trivial] at h
     | _, _, .bin op a b, ρ, h => by
       simp only [TExpr.trivial, Bool.and_eq_true] at h
       simp [TExpr.safe, op.guard_total h.1.1, andT, TExpr.safe_of_trivial a ρ h.1.2, TExpr.safe_of_trivial b ρ h.2]

@@ -116,7 +116,7 @@ noncomputable def ast : Program := [
               .brk]
             [],
           .assign "k" (.cond (.binary .gt (.var "k") (.lit (.number 100))) (.binary .sub (.var "k") (.lit (.number 100))) (.binary .sub (.var "k") (.lit (.number 1)))),
-          .assign "count" (.binary .add (.var "count") (.lit (.number 1)))],
+          .assign "count" (.unary .inc (.var "count"))],
       .ret (.var "count")] },
   { name := "score", params := ["a", "b"], body := [
       .let_ "s" (.lit (.number 0)),
@@ -160,7 +160,7 @@ noncomputable def ast : Program := [
             [
               .ret (.var "i")]
             [],
-          .assign "i" (.binary .add (.var "i") (.lit (.number 1)))],
+          .assign "i" (.unary .inc (.var "i"))],
       .ret (.unary .neg (.lit (.number 1)))] },
   { name := "countdown", params := ["n"], body := [
       .let_ "out" (.array []),
@@ -168,7 +168,7 @@ noncomputable def ast : Program := [
       .while_ (.binary .gt (.var "k") (.lit (.number 0))) [
           .ite (.binary .eq (.binary .mod (.var "k") (.lit (.number 3))) (.lit (.number 0)))
             [
-              .assign "k" (.binary .sub (.var "k") (.lit (.number 1))),
+              .assign "k" (.unary .dec (.var "k")),
               .cont]
             [],
           .assign "out" (.array [(true, (.var "out")), (false, (.var "k"))]),
@@ -176,7 +176,7 @@ noncomputable def ast : Program := [
             [
               .brk]
             [],
-          .assign "k" (.binary .sub (.var "k") (.lit (.number 1)))],
+          .assign "k" (.unary .dec (.var "k"))],
       .ret (.var "out")] }]
 
 noncomputable abbrev ty.«Item» : Ty := (.record (.cons "id" .number (.cons "size" .number (.cons "tags" (.array .string) .nil))))
@@ -391,7 +391,7 @@ noncomputable def body.«steps» : TStmts [sig.«perimeters», sig.«grid», sig
   (.brk .nil)
   .nil
   (.assign (.there ne.«k».«_» .here) (.cond (.bin .ngt (.var (.there ne.«k».«_» .here)) (.num 100)) (.bin .nsub (.var (.there ne.«k».«_» .here)) (.num 100)) (.bin .nsub (.var (.there ne.«k».«_» .here)) (.num 1)))
-  (.assign (.there ne.«count».«_» (.there ne.«count».«k» .here)) (.bin .nadd (.var (.there ne.«count».«_» (.there ne.«count».«k» .here))) (.num 1))
+  (.assign (.there ne.«count».«_» (.there ne.«count».«k» .here)) (.ninc true (.var (.there ne.«count».«_» (.there ne.«count».«k» .here))))
   .nil)))
   (.ret (.var (.there ne.«count».«k» .here)) .nil))))
 
@@ -439,7 +439,7 @@ noncomputable def body.«firstAbove» : TStmts [sig.«gcd», sig.«triangle», s
   (.ite (.bin .ngt (.var .here) (.var (.there ne.«limit».«x» (.there ne.«limit».«i» (.there ne.«limit».«xs» .here)))))
   (.ret (.var (.there ne.«i».«x» .here)) .nil)
   .nil
-  (.assign (.there ne.«i».«x» .here) (.bin .nadd (.var (.there ne.«i».«x» .here)) (.num 1))
+  (.assign (.there ne.«i».«x» .here) (.ninc true (.var (.there ne.«i».«x» .here)))
   .nil)))
   (.ret (.negNum 1 (by decide +kernel)) .nil)))
 
@@ -448,14 +448,14 @@ noncomputable def body.«countdown» : TStmts [sig.«firstAbove», sig.«gcd», 
   (.let_ "k" (.var (.there ne.«n».«out» .here))
   (.whileLoop (.bin .ngt (.var .here) (.num 0))
   (.ite (.bin (.eq (by decide +kernel)) (.bin .nmod (.var .here) (.num 3)) (.num 0))
-  (.assign .here (.bin .nsub (.var .here) (.num 1))
+  (.assign .here (.ninc false (.var .here))
   (.cont .nil))
   .nil
   (.assign (.there ne.«out».«k» .here) (.array (τ := .number) (.spread (.var (.there ne.«out».«k» .here)) (.cons (.var .here) .nil)))
   (.ite (.bin .nge (.length (.var (.there ne.«out».«k» .here))) (.num 5))
   (.brk .nil)
   .nil
-  (.assign .here (.bin .nsub (.var .here) (.num 1))
+  (.assign .here (.ninc false (.var .here))
   .nil))))
   (.ret (.var (.there ne.«out».«k» .here)) .nil))))
 
@@ -698,7 +698,7 @@ def «steps» («n» : Int) : Int :=
       exit2' («k», «count», «n», ())
     else
       let «k» : Int := if decide («k» > (100 : Int)) then «k» - (100 : Int) else «k» - (1 : Int)
-      let «count» : Int := «count» + (1 : Int)
+      let «count» : Int := «count» + 1
       next2' («k», «count», «n», ()))
     (fun (_, «count», _, ()) =>
     «count»)
@@ -713,7 +713,7 @@ def «steps».safe («n» : Int) : Bool :=
       exit2' («k», «count», «n», ())
     else
       (if decide («k» > (100 : Int)) then Ariadne.inRange («k» - (100 : Int)) else Ariadne.inRange («k» - (1 : Int))) && (let «k» : Int := if decide («k» > (100 : Int)) then «k» - (100 : Int) else «k» - (1 : Int)
-      Ariadne.inRange («count» + (1 : Int)) && (let «count» : Int := «count» + (1 : Int)
+      Ariadne.inRange («count» + 1) && (let «count» : Int := «count» + 1
       next2' («k», «count», «n», ()))))
     (fun _ =>
     true)
@@ -822,7 +822,7 @@ def «firstAbove» («xs» : List Int) («limit» : Int) : Int :=
     if decide («x» > «limit») then
       «i»
     else
-      let «i» : Int := «i» + (1 : Int)
+      let «i» : Int := «i» + 1
       next2' («i», «xs», «limit», ()))
     (fun _ =>
     (-(1 : Int)))
@@ -837,7 +837,7 @@ def «firstAbove».safe («xs» : List Int) («limit» : Int) : Bool :=
     if decide («x» > «limit») then
       true
     else
-      Ariadne.inRange («i» + (1 : Int)) && (let «i» : Int := «i» + (1 : Int)
+      Ariadne.inRange («i» + 1) && (let «i» : Int := «i» + 1
       next2' («i», «xs», «limit», ())))
     (fun _ =>
     true)
@@ -849,14 +849,14 @@ def «countdown» («n» : Int) : List Int :=
   Ariadne.whileDo (fun («k», _, _, ()) => decide («k» > (0 : Int)))
     (fun next2' exit2' («k», «out», «n», ()) =>
     if (Int.tmod «k» (3 : Int)) == (0 : Int) then
-      let «k» : Int := «k» - (1 : Int)
+      let «k» : Int := «k» - 1
       next2' («k», «out», «n», ())
     else
       let «out» : List Int := «out» ++ ([«k»])
       if decide ((List.length «out» : Int) ≥ (5 : Int)) then
         exit2' («k», «out», «n», ())
       else
-        let «k» : Int := «k» - (1 : Int)
+        let «k» : Int := «k» - 1
         next2' («k», «out», «n», ()))
     (fun (_, «out», _, ()) =>
     «out»)
@@ -869,14 +869,14 @@ def «countdown».safe («n» : Int) : Bool :=
   Ariadne.whileSafe (fun («k», _, _, ()) => decide («k» > (0 : Int)))
     (fun next2' exit2' («k», «out», «n», ()) =>
     ((3 : Int) != 0 && Ariadne.inRange (Int.tmod «k» (3 : Int))) && (if (Int.tmod «k» (3 : Int)) == (0 : Int) then
-      Ariadne.inRange («k» - (1 : Int)) && (let «k» : Int := «k» - (1 : Int)
+      Ariadne.inRange («k» - 1) && (let «k» : Int := «k» - 1
       next2' («k», «out», «n», ()))
     else
       let «out» : List Int := «out» ++ ([«k»])
       if decide ((List.length «out» : Int) ≥ (5 : Int)) then
         exit2' («k», «out», «n», ())
       else
-        Ariadne.inRange («k» - (1 : Int)) && (let «k» : Int := «k» - (1 : Int)
+        Ariadne.inRange («k» - 1) && (let «k» : Int := «k» - 1
         next2' («k», «out», «n», ()))))
     (fun _ =>
     true)

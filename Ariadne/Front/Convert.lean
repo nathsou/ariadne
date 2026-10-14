@@ -9,8 +9,9 @@ accepted source form to the model construct with the same JavaScript meaning.
 It drops spans and type annotations and refuses everything else; it makes no
 typing decisions. The non-identity mappings, each with JavaScript's meaning:
 
-- `x += e`, `x -= e`, `x *= e` and `x++`, `x--` on a local `x` are `x = x op e`
-  (the parser produces this form; `x` is read before `e` is evaluated).
+- `x += e`, `x -= e` and `x *= e` on a local `x` are `x = x op e` (the parser produces this form; `x` is
+  read before `e` is evaluated); `x++` and `x--` are `x = inc x` and `x = dec x`, which add one in `x`'s
+  own numeric type (`1` or `1n`).
 - An expression-bodied arrow `(ps) => e` is the model's `arrow ps e`.
 - A single unbraced statement as an `if` branch or a `for…of` body is a
   one-statement list (it is not a block, but a single non-declaration statement has
@@ -42,6 +43,8 @@ def unsupported (span : Span) (what : String) : Checked α :=
 def convertUnary (span : Span) : String → Checked UnOp
   | "!" => pure .not
   | "-" => pure .neg
+  | "++" => pure .inc
+  | "--" => pure .dec
   | op => unsupported span s!"unary '{op}'"
 
 def convertBinary (span : Span) : String → Checked BinOp
@@ -68,6 +71,12 @@ def convertLiteral (span : Span) : Parse.Literal → Checked Lit
   | .number m e => return .number (← integerLiteral span m e)
   | .undefined => pure .undefined
   | .null => pure .null
+
+/-- The variable a counted loop's update increments: `i++`, `i += 1` or `i = i + 1`. -/
+def incrementOf : Parse.Stmt → Option String
+  | .assign (.var i _) (.unary "++" (.var i' _) _) _ => if i == i' then some i else none
+  | .assign (.var i _) (.binary "+" (.var i' _) (.literal (.number 1 0) _) _) _ => if i == i' then some i else none
+  | _ => none
 
 /-- A declaration's name: not `Math`, which `Math.floor` refers to. -/
 def declName (span : Span) (x : String) : Checked String :=
@@ -129,9 +138,8 @@ mutual
     | .break_ _ => pure .brk
     | .continue_ _ => pure .cont
     | .forOf false x e body span => return .forOf (← declName span x) (← convertExpr e) (← convertBranch body)
-    | .for_ (.let_ true i _ (.literal (.number 0 0) _) _) (.binary "<" (.var i₁ _) (.var n _) _)
-        (.assign (.var i₂ _) (.binary "+" (.var i₃ _) (.literal (.number 1 0) _) _) _) body span =>
-      if i₁ == i && i₂ == i && i₃ == i then return .forRange (← declName span i) n (← convertBranch body)
+    | .for_ (.let_ true i _ (.literal (.number 0 0) _) _) (.binary "<" (.var i₁ _) (.var n _) _) update body span =>
+      if i₁ == i && incrementOf update == some i then return .forRange (← declName span i) n (← convertBranch body)
       else unsupported span "this for loop"
     | .while_ c body _ => return .while_ (← convertExpr c) (← convertBranch body)
     | .forOfPair false i x (.call (.member e "entries" _) [] _) (.block body _) span =>

@@ -111,3 +111,21 @@ export function fault_while_forever(): number {
   }
   return x;
 }
+
+export function t_increments(): (number | bigint)[] {
+  let a = 9007199254740990;
+  a++;
+  let b = 1n;
+  b++;
+  b++;
+  b--;
+  let c = -9007199254740990;
+  c--;
+  return [a, b, c];
+}
+
+export function fault_increment_unsafe(): number {
+  let a = 9007199254740991;
+  a++;
+  return a;
+}

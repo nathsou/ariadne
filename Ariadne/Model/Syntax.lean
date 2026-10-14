@@ -26,6 +26,8 @@ inductive Lit where
 
 inductive UnOp where
   | not | neg
+  /-- What `x++` and `x--` add to `x`: one, in its own numeric type. -/
+  | inc | dec
   deriving Repr, BEq, DecidableEq, Inhabited
 
 inductive BinOp where

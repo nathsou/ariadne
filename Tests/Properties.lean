@@ -2,6 +2,8 @@ import Tests.Generated.Records
 import Tests.Generated.Arrays
 import Tests.Generated.Loops
 import Ariadne.Lib.Loop
+import Ariadne.Lib.Cmp
+import Ariadne.Lib.Safe
 
 /-!
 # Using the source theorems
@@ -97,6 +99,11 @@ theorem firstAbove_safe (xs : List Int) (limit : Int) (h : xs.length < 2 ^ 53) :
   all_goals first
     | rfl
     | rw [hr, Bool.true_and]; exact hn _ ⟨rfl, by omega⟩ (by simp only; omega)
+
+/-- `ranked` sorts by a declared comparator; `cmp_laws` proves it lawful, and `ariadne_safe` discharges
+`toSorted`'s safety condition with that. -/
+theorem ranked_safe (es : List Generated.Arrays.«Entry») : Generated.Arrays.«ranked».safe es = true := by
+  ariadne_safe [consistent_of_laws (show CmpLaws Generated.Arrays.«bySizeDesc» by cmp_laws)]
 
 /-- Every run of `sum` on an input where it stays exact returns the sum. -/
 theorem sum_run (xs : List Int) (vs : List JSValue) (args : ArgsRep sig.«sum».params vs (xs, ()))
