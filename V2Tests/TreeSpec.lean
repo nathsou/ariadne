@@ -17,7 +17,8 @@ that write them.
 
 Re-deriving where nodes sit starts from the cycles of wanted parents, found by
 `cycleOf`: what it returns is such a cycle through the node (`cycleOf_cycle`), and
-it finds every one no longer than the number of nodes (`cycleOf_finds`).
+it finds every one (`cycleOf_finds_all`): its bound of one step per node is enough,
+because a longer walk back to the node repeats a node and so has a shorter one.
 -/
 
 namespace V2Tests.TreeSpec
@@ -431,5 +432,91 @@ theorem cycleOf_finds (r : State) (id : JSString) {k : Nat} (hk1 : 1 ≤ k) (hk2
         · exact hn _ (by simp)
     · intro t g; exact g
   · exact ⟨rfl, rfl, by simp [hlen, up], by simp [hlen], by simp [hlen]; omega⟩
+
+/-! ### Every cycle is short enough
+
+A walk up the wanted parents that returns to `id` after more steps than there are
+nodes visits some node twice, so a shorter walk returns too: `cycleOf` finds every
+cycle through `id`. -/
+
+theorem up_add (sp : List (JSString × ty.«Spot».denote)) (x : JSString) (a : Nat) :
+    ∀ m, up sp (a + m) x = (up sp a x).bind (fun y => up sp m y)
+  | 0 => by cases up sp a x <;> simp [up]
+  | m + 1 => by
+    rw [← Nat.add_assoc]; simp only [up]; rw [up_add sp x a m]
+    cases up sp a x <;> simp
+
+theorem mem_keys_of_lookup {α : Type} : ∀ {sp : List (JSString × α)} {c : JSString} {v : α},
+    sp.lookup c = some v → c ∈ sp.map Prod.fst
+  | [], _, _, h => by simp at h
+  | (k, w) :: rest, c, v, h => by
+    by_cases hc : c = k
+    · simp [hc]
+    · have : (c == k) = false := beq_eq_false_iff_ne.mpr hc
+      simp only [List.lookup, this] at h
+      exact List.mem_cons_of_mem _ (mem_keys_of_lookup h)
+
+theorem nodup_map_range {β : Type} (f : Nat → β) :
+    ∀ k, (∀ i j, i < k → j < k → f i = f j → i = j) → ((List.range k).map f).Nodup
+  | 0, _ => by simp
+  | k + 1, h => by
+    rw [List.range_succ, List.map_append, List.nodup_append]
+    refine ⟨nodup_map_range f k (fun i j hi hj => h i j (by omega) (by omega)), by simp, ?_⟩
+    intro a ha b hb
+    simp only [List.mem_map, List.mem_range] at ha
+    simp only [List.map_cons, List.map_nil, List.mem_singleton] at hb
+    obtain ⟨i, hi, rfl⟩ := ha
+    subst hb
+    intro he
+    have := h i k (by omega) (by omega) he
+    omega
+
+/-- A walk that returns to `id` after more steps than there are nodes has a shorter one. -/
+theorem up_shorter (r : State) (id : JSString) {k : Nat} (hk : up r.1 k id = some id)
+    (hlong : r.1.length < k) : ∃ k', 1 ≤ k' ∧ k' < k ∧ up r.1 k' id = some id := by
+  refine Classical.byContradiction fun hno => ?_
+  have hinj : ∀ i j, i < k → j < k → up r.1 i id = up r.1 j id → i = j := by
+    have key : ∀ i j, i < j → j < k → up r.1 i id = up r.1 j id → False := by
+      intro i j hij hj he
+      have h1 : up r.1 (i + (k - j)) id = some id := by
+        rw [up_add, he, ← up_add, show j + (k - j) = k by omega, hk]
+      exact hno ⟨i + (k - j), by omega, by omega, h1⟩
+    intro i j hi hj he
+    rcases Nat.lt_trichotomy i j with h | h | h
+    · exact (key i j h hj he).elim
+    · exact h
+    · exact (key j i h hi he.symm).elim
+  have hnd := nodup_map_range (fun i => up r.1 i id) k hinj
+  have hsub : (List.range k).map (fun i => up r.1 i id) ⊆ r.1.map (fun p => some p.1) := by
+    intro o ho
+    simp only [List.mem_map, List.mem_range] at ho
+    obtain ⟨i, hi, rfl⟩ := ho
+    cases hc : up r.1 i id with
+    | none => rw [up_none r.1 id hc k (by omega)] at hk; simp at hk
+    | some c =>
+      cases hs : mapGet r.1 c with
+      | none =>
+        have : up r.1 (i + 1) id = none := by simp [up, hc, hs]
+        rw [up_none r.1 id this k (by omega)] at hk; simp at hk
+      | some v =>
+        have := mem_keys_of_lookup (sp := r.1) hs
+        simp only [List.mem_map] at this ⊢
+        obtain ⟨p, hp, rfl⟩ := this
+        exact ⟨p, hp, rfl⟩
+  have := hnd.length_le_of_subset hsub
+  simp at this
+  omega
+
+/-- **`cycleOf` finds every cycle** of wanted parents through `id`. -/
+theorem cycleOf_finds_all (r : State) (id : JSString) :
+    ∀ k, 1 ≤ k → up r.1 k id = some id → «cycleOf» r id ≠ [] := by
+  intro k
+  induction k using Nat.strongRecOn with
+  | ind k ih =>
+    intro hk1 hk
+    by_cases hle : k ≤ r.1.length
+    · exact cycleOf_finds r id hk1 hle hk
+    · obtain ⟨k', h1, h2, h3⟩ := up_shorter r id hk (by omega)
+      exact ih k' h2 h1 h3
 
 end V2Tests.TreeSpec
