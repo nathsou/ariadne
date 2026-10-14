@@ -97,3 +97,8 @@ export function flags(es: readonly Entry[]): boolean[] {
 export function summaries(es: readonly Entry[]): Entry[] {
   return es.map((e) => ({ id: e.id, size: e.size + 1, name: e.name, tags: [] }));
 }
+
+/** Empty slots: `filter` would skip a hole in the array, which the type does not allow. */
+export function missing(xs: readonly (bigint | undefined)[]): number {
+  return xs.filter((x) => x == null).length;
+}

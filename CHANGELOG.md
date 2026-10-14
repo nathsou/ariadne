@@ -10,6 +10,11 @@ Ariadne follows semantic versioning: a minor version may change generated files 
 - `x++` and `x--` on bigints. Increments are model operators (`inc`, `dec`) rather than `x = x + 1`,
   which a bigint could not be written as.
 
+**Command line**
+- `ariadne validators FILE [--out FILE.ts]`: a TypeScript module with a guard per exported function and
+  method, `args.f(...)`, true only if the arguments represent `f`'s parameter types, as its source theorem
+  assumes. For callers at a boundary (storage, the network). Tested by `scripts/validators.mjs`.
+
 **Proof library**
 - `ariadne_safe [facts]`: proves a safety condition that holds on every input given the facts.
 

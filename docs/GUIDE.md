@@ -28,7 +28,7 @@ supportInterpreter = true
 
 (The example requires Ariadne by path instead, to test the current commit.) `lake update` fetches it;
 `lake exe ariadne` builds the translator on first use, or `scripts/fetch-release.sh` downloads the
-release's build (see 6).
+release's build (see 7).
 
 ## 2. Translate
 
@@ -78,7 +78,25 @@ that directly, as `freeze_runs` does.
   cases and closes each by `simp` with the facts given (a comparator's laws, callees' `_safe` lemmas); what
   it leaves bounds numbers, for `inRange` and `omega`.
 
-## 5. Audit
+## 5. Check the hypotheses at the boundary
+
+A source theorem assumes its arguments represent the declared types: numbers are safe integers, records
+have their fields, arrays have no holes. Inside the subset that holds by typing; where values come from
+storage or the network, check it:
+
+```sh
+lake exe ariadne validators src/ledger.ts --out src/ledger.validators.ts
+```
+
+```ts
+import { args } from './ledger.validators.ts';
+if (!args.balance(entries)) throw new Error('invalid entries');
+```
+
+The guards are sufficient: a value they accept is represented. (Safety conditions, `«f».safe`, are
+separate: prove them, as in 4.)
+
+## 6. Audit
 
 `Audit.lean` runs Ariadne's soundness gate:
 
@@ -99,7 +117,7 @@ with the kernel, theorems use only the standard axioms, every claim is proved ex
 matches. The lock prints the claims and the definitions they mention, so a changed claim, or a change to
 the code it is about, is a visible diff in review; `lake exe audit --write-lock` rewrites it.
 
-## 6. CI
+## 7. CI
 
 Check, on every change: the translation is up to date, `lake build`, `lake exe audit`. Ariadne's own CI
 also runs its fixtures in Bun against the model; a project can do the same with `ariadne batch`
@@ -117,7 +135,7 @@ With `replay := [`Ariadne]`, the audit re-checks every declaration of the prebui
 archive is trusted only for the `ariadne` executable, which the pinned hash ties to the release
 workflow's build of the tagged commit.
 
-## 7. Updating Ariadne
+## 8. Updating Ariadne
 
 Bump the tag (and hash), regenerate the translations, and run the audit. Release notes
 ([CHANGELOG.md](../CHANGELOG.md)) say what changed; the diffs to review are the generated files, and the

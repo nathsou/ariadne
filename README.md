@@ -57,6 +57,10 @@ Trusted:
 The type checker, the printer and every tactic are untrusted: a bug in any of them makes a
 per-file check fail, never a wrong theorem.
 
+Each source theorem assumes that its arguments represent the declared types (safe integers, records with
+their fields, arrays without holes). `ariadne validators FILE` prints TypeScript guards that check it
+where values enter from outside the subset.
+
 ## Using Ariadne in a project
 
 Require it in the project's `lakefile.toml`, pinned to a release:

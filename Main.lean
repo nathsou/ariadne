@@ -1,4 +1,5 @@
 import Ariadne.Front.Check
+import Ariadne.Front.Validators
 import Ariadne.Model.Eval
 import Ariadne.Model.Store
 import Lean.Data.Json
@@ -12,6 +13,7 @@ private def usage : String :=
   "  ariadne translate FILE --out FILE.lean --namespace NAME\n" ++
   "  ariadne batch FILE < CALLS\n" ++
   "  ariadne signatures FILE\n" ++
+  "  ariadne validators FILE [--out FILE.ts]\n" ++
   "  ariadne ast FILE\n\n" ++
   "batch evaluates calls in the trusted model (no type checking): one JSON array per\n" ++
   "line, the function name then its arguments as observations, and prints one\n" ++
@@ -188,5 +190,14 @@ def main (args : List String) : IO UInt32 := do
     | .error d => report { path, text } d
     | .ok lines =>
       for l in lines do IO.println l
+      return 0
+  | "validators" :: path :: rest =>
+    let text ← IO.FS.readFile path
+    match validators (System.FilePath.fileName path |>.getD path) text with
+    | .error d => report { path, text } d
+    | .ok ts =>
+      match option rest "--out" with
+      | some out => IO.FS.writeFile out ts
+      | none => IO.print ts
       return 0
   | _ => IO.eprintln usage; return 2

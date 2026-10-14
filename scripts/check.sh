@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # All checks: the general theorem, regenerated fixtures (kernel-checked),
 # the model against JavaScript (cases, differential execution, random programs),
-# negative fixtures, and the parser against the TypeScript compiler.
+# negative fixtures, the boundary validators, and the parser against the TypeScript compiler.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -34,6 +34,7 @@ if [ "$js" = bun ]; then
 fi
 "$js" scripts/negative.mjs
 "$js" scripts/fuzz-model.mjs
+"$js" scripts/validators.mjs
 
 # The TypeScript compiler, pinned by bun.lock (with its integrity hash), for the parser cross-check.
 if [ "$js" = bun ]; then

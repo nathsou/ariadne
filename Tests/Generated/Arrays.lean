@@ -74,7 +74,9 @@ noncomputable def ast : Program := [
   { name := "flags", params := ["es"], body := [
       .ret (.method (.var "es") "map" [(.arrow [] (.lit (.bool false)))])] },
   { name := "summaries", params := ["es"], body := [
-      .ret (.method (.var "es") "map" [(.arrow ["e"] (.record [(some "id", (.field (.var "e") "id")), (some "size", (.binary .add (.field (.var "e") "size") (.lit (.number 1)))), (some "name", (.field (.var "e") "name")), (some "tags", (.array []))]))])] }]
+      .ret (.method (.var "es") "map" [(.arrow ["e"] (.record [(some "id", (.field (.var "e") "id")), (some "size", (.binary .add (.field (.var "e") "size") (.lit (.number 1)))), (some "name", (.field (.var "e") "name")), (some "tags", (.array []))]))])] },
+  { name := "missing", params := ["xs"], body := [
+      .ret (.field (.method (.var "xs") "filter" [(.arrow ["x"] (.binary .looseEq (.var "x") (.lit .null)))]) "length")] }]
 
 noncomputable abbrev ty.«Entry» : Ty := (.record (.cons "id" .number (.cons "size" .number (.cons "name" .string (.cons "tags" (.array .string) .nil)))))
 
@@ -113,6 +115,7 @@ noncomputable def sig.«large» : Sig := { name := "large", params := [("es", (.
 noncomputable def sig.«ranked» : Sig := { name := "ranked", params := [("es", (.array ty.«Entry»))], result := (.array ty.«Entry»), trivial := false }
 noncomputable def sig.«flags» : Sig := { name := "flags", params := [("es", (.array ty.«Entry»))], result := (.array .bool), trivial := true }
 noncomputable def sig.«summaries» : Sig := { name := "summaries", params := [("es", (.array ty.«Entry»))], result := (.array ty.«Entry»), trivial := false }
+noncomputable def sig.«missing» : Sig := { name := "missing", params := [("xs", (.array (.option .undef .int)))], result := .number, trivial := true }
 
 theorem ne.«b».«a» : ("b" : String) ≠ "a" := by decide
 theorem ne.«n».«i» : ("n" : String) ≠ "i" := by decide
@@ -208,10 +211,13 @@ noncomputable def body.«flags» : TStmts [sig.«ranked», sig.«large», sig.«
 noncomputable def body.«summaries» : TStmts [sig.«flags», sig.«ranked», sig.«large», sig.«bySizeDesc», sig.«isLarge», sig.«totalOf», sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«summaries».params sig.«summaries».result :=
   (.ret (.map (.var .here) (.arrow "e" (.record (.cons "id" (.field (.var .here) .here (by decide +kernel)) (.cons "size" (.bin .nadd (.field (.var .here) (.there .here) (by decide +kernel)) (.num 1)) (.cons "name" (.field (.var .here) (.there (.there .here)) (by decide +kernel)) (.cons "tags" (.array (τ := .string) .nil) .nil)))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) .nil)))) (by decide +kernel)))) .nil)
 
-noncomputable abbrev sigs : Sigs := [sig.«summaries», sig.«flags», sig.«ranked», sig.«large», sig.«bySizeDesc», sig.«isLarge», sig.«totalOf», sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»]
+noncomputable def body.«missing» : TStmts [sig.«summaries», sig.«flags», sig.«ranked», sig.«large», sig.«bySizeDesc», sig.«isLarge», sig.«totalOf», sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«missing».params sig.«missing».result :=
+  (.ret (.length (.filter (.var .here) (.arrow "x" (.isNull (by decide +kernel) (.var .here))))) .nil)
+
+noncomputable abbrev sigs : Sigs := [sig.«missing», sig.«summaries», sig.«flags», sig.«ranked», sig.«large», sig.«bySizeDesc», sig.«isLarge», sig.«totalOf», sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»]
 
 noncomputable def typed : TProgram sigs :=
-  (.cons sig.«summaries» body.«summaries» (.cons sig.«flags» body.«flags» (.cons sig.«ranked» body.«ranked» (.cons sig.«large» body.«large» (.cons sig.«bySizeDesc» body.«bySizeDesc» (.cons sig.«isLarge» body.«isLarge» (.cons sig.«totalOf» body.«totalOf» (.cons sig.«scaled» body.«scaled» (.cons sig.«signs» body.«signs» (.cons sig.«grow» body.«grow» (.cons sig.«firstName» body.«firstName» (.cons sig.«ids» body.«ids» (.cons sig.«byName» body.«byName» (.cons sig.«bySize» body.«bySize» (.cons sig.«allNamed» body.«allNamed» (.cons sig.«anyLarge» body.«anyLarge» (.cons sig.«tagged» body.«tagged» (.cons sig.«named» body.«named» (.cons sig.«sizes» body.«sizes» (.cons sig.«count» body.«count» (.cons sig.«clampIndex» body.«clampIndex» (.cons sig.«negate» body.«negate» (.cons sig.«total» body.«total» .nil)))))))))))))))))))))))
+  (.cons sig.«missing» body.«missing» (.cons sig.«summaries» body.«summaries» (.cons sig.«flags» body.«flags» (.cons sig.«ranked» body.«ranked» (.cons sig.«large» body.«large» (.cons sig.«bySizeDesc» body.«bySizeDesc» (.cons sig.«isLarge» body.«isLarge» (.cons sig.«totalOf» body.«totalOf» (.cons sig.«scaled» body.«scaled» (.cons sig.«signs» body.«signs» (.cons sig.«grow» body.«grow» (.cons sig.«firstName» body.«firstName» (.cons sig.«ids» body.«ids» (.cons sig.«byName» body.«byName» (.cons sig.«bySize» body.«bySize» (.cons sig.«allNamed» body.«allNamed» (.cons sig.«anyLarge» body.«anyLarge» (.cons sig.«tagged» body.«tagged» (.cons sig.«named» body.«named» (.cons sig.«sizes» body.«sizes» (.cons sig.«count» body.«count» (.cons sig.«clampIndex» body.«clampIndex» (.cons sig.«negate» body.«negate» (.cons sig.«total» body.«total» .nil))))))))))))))))))))))))
 
 theorem erased : typed.erase = ast := by kernel_rfl
 
@@ -351,6 +357,9 @@ def «summaries» («es» : List «Entry») : List «Entry» :=
 /-- The inputs on which `summaries` stays within what the model covers. -/
 def «summaries».safe («es» : List «Entry») : Bool :=
   List.all «es» (fun «e» => Ariadne.inRange («e».«size» + (1 : Int)))
+
+def «missing» («xs» : List (Option Int)) : Int :=
+  (List.length (List.filter (fun «x» => «x».isNone) «xs») : Int)
 
 /-! ## Denotation
 
@@ -646,11 +655,24 @@ theorem «summaries».safe_eq :
     body.«summaries».safeFn («flags».uncurried, «ranked».uncurried, «large».uncurried, «bySizeDesc».uncurried, «isLarge».uncurried, «totalOf».uncurried, «scaled».uncurried, «signs».uncurried, «grow».uncurried, «firstName».uncurried, «ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) («flags».safety, «ranked».safety, «large».safety, «bySizeDesc».safety, «isLarge».safety, «totalOf».safety, «scaled».safety, «signs».safety, «grow».safety, «firstName».safety, «ids».safety, «byName».safety, «bySize».safety, «allNamed».safety, «anyLarge».safety, «tagged».safety, «named».safety, «sizes».safety, «count».safety, «clampIndex».safety, «negate».safety, «total».safety, ()) = «summaries».safety := by
   kernel_rfl
 
-theorem denote_eq : typed.denote = («summaries».uncurried, «flags».uncurried, «ranked».uncurried, «large».uncurried, «bySizeDesc».uncurried, «isLarge».uncurried, «totalOf».uncurried, «scaled».uncurried, «signs».uncurried, «grow».uncurried, «firstName».uncurried, «ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) :=
-  (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) «ids».body_eq) «firstName».body_eq) «grow».body_eq) «signs».body_eq) «scaled».body_eq) «totalOf».body_eq) «isLarge».body_eq) «bySizeDesc».body_eq) «large».body_eq) «ranked».body_eq) «flags».body_eq) «summaries».body_eq)
+noncomputable def «missing».uncurried : sig.«missing».denote := fun xs => «missing» xs.1
 
-theorem safety_eq : typed.safety = («summaries».safety, «flags».safety, «ranked».safety, «large».safety, «bySizeDesc».safety, «isLarge».safety, «totalOf».safety, «scaled».safety, «signs».safety, «grow».safety, «firstName».safety, «ids».safety, «byName».safety, «bySize».safety, «allNamed».safety, «anyLarge».safety, «tagged».safety, «named».safety, «sizes».safety, «count».safety, «clampIndex».safety, «negate».safety, «total».safety, ()) :=
-  (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) «ids».body_eq) «firstName».body_eq) «grow».body_eq) «signs».body_eq) «scaled».body_eq) «totalOf».body_eq) «isLarge».body_eq) «bySizeDesc».body_eq) «large».body_eq) «ranked».body_eq) «flags».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) «ids».body_eq) «firstName».body_eq) «grow».body_eq) «signs».body_eq) «scaled».body_eq) «totalOf».body_eq) «isLarge».body_eq) «bySizeDesc».body_eq) «large».body_eq) «ranked».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) «ids».body_eq) «firstName».body_eq) «grow».body_eq) «signs».body_eq) «scaled».body_eq) «totalOf».body_eq) «isLarge».body_eq) «bySizeDesc».body_eq) «large».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) «ids».body_eq) «firstName».body_eq) «grow».body_eq) «signs».body_eq) «scaled».body_eq) «totalOf».body_eq) «isLarge».body_eq) «bySizeDesc».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) «ids».body_eq) «firstName».body_eq) «grow».body_eq) «signs».body_eq) «scaled».body_eq) «totalOf».body_eq) «isLarge».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) «ids».body_eq) «firstName».body_eq) «grow».body_eq) «signs».body_eq) «scaled».body_eq) «totalOf».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) «ids».body_eq) «firstName».body_eq) «grow».body_eq) «signs».body_eq) «scaled».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) «ids».body_eq) «firstName».body_eq) «grow».body_eq) «signs».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) «ids».body_eq) «firstName».body_eq) «grow».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) «ids».body_eq) «firstName».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) «ids».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) (TProgram.safety_cons (TProgram.denote_cons rfl «total».body_eq) (TProgram.safety_cons rfl rfl «total».safe_eq) «negate».safe_eq) «clampIndex».safe_eq) «count».safe_eq) «sizes».safe_eq) «named».safe_eq) «tagged».safe_eq) «anyLarge».safe_eq) «allNamed».safe_eq) «bySize».safe_eq) «byName».safe_eq) «ids».safe_eq) «firstName».safe_eq) «grow».safe_eq) «signs».safe_eq) «scaled».safe_eq) «totalOf».safe_eq) «isLarge».safe_eq) «bySizeDesc».safe_eq) «large».safe_eq) «ranked».safe_eq) «flags».safe_eq) «summaries».safe_eq)
+/-- Trivially safe: every input is in what the model covers. -/
+noncomputable def «missing».safety : sig.«missing».params.denote → Bool := fun _ => true
+
+theorem «missing».body_eq :
+    body.«missing».denoteFn («summaries».uncurried, «flags».uncurried, «ranked».uncurried, «large».uncurried, «bySizeDesc».uncurried, «isLarge».uncurried, «totalOf».uncurried, «scaled».uncurried, «signs».uncurried, «grow».uncurried, «firstName».uncurried, «ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) = «missing».uncurried := by
+  kernel_rfl
+
+theorem «missing».safe_eq :
+    body.«missing».safeFn («summaries».uncurried, «flags».uncurried, «ranked».uncurried, «large».uncurried, «bySizeDesc».uncurried, «isLarge».uncurried, «totalOf».uncurried, «scaled».uncurried, «signs».uncurried, «grow».uncurried, «firstName».uncurried, «ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) («summaries».safety, «flags».safety, «ranked».safety, «large».safety, «bySizeDesc».safety, «isLarge».safety, «totalOf».safety, «scaled».safety, «signs».safety, «grow».safety, «firstName».safety, «ids».safety, «byName».safety, «bySize».safety, «allNamed».safety, «anyLarge».safety, «tagged».safety, «named».safety, «sizes».safety, «count».safety, «clampIndex».safety, «negate».safety, «total».safety, ()) = «missing».safety := by
+  kernel_rfl
+
+theorem denote_eq : typed.denote = («missing».uncurried, «summaries».uncurried, «flags».uncurried, «ranked».uncurried, «large».uncurried, «bySizeDesc».uncurried, «isLarge».uncurried, «totalOf».uncurried, «scaled».uncurried, «signs».uncurried, «grow».uncurried, «firstName».uncurried, «ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) :=
+  (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) «ids».body_eq) «firstName».body_eq) «grow».body_eq) «signs».body_eq) «scaled».body_eq) «totalOf».body_eq) «isLarge».body_eq) «bySizeDesc».body_eq) «large».body_eq) «ranked».body_eq) «flags».body_eq) «summaries».body_eq) «missing».body_eq)
+
+theorem safety_eq : typed.safety = («missing».safety, «summaries».safety, «flags».safety, «ranked».safety, «large».safety, «bySizeDesc».safety, «isLarge».safety, «totalOf».safety, «scaled».safety, «signs».safety, «grow».safety, «firstName».safety, «ids».safety, «byName».safety, «bySize».safety, «allNamed».safety, «anyLarge».safety, «tagged».safety, «named».safety, «sizes».safety, «count».safety, «clampIndex».safety, «negate».safety, «total».safety, ()) :=
+  (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) «ids».body_eq) «firstName».body_eq) «grow».body_eq) «signs».body_eq) «scaled».body_eq) «totalOf».body_eq) «isLarge».body_eq) «bySizeDesc».body_eq) «large».body_eq) «ranked».body_eq) «flags».body_eq) «summaries».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) «ids».body_eq) «firstName».body_eq) «grow».body_eq) «signs».body_eq) «scaled».body_eq) «totalOf».body_eq) «isLarge».body_eq) «bySizeDesc».body_eq) «large».body_eq) «ranked».body_eq) «flags».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) «ids».body_eq) «firstName».body_eq) «grow».body_eq) «signs».body_eq) «scaled».body_eq) «totalOf».body_eq) «isLarge».body_eq) «bySizeDesc».body_eq) «large».body_eq) «ranked».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) «ids».body_eq) «firstName».body_eq) «grow».body_eq) «signs».body_eq) «scaled».body_eq) «totalOf».body_eq) «isLarge».body_eq) «bySizeDesc».body_eq) «large».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) «ids».body_eq) «firstName».body_eq) «grow».body_eq) «signs».body_eq) «scaled».body_eq) «totalOf».body_eq) «isLarge».body_eq) «bySizeDesc».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) «ids».body_eq) «firstName».body_eq) «grow».body_eq) «signs».body_eq) «scaled».body_eq) «totalOf».body_eq) «isLarge».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) «ids».body_eq) «firstName».body_eq) «grow».body_eq) «signs».body_eq) «scaled».body_eq) «totalOf».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) «ids».body_eq) «firstName».body_eq) «grow».body_eq) «signs».body_eq) «scaled».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) «ids».body_eq) «firstName».body_eq) «grow».body_eq) «signs».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) «ids».body_eq) «firstName».body_eq) «grow».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) «ids».body_eq) «firstName».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) «ids».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) «byName».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) «bySize».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) «allNamed».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) «anyLarge».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) «tagged».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) «named».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) «sizes».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) «count».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) «clampIndex».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons rfl «total».body_eq) «negate».body_eq) (TProgram.safety_cons (TProgram.denote_cons rfl «total».body_eq) (TProgram.safety_cons rfl rfl «total».safe_eq) «negate».safe_eq) «clampIndex».safe_eq) «count».safe_eq) «sizes».safe_eq) «named».safe_eq) «tagged».safe_eq) «anyLarge».safe_eq) «allNamed».safe_eq) «bySize».safe_eq) «byName».safe_eq) «ids».safe_eq) «firstName».safe_eq) «grow».safe_eq) «signs».safe_eq) «scaled».safe_eq) «totalOf».safe_eq) «isLarge».safe_eq) «bySizeDesc».safe_eq) «large».safe_eq) «ranked».safe_eq) «flags».safe_eq) «summaries».safe_eq) «missing».safe_eq)
 
 /-! ## Source theorems -/
 
@@ -661,7 +683,7 @@ theorem «total».source («a» : Int) («b» : Int) (vs' : List JSValue)
     (safe' : «total».safe «a» «b» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "total" vs') (.ok w') ∧
       Ty.Rep .number w' («total» «a» «b») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) : FVar sigs "total" sig.«total») rfl («a», «b», ()) vs' args' safe'
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))) : FVar sigs "total" sig.«total») rfl («a», «b», ()) vs' args' safe'
 
 /-- Every run of `negate` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -670,7 +692,7 @@ theorem «negate».source («x» : Int) (vs' : List JSValue)
     (safe' : «negate».safe «x» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "negate" vs') (.ok w') ∧
       Ty.Rep .number w' («negate» «x») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))) : FVar sigs "negate" sig.«negate») rfl («x», ()) vs' args' safe'
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) : FVar sigs "negate" sig.«negate») rfl («x», ()) vs' args' safe'
 
 /-- Every run of `clampIndex` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -679,7 +701,7 @@ theorem «clampIndex».source («i» : Int) («n» : Int) (vs' : List JSValue)
     (safe' : «clampIndex».safe «i» «n» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "clampIndex" vs') (.ok w') ∧
       Ty.Rep .number w' («clampIndex» «i» «n») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))) : FVar sigs "clampIndex" sig.«clampIndex») rfl («i», «n», ()) vs' args' safe'
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))) : FVar sigs "clampIndex" sig.«clampIndex») rfl («i», «n», ()) vs' args' safe'
 
 /-- Every run of `count` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -687,7 +709,7 @@ theorem «count».source («es» : List «Entry») (vs' : List JSValue)
     (args' : ArgsRep sig.«count».params vs' («es», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "count" vs') (.ok w') ∧
       Ty.Rep .number w' («count» «es») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) : FVar sigs "count" sig.«count») rfl («es», ()) vs' args' rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))) : FVar sigs "count" sig.«count») rfl («es», ()) vs' args' rfl
 
 /-- Every run of `sizes` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -695,7 +717,7 @@ theorem «sizes».source («es» : List «Entry») (vs' : List JSValue)
     (args' : ArgsRep sig.«sizes».params vs' («es», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "sizes" vs') (.ok w') ∧
       Ty.Rep (.array .number) w' («sizes» «es») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) : FVar sigs "sizes" sig.«sizes») rfl («es», ()) vs' args' rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) : FVar sigs "sizes" sig.«sizes») rfl («es», ()) vs' args' rfl
 
 /-- Every run of `named` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -703,7 +725,7 @@ theorem «named».source («es» : List «Entry») («name» : JSString) (vs' : 
     (args' : ArgsRep sig.«named».params vs' («es», «name», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "named" vs') (.ok w') ∧
       Ty.Rep (.option .undef ty.«Entry») w' («named» «es» «name») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) : FVar sigs "named" sig.«named») rfl («es», «name», ()) vs' args' rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) : FVar sigs "named" sig.«named») rfl («es», «name», ()) vs' args' rfl
 
 /-- Every run of `tagged` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -711,7 +733,7 @@ theorem «tagged».source («es» : List «Entry») («tag» : JSString) (vs' : 
     (args' : ArgsRep sig.«tagged».params vs' («es», «tag», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "tagged" vs') (.ok w') ∧
       Ty.Rep (.array ty.«Entry») w' («tagged» «es» «tag») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))) : FVar sigs "tagged" sig.«tagged») rfl («es», «tag», ()) vs' args' rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) : FVar sigs "tagged" sig.«tagged») rfl («es», «tag», ()) vs' args' rfl
 
 /-- Every run of `anyLarge` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -719,7 +741,7 @@ theorem «anyLarge».source («es» : List «Entry») («limit» : Int) (vs' : L
     (args' : ArgsRep sig.«anyLarge».params vs' («es», «limit», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "anyLarge" vs') (.ok w') ∧
       Ty.Rep .bool w' («anyLarge» «es» «limit») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))) : FVar sigs "anyLarge" sig.«anyLarge») rfl («es», «limit», ()) vs' args' rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))) : FVar sigs "anyLarge" sig.«anyLarge») rfl («es», «limit», ()) vs' args' rfl
 
 /-- Every run of `allNamed` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -727,7 +749,7 @@ theorem «allNamed».source («es» : List «Entry») (vs' : List JSValue)
     (args' : ArgsRep sig.«allNamed».params vs' («es», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "allNamed" vs') (.ok w') ∧
       Ty.Rep .bool w' («allNamed» «es») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))) : FVar sigs "allNamed" sig.«allNamed») rfl («es», ()) vs' args' rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))) : FVar sigs "allNamed" sig.«allNamed») rfl («es», ()) vs' args' rfl
 
 /-- Every run of `bySize` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -736,7 +758,7 @@ theorem «bySize».source («es» : List «Entry») (vs' : List JSValue)
     (safe' : «bySize».safe «es» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "bySize" vs') (.ok w') ∧
       Ty.Rep (.array ty.«Entry») w' («bySize» «es») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))) : FVar sigs "bySize" sig.«bySize») rfl («es», ()) vs' args' safe'
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))) : FVar sigs "bySize" sig.«bySize») rfl («es», ()) vs' args' safe'
 
 /-- Every run of `byName` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -745,7 +767,7 @@ theorem «byName».source («es» : List «Entry») (vs' : List JSValue)
     (safe' : «byName».safe «es» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "byName" vs') (.ok w') ∧
       Ty.Rep (.array ty.«Entry») w' («byName» «es») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "byName" sig.«byName») rfl («es», ()) vs' args' safe'
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))) : FVar sigs "byName" sig.«byName») rfl («es», ()) vs' args' safe'
 
 /-- Every run of `ids` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -753,7 +775,7 @@ theorem «ids».source («es» : List «Entry») (vs' : List JSValue)
     (args' : ArgsRep sig.«ids».params vs' («es», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "ids" vs') (.ok w') ∧
       Ty.Rep (.array .number) w' («ids» «es») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "ids" sig.«ids») rfl («es», ()) vs' args' rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "ids" sig.«ids») rfl («es», ()) vs' args' rfl
 
 /-- Every run of `firstName` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -761,7 +783,7 @@ theorem «firstName».source («es» : List «Entry») (vs' : List JSValue)
     (args' : ArgsRep sig.«firstName».params vs' («es», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "firstName" vs') (.ok w') ∧
       Ty.Rep .string w' («firstName» «es») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "firstName" sig.«firstName») rfl («es», ()) vs' args' rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "firstName" sig.«firstName») rfl («es», ()) vs' args' rfl
 
 /-- Every run of `grow` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -770,7 +792,7 @@ theorem «grow».source («es» : List «Entry») («by» : Int) (vs' : List JSV
     (safe' : «grow».safe «es» «by» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "grow" vs') (.ok w') ∧
       Ty.Rep (.array ty.«Entry») w' («grow» «es» «by») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "grow" sig.«grow») rfl («es», «by», ()) vs' args' safe'
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "grow" sig.«grow») rfl («es», «by», ()) vs' args' safe'
 
 /-- Every run of `signs` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -778,7 +800,7 @@ theorem «signs».source («xs» : List Int) (vs' : List JSValue)
     (args' : ArgsRep sig.«signs».params vs' («xs», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "signs" vs') (.ok w') ∧
       Ty.Rep (.array .string) w' («signs» «xs») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) : FVar sigs "signs" sig.«signs») rfl («xs», ()) vs' args' rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "signs" sig.«signs») rfl («xs», ()) vs' args' rfl
 
 /-- Every run of `scaled` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -787,7 +809,7 @@ theorem «scaled».source («xs» : List Int) («k» : Int) (vs' : List JSValue)
     (safe' : «scaled».safe «xs» «k» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "scaled" vs') (.ok w') ∧
       Ty.Rep (.array .number) w' («scaled» «xs» «k») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there .here))))))) : FVar sigs "scaled" sig.«scaled») rfl («xs», «k», ()) vs' args' safe'
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) : FVar sigs "scaled" sig.«scaled») rfl («xs», «k», ()) vs' args' safe'
 
 /-- Every run of `totalOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -796,7 +818,7 @@ theorem «totalOf».source («es» : List «Entry») (vs' : List JSValue)
     (safe' : «totalOf».safe «es» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "totalOf" vs') (.ok w') ∧
       Ty.Rep .number w' («totalOf» «es») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "totalOf" sig.«totalOf») rfl («es», ()) vs' args' safe'
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there .here))))))) : FVar sigs "totalOf" sig.«totalOf») rfl («es», ()) vs' args' safe'
 
 /-- Every run of `isLarge` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -804,7 +826,7 @@ theorem «isLarge».source («e» : «Entry») (vs' : List JSValue)
     (args' : ArgsRep sig.«isLarge».params vs' («e», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "isLarge" vs') (.ok w') ∧
       Ty.Rep .bool w' («isLarge» «e») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "isLarge" sig.«isLarge») rfl («e», ()) vs' args' rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "isLarge" sig.«isLarge») rfl («e», ()) vs' args' rfl
 
 /-- Every run of `bySizeDesc` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -812,7 +834,7 @@ theorem «bySizeDesc».source («a» : «Entry») («b» : «Entry») (vs' : Lis
     (args' : ArgsRep sig.«bySizeDesc».params vs' («a», «b», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "bySizeDesc" vs') (.ok w') ∧
       Ty.Rep .number w' («bySizeDesc» «a» «b») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "bySizeDesc" sig.«bySizeDesc») rfl («a», «b», ()) vs' args' rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "bySizeDesc" sig.«bySizeDesc») rfl («a», «b», ()) vs' args' rfl
 
 /-- Every run of `large` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -820,7 +842,7 @@ theorem «large».source («es» : List «Entry») (vs' : List JSValue)
     (args' : ArgsRep sig.«large».params vs' («es», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "large" vs') (.ok w') ∧
       Ty.Rep (.array ty.«Entry») w' («large» «es») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "large" sig.«large») rfl («es», ()) vs' args' rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "large" sig.«large») rfl («es», ()) vs' args' rfl
 
 /-- Every run of `ranked` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -829,7 +851,7 @@ theorem «ranked».source («es» : List «Entry») (vs' : List JSValue)
     (safe' : «ranked».safe «es» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "ranked" vs') (.ok w') ∧
       Ty.Rep (.array ty.«Entry») w' («ranked» «es») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "ranked" sig.«ranked») rfl («es», ()) vs' args' safe'
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "ranked" sig.«ranked») rfl («es», ()) vs' args' safe'
 
 /-- Every run of `flags` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -837,7 +859,7 @@ theorem «flags».source («es» : List «Entry») (vs' : List JSValue)
     (args' : ArgsRep sig.«flags».params vs' («es», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "flags" vs') (.ok w') ∧
       Ty.Rep (.array .bool) w' («flags» «es») :=
-  source_of erased wf denote_eq safety_eq ((.there .here) : FVar sigs "flags" sig.«flags») rfl («es», ()) vs' args' rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "flags" sig.«flags») rfl («es», ()) vs' args' rfl
 
 /-- Every run of `summaries` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -846,6 +868,14 @@ theorem «summaries».source («es» : List «Entry») (vs' : List JSValue)
     (safe' : «summaries».safe «es» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "summaries" vs') (.ok w') ∧
       Ty.Rep (.array ty.«Entry») w' («summaries» «es») :=
-  source_of erased wf denote_eq safety_eq (.here : FVar sigs "summaries" sig.«summaries») rfl («es», ()) vs' args' safe'
+  source_of erased wf denote_eq safety_eq ((.there .here) : FVar sigs "summaries" sig.«summaries») rfl («es», ()) vs' args' safe'
+
+/-- Every run of `missing` on arguments representing its inputs converges to a value
+representing the readable definition's result. -/
+theorem «missing».source («xs» : List (Option Int)) (vs' : List JSValue)
+    (args' : ArgsRep sig.«missing».params vs' («xs», ())) :
+    ∃ w', Converges (fun fuel' => run ast fuel' "missing" vs') (.ok w') ∧
+      Ty.Rep .number w' («missing» «xs») :=
+  source_of erased wf denote_eq safety_eq (.here : FVar sigs "missing" sig.«missing») rfl («xs», ()) vs' args' rfl
 
 end Tests.Generated.Arrays

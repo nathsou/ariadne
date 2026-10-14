@@ -291,6 +291,10 @@ readable definitions and transfer them to every run.
   parentheses, literals and escapes, the program Ariadne's parser and converter produce (`ariadne ast`)
   must be the one the compiler's tree gives; and Ariadne must refuse what the compiler finds a syntax
   error.
+- **Validators** (`scripts/validators.mjs`): the guards `ariadne validators` prints accept every argument
+  list the differential test draws; on mutated ones (wrong types, fractions, numbers beyond the safe
+  integers, holes, getters, class instances, non-string map keys) JavaScript and the model must agree
+  wherever a guard accepts, and the model must be able to represent what it accepts.
 - **Regeneration**: each fixture's generated file must regenerate with no diff and kernel-check.
 - **Negative fixtures** (`scripts/negative.mjs`, `Tests/negative`): every refusal, with its diagnostic
   code.
