@@ -9,7 +9,7 @@ set_option maxRecDepth 8192
 set_option linter.unusedVariables false
 
 /-- The source file in the model's syntax. -/
-def ast : Program := [
+noncomputable def ast : Program := [
   { name := "origin", params := [], body := [
       .ret (.record [(some "x", (.lit (.bigint 0))), (some "y", (.lit (.bigint 0)))])] },
   { name := "moved", params := ["p", "dx"], body := [
@@ -91,23 +91,23 @@ def ast : Program := [
             .assign "w" (.lit (.bigint 1))])],
       .ret (.var "w")] }]
 
-abbrev ty.«Point» : Ty := (.record (.cons "x" .int (.cons "y" .int (.cons "label" (.option .undef .string) .nil))))
-abbrev ty.«Recovery» : Ty := (.lits (js "none") [(js "ok"), (js "legacy"), (js "bad")])
-abbrev ty.«Fact» : Ty := (.union "kind" (.cons (.str (js "unopened")) .nil (.cons (.str (js "damaged")) .nil (.one (.str (js "opened")) (.cons "written" .int (.cons "recovery" (.lits (js "none") [(js "ok"), (js "legacy"), (js "bad")]) (.cons "kid" (.option .undef .string) .nil)))))))
-abbrev ty.«Choice» : Ty := (.union "ok" (.cons (.bool true) (.cons "value" .int .nil) (.one (.bool false) (.cons "reason" .string .nil))))
+noncomputable abbrev ty.«Point» : Ty := (.record (.cons "x" .int (.cons "y" .int (.cons "label" (.option .undef .string) .nil))))
+noncomputable abbrev ty.«Recovery» : Ty := (.lits (js "none") [(js "ok"), (js "legacy"), (js "bad")])
+noncomputable abbrev ty.«Fact» : Ty := (.union "kind" (.cons (.str (js "unopened")) .nil (.cons (.str (js "damaged")) .nil (.one (.str (js "opened")) (.cons "written" .int (.cons "recovery" (.lits (js "none") [(js "ok"), (js "legacy"), (js "bad")]) (.cons "kid" (.option .undef .string) .nil)))))))
+noncomputable abbrev ty.«Choice» : Ty := (.union "ok" (.cons (.bool true) (.cons "value" .int .nil) (.one (.bool false) (.cons "reason" .string .nil))))
 
-def sig.«origin» : Sig := { name := "origin", params := [], result := ty.«Point», trivial := true }
-def sig.«moved» : Sig := { name := "moved", params := [("p", ty.«Point»), ("dx", .int)], result := ty.«Point», trivial := true }
-def sig.«labelOf» : Sig := { name := "labelOf", params := [("p", ty.«Point»)], result := .string, trivial := true }
-def sig.«hasLabel» : Sig := { name := "hasLabel", params := [("p", ty.«Point»)], result := .bool, trivial := true }
-def sig.«describe» : Sig := { name := "describe", params := [("f", ty.«Fact»)], result := .string, trivial := true }
-def sig.«trusted» : Sig := { name := "trusted", params := [("f", ty.«Fact»)], result := .bool, trivial := true }
-def sig.«choose» : Sig := { name := "choose", params := [("n", .int), ("floor", (.option .both .int))], result := ty.«Choice», trivial := true }
-def sig.«orDefault» : Sig := { name := "orDefault", params := [("c", ty.«Choice»)], result := .int, trivial := true }
-def sig.«pick» : Sig := { name := "pick", params := [("a", ty.«Point»), ("b", ty.«Point»), ("preferA", .bool)], result := ty.«Point», trivial := true }
-def sig.«rank» : Sig := { name := "rank", params := [("f", ty.«Fact»)], result := .int, trivial := true }
-def sig.«isOpened» : Sig := { name := "isOpened", params := [("f", ty.«Fact»)], result := .bool, trivial := true }
-def sig.«weight» : Sig := { name := "weight", params := [("f", ty.«Fact»)], result := .int, trivial := true }
+noncomputable def sig.«origin» : Sig := { name := "origin", params := [], result := ty.«Point», trivial := true }
+noncomputable def sig.«moved» : Sig := { name := "moved", params := [("p", ty.«Point»), ("dx", .int)], result := ty.«Point», trivial := true }
+noncomputable def sig.«labelOf» : Sig := { name := "labelOf", params := [("p", ty.«Point»)], result := .string, trivial := true }
+noncomputable def sig.«hasLabel» : Sig := { name := "hasLabel", params := [("p", ty.«Point»)], result := .bool, trivial := true }
+noncomputable def sig.«describe» : Sig := { name := "describe", params := [("f", ty.«Fact»)], result := .string, trivial := true }
+noncomputable def sig.«trusted» : Sig := { name := "trusted", params := [("f", ty.«Fact»)], result := .bool, trivial := true }
+noncomputable def sig.«choose» : Sig := { name := "choose", params := [("n", .int), ("floor", (.option .both .int))], result := ty.«Choice», trivial := true }
+noncomputable def sig.«orDefault» : Sig := { name := "orDefault", params := [("c", ty.«Choice»)], result := .int, trivial := true }
+noncomputable def sig.«pick» : Sig := { name := "pick", params := [("a", ty.«Point»), ("b", ty.«Point»), ("preferA", .bool)], result := ty.«Point», trivial := true }
+noncomputable def sig.«rank» : Sig := { name := "rank", params := [("f", ty.«Fact»)], result := .int, trivial := true }
+noncomputable def sig.«isOpened» : Sig := { name := "isOpened", params := [("f", ty.«Fact»)], result := .bool, trivial := true }
+noncomputable def sig.«weight» : Sig := { name := "weight", params := [("f", ty.«Fact»)], result := .int, trivial := true }
 
 theorem ne.«dx».«p» : ("dx" : String) ≠ "p" := by decide
 theorem ne.«f».«suffix» : ("f" : String) ≠ "suffix" := by decide
@@ -118,28 +118,28 @@ theorem ne.«preferA».«b» : ("preferA" : String) ≠ "b" := by decide
 theorem ne.«b».«a» : ("b" : String) ≠ "a" := by decide
 theorem ne.«f».«w» : ("f" : String) ≠ "w" := by decide
 
-def body.«origin» : TStmts [] sig.«origin».params sig.«origin».result :=
-  (.ret (.record (.cons "x" (.int 0) (.cons "y" (.int 0) .nil)) (.cons .here (.cons (.there .here) (.absent (by decide) .nil))) (by decide)) .nil)
+noncomputable def body.«origin» : TStmts [] sig.«origin».params sig.«origin».result :=
+  (.ret (.record (.cons "x" (.int 0) (.cons "y" (.int 0) .nil)) (.cons .here (.cons (.there .here) (.absent (by decide +kernel) .nil))) (by decide +kernel)) .nil)
 
-def body.«moved» : TStmts [sig.«origin»] sig.«moved».params sig.«moved».result :=
-  (.ret (.update (.var .here) (.cons "x" (.bin .add (.field (.var .here) .here (by decide)) (.var (.there ne.«dx».«p» .here))) (.cons "label" (.widen (.some .undef .string) (.str (js "moved"))) .nil)) (.set .here (.keep (by decide) (.set (.there .here) .nil))) (by decide)) .nil)
+noncomputable def body.«moved» : TStmts [sig.«origin»] sig.«moved».params sig.«moved».result :=
+  (.ret (.update (.var .here) (.cons "x" (.bin .add (.field (.var .here) .here (by decide +kernel)) (.var (.there ne.«dx».«p» .here))) (.cons "label" (.widen (.some .undef .string) (.str (js "moved"))) .nil)) (.set .here (.keep (by decide +kernel) (.set (.there .here) .nil))) (by decide +kernel)) .nil)
 
-def body.«labelOf» : TStmts [sig.«moved», sig.«origin»] sig.«labelOf».params sig.«labelOf».result :=
-  (.ret (.coalesce (by decide) (.field (.var .here) (.there (.there .here)) (by decide)) (.str (js "unnamed"))) .nil)
+noncomputable def body.«labelOf» : TStmts [sig.«moved», sig.«origin»] sig.«labelOf».params sig.«labelOf».result :=
+  (.ret (.coalesce (by decide +kernel) (.field (.var .here) (.there (.there .here)) (by decide +kernel)) (.str (js "unnamed"))) .nil)
 
-def body.«hasLabel» : TStmts [sig.«labelOf», sig.«moved», sig.«origin»] sig.«hasLabel».params sig.«hasLabel».result :=
-  (.const "l" (.field (.var .here) (.there (.there .here)) (by decide))
-  (.ifNullExit .here (by decide)
+noncomputable def body.«hasLabel» : TStmts [sig.«labelOf», sig.«moved», sig.«origin»] sig.«hasLabel».params sig.«hasLabel».result :=
+  (.const "l" (.field (.var .here) (.there (.there .here)) (by decide +kernel))
+  (.ifNullExit .here (by decide +kernel)
   (.ret (.bool false) .nil)
-  (.ret (.bin (.ne (by decide)) (.var .here) (.str (js ""))) .nil)))
+  (.ret (.bin (.ne (by decide +kernel)) (.var .here) (.str (js ""))) .nil)))
 
-def body.«describe» : TStmts [sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«describe».params sig.«describe».result :=
-  (.switchG .here (by decide)
+noncomputable def body.«describe» : TStmts [sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«describe».params sig.«describe».result :=
+  (.switchG .here (by decide +kernel)
   (.narrow .head (.ret (.str (js "u")) .nil)
   (.narrow (.there .head) (.ret (.str (js "d")) .nil)
-  (.narrow (.there (.there .one)) (.block (.const "k" (.field (.var .here) (.there (.there (.there .here))) (by decide))
-  (.const "suffix" (.condNull .here (by decide) (.str (js "-")) (.var .here))
-  (.ite (.bin (.eq (by decide)) (.field (.var (.there ne.«f».«suffix» (.there ne.«f».«k» .here))) (.there (.there .here)) (by decide)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 3))
+  (.narrow (.there (.there .one)) (.block (.const "k" (.field (.var .here) (.there (.there (.there .here))) (by decide +kernel))
+  (.const "suffix" (.condNull .here (by decide +kernel) (.str (js "-")) (.var .here))
+  (.ite (.bin (.eq (by decide +kernel)) (.field (.var (.there ne.«f».«suffix» (.there ne.«f».«k» .here))) (.there (.there .here)) (by decide +kernel)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 3))
   (.ret (.bin .concat (.str (js "o!")) (.var .here)) .nil)
   .nil
   (.ret (.bin .concat (.str (js "o")) (.var .here)) .nil))))
@@ -147,54 +147,54 @@ def body.«describe» : TStmts [sig.«hasLabel», sig.«labelOf», sig.«moved»
   .nil)))
   .nil)
 
-def body.«trusted» : TStmts [sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«trusted».params sig.«trusted».result :=
-  (.switchG .here (by decide)
+noncomputable def body.«trusted» : TStmts [sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«trusted».params sig.«trusted».result :=
+  (.switchG .here (by decide +kernel)
   (.narrow .head (.ret (.bool false) .nil)
   (.narrow (.there .head) (.ret (.bool false) .nil)
-  (.narrow (.there (.there .one)) (.ret (.and (.bin (.ne (by decide)) (.field (.var .here) (.there (.there .here)) (by decide)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 3)) (.bin (.ne (by decide)) (.field (.var .here) (.there (.there .here)) (by decide)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 2))) .nil)
+  (.narrow (.there (.there .one)) (.ret (.and (.bin (.ne (by decide +kernel)) (.field (.var .here) (.there (.there .here)) (by decide +kernel)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 3)) (.bin (.ne (by decide +kernel)) (.field (.var .here) (.there (.there .here)) (by decide +kernel)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 2))) .nil)
   .nil)))
   .nil)
 
-def body.«choose» : TStmts [sig.«trusted», sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«choose».params sig.«choose».result :=
-  (.ifNotNull (.there ne.«floor».«n» .here) (by decide)
+noncomputable def body.«choose» : TStmts [sig.«trusted», sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«choose».params sig.«choose».result :=
+  (.ifNotNull (.there ne.«floor».«n» .here) (by decide +kernel)
   (.ite (.bin .lt (.var .here) (.var (.there ne.«floor».«n» .here)))
-  (.ret (.widen (.variant (.there .one)) (.record (.cons "ok" (.tagLit (.bool false)) (.cons "reason" (.str (js "older")) .nil)) (.cons .here (.cons (.there .here) .nil)) (by decide))) .nil)
+  (.ret (.widen (.variant (.there .one)) (.record (.cons "ok" (.tagLit (.bool false)) (.cons "reason" (.str (js "older")) .nil)) (.cons .here (.cons (.there .here) .nil)) (by decide +kernel))) .nil)
   .nil
   .nil)
   .nil
   (.ite (.bin .gt (.var .here) (.int 0))
-  (.ret (.widen (.variant .head) (.record (.cons "ok" (.tagLit (.bool true)) (.cons "value" (.var .here) .nil)) (.cons .here (.cons (.there .here) .nil)) (by decide))) .nil)
+  (.ret (.widen (.variant .head) (.record (.cons "ok" (.tagLit (.bool true)) (.cons "value" (.var .here) .nil)) (.cons .here (.cons (.there .here) .nil)) (by decide +kernel))) .nil)
   .nil
-  (.ret (.widen (.variant (.there .one)) (.record (.cons "ok" (.tagLit (.bool false)) (.cons "reason" (.str (js "non-positive")) .nil)) (.cons .here (.cons (.there .here) .nil)) (by decide))) .nil)))
+  (.ret (.widen (.variant (.there .one)) (.record (.cons "ok" (.tagLit (.bool false)) (.cons "reason" (.str (js "non-positive")) .nil)) (.cons .here (.cons (.there .here) .nil)) (by decide +kernel))) .nil)))
 
-def body.«orDefault» : TStmts [sig.«choose», sig.«trusted», sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«orDefault».params sig.«orDefault».result :=
-  (.switchG .here (by decide)
-  (.narrow .head (.ret (.field (.var .here) (.there .here) (by decide)) .nil)
+noncomputable def body.«orDefault» : TStmts [sig.«choose», sig.«trusted», sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«orDefault».params sig.«orDefault».result :=
+  (.switchG .here (by decide +kernel)
+  (.narrow .head (.ret (.field (.var .here) (.there .here) (by decide +kernel)) .nil)
   (.narrow (.there .one) (.ret (.neg (.int 1)) .nil)
   .nil))
   .nil)
 
-def body.«pick» : TStmts [sig.«orDefault», sig.«choose», sig.«trusted», sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«pick».params sig.«pick».result :=
+noncomputable def body.«pick» : TStmts [sig.«orDefault», sig.«choose», sig.«trusted», sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«pick».params sig.«pick».result :=
   (.const "chosen" (.cond (.var (.there ne.«preferA».«a» (.there ne.«preferA».«b» .here))) (.var .here) (.var (.there ne.«b».«a» .here)))
-  (.ret (.update (.var .here) (.cons "label" (.widen (.some .undef .string) (.coalesce (by decide) (.field (.var .here) (.there (.there .here)) (by decide)) (.str (js "picked")))) .nil) (.keep (by decide) (.keep (by decide) (.set .here .nil))) (by decide)) .nil))
+  (.ret (.update (.var .here) (.cons "label" (.widen (.some .undef .string) (.coalesce (by decide +kernel) (.field (.var .here) (.there (.there .here)) (by decide +kernel)) (.str (js "picked")))) .nil) (.keep (by decide +kernel) (.keep (by decide +kernel) (.set .here .nil))) (by decide +kernel)) .nil))
 
-def body.«rank» : TStmts [sig.«pick», sig.«orDefault», sig.«choose», sig.«trusted», sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«rank».params sig.«rank».result :=
-  (.switchG .here (by decide)
-  (.narrow (.there (.there .one)) (.ret (.field (.var .here) (.there .here) (by decide)) .nil)
+noncomputable def body.«rank» : TStmts [sig.«pick», sig.«orDefault», sig.«choose», sig.«trusted», sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«rank».params sig.«rank».result :=
+  (.switchG .here (by decide +kernel)
+  (.narrow (.there (.there .one)) (.ret (.field (.var .here) (.there .here) (by decide +kernel)) .nil)
   (.empty (some (.str (js "unopened"))) (.wide (some (.str (js "damaged"))) (.ret (.neg (.int 1)) .nil)
   .nil)))
   .nil)
 
-def body.«isOpened» : TStmts [sig.«rank», sig.«pick», sig.«orDefault», sig.«choose», sig.«trusted», sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«isOpened».params sig.«isOpened».result :=
-  (.switchG .here (by decide)
+noncomputable def body.«isOpened» : TStmts [sig.«rank», sig.«pick», sig.«orDefault», sig.«choose», sig.«trusted», sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«isOpened».params sig.«isOpened».result :=
+  (.switchG .here (by decide +kernel)
   (.narrow (.there (.there .one)) (.ret (.bool true) .nil)
   (.wide none (.ret (.bool false) .nil)
   .nil))
   .nil)
 
-def body.«weight» : TStmts [sig.«isOpened», sig.«rank», sig.«pick», sig.«orDefault», sig.«choose», sig.«trusted», sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«weight».params sig.«weight».result :=
+noncomputable def body.«weight» : TStmts [sig.«isOpened», sig.«rank», sig.«pick», sig.«orDefault», sig.«choose», sig.«trusted», sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»] sig.«weight».params sig.«weight».result :=
   (.let_ "w" (.int 0)
-  (.switchG (.there ne.«f».«w» .here) (by decide)
+  (.switchG (.there ne.«f».«w» .here) (by decide +kernel)
   (.narrow (.there .head) (.assign .here (.int 5)
   (.brk .nil))
   (.wide none (.assign .here (.int 1)
@@ -202,14 +202,18 @@ def body.«weight» : TStmts [sig.«isOpened», sig.«rank», sig.«pick», sig.
   .nil))
   (.ret (.var .here) .nil)))
 
-abbrev sigs : Sigs := [sig.«weight», sig.«isOpened», sig.«rank», sig.«pick», sig.«orDefault», sig.«choose», sig.«trusted», sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»]
+noncomputable abbrev sigs : Sigs := [sig.«weight», sig.«isOpened», sig.«rank», sig.«pick», sig.«orDefault», sig.«choose», sig.«trusted», sig.«describe», sig.«hasLabel», sig.«labelOf», sig.«moved», sig.«origin»]
 
-def typed : TProgram sigs :=
+noncomputable def typed : TProgram sigs :=
   (.cons sig.«weight» body.«weight» (.cons sig.«isOpened» body.«isOpened» (.cons sig.«rank» body.«rank» (.cons sig.«pick» body.«pick» (.cons sig.«orDefault» body.«orDefault» (.cons sig.«choose» body.«choose» (.cons sig.«trusted» body.«trusted» (.cons sig.«describe» body.«describe» (.cons sig.«hasLabel» body.«hasLabel» (.cons sig.«labelOf» body.«labelOf» (.cons sig.«moved» body.«moved» (.cons sig.«origin» body.«origin» .nil))))))))))))
 
 theorem erased : typed.erase = ast := by kernel_rfl
 
-theorem wf : typed.WF := by decide +kernel
+theorem bodies_ok : typed.bodiesOk = true := by decide +kernel
+
+theorem ast_scoped : ast.scoped = true := by decide +kernel
+
+theorem wf : typed.WF := TProgram.wf_of typed erased bodies_ok ast_scoped
 
 /-! ## Readable definitions -/
 
@@ -339,10 +343,10 @@ def «weight» («f» : ty.«Fact».denote) : Int :=
 Each body is checked against its readable definition with the earlier functions'
 readable definitions as its environment, so no check unfolds a callee. -/
 
-def «origin».uncurried : sig.«origin».denote := fun xs => «origin»
+noncomputable def «origin».uncurried : sig.«origin».denote := fun xs => «origin»
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «origin».safety : sig.«origin».params.denote → Bool := fun _ => true
+noncomputable def «origin».safety : sig.«origin».params.denote → Bool := fun _ => true
 
 theorem «origin».body_eq :
     body.«origin».denoteFn (()) = «origin».uncurried := by
@@ -352,10 +356,10 @@ theorem «origin».safe_eq :
     body.«origin».safeFn (()) (()) = «origin».safety := by
   kernel_rfl
 
-def «moved».uncurried : sig.«moved».denote := fun xs => «moved» xs.1 xs.2.1
+noncomputable def «moved».uncurried : sig.«moved».denote := fun xs => «moved» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «moved».safety : sig.«moved».params.denote → Bool := fun _ => true
+noncomputable def «moved».safety : sig.«moved».params.denote → Bool := fun _ => true
 
 theorem «moved».body_eq :
     body.«moved».denoteFn («origin».uncurried, ()) = «moved».uncurried := by
@@ -365,10 +369,10 @@ theorem «moved».safe_eq :
     body.«moved».safeFn («origin».uncurried, ()) («origin».safety, ()) = «moved».safety := by
   kernel_rfl
 
-def «labelOf».uncurried : sig.«labelOf».denote := fun xs => «labelOf» xs.1
+noncomputable def «labelOf».uncurried : sig.«labelOf».denote := fun xs => «labelOf» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «labelOf».safety : sig.«labelOf».params.denote → Bool := fun _ => true
+noncomputable def «labelOf».safety : sig.«labelOf».params.denote → Bool := fun _ => true
 
 theorem «labelOf».body_eq :
     body.«labelOf».denoteFn («moved».uncurried, «origin».uncurried, ()) = «labelOf».uncurried := by
@@ -378,10 +382,10 @@ theorem «labelOf».safe_eq :
     body.«labelOf».safeFn («moved».uncurried, «origin».uncurried, ()) («moved».safety, «origin».safety, ()) = «labelOf».safety := by
   kernel_rfl
 
-def «hasLabel».uncurried : sig.«hasLabel».denote := fun xs => «hasLabel» xs.1
+noncomputable def «hasLabel».uncurried : sig.«hasLabel».denote := fun xs => «hasLabel» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «hasLabel».safety : sig.«hasLabel».params.denote → Bool := fun _ => true
+noncomputable def «hasLabel».safety : sig.«hasLabel».params.denote → Bool := fun _ => true
 
 theorem «hasLabel».body_eq :
     body.«hasLabel».denoteFn («labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) = «hasLabel».uncurried := by
@@ -391,10 +395,10 @@ theorem «hasLabel».safe_eq :
     body.«hasLabel».safeFn («labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) («labelOf».safety, «moved».safety, «origin».safety, ()) = «hasLabel».safety := by
   kernel_rfl
 
-def «describe».uncurried : sig.«describe».denote := fun xs => «describe» xs.1
+noncomputable def «describe».uncurried : sig.«describe».denote := fun xs => «describe» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «describe».safety : sig.«describe».params.denote → Bool := fun _ => true
+noncomputable def «describe».safety : sig.«describe».params.denote → Bool := fun _ => true
 
 theorem «describe».body_eq :
     body.«describe».denoteFn («hasLabel».uncurried, «labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) = «describe».uncurried := by
@@ -404,10 +408,10 @@ theorem «describe».safe_eq :
     body.«describe».safeFn («hasLabel».uncurried, «labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) («hasLabel».safety, «labelOf».safety, «moved».safety, «origin».safety, ()) = «describe».safety := by
   kernel_rfl
 
-def «trusted».uncurried : sig.«trusted».denote := fun xs => «trusted» xs.1
+noncomputable def «trusted».uncurried : sig.«trusted».denote := fun xs => «trusted» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «trusted».safety : sig.«trusted».params.denote → Bool := fun _ => true
+noncomputable def «trusted».safety : sig.«trusted».params.denote → Bool := fun _ => true
 
 theorem «trusted».body_eq :
     body.«trusted».denoteFn («describe».uncurried, «hasLabel».uncurried, «labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) = «trusted».uncurried := by
@@ -417,10 +421,10 @@ theorem «trusted».safe_eq :
     body.«trusted».safeFn («describe».uncurried, «hasLabel».uncurried, «labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) («describe».safety, «hasLabel».safety, «labelOf».safety, «moved».safety, «origin».safety, ()) = «trusted».safety := by
   kernel_rfl
 
-def «choose».uncurried : sig.«choose».denote := fun xs => «choose» xs.1 xs.2.1
+noncomputable def «choose».uncurried : sig.«choose».denote := fun xs => «choose» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «choose».safety : sig.«choose».params.denote → Bool := fun _ => true
+noncomputable def «choose».safety : sig.«choose».params.denote → Bool := fun _ => true
 
 theorem «choose».body_eq :
     body.«choose».denoteFn («trusted».uncurried, «describe».uncurried, «hasLabel».uncurried, «labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) = «choose».uncurried := by
@@ -430,10 +434,10 @@ theorem «choose».safe_eq :
     body.«choose».safeFn («trusted».uncurried, «describe».uncurried, «hasLabel».uncurried, «labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) («trusted».safety, «describe».safety, «hasLabel».safety, «labelOf».safety, «moved».safety, «origin».safety, ()) = «choose».safety := by
   kernel_rfl
 
-def «orDefault».uncurried : sig.«orDefault».denote := fun xs => «orDefault» xs.1
+noncomputable def «orDefault».uncurried : sig.«orDefault».denote := fun xs => «orDefault» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «orDefault».safety : sig.«orDefault».params.denote → Bool := fun _ => true
+noncomputable def «orDefault».safety : sig.«orDefault».params.denote → Bool := fun _ => true
 
 theorem «orDefault».body_eq :
     body.«orDefault».denoteFn («choose».uncurried, «trusted».uncurried, «describe».uncurried, «hasLabel».uncurried, «labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) = «orDefault».uncurried := by
@@ -443,10 +447,10 @@ theorem «orDefault».safe_eq :
     body.«orDefault».safeFn («choose».uncurried, «trusted».uncurried, «describe».uncurried, «hasLabel».uncurried, «labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) («choose».safety, «trusted».safety, «describe».safety, «hasLabel».safety, «labelOf».safety, «moved».safety, «origin».safety, ()) = «orDefault».safety := by
   kernel_rfl
 
-def «pick».uncurried : sig.«pick».denote := fun xs => «pick» xs.1 xs.2.1 xs.2.2.1
+noncomputable def «pick».uncurried : sig.«pick».denote := fun xs => «pick» xs.1 xs.2.1 xs.2.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «pick».safety : sig.«pick».params.denote → Bool := fun _ => true
+noncomputable def «pick».safety : sig.«pick».params.denote → Bool := fun _ => true
 
 theorem «pick».body_eq :
     body.«pick».denoteFn («orDefault».uncurried, «choose».uncurried, «trusted».uncurried, «describe».uncurried, «hasLabel».uncurried, «labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) = «pick».uncurried := by
@@ -456,10 +460,10 @@ theorem «pick».safe_eq :
     body.«pick».safeFn («orDefault».uncurried, «choose».uncurried, «trusted».uncurried, «describe».uncurried, «hasLabel».uncurried, «labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) («orDefault».safety, «choose».safety, «trusted».safety, «describe».safety, «hasLabel».safety, «labelOf».safety, «moved».safety, «origin».safety, ()) = «pick».safety := by
   kernel_rfl
 
-def «rank».uncurried : sig.«rank».denote := fun xs => «rank» xs.1
+noncomputable def «rank».uncurried : sig.«rank».denote := fun xs => «rank» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «rank».safety : sig.«rank».params.denote → Bool := fun _ => true
+noncomputable def «rank».safety : sig.«rank».params.denote → Bool := fun _ => true
 
 theorem «rank».body_eq :
     body.«rank».denoteFn («pick».uncurried, «orDefault».uncurried, «choose».uncurried, «trusted».uncurried, «describe».uncurried, «hasLabel».uncurried, «labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) = «rank».uncurried := by
@@ -469,10 +473,10 @@ theorem «rank».safe_eq :
     body.«rank».safeFn («pick».uncurried, «orDefault».uncurried, «choose».uncurried, «trusted».uncurried, «describe».uncurried, «hasLabel».uncurried, «labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) («pick».safety, «orDefault».safety, «choose».safety, «trusted».safety, «describe».safety, «hasLabel».safety, «labelOf».safety, «moved».safety, «origin».safety, ()) = «rank».safety := by
   kernel_rfl
 
-def «isOpened».uncurried : sig.«isOpened».denote := fun xs => «isOpened» xs.1
+noncomputable def «isOpened».uncurried : sig.«isOpened».denote := fun xs => «isOpened» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «isOpened».safety : sig.«isOpened».params.denote → Bool := fun _ => true
+noncomputable def «isOpened».safety : sig.«isOpened».params.denote → Bool := fun _ => true
 
 theorem «isOpened».body_eq :
     body.«isOpened».denoteFn («rank».uncurried, «pick».uncurried, «orDefault».uncurried, «choose».uncurried, «trusted».uncurried, «describe».uncurried, «hasLabel».uncurried, «labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) = «isOpened».uncurried := by
@@ -482,10 +486,10 @@ theorem «isOpened».safe_eq :
     body.«isOpened».safeFn («rank».uncurried, «pick».uncurried, «orDefault».uncurried, «choose».uncurried, «trusted».uncurried, «describe».uncurried, «hasLabel».uncurried, «labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) («rank».safety, «pick».safety, «orDefault».safety, «choose».safety, «trusted».safety, «describe».safety, «hasLabel».safety, «labelOf».safety, «moved».safety, «origin».safety, ()) = «isOpened».safety := by
   kernel_rfl
 
-def «weight».uncurried : sig.«weight».denote := fun xs => «weight» xs.1
+noncomputable def «weight».uncurried : sig.«weight».denote := fun xs => «weight» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «weight».safety : sig.«weight».params.denote → Bool := fun _ => true
+noncomputable def «weight».safety : sig.«weight».params.denote → Bool := fun _ => true
 
 theorem «weight».body_eq :
     body.«weight».denoteFn («isOpened».uncurried, «rank».uncurried, «pick».uncurried, «orDefault».uncurried, «choose».uncurried, «trusted».uncurried, «describe».uncurried, «hasLabel».uncurried, «labelOf».uncurried, «moved».uncurried, «origin».uncurried, ()) = «weight».uncurried := by

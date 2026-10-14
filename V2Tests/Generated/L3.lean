@@ -9,7 +9,7 @@ set_option maxRecDepth 8192
 set_option linter.unusedVariables false
 
 /-- The source file in the model's syntax. -/
-def ast : Program := [
+noncomputable def ast : Program := [
   { name := "sum", params := ["xs"], body := [
       .let_ "total" (.lit (.number 0)),
       .forOf "x" (.var "xs") [
@@ -143,22 +143,22 @@ def ast : Program := [
           .assign "t" (.binary .add (.var "t") (.var "i"))],
       .ret (.var "t")] }]
 
-abbrev ty.«Item» : Ty := (.record (.cons "id" .number (.cons "size" .number (.cons "tags" (.array .string) .nil))))
-abbrev ty.«Shape» : Ty := (.union "kind" (.cons (.str (js "circle")) (.cons "r" .number .nil) (.one (.str (js "square")) (.cons "side" .number .nil))))
+noncomputable abbrev ty.«Item» : Ty := (.record (.cons "id" .number (.cons "size" .number (.cons "tags" (.array .string) .nil))))
+noncomputable abbrev ty.«Shape» : Ty := (.union "kind" (.cons (.str (js "circle")) (.cons "r" .number .nil) (.one (.str (js "square")) (.cons "side" .number .nil))))
 
-def sig.«sum» : Sig := { name := "sum", params := [("xs", (.array .number))], result := .number, trivial := false }
-def sig.«firstLarge» : Sig := { name := "firstLarge", params := [("items", (.array ty.«Item»)), ("limit", .number)], result := (.option .undef ty.«Item»), trivial := true }
-def sig.«indexOf» : Sig := { name := "indexOf", params := [("xs", (.array .string)), ("target", .string)], result := .number, trivial := true }
-def sig.«countTagged» : Sig := { name := "countTagged", params := [("items", (.array ty.«Item»)), ("tag", .string)], result := .number, trivial := false }
-def sig.«prefixUntil» : Sig := { name := "prefixUntil", params := [("xs", (.array .number)), ("stop", .number)], result := (.array .number), trivial := true }
-def sig.«largest» : Sig := { name := "largest", params := [("items", (.array ty.«Item»))], result := (.option .undef ty.«Item»), trivial := true }
-def sig.«classify» : Sig := { name := "classify", params := [("xs", (.array .number))], result := .string, trivial := false }
-def sig.«bump» : Sig := { name := "bump", params := [("n", .number)], result := .number, trivial := false }
-def sig.«grid» : Sig := { name := "grid", params := [("rows", (.array (.array .number)))], result := .number, trivial := false }
-def sig.«perimeters» : Sig := { name := "perimeters", params := [("shapes", (.array ty.«Shape»))], result := .number, trivial := false }
-def sig.«steps» : Sig := { name := "steps", params := [("n", .number)], result := .number, trivial := false }
-def sig.«score» : Sig := { name := "score", params := [("a", .number), ("b", .number)], result := .number, trivial := false }
-def sig.«triangle» : Sig := { name := "triangle", params := [("n", .number), ("cap", .number)], result := .number, trivial := false }
+noncomputable def sig.«sum» : Sig := { name := "sum", params := [("xs", (.array .number))], result := .number, trivial := false }
+noncomputable def sig.«firstLarge» : Sig := { name := "firstLarge", params := [("items", (.array ty.«Item»)), ("limit", .number)], result := (.option .undef ty.«Item»), trivial := true }
+noncomputable def sig.«indexOf» : Sig := { name := "indexOf", params := [("xs", (.array .string)), ("target", .string)], result := .number, trivial := true }
+noncomputable def sig.«countTagged» : Sig := { name := "countTagged", params := [("items", (.array ty.«Item»)), ("tag", .string)], result := .number, trivial := false }
+noncomputable def sig.«prefixUntil» : Sig := { name := "prefixUntil", params := [("xs", (.array .number)), ("stop", .number)], result := (.array .number), trivial := true }
+noncomputable def sig.«largest» : Sig := { name := "largest", params := [("items", (.array ty.«Item»))], result := (.option .undef ty.«Item»), trivial := true }
+noncomputable def sig.«classify» : Sig := { name := "classify", params := [("xs", (.array .number))], result := .string, trivial := false }
+noncomputable def sig.«bump» : Sig := { name := "bump", params := [("n", .number)], result := .number, trivial := false }
+noncomputable def sig.«grid» : Sig := { name := "grid", params := [("rows", (.array (.array .number)))], result := .number, trivial := false }
+noncomputable def sig.«perimeters» : Sig := { name := "perimeters", params := [("shapes", (.array ty.«Shape»))], result := .number, trivial := false }
+noncomputable def sig.«steps» : Sig := { name := "steps", params := [("n", .number)], result := .number, trivial := false }
+noncomputable def sig.«score» : Sig := { name := "score", params := [("a", .number), ("b", .number)], result := .number, trivial := false }
+noncomputable def sig.«triangle» : Sig := { name := "triangle", params := [("n", .number), ("cap", .number)], result := .number, trivial := false }
 
 theorem ne.«xs».«total» : ("xs" : String) ≠ "total" := by decide
 theorem ne.«total».«x» : ("total" : String) ≠ "x" := by decide
@@ -206,63 +206,63 @@ theorem ne.«cap».«m» : ("cap" : String) ≠ "m" := by decide
 theorem ne.«cap».«n» : ("cap" : String) ≠ "n" := by decide
 theorem ne.«t».«i» : ("t" : String) ≠ "i" := by decide
 
-def body.«sum» : TStmts [] sig.«sum».params sig.«sum».result :=
+noncomputable def body.«sum» : TStmts [] sig.«sum».params sig.«sum».result :=
   (.let_ "total" (.num 0)
   (.forOf "x" (.var (.there ne.«xs».«total» .here))
   (.assign (.there ne.«total».«x» .here) (.bin .nadd (.var (.there ne.«total».«x» .here)) (.var .here))
   .nil)
   (.ret (.var .here) .nil)))
 
-def body.«firstLarge» : TStmts [sig.«sum»] sig.«firstLarge».params sig.«firstLarge».result :=
+noncomputable def body.«firstLarge» : TStmts [sig.«sum»] sig.«firstLarge».params sig.«firstLarge».result :=
   (.forOf "it" (.var .here)
-  (.ite (.bin .ngt (.field (.var .here) (.there .here) (by decide)) (.var (.there ne.«limit».«it» (.there ne.«limit».«items» .here))))
+  (.ite (.bin .ngt (.field (.var .here) (.there .here) (by decide +kernel)) (.var (.there ne.«limit».«it» (.there ne.«limit».«items» .here))))
   (.ret (.widen (.some .undef ty.«Item») (.var .here)) .nil)
   .nil
   .nil)
-  (.ret (.undef .undef ty.«Item» (by decide)) .nil))
+  (.ret (.undef .undef ty.«Item» (by decide +kernel)) .nil))
 
-def body.«indexOf» : TStmts [sig.«firstLarge», sig.«sum»] sig.«indexOf».params sig.«indexOf».result :=
+noncomputable def body.«indexOf» : TStmts [sig.«firstLarge», sig.«sum»] sig.«indexOf».params sig.«indexOf».result :=
   (.forEntries "i" "x" (.var .here)
-  (.ite (.bin (.eq (by decide)) (.var .here) (.var (.there ne.«target».«x» (.there ne.«target».«i» (.there ne.«target».«xs» .here)))))
+  (.ite (.bin (.eq (by decide +kernel)) (.var .here) (.var (.there ne.«target».«x» (.there ne.«target».«i» (.there ne.«target».«xs» .here)))))
   (.ret (.var (.there ne.«i».«x» .here)) .nil)
   .nil
   .nil)
-  (.ret (.negNum 1 (by decide)) .nil))
+  (.ret (.negNum 1 (by decide +kernel)) .nil))
 
-def body.«countTagged» : TStmts [sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«countTagged».params sig.«countTagged».result :=
+noncomputable def body.«countTagged» : TStmts [sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«countTagged».params sig.«countTagged».result :=
   (.let_ "n" (.num 0)
   (.forOf "it" (.var (.there ne.«items».«n» .here))
-  (.ite (.not (.includes (by decide) (.field (.var .here) (.there (.there .here)) (by decide)) (.var (.there ne.«tag».«it» (.there ne.«tag».«n» (.there ne.«tag».«items» .here))))))
+  (.ite (.not (.includes (by decide +kernel) (.field (.var .here) (.there (.there .here)) (by decide +kernel)) (.var (.there ne.«tag».«it» (.there ne.«tag».«n» (.there ne.«tag».«items» .here))))))
   (.cont .nil)
   .nil
   (.assign (.there ne.«n».«it» .here) (.bin .nadd (.var (.there ne.«n».«it» .here)) (.num 1))
   .nil))
   (.ret (.var .here) .nil)))
 
-def body.«prefixUntil» : TStmts [sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«prefixUntil».params sig.«prefixUntil».result :=
+noncomputable def body.«prefixUntil» : TStmts [sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«prefixUntil».params sig.«prefixUntil».result :=
   (.let_ "out" (.array (τ := .number) .nil)
   (.forOf "x" (.var (.there ne.«xs».«out» .here))
-  (.ite (.bin (.eq (by decide)) (.var .here) (.var (.there ne.«stop».«x» (.there ne.«stop».«out» (.there ne.«stop».«xs» .here)))))
+  (.ite (.bin (.eq (by decide +kernel)) (.var .here) (.var (.there ne.«stop».«x» (.there ne.«stop».«out» (.there ne.«stop».«xs» .here)))))
   (.brk .nil)
   .nil
   (.assign (.there ne.«out».«x» .here) (.array (τ := .number) (.spread (.var (.there ne.«out».«x» .here)) (.cons (.var .here) .nil)))
   .nil))
   (.ret (.var .here) .nil)))
 
-def body.«largest» : TStmts [sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«largest».params sig.«largest».result :=
-  (.let_ "best" (.undef .undef ty.«Item» (by decide))
+noncomputable def body.«largest» : TStmts [sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«largest».params sig.«largest».result :=
+  (.let_ "best" (.undef .undef ty.«Item» (by decide +kernel))
   (.forOf "it" (.var (.there ne.«items».«best» .here))
-  (.ifNullExit (.there ne.«best».«it» .here) (by decide)
+  (.ifNullExit (.there ne.«best».«it» .here) (by decide +kernel)
   (.assign (.there ne.«best».«it» .here) (.widen (.some .undef ty.«Item») (.var .here))
   (.cont .nil))
-  (.ite (.bin .ngt (.field (.var .here) (.there .here) (by decide)) (.field (.var (.there ne.«best».«it» .here)) (.there .here) (by decide)))
+  (.ite (.bin .ngt (.field (.var .here) (.there .here) (by decide +kernel)) (.field (.var (.there ne.«best».«it» .here)) (.there .here) (by decide +kernel)))
   (.assign (.there ne.«best».«it» .here) (.var .here)
   .nil)
   .nil
   .nil))
   (.ret (.var .here) .nil)))
 
-def body.«classify» : TStmts [sig.«largest», sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«classify».params sig.«classify».result :=
+noncomputable def body.«classify» : TStmts [sig.«largest», sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«classify».params sig.«classify».result :=
   (.let_ "pos" (.num 0)
   (.let_ "neg" (.num 0)
   (.forOf "x" (.var (.there ne.«xs».«neg» (.there ne.«xs».«pos» .here)))
@@ -283,11 +283,11 @@ def body.«classify» : TStmts [sig.«largest», sig.«prefixUntil», sig.«coun
   .nil
   (.ret (.str (js "even")) .nil))))))
 
-def body.«bump» : TStmts [sig.«classify», sig.«largest», sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«bump».params sig.«bump».result :=
+noncomputable def body.«bump» : TStmts [sig.«classify», sig.«largest», sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«bump».params sig.«bump».result :=
   (.assign .here (.bin .nadd (.var .here) (.num 1))
   (.ret (.bin .nmul (.var .here) (.num 2)) .nil))
 
-def body.«grid» : TStmts [sig.«bump», sig.«classify», sig.«largest», sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«grid».params sig.«grid».result :=
+noncomputable def body.«grid» : TStmts [sig.«bump», sig.«classify», sig.«largest», sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«grid».params sig.«grid».result :=
   (.let_ "total" (.num 0)
   (.forOf "row" (.var (.there ne.«rows».«total» .here))
   (.forEntries "j" "v" (.var .here)
@@ -299,19 +299,19 @@ def body.«grid» : TStmts [sig.«bump», sig.«classify», sig.«largest», sig
   .nil)
   (.ret (.var .here) .nil)))
 
-def body.«perimeters» : TStmts [sig.«grid», sig.«bump», sig.«classify», sig.«largest», sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«perimeters».params sig.«perimeters».result :=
+noncomputable def body.«perimeters» : TStmts [sig.«grid», sig.«bump», sig.«classify», sig.«largest», sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«perimeters».params sig.«perimeters».result :=
   (.let_ "t" (.num 0)
   (.forOf "sh" (.var (.there ne.«shapes».«t» .here))
-  (.switchG .here (by decide)
-  (.narrow .head (.assign (.there ne.«t».«sh» .here) (.bin .nadd (.var (.there ne.«t».«sh» .here)) (.bin .nmul (.num 6) (.field (.var .here) (.there .here) (by decide))))
+  (.switchG .here (by decide +kernel)
+  (.narrow .head (.assign (.there ne.«t».«sh» .here) (.bin .nadd (.var (.there ne.«t».«sh» .here)) (.bin .nmul (.num 6) (.field (.var .here) (.there .here) (by decide +kernel))))
   (.brk .nil))
-  (.narrow (.there .one) (.assign (.there ne.«t».«sh» .here) (.bin .nadd (.var (.there ne.«t».«sh» .here)) (.bin .nmul (.num 4) (.field (.var .here) (.there .here) (by decide))))
+  (.narrow (.there .one) (.assign (.there ne.«t».«sh» .here) (.bin .nadd (.var (.there ne.«t».«sh» .here)) (.bin .nmul (.num 4) (.field (.var .here) (.there .here) (by decide +kernel))))
   (.brk .nil))
   .nil))
   .nil)
   (.ret (.var .here) .nil)))
 
-def body.«steps» : TStmts [sig.«perimeters», sig.«grid», sig.«bump», sig.«classify», sig.«largest», sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«steps».params sig.«steps».result :=
+noncomputable def body.«steps» : TStmts [sig.«perimeters», sig.«grid», sig.«bump», sig.«classify», sig.«largest», sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«steps».params sig.«steps».result :=
   (.let_ "count" (.num 0)
   (.let_ "k" (.var (.there ne.«n».«count» .here))
   (.forOf "_" (.array (τ := .number) (.cons (.num 1) (.cons (.num 2) (.cons (.num 3) (.cons (.num 4) (.cons (.num 5) (.cons (.num 6) (.cons (.num 7) (.cons (.num 8) .nil)))))))))
@@ -323,7 +323,7 @@ def body.«steps» : TStmts [sig.«perimeters», sig.«grid», sig.«bump», sig
   .nil)))
   (.ret (.var (.there ne.«count».«k» .here)) .nil))))
 
-def body.«score» : TStmts [sig.«steps», sig.«perimeters», sig.«grid», sig.«bump», sig.«classify», sig.«largest», sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«score».params sig.«score».result :=
+noncomputable def body.«score» : TStmts [sig.«steps», sig.«perimeters», sig.«grid», sig.«bump», sig.«classify», sig.«largest», sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«score».params sig.«score».result :=
   (.let_ "s" (.num 0)
   (.ite (.bin .ngt (.var (.there ne.«a».«s» .here)) (.num 0))
   (.assign .here (.bin .nadd (.var .here) (.num 1))
@@ -336,28 +336,32 @@ def body.«score» : TStmts [sig.«steps», sig.«perimeters», sig.«grid», si
   .nil
   (.ret (.var .here) .nil))))
 
-def body.«triangle» : TStmts [sig.«score», sig.«steps», sig.«perimeters», sig.«grid», sig.«bump», sig.«classify», sig.«largest», sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«triangle».params sig.«triangle».result :=
+noncomputable def body.«triangle» : TStmts [sig.«score», sig.«steps», sig.«perimeters», sig.«grid», sig.«bump», sig.«classify», sig.«largest», sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«triangle».params sig.«triangle».result :=
   (.const "m" (.var .here)
   (.let_ "t" (.num 0)
   (.forRange "i" (.there ne.«m».«t» .here)
   (.ite (.bin .ngt (.var .here) (.var (.there ne.«cap».«i» (.there ne.«cap».«t» (.there ne.«cap».«m» (.there ne.«cap».«n» .here))))))
   (.brk .nil)
   .nil
-  (.ite (.bin (.eq (by decide)) (.var .here) (.num 3))
+  (.ite (.bin (.eq (by decide +kernel)) (.var .here) (.num 3))
   (.cont .nil)
   .nil
   (.assign (.there ne.«t».«i» .here) (.bin .nadd (.var (.there ne.«t».«i» .here)) (.var .here))
   .nil)))
   (.ret (.var .here) .nil))))
 
-abbrev sigs : Sigs := [sig.«triangle», sig.«score», sig.«steps», sig.«perimeters», sig.«grid», sig.«bump», sig.«classify», sig.«largest», sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»]
+noncomputable abbrev sigs : Sigs := [sig.«triangle», sig.«score», sig.«steps», sig.«perimeters», sig.«grid», sig.«bump», sig.«classify», sig.«largest», sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»]
 
-def typed : TProgram sigs :=
+noncomputable def typed : TProgram sigs :=
   (.cons sig.«triangle» body.«triangle» (.cons sig.«score» body.«score» (.cons sig.«steps» body.«steps» (.cons sig.«perimeters» body.«perimeters» (.cons sig.«grid» body.«grid» (.cons sig.«bump» body.«bump» (.cons sig.«classify» body.«classify» (.cons sig.«largest» body.«largest» (.cons sig.«prefixUntil» body.«prefixUntil» (.cons sig.«countTagged» body.«countTagged» (.cons sig.«indexOf» body.«indexOf» (.cons sig.«firstLarge» body.«firstLarge» (.cons sig.«sum» body.«sum» .nil)))))))))))))
 
 theorem erased : typed.erase = ast := by kernel_rfl
 
-theorem wf : typed.WF := by decide +kernel
+theorem bodies_ok : typed.bodiesOk = true := by decide +kernel
+
+theorem ast_scoped : ast.scoped = true := by decide +kernel
+
+theorem wf : typed.WF := TProgram.wf_of typed erased bodies_ok ast_scoped
 
 /-! ## Readable definitions -/
 
@@ -766,9 +770,9 @@ def «triangle».safe («n» : Int) («cap» : Int) : Bool :=
 Each body is checked against its readable definition with the earlier functions'
 readable definitions as its environment, so no check unfolds a callee. -/
 
-def «sum».uncurried : sig.«sum».denote := fun xs => «sum» xs.1
+noncomputable def «sum».uncurried : sig.«sum».denote := fun xs => «sum» xs.1
 
-def «sum».safety : sig.«sum».params.denote → Bool := fun xs => «sum».safe xs.1
+noncomputable def «sum».safety : sig.«sum».params.denote → Bool := fun xs => «sum».safe xs.1
 
 theorem «sum».body_eq :
     body.«sum».denoteFn (()) = «sum».uncurried := by
@@ -778,10 +782,10 @@ theorem «sum».safe_eq :
     body.«sum».safeFn (()) (()) = «sum».safety := by
   kernel_rfl
 
-def «firstLarge».uncurried : sig.«firstLarge».denote := fun xs => «firstLarge» xs.1 xs.2.1
+noncomputable def «firstLarge».uncurried : sig.«firstLarge».denote := fun xs => «firstLarge» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «firstLarge».safety : sig.«firstLarge».params.denote → Bool := fun _ => true
+noncomputable def «firstLarge».safety : sig.«firstLarge».params.denote → Bool := fun _ => true
 
 theorem «firstLarge».body_eq :
     body.«firstLarge».denoteFn («sum».uncurried, ()) = «firstLarge».uncurried := by
@@ -791,10 +795,10 @@ theorem «firstLarge».safe_eq :
     body.«firstLarge».safeFn («sum».uncurried, ()) («sum».safety, ()) = «firstLarge».safety := by
   kernel_rfl
 
-def «indexOf».uncurried : sig.«indexOf».denote := fun xs => «indexOf» xs.1 xs.2.1
+noncomputable def «indexOf».uncurried : sig.«indexOf».denote := fun xs => «indexOf» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «indexOf».safety : sig.«indexOf».params.denote → Bool := fun _ => true
+noncomputable def «indexOf».safety : sig.«indexOf».params.denote → Bool := fun _ => true
 
 theorem «indexOf».body_eq :
     body.«indexOf».denoteFn («firstLarge».uncurried, «sum».uncurried, ()) = «indexOf».uncurried := by
@@ -804,9 +808,9 @@ theorem «indexOf».safe_eq :
     body.«indexOf».safeFn («firstLarge».uncurried, «sum».uncurried, ()) («firstLarge».safety, «sum».safety, ()) = «indexOf».safety := by
   kernel_rfl
 
-def «countTagged».uncurried : sig.«countTagged».denote := fun xs => «countTagged» xs.1 xs.2.1
+noncomputable def «countTagged».uncurried : sig.«countTagged».denote := fun xs => «countTagged» xs.1 xs.2.1
 
-def «countTagged».safety : sig.«countTagged».params.denote → Bool := fun xs => «countTagged».safe xs.1 xs.2.1
+noncomputable def «countTagged».safety : sig.«countTagged».params.denote → Bool := fun xs => «countTagged».safe xs.1 xs.2.1
 
 theorem «countTagged».body_eq :
     body.«countTagged».denoteFn («indexOf».uncurried, «firstLarge».uncurried, «sum».uncurried, ()) = «countTagged».uncurried := by
@@ -816,10 +820,10 @@ theorem «countTagged».safe_eq :
     body.«countTagged».safeFn («indexOf».uncurried, «firstLarge».uncurried, «sum».uncurried, ()) («indexOf».safety, «firstLarge».safety, «sum».safety, ()) = «countTagged».safety := by
   kernel_rfl
 
-def «prefixUntil».uncurried : sig.«prefixUntil».denote := fun xs => «prefixUntil» xs.1 xs.2.1
+noncomputable def «prefixUntil».uncurried : sig.«prefixUntil».denote := fun xs => «prefixUntil» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «prefixUntil».safety : sig.«prefixUntil».params.denote → Bool := fun _ => true
+noncomputable def «prefixUntil».safety : sig.«prefixUntil».params.denote → Bool := fun _ => true
 
 theorem «prefixUntil».body_eq :
     body.«prefixUntil».denoteFn («countTagged».uncurried, «indexOf».uncurried, «firstLarge».uncurried, «sum».uncurried, ()) = «prefixUntil».uncurried := by
@@ -829,10 +833,10 @@ theorem «prefixUntil».safe_eq :
     body.«prefixUntil».safeFn («countTagged».uncurried, «indexOf».uncurried, «firstLarge».uncurried, «sum».uncurried, ()) («countTagged».safety, «indexOf».safety, «firstLarge».safety, «sum».safety, ()) = «prefixUntil».safety := by
   kernel_rfl
 
-def «largest».uncurried : sig.«largest».denote := fun xs => «largest» xs.1
+noncomputable def «largest».uncurried : sig.«largest».denote := fun xs => «largest» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «largest».safety : sig.«largest».params.denote → Bool := fun _ => true
+noncomputable def «largest».safety : sig.«largest».params.denote → Bool := fun _ => true
 
 theorem «largest».body_eq :
     body.«largest».denoteFn («prefixUntil».uncurried, «countTagged».uncurried, «indexOf».uncurried, «firstLarge».uncurried, «sum».uncurried, ()) = «largest».uncurried := by
@@ -842,9 +846,9 @@ theorem «largest».safe_eq :
     body.«largest».safeFn («prefixUntil».uncurried, «countTagged».uncurried, «indexOf».uncurried, «firstLarge».uncurried, «sum».uncurried, ()) («prefixUntil».safety, «countTagged».safety, «indexOf».safety, «firstLarge».safety, «sum».safety, ()) = «largest».safety := by
   kernel_rfl
 
-def «classify».uncurried : sig.«classify».denote := fun xs => «classify» xs.1
+noncomputable def «classify».uncurried : sig.«classify».denote := fun xs => «classify» xs.1
 
-def «classify».safety : sig.«classify».params.denote → Bool := fun xs => «classify».safe xs.1
+noncomputable def «classify».safety : sig.«classify».params.denote → Bool := fun xs => «classify».safe xs.1
 
 theorem «classify».body_eq :
     body.«classify».denoteFn («largest».uncurried, «prefixUntil».uncurried, «countTagged».uncurried, «indexOf».uncurried, «firstLarge».uncurried, «sum».uncurried, ()) = «classify».uncurried := by
@@ -854,9 +858,9 @@ theorem «classify».safe_eq :
     body.«classify».safeFn («largest».uncurried, «prefixUntil».uncurried, «countTagged».uncurried, «indexOf».uncurried, «firstLarge».uncurried, «sum».uncurried, ()) («largest».safety, «prefixUntil».safety, «countTagged».safety, «indexOf».safety, «firstLarge».safety, «sum».safety, ()) = «classify».safety := by
   kernel_rfl
 
-def «bump».uncurried : sig.«bump».denote := fun xs => «bump» xs.1
+noncomputable def «bump».uncurried : sig.«bump».denote := fun xs => «bump» xs.1
 
-def «bump».safety : sig.«bump».params.denote → Bool := fun xs => «bump».safe xs.1
+noncomputable def «bump».safety : sig.«bump».params.denote → Bool := fun xs => «bump».safe xs.1
 
 theorem «bump».body_eq :
     body.«bump».denoteFn («classify».uncurried, «largest».uncurried, «prefixUntil».uncurried, «countTagged».uncurried, «indexOf».uncurried, «firstLarge».uncurried, «sum».uncurried, ()) = «bump».uncurried := by
@@ -866,9 +870,9 @@ theorem «bump».safe_eq :
     body.«bump».safeFn («classify».uncurried, «largest».uncurried, «prefixUntil».uncurried, «countTagged».uncurried, «indexOf».uncurried, «firstLarge».uncurried, «sum».uncurried, ()) («classify».safety, «largest».safety, «prefixUntil».safety, «countTagged».safety, «indexOf».safety, «firstLarge».safety, «sum».safety, ()) = «bump».safety := by
   kernel_rfl
 
-def «grid».uncurried : sig.«grid».denote := fun xs => «grid» xs.1
+noncomputable def «grid».uncurried : sig.«grid».denote := fun xs => «grid» xs.1
 
-def «grid».safety : sig.«grid».params.denote → Bool := fun xs => «grid».safe xs.1
+noncomputable def «grid».safety : sig.«grid».params.denote → Bool := fun xs => «grid».safe xs.1
 
 theorem «grid».body_eq :
     body.«grid».denoteFn («bump».uncurried, «classify».uncurried, «largest».uncurried, «prefixUntil».uncurried, «countTagged».uncurried, «indexOf».uncurried, «firstLarge».uncurried, «sum».uncurried, ()) = «grid».uncurried := by
@@ -878,9 +882,9 @@ theorem «grid».safe_eq :
     body.«grid».safeFn («bump».uncurried, «classify».uncurried, «largest».uncurried, «prefixUntil».uncurried, «countTagged».uncurried, «indexOf».uncurried, «firstLarge».uncurried, «sum».uncurried, ()) («bump».safety, «classify».safety, «largest».safety, «prefixUntil».safety, «countTagged».safety, «indexOf».safety, «firstLarge».safety, «sum».safety, ()) = «grid».safety := by
   kernel_rfl
 
-def «perimeters».uncurried : sig.«perimeters».denote := fun xs => «perimeters» xs.1
+noncomputable def «perimeters».uncurried : sig.«perimeters».denote := fun xs => «perimeters» xs.1
 
-def «perimeters».safety : sig.«perimeters».params.denote → Bool := fun xs => «perimeters».safe xs.1
+noncomputable def «perimeters».safety : sig.«perimeters».params.denote → Bool := fun xs => «perimeters».safe xs.1
 
 theorem «perimeters».body_eq :
     body.«perimeters».denoteFn («grid».uncurried, «bump».uncurried, «classify».uncurried, «largest».uncurried, «prefixUntil».uncurried, «countTagged».uncurried, «indexOf».uncurried, «firstLarge».uncurried, «sum».uncurried, ()) = «perimeters».uncurried := by
@@ -890,9 +894,9 @@ theorem «perimeters».safe_eq :
     body.«perimeters».safeFn («grid».uncurried, «bump».uncurried, «classify».uncurried, «largest».uncurried, «prefixUntil».uncurried, «countTagged».uncurried, «indexOf».uncurried, «firstLarge».uncurried, «sum».uncurried, ()) («grid».safety, «bump».safety, «classify».safety, «largest».safety, «prefixUntil».safety, «countTagged».safety, «indexOf».safety, «firstLarge».safety, «sum».safety, ()) = «perimeters».safety := by
   kernel_rfl
 
-def «steps».uncurried : sig.«steps».denote := fun xs => «steps» xs.1
+noncomputable def «steps».uncurried : sig.«steps».denote := fun xs => «steps» xs.1
 
-def «steps».safety : sig.«steps».params.denote → Bool := fun xs => «steps».safe xs.1
+noncomputable def «steps».safety : sig.«steps».params.denote → Bool := fun xs => «steps».safe xs.1
 
 theorem «steps».body_eq :
     body.«steps».denoteFn («perimeters».uncurried, «grid».uncurried, «bump».uncurried, «classify».uncurried, «largest».uncurried, «prefixUntil».uncurried, «countTagged».uncurried, «indexOf».uncurried, «firstLarge».uncurried, «sum».uncurried, ()) = «steps».uncurried := by
@@ -902,9 +906,9 @@ theorem «steps».safe_eq :
     body.«steps».safeFn («perimeters».uncurried, «grid».uncurried, «bump».uncurried, «classify».uncurried, «largest».uncurried, «prefixUntil».uncurried, «countTagged».uncurried, «indexOf».uncurried, «firstLarge».uncurried, «sum».uncurried, ()) («perimeters».safety, «grid».safety, «bump».safety, «classify».safety, «largest».safety, «prefixUntil».safety, «countTagged».safety, «indexOf».safety, «firstLarge».safety, «sum».safety, ()) = «steps».safety := by
   kernel_rfl
 
-def «score».uncurried : sig.«score».denote := fun xs => «score» xs.1 xs.2.1
+noncomputable def «score».uncurried : sig.«score».denote := fun xs => «score» xs.1 xs.2.1
 
-def «score».safety : sig.«score».params.denote → Bool := fun xs => «score».safe xs.1 xs.2.1
+noncomputable def «score».safety : sig.«score».params.denote → Bool := fun xs => «score».safe xs.1 xs.2.1
 
 theorem «score».body_eq :
     body.«score».denoteFn («steps».uncurried, «perimeters».uncurried, «grid».uncurried, «bump».uncurried, «classify».uncurried, «largest».uncurried, «prefixUntil».uncurried, «countTagged».uncurried, «indexOf».uncurried, «firstLarge».uncurried, «sum».uncurried, ()) = «score».uncurried := by
@@ -914,9 +918,9 @@ theorem «score».safe_eq :
     body.«score».safeFn («steps».uncurried, «perimeters».uncurried, «grid».uncurried, «bump».uncurried, «classify».uncurried, «largest».uncurried, «prefixUntil».uncurried, «countTagged».uncurried, «indexOf».uncurried, «firstLarge».uncurried, «sum».uncurried, ()) («steps».safety, «perimeters».safety, «grid».safety, «bump».safety, «classify».safety, «largest».safety, «prefixUntil».safety, «countTagged».safety, «indexOf».safety, «firstLarge».safety, «sum».safety, ()) = «score».safety := by
   kernel_rfl
 
-def «triangle».uncurried : sig.«triangle».denote := fun xs => «triangle» xs.1 xs.2.1
+noncomputable def «triangle».uncurried : sig.«triangle».denote := fun xs => «triangle» xs.1 xs.2.1
 
-def «triangle».safety : sig.«triangle».params.denote → Bool := fun xs => «triangle».safe xs.1 xs.2.1
+noncomputable def «triangle».safety : sig.«triangle».params.denote → Bool := fun xs => «triangle».safe xs.1 xs.2.1
 
 theorem «triangle».body_eq :
     body.«triangle».denoteFn («score».uncurried, «steps».uncurried, «perimeters».uncurried, «grid».uncurried, «bump».uncurried, «classify».uncurried, «largest».uncurried, «prefixUntil».uncurried, «countTagged».uncurried, «indexOf».uncurried, «firstLarge».uncurried, «sum».uncurried, ()) = «triangle».uncurried := by

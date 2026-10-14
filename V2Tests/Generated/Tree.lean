@@ -9,7 +9,7 @@ set_option maxRecDepth 8192
 set_option linter.unusedVariables false
 
 /-- The source file in the model's syntax. -/
-def ast : Program := [
+noncomputable def ast : Program := [
   { name := "root", params := [], body := [
       .ret (.lit (.string (js "root")))] },
   { name := "newer", params := ["s", "stamp"], body := [
@@ -350,50 +350,50 @@ def ast : Program := [
           .stateDelete "changed" (.var "id")],
       .ret (.lit .undefined)], method := true }]
 
-abbrev ty.«Spot» : Ty := (.record (.cons "want" .string (.cons "name" .string (.cons "pos" (.option .undef .string) (.cons "made" (.option .undef .string) .nil)))))
-abbrev ty.«Link» : Ty := (.record (.cons "parent" .string (.cons "prev" (.option .undef .string) (.cons "next" (.option .undef .string) .nil))))
-abbrev ty.«Ends» : Ty := (.record (.cons "first" .string (.cons "last" .string .nil)))
-abbrev ty.«Tree» : Ty := (.record (.cons "spots" (.map (.record (.cons "want" .string (.cons "name" .string (.cons "pos" (.option .undef .string) (.cons "made" (.option .undef .string) .nil)))))) (.cons "links" (.map (.record (.cons "parent" .string (.cons "prev" (.option .undef .string) (.cons "next" (.option .undef .string) .nil))))) (.cons "ends" (.map (.record (.cons "first" .string (.cons "last" .string .nil)))) (.cons "detached" (.map .bool) (.cons "waiting" (.map .bool) (.cons "purged" (.map .string) (.cons "buried" (.map .string) (.cons "changed" (.map .bool) .nil)))))))))
+noncomputable abbrev ty.«Spot» : Ty := (.record (.cons "want" .string (.cons "name" .string (.cons "pos" (.option .undef .string) (.cons "made" (.option .undef .string) .nil)))))
+noncomputable abbrev ty.«Link» : Ty := (.record (.cons "parent" .string (.cons "prev" (.option .undef .string) (.cons "next" (.option .undef .string) .nil))))
+noncomputable abbrev ty.«Ends» : Ty := (.record (.cons "first" .string (.cons "last" .string .nil)))
+noncomputable abbrev ty.«Tree» : Ty := (.record (.cons "spots" (.map (.record (.cons "want" .string (.cons "name" .string (.cons "pos" (.option .undef .string) (.cons "made" (.option .undef .string) .nil)))))) (.cons "links" (.map (.record (.cons "parent" .string (.cons "prev" (.option .undef .string) (.cons "next" (.option .undef .string) .nil))))) (.cons "ends" (.map (.record (.cons "first" .string (.cons "last" .string .nil)))) (.cons "detached" (.map .bool) (.cons "waiting" (.map .bool) (.cons "purged" (.map .string) (.cons "buried" (.map .string) (.cons "changed" (.map .bool) .nil)))))))))
 
-def sig.«root» : Sig := { name := "root", params := [], result := .string, trivial := true }
-def sig.«newer» : Sig := { name := "newer", params := [("s", (.option .undef .string)), ("stamp", .string)], result := .bool, trivial := true }
-def sig.«earlier» : Sig := { name := "earlier", params := [("s", (.option .undef .string)), ("stamp", .string)], result := .bool, trivial := true }
-def sig.«minStamp» : Sig := { name := "minStamp", params := [("a", .string), ("b", .string)], result := .string, trivial := true }
-def sig.«orNone» : Sig := { name := "orNone", params := [("s", (.option .undef .string))], result := .string, trivial := true }
-def sig.«key» : Sig := { name := "key", params := [("s", ty.«Spot»), ("id", .string)], result := .string, trivial := true }
-def sig.«new Tree» : Sig := { name := "new Tree", params := [], result := ty.«Tree», trivial := true }
-def sig.«cycleOf» : Sig := { name := "cycleOf", params := [("this", ty.«Tree»), ("id", .string)], result := (.array .string), trivial := true, method := true, void := false }
-def sig.«keyOf» : Sig := { name := "keyOf", params := [("this", ty.«Tree»), ("id", .string)], result := .string, trivial := true, method := true, void := false }
-def sig.«setNext» : Sig := { name := "setNext", params := [("this", ty.«Tree»), ("id", .string), ("next", (.option .undef .string))], result := ty.«Tree», trivial := true, method := true, void := true }
-def sig.«setPrev» : Sig := { name := "setPrev", params := [("this", ty.«Tree»), ("id", .string), ("prev", (.option .undef .string))], result := ty.«Tree», trivial := true, method := true, void := true }
-def sig.«unlink» : Sig := { name := "unlink", params := [("this", ty.«Tree»), ("id", .string)], result := ty.«Tree», trivial := true, method := true, void := true }
-def sig.«bury» : Sig := { name := "bury", params := [("this", ty.«Tree»), ("id", .string), ("by", .string)], result := ty.«Tree», trivial := true, method := true, void := true }
-def sig.«loadSpot» : Sig := { name := "loadSpot", params := [("this", ty.«Tree»), ("id", .string), ("s", ty.«Spot»)], result := ty.«Tree», trivial := true, method := true, void := true }
-def sig.«loadPurge» : Sig := { name := "loadPurge", params := [("this", ty.«Tree»), ("id", .string), ("stamp", .string)], result := ty.«Tree», trivial := true, method := true, void := true }
-def sig.«spotOf» : Sig := { name := "spotOf", params := [("this", ty.«Tree»), ("id", .string)], result := (.option .undef ty.«Spot»), trivial := true, method := true, void := false }
-def sig.«parentOf» : Sig := { name := "parentOf", params := [("this", ty.«Tree»), ("id", .string)], result := .string, trivial := true, method := true, void := false }
-def sig.«burialOf» : Sig := { name := "burialOf", params := [("this", ty.«Tree»), ("id", .string)], result := .string, trivial := true, method := true, void := false }
-def sig.«firstChild» : Sig := { name := "firstChild", params := [("this", ty.«Tree»), ("id", .string)], result := .string, trivial := true, method := true, void := false }
-def sig.«lastChild» : Sig := { name := "lastChild", params := [("this", ty.«Tree»), ("id", .string)], result := .string, trivial := true, method := true, void := false }
-def sig.«link» : Sig := { name := "link", params := [("this", ty.«Tree»), ("id", .string), ("parent", .string)], result := ty.«Tree», trivial := true, method := true, void := true }
-def sig.«loadLink» : Sig := { name := "loadLink", params := [("this", ty.«Tree»), ("id", .string), ("parent", .string)], result := ty.«Tree», trivial := true, method := true, void := true }
-def sig.«nextSibling» : Sig := { name := "nextSibling", params := [("this", ty.«Tree»), ("id", .string)], result := .string, trivial := true, method := true, void := false }
-def sig.«settle» : Sig := { name := "settle", params := [("this", ty.«Tree»), ("start", .string), ("all", .bool)], result := ty.«Tree», trivial := false, method := true, void := true }
-def sig.«attach» : Sig := { name := "attach", params := [("this", ty.«Tree»), ("id", .string)], result := ty.«Tree», trivial := false, method := true, void := true }
-def sig.«rearrange» : Sig := { name := "rearrange", params := [("this", ty.«Tree»), ("id", .string)], result := ty.«Tree», trivial := false, method := true, void := true }
-def sig.«create» : Sig := { name := "create", params := [("this", ty.«Tree»), ("id", .string), ("parent", .string), ("name", .string), ("stamp", .string)], result := ty.«Tree», trivial := false, method := true, void := true }
-def sig.«position» : Sig := { name := "position", params := [("this", ty.«Tree»), ("id", .string), ("parent", .string), ("name", .string), ("stamp", .string), ("move", .bool)], result := ty.«Tree», trivial := false, method := true, void := true }
-def sig.«purge» : Sig := { name := "purge", params := [("this", ty.«Tree»), ("id", .string), ("stamp", .string)], result := ty.«Tree», trivial := false, method := true, void := true }
-def sig.«untangle» : Sig := { name := "untangle", params := [("this", ty.«Tree»)], result := ty.«Tree», trivial := false, method := true, void := true }
-def sig.«isDetached» : Sig := { name := "isDetached", params := [("this", ty.«Tree»), ("id", .string)], result := .bool, trivial := true, method := true, void := false }
-def sig.«burial» : Sig := { name := "burial", params := [("this", ty.«Tree»), ("id", .string)], result := (.option .undef .string), trivial := true, method := true, void := false }
-def sig.«isPurged» : Sig := { name := "isPurged", params := [("this", ty.«Tree»), ("id", .string)], result := .bool, trivial := true, method := true, void := false }
-def sig.«purgeOf» : Sig := { name := "purgeOf", params := [("this", ty.«Tree»), ("id", .string)], result := (.option .undef .string), trivial := true, method := true, void := false }
-def sig.«purgedIds» : Sig := { name := "purgedIds", params := [("this", ty.«Tree»)], result := (.array .string), trivial := true, method := true, void := false }
-def sig.«waitingIds» : Sig := { name := "waitingIds", params := [("this", ty.«Tree»)], result := (.array .string), trivial := true, method := true, void := false }
-def sig.«hasWaiting» : Sig := { name := "hasWaiting", params := [("this", ty.«Tree»)], result := .bool, trivial := true, method := true, void := false }
-def sig.«changes» : Sig := { name := "changes", params := [("this", ty.«Tree»)], result := (.array .string), trivial := true, method := true, void := false }
-def sig.«clearChanges» : Sig := { name := "clearChanges", params := [("this", ty.«Tree»)], result := ty.«Tree», trivial := true, method := true, void := true }
+noncomputable def sig.«root» : Sig := { name := "root", params := [], result := .string, trivial := true }
+noncomputable def sig.«newer» : Sig := { name := "newer", params := [("s", (.option .undef .string)), ("stamp", .string)], result := .bool, trivial := true }
+noncomputable def sig.«earlier» : Sig := { name := "earlier", params := [("s", (.option .undef .string)), ("stamp", .string)], result := .bool, trivial := true }
+noncomputable def sig.«minStamp» : Sig := { name := "minStamp", params := [("a", .string), ("b", .string)], result := .string, trivial := true }
+noncomputable def sig.«orNone» : Sig := { name := "orNone", params := [("s", (.option .undef .string))], result := .string, trivial := true }
+noncomputable def sig.«key» : Sig := { name := "key", params := [("s", ty.«Spot»), ("id", .string)], result := .string, trivial := true }
+noncomputable def sig.«new Tree» : Sig := { name := "new Tree", params := [], result := ty.«Tree», trivial := true }
+noncomputable def sig.«cycleOf» : Sig := { name := "cycleOf", params := [("this", ty.«Tree»), ("id", .string)], result := (.array .string), trivial := true, method := true, void := false }
+noncomputable def sig.«keyOf» : Sig := { name := "keyOf", params := [("this", ty.«Tree»), ("id", .string)], result := .string, trivial := true, method := true, void := false }
+noncomputable def sig.«setNext» : Sig := { name := "setNext", params := [("this", ty.«Tree»), ("id", .string), ("next", (.option .undef .string))], result := ty.«Tree», trivial := true, method := true, void := true }
+noncomputable def sig.«setPrev» : Sig := { name := "setPrev", params := [("this", ty.«Tree»), ("id", .string), ("prev", (.option .undef .string))], result := ty.«Tree», trivial := true, method := true, void := true }
+noncomputable def sig.«unlink» : Sig := { name := "unlink", params := [("this", ty.«Tree»), ("id", .string)], result := ty.«Tree», trivial := true, method := true, void := true }
+noncomputable def sig.«bury» : Sig := { name := "bury", params := [("this", ty.«Tree»), ("id", .string), ("by", .string)], result := ty.«Tree», trivial := true, method := true, void := true }
+noncomputable def sig.«loadSpot» : Sig := { name := "loadSpot", params := [("this", ty.«Tree»), ("id", .string), ("s", ty.«Spot»)], result := ty.«Tree», trivial := true, method := true, void := true }
+noncomputable def sig.«loadPurge» : Sig := { name := "loadPurge", params := [("this", ty.«Tree»), ("id", .string), ("stamp", .string)], result := ty.«Tree», trivial := true, method := true, void := true }
+noncomputable def sig.«spotOf» : Sig := { name := "spotOf", params := [("this", ty.«Tree»), ("id", .string)], result := (.option .undef ty.«Spot»), trivial := true, method := true, void := false }
+noncomputable def sig.«parentOf» : Sig := { name := "parentOf", params := [("this", ty.«Tree»), ("id", .string)], result := .string, trivial := true, method := true, void := false }
+noncomputable def sig.«burialOf» : Sig := { name := "burialOf", params := [("this", ty.«Tree»), ("id", .string)], result := .string, trivial := true, method := true, void := false }
+noncomputable def sig.«firstChild» : Sig := { name := "firstChild", params := [("this", ty.«Tree»), ("id", .string)], result := .string, trivial := true, method := true, void := false }
+noncomputable def sig.«lastChild» : Sig := { name := "lastChild", params := [("this", ty.«Tree»), ("id", .string)], result := .string, trivial := true, method := true, void := false }
+noncomputable def sig.«link» : Sig := { name := "link", params := [("this", ty.«Tree»), ("id", .string), ("parent", .string)], result := ty.«Tree», trivial := true, method := true, void := true }
+noncomputable def sig.«loadLink» : Sig := { name := "loadLink", params := [("this", ty.«Tree»), ("id", .string), ("parent", .string)], result := ty.«Tree», trivial := true, method := true, void := true }
+noncomputable def sig.«nextSibling» : Sig := { name := "nextSibling", params := [("this", ty.«Tree»), ("id", .string)], result := .string, trivial := true, method := true, void := false }
+noncomputable def sig.«settle» : Sig := { name := "settle", params := [("this", ty.«Tree»), ("start", .string), ("all", .bool)], result := ty.«Tree», trivial := false, method := true, void := true }
+noncomputable def sig.«attach» : Sig := { name := "attach", params := [("this", ty.«Tree»), ("id", .string)], result := ty.«Tree», trivial := false, method := true, void := true }
+noncomputable def sig.«rearrange» : Sig := { name := "rearrange", params := [("this", ty.«Tree»), ("id", .string)], result := ty.«Tree», trivial := false, method := true, void := true }
+noncomputable def sig.«create» : Sig := { name := "create", params := [("this", ty.«Tree»), ("id", .string), ("parent", .string), ("name", .string), ("stamp", .string)], result := ty.«Tree», trivial := false, method := true, void := true }
+noncomputable def sig.«position» : Sig := { name := "position", params := [("this", ty.«Tree»), ("id", .string), ("parent", .string), ("name", .string), ("stamp", .string), ("move", .bool)], result := ty.«Tree», trivial := false, method := true, void := true }
+noncomputable def sig.«purge» : Sig := { name := "purge", params := [("this", ty.«Tree»), ("id", .string), ("stamp", .string)], result := ty.«Tree», trivial := false, method := true, void := true }
+noncomputable def sig.«untangle» : Sig := { name := "untangle", params := [("this", ty.«Tree»)], result := ty.«Tree», trivial := false, method := true, void := true }
+noncomputable def sig.«isDetached» : Sig := { name := "isDetached", params := [("this", ty.«Tree»), ("id", .string)], result := .bool, trivial := true, method := true, void := false }
+noncomputable def sig.«burial» : Sig := { name := "burial", params := [("this", ty.«Tree»), ("id", .string)], result := (.option .undef .string), trivial := true, method := true, void := false }
+noncomputable def sig.«isPurged» : Sig := { name := "isPurged", params := [("this", ty.«Tree»), ("id", .string)], result := .bool, trivial := true, method := true, void := false }
+noncomputable def sig.«purgeOf» : Sig := { name := "purgeOf", params := [("this", ty.«Tree»), ("id", .string)], result := (.option .undef .string), trivial := true, method := true, void := false }
+noncomputable def sig.«purgedIds» : Sig := { name := "purgedIds", params := [("this", ty.«Tree»)], result := (.array .string), trivial := true, method := true, void := false }
+noncomputable def sig.«waitingIds» : Sig := { name := "waitingIds", params := [("this", ty.«Tree»)], result := (.array .string), trivial := true, method := true, void := false }
+noncomputable def sig.«hasWaiting» : Sig := { name := "hasWaiting", params := [("this", ty.«Tree»)], result := .bool, trivial := true, method := true, void := false }
+noncomputable def sig.«changes» : Sig := { name := "changes", params := [("this", ty.«Tree»)], result := (.array .string), trivial := true, method := true, void := false }
+noncomputable def sig.«clearChanges» : Sig := { name := "clearChanges", params := [("this", ty.«Tree»)], result := ty.«Tree», trivial := true, method := true, void := true }
 
 theorem ne.«stamp».«s» : ("stamp" : String) ≠ "s" := by decide
 theorem ne.«b».«a» : ("b" : String) ≠ "a" := by decide
@@ -517,49 +517,49 @@ theorem ne.«parent».«s» : ("parent" : String) ≠ "s" := by decide
 theorem ne.«name».«s» : ("name" : String) ≠ "s" := by decide
 theorem ne.«this».«id» : ("this" : String) ≠ "id" := by decide
 
-def body.«root» : TStmts [] sig.«root».params sig.«root».result :=
+noncomputable def body.«root» : TStmts [] sig.«root».params sig.«root».result :=
   (.ret (.str (js "root")) .nil)
 
-def body.«newer» : TStmts [sig.«root»] sig.«newer».params sig.«newer».result :=
-  (.ifNullExit .here (by decide)
+noncomputable def body.«newer» : TStmts [sig.«root»] sig.«newer».params sig.«newer».result :=
+  (.ifNullExit .here (by decide +kernel)
   (.ret (.bool true) .nil)
-  (.ret (.or (.bin (.eq (by decide)) (.var .here) (.str (js ""))) (.bin .slt (.var .here) (.var (.there ne.«stamp».«s» .here)))) .nil))
+  (.ret (.or (.bin (.eq (by decide +kernel)) (.var .here) (.str (js ""))) (.bin .slt (.var .here) (.var (.there ne.«stamp».«s» .here)))) .nil))
 
-def body.«earlier» : TStmts [sig.«newer», sig.«root»] sig.«earlier».params sig.«earlier».result :=
-  (.ifNullExit .here (by decide)
+noncomputable def body.«earlier» : TStmts [sig.«newer», sig.«root»] sig.«earlier».params sig.«earlier».result :=
+  (.ifNullExit .here (by decide +kernel)
   (.ret (.bool true) .nil)
-  (.ret (.or (.bin (.eq (by decide)) (.var .here) (.str (js ""))) (.bin .slt (.var (.there ne.«stamp».«s» .here)) (.var .here))) .nil))
+  (.ret (.or (.bin (.eq (by decide +kernel)) (.var .here) (.str (js ""))) (.bin .slt (.var (.there ne.«stamp».«s» .here)) (.var .here))) .nil))
 
-def body.«minStamp» : TStmts [sig.«earlier», sig.«newer», sig.«root»] sig.«minStamp».params sig.«minStamp».result :=
-  (.ite (.bin (.eq (by decide)) (.var .here) (.str (js "")))
+noncomputable def body.«minStamp» : TStmts [sig.«earlier», sig.«newer», sig.«root»] sig.«minStamp».params sig.«minStamp».result :=
+  (.ite (.bin (.eq (by decide +kernel)) (.var .here) (.str (js "")))
   (.ret (.var (.there ne.«b».«a» .here)) .nil)
   .nil
-  (.ite (.bin (.eq (by decide)) (.var (.there ne.«b».«a» .here)) (.str (js "")))
+  (.ite (.bin (.eq (by decide +kernel)) (.var (.there ne.«b».«a» .here)) (.str (js "")))
   (.ret (.var .here) .nil)
   .nil
   (.ret (.cond (.bin .slt (.var .here) (.var (.there ne.«b».«a» .here))) (.var .here) (.var (.there ne.«b».«a» .here))) .nil)))
 
-def body.«orNone» : TStmts [sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«orNone».params sig.«orNone».result :=
-  (.ret (.condNull .here (by decide) (.str (js "")) (.var .here)) .nil)
+noncomputable def body.«orNone» : TStmts [sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«orNone».params sig.«orNone».result :=
+  (.ret (.condNull .here (by decide +kernel) (.str (js "")) (.var .here)) .nil)
 
-def body.«key» : TStmts [sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«key».params sig.«key».result :=
-  (.const "pos" (.field (.var .here) (.there (.there .here)) (by decide))
-  (.const "stamp" (.condNull .here (by decide) (.call (s := sig.«orNone») .here (by decide) (.cons (.field (.var (.there ne.«s».«pos» .here)) (.there (.there (.there .here))) (by decide)) .nil)) (.var .here))
+noncomputable def body.«key» : TStmts [sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«key».params sig.«key».result :=
+  (.const "pos" (.field (.var .here) (.there (.there .here)) (by decide +kernel))
+  (.const "stamp" (.condNull .here (by decide +kernel) (.call (s := sig.«orNone») .here (by decide +kernel) (.cons (.field (.var (.there ne.«s».«pos» .here)) (.there (.there (.there .here))) (by decide +kernel)) .nil)) (.var .here))
   (.ret (.bin .concat (.bin .concat (.var .here) (.str ([10] : JSString))) (.var (.there ne.«id».«stamp» (.there ne.«id».«pos» (.there ne.«id».«s» .here))))) .nil)))
 
-def body.«new Tree» : TStmts [sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«new Tree».params sig.«new Tree».result :=
-  (.ret (.record (.cons "spots" (.newMap ty.«Spot») (.cons "links" (.newMap ty.«Link») (.cons "ends" (.newMap ty.«Ends») (.cons "detached" (.newMap .bool) (.cons "waiting" (.newMap .bool) (.cons "purged" (.newMap .string) (.cons "buried" (.newMap .string) (.cons "changed" (.newMap .bool) .nil)))))))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) (.cons (.there (.there (.there (.there .here)))) (.cons (.there (.there (.there (.there (.there .here))))) (.cons (.there (.there (.there (.there (.there (.there .here)))))) (.cons (.there (.there (.there (.there (.there (.there (.there .here))))))) .nil)))))))) (by decide)) .nil)
+noncomputable def body.«new Tree» : TStmts [sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«new Tree».params sig.«new Tree».result :=
+  (.ret (.record (.cons "spots" (.newMap ty.«Spot») (.cons "links" (.newMap ty.«Link») (.cons "ends" (.newMap ty.«Ends») (.cons "detached" (.newMap .bool) (.cons "waiting" (.newMap .bool) (.cons "purged" (.newMap .string) (.cons "buried" (.newMap .string) (.cons "changed" (.newMap .bool) .nil)))))))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) (.cons (.there (.there (.there (.there .here)))) (.cons (.there (.there (.there (.there (.there .here))))) (.cons (.there (.there (.there (.there (.there (.there .here)))))) (.cons (.there (.there (.there (.there (.there (.there (.there .here))))))) .nil)))))))) (by decide +kernel)) .nil)
 
-def body.«cycleOf» : TStmts [sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«cycleOf».params sig.«cycleOf».result :=
+noncomputable def body.«cycleOf» : TStmts [sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«cycleOf».params sig.«cycleOf».result :=
   (.const "steps" (.stateSize .here .here)
   (.let_ "cur" (.var (.there ne.«id».«steps» (.there ne.«id».«this» .here)))
   (.let_ "on" (.bool false)
   (.forRange "_step" (.there ne.«steps».«on» (.there ne.«steps».«cur» .here))
-  (.const "s" (.stateGet (.there ne.«this».«_step» (.there ne.«this».«on» (.there ne.«this».«cur» (.there ne.«this».«steps» .here)))) .here (by decide) (.var (.there ne.«cur».«_step» (.there ne.«cur».«on» .here))))
-  (.ifNullExit .here (by decide)
+  (.const "s" (.stateGet (.there ne.«this».«_step» (.there ne.«this».«on» (.there ne.«this».«cur» (.there ne.«this».«steps» .here)))) .here (by decide +kernel) (.var (.there ne.«cur».«_step» (.there ne.«cur».«on» .here))))
+  (.ifNullExit .here (by decide +kernel)
   (.ret (.array (τ := .string) .nil) .nil)
-  (.assign (.there ne.«cur».«s» (.there ne.«cur».«_step» (.there ne.«cur».«on» .here))) (.field (.var .here) .here (by decide))
-  (.ite (.bin (.eq (by decide)) (.var (.there ne.«cur».«s» (.there ne.«cur».«_step» (.there ne.«cur».«on» .here)))) (.var (.there ne.«id».«s» (.there ne.«id».«_step» (.there ne.«id».«on» (.there ne.«id».«cur» (.there ne.«id».«steps» (.there ne.«id».«this» .here))))))))
+  (.assign (.there ne.«cur».«s» (.there ne.«cur».«_step» (.there ne.«cur».«on» .here))) (.field (.var .here) .here (by decide +kernel))
+  (.ite (.bin (.eq (by decide +kernel)) (.var (.there ne.«cur».«s» (.there ne.«cur».«_step» (.there ne.«cur».«on» .here)))) (.var (.there ne.«id».«s» (.there ne.«id».«_step» (.there ne.«id».«on» (.there ne.«id».«cur» (.there ne.«id».«steps» (.there ne.«id».«this» .here))))))))
   (.assign (.there ne.«on».«s» (.there ne.«on».«_step» .here)) (.bool true)
   (.brk .nil))
   .nil
@@ -570,141 +570,141 @@ def body.«cycleOf» : TStmts [sig.«new Tree», sig.«key», sig.«orNone», si
   (.let_ "path" (.array (τ := .string) (.cons (.var (.there ne.«id».«on» (.there ne.«id».«cur» (.there ne.«id».«steps» (.there ne.«id».«this» .here))))) .nil))
   (.assign (.there ne.«cur».«path» (.there ne.«cur».«on» .here)) (.var (.there ne.«id».«path» (.there ne.«id».«on» (.there ne.«id».«cur» (.there ne.«id».«steps» (.there ne.«id».«this» .here))))))
   (.forRange "_step" (.there ne.«steps».«path» (.there ne.«steps».«on» (.there ne.«steps».«cur» .here)))
-  (.const "s" (.stateGet (.there ne.«this».«_step» (.there ne.«this».«path» (.there ne.«this».«on» (.there ne.«this».«cur» (.there ne.«this».«steps» .here))))) .here (by decide) (.var (.there ne.«cur».«_step» (.there ne.«cur».«path» (.there ne.«cur».«on» .here)))))
-  (.ifNullExit .here (by decide)
+  (.const "s" (.stateGet (.there ne.«this».«_step» (.there ne.«this».«path» (.there ne.«this».«on» (.there ne.«this».«cur» (.there ne.«this».«steps» .here))))) .here (by decide +kernel) (.var (.there ne.«cur».«_step» (.there ne.«cur».«path» (.there ne.«cur».«on» .here)))))
+  (.ifNullExit .here (by decide +kernel)
   (.ret (.var (.there ne.«path».«s» (.there ne.«path».«_step» .here))) .nil)
-  (.ite (.bin (.eq (by decide)) (.field (.var .here) .here (by decide)) (.var (.there ne.«id».«s» (.there ne.«id».«_step» (.there ne.«id».«path» (.there ne.«id».«on» (.there ne.«id».«cur» (.there ne.«id».«steps» (.there ne.«id».«this» .here)))))))))
+  (.ite (.bin (.eq (by decide +kernel)) (.field (.var .here) .here (by decide +kernel)) (.var (.there ne.«id».«s» (.there ne.«id».«_step» (.there ne.«id».«path» (.there ne.«id».«on» (.there ne.«id».«cur» (.there ne.«id».«steps» (.there ne.«id».«this» .here)))))))))
   (.ret (.var (.there ne.«path».«s» (.there ne.«path».«_step» .here))) .nil)
   .nil
-  (.assign (.there ne.«cur».«s» (.there ne.«cur».«_step» (.there ne.«cur».«path» (.there ne.«cur».«on» .here)))) (.field (.var .here) .here (by decide))
+  (.assign (.there ne.«cur».«s» (.there ne.«cur».«_step» (.there ne.«cur».«path» (.there ne.«cur».«on» .here)))) (.field (.var .here) .here (by decide +kernel))
   (.assign (.there ne.«path».«s» (.there ne.«path».«_step» .here)) (.array (τ := .string) (.spread (.var (.there ne.«path».«s» (.there ne.«path».«_step» .here))) (.cons (.var (.there ne.«cur».«s» (.there ne.«cur».«_step» (.there ne.«cur».«path» (.there ne.«cur».«on» .here))))) .nil)))
   .nil)))))
   (.ret (.var .here) .nil)))))))))
 
-def body.«keyOf» : TStmts [sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«keyOf».params sig.«keyOf».result :=
-  (.const "s" (.stateGet .here .here (by decide) (.var (.there ne.«id».«this» .here)))
-  (.ifNullExit .here (by decide)
+noncomputable def body.«keyOf» : TStmts [sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«keyOf».params sig.«keyOf».result :=
+  (.const "s" (.stateGet .here .here (by decide +kernel) (.var (.there ne.«id».«this» .here)))
+  (.ifNullExit .here (by decide +kernel)
   (.ret (.str (js "")) .nil)
-  (.ret (.call (s := sig.«key») (.there (.there .here)) (by decide) (.cons (.var .here) (.cons (.var (.there ne.«id».«s» (.there ne.«id».«this» .here))) .nil))) .nil)))
+  (.ret (.call (s := sig.«key») (.there (.there .here)) (by decide +kernel) (.cons (.var .here) (.cons (.var (.there ne.«id».«s» (.there ne.«id».«this» .here))) .nil))) .nil)))
 
-def body.«setNext» : TStmts [sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«setNext».params sig.«setNext».result :=
-  (.const "l" (.stateGet .here (.there .here) (by decide) (.var (.there ne.«id».«this» .here)))
-  (.ifNullExit .here (by decide)
+noncomputable def body.«setNext» : TStmts [sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«setNext».params sig.«setNext».result :=
+  (.const "l" (.stateGet .here (.there .here) (by decide +kernel) (.var (.there ne.«id».«this» .here)))
+  (.ifNullExit .here (by decide +kernel)
   (.retVoid (.there ne.«this».«l» .here) .nil)
-  (.stateSet (.there ne.«this».«l» .here) (.there .here) (by decide) (.var (.there ne.«id».«l» (.there ne.«id».«this» .here))) (.update (.var .here) (.cons "next" (.var (.there ne.«next».«l» (.there ne.«next».«this» (.there ne.«next».«id» .here)))) .nil) (.keep (by decide) (.keep (by decide) (.set .here .nil))) (by decide))
+  (.stateSet (.there ne.«this».«l» .here) (.there .here) (by decide +kernel) (.var (.there ne.«id».«l» (.there ne.«id».«this» .here))) (.update (.var .here) (.cons "next" (.var (.there ne.«next».«l» (.there ne.«next».«this» (.there ne.«next».«id» .here)))) .nil) (.keep (by decide +kernel) (.keep (by decide +kernel) (.set .here .nil))) (by decide +kernel))
   (.retVoid (.there ne.«this».«l» .here) .nil))))
 
-def body.«setPrev» : TStmts [sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«setPrev».params sig.«setPrev».result :=
-  (.const "l" (.stateGet .here (.there .here) (by decide) (.var (.there ne.«id».«this» .here)))
-  (.ifNullExit .here (by decide)
+noncomputable def body.«setPrev» : TStmts [sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«setPrev».params sig.«setPrev».result :=
+  (.const "l" (.stateGet .here (.there .here) (by decide +kernel) (.var (.there ne.«id».«this» .here)))
+  (.ifNullExit .here (by decide +kernel)
   (.retVoid (.there ne.«this».«l» .here) .nil)
-  (.stateSet (.there ne.«this».«l» .here) (.there .here) (by decide) (.var (.there ne.«id».«l» (.there ne.«id».«this» .here))) (.update (.var .here) (.cons "prev" (.var (.there ne.«prev».«l» (.there ne.«prev».«this» (.there ne.«prev».«id» .here)))) .nil) (.keep (by decide) (.set .here (.keep (by decide) .nil))) (by decide))
+  (.stateSet (.there ne.«this».«l» .here) (.there .here) (by decide +kernel) (.var (.there ne.«id».«l» (.there ne.«id».«this» .here))) (.update (.var .here) (.cons "prev" (.var (.there ne.«prev».«l» (.there ne.«prev».«this» (.there ne.«prev».«id» .here)))) .nil) (.keep (by decide +kernel) (.set .here (.keep (by decide +kernel) .nil))) (by decide +kernel))
   (.retVoid (.there ne.«this».«l» .here) .nil))))
 
-def body.«unlink» : TStmts [sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«unlink».params sig.«unlink».result :=
-  (.const "l" (.stateGet .here (.there .here) (by decide) (.var (.there ne.«id».«this» .here)))
-  (.ifNullExit .here (by decide)
+noncomputable def body.«unlink» : TStmts [sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«unlink».params sig.«unlink».result :=
+  (.const "l" (.stateGet .here (.there .here) (by decide +kernel) (.var (.there ne.«id».«this» .here)))
+  (.ifNullExit .here (by decide +kernel)
   (.retVoid (.there ne.«this».«l» .here) .nil)
-  (.stateDelete (.there ne.«this».«l» .here) (.there .here) (by decide) (.var (.there ne.«id».«l» (.there ne.«id».«this» .here)))
-  (.const "e" (.stateGet (.there ne.«this».«l» .here) (.there (.there .here)) (by decide) (.field (.var .here) .here (by decide)))
-  (.ifNullExit .here (by decide)
+  (.stateDelete (.there ne.«this».«l» .here) (.there .here) (by decide +kernel) (.var (.there ne.«id».«l» (.there ne.«id».«this» .here)))
+  (.const "e" (.stateGet (.there ne.«this».«l» .here) (.there (.there .here)) (by decide +kernel) (.field (.var .here) .here (by decide +kernel)))
+  (.ifNullExit .here (by decide +kernel)
   (.retVoid (.there ne.«this».«e» (.there ne.«this».«l» .here)) .nil)
-  (.const "prev" (.call (s := sig.«orNone») (.there (.there (.there (.there (.there (.there .here)))))) (by decide) (.cons (.field (.var (.there ne.«l».«e» .here)) (.there .here) (by decide)) .nil))
-  (.const "next" (.call (s := sig.«orNone») (.there (.there (.there (.there (.there (.there .here)))))) (by decide) (.cons (.field (.var (.there ne.«l».«prev» (.there ne.«l».«e» .here))) (.there (.there .here)) (by decide)) .nil))
-  (.ite (.and (.bin (.eq (by decide)) (.var (.there ne.«prev».«next» .here)) (.str (js ""))) (.bin (.eq (by decide)) (.var .here) (.str (js ""))))
-  (.stateDelete (.there ne.«this».«next» (.there ne.«this».«prev» (.there ne.«this».«e» (.there ne.«this».«l» .here)))) (.there (.there .here)) (by decide) (.field (.var (.there ne.«l».«next» (.there ne.«l».«prev» (.there ne.«l».«e» .here)))) .here (by decide))
-  (.stateDelete (.there ne.«this».«next» (.there ne.«this».«prev» (.there ne.«this».«e» (.there ne.«this».«l» .here)))) (.there (.there (.there (.there .here)))) (by decide) (.field (.var (.there ne.«l».«next» (.there ne.«l».«prev» (.there ne.«l».«e» .here)))) .here (by decide))
+  (.const "prev" (.call (s := sig.«orNone») (.there (.there (.there (.there (.there (.there .here)))))) (by decide +kernel) (.cons (.field (.var (.there ne.«l».«e» .here)) (.there .here) (by decide +kernel)) .nil))
+  (.const "next" (.call (s := sig.«orNone») (.there (.there (.there (.there (.there (.there .here)))))) (by decide +kernel) (.cons (.field (.var (.there ne.«l».«prev» (.there ne.«l».«e» .here))) (.there (.there .here)) (by decide +kernel)) .nil))
+  (.ite (.and (.bin (.eq (by decide +kernel)) (.var (.there ne.«prev».«next» .here)) (.str (js ""))) (.bin (.eq (by decide +kernel)) (.var .here) (.str (js ""))))
+  (.stateDelete (.there ne.«this».«next» (.there ne.«this».«prev» (.there ne.«this».«e» (.there ne.«this».«l» .here)))) (.there (.there .here)) (by decide +kernel) (.field (.var (.there ne.«l».«next» (.there ne.«l».«prev» (.there ne.«l».«e» .here)))) .here (by decide +kernel))
+  (.stateDelete (.there ne.«this».«next» (.there ne.«this».«prev» (.there ne.«this».«e» (.there ne.«this».«l» .here)))) (.there (.there (.there (.there .here)))) (by decide +kernel) (.field (.var (.there ne.«l».«next» (.there ne.«l».«prev» (.there ne.«l».«e» .here)))) .here (by decide +kernel))
   (.retVoid (.there ne.«this».«next» (.there ne.«this».«prev» (.there ne.«this».«e» (.there ne.«this».«l» .here)))) .nil)))
   .nil
-  (.ite (.bin (.ne (by decide)) (.var (.there ne.«prev».«next» .here)) (.str (js "")))
-  (.callVoid (.there .here) (.there ne.«this».«next» (.there ne.«this».«prev» (.there ne.«this».«e» (.there ne.«this».«l» .here)))) (.cons (.var (.there ne.«prev».«next» .here)) (.cons (.field (.var (.there ne.«l».«next» (.there ne.«l».«prev» (.there ne.«l».«e» .here)))) (.there (.there .here)) (by decide)) .nil))
+  (.ite (.bin (.ne (by decide +kernel)) (.var (.there ne.«prev».«next» .here)) (.str (js "")))
+  (.callVoid (.there .here) (.there ne.«this».«next» (.there ne.«this».«prev» (.there ne.«this».«e» (.there ne.«this».«l» .here)))) (.cons (.var (.there ne.«prev».«next» .here)) (.cons (.field (.var (.there ne.«l».«next» (.there ne.«l».«prev» (.there ne.«l».«e» .here)))) (.there (.there .here)) (by decide +kernel)) .nil))
   .nil)
   .nil
-  (.ite (.bin (.ne (by decide)) (.var .here) (.str (js "")))
-  (.callVoid .here (.there ne.«this».«next» (.there ne.«this».«prev» (.there ne.«this».«e» (.there ne.«this».«l» .here)))) (.cons (.var .here) (.cons (.field (.var (.there ne.«l».«next» (.there ne.«l».«prev» (.there ne.«l».«e» .here)))) (.there .here) (by decide)) .nil))
+  (.ite (.bin (.ne (by decide +kernel)) (.var .here) (.str (js "")))
+  (.callVoid .here (.there ne.«this».«next» (.there ne.«this».«prev» (.there ne.«this».«e» (.there ne.«this».«l» .here)))) (.cons (.var .here) (.cons (.field (.var (.there ne.«l».«next» (.there ne.«l».«prev» (.there ne.«l».«e» .here)))) (.there .here) (by decide +kernel)) .nil))
   .nil)
   .nil
-  (.stateSet (.there ne.«this».«next» (.there ne.«this».«prev» (.there ne.«this».«e» (.there ne.«this».«l» .here)))) (.there (.there .here)) (by decide) (.field (.var (.there ne.«l».«next» (.there ne.«l».«prev» (.there ne.«l».«e» .here)))) .here (by decide)) (.record (.cons "first" (.cond (.bin (.eq (by decide)) (.var (.there ne.«prev».«next» .here)) (.str (js ""))) (.var .here) (.field (.var (.there ne.«e».«next» (.there ne.«e».«prev» .here))) .here (by decide))) (.cons "last" (.cond (.bin (.eq (by decide)) (.var .here) (.str (js ""))) (.var (.there ne.«prev».«next» .here)) (.field (.var (.there ne.«e».«next» (.there ne.«e».«prev» .here))) (.there .here) (by decide))) .nil)) (.cons .here (.cons (.there .here) .nil)) (by decide))
+  (.stateSet (.there ne.«this».«next» (.there ne.«this».«prev» (.there ne.«this».«e» (.there ne.«this».«l» .here)))) (.there (.there .here)) (by decide +kernel) (.field (.var (.there ne.«l».«next» (.there ne.«l».«prev» (.there ne.«l».«e» .here)))) .here (by decide +kernel)) (.record (.cons "first" (.cond (.bin (.eq (by decide +kernel)) (.var (.there ne.«prev».«next» .here)) (.str (js ""))) (.var .here) (.field (.var (.there ne.«e».«next» (.there ne.«e».«prev» .here))) .here (by decide +kernel))) (.cons "last" (.cond (.bin (.eq (by decide +kernel)) (.var .here) (.str (js ""))) (.var (.there ne.«prev».«next» .here)) (.field (.var (.there ne.«e».«next» (.there ne.«e».«prev» .here))) (.there .here) (by decide +kernel))) .nil)) (.cons .here (.cons (.there .here) .nil)) (by decide +kernel))
   (.retVoid (.there ne.«this».«next» (.there ne.«this».«prev» (.there ne.«this».«e» (.there ne.«this».«l» .here)))) .nil))))))))))))
 
-def body.«bury» : TStmts [sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«bury».params sig.«bury».result :=
-  (.stateSet .here (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide) (.var (.there ne.«id».«this» .here)) (.bool true)
-  (.ite (.bin (.eq (by decide)) (.var (.there ne.«by».«this» (.there ne.«by».«id» .here))) (.str (js "")))
-  (.stateDelete .here (.there (.there (.there (.there (.there (.there .here)))))) (by decide) (.var (.there ne.«id».«this» .here))
+noncomputable def body.«bury» : TStmts [sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«bury».params sig.«bury».result :=
+  (.stateSet .here (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide +kernel) (.var (.there ne.«id».«this» .here)) (.bool true)
+  (.ite (.bin (.eq (by decide +kernel)) (.var (.there ne.«by».«this» (.there ne.«by».«id» .here))) (.str (js "")))
+  (.stateDelete .here (.there (.there (.there (.there (.there (.there .here)))))) (by decide +kernel) (.var (.there ne.«id».«this» .here))
   .nil)
-  (.stateSet .here (.there (.there (.there (.there (.there (.there .here)))))) (by decide) (.var (.there ne.«id».«this» .here)) (.var (.there ne.«by».«this» (.there ne.«by».«id» .here)))
+  (.stateSet .here (.there (.there (.there (.there (.there (.there .here)))))) (by decide +kernel) (.var (.there ne.«id».«this» .here)) (.var (.there ne.«by».«this» (.there ne.«by».«id» .here)))
   .nil)
   (.retVoid .here .nil)))
 
-def body.«loadSpot» : TStmts [sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«loadSpot».params sig.«loadSpot».result :=
-  (.ite (.bin (.eq (by decide)) (.var (.there ne.«id».«this» .here)) (.call (s := sig.«root») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) (by decide) .nil))
+noncomputable def body.«loadSpot» : TStmts [sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«loadSpot».params sig.«loadSpot».result :=
+  (.ite (.bin (.eq (by decide +kernel)) (.var (.there ne.«id».«this» .here)) (.call (s := sig.«root») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) (by decide +kernel) .nil))
   (.retVoid .here .nil)
   .nil
-  (.stateSet .here .here (by decide) (.var (.there ne.«id».«this» .here)) (.var (.there ne.«s».«this» (.there ne.«s».«id» .here)))
-  (.stateSet .here (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide) (.var (.there ne.«id».«this» .here)) (.bool true)
+  (.stateSet .here .here (by decide +kernel) (.var (.there ne.«id».«this» .here)) (.var (.there ne.«s».«this» (.there ne.«s».«id» .here)))
+  (.stateSet .here (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide +kernel) (.var (.there ne.«id».«this» .here)) (.bool true)
   (.retVoid .here .nil))))
 
-def body.«loadPurge» : TStmts [sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«loadPurge».params sig.«loadPurge».result :=
-  (.stateSet .here (.there (.there (.there (.there (.there .here))))) (by decide) (.var (.there ne.«id».«this» .here)) (.var (.there ne.«stamp».«this» (.there ne.«stamp».«id» .here)))
+noncomputable def body.«loadPurge» : TStmts [sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«loadPurge».params sig.«loadPurge».result :=
+  (.stateSet .here (.there (.there (.there (.there (.there .here))))) (by decide +kernel) (.var (.there ne.«id».«this» .here)) (.var (.there ne.«stamp».«this» (.there ne.«stamp».«id» .here)))
   (.retVoid .here .nil))
 
-def body.«spotOf» : TStmts [sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«spotOf».params sig.«spotOf».result :=
-  (.ret (.stateGet .here .here (by decide) (.var (.there ne.«id».«this» .here))) .nil)
+noncomputable def body.«spotOf» : TStmts [sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«spotOf».params sig.«spotOf».result :=
+  (.ret (.stateGet .here .here (by decide +kernel) (.var (.there ne.«id».«this» .here))) .nil)
 
-def body.«parentOf» : TStmts [sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«parentOf».params sig.«parentOf».result :=
-  (.const "l" (.stateGet .here (.there .here) (by decide) (.var (.there ne.«id».«this» .here)))
-  (.ret (.condNull .here (by decide) (.str (js "")) (.field (.var .here) .here (by decide))) .nil))
+noncomputable def body.«parentOf» : TStmts [sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«parentOf».params sig.«parentOf».result :=
+  (.const "l" (.stateGet .here (.there .here) (by decide +kernel) (.var (.there ne.«id».«this» .here)))
+  (.ret (.condNull .here (by decide +kernel) (.str (js "")) (.field (.var .here) .here (by decide +kernel))) .nil))
 
-def body.«burialOf» : TStmts [sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«burialOf».params sig.«burialOf».result :=
+noncomputable def body.«burialOf» : TStmts [sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«burialOf».params sig.«burialOf».result :=
   (.const "p" (.callThis .here .here (.cons (.var (.there ne.«id».«this» .here)) .nil))
-  (.const "above" (.cond (.or (.bin (.eq (by decide)) (.var .here) (.str (js ""))) (.bin (.eq (by decide)) (.var .here) (.call (s := sig.«root») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))) (by decide) .nil))) (.str (js "")) (.call (s := sig.«orNone») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) (by decide) (.cons (.cond (.stateHas (.there ne.«this».«p» .here) .here (.var .here)) (.stateGet (.there ne.«this».«p» .here) (.there (.there (.there (.there (.there (.there .here)))))) (by decide) (.var .here)) (.stateGet (.there ne.«this».«p» .here) (.there (.there (.there (.there (.there .here))))) (by decide) (.var .here))) .nil)))
-  (.ret (.call (s := sig.«minStamp») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))) (by decide) (.cons (.call (s := sig.«orNone») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) (by decide) (.cons (.stateGet (.there ne.«this».«above» (.there ne.«this».«p» .here)) (.there (.there (.there (.there (.there .here))))) (by decide) (.var (.there ne.«id».«above» (.there ne.«id».«p» (.there ne.«id».«this» .here))))) .nil)) (.cons (.var .here) .nil))) .nil)))
+  (.const "above" (.cond (.or (.bin (.eq (by decide +kernel)) (.var .here) (.str (js ""))) (.bin (.eq (by decide +kernel)) (.var .here) (.call (s := sig.«root») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))) (by decide +kernel) .nil))) (.str (js "")) (.call (s := sig.«orNone») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) (by decide +kernel) (.cons (.cond (.stateHas (.there ne.«this».«p» .here) .here (.var .here)) (.stateGet (.there ne.«this».«p» .here) (.there (.there (.there (.there (.there (.there .here)))))) (by decide +kernel) (.var .here)) (.stateGet (.there ne.«this».«p» .here) (.there (.there (.there (.there (.there .here))))) (by decide +kernel) (.var .here))) .nil)))
+  (.ret (.call (s := sig.«minStamp») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))) (by decide +kernel) (.cons (.call (s := sig.«orNone») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) (by decide +kernel) (.cons (.stateGet (.there ne.«this».«above» (.there ne.«this».«p» .here)) (.there (.there (.there (.there (.there .here))))) (by decide +kernel) (.var (.there ne.«id».«above» (.there ne.«id».«p» (.there ne.«id».«this» .here))))) .nil)) (.cons (.var .here) .nil))) .nil)))
 
-def body.«firstChild» : TStmts [sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«firstChild».params sig.«firstChild».result :=
-  (.const "e" (.stateGet .here (.there (.there .here)) (by decide) (.var (.there ne.«id».«this» .here)))
-  (.ret (.condNull .here (by decide) (.str (js "")) (.field (.var .here) .here (by decide))) .nil))
+noncomputable def body.«firstChild» : TStmts [sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«firstChild».params sig.«firstChild».result :=
+  (.const "e" (.stateGet .here (.there (.there .here)) (by decide +kernel) (.var (.there ne.«id».«this» .here)))
+  (.ret (.condNull .here (by decide +kernel) (.str (js "")) (.field (.var .here) .here (by decide +kernel))) .nil))
 
-def body.«lastChild» : TStmts [sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«lastChild».params sig.«lastChild».result :=
-  (.const "e" (.stateGet .here (.there (.there .here)) (by decide) (.var (.there ne.«id».«this» .here)))
-  (.ret (.condNull .here (by decide) (.str (js "")) (.field (.var .here) (.there .here) (by decide))) .nil))
+noncomputable def body.«lastChild» : TStmts [sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«lastChild».params sig.«lastChild».result :=
+  (.const "e" (.stateGet .here (.there (.there .here)) (by decide +kernel) (.var (.there ne.«id».«this» .here)))
+  (.ret (.condNull .here (by decide +kernel) (.str (js "")) (.field (.var .here) (.there .here) (by decide +kernel))) .nil))
 
-def body.«link» : TStmts [sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«link».params sig.«link».result :=
+noncomputable def body.«link» : TStmts [sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«link».params sig.«link».result :=
   (.const "last" (.callThis .here .here (.cons (.var (.there ne.«parent».«this» (.there ne.«parent».«id» .here))) .nil))
-  (.ite (.bin (.eq (by decide)) (.var .here) (.str (js "")))
-  (.stateSet (.there ne.«this».«last» .here) (.there (.there .here)) (by decide) (.var (.there ne.«parent».«last» (.there ne.«parent».«this» (.there ne.«parent».«id» .here)))) (.record (.cons "first" (.var (.there ne.«id».«last» (.there ne.«id».«this» .here))) (.cons "last" (.var (.there ne.«id».«last» (.there ne.«id».«this» .here))) .nil)) (.cons .here (.cons (.there .here) .nil)) (by decide))
-  (.stateSet (.there ne.«this».«last» .here) (.there .here) (by decide) (.var (.there ne.«id».«last» (.there ne.«id».«this» .here))) (.record (.cons "parent" (.var (.there ne.«parent».«last» (.there ne.«parent».«this» (.there ne.«parent».«id» .here)))) .nil) (.cons .here (.absent (by decide) (.absent (by decide) .nil))) (by decide))
+  (.ite (.bin (.eq (by decide +kernel)) (.var .here) (.str (js "")))
+  (.stateSet (.there ne.«this».«last» .here) (.there (.there .here)) (by decide +kernel) (.var (.there ne.«parent».«last» (.there ne.«parent».«this» (.there ne.«parent».«id» .here)))) (.record (.cons "first" (.var (.there ne.«id».«last» (.there ne.«id».«this» .here))) (.cons "last" (.var (.there ne.«id».«last» (.there ne.«id».«this» .here))) .nil)) (.cons .here (.cons (.there .here) .nil)) (by decide +kernel))
+  (.stateSet (.there ne.«this».«last» .here) (.there .here) (by decide +kernel) (.var (.there ne.«id».«last» (.there ne.«id».«this» .here))) (.record (.cons "parent" (.var (.there ne.«parent».«last» (.there ne.«parent».«this» (.there ne.«parent».«id» .here)))) .nil) (.cons .here (.absent (by decide +kernel) (.absent (by decide +kernel) .nil))) (by decide +kernel))
   .nil))
   (.callVoid (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) (.there ne.«this».«last» .here) (.cons (.var .here) (.cons (.widen (.some .undef .string) (.var (.there ne.«id».«last» (.there ne.«id».«this» .here)))) .nil))
-  (.stateSet (.there ne.«this».«last» .here) (.there .here) (by decide) (.var (.there ne.«id».«last» (.there ne.«id».«this» .here))) (.record (.cons "parent" (.var (.there ne.«parent».«last» (.there ne.«parent».«this» (.there ne.«parent».«id» .here)))) (.cons "prev" (.widen (.some .undef .string) (.var .here)) .nil)) (.cons .here (.cons (.there .here) (.absent (by decide) .nil))) (by decide))
-  (.stateSet (.there ne.«this».«last» .here) (.there (.there .here)) (by decide) (.var (.there ne.«parent».«last» (.there ne.«parent».«this» (.there ne.«parent».«id» .here)))) (.record (.cons "first" (.callThis (.there .here) (.there ne.«this».«last» .here) (.cons (.var (.there ne.«parent».«last» (.there ne.«parent».«this» (.there ne.«parent».«id» .here)))) .nil)) (.cons "last" (.var (.there ne.«id».«last» (.there ne.«id».«this» .here))) .nil)) (.cons .here (.cons (.there .here) .nil)) (by decide))
+  (.stateSet (.there ne.«this».«last» .here) (.there .here) (by decide +kernel) (.var (.there ne.«id».«last» (.there ne.«id».«this» .here))) (.record (.cons "parent" (.var (.there ne.«parent».«last» (.there ne.«parent».«this» (.there ne.«parent».«id» .here)))) (.cons "prev" (.widen (.some .undef .string) (.var .here)) .nil)) (.cons .here (.cons (.there .here) (.absent (by decide +kernel) .nil))) (by decide +kernel))
+  (.stateSet (.there ne.«this».«last» .here) (.there (.there .here)) (by decide +kernel) (.var (.there ne.«parent».«last» (.there ne.«parent».«this» (.there ne.«parent».«id» .here)))) (.record (.cons "first" (.callThis (.there .here) (.there ne.«this».«last» .here) (.cons (.var (.there ne.«parent».«last» (.there ne.«parent».«this» (.there ne.«parent».«id» .here)))) .nil)) (.cons "last" (.var (.there ne.«id».«last» (.there ne.«id».«this» .here))) .nil)) (.cons .here (.cons (.there .here) .nil)) (by decide +kernel))
   .nil)))
-  (.ite (.and (.and (.bin (.ne (by decide)) (.var (.there ne.«parent».«last» (.there ne.«parent».«this» (.there ne.«parent».«id» .here)))) (.call (s := sig.«root») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) (by decide) .nil)) (.not (.stateHas (.there ne.«this».«last» .here) .here (.var (.there ne.«parent».«last» (.there ne.«parent».«this» (.there ne.«parent».«id» .here))))))) (.not (.stateHas (.there ne.«this».«last» .here) (.there (.there (.there (.there (.there .here))))) (.var (.there ne.«parent».«last» (.there ne.«parent».«this» (.there ne.«parent».«id» .here)))))))
-  (.stateSet (.there ne.«this».«last» .here) (.there (.there (.there (.there .here)))) (by decide) (.var (.there ne.«parent».«last» (.there ne.«parent».«this» (.there ne.«parent».«id» .here)))) (.bool true)
+  (.ite (.and (.and (.bin (.ne (by decide +kernel)) (.var (.there ne.«parent».«last» (.there ne.«parent».«this» (.there ne.«parent».«id» .here)))) (.call (s := sig.«root») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) (by decide +kernel) .nil)) (.not (.stateHas (.there ne.«this».«last» .here) .here (.var (.there ne.«parent».«last» (.there ne.«parent».«this» (.there ne.«parent».«id» .here))))))) (.not (.stateHas (.there ne.«this».«last» .here) (.there (.there (.there (.there (.there .here))))) (.var (.there ne.«parent».«last» (.there ne.«parent».«this» (.there ne.«parent».«id» .here)))))))
+  (.stateSet (.there ne.«this».«last» .here) (.there (.there (.there (.there .here)))) (by decide +kernel) (.var (.there ne.«parent».«last» (.there ne.«parent».«this» (.there ne.«parent».«id» .here)))) (.bool true)
   .nil)
   .nil
   (.retVoid (.there ne.«this».«last» .here) .nil))))
 
-def body.«loadLink» : TStmts [sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«loadLink».params sig.«loadLink».result :=
+noncomputable def body.«loadLink» : TStmts [sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«loadLink».params sig.«loadLink».result :=
   (.ite (.or (.not (.stateHas .here .here (.var (.there ne.«id».«this» .here)))) (.stateHas .here (.there .here) (.var (.there ne.«id».«this» .here))))
   (.retVoid .here .nil)
   .nil
   (.callVoid .here .here (.cons (.var (.there ne.«id».«this» .here)) (.cons (.var (.there ne.«parent».«this» (.there ne.«parent».«id» .here))) .nil))
   (.retVoid .here .nil)))
 
-def body.«nextSibling» : TStmts [sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«nextSibling».params sig.«nextSibling».result :=
-  (.const "l" (.stateGet .here (.there .here) (by decide) (.var (.there ne.«id».«this» .here)))
-  (.ret (.condNull .here (by decide) (.str (js "")) (.call (s := sig.«orNone») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) (by decide) (.cons (.field (.var .here) (.there (.there .here)) (by decide)) .nil))) .nil))
+noncomputable def body.«nextSibling» : TStmts [sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«nextSibling».params sig.«nextSibling».result :=
+  (.const "l" (.stateGet .here (.there .here) (by decide +kernel) (.var (.there ne.«id».«this» .here)))
+  (.ret (.condNull .here (by decide +kernel) (.str (js "")) (.call (s := sig.«orNone») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) (by decide +kernel) (.cons (.field (.var .here) (.there (.there .here)) (by decide +kernel)) .nil))) .nil))
 
-def body.«settle» : TStmts [sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«settle».params sig.«settle».result :=
+noncomputable def body.«settle» : TStmts [sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«settle».params sig.«settle».result :=
   (.const "steps" (.bin .nadd (.bin .nmul (.num 2) (.stateSize .here (.there .here))) (.num 2))
   (.let_ "cur" (.var (.there ne.«start».«steps» (.there ne.«start».«this» .here)))
   (.let_ "down" (.bool true)
   (.forRange "_step" (.there ne.«steps».«down» (.there ne.«steps».«cur» .here))
   (.ite (.var (.there ne.«down».«_step» .here))
   (.let_ "deeper" (.bool true)
-  (.ite (.and (.bin (.ne (by decide)) (.var (.there ne.«cur».«deeper» (.there ne.«cur».«_step» (.there ne.«cur».«down» .here)))) (.call (s := sig.«root») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) (by decide) .nil)) (.stateHas (.there ne.«this».«deeper» (.there ne.«this».«_step» (.there ne.«this».«down» (.there ne.«this».«cur» (.there ne.«this».«steps» .here))))) .here (.var (.there ne.«cur».«deeper» (.there ne.«cur».«_step» (.there ne.«cur».«down» .here))))))
+  (.ite (.and (.bin (.ne (by decide +kernel)) (.var (.there ne.«cur».«deeper» (.there ne.«cur».«_step» (.there ne.«cur».«down» .here)))) (.call (s := sig.«root») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) (by decide +kernel) .nil)) (.stateHas (.there ne.«this».«deeper» (.there ne.«this».«_step» (.there ne.«this».«down» (.there ne.«this».«cur» (.there ne.«this».«steps» .here))))) .here (.var (.there ne.«cur».«deeper» (.there ne.«cur».«_step» (.there ne.«cur».«down» .here))))))
   (.const "by" (.callThis (.there (.there (.there (.there (.there .here))))) (.there ne.«this».«deeper» (.there ne.«this».«_step» (.there ne.«this».«down» (.there ne.«this».«cur» (.there ne.«this».«steps» .here))))) (.cons (.var (.there ne.«cur».«deeper» (.there ne.«cur».«_step» (.there ne.«cur».«down» .here)))) .nil))
-  (.ite (.bin (.ne (by decide)) (.var .here) (.call (s := sig.«orNone») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) (by decide) (.cons (.stateGet (.there ne.«this».«by» (.there ne.«this».«deeper» (.there ne.«this».«_step» (.there ne.«this».«down» (.there ne.«this».«cur» (.there ne.«this».«steps» .here)))))) (.there (.there (.there (.there (.there (.there .here)))))) (by decide) (.var (.there ne.«cur».«by» (.there ne.«cur».«deeper» (.there ne.«cur».«_step» (.there ne.«cur».«down» .here)))))) .nil)))
+  (.ite (.bin (.ne (by decide +kernel)) (.var .here) (.call (s := sig.«orNone») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) (by decide +kernel) (.cons (.stateGet (.there ne.«this».«by» (.there ne.«this».«deeper» (.there ne.«this».«_step» (.there ne.«this».«down» (.there ne.«this».«cur» (.there ne.«this».«steps» .here)))))) (.there (.there (.there (.there (.there (.there .here)))))) (by decide +kernel) (.var (.there ne.«cur».«by» (.there ne.«cur».«deeper» (.there ne.«cur».«_step» (.there ne.«cur».«down» .here)))))) .nil)))
   (.callVoid (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) (.there ne.«this».«by» (.there ne.«this».«deeper» (.there ne.«this».«_step» (.there ne.«this».«down» (.there ne.«this».«cur» (.there ne.«this».«steps» .here)))))) (.cons (.var (.there ne.«cur».«by» (.there ne.«cur».«deeper» (.there ne.«cur».«_step» (.there ne.«cur».«down» .here))))) (.cons (.var .here) .nil))
   .nil)
   (.assign (.there ne.«deeper».«by» .here) (.var (.there ne.«all».«by» (.there ne.«all».«deeper» (.there ne.«all».«_step» (.there ne.«all».«down» (.there ne.«all».«cur» (.there ne.«all».«steps» (.there ne.«all».«this» (.there ne.«all».«start» .here)))))))))
@@ -712,18 +712,18 @@ def body.«settle» : TStmts [sig.«nextSibling», sig.«loadLink», sig.«link�
   .nil))
   .nil
   (.const "first" (.cond (.var .here) (.callThis (.there (.there (.there (.there .here)))) (.there ne.«this».«deeper» (.there ne.«this».«_step» (.there ne.«this».«down» (.there ne.«this».«cur» (.there ne.«this».«steps» .here))))) (.cons (.var (.there ne.«cur».«deeper» (.there ne.«cur».«_step» (.there ne.«cur».«down» .here)))) .nil)) (.str (js "")))
-  (.ite (.bin (.ne (by decide)) (.var .here) (.str (js "")))
+  (.ite (.bin (.ne (by decide +kernel)) (.var .here) (.str (js "")))
   (.assign (.there ne.«cur».«first» (.there ne.«cur».«deeper» (.there ne.«cur».«_step» (.there ne.«cur».«down» .here)))) (.var .here)
   (.cont .nil))
   .nil
   (.assign (.there ne.«down».«first» (.there ne.«down».«deeper» (.there ne.«down».«_step» .here))) (.bool false)
   .nil)))))
   .nil
-  (.ite (.bin (.eq (by decide)) (.var (.there ne.«cur».«_step» (.there ne.«cur».«down» .here))) (.var (.there ne.«start».«_step» (.there ne.«start».«down» (.there ne.«start».«cur» (.there ne.«start».«steps» (.there ne.«start».«this» .here)))))))
+  (.ite (.bin (.eq (by decide +kernel)) (.var (.there ne.«cur».«_step» (.there ne.«cur».«down» .here))) (.var (.there ne.«start».«_step» (.there ne.«start».«down» (.there ne.«start».«cur» (.there ne.«start».«steps» (.there ne.«start».«this» .here)))))))
   (.retVoid (.there ne.«this».«_step» (.there ne.«this».«down» (.there ne.«this».«cur» (.there ne.«this».«steps» .here)))) .nil)
   .nil
   (.const "next" (.callThis .here (.there ne.«this».«_step» (.there ne.«this».«down» (.there ne.«this».«cur» (.there ne.«this».«steps» .here)))) (.cons (.var (.there ne.«cur».«_step» (.there ne.«cur».«down» .here))) .nil))
-  (.ite (.bin (.ne (by decide)) (.var .here) (.str (js "")))
+  (.ite (.bin (.ne (by decide +kernel)) (.var .here) (.str (js "")))
   (.assign (.there ne.«cur».«next» (.there ne.«cur».«_step» (.there ne.«cur».«down» .here))) (.var .here)
   (.assign (.there ne.«down».«next» (.there ne.«down».«_step» .here)) (.bool true)
   (.cont .nil)))
@@ -732,29 +732,29 @@ def body.«settle» : TStmts [sig.«nextSibling», sig.«loadLink», sig.«link�
   .nil)))))
   (.retVoid (.there ne.«this».«down» (.there ne.«this».«cur» (.there ne.«this».«steps» .here))) .nil)))))
 
-def body.«attach» : TStmts [sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«attach».params sig.«attach».result :=
-  (.const "s" (.stateGet .here .here (by decide) (.var (.there ne.«id».«this» .here)))
-  (.ifNullExit .here (by decide)
+noncomputable def body.«attach» : TStmts [sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«attach».params sig.«attach».result :=
+  (.const "s" (.stateGet .here .here (by decide +kernel) (.var (.there ne.«id».«this» .here)))
+  (.ifNullExit .here (by decide +kernel)
   (.retVoid (.there ne.«this».«s» .here) .nil)
   (.const "cycle" (.callThis (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))) (.there ne.«this».«s» .here) (.cons (.var (.there ne.«id».«s» (.there ne.«id».«this» .here))) .nil))
-  (.const "mine" (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) (by decide) (.cons (.var (.there ne.«s».«cycle» .here)) (.cons (.var (.there ne.«id».«cycle» (.there ne.«id».«s» (.there ne.«id».«this» .here)))) .nil)))
-  (.const "detach" (.and (.bin .ngt (.length (.var (.there ne.«cycle».«mine» .here))) (.num 0)) (.all (.var (.there ne.«cycle».«mine» .here)) (.arrow "c" (.or (.bin (.eq (by decide)) (.var .here) (.var (.there ne.«id».«c» (.there ne.«id».«mine» (.there ne.«id».«cycle» (.there ne.«id».«s» (.there ne.«id».«this» .here))))))) (.bin .slt (.callThis (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))) (.there ne.«this».«c» (.there ne.«this».«mine» (.there ne.«this».«cycle» (.there ne.«this».«s» .here)))) (.cons (.var .here) .nil)) (.var (.there ne.«mine».«c» .here)))))))
+  (.const "mine" (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«s».«cycle» .here)) (.cons (.var (.there ne.«id».«cycle» (.there ne.«id».«s» (.there ne.«id».«this» .here)))) .nil)))
+  (.const "detach" (.and (.bin .ngt (.length (.var (.there ne.«cycle».«mine» .here))) (.num 0)) (.all (.var (.there ne.«cycle».«mine» .here)) (.arrow "c" (.or (.bin (.eq (by decide +kernel)) (.var .here) (.var (.there ne.«id».«c» (.there ne.«id».«mine» (.there ne.«id».«cycle» (.there ne.«id».«s» (.there ne.«id».«this» .here))))))) (.bin .slt (.callThis (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))) (.there ne.«this».«c» (.there ne.«this».«mine» (.there ne.«this».«cycle» (.there ne.«this».«s» .here)))) (.cons (.var .here) .nil)) (.var (.there ne.«mine».«c» .here)))))))
   (.ite (.var .here)
-  (.stateSet (.there ne.«this».«detach» (.there ne.«this».«mine» (.there ne.«this».«cycle» (.there ne.«this».«s» .here)))) (.there (.there (.there .here))) (by decide) (.var (.there ne.«id».«detach» (.there ne.«id».«mine» (.there ne.«id».«cycle» (.there ne.«id».«s» (.there ne.«id».«this» .here)))))) (.bool true)
+  (.stateSet (.there ne.«this».«detach» (.there ne.«this».«mine» (.there ne.«this».«cycle» (.there ne.«this».«s» .here)))) (.there (.there (.there .here))) (by decide +kernel) (.var (.there ne.«id».«detach» (.there ne.«id».«mine» (.there ne.«id».«cycle» (.there ne.«id».«s» (.there ne.«id».«this» .here)))))) (.bool true)
   .nil)
-  (.stateDelete (.there ne.«this».«detach» (.there ne.«this».«mine» (.there ne.«this».«cycle» (.there ne.«this».«s» .here)))) (.there (.there (.there .here))) (by decide) (.var (.there ne.«id».«detach» (.there ne.«id».«mine» (.there ne.«id».«cycle» (.there ne.«id».«s» (.there ne.«id».«this» .here))))))
+  (.stateDelete (.there ne.«this».«detach» (.there ne.«this».«mine» (.there ne.«this».«cycle» (.there ne.«this».«s» .here)))) (.there (.there (.there .here))) (by decide +kernel) (.var (.there ne.«id».«detach» (.there ne.«id».«mine» (.there ne.«id».«cycle» (.there ne.«id».«s» (.there ne.«id».«this» .here))))))
   .nil)
-  (.const "parent" (.cond (.var .here) (.call (s := sig.«root») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))) (by decide) .nil) (.field (.var (.there ne.«s».«detach» (.there ne.«s».«mine» (.there ne.«s».«cycle» .here)))) .here (by decide)))
-  (.ite (.bin (.eq (by decide)) (.callThis (.there (.there (.there (.there (.there (.there (.there .here))))))) (.there ne.«this».«parent» (.there ne.«this».«detach» (.there ne.«this».«mine» (.there ne.«this».«cycle» (.there ne.«this».«s» .here))))) (.cons (.var (.there ne.«id».«parent» (.there ne.«id».«detach» (.there ne.«id».«mine» (.there ne.«id».«cycle» (.there ne.«id».«s» (.there ne.«id».«this» .here))))))) .nil)) (.var .here))
+  (.const "parent" (.cond (.var .here) (.call (s := sig.«root») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))) (by decide +kernel) .nil) (.field (.var (.there ne.«s».«detach» (.there ne.«s».«mine» (.there ne.«s».«cycle» .here)))) .here (by decide +kernel)))
+  (.ite (.bin (.eq (by decide +kernel)) (.callThis (.there (.there (.there (.there (.there (.there (.there .here))))))) (.there ne.«this».«parent» (.there ne.«this».«detach» (.there ne.«this».«mine» (.there ne.«this».«cycle» (.there ne.«this».«s» .here))))) (.cons (.var (.there ne.«id».«parent» (.there ne.«id».«detach» (.there ne.«id».«mine» (.there ne.«id».«cycle» (.there ne.«id».«s» (.there ne.«id».«this» .here))))))) .nil)) (.var .here))
   (.retVoid (.there ne.«this».«parent» (.there ne.«this».«detach» (.there ne.«this».«mine» (.there ne.«this».«cycle» (.there ne.«this».«s» .here))))) .nil)
   .nil
   (.callVoid (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) (.there ne.«this».«parent» (.there ne.«this».«detach» (.there ne.«this».«mine» (.there ne.«this».«cycle» (.there ne.«this».«s» .here))))) (.cons (.var (.there ne.«id».«parent» (.there ne.«id».«detach» (.there ne.«id».«mine» (.there ne.«id».«cycle» (.there ne.«id».«s» (.there ne.«id».«this» .here))))))) .nil)
   (.callVoid (.there (.there (.there .here))) (.there ne.«this».«parent» (.there ne.«this».«detach» (.there ne.«this».«mine» (.there ne.«this».«cycle» (.there ne.«this».«s» .here))))) (.cons (.var (.there ne.«id».«parent» (.there ne.«id».«detach» (.there ne.«id».«mine» (.there ne.«id».«cycle» (.there ne.«id».«s» (.there ne.«id».«this» .here))))))) (.cons (.var .here) .nil))
-  (.stateSet (.there ne.«this».«parent» (.there ne.«this».«detach» (.there ne.«this».«mine» (.there ne.«this».«cycle» (.there ne.«this».«s» .here))))) (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide) (.var (.there ne.«id».«parent» (.there ne.«id».«detach» (.there ne.«id».«mine» (.there ne.«id».«cycle» (.there ne.«id».«s» (.there ne.«id».«this» .here))))))) (.bool true)
+  (.stateSet (.there ne.«this».«parent» (.there ne.«this».«detach» (.there ne.«this».«mine» (.there ne.«this».«cycle» (.there ne.«this».«s» .here))))) (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide +kernel) (.var (.there ne.«id».«parent» (.there ne.«id».«detach» (.there ne.«id».«mine» (.there ne.«id».«cycle» (.there ne.«id».«s» (.there ne.«id».«this» .here))))))) (.bool true)
   (.callVoid .here (.there ne.«this».«parent» (.there ne.«this».«detach» (.there ne.«this».«mine» (.there ne.«this».«cycle» (.there ne.«this».«s» .here))))) (.cons (.var (.there ne.«id».«parent» (.there ne.«id».«detach» (.there ne.«id».«mine» (.there ne.«id».«cycle» (.there ne.«id».«s» (.there ne.«id».«this» .here))))))) (.cons (.bool false) .nil))
   (.retVoid (.there ne.«this».«parent» (.there ne.«this».«detach» (.there ne.«this».«mine» (.there ne.«this».«cycle» (.there ne.«this».«s» .here))))) .nil)))))))))))))
 
-def body.«rearrange» : TStmts [sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«rearrange».params sig.«rearrange».result :=
+noncomputable def body.«rearrange» : TStmts [sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«rearrange».params sig.«rearrange».result :=
   (.const "cycle" (.callThis (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) .here (.cons (.var (.there ne.«id».«this» .here)) .nil))
   (.const "detached" (.array (τ := .string) (.spreadKeys (.there ne.«this».«cycle» .here) (.there (.there (.there .here))) .nil))
   (.callVoid .here (.there ne.«this».«detached» (.there ne.«this».«cycle» .here)) (.cons (.var (.there ne.«id».«detached» (.there ne.«id».«cycle» (.there ne.«id».«this» .here)))) .nil)
@@ -766,109 +766,113 @@ def body.«rearrange» : TStmts [sig.«attach», sig.«settle», sig.«nextSibli
   .nil)
   (.retVoid (.there ne.«this».«detached» (.there ne.«this».«cycle» .here)) .nil))))))
 
-def body.«create» : TStmts [sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«create».params sig.«create».result :=
-  (.ite (.or (.bin (.eq (by decide)) (.var (.there ne.«id».«this» .here)) (.call (s := sig.«root») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))) (by decide) .nil)) (.stateHas .here .here (.var (.there ne.«id».«this» .here))))
+noncomputable def body.«create» : TStmts [sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«create».params sig.«create».result :=
+  (.ite (.or (.bin (.eq (by decide +kernel)) (.var (.there ne.«id».«this» .here)) (.call (s := sig.«root») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))) (by decide +kernel) .nil)) (.stateHas .here .here (.var (.there ne.«id».«this» .here))))
   (.retVoid .here .nil)
   .nil
-  (.stateSet .here .here (by decide) (.var (.there ne.«id».«this» .here)) (.record (.cons "want" (.var (.there ne.«parent».«this» (.there ne.«parent».«id» .here))) (.cons "name" (.var (.there ne.«name».«this» (.there ne.«name».«id» (.there ne.«name».«parent» .here)))) (.cons "made" (.widen (.some .undef .string) (.var (.there ne.«stamp».«this» (.there ne.«stamp».«id» (.there ne.«stamp».«parent» (.there ne.«stamp».«name» .here)))))) .nil))) (.cons .here (.cons (.there .here) (.absent (by decide) (.cons (.there (.there .here)) .nil)))) (by decide))
-  (.stateDelete .here (.there (.there (.there (.there .here)))) (by decide) (.var (.there ne.«id».«this» .here))
-  (.stateSet .here (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide) (.var (.there ne.«id».«this» .here)) (.bool true)
+  (.stateSet .here .here (by decide +kernel) (.var (.there ne.«id».«this» .here)) (.record (.cons "want" (.var (.there ne.«parent».«this» (.there ne.«parent».«id» .here))) (.cons "name" (.var (.there ne.«name».«this» (.there ne.«name».«id» (.there ne.«name».«parent» .here)))) (.cons "made" (.widen (.some .undef .string) (.var (.there ne.«stamp».«this» (.there ne.«stamp».«id» (.there ne.«stamp».«parent» (.there ne.«stamp».«name» .here)))))) .nil))) (.cons .here (.cons (.there .here) (.absent (by decide +kernel) (.cons (.there (.there .here)) .nil)))) (by decide +kernel))
+  (.stateDelete .here (.there (.there (.there (.there .here)))) (by decide +kernel) (.var (.there ne.«id».«this» .here))
+  (.stateSet .here (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide +kernel) (.var (.there ne.«id».«this» .here)) (.bool true)
   (.callVoid .here .here (.cons (.var (.there ne.«id».«this» .here)) .nil)
   (.retVoid .here .nil))))))
 
-def body.«position» : TStmts [sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«position».params sig.«position».result :=
-  (.const "s" (.stateGet .here .here (by decide) (.var (.there ne.«id».«this» .here)))
-  (.ifNullExit .here (by decide)
+noncomputable def body.«position» : TStmts [sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«position».params sig.«position».result :=
+  (.const "s" (.stateGet .here .here (by decide +kernel) (.var (.there ne.«id».«this» .here)))
+  (.ifNullExit .here (by decide +kernel)
   (.retVoid (.there ne.«this».«s» .here) .nil)
   (.ite (.var (.there ne.«move».«s» (.there ne.«move».«this» (.there ne.«move».«id» (.there ne.«move».«parent» (.there ne.«move».«name» (.there ne.«move».«stamp» .here)))))))
-  (.ite (.not (.call (s := sig.«newer») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))) (by decide) (.cons (.field (.var .here) (.there (.there .here)) (by decide)) (.cons (.var (.there ne.«stamp».«s» (.there ne.«stamp».«this» (.there ne.«stamp».«id» (.there ne.«stamp».«parent» (.there ne.«stamp».«name» .here)))))) .nil))))
+  (.ite (.not (.call (s := sig.«newer») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))) (by decide +kernel) (.cons (.field (.var .here) (.there (.there .here)) (by decide +kernel)) (.cons (.var (.there ne.«stamp».«s» (.there ne.«stamp».«this» (.there ne.«stamp».«id» (.there ne.«stamp».«parent» (.there ne.«stamp».«name» .here)))))) .nil))))
   (.retVoid (.there ne.«this».«s» .here) .nil)
   .nil
-  (.stateSet (.there ne.«this».«s» .here) .here (by decide) (.var (.there ne.«id».«s» (.there ne.«id».«this» .here))) (.update (.var .here) (.cons "want" (.var (.there ne.«parent».«s» (.there ne.«parent».«this» (.there ne.«parent».«id» .here)))) (.cons "name" (.var (.there ne.«name».«s» (.there ne.«name».«this» (.there ne.«name».«id» (.there ne.«name».«parent» .here))))) (.cons "pos" (.widen (.some .undef .string) (.var (.there ne.«stamp».«s» (.there ne.«stamp».«this» (.there ne.«stamp».«id» (.there ne.«stamp».«parent» (.there ne.«stamp».«name» .here))))))) .nil))) (.set .here (.set (.there .here) (.set (.there (.there .here)) (.keep (by decide) .nil)))) (by decide))
+  (.stateSet (.there ne.«this».«s» .here) .here (by decide +kernel) (.var (.there ne.«id».«s» (.there ne.«id».«this» .here))) (.update (.var .here) (.cons "want" (.var (.there ne.«parent».«s» (.there ne.«parent».«this» (.there ne.«parent».«id» .here)))) (.cons "name" (.var (.there ne.«name».«s» (.there ne.«name».«this» (.there ne.«name».«id» (.there ne.«name».«parent» .here))))) (.cons "pos" (.widen (.some .undef .string) (.var (.there ne.«stamp».«s» (.there ne.«stamp».«this» (.there ne.«stamp».«id» (.there ne.«stamp».«parent» (.there ne.«stamp».«name» .here))))))) .nil))) (.set .here (.set (.there .here) (.set (.there (.there .here)) (.keep (by decide +kernel) .nil)))) (by decide +kernel))
   .nil))
-  (.ite (.not (.call (s := sig.«earlier») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))) (by decide) (.cons (.field (.var .here) (.there (.there (.there .here))) (by decide)) (.cons (.var (.there ne.«stamp».«s» (.there ne.«stamp».«this» (.there ne.«stamp».«id» (.there ne.«stamp».«parent» (.there ne.«stamp».«name» .here)))))) .nil))))
+  (.ite (.not (.call (s := sig.«earlier») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))) (by decide +kernel) (.cons (.field (.var .here) (.there (.there (.there .here))) (by decide +kernel)) (.cons (.var (.there ne.«stamp».«s» (.there ne.«stamp».«this» (.there ne.«stamp».«id» (.there ne.«stamp».«parent» (.there ne.«stamp».«name» .here)))))) .nil))))
   (.retVoid (.there ne.«this».«s» .here) .nil)
   .nil
-  (.ite (.bin (.ne (by decide)) (.call (s := sig.«orNone») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) (by decide) (.cons (.field (.var .here) (.there (.there .here)) (by decide)) .nil)) (.str (js "")))
-  (.stateSet (.there ne.«this».«s» .here) .here (by decide) (.var (.there ne.«id».«s» (.there ne.«id».«this» .here))) (.update (.var .here) (.cons "made" (.widen (.some .undef .string) (.var (.there ne.«stamp».«s» (.there ne.«stamp».«this» (.there ne.«stamp».«id» (.there ne.«stamp».«parent» (.there ne.«stamp».«name» .here))))))) .nil) (.keep (by decide) (.keep (by decide) (.keep (by decide) (.set .here .nil)))) (by decide))
-  (.stateSet (.there ne.«this».«s» .here) (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide) (.var (.there ne.«id».«s» (.there ne.«id».«this» .here))) (.bool true)
+  (.ite (.bin (.ne (by decide +kernel)) (.call (s := sig.«orNone») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) (by decide +kernel) (.cons (.field (.var .here) (.there (.there .here)) (by decide +kernel)) .nil)) (.str (js "")))
+  (.stateSet (.there ne.«this».«s» .here) .here (by decide +kernel) (.var (.there ne.«id».«s» (.there ne.«id».«this» .here))) (.update (.var .here) (.cons "made" (.widen (.some .undef .string) (.var (.there ne.«stamp».«s» (.there ne.«stamp».«this» (.there ne.«stamp».«id» (.there ne.«stamp».«parent» (.there ne.«stamp».«name» .here))))))) .nil) (.keep (by decide +kernel) (.keep (by decide +kernel) (.keep (by decide +kernel) (.set .here .nil)))) (by decide +kernel))
+  (.stateSet (.there ne.«this».«s» .here) (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide +kernel) (.var (.there ne.«id».«s» (.there ne.«id».«this» .here))) (.bool true)
   (.retVoid (.there ne.«this».«s» .here) .nil)))
   .nil
-  (.stateSet (.there ne.«this».«s» .here) .here (by decide) (.var (.there ne.«id».«s» (.there ne.«id».«this» .here))) (.update (.var .here) (.cons "want" (.var (.there ne.«parent».«s» (.there ne.«parent».«this» (.there ne.«parent».«id» .here)))) (.cons "name" (.var (.there ne.«name».«s» (.there ne.«name».«this» (.there ne.«name».«id» (.there ne.«name».«parent» .here))))) (.cons "made" (.widen (.some .undef .string) (.var (.there ne.«stamp».«s» (.there ne.«stamp».«this» (.there ne.«stamp».«id» (.there ne.«stamp».«parent» (.there ne.«stamp».«name» .here))))))) .nil))) (.set .here (.set (.there .here) (.keep (by decide) (.set (.there (.there .here)) .nil)))) (by decide))
+  (.stateSet (.there ne.«this».«s» .here) .here (by decide +kernel) (.var (.there ne.«id».«s» (.there ne.«id».«this» .here))) (.update (.var .here) (.cons "want" (.var (.there ne.«parent».«s» (.there ne.«parent».«this» (.there ne.«parent».«id» .here)))) (.cons "name" (.var (.there ne.«name».«s» (.there ne.«name».«this» (.there ne.«name».«id» (.there ne.«name».«parent» .here))))) (.cons "made" (.widen (.some .undef .string) (.var (.there ne.«stamp».«s» (.there ne.«stamp».«this» (.there ne.«stamp».«id» (.there ne.«stamp».«parent» (.there ne.«stamp».«name» .here))))))) .nil))) (.set .here (.set (.there .here) (.keep (by decide +kernel) (.set (.there (.there .here)) .nil)))) (by decide +kernel))
   .nil)))
-  (.stateSet (.there ne.«this».«s» .here) (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide) (.var (.there ne.«id».«s» (.there ne.«id».«this» .here))) (.bool true)
+  (.stateSet (.there ne.«this».«s» .here) (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide +kernel) (.var (.there ne.«id».«s» (.there ne.«id».«this» .here))) (.bool true)
   (.callVoid (.there .here) (.there ne.«this».«s» .here) (.cons (.var (.there ne.«id».«s» (.there ne.«id».«this» .here))) .nil)
   (.retVoid (.there ne.«this».«s» .here) .nil))))))
 
-def body.«purge» : TStmts [sig.«position», sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«purge».params sig.«purge».result :=
-  (.ite (.bin (.eq (by decide)) (.var (.there ne.«id».«this» .here)) (.call (s := sig.«root») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))) (by decide) .nil))
+noncomputable def body.«purge» : TStmts [sig.«position», sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«purge».params sig.«purge».result :=
+  (.ite (.bin (.eq (by decide +kernel)) (.var (.there ne.«id».«this» .here)) (.call (s := sig.«root») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))) (by decide +kernel) .nil))
   (.retVoid .here .nil)
   .nil
-  (.ite (.not (.call (s := sig.«earlier») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))) (by decide) (.cons (.stateGet .here (.there (.there (.there (.there (.there .here))))) (by decide) (.var (.there ne.«id».«this» .here))) (.cons (.var (.there ne.«stamp».«this» (.there ne.«stamp».«id» .here))) .nil))))
+  (.ite (.not (.call (s := sig.«earlier») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))) (by decide +kernel) (.cons (.stateGet .here (.there (.there (.there (.there (.there .here))))) (by decide +kernel) (.var (.there ne.«id».«this» .here))) (.cons (.var (.there ne.«stamp».«this» (.there ne.«stamp».«id» .here))) .nil))))
   (.retVoid .here .nil)
   .nil
-  (.stateSet .here (.there (.there (.there (.there (.there .here))))) (by decide) (.var (.there ne.«id».«this» .here)) (.var (.there ne.«stamp».«this» (.there ne.«stamp».«id» .here)))
-  (.stateDelete .here (.there (.there (.there (.there .here)))) (by decide) (.var (.there ne.«id».«this» .here))
+  (.stateSet .here (.there (.there (.there (.there (.there .here))))) (by decide +kernel) (.var (.there ne.«id».«this» .here)) (.var (.there ne.«stamp».«this» (.there ne.«stamp».«id» .here)))
+  (.stateDelete .here (.there (.there (.there (.there .here)))) (by decide +kernel) (.var (.there ne.«id».«this» .here))
   (.callVoid (.there (.there (.there (.there .here)))) .here (.cons (.var (.there ne.«id».«this» .here)) (.cons (.bool false) .nil))
   (.retVoid .here .nil))))))
 
-def body.«untangle» : TStmts [sig.«purge», sig.«position», sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«untangle».params sig.«untangle».result :=
+noncomputable def body.«untangle» : TStmts [sig.«purge», sig.«position», sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«untangle».params sig.«untangle».result :=
   (.forOf "id" (.array (τ := .string) (.spreadKeys .here .here .nil))
-  (.const "s" (.stateGet (.there ne.«this».«id» .here) .here (by decide) (.var .here))
-  (.ifNullExit .here (by decide)
+  (.const "s" (.stateGet (.there ne.«this».«id» .here) .here (by decide +kernel) (.var .here))
+  (.ifNullExit .here (by decide +kernel)
   (.cont .nil)
-  (.ite (.or (.bin (.ne (by decide)) (.callThis (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) (.there ne.«this».«s» (.there ne.«this».«id» .here)) (.cons (.var (.there ne.«id».«s» .here)) .nil)) (.field (.var .here) .here (by decide))) (.bin .ngt (.length (.callThis (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))) (.there ne.«this».«s» (.there ne.«this».«id» .here)) (.cons (.var (.there ne.«id».«s» .here)) .nil))) (.num 0)))
+  (.ite (.or (.bin (.ne (by decide +kernel)) (.callThis (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) (.there ne.«this».«s» (.there ne.«this».«id» .here)) (.cons (.var (.there ne.«id».«s» .here)) .nil)) (.field (.var .here) .here (by decide +kernel))) (.bin .ngt (.length (.callThis (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))) (.there ne.«this».«s» (.there ne.«this».«id» .here)) (.cons (.var (.there ne.«id».«s» .here)) .nil))) (.num 0)))
   (.callVoid (.there (.there (.there (.there .here)))) (.there ne.«this».«s» (.there ne.«this».«id» .here)) (.cons (.var (.there ne.«id».«s» .here)) .nil)
   .nil)
   .nil
   .nil)))
-  (.callVoid (.there (.there (.there (.there (.there .here))))) .here (.cons (.call (s := sig.«root») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) (by decide) .nil) (.cons (.bool true) .nil))
+  (.callVoid (.there (.there (.there (.there (.there .here))))) .here (.cons (.call (s := sig.«root») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) (by decide +kernel) .nil) (.cons (.bool true) .nil))
   (.forOf "p" (.array (τ := .string) (.spreadKeys .here (.there (.there .here)) .nil))
-  (.ite (.and (.bin (.ne (by decide)) (.var .here) (.call (s := sig.«root») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) (by decide) .nil)) (.not (.stateHas (.there ne.«this».«p» .here) .here (.var .here))))
+  (.ite (.and (.bin (.ne (by decide +kernel)) (.var .here) (.call (s := sig.«root») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) (by decide +kernel) .nil)) (.not (.stateHas (.there ne.«this».«p» .here) .here (.var .here))))
   (.callVoid (.there (.there (.there (.there (.there .here))))) (.there ne.«this».«p» .here) (.cons (.var .here) (.cons (.bool true) .nil))
   .nil)
   .nil
   .nil)
   (.retVoid .here .nil))))
 
-def body.«isDetached» : TStmts [sig.«untangle», sig.«purge», sig.«position», sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«isDetached».params sig.«isDetached».result :=
+noncomputable def body.«isDetached» : TStmts [sig.«untangle», sig.«purge», sig.«position», sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«isDetached».params sig.«isDetached».result :=
   (.ret (.stateHas .here (.there (.there (.there .here))) (.var (.there ne.«id».«this» .here))) .nil)
 
-def body.«burial» : TStmts [sig.«isDetached», sig.«untangle», sig.«purge», sig.«position», sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«burial».params sig.«burial».result :=
-  (.ret (.stateGet .here (.there (.there (.there (.there (.there (.there .here)))))) (by decide) (.var (.there ne.«id».«this» .here))) .nil)
+noncomputable def body.«burial» : TStmts [sig.«isDetached», sig.«untangle», sig.«purge», sig.«position», sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«burial».params sig.«burial».result :=
+  (.ret (.stateGet .here (.there (.there (.there (.there (.there (.there .here)))))) (by decide +kernel) (.var (.there ne.«id».«this» .here))) .nil)
 
-def body.«isPurged» : TStmts [sig.«burial», sig.«isDetached», sig.«untangle», sig.«purge», sig.«position», sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«isPurged».params sig.«isPurged».result :=
+noncomputable def body.«isPurged» : TStmts [sig.«burial», sig.«isDetached», sig.«untangle», sig.«purge», sig.«position», sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«isPurged».params sig.«isPurged».result :=
   (.ret (.stateHas .here (.there (.there (.there (.there (.there .here))))) (.var (.there ne.«id».«this» .here))) .nil)
 
-def body.«purgeOf» : TStmts [sig.«isPurged», sig.«burial», sig.«isDetached», sig.«untangle», sig.«purge», sig.«position», sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«purgeOf».params sig.«purgeOf».result :=
-  (.ret (.stateGet .here (.there (.there (.there (.there (.there .here))))) (by decide) (.var (.there ne.«id».«this» .here))) .nil)
+noncomputable def body.«purgeOf» : TStmts [sig.«isPurged», sig.«burial», sig.«isDetached», sig.«untangle», sig.«purge», sig.«position», sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«purgeOf».params sig.«purgeOf».result :=
+  (.ret (.stateGet .here (.there (.there (.there (.there (.there .here))))) (by decide +kernel) (.var (.there ne.«id».«this» .here))) .nil)
 
-def body.«purgedIds» : TStmts [sig.«purgeOf», sig.«isPurged», sig.«burial», sig.«isDetached», sig.«untangle», sig.«purge», sig.«position», sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«purgedIds».params sig.«purgedIds».result :=
+noncomputable def body.«purgedIds» : TStmts [sig.«purgeOf», sig.«isPurged», sig.«burial», sig.«isDetached», sig.«untangle», sig.«purge», sig.«position», sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«purgedIds».params sig.«purgedIds».result :=
   (.ret (.array (τ := .string) (.spreadKeys .here (.there (.there (.there (.there (.there .here))))) .nil)) .nil)
 
-def body.«waitingIds» : TStmts [sig.«purgedIds», sig.«purgeOf», sig.«isPurged», sig.«burial», sig.«isDetached», sig.«untangle», sig.«purge», sig.«position», sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«waitingIds».params sig.«waitingIds».result :=
+noncomputable def body.«waitingIds» : TStmts [sig.«purgedIds», sig.«purgeOf», sig.«isPurged», sig.«burial», sig.«isDetached», sig.«untangle», sig.«purge», sig.«position», sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«waitingIds».params sig.«waitingIds».result :=
   (.ret (.array (τ := .string) (.spreadKeys .here (.there (.there (.there (.there .here)))) .nil)) .nil)
 
-def body.«hasWaiting» : TStmts [sig.«waitingIds», sig.«purgedIds», sig.«purgeOf», sig.«isPurged», sig.«burial», sig.«isDetached», sig.«untangle», sig.«purge», sig.«position», sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«hasWaiting».params sig.«hasWaiting».result :=
+noncomputable def body.«hasWaiting» : TStmts [sig.«waitingIds», sig.«purgedIds», sig.«purgeOf», sig.«isPurged», sig.«burial», sig.«isDetached», sig.«untangle», sig.«purge», sig.«position», sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«hasWaiting».params sig.«hasWaiting».result :=
   (.ret (.bin .ngt (.stateSize .here (.there (.there (.there (.there .here))))) (.num 0)) .nil)
 
-def body.«changes» : TStmts [sig.«hasWaiting», sig.«waitingIds», sig.«purgedIds», sig.«purgeOf», sig.«isPurged», sig.«burial», sig.«isDetached», sig.«untangle», sig.«purge», sig.«position», sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«changes».params sig.«changes».result :=
+noncomputable def body.«changes» : TStmts [sig.«hasWaiting», sig.«waitingIds», sig.«purgedIds», sig.«purgeOf», sig.«isPurged», sig.«burial», sig.«isDetached», sig.«untangle», sig.«purge», sig.«position», sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«changes».params sig.«changes».result :=
   (.ret (.array (τ := .string) (.spreadKeys .here (.there (.there (.there (.there (.there (.there (.there .here))))))) .nil)) .nil)
 
-def body.«clearChanges» : TStmts [sig.«changes», sig.«hasWaiting», sig.«waitingIds», sig.«purgedIds», sig.«purgeOf», sig.«isPurged», sig.«burial», sig.«isDetached», sig.«untangle», sig.«purge», sig.«position», sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«clearChanges».params sig.«clearChanges».result :=
+noncomputable def body.«clearChanges» : TStmts [sig.«changes», sig.«hasWaiting», sig.«waitingIds», sig.«purgedIds», sig.«purgeOf», sig.«isPurged», sig.«burial», sig.«isDetached», sig.«untangle», sig.«purge», sig.«position», sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»] sig.«clearChanges».params sig.«clearChanges».result :=
   (.forOf "id" (.array (τ := .string) (.spreadKeys .here (.there (.there (.there (.there (.there (.there (.there .here))))))) .nil))
-  (.stateDelete (.there ne.«this».«id» .here) (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide) (.var .here)
+  (.stateDelete (.there ne.«this».«id» .here) (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide +kernel) (.var .here)
   .nil)
   (.retVoid .here .nil))
 
-abbrev sigs : Sigs := [sig.«clearChanges», sig.«changes», sig.«hasWaiting», sig.«waitingIds», sig.«purgedIds», sig.«purgeOf», sig.«isPurged», sig.«burial», sig.«isDetached», sig.«untangle», sig.«purge», sig.«position», sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»]
+noncomputable abbrev sigs : Sigs := [sig.«clearChanges», sig.«changes», sig.«hasWaiting», sig.«waitingIds», sig.«purgedIds», sig.«purgeOf», sig.«isPurged», sig.«burial», sig.«isDetached», sig.«untangle», sig.«purge», sig.«position», sig.«create», sig.«rearrange», sig.«attach», sig.«settle», sig.«nextSibling», sig.«loadLink», sig.«link», sig.«lastChild», sig.«firstChild», sig.«burialOf», sig.«parentOf», sig.«spotOf», sig.«loadPurge», sig.«loadSpot», sig.«bury», sig.«unlink», sig.«setPrev», sig.«setNext», sig.«keyOf», sig.«cycleOf», sig.«new Tree», sig.«key», sig.«orNone», sig.«minStamp», sig.«earlier», sig.«newer», sig.«root»]
 
-def typed : TProgram sigs :=
+noncomputable def typed : TProgram sigs :=
   (.cons sig.«clearChanges» body.«clearChanges» (.cons sig.«changes» body.«changes» (.cons sig.«hasWaiting» body.«hasWaiting» (.cons sig.«waitingIds» body.«waitingIds» (.cons sig.«purgedIds» body.«purgedIds» (.cons sig.«purgeOf» body.«purgeOf» (.cons sig.«isPurged» body.«isPurged» (.cons sig.«burial» body.«burial» (.cons sig.«isDetached» body.«isDetached» (.cons sig.«untangle» body.«untangle» (.cons sig.«purge» body.«purge» (.cons sig.«position» body.«position» (.cons sig.«create» body.«create» (.cons sig.«rearrange» body.«rearrange» (.cons sig.«attach» body.«attach» (.cons sig.«settle» body.«settle» (.cons sig.«nextSibling» body.«nextSibling» (.cons sig.«loadLink» body.«loadLink» (.cons sig.«link» body.«link» (.cons sig.«lastChild» body.«lastChild» (.cons sig.«firstChild» body.«firstChild» (.cons sig.«burialOf» body.«burialOf» (.cons sig.«parentOf» body.«parentOf» (.cons sig.«spotOf» body.«spotOf» (.cons sig.«loadPurge» body.«loadPurge» (.cons sig.«loadSpot» body.«loadSpot» (.cons sig.«bury» body.«bury» (.cons sig.«unlink» body.«unlink» (.cons sig.«setPrev» body.«setPrev» (.cons sig.«setNext» body.«setNext» (.cons sig.«keyOf» body.«keyOf» (.cons sig.«cycleOf» body.«cycleOf» (.cons sig.«new Tree» body.«new Tree» (.cons sig.«key» body.«key» (.cons sig.«orNone» body.«orNone» (.cons sig.«minStamp» body.«minStamp» (.cons sig.«earlier» body.«earlier» (.cons sig.«newer» body.«newer» (.cons sig.«root» body.«root» .nil)))))))))))))))))))))))))))))))))))))))
 
 theorem erased : typed.erase = ast := by kernel_rfl
 
-theorem wf : typed.WF := by decide +kernel
+theorem bodies_ok : typed.bodiesOk = true := by decide +kernel
+
+theorem ast_scoped : ast.scoped = true := by decide +kernel
+
+theorem wf : typed.WF := TProgram.wf_of typed erased bodies_ok ast_scoped
 
 /-! ## Readable definitions -/
 
@@ -1574,10 +1578,10 @@ def «clearChanges» («this» : ty.«Tree».denote) : ty.«Tree».denote :=
 Each body is checked against its readable definition with the earlier functions'
 readable definitions as its environment, so no check unfolds a callee. -/
 
-def «root».uncurried : sig.«root».denote := fun xs => «root»
+noncomputable def «root».uncurried : sig.«root».denote := fun xs => «root»
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «root».safety : sig.«root».params.denote → Bool := fun _ => true
+noncomputable def «root».safety : sig.«root».params.denote → Bool := fun _ => true
 
 theorem «root».body_eq :
     body.«root».denoteFn (()) = «root».uncurried := by
@@ -1587,10 +1591,10 @@ theorem «root».safe_eq :
     body.«root».safeFn (()) (()) = «root».safety := by
   kernel_rfl
 
-def «newer».uncurried : sig.«newer».denote := fun xs => «newer» xs.1 xs.2.1
+noncomputable def «newer».uncurried : sig.«newer».denote := fun xs => «newer» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «newer».safety : sig.«newer».params.denote → Bool := fun _ => true
+noncomputable def «newer».safety : sig.«newer».params.denote → Bool := fun _ => true
 
 theorem «newer».body_eq :
     body.«newer».denoteFn («root».uncurried, ()) = «newer».uncurried := by
@@ -1600,10 +1604,10 @@ theorem «newer».safe_eq :
     body.«newer».safeFn («root».uncurried, ()) («root».safety, ()) = «newer».safety := by
   kernel_rfl
 
-def «earlier».uncurried : sig.«earlier».denote := fun xs => «earlier» xs.1 xs.2.1
+noncomputable def «earlier».uncurried : sig.«earlier».denote := fun xs => «earlier» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «earlier».safety : sig.«earlier».params.denote → Bool := fun _ => true
+noncomputable def «earlier».safety : sig.«earlier».params.denote → Bool := fun _ => true
 
 theorem «earlier».body_eq :
     body.«earlier».denoteFn («newer».uncurried, «root».uncurried, ()) = «earlier».uncurried := by
@@ -1613,10 +1617,10 @@ theorem «earlier».safe_eq :
     body.«earlier».safeFn («newer».uncurried, «root».uncurried, ()) («newer».safety, «root».safety, ()) = «earlier».safety := by
   kernel_rfl
 
-def «minStamp».uncurried : sig.«minStamp».denote := fun xs => «minStamp» xs.1 xs.2.1
+noncomputable def «minStamp».uncurried : sig.«minStamp».denote := fun xs => «minStamp» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «minStamp».safety : sig.«minStamp».params.denote → Bool := fun _ => true
+noncomputable def «minStamp».safety : sig.«minStamp».params.denote → Bool := fun _ => true
 
 theorem «minStamp».body_eq :
     body.«minStamp».denoteFn («earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «minStamp».uncurried := by
@@ -1626,10 +1630,10 @@ theorem «minStamp».safe_eq :
     body.«minStamp».safeFn («earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («earlier».safety, «newer».safety, «root».safety, ()) = «minStamp».safety := by
   kernel_rfl
 
-def «orNone».uncurried : sig.«orNone».denote := fun xs => «orNone» xs.1
+noncomputable def «orNone».uncurried : sig.«orNone».denote := fun xs => «orNone» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «orNone».safety : sig.«orNone».params.denote → Bool := fun _ => true
+noncomputable def «orNone».safety : sig.«orNone».params.denote → Bool := fun _ => true
 
 theorem «orNone».body_eq :
     body.«orNone».denoteFn («minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «orNone».uncurried := by
@@ -1639,10 +1643,10 @@ theorem «orNone».safe_eq :
     body.«orNone».safeFn («minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «orNone».safety := by
   kernel_rfl
 
-def «key».uncurried : sig.«key».denote := fun xs => «key» xs.1 xs.2.1
+noncomputable def «key».uncurried : sig.«key».denote := fun xs => «key» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «key».safety : sig.«key».params.denote → Bool := fun _ => true
+noncomputable def «key».safety : sig.«key».params.denote → Bool := fun _ => true
 
 theorem «key».body_eq :
     body.«key».denoteFn («orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «key».uncurried := by
@@ -1652,10 +1656,10 @@ theorem «key».safe_eq :
     body.«key».safeFn («orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «key».safety := by
   kernel_rfl
 
-def «new Tree».uncurried : sig.«new Tree».denote := fun xs => «new Tree»
+noncomputable def «new Tree».uncurried : sig.«new Tree».denote := fun xs => «new Tree»
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «new Tree».safety : sig.«new Tree».params.denote → Bool := fun _ => true
+noncomputable def «new Tree».safety : sig.«new Tree».params.denote → Bool := fun _ => true
 
 theorem «new Tree».body_eq :
     body.«new Tree».denoteFn («key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «new Tree».uncurried := by
@@ -1665,10 +1669,10 @@ theorem «new Tree».safe_eq :
     body.«new Tree».safeFn («key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «new Tree».safety := by
   kernel_rfl
 
-def «cycleOf».uncurried : sig.«cycleOf».denote := fun xs => «cycleOf» xs.1 xs.2.1
+noncomputable def «cycleOf».uncurried : sig.«cycleOf».denote := fun xs => «cycleOf» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «cycleOf».safety : sig.«cycleOf».params.denote → Bool := fun _ => true
+noncomputable def «cycleOf».safety : sig.«cycleOf».params.denote → Bool := fun _ => true
 
 theorem «cycleOf».body_eq :
     body.«cycleOf».denoteFn («new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «cycleOf».uncurried := by
@@ -1678,10 +1682,10 @@ theorem «cycleOf».safe_eq :
     body.«cycleOf».safeFn («new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «cycleOf».safety := by
   kernel_rfl
 
-def «keyOf».uncurried : sig.«keyOf».denote := fun xs => «keyOf» xs.1 xs.2.1
+noncomputable def «keyOf».uncurried : sig.«keyOf».denote := fun xs => «keyOf» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «keyOf».safety : sig.«keyOf».params.denote → Bool := fun _ => true
+noncomputable def «keyOf».safety : sig.«keyOf».params.denote → Bool := fun _ => true
 
 theorem «keyOf».body_eq :
     body.«keyOf».denoteFn («cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «keyOf».uncurried := by
@@ -1691,10 +1695,10 @@ theorem «keyOf».safe_eq :
     body.«keyOf».safeFn («cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «keyOf».safety := by
   kernel_rfl
 
-def «setNext».uncurried : sig.«setNext».denote := fun xs => «setNext» xs.1 xs.2.1 xs.2.2.1
+noncomputable def «setNext».uncurried : sig.«setNext».denote := fun xs => «setNext» xs.1 xs.2.1 xs.2.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «setNext».safety : sig.«setNext».params.denote → Bool := fun _ => true
+noncomputable def «setNext».safety : sig.«setNext».params.denote → Bool := fun _ => true
 
 theorem «setNext».body_eq :
     body.«setNext».denoteFn («keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «setNext».uncurried := by
@@ -1704,10 +1708,10 @@ theorem «setNext».safe_eq :
     body.«setNext».safeFn («keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «setNext».safety := by
   kernel_rfl
 
-def «setPrev».uncurried : sig.«setPrev».denote := fun xs => «setPrev» xs.1 xs.2.1 xs.2.2.1
+noncomputable def «setPrev».uncurried : sig.«setPrev».denote := fun xs => «setPrev» xs.1 xs.2.1 xs.2.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «setPrev».safety : sig.«setPrev».params.denote → Bool := fun _ => true
+noncomputable def «setPrev».safety : sig.«setPrev».params.denote → Bool := fun _ => true
 
 theorem «setPrev».body_eq :
     body.«setPrev».denoteFn («setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «setPrev».uncurried := by
@@ -1717,10 +1721,10 @@ theorem «setPrev».safe_eq :
     body.«setPrev».safeFn («setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «setPrev».safety := by
   kernel_rfl
 
-def «unlink».uncurried : sig.«unlink».denote := fun xs => «unlink» xs.1 xs.2.1
+noncomputable def «unlink».uncurried : sig.«unlink».denote := fun xs => «unlink» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «unlink».safety : sig.«unlink».params.denote → Bool := fun _ => true
+noncomputable def «unlink».safety : sig.«unlink».params.denote → Bool := fun _ => true
 
 theorem «unlink».body_eq :
     body.«unlink».denoteFn («setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «unlink».uncurried := by
@@ -1730,10 +1734,10 @@ theorem «unlink».safe_eq :
     body.«unlink».safeFn («setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «unlink».safety := by
   kernel_rfl
 
-def «bury».uncurried : sig.«bury».denote := fun xs => «bury» xs.1 xs.2.1 xs.2.2.1
+noncomputable def «bury».uncurried : sig.«bury».denote := fun xs => «bury» xs.1 xs.2.1 xs.2.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «bury».safety : sig.«bury».params.denote → Bool := fun _ => true
+noncomputable def «bury».safety : sig.«bury».params.denote → Bool := fun _ => true
 
 theorem «bury».body_eq :
     body.«bury».denoteFn («unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «bury».uncurried := by
@@ -1743,10 +1747,10 @@ theorem «bury».safe_eq :
     body.«bury».safeFn («unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «bury».safety := by
   kernel_rfl
 
-def «loadSpot».uncurried : sig.«loadSpot».denote := fun xs => «loadSpot» xs.1 xs.2.1 xs.2.2.1
+noncomputable def «loadSpot».uncurried : sig.«loadSpot».denote := fun xs => «loadSpot» xs.1 xs.2.1 xs.2.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «loadSpot».safety : sig.«loadSpot».params.denote → Bool := fun _ => true
+noncomputable def «loadSpot».safety : sig.«loadSpot».params.denote → Bool := fun _ => true
 
 theorem «loadSpot».body_eq :
     body.«loadSpot».denoteFn («bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «loadSpot».uncurried := by
@@ -1756,10 +1760,10 @@ theorem «loadSpot».safe_eq :
     body.«loadSpot».safeFn («bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («bury».safety, «unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «loadSpot».safety := by
   kernel_rfl
 
-def «loadPurge».uncurried : sig.«loadPurge».denote := fun xs => «loadPurge» xs.1 xs.2.1 xs.2.2.1
+noncomputable def «loadPurge».uncurried : sig.«loadPurge».denote := fun xs => «loadPurge» xs.1 xs.2.1 xs.2.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «loadPurge».safety : sig.«loadPurge».params.denote → Bool := fun _ => true
+noncomputable def «loadPurge».safety : sig.«loadPurge».params.denote → Bool := fun _ => true
 
 theorem «loadPurge».body_eq :
     body.«loadPurge».denoteFn («loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «loadPurge».uncurried := by
@@ -1769,10 +1773,10 @@ theorem «loadPurge».safe_eq :
     body.«loadPurge».safeFn («loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («loadSpot».safety, «bury».safety, «unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «loadPurge».safety := by
   kernel_rfl
 
-def «spotOf».uncurried : sig.«spotOf».denote := fun xs => «spotOf» xs.1 xs.2.1
+noncomputable def «spotOf».uncurried : sig.«spotOf».denote := fun xs => «spotOf» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «spotOf».safety : sig.«spotOf».params.denote → Bool := fun _ => true
+noncomputable def «spotOf».safety : sig.«spotOf».params.denote → Bool := fun _ => true
 
 theorem «spotOf».body_eq :
     body.«spotOf».denoteFn («loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «spotOf».uncurried := by
@@ -1782,10 +1786,10 @@ theorem «spotOf».safe_eq :
     body.«spotOf».safeFn («loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («loadPurge».safety, «loadSpot».safety, «bury».safety, «unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «spotOf».safety := by
   kernel_rfl
 
-def «parentOf».uncurried : sig.«parentOf».denote := fun xs => «parentOf» xs.1 xs.2.1
+noncomputable def «parentOf».uncurried : sig.«parentOf».denote := fun xs => «parentOf» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «parentOf».safety : sig.«parentOf».params.denote → Bool := fun _ => true
+noncomputable def «parentOf».safety : sig.«parentOf».params.denote → Bool := fun _ => true
 
 theorem «parentOf».body_eq :
     body.«parentOf».denoteFn («spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «parentOf».uncurried := by
@@ -1795,10 +1799,10 @@ theorem «parentOf».safe_eq :
     body.«parentOf».safeFn («spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («spotOf».safety, «loadPurge».safety, «loadSpot».safety, «bury».safety, «unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «parentOf».safety := by
   kernel_rfl
 
-def «burialOf».uncurried : sig.«burialOf».denote := fun xs => «burialOf» xs.1 xs.2.1
+noncomputable def «burialOf».uncurried : sig.«burialOf».denote := fun xs => «burialOf» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «burialOf».safety : sig.«burialOf».params.denote → Bool := fun _ => true
+noncomputable def «burialOf».safety : sig.«burialOf».params.denote → Bool := fun _ => true
 
 theorem «burialOf».body_eq :
     body.«burialOf».denoteFn («parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «burialOf».uncurried := by
@@ -1808,10 +1812,10 @@ theorem «burialOf».safe_eq :
     body.«burialOf».safeFn («parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («parentOf».safety, «spotOf».safety, «loadPurge».safety, «loadSpot».safety, «bury».safety, «unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «burialOf».safety := by
   kernel_rfl
 
-def «firstChild».uncurried : sig.«firstChild».denote := fun xs => «firstChild» xs.1 xs.2.1
+noncomputable def «firstChild».uncurried : sig.«firstChild».denote := fun xs => «firstChild» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «firstChild».safety : sig.«firstChild».params.denote → Bool := fun _ => true
+noncomputable def «firstChild».safety : sig.«firstChild».params.denote → Bool := fun _ => true
 
 theorem «firstChild».body_eq :
     body.«firstChild».denoteFn («burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «firstChild».uncurried := by
@@ -1821,10 +1825,10 @@ theorem «firstChild».safe_eq :
     body.«firstChild».safeFn («burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («burialOf».safety, «parentOf».safety, «spotOf».safety, «loadPurge».safety, «loadSpot».safety, «bury».safety, «unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «firstChild».safety := by
   kernel_rfl
 
-def «lastChild».uncurried : sig.«lastChild».denote := fun xs => «lastChild» xs.1 xs.2.1
+noncomputable def «lastChild».uncurried : sig.«lastChild».denote := fun xs => «lastChild» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «lastChild».safety : sig.«lastChild».params.denote → Bool := fun _ => true
+noncomputable def «lastChild».safety : sig.«lastChild».params.denote → Bool := fun _ => true
 
 theorem «lastChild».body_eq :
     body.«lastChild».denoteFn («firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «lastChild».uncurried := by
@@ -1834,10 +1838,10 @@ theorem «lastChild».safe_eq :
     body.«lastChild».safeFn («firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («firstChild».safety, «burialOf».safety, «parentOf».safety, «spotOf».safety, «loadPurge».safety, «loadSpot».safety, «bury».safety, «unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «lastChild».safety := by
   kernel_rfl
 
-def «link».uncurried : sig.«link».denote := fun xs => «link» xs.1 xs.2.1 xs.2.2.1
+noncomputable def «link».uncurried : sig.«link».denote := fun xs => «link» xs.1 xs.2.1 xs.2.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «link».safety : sig.«link».params.denote → Bool := fun _ => true
+noncomputable def «link».safety : sig.«link».params.denote → Bool := fun _ => true
 
 theorem «link».body_eq :
     body.«link».denoteFn («lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «link».uncurried := by
@@ -1847,10 +1851,10 @@ theorem «link».safe_eq :
     body.«link».safeFn («lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («lastChild».safety, «firstChild».safety, «burialOf».safety, «parentOf».safety, «spotOf».safety, «loadPurge».safety, «loadSpot».safety, «bury».safety, «unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «link».safety := by
   kernel_rfl
 
-def «loadLink».uncurried : sig.«loadLink».denote := fun xs => «loadLink» xs.1 xs.2.1 xs.2.2.1
+noncomputable def «loadLink».uncurried : sig.«loadLink».denote := fun xs => «loadLink» xs.1 xs.2.1 xs.2.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «loadLink».safety : sig.«loadLink».params.denote → Bool := fun _ => true
+noncomputable def «loadLink».safety : sig.«loadLink».params.denote → Bool := fun _ => true
 
 theorem «loadLink».body_eq :
     body.«loadLink».denoteFn («link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «loadLink».uncurried := by
@@ -1860,10 +1864,10 @@ theorem «loadLink».safe_eq :
     body.«loadLink».safeFn («link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («link».safety, «lastChild».safety, «firstChild».safety, «burialOf».safety, «parentOf».safety, «spotOf».safety, «loadPurge».safety, «loadSpot».safety, «bury».safety, «unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «loadLink».safety := by
   kernel_rfl
 
-def «nextSibling».uncurried : sig.«nextSibling».denote := fun xs => «nextSibling» xs.1 xs.2.1
+noncomputable def «nextSibling».uncurried : sig.«nextSibling».denote := fun xs => «nextSibling» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «nextSibling».safety : sig.«nextSibling».params.denote → Bool := fun _ => true
+noncomputable def «nextSibling».safety : sig.«nextSibling».params.denote → Bool := fun _ => true
 
 theorem «nextSibling».body_eq :
     body.«nextSibling».denoteFn («loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «nextSibling».uncurried := by
@@ -1873,9 +1877,9 @@ theorem «nextSibling».safe_eq :
     body.«nextSibling».safeFn («loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («loadLink».safety, «link».safety, «lastChild».safety, «firstChild».safety, «burialOf».safety, «parentOf».safety, «spotOf».safety, «loadPurge».safety, «loadSpot».safety, «bury».safety, «unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «nextSibling».safety := by
   kernel_rfl
 
-def «settle».uncurried : sig.«settle».denote := fun xs => «settle» xs.1 xs.2.1 xs.2.2.1
+noncomputable def «settle».uncurried : sig.«settle».denote := fun xs => «settle» xs.1 xs.2.1 xs.2.2.1
 
-def «settle».safety : sig.«settle».params.denote → Bool := fun xs => «settle».safe xs.1 xs.2.1 xs.2.2.1
+noncomputable def «settle».safety : sig.«settle».params.denote → Bool := fun xs => «settle».safe xs.1 xs.2.1 xs.2.2.1
 
 theorem «settle».body_eq :
     body.«settle».denoteFn («nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «settle».uncurried := by
@@ -1885,9 +1889,9 @@ theorem «settle».safe_eq :
     body.«settle».safeFn («nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («nextSibling».safety, «loadLink».safety, «link».safety, «lastChild».safety, «firstChild».safety, «burialOf».safety, «parentOf».safety, «spotOf».safety, «loadPurge».safety, «loadSpot».safety, «bury».safety, «unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «settle».safety := by
   kernel_rfl
 
-def «attach».uncurried : sig.«attach».denote := fun xs => «attach» xs.1 xs.2.1
+noncomputable def «attach».uncurried : sig.«attach».denote := fun xs => «attach» xs.1 xs.2.1
 
-def «attach».safety : sig.«attach».params.denote → Bool := fun xs => «attach».safe xs.1 xs.2.1
+noncomputable def «attach».safety : sig.«attach».params.denote → Bool := fun xs => «attach».safe xs.1 xs.2.1
 
 theorem «attach».body_eq :
     body.«attach».denoteFn («settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «attach».uncurried := by
@@ -1897,9 +1901,9 @@ theorem «attach».safe_eq :
     body.«attach».safeFn («settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («settle».safety, «nextSibling».safety, «loadLink».safety, «link».safety, «lastChild».safety, «firstChild».safety, «burialOf».safety, «parentOf».safety, «spotOf».safety, «loadPurge».safety, «loadSpot».safety, «bury».safety, «unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «attach».safety := by
   kernel_rfl
 
-def «rearrange».uncurried : sig.«rearrange».denote := fun xs => «rearrange» xs.1 xs.2.1
+noncomputable def «rearrange».uncurried : sig.«rearrange».denote := fun xs => «rearrange» xs.1 xs.2.1
 
-def «rearrange».safety : sig.«rearrange».params.denote → Bool := fun xs => «rearrange».safe xs.1 xs.2.1
+noncomputable def «rearrange».safety : sig.«rearrange».params.denote → Bool := fun xs => «rearrange».safe xs.1 xs.2.1
 
 theorem «rearrange».body_eq :
     body.«rearrange».denoteFn («attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «rearrange».uncurried := by
@@ -1909,9 +1913,9 @@ theorem «rearrange».safe_eq :
     body.«rearrange».safeFn («attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («attach».safety, «settle».safety, «nextSibling».safety, «loadLink».safety, «link».safety, «lastChild».safety, «firstChild».safety, «burialOf».safety, «parentOf».safety, «spotOf».safety, «loadPurge».safety, «loadSpot».safety, «bury».safety, «unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «rearrange».safety := by
   kernel_rfl
 
-def «create».uncurried : sig.«create».denote := fun xs => «create» xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1
+noncomputable def «create».uncurried : sig.«create».denote := fun xs => «create» xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1
 
-def «create».safety : sig.«create».params.denote → Bool := fun xs => «create».safe xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1
+noncomputable def «create».safety : sig.«create».params.denote → Bool := fun xs => «create».safe xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1
 
 theorem «create».body_eq :
     body.«create».denoteFn («rearrange».uncurried, «attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «create».uncurried := by
@@ -1921,9 +1925,9 @@ theorem «create».safe_eq :
     body.«create».safeFn («rearrange».uncurried, «attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («rearrange».safety, «attach».safety, «settle».safety, «nextSibling».safety, «loadLink».safety, «link».safety, «lastChild».safety, «firstChild».safety, «burialOf».safety, «parentOf».safety, «spotOf».safety, «loadPurge».safety, «loadSpot».safety, «bury».safety, «unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «create».safety := by
   kernel_rfl
 
-def «position».uncurried : sig.«position».denote := fun xs => «position» xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1 xs.2.2.2.2.2.1
+noncomputable def «position».uncurried : sig.«position».denote := fun xs => «position» xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1 xs.2.2.2.2.2.1
 
-def «position».safety : sig.«position».params.denote → Bool := fun xs => «position».safe xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1 xs.2.2.2.2.2.1
+noncomputable def «position».safety : sig.«position».params.denote → Bool := fun xs => «position».safe xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1 xs.2.2.2.2.2.1
 
 theorem «position».body_eq :
     body.«position».denoteFn («create».uncurried, «rearrange».uncurried, «attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «position».uncurried := by
@@ -1933,9 +1937,9 @@ theorem «position».safe_eq :
     body.«position».safeFn («create».uncurried, «rearrange».uncurried, «attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («create».safety, «rearrange».safety, «attach».safety, «settle».safety, «nextSibling».safety, «loadLink».safety, «link».safety, «lastChild».safety, «firstChild».safety, «burialOf».safety, «parentOf».safety, «spotOf».safety, «loadPurge».safety, «loadSpot».safety, «bury».safety, «unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «position».safety := by
   kernel_rfl
 
-def «purge».uncurried : sig.«purge».denote := fun xs => «purge» xs.1 xs.2.1 xs.2.2.1
+noncomputable def «purge».uncurried : sig.«purge».denote := fun xs => «purge» xs.1 xs.2.1 xs.2.2.1
 
-def «purge».safety : sig.«purge».params.denote → Bool := fun xs => «purge».safe xs.1 xs.2.1 xs.2.2.1
+noncomputable def «purge».safety : sig.«purge».params.denote → Bool := fun xs => «purge».safe xs.1 xs.2.1 xs.2.2.1
 
 theorem «purge».body_eq :
     body.«purge».denoteFn («position».uncurried, «create».uncurried, «rearrange».uncurried, «attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «purge».uncurried := by
@@ -1945,9 +1949,9 @@ theorem «purge».safe_eq :
     body.«purge».safeFn («position».uncurried, «create».uncurried, «rearrange».uncurried, «attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («position».safety, «create».safety, «rearrange».safety, «attach».safety, «settle».safety, «nextSibling».safety, «loadLink».safety, «link».safety, «lastChild».safety, «firstChild».safety, «burialOf».safety, «parentOf».safety, «spotOf».safety, «loadPurge».safety, «loadSpot».safety, «bury».safety, «unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «purge».safety := by
   kernel_rfl
 
-def «untangle».uncurried : sig.«untangle».denote := fun xs => «untangle» xs.1
+noncomputable def «untangle».uncurried : sig.«untangle».denote := fun xs => «untangle» xs.1
 
-def «untangle».safety : sig.«untangle».params.denote → Bool := fun xs => «untangle».safe xs.1
+noncomputable def «untangle».safety : sig.«untangle».params.denote → Bool := fun xs => «untangle».safe xs.1
 
 theorem «untangle».body_eq :
     body.«untangle».denoteFn («purge».uncurried, «position».uncurried, «create».uncurried, «rearrange».uncurried, «attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «untangle».uncurried := by
@@ -1957,10 +1961,10 @@ theorem «untangle».safe_eq :
     body.«untangle».safeFn («purge».uncurried, «position».uncurried, «create».uncurried, «rearrange».uncurried, «attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («purge».safety, «position».safety, «create».safety, «rearrange».safety, «attach».safety, «settle».safety, «nextSibling».safety, «loadLink».safety, «link».safety, «lastChild».safety, «firstChild».safety, «burialOf».safety, «parentOf».safety, «spotOf».safety, «loadPurge».safety, «loadSpot».safety, «bury».safety, «unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «untangle».safety := by
   kernel_rfl
 
-def «isDetached».uncurried : sig.«isDetached».denote := fun xs => «isDetached» xs.1 xs.2.1
+noncomputable def «isDetached».uncurried : sig.«isDetached».denote := fun xs => «isDetached» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «isDetached».safety : sig.«isDetached».params.denote → Bool := fun _ => true
+noncomputable def «isDetached».safety : sig.«isDetached».params.denote → Bool := fun _ => true
 
 theorem «isDetached».body_eq :
     body.«isDetached».denoteFn («untangle».uncurried, «purge».uncurried, «position».uncurried, «create».uncurried, «rearrange».uncurried, «attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «isDetached».uncurried := by
@@ -1970,10 +1974,10 @@ theorem «isDetached».safe_eq :
     body.«isDetached».safeFn («untangle».uncurried, «purge».uncurried, «position».uncurried, «create».uncurried, «rearrange».uncurried, «attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («untangle».safety, «purge».safety, «position».safety, «create».safety, «rearrange».safety, «attach».safety, «settle».safety, «nextSibling».safety, «loadLink».safety, «link».safety, «lastChild».safety, «firstChild».safety, «burialOf».safety, «parentOf».safety, «spotOf».safety, «loadPurge».safety, «loadSpot».safety, «bury».safety, «unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «isDetached».safety := by
   kernel_rfl
 
-def «burial».uncurried : sig.«burial».denote := fun xs => «burial» xs.1 xs.2.1
+noncomputable def «burial».uncurried : sig.«burial».denote := fun xs => «burial» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «burial».safety : sig.«burial».params.denote → Bool := fun _ => true
+noncomputable def «burial».safety : sig.«burial».params.denote → Bool := fun _ => true
 
 theorem «burial».body_eq :
     body.«burial».denoteFn («isDetached».uncurried, «untangle».uncurried, «purge».uncurried, «position».uncurried, «create».uncurried, «rearrange».uncurried, «attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «burial».uncurried := by
@@ -1983,10 +1987,10 @@ theorem «burial».safe_eq :
     body.«burial».safeFn («isDetached».uncurried, «untangle».uncurried, «purge».uncurried, «position».uncurried, «create».uncurried, «rearrange».uncurried, «attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («isDetached».safety, «untangle».safety, «purge».safety, «position».safety, «create».safety, «rearrange».safety, «attach».safety, «settle».safety, «nextSibling».safety, «loadLink».safety, «link».safety, «lastChild».safety, «firstChild».safety, «burialOf».safety, «parentOf».safety, «spotOf».safety, «loadPurge».safety, «loadSpot».safety, «bury».safety, «unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «burial».safety := by
   kernel_rfl
 
-def «isPurged».uncurried : sig.«isPurged».denote := fun xs => «isPurged» xs.1 xs.2.1
+noncomputable def «isPurged».uncurried : sig.«isPurged».denote := fun xs => «isPurged» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «isPurged».safety : sig.«isPurged».params.denote → Bool := fun _ => true
+noncomputable def «isPurged».safety : sig.«isPurged».params.denote → Bool := fun _ => true
 
 theorem «isPurged».body_eq :
     body.«isPurged».denoteFn («burial».uncurried, «isDetached».uncurried, «untangle».uncurried, «purge».uncurried, «position».uncurried, «create».uncurried, «rearrange».uncurried, «attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «isPurged».uncurried := by
@@ -1996,10 +2000,10 @@ theorem «isPurged».safe_eq :
     body.«isPurged».safeFn («burial».uncurried, «isDetached».uncurried, «untangle».uncurried, «purge».uncurried, «position».uncurried, «create».uncurried, «rearrange».uncurried, «attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («burial».safety, «isDetached».safety, «untangle».safety, «purge».safety, «position».safety, «create».safety, «rearrange».safety, «attach».safety, «settle».safety, «nextSibling».safety, «loadLink».safety, «link».safety, «lastChild».safety, «firstChild».safety, «burialOf».safety, «parentOf».safety, «spotOf».safety, «loadPurge».safety, «loadSpot».safety, «bury».safety, «unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «isPurged».safety := by
   kernel_rfl
 
-def «purgeOf».uncurried : sig.«purgeOf».denote := fun xs => «purgeOf» xs.1 xs.2.1
+noncomputable def «purgeOf».uncurried : sig.«purgeOf».denote := fun xs => «purgeOf» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «purgeOf».safety : sig.«purgeOf».params.denote → Bool := fun _ => true
+noncomputable def «purgeOf».safety : sig.«purgeOf».params.denote → Bool := fun _ => true
 
 theorem «purgeOf».body_eq :
     body.«purgeOf».denoteFn («isPurged».uncurried, «burial».uncurried, «isDetached».uncurried, «untangle».uncurried, «purge».uncurried, «position».uncurried, «create».uncurried, «rearrange».uncurried, «attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «purgeOf».uncurried := by
@@ -2009,10 +2013,10 @@ theorem «purgeOf».safe_eq :
     body.«purgeOf».safeFn («isPurged».uncurried, «burial».uncurried, «isDetached».uncurried, «untangle».uncurried, «purge».uncurried, «position».uncurried, «create».uncurried, «rearrange».uncurried, «attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («isPurged».safety, «burial».safety, «isDetached».safety, «untangle».safety, «purge».safety, «position».safety, «create».safety, «rearrange».safety, «attach».safety, «settle».safety, «nextSibling».safety, «loadLink».safety, «link».safety, «lastChild».safety, «firstChild».safety, «burialOf».safety, «parentOf».safety, «spotOf».safety, «loadPurge».safety, «loadSpot».safety, «bury».safety, «unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «purgeOf».safety := by
   kernel_rfl
 
-def «purgedIds».uncurried : sig.«purgedIds».denote := fun xs => «purgedIds» xs.1
+noncomputable def «purgedIds».uncurried : sig.«purgedIds».denote := fun xs => «purgedIds» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «purgedIds».safety : sig.«purgedIds».params.denote → Bool := fun _ => true
+noncomputable def «purgedIds».safety : sig.«purgedIds».params.denote → Bool := fun _ => true
 
 theorem «purgedIds».body_eq :
     body.«purgedIds».denoteFn («purgeOf».uncurried, «isPurged».uncurried, «burial».uncurried, «isDetached».uncurried, «untangle».uncurried, «purge».uncurried, «position».uncurried, «create».uncurried, «rearrange».uncurried, «attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «purgedIds».uncurried := by
@@ -2022,10 +2026,10 @@ theorem «purgedIds».safe_eq :
     body.«purgedIds».safeFn («purgeOf».uncurried, «isPurged».uncurried, «burial».uncurried, «isDetached».uncurried, «untangle».uncurried, «purge».uncurried, «position».uncurried, «create».uncurried, «rearrange».uncurried, «attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («purgeOf».safety, «isPurged».safety, «burial».safety, «isDetached».safety, «untangle».safety, «purge».safety, «position».safety, «create».safety, «rearrange».safety, «attach».safety, «settle».safety, «nextSibling».safety, «loadLink».safety, «link».safety, «lastChild».safety, «firstChild».safety, «burialOf».safety, «parentOf».safety, «spotOf».safety, «loadPurge».safety, «loadSpot».safety, «bury».safety, «unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «purgedIds».safety := by
   kernel_rfl
 
-def «waitingIds».uncurried : sig.«waitingIds».denote := fun xs => «waitingIds» xs.1
+noncomputable def «waitingIds».uncurried : sig.«waitingIds».denote := fun xs => «waitingIds» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «waitingIds».safety : sig.«waitingIds».params.denote → Bool := fun _ => true
+noncomputable def «waitingIds».safety : sig.«waitingIds».params.denote → Bool := fun _ => true
 
 theorem «waitingIds».body_eq :
     body.«waitingIds».denoteFn («purgedIds».uncurried, «purgeOf».uncurried, «isPurged».uncurried, «burial».uncurried, «isDetached».uncurried, «untangle».uncurried, «purge».uncurried, «position».uncurried, «create».uncurried, «rearrange».uncurried, «attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «waitingIds».uncurried := by
@@ -2035,10 +2039,10 @@ theorem «waitingIds».safe_eq :
     body.«waitingIds».safeFn («purgedIds».uncurried, «purgeOf».uncurried, «isPurged».uncurried, «burial».uncurried, «isDetached».uncurried, «untangle».uncurried, «purge».uncurried, «position».uncurried, «create».uncurried, «rearrange».uncurried, «attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («purgedIds».safety, «purgeOf».safety, «isPurged».safety, «burial».safety, «isDetached».safety, «untangle».safety, «purge».safety, «position».safety, «create».safety, «rearrange».safety, «attach».safety, «settle».safety, «nextSibling».safety, «loadLink».safety, «link».safety, «lastChild».safety, «firstChild».safety, «burialOf».safety, «parentOf».safety, «spotOf».safety, «loadPurge».safety, «loadSpot».safety, «bury».safety, «unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «waitingIds».safety := by
   kernel_rfl
 
-def «hasWaiting».uncurried : sig.«hasWaiting».denote := fun xs => «hasWaiting» xs.1
+noncomputable def «hasWaiting».uncurried : sig.«hasWaiting».denote := fun xs => «hasWaiting» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «hasWaiting».safety : sig.«hasWaiting».params.denote → Bool := fun _ => true
+noncomputable def «hasWaiting».safety : sig.«hasWaiting».params.denote → Bool := fun _ => true
 
 theorem «hasWaiting».body_eq :
     body.«hasWaiting».denoteFn («waitingIds».uncurried, «purgedIds».uncurried, «purgeOf».uncurried, «isPurged».uncurried, «burial».uncurried, «isDetached».uncurried, «untangle».uncurried, «purge».uncurried, «position».uncurried, «create».uncurried, «rearrange».uncurried, «attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «hasWaiting».uncurried := by
@@ -2048,10 +2052,10 @@ theorem «hasWaiting».safe_eq :
     body.«hasWaiting».safeFn («waitingIds».uncurried, «purgedIds».uncurried, «purgeOf».uncurried, «isPurged».uncurried, «burial».uncurried, «isDetached».uncurried, «untangle».uncurried, «purge».uncurried, «position».uncurried, «create».uncurried, «rearrange».uncurried, «attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («waitingIds».safety, «purgedIds».safety, «purgeOf».safety, «isPurged».safety, «burial».safety, «isDetached».safety, «untangle».safety, «purge».safety, «position».safety, «create».safety, «rearrange».safety, «attach».safety, «settle».safety, «nextSibling».safety, «loadLink».safety, «link».safety, «lastChild».safety, «firstChild».safety, «burialOf».safety, «parentOf».safety, «spotOf».safety, «loadPurge».safety, «loadSpot».safety, «bury».safety, «unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «hasWaiting».safety := by
   kernel_rfl
 
-def «changes».uncurried : sig.«changes».denote := fun xs => «changes» xs.1
+noncomputable def «changes».uncurried : sig.«changes».denote := fun xs => «changes» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «changes».safety : sig.«changes».params.denote → Bool := fun _ => true
+noncomputable def «changes».safety : sig.«changes».params.denote → Bool := fun _ => true
 
 theorem «changes».body_eq :
     body.«changes».denoteFn («hasWaiting».uncurried, «waitingIds».uncurried, «purgedIds».uncurried, «purgeOf».uncurried, «isPurged».uncurried, «burial».uncurried, «isDetached».uncurried, «untangle».uncurried, «purge».uncurried, «position».uncurried, «create».uncurried, «rearrange».uncurried, «attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «changes».uncurried := by
@@ -2061,10 +2065,10 @@ theorem «changes».safe_eq :
     body.«changes».safeFn («hasWaiting».uncurried, «waitingIds».uncurried, «purgedIds».uncurried, «purgeOf».uncurried, «isPurged».uncurried, «burial».uncurried, «isDetached».uncurried, «untangle».uncurried, «purge».uncurried, «position».uncurried, «create».uncurried, «rearrange».uncurried, «attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) («hasWaiting».safety, «waitingIds».safety, «purgedIds».safety, «purgeOf».safety, «isPurged».safety, «burial».safety, «isDetached».safety, «untangle».safety, «purge».safety, «position».safety, «create».safety, «rearrange».safety, «attach».safety, «settle».safety, «nextSibling».safety, «loadLink».safety, «link».safety, «lastChild».safety, «firstChild».safety, «burialOf».safety, «parentOf».safety, «spotOf».safety, «loadPurge».safety, «loadSpot».safety, «bury».safety, «unlink».safety, «setPrev».safety, «setNext».safety, «keyOf».safety, «cycleOf».safety, «new Tree».safety, «key».safety, «orNone».safety, «minStamp».safety, «earlier».safety, «newer».safety, «root».safety, ()) = «changes».safety := by
   kernel_rfl
 
-def «clearChanges».uncurried : sig.«clearChanges».denote := fun xs => «clearChanges» xs.1
+noncomputable def «clearChanges».uncurried : sig.«clearChanges».denote := fun xs => «clearChanges» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «clearChanges».safety : sig.«clearChanges».params.denote → Bool := fun _ => true
+noncomputable def «clearChanges».safety : sig.«clearChanges».params.denote → Bool := fun _ => true
 
 theorem «clearChanges».body_eq :
     body.«clearChanges».denoteFn («changes».uncurried, «hasWaiting».uncurried, «waitingIds».uncurried, «purgedIds».uncurried, «purgeOf».uncurried, «isPurged».uncurried, «burial».uncurried, «isDetached».uncurried, «untangle».uncurried, «purge».uncurried, «position».uncurried, «create».uncurried, «rearrange».uncurried, «attach».uncurried, «settle».uncurried, «nextSibling».uncurried, «loadLink».uncurried, «link».uncurried, «lastChild».uncurried, «firstChild».uncurried, «burialOf».uncurried, «parentOf».uncurried, «spotOf».uncurried, «loadPurge».uncurried, «loadSpot».uncurried, «bury».uncurried, «unlink».uncurried, «setPrev».uncurried, «setNext».uncurried, «keyOf».uncurried, «cycleOf».uncurried, «new Tree».uncurried, «key».uncurried, «orNone».uncurried, «minStamp».uncurried, «earlier».uncurried, «newer».uncurried, «root».uncurried, ()) = «clearChanges».uncurried := by

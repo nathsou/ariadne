@@ -438,14 +438,14 @@ mutual
       match expected with
       | some τ@(.option n σ) =>
         if !n.undef? then mismatch span s!"undefined where {τ.ts} admits only null"
-        return { ty := τ, typed := s!"(.undef {printNullish n} {T.print σ} (by decide))", readable := "none",
+        return { ty := τ, typed := s!"(.undef {printNullish n} {T.print σ} (by decide +kernel))", readable := "none",
                  atomic := true }
       | _ => mismatch span "undefined needs an optional type here"
     | .literal .null span =>
       match expected with
       | some τ@(.option n σ) =>
         if !n.null? then mismatch span s!"null where {τ.ts} admits only undefined"
-        return { ty := τ, typed := s!"(.null {printNullish n} {T.print σ} (by decide))", readable := "none",
+        return { ty := τ, typed := s!"(.null {printNullish n} {T.print σ} (by decide +kernel))", readable := "none",
                  atomic := true }
       | _ => mismatch span "null needs an optional type here"
     | .var "this" span => mismatch span "'this' used as a value (only this.f.get/has/size/set/delete and this.m())"
@@ -455,7 +455,7 @@ mutual
       | none => throw { code := "A2001", message := s!"unknown variable '{x}'", span }
     | .unary "-" (.literal (.number m ex) _) span => do
       let n ← integerLiteral span m ex
-      return { ty := .number, typed := s!"(.negNum {n} (by decide))", readable := s!"(-({n} : Int))", atomic := true }
+      return { ty := .number, typed := s!"(.negNum {n} (by decide +kernel))", readable := s!"(-({n} : Int))", atomic := true }
     | .unary op a span => do
       let a ← inferExpr T s a none
       match op, a.ty with
@@ -478,7 +478,7 @@ mutual
         let arms (ra rb : String) := if isNull then
             s!"match {ident x} with | none => {ra} | some {ident x} => {rb}"
           else s!"match {ident x} with | some {ident x} => {ra} | none => {rb}"
-        return { ty := a.ty, typed := s!"(.{ctor} {path} (by decide) {a.typed} {b.typed})",
+        return { ty := a.ty, typed := s!"(.{ctor} {path} (by decide +kernel) {a.typed} {b.typed})",
                  readable := arms a.readable b.readable, trivial := a.trivial && b.trivial,
                  safe := arms (paren a.ok) (paren b.ok) }
       | none => do
@@ -493,7 +493,7 @@ mutual
       let (path, _, j, τ) ← s.stateField span f
       if !τ.nonNullish then mismatch span "a Map whose values may be undefined (get would be ambiguous)"
       let k ← checkExpr T s k (some .string)
-      return { ty := .option .undef τ, typed := s!"(.stateGet {path} {fidxPath j} (by decide) {k.typed})",
+      return { ty := .option .undef τ, typed := s!"(.stateGet {path} {fidxPath j} (by decide +kernel) {k.typed})",
                readable := s!"V2.mapGet {projText (ident "this") j} {k.term}", trivial := k.trivial, safe := k.safe }
     | .call (.member (.member (.var "this" _) f _) "has" _) [k] span => do
       let (path, _, j, _) ← s.stateField span f
@@ -534,12 +534,12 @@ mutual
       if !omitted.all (fun (_, τ) => τ matches .option .undef _ | .option .both _) then
         mismatch span s!"'{f}' needs {sig.params.length} arguments"
       let typedArgs := given.foldr (fun a acc => s!"(.cons {a.typed} {acc})")
-        (if omitted.isEmpty then ".nil" else "(.omitted (by decide))")
+        (if omitted.isEmpty then ".nil" else "(.omitted (by decide +kernel))")
       let readableArgs := given.map (·.term) ++ omitted.map fun _ => "none"
       let readable := if readableArgs.isEmpty then ident f else " ".intercalate (ident f :: readableArgs)
       let (argsT, argsS) := foldSafe given
       let calleeSafe := " ".intercalate (s!"{ident f}.safe" :: readableArgs)
-      return { ty := sig.result, typed := s!"(.call (s := sig.{ident f}) {fnPath (s.fns.length - 1 - j)} (by decide) {typedArgs})",
+      return { ty := sig.result, typed := s!"(.call (s := sig.{ident f}) {fnPath (s.fns.length - 1 - j)} (by decide +kernel) {typedArgs})",
                readable, atomic := readableArgs.isEmpty, trivial := argsT && sig.trivial,
                safe := andTText argsT argsS sig.trivial calleeSafe }
     | .call (.member recv m _) args span => checkMethod T s recv m args span expected
@@ -554,7 +554,7 @@ mutual
         match fields.findIdx? (·.1 == f) with
         | some k =>
           if protoName f then mismatch span s!"'{f}' is an Object.prototype property"
-          return { ty := fields[k]!.2, typed := s!"(.field {a.typed} {fidxPath k} (by decide))",
+          return { ty := fields[k]!.2, typed := s!"(.field {a.typed} {fidxPath k} (by decide +kernel))",
                    readable := projText a.term k, trivial := a.trivial, safe := a.safe }
         | none => mismatch span s!"no field '{f}'"
       | τ, _ => mismatch span s!"field '{f}' of {τ.ts}"
@@ -645,7 +645,7 @@ mutual
     | "includes" =>
       if !τ.prim then mismatch span s!"'includes' on an array of {τ.ts} (objects compare by identity)"
       let x ← checkExpr T s arg (some τ)
-      return { ty := .bool, typed := s!"(.includes (by decide) {a.typed} {x.typed})",
+      return { ty := .bool, typed := s!"(.includes (by decide +kernel) {a.typed} {x.typed})",
                readable := s!"List.any {a.term} (fun y' => y' == {x.term})", trivial := a.trivial && x.trivial,
                safe := both a x }
     | "some" | "every" | "find" | "filter" | "map" => do
@@ -688,7 +688,7 @@ mutual
       if τ' != τ then mismatch span s!"'{f}' takes {τ'.ts} where {τ.ts} is passed"
       if let some r := result then
         if r != sig.result then mismatch span s!"'{f}' returns {sig.result.ts} where {r.ts} is expected"
-      return { typed := s!"(.ref {path} (by decide))", lam := ident f, lamSafe := s!"{ident f}.safe",
+      return { typed := s!"(.ref {path} (by decide +kernel))", lam := ident f, lamSafe := s!"{ident f}.safe",
                trivial := sig.trivial, ty := sig.result }
     | .lambda .. => unsupportedTy span "a callback other than an arrow function with an expression body and at most one parameter"
     | _ => unsupportedTy span "a callback other than an arrow function or a declared function"
@@ -708,7 +708,7 @@ mutual
       let [(_, τ1), (_, τ2)] := sig.params | mismatch span s!"'{f}' as a comparator must take two parameters"
       if τ1 != τ || τ2 != τ || sig.result != .number then
         mismatch span s!"'{f}' is not a comparator of {τ.ts}"
-      return { typed := s!"(.ref {path} (by decide))", lam := ident f, lamSafe := s!"{ident f}.safe",
+      return { typed := s!"(.ref {path} (by decide +kernel))", lam := ident f, lamSafe := s!"{ident f}.safe",
                trivial := sig.trivial, ty := .number }
     | _ => unsupportedTy span "a comparator other than an arrow function of two parameters or a declared function"
 
@@ -729,14 +729,14 @@ mutual
       let .option _ σ := a.ty | mismatch span s!"'{op} null' on {a.ty.ts}"
       if !σ.nonNullish then mismatch span "a nested optional"
       let (ctor, readable) := if op == "==" then ("isNull", s!"{a.term}.isNone") else ("notNull", s!"{a.term}.isSome")
-      return { ty := .bool, typed := s!"(.{ctor} (by decide) {a.typed})", readable, trivial := a.trivial,
+      return { ty := .bool, typed := s!"(.{ctor} (by decide +kernel) {a.typed})", readable, trivial := a.trivial,
                safe := a.safe }
     | "??" => do
       let a ← inferExpr T s a none
       let .option _ σ := a.ty | mismatch span s!"'??' on {a.ty.ts}"
       if !σ.nonNullish then mismatch span "a nested optional"
       let b ← checkExpr T s b (some σ)
-      return { ty := σ, typed := s!"(.coalesce (by decide) {a.typed} {b.typed})",
+      return { ty := σ, typed := s!"(.coalesce (by decide +kernel) {a.typed} {b.typed})",
                readable := s!"match {a.readable} with | some v' => v' | none => {b.readable}",
                trivial := a.trivial && b.trivial,
                safe := andTText a.trivial a.safe b.trivial
@@ -748,7 +748,7 @@ mutual
         | _ => do let a ← inferExpr T s a none; pure (a, ← checkExpr T s b (some a.ty))
       if !a.ty.prim then mismatch span s!"'{op}' on {a.ty.ts} (objects compare by identity)"
       let neg := op == "!=="
-      return { ty := .bool, typed := s!"(.bin (.{if neg then "ne" else "eq"} (by decide)) {a.typed} {b.typed})",
+      return { ty := .bool, typed := s!"(.bin (.{if neg then "ne" else "eq"} (by decide +kernel)) {a.typed} {b.typed})",
                readable := s!"{a.term} {if neg then "!=" else "=="} {b.term}", trivial := a.trivial && b.trivial,
                safe := both a b }
     | _ => do
@@ -813,9 +813,9 @@ mutual
         let (upd, readable) := fields.zipIdx.foldr (fun ((f, _), k) (accU, accR) =>
             match srcNames.findIdx? (· == f) with
             | some j => (s!"(.set {fidxPath j} {accU})", src[j]!.2.term :: accR)
-            | none => (s!"(.keep (by decide) {accU})", projText "r'" k :: accR)) (".nil", [])
+            | none => (s!"(.keep (by decide +kernel) {accU})", projText "r'" k :: accR)) (".nil", [])
         let (esT, esS) := foldSafe (src.map (·.2))
-        return { ty := τ, typed := s!"(.update {r.typed} {typedEntries} {upd} (by decide))",
+        return { ty := τ, typed := s!"(.update {r.typed} {typedEntries} {upd} (by decide +kernel))",
                  readable := s!"let r' := {r.readable}; ({", ".intercalate (readable ++ ["()"])})",
                  trivial := r.trivial && esT, safe := andTText r.trivial r.safe esT esS }
       | _ => do
@@ -829,10 +829,10 @@ mutual
             match srcNames.findIdx? (· == f) with
             | some j => pure (s!"(.cons {fidxPath j} {accS})", src[j]!.2.term :: accR)
             | none => match fτ with
-              | .option .undef _ | .option .both _ => pure (s!"(.absent (by decide) {accS})", "none" :: accR)
+              | .option .undef _ | .option .both _ => pure (s!"(.absent (by decide +kernel) {accS})", "none" :: accR)
               | _ => mismatch span s!"the literal has no '{f}' field") (".nil", [])
         let (esT, esS) := foldSafe (src.map (·.2))
-        return { ty := τ, typed := s!"(.record {typedEntries} {sel.1} (by decide))",
+        return { ty := τ, typed := s!"(.record {typedEntries} {sel.1} (by decide +kernel))",
                  readable := "(" ++ ", ".intercalate (sel.2 ++ ["()"]) ++ ")", trivial := esT, safe := esS }
     | τ@(.option _ σ) => do
       let r ← checkRecord T s entries span σ
@@ -1049,11 +1049,11 @@ mutual
         | "set", [k, v] => do
           let key ← checkExpr T s k (some .string)
           let v ← checkExpr T s v (some τ)
-          pure (s!"(.stateSet {path} {fidxPath j} (by decide) {key.typed} {v.typed}",
+          pure (s!"(.stateSet {path} {fidxPath j} (by decide +kernel) {key.typed} {v.typed}",
             s!"V2.mapPut {field} {key.term} {v.term}", key, [v])
         | "delete", [k] => do
           let key ← checkExpr T s k (some .string)
-          pure (s!"(.stateDelete {path} {fidxPath j} (by decide) {key.typed}", s!"V2.mapDel {field} {key.term}", key, [])
+          pure (s!"(.stateDelete {path} {fidxPath j} (by decide +kernel) {key.typed}", s!"V2.mapDel {field} {key.term}", key, [])
         | _, _ => unsupportedTy span s!"this.{f}.{op}(…) as a statement"
       let rest ← checkStmts T s result rest
       let upd := s!"let {ident "this"} : {T.lean σ} := {tupleSetText (ident "this") j n newMap}"
@@ -1125,7 +1125,7 @@ mutual
         let text (render : Block → String → KText → String) (i : String) (k : KText) :=
           let j := i ++ "  "
           s!"match {ident x} with\n{i}| none =>\n{j}{render yes j k}\n{i}| some {ident x} =>\n{j}{render rest j (k.wrap n)}"
-        return { typed := s!"(.ifNullExit {path} (by decide)\n  {yes.typed}\n  {rest.typed})",
+        return { typed := s!"(.ifNullExit {path} (by decide +kernel)\n  {yes.typed}\n  {rest.typed})",
                  readable := text (·.readable), safe := text (·.safe), trivial := yes.trivial && rest.trivial,
                  falls := rest.falls, breaks := yes.breaks || rest.breaks,
                  continues := yes.continues || rest.continues }
@@ -1136,7 +1136,7 @@ mutual
         let k' := { k with normal := fun j' => render rest j' k }
         s!"match {ident x} with\n{i}| none =>\n{j}{render yes j k'}\n{i}| some {ident x} =>\n{j}{render no j (k'.wrap n)}"
       let (falls, breaks, continues) := flagsIte yes no rest
-      return { typed := s!"(.ifNull {path} (by decide)\n  {yes.typed}\n  {no.typed}\n  {rest.typed})",
+      return { typed := s!"(.ifNull {path} (by decide +kernel)\n  {yes.typed}\n  {no.typed}\n  {rest.typed})",
                readable := text (·.readable), safe := text (·.safe),
                trivial := yes.trivial && no.trivial && rest.trivial, falls, breaks, continues }
     else
@@ -1148,7 +1148,7 @@ mutual
         let k' := { k with normal := fun j' => render rest j' k }
         s!"match {ident x} with\n{i}| some {ident x} =>\n{j}{render yes j (k'.wrap n)}\n{i}| none =>\n{j}{render no j k'}"
       let (falls, breaks, continues) := flagsIte yes no rest
-      return { typed := s!"(.ifNotNull {path} (by decide)\n  {yes.typed}\n  {no.typed}\n  {rest.typed})",
+      return { typed := s!"(.ifNotNull {path} (by decide +kernel)\n  {yes.typed}\n  {no.typed}\n  {rest.typed})",
                readable := text (·.readable), safe := text (·.safe),
                trivial := yes.trivial && no.trivial && rest.trivial, falls, breaks, continues }
 
@@ -1218,7 +1218,7 @@ mutual
     let text (render : Block → String → KText → String) (ind : String) (k : KText) :=
       let kr := fun j => render rest j k
       switchLeaves render x leaves { k with normal := kr, brk := kr } (ident x) ind
-    pure { typed := s!"(.switchG {s.varPath i} (by decide)\n  {armsTyped}\n  {rest.typed})",
+    pure { typed := s!"(.switchG {s.varPath i} (by decide +kernel)\n  {armsTyped}\n  {rest.typed})",
            readable := text (·.readable), safe := text (·.safe),
            trivial := bodies.all (·.trivial) && rest.trivial,
            falls := f && rest.falls, breaks := f && rest.breaks,
@@ -1375,16 +1375,16 @@ def printFile (source namespace_ : String) (ast : Program) (T : Types) (fns : Li
   let name := ((source.splitOn "/").getLast?.getD source).map fun c => if c == '\n' || c == '\r' then ' ' else c
   let mut out := s!"import V2.Proof.Adequacy\n\n-- Generated by ariadne2 from {name}. Do not edit.\n\n"
   out := out ++ s!"namespace {namespace_}\nopen V2\n\nset_option maxRecDepth 8192\nset_option linter.unusedVariables false\n\n"
-  out := out ++ "/-- The source file in the model's syntax. -/\ndef ast : Program := [\n  " ++
+  out := out ++ "/-- The source file in the model's syntax. -/\nnoncomputable def ast : Program := [\n  " ++
     ",\n  ".intercalate (ast.map printFunction) ++ "]\n\n"
   for (n, τ) in T.named do
-    out := out ++ s!"abbrev ty.{ident n} : Ty := {printTy τ}\n"
+    out := out ++ s!"noncomputable abbrev ty.{ident n} : Ty := {printTy τ}\n"
   if !T.named.isEmpty then out := out ++ "\n"
   for fn in fns do
     let s := fn.sig
     let ctx := "[" ++ ", ".intercalate (s.params.map fun (x, τ) => s!"({leanString x}, {T.print τ})") ++ "]"
     let kind := if s.method then s!", method := true, void := {s.void}" else ""
-    out := out ++ s!"def {sigName s.name} : Sig := " ++ "{ name := " ++ leanString s.name ++
+    out := out ++ s!"noncomputable def {sigName s.name} : Sig := " ++ "{ name := " ++ leanString s.name ++
       s!", params := {ctx}, result := {T.print s.result}, trivial := {s.trivial}{kind} " ++ "}\n"
   out := out ++ "\n"
   let nes := (fns.foldl (fun acc fn => acc ++ collectNe fn.body.typed) []).eraseDups
@@ -1395,13 +1395,15 @@ def printFile (source namespace_ : String) (ast : Program) (T : Types) (fns : Li
   for fn in fns do
     let s := fn.sig
     let φ := "[" ++ ", ".intercalate (earlier.map sigName) ++ "]"
-    out := out ++ s!"def body.{ident s.name} : TStmts {φ} {sigName s.name}.params {sigName s.name}.result :=\n  " ++
+    out := out ++ s!"noncomputable def body.{ident s.name} : TStmts {φ} {sigName s.name}.params {sigName s.name}.result :=\n  " ++
       fn.body.typed ++ "\n\n"
     earlier := s.name :: earlier
   let all := "[" ++ ", ".intercalate (earlier.map sigName) ++ "]"
   let program := fns.foldl (fun acc fn => s!"(.cons {sigName fn.sig.name} body.{ident fn.sig.name} {acc})") ".nil"
-  out := out ++ s!"abbrev sigs : Sigs := {all}\n\ndef typed : TProgram sigs :=\n  {program}\n\n"
-  out := out ++ "theorem erased : typed.erase = ast := by kernel_rfl\n\ntheorem wf : typed.WF := by decide +kernel\n\n"
+  out := out ++ s!"noncomputable abbrev sigs : Sigs := {all}\n\nnoncomputable def typed : TProgram sigs :=\n  {program}\n\n"
+  out := out ++ "theorem erased : typed.erase = ast := by kernel_rfl\n\ntheorem bodies_ok : typed.bodiesOk = true := by decide +kernel\n\n" ++
+    "theorem ast_scoped : ast.scoped = true := by decide +kernel\n\n" ++
+    "theorem wf : typed.WF := TProgram.wf_of typed erased bodies_ok ast_scoped\n\n"
   out := out ++ "/-! ## Readable definitions -/\n\n"
   for fn in fns do
     let s := fn.sig
@@ -1424,13 +1426,13 @@ readable definitions as its environment, so no check unfolds a callee. -/\n\n"
     let s := fn.sig
     let projections := (List.range s.params.length).map fun k => projText "xs" k
     let applied := if s.params.isEmpty then ident s.name else " ".intercalate (ident s.name :: projections)
-    out := out ++ s!"def {ident s.name}.uncurried : {sigName s.name}.denote := fun xs => {applied}\n\n"
+    out := out ++ s!"noncomputable def {ident s.name}.uncurried : {sigName s.name}.denote := fun xs => {applied}\n\n"
     if s.trivial then
       out := out ++ s!"/-- Trivially safe: every input is in what the model covers. -/\n"
-      out := out ++ s!"def {ident s.name}.safety : {sigName s.name}.params.denote → Bool := fun _ => true\n\n"
+      out := out ++ s!"noncomputable def {ident s.name}.safety : {sigName s.name}.params.denote → Bool := fun _ => true\n\n"
     else
       let safeApplied := " ".intercalate (s!"{ident s.name}.safe" :: projections)
-      out := out ++ s!"def {ident s.name}.safety : {sigName s.name}.params.denote → Bool := fun xs => {safeApplied}\n\n"
+      out := out ++ s!"noncomputable def {ident s.name}.safety : {sigName s.name}.params.denote → Bool := fun xs => {safeApplied}\n\n"
     out := out ++ s!"theorem {ident s.name}.body_eq :\n    body.{ident s.name}.denoteFn {tupleOf prior "uncurried"} = {ident s.name}.uncurried := by\n  kernel_rfl\n\n"
     out := out ++ s!"theorem {ident s.name}.safe_eq :\n    body.{ident s.name}.safeFn {tupleOf prior "uncurried"} {tupleOf prior "safety"} = {ident s.name}.safety := by\n  kernel_rfl\n\n"
     prior := s.name :: prior

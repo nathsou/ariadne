@@ -9,7 +9,7 @@ set_option maxRecDepth 8192
 set_option linter.unusedVariables false
 
 /-- The source file in the model's syntax. -/
-def ast : Program := [
+noncomputable def ast : Program := [
   { name := "total", params := ["a", "b"], body := [
       .ret (.binary .add (.var "a") (.binary .mul (.var "b") (.lit (.number 2))))] },
   { name := "negate", params := ["x"], body := [
@@ -74,31 +74,31 @@ def ast : Program := [
   { name := "summaries", params := ["es"], body := [
       .ret (.method (.var "es") "map" [(.arrow ["e"] (.record [(some "id", (.field (.var "e") "id")), (some "size", (.binary .add (.field (.var "e") "size") (.lit (.number 1)))), (some "name", (.field (.var "e") "name")), (some "tags", (.array []))]))])] }]
 
-abbrev ty.«Entry» : Ty := (.record (.cons "id" .number (.cons "size" .number (.cons "name" .string (.cons "tags" (.array .string) .nil)))))
+noncomputable abbrev ty.«Entry» : Ty := (.record (.cons "id" .number (.cons "size" .number (.cons "name" .string (.cons "tags" (.array .string) .nil)))))
 
-def sig.«total» : Sig := { name := "total", params := [("a", .number), ("b", .number)], result := .number, trivial := false }
-def sig.«negate» : Sig := { name := "negate", params := [("x", .number)], result := .number, trivial := false }
-def sig.«clampIndex» : Sig := { name := "clampIndex", params := [("i", .number), ("n", .number)], result := .number, trivial := false }
-def sig.«count» : Sig := { name := "count", params := [("es", (.array ty.«Entry»))], result := .number, trivial := true }
-def sig.«sizes» : Sig := { name := "sizes", params := [("es", (.array ty.«Entry»))], result := (.array .number), trivial := true }
-def sig.«named» : Sig := { name := "named", params := [("es", (.array ty.«Entry»)), ("name", .string)], result := (.option .undef ty.«Entry»), trivial := true }
-def sig.«tagged» : Sig := { name := "tagged", params := [("es", (.array ty.«Entry»)), ("tag", .string)], result := (.array ty.«Entry»), trivial := true }
-def sig.«anyLarge» : Sig := { name := "anyLarge", params := [("es", (.array ty.«Entry»)), ("limit", .number)], result := .bool, trivial := true }
-def sig.«allNamed» : Sig := { name := "allNamed", params := [("es", (.array ty.«Entry»))], result := .bool, trivial := true }
-def sig.«bySize» : Sig := { name := "bySize", params := [("es", (.array ty.«Entry»))], result := (.array ty.«Entry»), trivial := false }
-def sig.«byName» : Sig := { name := "byName", params := [("es", (.array ty.«Entry»))], result := (.array ty.«Entry»), trivial := false }
-def sig.«ids» : Sig := { name := "ids", params := [("es", (.array ty.«Entry»))], result := (.array .number), trivial := true }
-def sig.«firstName» : Sig := { name := "firstName", params := [("es", (.array ty.«Entry»))], result := .string, trivial := true }
-def sig.«grow» : Sig := { name := "grow", params := [("es", (.array ty.«Entry»)), ("by", .number)], result := (.array ty.«Entry»), trivial := false }
-def sig.«signs» : Sig := { name := "signs", params := [("xs", (.array .number))], result := (.array .string), trivial := true }
-def sig.«scaled» : Sig := { name := "scaled", params := [("xs", (.array .number)), ("k", .number)], result := (.array .number), trivial := false }
-def sig.«totalOf» : Sig := { name := "totalOf", params := [("es", (.array ty.«Entry»))], result := .number, trivial := false }
-def sig.«isLarge» : Sig := { name := "isLarge", params := [("e", ty.«Entry»)], result := .bool, trivial := true }
-def sig.«bySizeDesc» : Sig := { name := "bySizeDesc", params := [("a", ty.«Entry»), ("b", ty.«Entry»)], result := .number, trivial := true }
-def sig.«large» : Sig := { name := "large", params := [("es", (.array ty.«Entry»))], result := (.array ty.«Entry»), trivial := true }
-def sig.«ranked» : Sig := { name := "ranked", params := [("es", (.array ty.«Entry»))], result := (.array ty.«Entry»), trivial := false }
-def sig.«flags» : Sig := { name := "flags", params := [("es", (.array ty.«Entry»))], result := (.array .bool), trivial := true }
-def sig.«summaries» : Sig := { name := "summaries", params := [("es", (.array ty.«Entry»))], result := (.array ty.«Entry»), trivial := false }
+noncomputable def sig.«total» : Sig := { name := "total", params := [("a", .number), ("b", .number)], result := .number, trivial := false }
+noncomputable def sig.«negate» : Sig := { name := "negate", params := [("x", .number)], result := .number, trivial := false }
+noncomputable def sig.«clampIndex» : Sig := { name := "clampIndex", params := [("i", .number), ("n", .number)], result := .number, trivial := false }
+noncomputable def sig.«count» : Sig := { name := "count", params := [("es", (.array ty.«Entry»))], result := .number, trivial := true }
+noncomputable def sig.«sizes» : Sig := { name := "sizes", params := [("es", (.array ty.«Entry»))], result := (.array .number), trivial := true }
+noncomputable def sig.«named» : Sig := { name := "named", params := [("es", (.array ty.«Entry»)), ("name", .string)], result := (.option .undef ty.«Entry»), trivial := true }
+noncomputable def sig.«tagged» : Sig := { name := "tagged", params := [("es", (.array ty.«Entry»)), ("tag", .string)], result := (.array ty.«Entry»), trivial := true }
+noncomputable def sig.«anyLarge» : Sig := { name := "anyLarge", params := [("es", (.array ty.«Entry»)), ("limit", .number)], result := .bool, trivial := true }
+noncomputable def sig.«allNamed» : Sig := { name := "allNamed", params := [("es", (.array ty.«Entry»))], result := .bool, trivial := true }
+noncomputable def sig.«bySize» : Sig := { name := "bySize", params := [("es", (.array ty.«Entry»))], result := (.array ty.«Entry»), trivial := false }
+noncomputable def sig.«byName» : Sig := { name := "byName", params := [("es", (.array ty.«Entry»))], result := (.array ty.«Entry»), trivial := false }
+noncomputable def sig.«ids» : Sig := { name := "ids", params := [("es", (.array ty.«Entry»))], result := (.array .number), trivial := true }
+noncomputable def sig.«firstName» : Sig := { name := "firstName", params := [("es", (.array ty.«Entry»))], result := .string, trivial := true }
+noncomputable def sig.«grow» : Sig := { name := "grow", params := [("es", (.array ty.«Entry»)), ("by", .number)], result := (.array ty.«Entry»), trivial := false }
+noncomputable def sig.«signs» : Sig := { name := "signs", params := [("xs", (.array .number))], result := (.array .string), trivial := true }
+noncomputable def sig.«scaled» : Sig := { name := "scaled", params := [("xs", (.array .number)), ("k", .number)], result := (.array .number), trivial := false }
+noncomputable def sig.«totalOf» : Sig := { name := "totalOf", params := [("es", (.array ty.«Entry»))], result := .number, trivial := false }
+noncomputable def sig.«isLarge» : Sig := { name := "isLarge", params := [("e", ty.«Entry»)], result := .bool, trivial := true }
+noncomputable def sig.«bySizeDesc» : Sig := { name := "bySizeDesc", params := [("a", ty.«Entry»), ("b", ty.«Entry»)], result := .number, trivial := true }
+noncomputable def sig.«large» : Sig := { name := "large", params := [("es", (.array ty.«Entry»))], result := (.array ty.«Entry»), trivial := true }
+noncomputable def sig.«ranked» : Sig := { name := "ranked", params := [("es", (.array ty.«Entry»))], result := (.array ty.«Entry»), trivial := false }
+noncomputable def sig.«flags» : Sig := { name := "flags", params := [("es", (.array ty.«Entry»))], result := (.array .bool), trivial := true }
+noncomputable def sig.«summaries» : Sig := { name := "summaries", params := [("es", (.array ty.«Entry»))], result := (.array ty.«Entry»), trivial := false }
 
 theorem ne.«b».«a» : ("b" : String) ≠ "a" := by decide
 theorem ne.«n».«i» : ("n" : String) ≠ "i" := by decide
@@ -113,13 +113,13 @@ theorem ne.«by».«es» : ("by" : String) ≠ "es" := by decide
 theorem ne.«k».«x» : ("k" : String) ≠ "x" := by decide
 theorem ne.«k».«xs» : ("k" : String) ≠ "xs" := by decide
 
-def body.«total» : TStmts [] sig.«total».params sig.«total».result :=
+noncomputable def body.«total» : TStmts [] sig.«total».params sig.«total».result :=
   (.ret (.bin .nadd (.var .here) (.bin .nmul (.var (.there ne.«b».«a» .here)) (.num 2))) .nil)
 
-def body.«negate» : TStmts [sig.«total»] sig.«negate».params sig.«negate».result :=
+noncomputable def body.«negate» : TStmts [sig.«total»] sig.«negate».params sig.«negate».result :=
   (.ret (.nneg (.var .here)) .nil)
 
-def body.«clampIndex» : TStmts [sig.«negate», sig.«total»] sig.«clampIndex».params sig.«clampIndex».result :=
+noncomputable def body.«clampIndex» : TStmts [sig.«negate», sig.«total»] sig.«clampIndex».params sig.«clampIndex».result :=
   (.ite (.bin .nlt (.var .here) (.num 0))
   (.ret (.num 0) .nil)
   .nil
@@ -128,80 +128,84 @@ def body.«clampIndex» : TStmts [sig.«negate», sig.«total»] sig.«clampInde
   .nil
   (.ret (.var .here) .nil)))
 
-def body.«count» : TStmts [sig.«clampIndex», sig.«negate», sig.«total»] sig.«count».params sig.«count».result :=
+noncomputable def body.«count» : TStmts [sig.«clampIndex», sig.«negate», sig.«total»] sig.«count».params sig.«count».result :=
   (.ret (.length (.var .here)) .nil)
 
-def body.«sizes» : TStmts [sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«sizes».params sig.«sizes».result :=
-  (.ret (.map (.var .here) (.arrow "e" (.field (.var .here) (.there .here) (by decide)))) .nil)
+noncomputable def body.«sizes» : TStmts [sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«sizes».params sig.«sizes».result :=
+  (.ret (.map (.var .here) (.arrow "e" (.field (.var .here) (.there .here) (by decide +kernel)))) .nil)
 
-def body.«named» : TStmts [sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«named».params sig.«named».result :=
-  (.ret (.find (.var .here) (.arrow "e" (.bin (.eq (by decide)) (.field (.var .here) (.there (.there .here)) (by decide)) (.var (.there ne.«name».«e» (.there ne.«name».«es» .here)))))) .nil)
+noncomputable def body.«named» : TStmts [sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«named».params sig.«named».result :=
+  (.ret (.find (.var .here) (.arrow "e" (.bin (.eq (by decide +kernel)) (.field (.var .here) (.there (.there .here)) (by decide +kernel)) (.var (.there ne.«name».«e» (.there ne.«name».«es» .here)))))) .nil)
 
-def body.«tagged» : TStmts [sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«tagged».params sig.«tagged».result :=
-  (.ret (.filter (.var .here) (.arrow "e" (.includes (by decide) (.field (.var .here) (.there (.there (.there .here))) (by decide)) (.var (.there ne.«tag».«e» (.there ne.«tag».«es» .here)))))) .nil)
+noncomputable def body.«tagged» : TStmts [sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«tagged».params sig.«tagged».result :=
+  (.ret (.filter (.var .here) (.arrow "e" (.includes (by decide +kernel) (.field (.var .here) (.there (.there (.there .here))) (by decide +kernel)) (.var (.there ne.«tag».«e» (.there ne.«tag».«es» .here)))))) .nil)
 
-def body.«anyLarge» : TStmts [sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«anyLarge».params sig.«anyLarge».result :=
-  (.ret (.any (.var .here) (.arrow "e" (.bin .ngt (.field (.var .here) (.there .here) (by decide)) (.var (.there ne.«limit».«e» (.there ne.«limit».«es» .here)))))) .nil)
+noncomputable def body.«anyLarge» : TStmts [sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«anyLarge».params sig.«anyLarge».result :=
+  (.ret (.any (.var .here) (.arrow "e" (.bin .ngt (.field (.var .here) (.there .here) (by decide +kernel)) (.var (.there ne.«limit».«e» (.there ne.«limit».«es» .here)))))) .nil)
 
-def body.«allNamed» : TStmts [sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«allNamed».params sig.«allNamed».result :=
-  (.ret (.all (.var .here) (.arrow "e" (.bin .ngt (.slength (.field (.var .here) (.there (.there .here)) (by decide))) (.num 0)))) .nil)
+noncomputable def body.«allNamed» : TStmts [sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«allNamed».params sig.«allNamed».result :=
+  (.ret (.all (.var .here) (.arrow "e" (.bin .ngt (.slength (.field (.var .here) (.there (.there .here)) (by decide +kernel))) (.num 0)))) .nil)
 
-def body.«bySize» : TStmts [sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«bySize».params sig.«bySize».result :=
-  (.ret (.sorted (.var .here) (.arrow "a" "b" (.bin .nsub (.field (.var .here) (.there .here) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there .here) (by decide))))) .nil)
+noncomputable def body.«bySize» : TStmts [sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«bySize».params sig.«bySize».result :=
+  (.ret (.sorted (.var .here) (.arrow "a" "b" (.bin .nsub (.field (.var .here) (.there .here) (by decide +kernel)) (.field (.var (.there ne.«b».«a» .here)) (.there .here) (by decide +kernel))))) .nil)
 
-def body.«byName» : TStmts [sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«byName».params sig.«byName».result :=
-  (.ret (.sorted (.var .here) (.arrow "a" "b" (.cond (.bin .slt (.field (.var .here) (.there (.there .here)) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there .here)) (by decide))) (.negNum 1 (by decide)) (.cond (.bin .sgt (.field (.var .here) (.there (.there .here)) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there .here)) (by decide))) (.num 1) (.num 0))))) .nil)
+noncomputable def body.«byName» : TStmts [sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«byName».params sig.«byName».result :=
+  (.ret (.sorted (.var .here) (.arrow "a" "b" (.cond (.bin .slt (.field (.var .here) (.there (.there .here)) (by decide +kernel)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there .here)) (by decide +kernel))) (.negNum 1 (by decide +kernel)) (.cond (.bin .sgt (.field (.var .here) (.there (.there .here)) (by decide +kernel)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there .here)) (by decide +kernel))) (.num 1) (.num 0))))) .nil)
 
-def body.«ids» : TStmts [sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«ids».params sig.«ids».result :=
-  (.ret (.array (τ := .number) (.cons (.num 0) (.spread (.map (.var .here) (.arrow "e" (.field (.var .here) .here (by decide)))) (.cons (.negNum 1 (by decide)) .nil)))) .nil)
+noncomputable def body.«ids» : TStmts [sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«ids».params sig.«ids».result :=
+  (.ret (.array (τ := .number) (.cons (.num 0) (.spread (.map (.var .here) (.arrow "e" (.field (.var .here) .here (by decide +kernel)))) (.cons (.negNum 1 (by decide +kernel)) .nil)))) .nil)
 
-def body.«firstName» : TStmts [sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«firstName».params sig.«firstName».result :=
+noncomputable def body.«firstName» : TStmts [sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«firstName».params sig.«firstName».result :=
   (.const "e" (.index (.var .here) (.num 0))
-  (.ifNullExit .here (by decide)
+  (.ifNullExit .here (by decide +kernel)
   (.ret (.str (js "")) .nil)
-  (.ret (.field (.var .here) (.there (.there .here)) (by decide)) .nil)))
+  (.ret (.field (.var .here) (.there (.there .here)) (by decide +kernel)) .nil)))
 
-def body.«grow» : TStmts [sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«grow».params sig.«grow».result :=
-  (.ret (.map (.var .here) (.arrow "e" (.update (.var .here) (.cons "size" (.bin .nadd (.field (.var .here) (.there .here) (by decide)) (.var (.there ne.«by».«e» (.there ne.«by».«es» .here)))) .nil) (.keep (by decide) (.set .here (.keep (by decide) (.keep (by decide) .nil)))) (by decide)))) .nil)
+noncomputable def body.«grow» : TStmts [sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«grow».params sig.«grow».result :=
+  (.ret (.map (.var .here) (.arrow "e" (.update (.var .here) (.cons "size" (.bin .nadd (.field (.var .here) (.there .here) (by decide +kernel)) (.var (.there ne.«by».«e» (.there ne.«by».«es» .here)))) .nil) (.keep (by decide +kernel) (.set .here (.keep (by decide +kernel) (.keep (by decide +kernel) .nil)))) (by decide +kernel)))) .nil)
 
-def body.«signs» : TStmts [sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«signs».params sig.«signs».result :=
-  (.ret (.map (.var .here) (.arrow "x" (.cond (.bin .ngt (.var .here) (.num 0)) (.str (js "pos")) (.cond (.bin (.eq (by decide)) (.var .here) (.num 0)) (.str (js "zero")) (.str (js "neg")))))) .nil)
+noncomputable def body.«signs» : TStmts [sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«signs».params sig.«signs».result :=
+  (.ret (.map (.var .here) (.arrow "x" (.cond (.bin .ngt (.var .here) (.num 0)) (.str (js "pos")) (.cond (.bin (.eq (by decide +kernel)) (.var .here) (.num 0)) (.str (js "zero")) (.str (js "neg")))))) .nil)
 
-def body.«scaled» : TStmts [sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«scaled».params sig.«scaled».result :=
-  (.ret (.map (.filter (.var .here) (.arrow "x" (.bin (.ne (by decide)) (.var .here) (.num 0)))) (.arrow "x" (.bin .nmul (.var .here) (.var (.there ne.«k».«x» (.there ne.«k».«xs» .here)))))) .nil)
+noncomputable def body.«scaled» : TStmts [sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«scaled».params sig.«scaled».result :=
+  (.ret (.map (.filter (.var .here) (.arrow "x" (.bin (.ne (by decide +kernel)) (.var .here) (.num 0)))) (.arrow "x" (.bin .nmul (.var .here) (.var (.there ne.«k».«x» (.there ne.«k».«xs» .here)))))) .nil)
 
-def body.«totalOf» : TStmts [sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«totalOf».params sig.«totalOf».result :=
-  (.ret (.call (s := sig.«total») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))) (by decide) (.cons (.call (s := sig.«count») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) (by decide) (.cons (.var .here) .nil)) (.cons (.num 1) .nil))) .nil)
+noncomputable def body.«totalOf» : TStmts [sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«totalOf».params sig.«totalOf».result :=
+  (.ret (.call (s := sig.«total») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))) (by decide +kernel) (.cons (.call (s := sig.«count») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) (by decide +kernel) (.cons (.var .here) .nil)) (.cons (.num 1) .nil))) .nil)
 
-def body.«isLarge» : TStmts [sig.«totalOf», sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«isLarge».params sig.«isLarge».result :=
-  (.ret (.bin .ngt (.field (.var .here) (.there .here) (by decide)) (.num 100)) .nil)
+noncomputable def body.«isLarge» : TStmts [sig.«totalOf», sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«isLarge».params sig.«isLarge».result :=
+  (.ret (.bin .ngt (.field (.var .here) (.there .here) (by decide +kernel)) (.num 100)) .nil)
 
-def body.«bySizeDesc» : TStmts [sig.«isLarge», sig.«totalOf», sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«bySizeDesc».params sig.«bySizeDesc».result :=
-  (.ite (.bin (.ne (by decide)) (.field (.var .here) (.there .here) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there .here) (by decide)))
-  (.ret (.cond (.bin .ngt (.field (.var .here) (.there .here) (by decide)) (.field (.var (.there ne.«b».«a» .here)) (.there .here) (by decide))) (.negNum 1 (by decide)) (.num 1)) .nil)
+noncomputable def body.«bySizeDesc» : TStmts [sig.«isLarge», sig.«totalOf», sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«bySizeDesc».params sig.«bySizeDesc».result :=
+  (.ite (.bin (.ne (by decide +kernel)) (.field (.var .here) (.there .here) (by decide +kernel)) (.field (.var (.there ne.«b».«a» .here)) (.there .here) (by decide +kernel)))
+  (.ret (.cond (.bin .ngt (.field (.var .here) (.there .here) (by decide +kernel)) (.field (.var (.there ne.«b».«a» .here)) (.there .here) (by decide +kernel))) (.negNum 1 (by decide +kernel)) (.num 1)) .nil)
   .nil
   (.ret (.num 0) .nil))
 
-def body.«large» : TStmts [sig.«bySizeDesc», sig.«isLarge», sig.«totalOf», sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«large».params sig.«large».result :=
-  (.ret (.filter (.var .here) (.ref (.there .here) (by decide))) .nil)
+noncomputable def body.«large» : TStmts [sig.«bySizeDesc», sig.«isLarge», sig.«totalOf», sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«large».params sig.«large».result :=
+  (.ret (.filter (.var .here) (.ref (.there .here) (by decide +kernel))) .nil)
 
-def body.«ranked» : TStmts [sig.«large», sig.«bySizeDesc», sig.«isLarge», sig.«totalOf», sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«ranked».params sig.«ranked».result :=
-  (.ret (.sorted (.var .here) (.ref (.there .here) (by decide))) .nil)
+noncomputable def body.«ranked» : TStmts [sig.«large», sig.«bySizeDesc», sig.«isLarge», sig.«totalOf», sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«ranked».params sig.«ranked».result :=
+  (.ret (.sorted (.var .here) (.ref (.there .here) (by decide +kernel))) .nil)
 
-def body.«flags» : TStmts [sig.«ranked», sig.«large», sig.«bySizeDesc», sig.«isLarge», sig.«totalOf», sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«flags».params sig.«flags».result :=
+noncomputable def body.«flags» : TStmts [sig.«ranked», sig.«large», sig.«bySizeDesc», sig.«isLarge», sig.«totalOf», sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«flags».params sig.«flags».result :=
   (.ret (.map (.var .here) (.const (.bool false))) .nil)
 
-def body.«summaries» : TStmts [sig.«flags», sig.«ranked», sig.«large», sig.«bySizeDesc», sig.«isLarge», sig.«totalOf», sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«summaries».params sig.«summaries».result :=
-  (.ret (.map (.var .here) (.arrow "e" (.record (.cons "id" (.field (.var .here) .here (by decide)) (.cons "size" (.bin .nadd (.field (.var .here) (.there .here) (by decide)) (.num 1)) (.cons "name" (.field (.var .here) (.there (.there .here)) (by decide)) (.cons "tags" (.array (τ := .string) .nil) .nil)))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) .nil)))) (by decide)))) .nil)
+noncomputable def body.«summaries» : TStmts [sig.«flags», sig.«ranked», sig.«large», sig.«bySizeDesc», sig.«isLarge», sig.«totalOf», sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»] sig.«summaries».params sig.«summaries».result :=
+  (.ret (.map (.var .here) (.arrow "e" (.record (.cons "id" (.field (.var .here) .here (by decide +kernel)) (.cons "size" (.bin .nadd (.field (.var .here) (.there .here) (by decide +kernel)) (.num 1)) (.cons "name" (.field (.var .here) (.there (.there .here)) (by decide +kernel)) (.cons "tags" (.array (τ := .string) .nil) .nil)))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) .nil)))) (by decide +kernel)))) .nil)
 
-abbrev sigs : Sigs := [sig.«summaries», sig.«flags», sig.«ranked», sig.«large», sig.«bySizeDesc», sig.«isLarge», sig.«totalOf», sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»]
+noncomputable abbrev sigs : Sigs := [sig.«summaries», sig.«flags», sig.«ranked», sig.«large», sig.«bySizeDesc», sig.«isLarge», sig.«totalOf», sig.«scaled», sig.«signs», sig.«grow», sig.«firstName», sig.«ids», sig.«byName», sig.«bySize», sig.«allNamed», sig.«anyLarge», sig.«tagged», sig.«named», sig.«sizes», sig.«count», sig.«clampIndex», sig.«negate», sig.«total»]
 
-def typed : TProgram sigs :=
+noncomputable def typed : TProgram sigs :=
   (.cons sig.«summaries» body.«summaries» (.cons sig.«flags» body.«flags» (.cons sig.«ranked» body.«ranked» (.cons sig.«large» body.«large» (.cons sig.«bySizeDesc» body.«bySizeDesc» (.cons sig.«isLarge» body.«isLarge» (.cons sig.«totalOf» body.«totalOf» (.cons sig.«scaled» body.«scaled» (.cons sig.«signs» body.«signs» (.cons sig.«grow» body.«grow» (.cons sig.«firstName» body.«firstName» (.cons sig.«ids» body.«ids» (.cons sig.«byName» body.«byName» (.cons sig.«bySize» body.«bySize» (.cons sig.«allNamed» body.«allNamed» (.cons sig.«anyLarge» body.«anyLarge» (.cons sig.«tagged» body.«tagged» (.cons sig.«named» body.«named» (.cons sig.«sizes» body.«sizes» (.cons sig.«count» body.«count» (.cons sig.«clampIndex» body.«clampIndex» (.cons sig.«negate» body.«negate» (.cons sig.«total» body.«total» .nil)))))))))))))))))))))))
 
 theorem erased : typed.erase = ast := by kernel_rfl
 
-theorem wf : typed.WF := by decide +kernel
+theorem bodies_ok : typed.bodiesOk = true := by decide +kernel
+
+theorem ast_scoped : ast.scoped = true := by decide +kernel
+
+theorem wf : typed.WF := TProgram.wf_of typed erased bodies_ok ast_scoped
 
 /-! ## Readable definitions -/
 
@@ -339,9 +343,9 @@ def «summaries».safe («es» : List (ty.«Entry».denote)) : Bool :=
 Each body is checked against its readable definition with the earlier functions'
 readable definitions as its environment, so no check unfolds a callee. -/
 
-def «total».uncurried : sig.«total».denote := fun xs => «total» xs.1 xs.2.1
+noncomputable def «total».uncurried : sig.«total».denote := fun xs => «total» xs.1 xs.2.1
 
-def «total».safety : sig.«total».params.denote → Bool := fun xs => «total».safe xs.1 xs.2.1
+noncomputable def «total».safety : sig.«total».params.denote → Bool := fun xs => «total».safe xs.1 xs.2.1
 
 theorem «total».body_eq :
     body.«total».denoteFn (()) = «total».uncurried := by
@@ -351,9 +355,9 @@ theorem «total».safe_eq :
     body.«total».safeFn (()) (()) = «total».safety := by
   kernel_rfl
 
-def «negate».uncurried : sig.«negate».denote := fun xs => «negate» xs.1
+noncomputable def «negate».uncurried : sig.«negate».denote := fun xs => «negate» xs.1
 
-def «negate».safety : sig.«negate».params.denote → Bool := fun xs => «negate».safe xs.1
+noncomputable def «negate».safety : sig.«negate».params.denote → Bool := fun xs => «negate».safe xs.1
 
 theorem «negate».body_eq :
     body.«negate».denoteFn («total».uncurried, ()) = «negate».uncurried := by
@@ -363,9 +367,9 @@ theorem «negate».safe_eq :
     body.«negate».safeFn («total».uncurried, ()) («total».safety, ()) = «negate».safety := by
   kernel_rfl
 
-def «clampIndex».uncurried : sig.«clampIndex».denote := fun xs => «clampIndex» xs.1 xs.2.1
+noncomputable def «clampIndex».uncurried : sig.«clampIndex».denote := fun xs => «clampIndex» xs.1 xs.2.1
 
-def «clampIndex».safety : sig.«clampIndex».params.denote → Bool := fun xs => «clampIndex».safe xs.1 xs.2.1
+noncomputable def «clampIndex».safety : sig.«clampIndex».params.denote → Bool := fun xs => «clampIndex».safe xs.1 xs.2.1
 
 theorem «clampIndex».body_eq :
     body.«clampIndex».denoteFn («negate».uncurried, «total».uncurried, ()) = «clampIndex».uncurried := by
@@ -375,10 +379,10 @@ theorem «clampIndex».safe_eq :
     body.«clampIndex».safeFn («negate».uncurried, «total».uncurried, ()) («negate».safety, «total».safety, ()) = «clampIndex».safety := by
   kernel_rfl
 
-def «count».uncurried : sig.«count».denote := fun xs => «count» xs.1
+noncomputable def «count».uncurried : sig.«count».denote := fun xs => «count» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «count».safety : sig.«count».params.denote → Bool := fun _ => true
+noncomputable def «count».safety : sig.«count».params.denote → Bool := fun _ => true
 
 theorem «count».body_eq :
     body.«count».denoteFn («clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) = «count».uncurried := by
@@ -388,10 +392,10 @@ theorem «count».safe_eq :
     body.«count».safeFn («clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) («clampIndex».safety, «negate».safety, «total».safety, ()) = «count».safety := by
   kernel_rfl
 
-def «sizes».uncurried : sig.«sizes».denote := fun xs => «sizes» xs.1
+noncomputable def «sizes».uncurried : sig.«sizes».denote := fun xs => «sizes» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «sizes».safety : sig.«sizes».params.denote → Bool := fun _ => true
+noncomputable def «sizes».safety : sig.«sizes».params.denote → Bool := fun _ => true
 
 theorem «sizes».body_eq :
     body.«sizes».denoteFn («count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) = «sizes».uncurried := by
@@ -401,10 +405,10 @@ theorem «sizes».safe_eq :
     body.«sizes».safeFn («count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) («count».safety, «clampIndex».safety, «negate».safety, «total».safety, ()) = «sizes».safety := by
   kernel_rfl
 
-def «named».uncurried : sig.«named».denote := fun xs => «named» xs.1 xs.2.1
+noncomputable def «named».uncurried : sig.«named».denote := fun xs => «named» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «named».safety : sig.«named».params.denote → Bool := fun _ => true
+noncomputable def «named».safety : sig.«named».params.denote → Bool := fun _ => true
 
 theorem «named».body_eq :
     body.«named».denoteFn («sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) = «named».uncurried := by
@@ -414,10 +418,10 @@ theorem «named».safe_eq :
     body.«named».safeFn («sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) («sizes».safety, «count».safety, «clampIndex».safety, «negate».safety, «total».safety, ()) = «named».safety := by
   kernel_rfl
 
-def «tagged».uncurried : sig.«tagged».denote := fun xs => «tagged» xs.1 xs.2.1
+noncomputable def «tagged».uncurried : sig.«tagged».denote := fun xs => «tagged» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «tagged».safety : sig.«tagged».params.denote → Bool := fun _ => true
+noncomputable def «tagged».safety : sig.«tagged».params.denote → Bool := fun _ => true
 
 theorem «tagged».body_eq :
     body.«tagged».denoteFn («named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) = «tagged».uncurried := by
@@ -427,10 +431,10 @@ theorem «tagged».safe_eq :
     body.«tagged».safeFn («named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) («named».safety, «sizes».safety, «count».safety, «clampIndex».safety, «negate».safety, «total».safety, ()) = «tagged».safety := by
   kernel_rfl
 
-def «anyLarge».uncurried : sig.«anyLarge».denote := fun xs => «anyLarge» xs.1 xs.2.1
+noncomputable def «anyLarge».uncurried : sig.«anyLarge».denote := fun xs => «anyLarge» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «anyLarge».safety : sig.«anyLarge».params.denote → Bool := fun _ => true
+noncomputable def «anyLarge».safety : sig.«anyLarge».params.denote → Bool := fun _ => true
 
 theorem «anyLarge».body_eq :
     body.«anyLarge».denoteFn («tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) = «anyLarge».uncurried := by
@@ -440,10 +444,10 @@ theorem «anyLarge».safe_eq :
     body.«anyLarge».safeFn («tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) («tagged».safety, «named».safety, «sizes».safety, «count».safety, «clampIndex».safety, «negate».safety, «total».safety, ()) = «anyLarge».safety := by
   kernel_rfl
 
-def «allNamed».uncurried : sig.«allNamed».denote := fun xs => «allNamed» xs.1
+noncomputable def «allNamed».uncurried : sig.«allNamed».denote := fun xs => «allNamed» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «allNamed».safety : sig.«allNamed».params.denote → Bool := fun _ => true
+noncomputable def «allNamed».safety : sig.«allNamed».params.denote → Bool := fun _ => true
 
 theorem «allNamed».body_eq :
     body.«allNamed».denoteFn («anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) = «allNamed».uncurried := by
@@ -453,9 +457,9 @@ theorem «allNamed».safe_eq :
     body.«allNamed».safeFn («anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) («anyLarge».safety, «tagged».safety, «named».safety, «sizes».safety, «count».safety, «clampIndex».safety, «negate».safety, «total».safety, ()) = «allNamed».safety := by
   kernel_rfl
 
-def «bySize».uncurried : sig.«bySize».denote := fun xs => «bySize» xs.1
+noncomputable def «bySize».uncurried : sig.«bySize».denote := fun xs => «bySize» xs.1
 
-def «bySize».safety : sig.«bySize».params.denote → Bool := fun xs => «bySize».safe xs.1
+noncomputable def «bySize».safety : sig.«bySize».params.denote → Bool := fun xs => «bySize».safe xs.1
 
 theorem «bySize».body_eq :
     body.«bySize».denoteFn («allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) = «bySize».uncurried := by
@@ -465,9 +469,9 @@ theorem «bySize».safe_eq :
     body.«bySize».safeFn («allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) («allNamed».safety, «anyLarge».safety, «tagged».safety, «named».safety, «sizes».safety, «count».safety, «clampIndex».safety, «negate».safety, «total».safety, ()) = «bySize».safety := by
   kernel_rfl
 
-def «byName».uncurried : sig.«byName».denote := fun xs => «byName» xs.1
+noncomputable def «byName».uncurried : sig.«byName».denote := fun xs => «byName» xs.1
 
-def «byName».safety : sig.«byName».params.denote → Bool := fun xs => «byName».safe xs.1
+noncomputable def «byName».safety : sig.«byName».params.denote → Bool := fun xs => «byName».safe xs.1
 
 theorem «byName».body_eq :
     body.«byName».denoteFn («bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) = «byName».uncurried := by
@@ -477,10 +481,10 @@ theorem «byName».safe_eq :
     body.«byName».safeFn («bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) («bySize».safety, «allNamed».safety, «anyLarge».safety, «tagged».safety, «named».safety, «sizes».safety, «count».safety, «clampIndex».safety, «negate».safety, «total».safety, ()) = «byName».safety := by
   kernel_rfl
 
-def «ids».uncurried : sig.«ids».denote := fun xs => «ids» xs.1
+noncomputable def «ids».uncurried : sig.«ids».denote := fun xs => «ids» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «ids».safety : sig.«ids».params.denote → Bool := fun _ => true
+noncomputable def «ids».safety : sig.«ids».params.denote → Bool := fun _ => true
 
 theorem «ids».body_eq :
     body.«ids».denoteFn («byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) = «ids».uncurried := by
@@ -490,10 +494,10 @@ theorem «ids».safe_eq :
     body.«ids».safeFn («byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) («byName».safety, «bySize».safety, «allNamed».safety, «anyLarge».safety, «tagged».safety, «named».safety, «sizes».safety, «count».safety, «clampIndex».safety, «negate».safety, «total».safety, ()) = «ids».safety := by
   kernel_rfl
 
-def «firstName».uncurried : sig.«firstName».denote := fun xs => «firstName» xs.1
+noncomputable def «firstName».uncurried : sig.«firstName».denote := fun xs => «firstName» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «firstName».safety : sig.«firstName».params.denote → Bool := fun _ => true
+noncomputable def «firstName».safety : sig.«firstName».params.denote → Bool := fun _ => true
 
 theorem «firstName».body_eq :
     body.«firstName».denoteFn («ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) = «firstName».uncurried := by
@@ -503,9 +507,9 @@ theorem «firstName».safe_eq :
     body.«firstName».safeFn («ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) («ids».safety, «byName».safety, «bySize».safety, «allNamed».safety, «anyLarge».safety, «tagged».safety, «named».safety, «sizes».safety, «count».safety, «clampIndex».safety, «negate».safety, «total».safety, ()) = «firstName».safety := by
   kernel_rfl
 
-def «grow».uncurried : sig.«grow».denote := fun xs => «grow» xs.1 xs.2.1
+noncomputable def «grow».uncurried : sig.«grow».denote := fun xs => «grow» xs.1 xs.2.1
 
-def «grow».safety : sig.«grow».params.denote → Bool := fun xs => «grow».safe xs.1 xs.2.1
+noncomputable def «grow».safety : sig.«grow».params.denote → Bool := fun xs => «grow».safe xs.1 xs.2.1
 
 theorem «grow».body_eq :
     body.«grow».denoteFn («firstName».uncurried, «ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) = «grow».uncurried := by
@@ -515,10 +519,10 @@ theorem «grow».safe_eq :
     body.«grow».safeFn («firstName».uncurried, «ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) («firstName».safety, «ids».safety, «byName».safety, «bySize».safety, «allNamed».safety, «anyLarge».safety, «tagged».safety, «named».safety, «sizes».safety, «count».safety, «clampIndex».safety, «negate».safety, «total».safety, ()) = «grow».safety := by
   kernel_rfl
 
-def «signs».uncurried : sig.«signs».denote := fun xs => «signs» xs.1
+noncomputable def «signs».uncurried : sig.«signs».denote := fun xs => «signs» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «signs».safety : sig.«signs».params.denote → Bool := fun _ => true
+noncomputable def «signs».safety : sig.«signs».params.denote → Bool := fun _ => true
 
 theorem «signs».body_eq :
     body.«signs».denoteFn («grow».uncurried, «firstName».uncurried, «ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) = «signs».uncurried := by
@@ -528,9 +532,9 @@ theorem «signs».safe_eq :
     body.«signs».safeFn («grow».uncurried, «firstName».uncurried, «ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) («grow».safety, «firstName».safety, «ids».safety, «byName».safety, «bySize».safety, «allNamed».safety, «anyLarge».safety, «tagged».safety, «named».safety, «sizes».safety, «count».safety, «clampIndex».safety, «negate».safety, «total».safety, ()) = «signs».safety := by
   kernel_rfl
 
-def «scaled».uncurried : sig.«scaled».denote := fun xs => «scaled» xs.1 xs.2.1
+noncomputable def «scaled».uncurried : sig.«scaled».denote := fun xs => «scaled» xs.1 xs.2.1
 
-def «scaled».safety : sig.«scaled».params.denote → Bool := fun xs => «scaled».safe xs.1 xs.2.1
+noncomputable def «scaled».safety : sig.«scaled».params.denote → Bool := fun xs => «scaled».safe xs.1 xs.2.1
 
 theorem «scaled».body_eq :
     body.«scaled».denoteFn («signs».uncurried, «grow».uncurried, «firstName».uncurried, «ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) = «scaled».uncurried := by
@@ -540,9 +544,9 @@ theorem «scaled».safe_eq :
     body.«scaled».safeFn («signs».uncurried, «grow».uncurried, «firstName».uncurried, «ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) («signs».safety, «grow».safety, «firstName».safety, «ids».safety, «byName».safety, «bySize».safety, «allNamed».safety, «anyLarge».safety, «tagged».safety, «named».safety, «sizes».safety, «count».safety, «clampIndex».safety, «negate».safety, «total».safety, ()) = «scaled».safety := by
   kernel_rfl
 
-def «totalOf».uncurried : sig.«totalOf».denote := fun xs => «totalOf» xs.1
+noncomputable def «totalOf».uncurried : sig.«totalOf».denote := fun xs => «totalOf» xs.1
 
-def «totalOf».safety : sig.«totalOf».params.denote → Bool := fun xs => «totalOf».safe xs.1
+noncomputable def «totalOf».safety : sig.«totalOf».params.denote → Bool := fun xs => «totalOf».safe xs.1
 
 theorem «totalOf».body_eq :
     body.«totalOf».denoteFn («scaled».uncurried, «signs».uncurried, «grow».uncurried, «firstName».uncurried, «ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) = «totalOf».uncurried := by
@@ -552,10 +556,10 @@ theorem «totalOf».safe_eq :
     body.«totalOf».safeFn («scaled».uncurried, «signs».uncurried, «grow».uncurried, «firstName».uncurried, «ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) («scaled».safety, «signs».safety, «grow».safety, «firstName».safety, «ids».safety, «byName».safety, «bySize».safety, «allNamed».safety, «anyLarge».safety, «tagged».safety, «named».safety, «sizes».safety, «count».safety, «clampIndex».safety, «negate».safety, «total».safety, ()) = «totalOf».safety := by
   kernel_rfl
 
-def «isLarge».uncurried : sig.«isLarge».denote := fun xs => «isLarge» xs.1
+noncomputable def «isLarge».uncurried : sig.«isLarge».denote := fun xs => «isLarge» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «isLarge».safety : sig.«isLarge».params.denote → Bool := fun _ => true
+noncomputable def «isLarge».safety : sig.«isLarge».params.denote → Bool := fun _ => true
 
 theorem «isLarge».body_eq :
     body.«isLarge».denoteFn («totalOf».uncurried, «scaled».uncurried, «signs».uncurried, «grow».uncurried, «firstName».uncurried, «ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) = «isLarge».uncurried := by
@@ -565,10 +569,10 @@ theorem «isLarge».safe_eq :
     body.«isLarge».safeFn («totalOf».uncurried, «scaled».uncurried, «signs».uncurried, «grow».uncurried, «firstName».uncurried, «ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) («totalOf».safety, «scaled».safety, «signs».safety, «grow».safety, «firstName».safety, «ids».safety, «byName».safety, «bySize».safety, «allNamed».safety, «anyLarge».safety, «tagged».safety, «named».safety, «sizes».safety, «count».safety, «clampIndex».safety, «negate».safety, «total».safety, ()) = «isLarge».safety := by
   kernel_rfl
 
-def «bySizeDesc».uncurried : sig.«bySizeDesc».denote := fun xs => «bySizeDesc» xs.1 xs.2.1
+noncomputable def «bySizeDesc».uncurried : sig.«bySizeDesc».denote := fun xs => «bySizeDesc» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «bySizeDesc».safety : sig.«bySizeDesc».params.denote → Bool := fun _ => true
+noncomputable def «bySizeDesc».safety : sig.«bySizeDesc».params.denote → Bool := fun _ => true
 
 theorem «bySizeDesc».body_eq :
     body.«bySizeDesc».denoteFn («isLarge».uncurried, «totalOf».uncurried, «scaled».uncurried, «signs».uncurried, «grow».uncurried, «firstName».uncurried, «ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) = «bySizeDesc».uncurried := by
@@ -578,10 +582,10 @@ theorem «bySizeDesc».safe_eq :
     body.«bySizeDesc».safeFn («isLarge».uncurried, «totalOf».uncurried, «scaled».uncurried, «signs».uncurried, «grow».uncurried, «firstName».uncurried, «ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) («isLarge».safety, «totalOf».safety, «scaled».safety, «signs».safety, «grow».safety, «firstName».safety, «ids».safety, «byName».safety, «bySize».safety, «allNamed».safety, «anyLarge».safety, «tagged».safety, «named».safety, «sizes».safety, «count».safety, «clampIndex».safety, «negate».safety, «total».safety, ()) = «bySizeDesc».safety := by
   kernel_rfl
 
-def «large».uncurried : sig.«large».denote := fun xs => «large» xs.1
+noncomputable def «large».uncurried : sig.«large».denote := fun xs => «large» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «large».safety : sig.«large».params.denote → Bool := fun _ => true
+noncomputable def «large».safety : sig.«large».params.denote → Bool := fun _ => true
 
 theorem «large».body_eq :
     body.«large».denoteFn («bySizeDesc».uncurried, «isLarge».uncurried, «totalOf».uncurried, «scaled».uncurried, «signs».uncurried, «grow».uncurried, «firstName».uncurried, «ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) = «large».uncurried := by
@@ -591,9 +595,9 @@ theorem «large».safe_eq :
     body.«large».safeFn («bySizeDesc».uncurried, «isLarge».uncurried, «totalOf».uncurried, «scaled».uncurried, «signs».uncurried, «grow».uncurried, «firstName».uncurried, «ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) («bySizeDesc».safety, «isLarge».safety, «totalOf».safety, «scaled».safety, «signs».safety, «grow».safety, «firstName».safety, «ids».safety, «byName».safety, «bySize».safety, «allNamed».safety, «anyLarge».safety, «tagged».safety, «named».safety, «sizes».safety, «count».safety, «clampIndex».safety, «negate».safety, «total».safety, ()) = «large».safety := by
   kernel_rfl
 
-def «ranked».uncurried : sig.«ranked».denote := fun xs => «ranked» xs.1
+noncomputable def «ranked».uncurried : sig.«ranked».denote := fun xs => «ranked» xs.1
 
-def «ranked».safety : sig.«ranked».params.denote → Bool := fun xs => «ranked».safe xs.1
+noncomputable def «ranked».safety : sig.«ranked».params.denote → Bool := fun xs => «ranked».safe xs.1
 
 theorem «ranked».body_eq :
     body.«ranked».denoteFn («large».uncurried, «bySizeDesc».uncurried, «isLarge».uncurried, «totalOf».uncurried, «scaled».uncurried, «signs».uncurried, «grow».uncurried, «firstName».uncurried, «ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) = «ranked».uncurried := by
@@ -603,10 +607,10 @@ theorem «ranked».safe_eq :
     body.«ranked».safeFn («large».uncurried, «bySizeDesc».uncurried, «isLarge».uncurried, «totalOf».uncurried, «scaled».uncurried, «signs».uncurried, «grow».uncurried, «firstName».uncurried, «ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) («large».safety, «bySizeDesc».safety, «isLarge».safety, «totalOf».safety, «scaled».safety, «signs».safety, «grow».safety, «firstName».safety, «ids».safety, «byName».safety, «bySize».safety, «allNamed».safety, «anyLarge».safety, «tagged».safety, «named».safety, «sizes».safety, «count».safety, «clampIndex».safety, «negate».safety, «total».safety, ()) = «ranked».safety := by
   kernel_rfl
 
-def «flags».uncurried : sig.«flags».denote := fun xs => «flags» xs.1
+noncomputable def «flags».uncurried : sig.«flags».denote := fun xs => «flags» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «flags».safety : sig.«flags».params.denote → Bool := fun _ => true
+noncomputable def «flags».safety : sig.«flags».params.denote → Bool := fun _ => true
 
 theorem «flags».body_eq :
     body.«flags».denoteFn («ranked».uncurried, «large».uncurried, «bySizeDesc».uncurried, «isLarge».uncurried, «totalOf».uncurried, «scaled».uncurried, «signs».uncurried, «grow».uncurried, «firstName».uncurried, «ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) = «flags».uncurried := by
@@ -616,9 +620,9 @@ theorem «flags».safe_eq :
     body.«flags».safeFn («ranked».uncurried, «large».uncurried, «bySizeDesc».uncurried, «isLarge».uncurried, «totalOf».uncurried, «scaled».uncurried, «signs».uncurried, «grow».uncurried, «firstName».uncurried, «ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) («ranked».safety, «large».safety, «bySizeDesc».safety, «isLarge».safety, «totalOf».safety, «scaled».safety, «signs».safety, «grow».safety, «firstName».safety, «ids».safety, «byName».safety, «bySize».safety, «allNamed».safety, «anyLarge».safety, «tagged».safety, «named».safety, «sizes».safety, «count».safety, «clampIndex».safety, «negate».safety, «total».safety, ()) = «flags».safety := by
   kernel_rfl
 
-def «summaries».uncurried : sig.«summaries».denote := fun xs => «summaries» xs.1
+noncomputable def «summaries».uncurried : sig.«summaries».denote := fun xs => «summaries» xs.1
 
-def «summaries».safety : sig.«summaries».params.denote → Bool := fun xs => «summaries».safe xs.1
+noncomputable def «summaries».safety : sig.«summaries».params.denote → Bool := fun xs => «summaries».safe xs.1
 
 theorem «summaries».body_eq :
     body.«summaries».denoteFn («flags».uncurried, «ranked».uncurried, «large».uncurried, «bySizeDesc».uncurried, «isLarge».uncurried, «totalOf».uncurried, «scaled».uncurried, «signs».uncurried, «grow».uncurried, «firstName».uncurried, «ids».uncurried, «byName».uncurried, «bySize».uncurried, «allNamed».uncurried, «anyLarge».uncurried, «tagged».uncurried, «named».uncurried, «sizes».uncurried, «count».uncurried, «clampIndex».uncurried, «negate».uncurried, «total».uncurried, ()) = «summaries».uncurried := by

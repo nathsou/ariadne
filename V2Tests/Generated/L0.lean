@@ -9,7 +9,7 @@ set_option maxRecDepth 8192
 set_option linter.unusedVariables false
 
 /-- The source file in the model's syntax. -/
-def ast : Program := [
+noncomputable def ast : Program := [
   { name := "max", params := ["a", "b"], body := [
       .ite (.binary .lt (.var "a") (.var "b"))
         [
@@ -60,13 +60,13 @@ def ast : Program := [
         [],
       .ret (.lit (.bool true))] }]
 
-def sig.«max» : Sig := { name := "max", params := [("a", .int), ("b", .int)], result := .int, trivial := true }
-def sig.«clamp» : Sig := { name := "clamp", params := [("x", .int), ("lo", .int), ("hi", .int)], result := .int, trivial := true }
-def sig.«sign» : Sig := { name := "sign", params := [("n", .int)], result := .int, trivial := true }
-def sig.«describe» : Sig := { name := "describe", params := [("n", .int), ("label", .string)], result := .string, trivial := true }
-def sig.«between» : Sig := { name := "between", params := [("lo", .string), ("x", .string), ("hi", .string)], result := .bool, trivial := true }
-def sig.«polynomial» : Sig := { name := "polynomial", params := [("x", .int)], result := .int, trivial := true }
-def sig.«implies» : Sig := { name := "implies", params := [("a", .bool), ("b", .bool)], result := .bool, trivial := true }
+noncomputable def sig.«max» : Sig := { name := "max", params := [("a", .int), ("b", .int)], result := .int, trivial := true }
+noncomputable def sig.«clamp» : Sig := { name := "clamp", params := [("x", .int), ("lo", .int), ("hi", .int)], result := .int, trivial := true }
+noncomputable def sig.«sign» : Sig := { name := "sign", params := [("n", .int)], result := .int, trivial := true }
+noncomputable def sig.«describe» : Sig := { name := "describe", params := [("n", .int), ("label", .string)], result := .string, trivial := true }
+noncomputable def sig.«between» : Sig := { name := "between", params := [("lo", .string), ("x", .string), ("hi", .string)], result := .bool, trivial := true }
+noncomputable def sig.«polynomial» : Sig := { name := "polynomial", params := [("x", .int)], result := .int, trivial := true }
+noncomputable def sig.«implies» : Sig := { name := "implies", params := [("a", .bool), ("b", .bool)], result := .bool, trivial := true }
 
 theorem ne.«b».«a» : ("b" : String) ≠ "a" := by decide
 theorem ne.«lo».«x» : ("lo" : String) ≠ "x" := by decide
@@ -84,48 +84,48 @@ theorem ne.«x».«square» : ("x" : String) ≠ "square" := by decide
 theorem ne.«square».«cube» : ("square" : String) ≠ "cube" := by decide
 theorem ne.«x».«cube» : ("x" : String) ≠ "cube" := by decide
 
-def body.«max» : TStmts [] sig.«max».params sig.«max».result :=
+noncomputable def body.«max» : TStmts [] sig.«max».params sig.«max».result :=
   (.ite (.bin .lt (.var .here) (.var (.there ne.«b».«a» .here)))
   (.ret (.var (.there ne.«b».«a» .here)) .nil)
   .nil
   (.ret (.var .here) .nil))
 
-def body.«clamp» : TStmts [sig.«max»] sig.«clamp».params sig.«clamp».result :=
-  (.const "y" (.call (s := sig.«max») .here (by decide) (.cons (.var .here) (.cons (.var (.there ne.«lo».«x» .here)) .nil)))
+noncomputable def body.«clamp» : TStmts [sig.«max»] sig.«clamp».params sig.«clamp».result :=
+  (.const "y" (.call (s := sig.«max») .here (by decide +kernel) (.cons (.var .here) (.cons (.var (.there ne.«lo».«x» .here)) .nil)))
   (.ret (.cond (.bin .gt (.var .here) (.var (.there ne.«hi».«y» (.there ne.«hi».«x» (.there ne.«hi».«lo» .here))))) (.var (.there ne.«hi».«y» (.there ne.«hi».«x» (.there ne.«hi».«lo» .here)))) (.var .here)) .nil))
 
-def body.«sign» : TStmts [sig.«clamp», sig.«max»] sig.«sign».params sig.«sign».result :=
+noncomputable def body.«sign» : TStmts [sig.«clamp», sig.«max»] sig.«sign».params sig.«sign».result :=
   (.ite (.bin .lt (.var .here) (.int 0))
   (.ret (.neg (.int 1)) .nil)
-  (.ite (.bin (.eq (by decide)) (.var .here) (.int 0))
+  (.ite (.bin (.eq (by decide +kernel)) (.var .here) (.int 0))
   (.ret (.int 0) .nil)
   .nil
   .nil)
   (.ret (.int 1) .nil))
 
-def body.«describe» : TStmts [sig.«sign», sig.«clamp», sig.«max»] sig.«describe».params sig.«describe».result :=
-  (.const "s" (.call (s := sig.«sign») .here (by decide) (.cons (.var .here) .nil))
+noncomputable def body.«describe» : TStmts [sig.«sign», sig.«clamp», sig.«max»] sig.«describe».params sig.«describe».result :=
+  (.const "s" (.call (s := sig.«sign») .here (by decide +kernel) (.cons (.var .here) .nil))
   (.const "prefix" (.bin .concat (.var (.there ne.«label».«s» (.there ne.«label».«n» .here))) (.str (js ": ")))
-  (.ite (.bin (.eq (by decide)) (.var (.there ne.«s».«prefix» .here)) (.int 0))
+  (.ite (.bin (.eq (by decide +kernel)) (.var (.there ne.«s».«prefix» .here)) (.int 0))
   (.ret (.bin .concat (.var .here) (.str (js "zero"))) .nil)
   .nil
   (.const "kind" (.cond (.bin .gt (.var (.there ne.«s».«prefix» .here)) (.int 0)) (.str (js "positive")) (.str (js "negative")))
-  (.ite (.or (.bin (.eq (by decide)) (.var (.there ne.«label».«kind» (.there ne.«label».«prefix» (.there ne.«label».«s» (.there ne.«label».«n» .here))))) (.str (js ""))) (.bin .sle (.var (.there ne.«label».«kind» (.there ne.«label».«prefix» (.there ne.«label».«s» (.there ne.«label».«n» .here))))) (.str (js "a"))))
+  (.ite (.or (.bin (.eq (by decide +kernel)) (.var (.there ne.«label».«kind» (.there ne.«label».«prefix» (.there ne.«label».«s» (.there ne.«label».«n» .here))))) (.str (js ""))) (.bin .sle (.var (.there ne.«label».«kind» (.there ne.«label».«prefix» (.there ne.«label».«s» (.there ne.«label».«n» .here))))) (.str (js "a"))))
   (.ret (.var .here) .nil)
   .nil
   (.ret (.bin .concat (.var (.there ne.«prefix».«kind» .here)) (.var .here)) .nil))))))
 
-def body.«between» : TStmts [sig.«describe», sig.«sign», sig.«clamp», sig.«max»] sig.«between».params sig.«between».result :=
-  (.ret (.and (.and (.not (.bin .slt (.var (.there ne.«x».«lo» .here)) (.var .here))) (.bin .sle (.var (.there ne.«x».«lo» .here)) (.var (.there ne.«hi».«lo» (.there ne.«hi».«x» .here))))) (.bin (.ne (by decide)) (.var .here) (.var (.there ne.«hi».«lo» (.there ne.«hi».«x» .here))))) .nil)
+noncomputable def body.«between» : TStmts [sig.«describe», sig.«sign», sig.«clamp», sig.«max»] sig.«between».params sig.«between».result :=
+  (.ret (.and (.and (.not (.bin .slt (.var (.there ne.«x».«lo» .here)) (.var .here))) (.bin .sle (.var (.there ne.«x».«lo» .here)) (.var (.there ne.«hi».«lo» (.there ne.«hi».«x» .here))))) (.bin (.ne (by decide +kernel)) (.var .here) (.var (.there ne.«hi».«lo» (.there ne.«hi».«x» .here))))) .nil)
 
-def body.«polynomial» : TStmts [sig.«between», sig.«describe», sig.«sign», sig.«clamp», sig.«max»] sig.«polynomial».params sig.«polynomial».result :=
+noncomputable def body.«polynomial» : TStmts [sig.«between», sig.«describe», sig.«sign», sig.«clamp», sig.«max»] sig.«polynomial».params sig.«polynomial».result :=
   (.const "square" (.bin .mul (.var .here) (.var .here))
   (.const "cube" (.bin .mul (.var .here) (.var (.there ne.«x».«square» .here)))
   (.ret (.bin .sub (.bin .add (.bin .sub (.var .here) (.bin .mul (.int 2) (.var (.there ne.«square».«cube» .here)))) (.bin .mul (.int 3) (.var (.there ne.«x».«cube» (.there ne.«x».«square» .here))))) (.int 4)) .nil)))
 
-def body.«implies» : TStmts [sig.«polynomial», sig.«between», sig.«describe», sig.«sign», sig.«clamp», sig.«max»] sig.«implies».params sig.«implies».result :=
+noncomputable def body.«implies» : TStmts [sig.«polynomial», sig.«between», sig.«describe», sig.«sign», sig.«clamp», sig.«max»] sig.«implies».params sig.«implies».result :=
   (.ite (.var .here)
-  (.const "t" (.bin (.eq (by decide)) (.var (.there ne.«b».«a» .here)) (.bool true))
+  (.const "t" (.bin (.eq (by decide +kernel)) (.var (.there ne.«b».«a» .here)) (.bool true))
   (.ite (.var .here)
   (.ret (.bool true) .nil)
   .nil
@@ -133,14 +133,18 @@ def body.«implies» : TStmts [sig.«polynomial», sig.«between», sig.«descri
   .nil
   (.ret (.bool true) .nil))
 
-abbrev sigs : Sigs := [sig.«implies», sig.«polynomial», sig.«between», sig.«describe», sig.«sign», sig.«clamp», sig.«max»]
+noncomputable abbrev sigs : Sigs := [sig.«implies», sig.«polynomial», sig.«between», sig.«describe», sig.«sign», sig.«clamp», sig.«max»]
 
-def typed : TProgram sigs :=
+noncomputable def typed : TProgram sigs :=
   (.cons sig.«implies» body.«implies» (.cons sig.«polynomial» body.«polynomial» (.cons sig.«between» body.«between» (.cons sig.«describe» body.«describe» (.cons sig.«sign» body.«sign» (.cons sig.«clamp» body.«clamp» (.cons sig.«max» body.«max» .nil)))))))
 
 theorem erased : typed.erase = ast := by kernel_rfl
 
-theorem wf : typed.WF := by decide +kernel
+theorem bodies_ok : typed.bodiesOk = true := by decide +kernel
+
+theorem ast_scoped : ast.scoped = true := by decide +kernel
+
+theorem wf : typed.WF := TProgram.wf_of typed erased bodies_ok ast_scoped
 
 /-! ## Readable definitions -/
 
@@ -198,10 +202,10 @@ def «implies» («a» : Bool) («b» : Bool) : Bool :=
 Each body is checked against its readable definition with the earlier functions'
 readable definitions as its environment, so no check unfolds a callee. -/
 
-def «max».uncurried : sig.«max».denote := fun xs => «max» xs.1 xs.2.1
+noncomputable def «max».uncurried : sig.«max».denote := fun xs => «max» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «max».safety : sig.«max».params.denote → Bool := fun _ => true
+noncomputable def «max».safety : sig.«max».params.denote → Bool := fun _ => true
 
 theorem «max».body_eq :
     body.«max».denoteFn (()) = «max».uncurried := by
@@ -211,10 +215,10 @@ theorem «max».safe_eq :
     body.«max».safeFn (()) (()) = «max».safety := by
   kernel_rfl
 
-def «clamp».uncurried : sig.«clamp».denote := fun xs => «clamp» xs.1 xs.2.1 xs.2.2.1
+noncomputable def «clamp».uncurried : sig.«clamp».denote := fun xs => «clamp» xs.1 xs.2.1 xs.2.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «clamp».safety : sig.«clamp».params.denote → Bool := fun _ => true
+noncomputable def «clamp».safety : sig.«clamp».params.denote → Bool := fun _ => true
 
 theorem «clamp».body_eq :
     body.«clamp».denoteFn («max».uncurried, ()) = «clamp».uncurried := by
@@ -224,10 +228,10 @@ theorem «clamp».safe_eq :
     body.«clamp».safeFn («max».uncurried, ()) («max».safety, ()) = «clamp».safety := by
   kernel_rfl
 
-def «sign».uncurried : sig.«sign».denote := fun xs => «sign» xs.1
+noncomputable def «sign».uncurried : sig.«sign».denote := fun xs => «sign» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «sign».safety : sig.«sign».params.denote → Bool := fun _ => true
+noncomputable def «sign».safety : sig.«sign».params.denote → Bool := fun _ => true
 
 theorem «sign».body_eq :
     body.«sign».denoteFn («clamp».uncurried, «max».uncurried, ()) = «sign».uncurried := by
@@ -237,10 +241,10 @@ theorem «sign».safe_eq :
     body.«sign».safeFn («clamp».uncurried, «max».uncurried, ()) («clamp».safety, «max».safety, ()) = «sign».safety := by
   kernel_rfl
 
-def «describe».uncurried : sig.«describe».denote := fun xs => «describe» xs.1 xs.2.1
+noncomputable def «describe».uncurried : sig.«describe».denote := fun xs => «describe» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «describe».safety : sig.«describe».params.denote → Bool := fun _ => true
+noncomputable def «describe».safety : sig.«describe».params.denote → Bool := fun _ => true
 
 theorem «describe».body_eq :
     body.«describe».denoteFn («sign».uncurried, «clamp».uncurried, «max».uncurried, ()) = «describe».uncurried := by
@@ -250,10 +254,10 @@ theorem «describe».safe_eq :
     body.«describe».safeFn («sign».uncurried, «clamp».uncurried, «max».uncurried, ()) («sign».safety, «clamp».safety, «max».safety, ()) = «describe».safety := by
   kernel_rfl
 
-def «between».uncurried : sig.«between».denote := fun xs => «between» xs.1 xs.2.1 xs.2.2.1
+noncomputable def «between».uncurried : sig.«between».denote := fun xs => «between» xs.1 xs.2.1 xs.2.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «between».safety : sig.«between».params.denote → Bool := fun _ => true
+noncomputable def «between».safety : sig.«between».params.denote → Bool := fun _ => true
 
 theorem «between».body_eq :
     body.«between».denoteFn («describe».uncurried, «sign».uncurried, «clamp».uncurried, «max».uncurried, ()) = «between».uncurried := by
@@ -263,10 +267,10 @@ theorem «between».safe_eq :
     body.«between».safeFn («describe».uncurried, «sign».uncurried, «clamp».uncurried, «max».uncurried, ()) («describe».safety, «sign».safety, «clamp».safety, «max».safety, ()) = «between».safety := by
   kernel_rfl
 
-def «polynomial».uncurried : sig.«polynomial».denote := fun xs => «polynomial» xs.1
+noncomputable def «polynomial».uncurried : sig.«polynomial».denote := fun xs => «polynomial» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «polynomial».safety : sig.«polynomial».params.denote → Bool := fun _ => true
+noncomputable def «polynomial».safety : sig.«polynomial».params.denote → Bool := fun _ => true
 
 theorem «polynomial».body_eq :
     body.«polynomial».denoteFn («between».uncurried, «describe».uncurried, «sign».uncurried, «clamp».uncurried, «max».uncurried, ()) = «polynomial».uncurried := by
@@ -276,10 +280,10 @@ theorem «polynomial».safe_eq :
     body.«polynomial».safeFn («between».uncurried, «describe».uncurried, «sign».uncurried, «clamp».uncurried, «max».uncurried, ()) («between».safety, «describe».safety, «sign».safety, «clamp».safety, «max».safety, ()) = «polynomial».safety := by
   kernel_rfl
 
-def «implies».uncurried : sig.«implies».denote := fun xs => «implies» xs.1 xs.2.1
+noncomputable def «implies».uncurried : sig.«implies».denote := fun xs => «implies» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «implies».safety : sig.«implies».params.denote → Bool := fun _ => true
+noncomputable def «implies».safety : sig.«implies».params.denote → Bool := fun _ => true
 
 theorem «implies».body_eq :
     body.«implies».denoteFn («polynomial».uncurried, «between».uncurried, «describe».uncurried, «sign».uncurried, «clamp».uncurried, «max».uncurried, ()) = «implies».uncurried := by

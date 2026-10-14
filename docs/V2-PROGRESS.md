@@ -293,11 +293,13 @@ Proof structure (about 300 lines, no `sorry`, axioms `propext`, `Classical.choic
 Per file, the printer emits (all kernel-checked, nothing trusted):
 
 ```lean
-def ast : Program := …                         -- the converted source
-abbrev sigs : Sigs := …
-def typed : TProgram sigs := …
+noncomputable def ast : Program := …           -- the converted source (scaffolding is not compiled)
+noncomputable abbrev sigs : Sigs := …
+noncomputable def typed : TProgram sigs := …
 theorem erased : typed.erase = ast := by kernel_rfl
-theorem wf : typed.WF := by decide +kernel
+theorem bodies_ok : typed.bodiesOk = true := by decide +kernel
+theorem ast_scoped : ast.scoped = true := by decide +kernel  -- checks distinct names too
+theorem wf : typed.WF := TProgram.wf_of typed erased bodies_ok ast_scoped
 def «f» (x : Int) … : Int := …                  -- readable definitions
 theorem «f».body_eq : body.«f».denoteFn (earlier readable functions) = «f».uncurried := by kernel_rfl
 theorem denote_eq : typed.denote = (readable functions) := TProgram.denote_cons … 

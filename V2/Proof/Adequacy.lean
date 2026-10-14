@@ -93,6 +93,19 @@ theorem TProgram.lookups : ∀ {Φ : Sigs} (P : TProgram Φ), P.names.Nodup → 
       simpa using (beq_iff_eq.mp heq) ▸ this
     simp [TProgram.erase, List.find?_append, hnone]
 
+/-- Well-formedness from the static check of the erased program (which already
+requires distinct names) and the bodies' check: what a printed file proves, so the
+kernel does not erase the program again or compare its names twice. -/
+theorem TProgram.wf_of {Φ : Sigs} (P : TProgram Φ) {ast : Program} (erased : P.erase = ast)
+    (bodies : P.bodiesOk = true) (hs : ast.scoped = true) : P.WF := by
+  subst erased
+  refine ⟨?_, bodies, hs⟩
+  have h := hs
+  simp only [Program.scoped, Bool.and_eq_true] at h
+  have := distinct_iff.mp h.1
+  rw [P.erase_names, List.Nodup, List.pairwise_reverse] at this
+  exact this.imp fun h e => h e.symm
+
 /-- **Adequacy.** In a well-formed typed program, every function, run by the model
 on arguments representing inputs on which it is safe, converges to a value
 representing its denotation. -/

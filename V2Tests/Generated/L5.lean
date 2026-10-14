@@ -9,7 +9,7 @@ set_option maxRecDepth 8192
 set_option linter.unusedVariables false
 
 /-- The source file in the model's syntax. -/
-def ast : Program := [
+noncomputable def ast : Program := [
   { name := "newer", params := ["s", "stamp"], body := [
       .ret (.binary .or (.binary .eq (.var "s") (.lit (.string (js "")))) (.binary .lt (.var "s") (.var "stamp")))] },
   { name := "new Book", params := [], body := [
@@ -65,22 +65,22 @@ def ast : Program := [
   { name := "labels", params := ["this"], body := [
       .ret (.method (.array [(true, (.stateKeys "names"))]) "map" [(.arrow ["k"] (.binary .add (.callThis "nameOf" [(.var "k")]) (.lit (.string (js "!")))))])], method := true }]
 
-abbrev ty.«Entry» : Ty := (.record (.cons "at" .number (.cons "s" .string (.cons "tag" (.option .undef .string) .nil))))
-abbrev ty.«Book» : Ty := (.record (.cons "items" (.map (.record (.cons "at" .number (.cons "s" .string (.cons "tag" (.option .undef .string) .nil))))) (.cons "names" (.map .string) (.cons "counts" (.map .number) .nil))))
+noncomputable abbrev ty.«Entry» : Ty := (.record (.cons "at" .number (.cons "s" .string (.cons "tag" (.option .undef .string) .nil))))
+noncomputable abbrev ty.«Book» : Ty := (.record (.cons "items" (.map (.record (.cons "at" .number (.cons "s" .string (.cons "tag" (.option .undef .string) .nil))))) (.cons "names" (.map .string) (.cons "counts" (.map .number) .nil))))
 
-def sig.«newer» : Sig := { name := "newer", params := [("s", .string), ("stamp", .string)], result := .bool, trivial := true }
-def sig.«new Book» : Sig := { name := "new Book", params := [], result := ty.«Book», trivial := true }
-def sig.«bump» : Sig := { name := "bump", params := [("this", ty.«Book»), ("k", .string)], result := ty.«Book», trivial := false, method := true, void := true }
-def sig.«put» : Sig := { name := "put", params := [("this", ty.«Book»), ("k", .string), ("e", ty.«Entry»)], result := ty.«Book», trivial := false, method := true, void := true }
-def sig.«rename» : Sig := { name := "rename", params := [("this", ty.«Book»), ("k", .string), ("n", .string)], result := ty.«Book», trivial := true, method := true, void := true }
-def sig.«drop» : Sig := { name := "drop", params := [("this", ty.«Book»), ("k", .string)], result := ty.«Book», trivial := true, method := true, void := true }
-def sig.«touchAll» : Sig := { name := "touchAll", params := [("this", ty.«Book»), ("ks", (.array .string))], result := ty.«Book», trivial := false, method := true, void := true }
-def sig.«get» : Sig := { name := "get", params := [("this", ty.«Book»), ("k", .string)], result := (.option .undef ty.«Entry»), trivial := true, method := true, void := false }
-def sig.«count» : Sig := { name := "count", params := [("this", ty.«Book»)], result := .number, trivial := true, method := true, void := false }
-def sig.«keys» : Sig := { name := "keys", params := [("this", ty.«Book»)], result := (.array .string), trivial := true, method := true, void := false }
-def sig.«latest» : Sig := { name := "latest", params := [("this", ty.«Book»)], result := .number, trivial := true, method := true, void := false }
-def sig.«nameOf» : Sig := { name := "nameOf", params := [("this", ty.«Book»), ("k", .string)], result := .string, trivial := true, method := true, void := false }
-def sig.«labels» : Sig := { name := "labels", params := [("this", ty.«Book»)], result := (.array .string), trivial := true, method := true, void := false }
+noncomputable def sig.«newer» : Sig := { name := "newer", params := [("s", .string), ("stamp", .string)], result := .bool, trivial := true }
+noncomputable def sig.«new Book» : Sig := { name := "new Book", params := [], result := ty.«Book», trivial := true }
+noncomputable def sig.«bump» : Sig := { name := "bump", params := [("this", ty.«Book»), ("k", .string)], result := ty.«Book», trivial := false, method := true, void := true }
+noncomputable def sig.«put» : Sig := { name := "put", params := [("this", ty.«Book»), ("k", .string), ("e", ty.«Entry»)], result := ty.«Book», trivial := false, method := true, void := true }
+noncomputable def sig.«rename» : Sig := { name := "rename", params := [("this", ty.«Book»), ("k", .string), ("n", .string)], result := ty.«Book», trivial := true, method := true, void := true }
+noncomputable def sig.«drop» : Sig := { name := "drop", params := [("this", ty.«Book»), ("k", .string)], result := ty.«Book», trivial := true, method := true, void := true }
+noncomputable def sig.«touchAll» : Sig := { name := "touchAll", params := [("this", ty.«Book»), ("ks", (.array .string))], result := ty.«Book», trivial := false, method := true, void := true }
+noncomputable def sig.«get» : Sig := { name := "get", params := [("this", ty.«Book»), ("k", .string)], result := (.option .undef ty.«Entry»), trivial := true, method := true, void := false }
+noncomputable def sig.«count» : Sig := { name := "count", params := [("this", ty.«Book»)], result := .number, trivial := true, method := true, void := false }
+noncomputable def sig.«keys» : Sig := { name := "keys", params := [("this", ty.«Book»)], result := (.array .string), trivial := true, method := true, void := false }
+noncomputable def sig.«latest» : Sig := { name := "latest", params := [("this", ty.«Book»)], result := .number, trivial := true, method := true, void := false }
+noncomputable def sig.«nameOf» : Sig := { name := "nameOf", params := [("this", ty.«Book»), ("k", .string)], result := .string, trivial := true, method := true, void := false }
+noncomputable def sig.«labels» : Sig := { name := "labels", params := [("this", ty.«Book»)], result := (.array .string), trivial := true, method := true, void := false }
 
 theorem ne.«stamp».«s» : ("stamp" : String) ≠ "s" := by decide
 theorem ne.«k».«this» : ("k" : String) ≠ "this" := by decide
@@ -99,82 +99,86 @@ theorem ne.«this».«best» : ("this" : String) ≠ "best" := by decide
 theorem ne.«best».«e» : ("best" : String) ≠ "e" := by decide
 theorem ne.«k».«n» : ("k" : String) ≠ "n" := by decide
 
-def body.«newer» : TStmts [] sig.«newer».params sig.«newer».result :=
-  (.ret (.or (.bin (.eq (by decide)) (.var .here) (.str (js ""))) (.bin .slt (.var .here) (.var (.there ne.«stamp».«s» .here)))) .nil)
+noncomputable def body.«newer» : TStmts [] sig.«newer».params sig.«newer».result :=
+  (.ret (.or (.bin (.eq (by decide +kernel)) (.var .here) (.str (js ""))) (.bin .slt (.var .here) (.var (.there ne.«stamp».«s» .here)))) .nil)
 
-def body.«new Book» : TStmts [sig.«newer»] sig.«new Book».params sig.«new Book».result :=
-  (.ret (.record (.cons "items" (.newMap ty.«Entry») (.cons "names" (.newMap .string) (.cons "counts" (.newMap .number) .nil))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) .nil))) (by decide)) .nil)
+noncomputable def body.«new Book» : TStmts [sig.«newer»] sig.«new Book».params sig.«new Book».result :=
+  (.ret (.record (.cons "items" (.newMap ty.«Entry») (.cons "names" (.newMap .string) (.cons "counts" (.newMap .number) .nil))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) .nil))) (by decide +kernel)) .nil)
 
-def body.«bump» : TStmts [sig.«new Book», sig.«newer»] sig.«bump».params sig.«bump».result :=
-  (.const "c" (.stateGet .here (.there (.there .here)) (by decide) (.var (.there ne.«k».«this» .here)))
-  (.stateSet (.there ne.«this».«c» .here) (.there (.there .here)) (by decide) (.var (.there ne.«k».«c» (.there ne.«k».«this» .here))) (.condNull .here (by decide) (.num 1) (.bin .nadd (.var .here) (.num 1)))
+noncomputable def body.«bump» : TStmts [sig.«new Book», sig.«newer»] sig.«bump».params sig.«bump».result :=
+  (.const "c" (.stateGet .here (.there (.there .here)) (by decide +kernel) (.var (.there ne.«k».«this» .here)))
+  (.stateSet (.there ne.«this».«c» .here) (.there (.there .here)) (by decide +kernel) (.var (.there ne.«k».«c» (.there ne.«k».«this» .here))) (.condNull .here (by decide +kernel) (.num 1) (.bin .nadd (.var .here) (.num 1)))
   (.retVoid (.there ne.«this».«c» .here) .nil)))
 
-def body.«put» : TStmts [sig.«bump», sig.«new Book», sig.«newer»] sig.«put».params sig.«put».result :=
-  (.const "cur" (.stateGet .here .here (by decide) (.var (.there ne.«k».«this» .here)))
-  (.ifNotNull .here (by decide)
-  (.ite (.not (.call (s := sig.«newer») (.there (.there .here)) (by decide) (.cons (.field (.var .here) (.there .here) (by decide)) (.cons (.field (.var (.there ne.«e».«cur» (.there ne.«e».«this» (.there ne.«e».«k» .here)))) (.there .here) (by decide)) .nil))))
+noncomputable def body.«put» : TStmts [sig.«bump», sig.«new Book», sig.«newer»] sig.«put».params sig.«put».result :=
+  (.const "cur" (.stateGet .here .here (by decide +kernel) (.var (.there ne.«k».«this» .here)))
+  (.ifNotNull .here (by decide +kernel)
+  (.ite (.not (.call (s := sig.«newer») (.there (.there .here)) (by decide +kernel) (.cons (.field (.var .here) (.there .here) (by decide +kernel)) (.cons (.field (.var (.there ne.«e».«cur» (.there ne.«e».«this» (.there ne.«e».«k» .here)))) (.there .here) (by decide +kernel)) .nil))))
   (.retVoid (.there ne.«this».«cur» .here) .nil)
   .nil
   .nil)
   .nil
-  (.stateSet (.there ne.«this».«cur» .here) .here (by decide) (.var (.there ne.«k».«cur» (.there ne.«k».«this» .here))) (.var (.there ne.«e».«cur» (.there ne.«e».«this» (.there ne.«e».«k» .here))))
+  (.stateSet (.there ne.«this».«cur» .here) .here (by decide +kernel) (.var (.there ne.«k».«cur» (.there ne.«k».«this» .here))) (.var (.there ne.«e».«cur» (.there ne.«e».«this» (.there ne.«e».«k» .here))))
   (.callVoid .here (.there ne.«this».«cur» .here) (.cons (.var (.there ne.«k».«cur» (.there ne.«k».«this» .here))) .nil)
   (.retVoid (.there ne.«this».«cur» .here) .nil)))))
 
-def body.«rename» : TStmts [sig.«put», sig.«bump», sig.«new Book», sig.«newer»] sig.«rename».params sig.«rename».result :=
-  (.stateSet .here (.there .here) (by decide) (.var (.there ne.«k».«this» .here)) (.var (.there ne.«n».«this» (.there ne.«n».«k» .here)))
+noncomputable def body.«rename» : TStmts [sig.«put», sig.«bump», sig.«new Book», sig.«newer»] sig.«rename».params sig.«rename».result :=
+  (.stateSet .here (.there .here) (by decide +kernel) (.var (.there ne.«k».«this» .here)) (.var (.there ne.«n».«this» (.there ne.«n».«k» .here)))
   (.ite (.not (.stateHas .here .here (.var (.there ne.«k».«this» .here))))
-  (.stateSet .here .here (by decide) (.var (.there ne.«k».«this» .here)) (.record (.cons "at" (.num 0) (.cons "s" (.str (js "")) .nil)) (.cons .here (.cons (.there .here) (.absent (by decide) .nil))) (by decide))
+  (.stateSet .here .here (by decide +kernel) (.var (.there ne.«k».«this» .here)) (.record (.cons "at" (.num 0) (.cons "s" (.str (js "")) .nil)) (.cons .here (.cons (.there .here) (.absent (by decide +kernel) .nil))) (by decide +kernel))
   .nil)
   .nil
   (.retVoid .here .nil)))
 
-def body.«drop» : TStmts [sig.«rename», sig.«put», sig.«bump», sig.«new Book», sig.«newer»] sig.«drop».params sig.«drop».result :=
-  (.stateDelete .here .here (by decide) (.var (.there ne.«k».«this» .here))
-  (.stateDelete .here (.there .here) (by decide) (.var (.there ne.«k».«this» .here))
+noncomputable def body.«drop» : TStmts [sig.«rename», sig.«put», sig.«bump», sig.«new Book», sig.«newer»] sig.«drop».params sig.«drop».result :=
+  (.stateDelete .here .here (by decide +kernel) (.var (.there ne.«k».«this» .here))
+  (.stateDelete .here (.there .here) (by decide +kernel) (.var (.there ne.«k».«this» .here))
   (.retVoid .here .nil)))
 
-def body.«touchAll» : TStmts [sig.«drop», sig.«rename», sig.«put», sig.«bump», sig.«new Book», sig.«newer»] sig.«touchAll».params sig.«touchAll».result :=
+noncomputable def body.«touchAll» : TStmts [sig.«drop», sig.«rename», sig.«put», sig.«bump», sig.«new Book», sig.«newer»] sig.«touchAll».params sig.«touchAll».result :=
   (.forOf "k" (.var (.there ne.«ks».«this» .here))
   (.callVoid (.there (.there (.there .here))) (.there ne.«this».«k» .here) (.cons (.var .here) .nil)
   .nil)
   (.retVoid .here .nil))
 
-def body.«get» : TStmts [sig.«touchAll», sig.«drop», sig.«rename», sig.«put», sig.«bump», sig.«new Book», sig.«newer»] sig.«get».params sig.«get».result :=
-  (.ret (.stateGet .here .here (by decide) (.var (.there ne.«k».«this» .here))) .nil)
+noncomputable def body.«get» : TStmts [sig.«touchAll», sig.«drop», sig.«rename», sig.«put», sig.«bump», sig.«new Book», sig.«newer»] sig.«get».params sig.«get».result :=
+  (.ret (.stateGet .here .here (by decide +kernel) (.var (.there ne.«k».«this» .here))) .nil)
 
-def body.«count» : TStmts [sig.«get», sig.«touchAll», sig.«drop», sig.«rename», sig.«put», sig.«bump», sig.«new Book», sig.«newer»] sig.«count».params sig.«count».result :=
+noncomputable def body.«count» : TStmts [sig.«get», sig.«touchAll», sig.«drop», sig.«rename», sig.«put», sig.«bump», sig.«new Book», sig.«newer»] sig.«count».params sig.«count».result :=
   (.ret (.stateSize .here .here) .nil)
 
-def body.«keys» : TStmts [sig.«count», sig.«get», sig.«touchAll», sig.«drop», sig.«rename», sig.«put», sig.«bump», sig.«new Book», sig.«newer»] sig.«keys».params sig.«keys».result :=
+noncomputable def body.«keys» : TStmts [sig.«count», sig.«get», sig.«touchAll», sig.«drop», sig.«rename», sig.«put», sig.«bump», sig.«new Book», sig.«newer»] sig.«keys».params sig.«keys».result :=
   (.ret (.array (τ := .string) (.spreadKeys .here .here .nil)) .nil)
 
-def body.«latest» : TStmts [sig.«keys», sig.«count», sig.«get», sig.«touchAll», sig.«drop», sig.«rename», sig.«put», sig.«bump», sig.«new Book», sig.«newer»] sig.«latest».params sig.«latest».result :=
+noncomputable def body.«latest» : TStmts [sig.«keys», sig.«count», sig.«get», sig.«touchAll», sig.«drop», sig.«rename», sig.«put», sig.«bump», sig.«new Book», sig.«newer»] sig.«latest».params sig.«latest».result :=
   (.let_ "best" (.num 0)
   (.forOf "e" (.array (τ := ty.«Entry») (.spreadValues (.there ne.«this».«best» .here) .here .nil))
-  (.ite (.bin .ngt (.field (.var .here) .here (by decide)) (.var (.there ne.«best».«e» .here)))
-  (.assign (.there ne.«best».«e» .here) (.field (.var .here) .here (by decide))
+  (.ite (.bin .ngt (.field (.var .here) .here (by decide +kernel)) (.var (.there ne.«best».«e» .here)))
+  (.assign (.there ne.«best».«e» .here) (.field (.var .here) .here (by decide +kernel))
   .nil)
   .nil
   .nil)
   (.ret (.var .here) .nil)))
 
-def body.«nameOf» : TStmts [sig.«latest», sig.«keys», sig.«count», sig.«get», sig.«touchAll», sig.«drop», sig.«rename», sig.«put», sig.«bump», sig.«new Book», sig.«newer»] sig.«nameOf».params sig.«nameOf».result :=
-  (.const "n" (.stateGet .here (.there .here) (by decide) (.var (.there ne.«k».«this» .here)))
-  (.ret (.condNull .here (by decide) (.var (.there ne.«k».«n» (.there ne.«k».«this» .here))) (.var .here)) .nil))
+noncomputable def body.«nameOf» : TStmts [sig.«latest», sig.«keys», sig.«count», sig.«get», sig.«touchAll», sig.«drop», sig.«rename», sig.«put», sig.«bump», sig.«new Book», sig.«newer»] sig.«nameOf».params sig.«nameOf».result :=
+  (.const "n" (.stateGet .here (.there .here) (by decide +kernel) (.var (.there ne.«k».«this» .here)))
+  (.ret (.condNull .here (by decide +kernel) (.var (.there ne.«k».«n» (.there ne.«k».«this» .here))) (.var .here)) .nil))
 
-def body.«labels» : TStmts [sig.«nameOf», sig.«latest», sig.«keys», sig.«count», sig.«get», sig.«touchAll», sig.«drop», sig.«rename», sig.«put», sig.«bump», sig.«new Book», sig.«newer»] sig.«labels».params sig.«labels».result :=
+noncomputable def body.«labels» : TStmts [sig.«nameOf», sig.«latest», sig.«keys», sig.«count», sig.«get», sig.«touchAll», sig.«drop», sig.«rename», sig.«put», sig.«bump», sig.«new Book», sig.«newer»] sig.«labels».params sig.«labels».result :=
   (.ret (.map (.array (τ := .string) (.spreadKeys .here (.there .here) .nil)) (.arrow "k" (.bin .concat (.callThis .here (.there ne.«this».«k» .here) (.cons (.var .here) .nil)) (.str (js "!"))))) .nil)
 
-abbrev sigs : Sigs := [sig.«labels», sig.«nameOf», sig.«latest», sig.«keys», sig.«count», sig.«get», sig.«touchAll», sig.«drop», sig.«rename», sig.«put», sig.«bump», sig.«new Book», sig.«newer»]
+noncomputable abbrev sigs : Sigs := [sig.«labels», sig.«nameOf», sig.«latest», sig.«keys», sig.«count», sig.«get», sig.«touchAll», sig.«drop», sig.«rename», sig.«put», sig.«bump», sig.«new Book», sig.«newer»]
 
-def typed : TProgram sigs :=
+noncomputable def typed : TProgram sigs :=
   (.cons sig.«labels» body.«labels» (.cons sig.«nameOf» body.«nameOf» (.cons sig.«latest» body.«latest» (.cons sig.«keys» body.«keys» (.cons sig.«count» body.«count» (.cons sig.«get» body.«get» (.cons sig.«touchAll» body.«touchAll» (.cons sig.«drop» body.«drop» (.cons sig.«rename» body.«rename» (.cons sig.«put» body.«put» (.cons sig.«bump» body.«bump» (.cons sig.«new Book» body.«new Book» (.cons sig.«newer» body.«newer» .nil)))))))))))))
 
 theorem erased : typed.erase = ast := by kernel_rfl
 
-theorem wf : typed.WF := by decide +kernel
+theorem bodies_ok : typed.bodiesOk = true := by decide +kernel
+
+theorem ast_scoped : ast.scoped = true := by decide +kernel
+
+theorem wf : typed.WF := TProgram.wf_of typed erased bodies_ok ast_scoped
 
 /-! ## Readable definitions -/
 
@@ -302,10 +306,10 @@ def «labels» («this» : ty.«Book».denote) : List (JSString) :=
 Each body is checked against its readable definition with the earlier functions'
 readable definitions as its environment, so no check unfolds a callee. -/
 
-def «newer».uncurried : sig.«newer».denote := fun xs => «newer» xs.1 xs.2.1
+noncomputable def «newer».uncurried : sig.«newer».denote := fun xs => «newer» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «newer».safety : sig.«newer».params.denote → Bool := fun _ => true
+noncomputable def «newer».safety : sig.«newer».params.denote → Bool := fun _ => true
 
 theorem «newer».body_eq :
     body.«newer».denoteFn (()) = «newer».uncurried := by
@@ -315,10 +319,10 @@ theorem «newer».safe_eq :
     body.«newer».safeFn (()) (()) = «newer».safety := by
   kernel_rfl
 
-def «new Book».uncurried : sig.«new Book».denote := fun xs => «new Book»
+noncomputable def «new Book».uncurried : sig.«new Book».denote := fun xs => «new Book»
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «new Book».safety : sig.«new Book».params.denote → Bool := fun _ => true
+noncomputable def «new Book».safety : sig.«new Book».params.denote → Bool := fun _ => true
 
 theorem «new Book».body_eq :
     body.«new Book».denoteFn («newer».uncurried, ()) = «new Book».uncurried := by
@@ -328,9 +332,9 @@ theorem «new Book».safe_eq :
     body.«new Book».safeFn («newer».uncurried, ()) («newer».safety, ()) = «new Book».safety := by
   kernel_rfl
 
-def «bump».uncurried : sig.«bump».denote := fun xs => «bump» xs.1 xs.2.1
+noncomputable def «bump».uncurried : sig.«bump».denote := fun xs => «bump» xs.1 xs.2.1
 
-def «bump».safety : sig.«bump».params.denote → Bool := fun xs => «bump».safe xs.1 xs.2.1
+noncomputable def «bump».safety : sig.«bump».params.denote → Bool := fun xs => «bump».safe xs.1 xs.2.1
 
 theorem «bump».body_eq :
     body.«bump».denoteFn («new Book».uncurried, «newer».uncurried, ()) = «bump».uncurried := by
@@ -340,9 +344,9 @@ theorem «bump».safe_eq :
     body.«bump».safeFn («new Book».uncurried, «newer».uncurried, ()) («new Book».safety, «newer».safety, ()) = «bump».safety := by
   kernel_rfl
 
-def «put».uncurried : sig.«put».denote := fun xs => «put» xs.1 xs.2.1 xs.2.2.1
+noncomputable def «put».uncurried : sig.«put».denote := fun xs => «put» xs.1 xs.2.1 xs.2.2.1
 
-def «put».safety : sig.«put».params.denote → Bool := fun xs => «put».safe xs.1 xs.2.1 xs.2.2.1
+noncomputable def «put».safety : sig.«put».params.denote → Bool := fun xs => «put».safe xs.1 xs.2.1 xs.2.2.1
 
 theorem «put».body_eq :
     body.«put».denoteFn («bump».uncurried, «new Book».uncurried, «newer».uncurried, ()) = «put».uncurried := by
@@ -352,10 +356,10 @@ theorem «put».safe_eq :
     body.«put».safeFn («bump».uncurried, «new Book».uncurried, «newer».uncurried, ()) («bump».safety, «new Book».safety, «newer».safety, ()) = «put».safety := by
   kernel_rfl
 
-def «rename».uncurried : sig.«rename».denote := fun xs => «rename» xs.1 xs.2.1 xs.2.2.1
+noncomputable def «rename».uncurried : sig.«rename».denote := fun xs => «rename» xs.1 xs.2.1 xs.2.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «rename».safety : sig.«rename».params.denote → Bool := fun _ => true
+noncomputable def «rename».safety : sig.«rename».params.denote → Bool := fun _ => true
 
 theorem «rename».body_eq :
     body.«rename».denoteFn («put».uncurried, «bump».uncurried, «new Book».uncurried, «newer».uncurried, ()) = «rename».uncurried := by
@@ -365,10 +369,10 @@ theorem «rename».safe_eq :
     body.«rename».safeFn («put».uncurried, «bump».uncurried, «new Book».uncurried, «newer».uncurried, ()) («put».safety, «bump».safety, «new Book».safety, «newer».safety, ()) = «rename».safety := by
   kernel_rfl
 
-def «drop».uncurried : sig.«drop».denote := fun xs => «drop» xs.1 xs.2.1
+noncomputable def «drop».uncurried : sig.«drop».denote := fun xs => «drop» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «drop».safety : sig.«drop».params.denote → Bool := fun _ => true
+noncomputable def «drop».safety : sig.«drop».params.denote → Bool := fun _ => true
 
 theorem «drop».body_eq :
     body.«drop».denoteFn («rename».uncurried, «put».uncurried, «bump».uncurried, «new Book».uncurried, «newer».uncurried, ()) = «drop».uncurried := by
@@ -378,9 +382,9 @@ theorem «drop».safe_eq :
     body.«drop».safeFn («rename».uncurried, «put».uncurried, «bump».uncurried, «new Book».uncurried, «newer».uncurried, ()) («rename».safety, «put».safety, «bump».safety, «new Book».safety, «newer».safety, ()) = «drop».safety := by
   kernel_rfl
 
-def «touchAll».uncurried : sig.«touchAll».denote := fun xs => «touchAll» xs.1 xs.2.1
+noncomputable def «touchAll».uncurried : sig.«touchAll».denote := fun xs => «touchAll» xs.1 xs.2.1
 
-def «touchAll».safety : sig.«touchAll».params.denote → Bool := fun xs => «touchAll».safe xs.1 xs.2.1
+noncomputable def «touchAll».safety : sig.«touchAll».params.denote → Bool := fun xs => «touchAll».safe xs.1 xs.2.1
 
 theorem «touchAll».body_eq :
     body.«touchAll».denoteFn («drop».uncurried, «rename».uncurried, «put».uncurried, «bump».uncurried, «new Book».uncurried, «newer».uncurried, ()) = «touchAll».uncurried := by
@@ -390,10 +394,10 @@ theorem «touchAll».safe_eq :
     body.«touchAll».safeFn («drop».uncurried, «rename».uncurried, «put».uncurried, «bump».uncurried, «new Book».uncurried, «newer».uncurried, ()) («drop».safety, «rename».safety, «put».safety, «bump».safety, «new Book».safety, «newer».safety, ()) = «touchAll».safety := by
   kernel_rfl
 
-def «get».uncurried : sig.«get».denote := fun xs => «get» xs.1 xs.2.1
+noncomputable def «get».uncurried : sig.«get».denote := fun xs => «get» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «get».safety : sig.«get».params.denote → Bool := fun _ => true
+noncomputable def «get».safety : sig.«get».params.denote → Bool := fun _ => true
 
 theorem «get».body_eq :
     body.«get».denoteFn («touchAll».uncurried, «drop».uncurried, «rename».uncurried, «put».uncurried, «bump».uncurried, «new Book».uncurried, «newer».uncurried, ()) = «get».uncurried := by
@@ -403,10 +407,10 @@ theorem «get».safe_eq :
     body.«get».safeFn («touchAll».uncurried, «drop».uncurried, «rename».uncurried, «put».uncurried, «bump».uncurried, «new Book».uncurried, «newer».uncurried, ()) («touchAll».safety, «drop».safety, «rename».safety, «put».safety, «bump».safety, «new Book».safety, «newer».safety, ()) = «get».safety := by
   kernel_rfl
 
-def «count».uncurried : sig.«count».denote := fun xs => «count» xs.1
+noncomputable def «count».uncurried : sig.«count».denote := fun xs => «count» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «count».safety : sig.«count».params.denote → Bool := fun _ => true
+noncomputable def «count».safety : sig.«count».params.denote → Bool := fun _ => true
 
 theorem «count».body_eq :
     body.«count».denoteFn («get».uncurried, «touchAll».uncurried, «drop».uncurried, «rename».uncurried, «put».uncurried, «bump».uncurried, «new Book».uncurried, «newer».uncurried, ()) = «count».uncurried := by
@@ -416,10 +420,10 @@ theorem «count».safe_eq :
     body.«count».safeFn («get».uncurried, «touchAll».uncurried, «drop».uncurried, «rename».uncurried, «put».uncurried, «bump».uncurried, «new Book».uncurried, «newer».uncurried, ()) («get».safety, «touchAll».safety, «drop».safety, «rename».safety, «put».safety, «bump».safety, «new Book».safety, «newer».safety, ()) = «count».safety := by
   kernel_rfl
 
-def «keys».uncurried : sig.«keys».denote := fun xs => «keys» xs.1
+noncomputable def «keys».uncurried : sig.«keys».denote := fun xs => «keys» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «keys».safety : sig.«keys».params.denote → Bool := fun _ => true
+noncomputable def «keys».safety : sig.«keys».params.denote → Bool := fun _ => true
 
 theorem «keys».body_eq :
     body.«keys».denoteFn («count».uncurried, «get».uncurried, «touchAll».uncurried, «drop».uncurried, «rename».uncurried, «put».uncurried, «bump».uncurried, «new Book».uncurried, «newer».uncurried, ()) = «keys».uncurried := by
@@ -429,10 +433,10 @@ theorem «keys».safe_eq :
     body.«keys».safeFn («count».uncurried, «get».uncurried, «touchAll».uncurried, «drop».uncurried, «rename».uncurried, «put».uncurried, «bump».uncurried, «new Book».uncurried, «newer».uncurried, ()) («count».safety, «get».safety, «touchAll».safety, «drop».safety, «rename».safety, «put».safety, «bump».safety, «new Book».safety, «newer».safety, ()) = «keys».safety := by
   kernel_rfl
 
-def «latest».uncurried : sig.«latest».denote := fun xs => «latest» xs.1
+noncomputable def «latest».uncurried : sig.«latest».denote := fun xs => «latest» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «latest».safety : sig.«latest».params.denote → Bool := fun _ => true
+noncomputable def «latest».safety : sig.«latest».params.denote → Bool := fun _ => true
 
 theorem «latest».body_eq :
     body.«latest».denoteFn («keys».uncurried, «count».uncurried, «get».uncurried, «touchAll».uncurried, «drop».uncurried, «rename».uncurried, «put».uncurried, «bump».uncurried, «new Book».uncurried, «newer».uncurried, ()) = «latest».uncurried := by
@@ -442,10 +446,10 @@ theorem «latest».safe_eq :
     body.«latest».safeFn («keys».uncurried, «count».uncurried, «get».uncurried, «touchAll».uncurried, «drop».uncurried, «rename».uncurried, «put».uncurried, «bump».uncurried, «new Book».uncurried, «newer».uncurried, ()) («keys».safety, «count».safety, «get».safety, «touchAll».safety, «drop».safety, «rename».safety, «put».safety, «bump».safety, «new Book».safety, «newer».safety, ()) = «latest».safety := by
   kernel_rfl
 
-def «nameOf».uncurried : sig.«nameOf».denote := fun xs => «nameOf» xs.1 xs.2.1
+noncomputable def «nameOf».uncurried : sig.«nameOf».denote := fun xs => «nameOf» xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «nameOf».safety : sig.«nameOf».params.denote → Bool := fun _ => true
+noncomputable def «nameOf».safety : sig.«nameOf».params.denote → Bool := fun _ => true
 
 theorem «nameOf».body_eq :
     body.«nameOf».denoteFn («latest».uncurried, «keys».uncurried, «count».uncurried, «get».uncurried, «touchAll».uncurried, «drop».uncurried, «rename».uncurried, «put».uncurried, «bump».uncurried, «new Book».uncurried, «newer».uncurried, ()) = «nameOf».uncurried := by
@@ -455,10 +459,10 @@ theorem «nameOf».safe_eq :
     body.«nameOf».safeFn («latest».uncurried, «keys».uncurried, «count».uncurried, «get».uncurried, «touchAll».uncurried, «drop».uncurried, «rename».uncurried, «put».uncurried, «bump».uncurried, «new Book».uncurried, «newer».uncurried, ()) («latest».safety, «keys».safety, «count».safety, «get».safety, «touchAll».safety, «drop».safety, «rename».safety, «put».safety, «bump».safety, «new Book».safety, «newer».safety, ()) = «nameOf».safety := by
   kernel_rfl
 
-def «labels».uncurried : sig.«labels».denote := fun xs => «labels» xs.1
+noncomputable def «labels».uncurried : sig.«labels».denote := fun xs => «labels» xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-def «labels».safety : sig.«labels».params.denote → Bool := fun _ => true
+noncomputable def «labels».safety : sig.«labels».params.denote → Bool := fun _ => true
 
 theorem «labels».body_eq :
     body.«labels».denoteFn («nameOf».uncurried, «latest».uncurried, «keys».uncurried, «count».uncurried, «get».uncurried, «touchAll».uncurried, «drop».uncurried, «rename».uncurried, «put».uncurried, «bump».uncurried, «new Book».uncurried, «newer».uncurried, ()) = «labels».uncurried := by
