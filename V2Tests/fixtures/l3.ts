@@ -117,9 +117,10 @@ export function score(a: number, b: number): number {
   return s;
 }
 
-/** A counted loop over `0 … m-1` with a constant bound. */
+/** A counted loop over `0 … m-1` with a constant bound (at most 1,000, so the test's huge
+inputs stay quick in JavaScript). */
 export function triangle(n: number, cap: number): number {
-  const m = n;
+  const m = n < 1000 ? n : 1000;
   let t = 0;
   for (let i = 0; i < m; i++) {
     if (i > cap) break;

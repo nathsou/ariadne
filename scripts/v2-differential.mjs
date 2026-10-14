@@ -8,7 +8,7 @@
 // hold random entries; the model gets the state's observation and returns the
 // method's result and the state it leaves, which must match the object's.
 import { readdir } from 'node:fs/promises';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { observe } from './v2-observe.mjs';
@@ -65,10 +65,9 @@ function record(fields, fixed) {
   return Object.fromEntries(entries);
 }
 
-let calls = 0;
-let refused = 0;
-let timeouts = 0;
-let failures = 0;
+// Inputs are drawn file by file in a fixed order (so a seed always gives the same
+// calls); the model's batches then run concurrently.
+const jobs = [];
 for (const file of (await readdir(dir)).filter(f => f.endsWith('.ts')).sort()) {
   const path = resolve(dir, file);
   const signatures = spawnSync(cli, ['signatures', path], { encoding: 'utf8' });
@@ -109,7 +108,32 @@ for (const file of (await readdir(dir)).filter(f => f.endsWith('.ts')).sort()) {
       expected.push({ call: `${sig.name}(${args.map(a => observeText(a)).join(', ')})`, result });
     }
   }
-  const run = spawnSync(cli, ['batch', path], { input: lines.join('\n') + '\n', encoding: 'utf8', maxBuffer: 1 << 28 });
+  jobs.push({ file, path, lines, expected });
+}
+
+function batch(path, input) {
+  return new Promise((resolveRun, reject) => {
+    const child = spawn(cli, ['batch', path]);
+    let stdout = '';
+    let stderr = '';
+    child.stdout.setEncoding('utf8');
+    child.stderr.setEncoding('utf8');
+    child.stdout.on('data', d => { stdout += d; });
+    child.stderr.on('data', d => { stderr += d; });
+    child.on('error', reject);
+    child.on('close', status => resolveRun({ status, stdout, stderr }));
+    child.stdin.end(input);
+  });
+}
+
+const runs = await Promise.all(jobs.map(({ path, lines }) => batch(path, lines.join('\n') + '\n')));
+
+let calls = 0;
+let refused = 0;
+let timeouts = 0;
+let failures = 0;
+for (const [j, { file, expected }] of jobs.entries()) {
+  const run = runs[j];
   if (run.status !== 0) throw new Error(`${file}: ${run.stderr}`);
   const actual = run.stdout.trim().split('\n').map(l => JSON.parse(l));
   expected.forEach(({ call, result }, i) => {

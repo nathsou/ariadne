@@ -129,7 +129,7 @@ noncomputable def ast : Program := [
         [],
       .ret (.var "s")] },
   { name := "triangle", params := ["n", "cap"], body := [
-      .const "m" (.var "n"),
+      .const "m" (.cond (.binary .lt (.var "n") (.lit (.number 1000))) (.var "n") (.lit (.number 1000))),
       .let_ "t" (.lit (.number 0)),
       .forRange "i" "m" [
           .ite (.binary .gt (.var "i") (.var "cap"))
@@ -337,7 +337,7 @@ noncomputable def body.«score» : TStmts [sig.«steps», sig.«perimeters», si
   (.ret (.var .here) .nil))))
 
 noncomputable def body.«triangle» : TStmts [sig.«score», sig.«steps», sig.«perimeters», sig.«grid», sig.«bump», sig.«classify», sig.«largest», sig.«prefixUntil», sig.«countTagged», sig.«indexOf», sig.«firstLarge», sig.«sum»] sig.«triangle».params sig.«triangle».result :=
-  (.const "m" (.var .here)
+  (.const "m" (.cond (.bin .nlt (.var .here) (.num 1000)) (.var .here) (.num 1000))
   (.let_ "t" (.num 0)
   (.forRange "i" (.there ne.«m».«t» .here)
   (.ite (.bin .ngt (.var .here) (.var (.there ne.«cap».«i» (.there ne.«cap».«t» (.there ne.«cap».«m» (.there ne.«cap».«n» .here))))))
@@ -724,7 +724,7 @@ def «score».safe («a» : Int) («b» : Int) : Bool :=
     after2' («s», «a», «b», ()))
 
 def «triangle» («n» : Int) («cap» : Int) : Int :=
-  let «m» : Int := «n»
+  let «m» : Int := if decide («n» < (1000 : Int)) then «n» else (1000 : Int)
   let «t» : Int := (0 : Int)
   V2.forIn (V2.range «m») (fun «i» next2' exit2' s2' =>
     let «t» := s2'.1
@@ -746,7 +746,7 @@ def «triangle» («n» : Int) («cap» : Int) : Int :=
 
 /-- The inputs on which `triangle` stays within what the model covers. -/
 def «triangle».safe («n» : Int) («cap» : Int) : Bool :=
-  let «m» : Int := «n»
+  let «m» : Int := if decide («n» < (1000 : Int)) then «n» else (1000 : Int)
   let «t» : Int := (0 : Int)
   V2.forIn (V2.range «m») (fun «i» next2' exit2' s2' =>
     let «t» := s2'.1
