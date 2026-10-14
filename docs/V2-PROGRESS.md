@@ -14,6 +14,8 @@ why, and measurements. Update it with each milestone.
 | M4: L3 | Done: `let`, assignment (including `+=`, `++`), `for…of`, `for (const [i, x] of xs.entries())`, `break`/`continue`, early `return` in loops, `switch` in loops. Theorem, frontend, fixture, property proof, differential and negative tests. Counted `for` deferred (see the checkpoint). |
 | Checkpoint after M4 | Written below: continue. |
 | M5 (L4): drive's `trust.ts` | Done: callbacks generalised (`TFn`, `TCmp`: arrows of 0, 1 or 2 parameters, declared functions as callbacks), general `switch` (cases in any order, grouped labels, `default`, fall-through), operators grouped into one constructor, comparator laws library. `trust.ts` translated with one rewrite and its spec proved (`V2Tests/TrustSpec.lean`). |
+| M6/M7 (L5/L6): classes with `Map` state | Done: a class whose fields are `Map<string, T>`s, `this.f.get/has/size`, `[...this.f.keys()/values()]`, `this.f.set/delete`, `this.m(…)`, `void` methods that change the state and value methods that read it. drive's `registers.ts` translated **unchanged** and properties proved (`V2Tests/RegistersSpec.lean`). |
+| L7 (part): counted `for` | Done: `for (let i = 0; i < n; i++)` on a constant `n`. drive's `tree.ts` translated **unchanged**. Measured `while`, recursion and `throw` not started (drive's kernel does not use them). |
 
 ### Toolchain
 
@@ -117,6 +119,38 @@ own `checkout`/`upload-artifact` actions, pinned by commit, are CI infrastructur
   once left `Variants.elim` stuck on a symbolic value, so `body_eq` failed); printed array literals and readable
   `let`s carry their types, since a metavariable left by elaboration blocks kernel reduction of narrowing.
 - **Tests:** 31 negative fixtures, differential 17,100 calls (278 refused), 2,598 theorems audited.
+
+### M6/M7 notes (L5/L6: classes with `Map` state)
+
+- **Model.** A `Map` with string keys is a value (`JSValue.map`, insertion order). The object a method runs on is
+  the binding `this`, a record of its fields; dedicated forms read a map field (`stateGet/Has/Size`,
+  `stateKeys/Values` only as `...` in an array literal, where an iterator is spread), change one (`stateSet/Delete`,
+  statements) or call a method (`callThis`). `this` is never a value (`Expr.scoped`), so a map is never shared and
+  changing it in place equals replacing it: the model stays a value semantics. A method called in an expression
+  must change no state (a static check: no `stateSet/Delete/callThis` statement in its body). `callState` runs a
+  method and returns its result and the final `this`; the `return` outcome now carries its environment for that.
+  Methods are named apart from locals and functions (JavaScript reaches them only as `this.m`).
+- **Conversion.** `new C()` is the function `new C` returning the record of empty maps (field initializers in
+  order); a method gets `this` as first parameter, and a `void` method a final `return;` (what falling off its end
+  does); methods are listed callees first (the model finds functions by name, so order has no meaning;
+  recursion between methods is refused).
+- **Typed layer.** `Ty.map τ` denotes an association list; the model's `mapGet/mapPut/mapDel` are generic, and the
+  denotation runs the same ones, so representation lemmas are short (`Proof/State.lean`, 150 lines). A `void`
+  method denotes the state it leaves: `return;` there is `retVoid` (the result is `this`), and `wf` takes the mode
+  so `return e` and state changes are excluded elsewhere (`SRel`'s `return` clause reads the final state in that
+  mode). `FnsOK` gained `convState`, and `adequacy_state` is the theorem for such methods.
+- **Readable output** passes the state along as a tuple: `let «this» := («this».1, V2.mapPut «this».2.1 k v,
+  «this».2.2)`, and a call `let «this» := «bump» «this» k`.
+- **Cost.** Proof +220 lines (to 2,664 in `V2/Proof`), typed syntax and denotation +120, model +170 (trusted).
+  `registers.ts` (429 lines, 30 methods) checks in 26 s, `tree.ts` (386 lines, 37 methods) in 19 s.
+- **Counted loops** (`forRange`) are a loop over `0 … n-1`; the static check requires `n` constant and the index not
+  assigned. The model builds only as many iterations as its fuel allows (its `loop` times out before using more).
+- **Properties** (`V2Tests/RegistersSpec.lean`, 235 lines): replaying `pack`, `mark` or `item` changes nothing;
+  two `item` operations on the same album item converge in either order (the later stamp wins). They use that
+  JavaScript's string order is a strict total order, and get/put laws of the maps.
+- **Tests:** fixture `l5.ts`, drive's `registers.ts` and `tree.ts`; the differential harness builds objects with
+  random `Map` states, runs every method in JavaScript and in the model, and compares results and final states
+  (41,700 calls). 38 negative fixtures; 3,909 theorems audited.
 
 ## Checkpoint after M4: is adding constructs viable?
 
@@ -270,6 +304,9 @@ definition (`clamp_le`) that transfers to every run via `clamp_source`.
   the parse of the file).
 - Not trusted: the type checker, the printer's typed term, readable definitions and proofs (all re-checked by the
   kernel).
+- Since L5/L6: that the model's value semantics of a class (state forms, `callState`, the static rules that `this` is
+  never a value and that expression calls change no state) agrees with JavaScript's objects; and that callers do not
+  mutate objects a method returns (they may share structure with the state, as in JavaScript).
 
 ## Measurements (M0)
 
@@ -306,9 +343,8 @@ scripts/v2-check.sh      # everything CI runs for v2
 
 ## Next steps
 
-- L5/L6 together: drive's remaining kernel files (`registers.ts`, `tree.ts`) are classes whose state is private
-  `Map<string, T>` fields, with `void` methods that change it and value methods that read it. Plan: the class state
-  is a record bound to `this`; maps are values; the model has dedicated forms for `this.f.get/has/size`,
-  `[...this.f.keys()/values()]`, `this.f.set/delete` and `this.m(…)`, and refuses `this` as a plain value, so no map
-  can be aliased. A `void` method returns the final state (the model's `return` outcome carries its environment).
-- L7: counted `for` with a bound, as `tree.ts` uses (`for (let _step = 0; _step < steps; _step++)`).
+- drive's three kernel files now translate (two unchanged, `trust.ts` with one rewrite). Next, by value: prove more
+  of drive's specs on the generated definitions (the tree's invariants: no cycles, burial), then L8 (a heap
+  semantics agreeing with the value semantics, removing the class trust above).
+- Remaining restrictions: block-bodied callbacks (they would put statements inside expressions' mutual family),
+  measured `while`, recursion, `throw`, local maps, a constructor with code, more than one class per file.
