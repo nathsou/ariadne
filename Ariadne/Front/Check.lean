@@ -83,6 +83,9 @@ structure Types where
   aliases : List (String × Parse.Ty)
   /-- Resolved named types, printed as `ty.«Name»`. -/
   named : List (String × Ty) := []
+  /-- Named types that also get a readable Lean name (an alias, field accessors, literal constants and
+  variant constructors): those whose name no function or generated declaration uses. -/
+  readable : List String := []
 
 def Types.name (T : Types) (τ : Ty) : Option String := (T.named.find? (·.2 == τ)).map fun (n, _) => s!"ty.{ident n}"
 
@@ -91,8 +94,8 @@ def Types.print (T : Types) (τ : Ty) : String := printTyWith T.name τ
 /-- The Lean type of a denoted value. -/
 partial def Types.lean (T : Types) : Ty → String
   | .bool => "Bool" | .int => "Int" | .number => "Int" | .string => "JSString"
-  | τ => match T.name τ, τ with
-    | some n, _ => s!"{n}.denote"
+  | τ => match (T.named.find? (·.2 == τ)).map (·.1), τ with
+    | some n, _ => if T.readable.contains n then ident n else s!"ty.{ident n}.denote"
     | none, .array σ => s!"List ({T.lean σ})"
     | none, .map σ => s!"List (JSString × {T.lean σ})"
     | none, .option _ σ => s!"Option ({T.lean σ})"
@@ -1261,8 +1264,16 @@ def checkFunction (T : Types) (fns : List FnSig) (f : Parse.Function) (this : Op
   pure { sig := { name := f.name, params, result, trivial := block.trivial, method := this.isSome, void },
          body := block }
 
+/-- Names a named type's readable alias may not take: the functions' and methods', and the generated
+declarations'. -/
+def reservedNames (p : Parse.Program) : List String :=
+  ["ast", "typed", "sigs", "erased", "wf", "bodies_ok", "ast_scoped", "denote_eq", "safety_eq", "ty", "sig",
+    "body", "ne"] ++ p.functions.map (·.name) ++ p.classes.flatMap (fun c => c.methods.map (·.name))
+
 def checkProgram (p : Parse.Program) : Checked (Types × List CheckedFn) := do
   let mut T ← Types.ofProgram p
+  let reserved := reservedNames p
+  T := { T with readable := T.named.filterMap fun (n, _) => if reserved.contains n then none else some n }
   let mut fns := []
   let mut out := []
   for f in p.functions do
@@ -1276,7 +1287,8 @@ def checkProgram (p : Parse.Program) : Checked (Types × List CheckedFn) := do
       | .newMap .string v sp => return (fld.name, Ty.map (← T.resolve sp 64 v))
       | _ => unsupportedTy fld.span "a field other than a Map with string keys"
     let σ := Ty.record (Fields.ofList fields)
-    T := { T with named := T.named ++ [(c.name, σ)] }
+    T := { T with named := T.named ++ [(c.name, σ)],
+                  readable := if reserved.contains c.name then T.readable else T.readable ++ [c.name] }
     -- `new C()`: the state with every map empty.
     let initBody : List Parse.Stmt :=
       [.return_ (.record (c.fields.map fun fld => (fld.name, fld.value)) c.span) c.span]
@@ -1368,6 +1380,50 @@ def printFunction (fn : Function) : String :=
 
 def sigName (f : String) : String := s!"sig.{ident f}"
 
+/-- A literal's text as a Lean name, when it can be one. -/
+def litName (units : List UInt16) : Option String :=
+  if !units.isEmpty && units.all (fun u => (u ≥ 0x21 && u < 0x7F) && u != 0x60) then
+    some (String.ofList (units.map fun u => Char.ofNat u.toNat))
+  else none
+
+def tagName : TagLit → Option String
+  | .str s => litName s
+  | .bool b => some (toString b)
+
+/-- Readable names for the named types: an alias `«T»` for the denoted type; for a record, an accessor
+`«T».«f»` per field; for a literal union, a constant `«T».«lit»` per literal; for a union of records,
+a payload type `«T».Variant.«tag»` with its accessors, and a constructor `«T».«tag»` per variant.
+All are reducible, so they unfold to the projections and injections readable definitions use. -/
+def readableNames (T : Types) : String := Id.run do
+  let mut out := ""
+  for (n, τ) in T.named do
+    if !T.readable.contains n then continue
+    let N := ident n
+    out := out ++ s!"\n/-- The source's `{n}`. -/\nabbrev {N} : Type := ty.{N}.denote\n"
+    let accessors (owner : String) (fs : Fields) : String := Id.run do
+      let mut acc := ""
+      for (k, (f, σ)) in (Fields.toList fs).zipIdx.map (fun ((f, σ), k) => (k, (f, σ))) do
+        acc := acc ++ s!"@[reducible] def {owner}.{ident f} (r : {owner}) : {T.lean σ} := {projText "r" k}\n"
+      return acc
+    match τ with
+    | .record fs => out := out ++ accessors N fs
+    | .lits a as =>
+      for (lit, i) in (a :: as).zipIdx do
+        if let some l := litName lit then
+          out := out ++ s!"@[reducible] def {N}.{ident l} : {N} := ⟨{i}, by decide⟩\n"
+    | .union _ vs =>
+      let variants := Variants.toList vs
+      for ((t, fs), i) in variants.zipIdx do
+        let some tn := tagName t | continue
+        if (Fields.toList fs).isEmpty then
+          out := out ++ s!"@[reducible] def {N}.{ident tn} : {N} := {injText i variants.length "()"}\n"
+        else
+          let V := s!"{N}.Variant.{ident tn}"
+          out := out ++ s!"abbrev {V} : Type := ({T.print (.record fs)} : Ty).denote\n" ++ accessors V fs ++
+            s!"@[reducible] def {N}.{ident tn} (x : {V}) : {N} := {injText i variants.length "x"}\n"
+    | _ => pure ()
+  return out
+
 /-- The Lean source for a checked file: the AST, the typed program, readable
 definitions, and per-function source theorems. -/
 def printFile (source namespace_ : String) (ast : Program) (T : Types) (fns : List CheckedFn) : String := Id.run do
@@ -1379,6 +1435,7 @@ def printFile (source namespace_ : String) (ast : Program) (T : Types) (fns : Li
     ",\n  ".intercalate (ast.map printFunction) ++ "]\n\n"
   for (n, τ) in T.named do
     out := out ++ s!"noncomputable abbrev ty.{ident n} : Ty := {printTy τ}\n"
+  out := out ++ readableNames T
   if !T.named.isEmpty then out := out ++ "\n"
   for fn in fns do
     let s := fn.sig

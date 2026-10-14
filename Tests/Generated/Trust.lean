@@ -161,6 +161,97 @@ noncomputable abbrev ty.«BestKeys» : Ty := (.record (.cons "index" .number (.c
 noncomputable abbrev ty.«StoredCopy» : Ty := (.union "state" (.cons (.str (js "missing")) .nil (.cons (.str (js "unknown")) .nil (.cons (.str (js "own")) (.cons "written" .number .nil) (.cons (.str (js "older")) .nil (.cons (.str (js "damaged")) .nil (.one (.str (js "foreign")) .nil)))))))
 noncomputable abbrev ty.«RepairContext» : Ty := (.record (.cons "stale" .bool (.cons "readOnly" .bool .nil)))
 
+/-- The source's `Recovery`. -/
+abbrev «Recovery» : Type := ty.«Recovery».denote
+@[reducible] def «Recovery».«none» : «Recovery» := ⟨0, by decide⟩
+@[reducible] def «Recovery».«ok» : «Recovery» := ⟨1, by decide⟩
+@[reducible] def «Recovery».«legacy» : «Recovery» := ⟨2, by decide⟩
+@[reducible] def «Recovery».«bad» : «Recovery» := ⟨3, by decide⟩
+
+/-- The source's `Commit`. -/
+abbrev «Commit» : Type := ty.«Commit».denote
+@[reducible] def «Commit».«ok» : «Commit» := ⟨0, by decide⟩
+@[reducible] def «Commit».«legacy» : «Commit» := ⟨1, by decide⟩
+@[reducible] def «Commit».«bad» : «Commit» := ⟨2, by decide⟩
+@[reducible] def «Commit».«none» : «Commit» := ⟨3, by decide⟩
+
+/-- The source's `CopyFact`. -/
+abbrev «CopyFact» : Type := ty.«CopyFact».denote
+@[reducible] def «CopyFact».«unopened» : «CopyFact» := (Sum.inl ())
+@[reducible] def «CopyFact».«damaged» : «CopyFact» := (Sum.inr (Sum.inl ()))
+abbrev «CopyFact».Variant.«opened» : Type := ((.record (.cons "written" .number (.cons "seeds" (.array .string) (.cons "recovery" ty.«Recovery» (.cons "commit" ty.«Commit» (.cons "kid" (.option .undef .string) .nil)))))) : Ty).denote
+@[reducible] def «CopyFact».Variant.«opened».«written» (r : «CopyFact».Variant.«opened») : Int := r.1
+@[reducible] def «CopyFact».Variant.«opened».«seeds» (r : «CopyFact».Variant.«opened») : List (JSString) := r.2.1
+@[reducible] def «CopyFact».Variant.«opened».«recovery» (r : «CopyFact».Variant.«opened») : «Recovery» := r.2.2.1
+@[reducible] def «CopyFact».Variant.«opened».«commit» (r : «CopyFact».Variant.«opened») : «Commit» := r.2.2.2.1
+@[reducible] def «CopyFact».Variant.«opened».«kid» (r : «CopyFact».Variant.«opened») : Option (JSString) := r.2.2.2.2.1
+@[reducible] def «CopyFact».«opened» (x : «CopyFact».Variant.«opened») : «CopyFact» := (Sum.inr (Sum.inr x))
+
+/-- The source's `Floor`. -/
+abbrev «Floor» : Type := ty.«Floor».denote
+@[reducible] def «Floor».«written» (r : «Floor») : Int := r.1
+@[reducible] def «Floor».«seed» (r : «Floor») : JSString := r.2.1
+@[reducible] def «Floor».«tagged» (r : «Floor») : Option (List (JSString)) := r.2.2.1
+@[reducible] def «Floor».«committed» (r : «Floor») : Option (List (JSString)) := r.2.2.2.1
+
+/-- The source's `Refusal`. -/
+abbrev «Refusal» : Type := ty.«Refusal».denote
+@[reducible] def «Refusal».«none» : «Refusal» := ⟨0, by decide⟩
+@[reducible] def «Refusal».«wrong-key» : «Refusal» := ⟨1, by decide⟩
+@[reducible] def «Refusal».«damaged» : «Refusal» := ⟨2, by decide⟩
+@[reducible] def «Refusal».«not-owner» : «Refusal» := ⟨3, by decide⟩
+@[reducible] def «Refusal».«older» : «Refusal» := ⟨4, by decide⟩
+
+/-- The source's `Ranked`. -/
+abbrev «Ranked» : Type := ty.«Ranked».denote
+@[reducible] def «Ranked».«index» (r : «Ranked») : Int := r.1
+@[reducible] def «Ranked».«trusted» (r : «Ranked») : Bool := r.2.1
+@[reducible] def «Ranked».«committed» (r : «Ranked») : Bool := r.2.2.1
+
+/-- The source's `Choice`. -/
+abbrev «Choice» : Type := ty.«Choice».denote
+abbrev «Choice».Variant.«true» : Type := ((.record (.cons "order" (.array ty.«Ranked») .nil)) : Ty).denote
+@[reducible] def «Choice».Variant.«true».«order» (r : «Choice».Variant.«true») : List («Ranked») := r.1
+@[reducible] def «Choice».«true» (x : «Choice».Variant.«true») : «Choice» := (Sum.inl x)
+abbrev «Choice».Variant.«false» : Type := ((.record (.cons "refused" ty.«Refusal» .nil)) : Ty).denote
+@[reducible] def «Choice».Variant.«false».«refused» (r : «Choice».Variant.«false») : «Refusal» := r.1
+@[reducible] def «Choice».«false» (x : «Choice».Variant.«false») : «Choice» := (Sum.inr x)
+
+/-- The source's `Candidate`. -/
+abbrev «Candidate» : Type := ty.«Candidate».denote
+@[reducible] def «Candidate».«index» (r : «Candidate») : Int := r.1
+@[reducible] def «Candidate».«committed» (r : «Candidate») : Bool := r.2.1
+@[reducible] def «Candidate».«tagged» (r : «Candidate») : Bool := r.2.2.1
+@[reducible] def «Candidate».«seeds» (r : «Candidate») : Int := r.2.2.2.1
+@[reducible] def «Candidate».«written» (r : «Candidate») : Int := r.2.2.2.2.1
+
+/-- The source's `KeysChoice`. -/
+abbrev «KeysChoice» : Type := ty.«KeysChoice».denote
+@[reducible] def «KeysChoice».«index» (r : «KeysChoice») : Int := r.1
+@[reducible] def «KeysChoice».«trusted» (r : «KeysChoice») : Bool := r.2.1
+
+/-- The source's `BestKeys`. -/
+abbrev «BestKeys» : Type := ty.«BestKeys».denote
+@[reducible] def «BestKeys».«index» (r : «BestKeys») : Int := r.1
+@[reducible] def «BestKeys».«trusted» (r : «BestKeys») : Bool := r.2.1
+@[reducible] def «BestKeys».«written» (r : «BestKeys») : Int := r.2.2.1
+
+/-- The source's `StoredCopy`. -/
+abbrev «StoredCopy» : Type := ty.«StoredCopy».denote
+@[reducible] def «StoredCopy».«missing» : «StoredCopy» := (Sum.inl ())
+@[reducible] def «StoredCopy».«unknown» : «StoredCopy» := (Sum.inr (Sum.inl ()))
+abbrev «StoredCopy».Variant.«own» : Type := ((.record (.cons "written" .number .nil)) : Ty).denote
+@[reducible] def «StoredCopy».Variant.«own».«written» (r : «StoredCopy».Variant.«own») : Int := r.1
+@[reducible] def «StoredCopy».«own» (x : «StoredCopy».Variant.«own») : «StoredCopy» := (Sum.inr (Sum.inr (Sum.inl x)))
+@[reducible] def «StoredCopy».«older» : «StoredCopy» := (Sum.inr (Sum.inr (Sum.inr (Sum.inl ()))))
+@[reducible] def «StoredCopy».«damaged» : «StoredCopy» := (Sum.inr (Sum.inr (Sum.inr (Sum.inr (Sum.inl ())))))
+@[reducible] def «StoredCopy».«foreign» : «StoredCopy» := (Sum.inr (Sum.inr (Sum.inr (Sum.inr (Sum.inr ())))))
+
+/-- The source's `RepairContext`. -/
+abbrev «RepairContext» : Type := ty.«RepairContext».denote
+@[reducible] def «RepairContext».«stale» (r : «RepairContext») : Bool := r.1
+@[reducible] def «RepairContext».«readOnly» (r : «RepairContext») : Bool := r.2.1
+
 noncomputable def sig.«listed» : Sig := { name := "listed", params := [("kid", (.option .undef .string)), ("list", (.option .undef (.array .string)))], result := .bool, trivial := true }
 noncomputable def sig.«byRank» : Sig := { name := "byRank", params := [("a", ty.«Candidate»), ("b", ty.«Candidate»)], result := .number, trivial := true }
 noncomputable def sig.«chooseVaultCopy» : Sig := { name := "chooseVaultCopy", params := [("facts", (.array ty.«CopyFact»)), ("floor", (.option .both ty.«Floor»))], result := ty.«Choice», trivial := false }
@@ -417,7 +508,7 @@ def «listed» («kid» : Option (JSString)) («list» : Option (List (JSString)
     | some «list» =>
       («kid» != (js "")) && (List.any «list» (fun y' => y' == «kid»))
 
-def «byRank» («a» : ty.«Candidate».denote) («b» : ty.«Candidate».denote) : Int :=
+def «byRank» («a» : «Candidate») («b» : «Candidate») : Int :=
   if («a».2.1) != («b».2.1) then
     if «a».2.1 then (-(1 : Int)) else (1 : Int)
   else
@@ -435,11 +526,11 @@ def «byRank» («a» : ty.«Candidate».denote) («b» : ty.«Candidate».denot
           else
             (0 : Int)
 
-def «chooseVaultCopy» («facts» : List (ty.«CopyFact».denote)) («floor» : Option (ty.«Floor».denote)) : ty.«Choice».denote :=
+def «chooseVaultCopy» («facts» : List («CopyFact»)) («floor» : Option («Floor»)) : «Choice» :=
   let «committedFactors» : Option (List (JSString)) := match «floor» with | none => none | some «floor» => «floor».2.2.2.1
   let «taggedFactors» : Option (List (JSString)) := match «floor» with | none => none | some «floor» => «floor».2.2.1
   let «floorSeed» : JSString := match «floor» with | none => (js "") | some «floor» => «floor».2.1
-  let «ok» : List (ty.«Candidate».denote) := []
+  let «ok» : List («Candidate») := []
   let «opened» : Bool := false
   let «damaged» : Bool := false
   let «notOwner» : Bool := false
@@ -460,35 +551,35 @@ def «chooseVaultCopy» («facts» : List (ty.«CopyFact».denote)) («floor» :
     match «f» with
     | Sum.inl p' =>
       let «f» := ((), p')
-      let «f» := ((Sum.inl «f».2) : ty.«CopyFact».denote)
+      let «f» := ((Sum.inl «f».2) : «CopyFact»)
       next2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ())
     | Sum.inr p' =>
       match p' with
       | Sum.inl p' =>
         let «f» := ((), p')
         let «damaged» : Bool := true
-        let «f» := ((Sum.inr (Sum.inl «f».2)) : ty.«CopyFact».denote)
+        let «f» := ((Sum.inr (Sum.inl «f».2)) : «CopyFact»)
         next2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ())
       | Sum.inr p' =>
         let «f» := ((), p')
         let «opened» : Bool := true
         if ((«f».2.2.2.2.1) == (2 : Fin 4)) || ((«f».2.2.2.1) == (3 : Fin 4)) then
           let «notOwner» : Bool := true
-          let «f» := ((Sum.inr (Sum.inr «f».2)) : ty.«CopyFact».denote)
+          let «f» := ((Sum.inr (Sum.inr «f».2)) : «CopyFact»)
           next2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ())
         else
           if (((«f».2.2.2.2.1) == (1 : Fin 4)) && («listed» («f».2.2.2.2.2.1) «committedFactors»)) || (((«f».2.2.2.1) == (2 : Fin 4)) && («listed» («f».2.2.2.2.2.1) «taggedFactors»)) then
             let «notOwner» : Bool := true
-            let «f» := ((Sum.inr (Sum.inr «f».2)) : ty.«CopyFact».denote)
+            let «f» := ((Sum.inr (Sum.inr «f».2)) : «CopyFact»)
             next2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ())
           else
             if («floorSeed» != (js "")) && (!(List.any («f».2.2.1) (fun y' => y' == «floorSeed»))) then
               let «older» : Bool := true
-              let «f» := ((Sum.inr (Sum.inr «f».2)) : ty.«CopyFact».denote)
+              let «f» := ((Sum.inr (Sum.inr «f».2)) : «CopyFact»)
               next2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ())
             else
-              let «ok» : List (ty.«Candidate».denote) := «ok» ++ ([((«index», ((«f».2.2.2.2.1) == (0 : Fin 4)), ((«f».2.2.2.1) != (2 : Fin 4)), (List.length («f».2.2.1) : Int), («f».2.1), ()))])
-              let «f» := ((Sum.inr (Sum.inr «f».2)) : ty.«CopyFact».denote)
+              let «ok» : List («Candidate») := «ok» ++ ([((«index», ((«f».2.2.2.2.1) == (0 : Fin 4)), ((«f».2.2.2.1) != (2 : Fin 4)), (List.length («f».2.2.1) : Int), («f».2.1), ()))])
+              let «f» := ((Sum.inr (Sum.inr «f».2)) : «CopyFact»)
               next2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ()))
     (fun s2' =>
     let «older» := s2'.1
@@ -498,7 +589,7 @@ def «chooseVaultCopy» («facts» : List (ty.«CopyFact».denote)) («floor» :
     let «ok» := s2'.2.2.2.2.1
     let «facts» := s2'.2.2.2.2.2.2.2.2.1
     if decide ((List.length «ok» : Int) > (0 : Int)) then
-      let «ranked» : List (ty.«Candidate».denote) := Ariadne.sortedBy «byRank» «ok»
+      let «ranked» : List («Candidate») := Ariadne.sortedBy «byRank» «ok»
       let «anyCommitted» : Bool := List.any «ranked» (fun «x» => «x».2.1)
       (Sum.inl (((), (List.map (fun «x» => ((«x».1), ((«x».2.2.1) && ((«x».2.1) || (!«anyCommitted»))), («x».2.1), ())) «ranked»), ())).2)
     else
@@ -506,11 +597,11 @@ def «chooseVaultCopy» («facts» : List (ty.«CopyFact».denote)) («floor» :
     («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ())
 
 /-- The inputs on which `chooseVaultCopy` stays within what the model covers. -/
-def «chooseVaultCopy».safe («facts» : List (ty.«CopyFact».denote)) («floor» : Option (ty.«Floor».denote)) : Bool :=
+def «chooseVaultCopy».safe («facts» : List («CopyFact»)) («floor» : Option («Floor»)) : Bool :=
   let «committedFactors» : Option (List (JSString)) := match «floor» with | none => none | some «floor» => «floor».2.2.2.1
   let «taggedFactors» : Option (List (JSString)) := match «floor» with | none => none | some «floor» => «floor».2.2.1
   let «floorSeed» : JSString := match «floor» with | none => (js "") | some «floor» => «floor».2.1
-  let «ok» : List (ty.«Candidate».denote) := []
+  let «ok» : List («Candidate») := []
   let «opened» : Bool := false
   let «damaged» : Bool := false
   let «notOwner» : Bool := false
@@ -531,48 +622,48 @@ def «chooseVaultCopy».safe («facts» : List (ty.«CopyFact».denote)) («floo
     match «f» with
     | Sum.inl p' =>
       let «f» := ((), p')
-      let «f» := ((Sum.inl «f».2) : ty.«CopyFact».denote)
+      let «f» := ((Sum.inl «f».2) : «CopyFact»)
       next2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ())
     | Sum.inr p' =>
       match p' with
       | Sum.inl p' =>
         let «f» := ((), p')
         let «damaged» : Bool := true
-        let «f» := ((Sum.inr (Sum.inl «f».2)) : ty.«CopyFact».denote)
+        let «f» := ((Sum.inr (Sum.inl «f».2)) : «CopyFact»)
         next2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ())
       | Sum.inr p' =>
         let «f» := ((), p')
         let «opened» : Bool := true
         if ((«f».2.2.2.2.1) == (2 : Fin 4)) || ((«f».2.2.2.1) == (3 : Fin 4)) then
           let «notOwner» : Bool := true
-          let «f» := ((Sum.inr (Sum.inr «f».2)) : ty.«CopyFact».denote)
+          let «f» := ((Sum.inr (Sum.inr «f».2)) : «CopyFact»)
           next2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ())
         else
           if (((«f».2.2.2.2.1) == (1 : Fin 4)) && («listed» («f».2.2.2.2.2.1) «committedFactors»)) || (((«f».2.2.2.1) == (2 : Fin 4)) && («listed» («f».2.2.2.2.2.1) «taggedFactors»)) then
             let «notOwner» : Bool := true
-            let «f» := ((Sum.inr (Sum.inr «f».2)) : ty.«CopyFact».denote)
+            let «f» := ((Sum.inr (Sum.inr «f».2)) : «CopyFact»)
             next2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ())
           else
             if («floorSeed» != (js "")) && (!(List.any («f».2.2.1) (fun y' => y' == «floorSeed»))) then
               let «older» : Bool := true
-              let «f» := ((Sum.inr (Sum.inr «f».2)) : ty.«CopyFact».denote)
+              let «f» := ((Sum.inr (Sum.inr «f».2)) : «CopyFact»)
               next2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ())
             else
-              let «ok» : List (ty.«Candidate».denote) := «ok» ++ ([((«index», ((«f».2.2.2.2.1) == (0 : Fin 4)), ((«f».2.2.2.1) != (2 : Fin 4)), (List.length («f».2.2.1) : Int), («f».2.1), ()))])
-              let «f» := ((Sum.inr (Sum.inr «f».2)) : ty.«CopyFact».denote)
+              let «ok» : List («Candidate») := «ok» ++ ([((«index», ((«f».2.2.2.2.1) == (0 : Fin 4)), ((«f».2.2.2.1) != (2 : Fin 4)), (List.length («f».2.2.1) : Int), («f».2.1), ()))])
+              let «f» := ((Sum.inr (Sum.inr «f».2)) : «CopyFact»)
               next2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ()))
     (fun s2' =>
     let «ok» := s2'.2.2.2.2.1
     if decide ((List.length «ok» : Int) > (0 : Int)) then
-      Ariadne.consistent (Ariadne.signs «byRank» «ok») && (let «ranked» : List (ty.«Candidate».denote) := Ariadne.sortedBy «byRank» «ok»
+      Ariadne.consistent (Ariadne.signs «byRank» «ok») && (let «ranked» : List («Candidate») := Ariadne.sortedBy «byRank» «ok»
       let «anyCommitted» : Bool := List.any «ranked» (fun «x» => «x».2.1)
       true)
     else
       true)
     («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ())
 
-def «chooseKeysCopy» («facts» : List (ty.«CopyFact».denote)) : Option (ty.«KeysChoice».denote) :=
-  let «best» : Option (ty.«BestKeys».denote) := none
+def «chooseKeysCopy» («facts» : List («CopyFact»)) : Option («KeysChoice») :=
+  let «best» : Option («BestKeys») := none
   Ariadne.forIn (List.zipIdx «facts») (fun p2' next2' exit2' s2' =>
     let «f» := p2'.1
     let «index» := (p2'.2 : Int)
@@ -588,17 +679,17 @@ def «chooseKeysCopy» («facts» : List (ty.«CopyFact».denote)) : Option (ty.
       | Sum.inr p' =>
         let «f» := ((), p')
         if («f».2.2.2.1) == (3 : Fin 4) then
-          let «f» := ((Sum.inr (Sum.inr «f».2)) : ty.«CopyFact».denote)
+          let «f» := ((Sum.inr (Sum.inr «f».2)) : «CopyFact»)
           next2' («best», «facts», ())
         else
           let «trusted» : Bool := («f».2.2.2.1) != (2 : Fin 4)
           let «better» : Bool := match «best» with | none => true | some «best» => («trusted» && (!(«best».2.1))) || ((«trusted» == («best».2.1)) && (decide ((«f».2.1) > («best».2.2.1))))
           if «better» then
-            let «best» : Option (ty.«BestKeys».denote) := some ((«index», «trusted», («f».2.1), ()))
-            let «f» := ((Sum.inr (Sum.inr «f».2)) : ty.«CopyFact».denote)
+            let «best» : Option («BestKeys») := some ((«index», «trusted», («f».2.1), ()))
+            let «f» := ((Sum.inr (Sum.inr «f».2)) : «CopyFact»)
             next2' («best», «facts», ())
           else
-            let «f» := ((Sum.inr (Sum.inr «f».2)) : ty.«CopyFact».denote)
+            let «f» := ((Sum.inr (Sum.inr «f».2)) : «CopyFact»)
             next2' («best», «facts», ()))
     (fun s2' =>
     let «best» := s2'.1
@@ -635,7 +726,7 @@ def «newestOwnCopy» («own» : Int) («stamps» : List (Option (Int))) : Int :
 def «mayChangeFrom» («written» : Int) («floorWritten» : Int) : Bool :=
   decide («written» ≥ «floorWritten»)
 
-def «answered» («c» : ty.«StoredCopy».denote) : Bool :=
+def «answered» («c» : «StoredCopy») : Bool :=
   match «c» with
   | Sum.inl p' =>
     true
@@ -659,7 +750,7 @@ def «answered» («c» : ty.«StoredCopy».denote) : Bool :=
           | Sum.inr p' =>
             true
 
-def «repairOne» («c» : ty.«StoredCopy».denote) («own» : Int) («allAnswered» : Bool) : Bool :=
+def «repairOne» («c» : «StoredCopy») («own» : Int) («allAnswered» : Bool) : Bool :=
   match «c» with
   | Sum.inl p' =>
     let «c» := ((), p')
@@ -684,7 +775,7 @@ def «repairOne» («c» : ty.«StoredCopy».denote) («own» : Int) («allAnswe
           | Sum.inr p' =>
             false
 
-def «repairs» («copies» : List (ty.«StoredCopy».denote)) («own» : Int) («ctx» : ty.«RepairContext».denote) : List (Bool) :=
+def «repairs» («copies» : List («StoredCopy»)) («own» : Int) («ctx» : «RepairContext») : List (Bool) :=
   if («ctx».1) || («ctx».2.1) then
     List.map (fun _ => false) «copies»
   else
@@ -846,7 +937,7 @@ theorem «listed».source («kid» : Option (JSString)) («list» : Option (List
 
 /-- Every run of `byRank` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «byRank».source («a» : ty.«Candidate».denote) («b» : ty.«Candidate».denote) (vs' : List JSValue)
+theorem «byRank».source («a» : «Candidate») («b» : «Candidate») (vs' : List JSValue)
     (args' : ArgsRep sig.«byRank».params vs' («a», «b», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "byRank" vs') (.ok w') ∧
       Ty.Rep .number w' («byRank» «a» «b») :=
@@ -854,7 +945,7 @@ theorem «byRank».source («a» : ty.«Candidate».denote) («b» : ty.«Candid
 
 /-- Every run of `chooseVaultCopy` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «chooseVaultCopy».source («facts» : List (ty.«CopyFact».denote)) («floor» : Option (ty.«Floor».denote)) (vs' : List JSValue)
+theorem «chooseVaultCopy».source («facts» : List («CopyFact»)) («floor» : Option («Floor»)) (vs' : List JSValue)
     (args' : ArgsRep sig.«chooseVaultCopy».params vs' («facts», «floor», ()))
     (safe' : «chooseVaultCopy».safe «facts» «floor» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "chooseVaultCopy" vs') (.ok w') ∧
@@ -863,7 +954,7 @@ theorem «chooseVaultCopy».source («facts» : List (ty.«CopyFact».denote)) (
 
 /-- Every run of `chooseKeysCopy` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «chooseKeysCopy».source («facts» : List (ty.«CopyFact».denote)) (vs' : List JSValue)
+theorem «chooseKeysCopy».source («facts» : List («CopyFact»)) (vs' : List JSValue)
     (args' : ArgsRep sig.«chooseKeysCopy».params vs' («facts», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "chooseKeysCopy" vs') (.ok w') ∧
       Ty.Rep (.option .null ty.«KeysChoice») w' («chooseKeysCopy» «facts») :=
@@ -887,7 +978,7 @@ theorem «mayChangeFrom».source («written» : Int) («floorWritten» : Int) (v
 
 /-- Every run of `answered` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «answered».source («c» : ty.«StoredCopy».denote) (vs' : List JSValue)
+theorem «answered».source («c» : «StoredCopy») (vs' : List JSValue)
     (args' : ArgsRep sig.«answered».params vs' («c», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "answered" vs') (.ok w') ∧
       Ty.Rep .bool w' («answered» «c») :=
@@ -895,7 +986,7 @@ theorem «answered».source («c» : ty.«StoredCopy».denote) (vs' : List JSVal
 
 /-- Every run of `repairOne` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «repairOne».source («c» : ty.«StoredCopy».denote) («own» : Int) («allAnswered» : Bool) (vs' : List JSValue)
+theorem «repairOne».source («c» : «StoredCopy») («own» : Int) («allAnswered» : Bool) (vs' : List JSValue)
     (args' : ArgsRep sig.«repairOne».params vs' («c», «own», «allAnswered», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "repairOne" vs') (.ok w') ∧
       Ty.Rep .bool w' («repairOne» «c» «own» «allAnswered») :=
@@ -903,7 +994,7 @@ theorem «repairOne».source («c» : ty.«StoredCopy».denote) («own» : Int) 
 
 /-- Every run of `repairs` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «repairs».source («copies» : List (ty.«StoredCopy».denote)) («own» : Int) («ctx» : ty.«RepairContext».denote) (vs' : List JSValue)
+theorem «repairs».source («copies» : List («StoredCopy»)) («own» : Int) («ctx» : «RepairContext») (vs' : List JSValue)
     (args' : ArgsRep sig.«repairs».params vs' («copies», «own», «ctx», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "repairs" vs') (.ok w') ∧
       Ty.Rep (.array .bool) w' («repairs» «copies» «own» «ctx») :=

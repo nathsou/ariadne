@@ -68,6 +68,18 @@ noncomputable def ast : Program := [
 noncomputable abbrev ty.«Entry» : Ty := (.record (.cons "at" .number (.cons "s" .string (.cons "tag" (.option .undef .string) .nil))))
 noncomputable abbrev ty.«Book» : Ty := (.record (.cons "items" (.map (.record (.cons "at" .number (.cons "s" .string (.cons "tag" (.option .undef .string) .nil))))) (.cons "names" (.map .string) (.cons "counts" (.map .number) .nil))))
 
+/-- The source's `Entry`. -/
+abbrev «Entry» : Type := ty.«Entry».denote
+@[reducible] def «Entry».«at» (r : «Entry») : Int := r.1
+@[reducible] def «Entry».«s» (r : «Entry») : JSString := r.2.1
+@[reducible] def «Entry».«tag» (r : «Entry») : Option (JSString) := r.2.2.1
+
+/-- The source's `Book`. -/
+abbrev «Book» : Type := ty.«Book».denote
+@[reducible] def «Book».«items» (r : «Book») : List (JSString × «Entry») := r.1
+@[reducible] def «Book».«names» (r : «Book») : List (JSString × JSString) := r.2.1
+@[reducible] def «Book».«counts» (r : «Book») : List (JSString × Int) := r.2.2.1
+
 noncomputable def sig.«newer» : Sig := { name := "newer", params := [("s", .string), ("stamp", .string)], result := .bool, trivial := true }
 noncomputable def sig.«new Book» : Sig := { name := "new Book", params := [], result := ty.«Book», trivial := true }
 noncomputable def sig.«bump» : Sig := { name := "bump", params := [("this", ty.«Book»), ("k", .string)], result := ty.«Book», trivial := false, method := true, void := true }
@@ -185,74 +197,74 @@ theorem wf : typed.WF := TProgram.wf_of typed erased bodies_ok ast_scoped
 def «newer» («s» : JSString) («stamp» : JSString) : Bool :=
   («s» == (js "")) || (Ariadne.strLt «s» «stamp»)
 
-def «new Book»  : ty.«Book».denote :=
-  (([] : List (JSString × ty.«Entry».denote)), ([] : List (JSString × JSString)), ([] : List (JSString × Int)), ())
+def «new Book»  : «Book» :=
+  (([] : List (JSString × «Entry»)), ([] : List (JSString × JSString)), ([] : List (JSString × Int)), ())
 
-def «bump» («this» : ty.«Book».denote) («k» : JSString) : ty.«Book».denote :=
+def «bump» («this» : «Book») («k» : JSString) : «Book» :=
   let «c» : Option (Int) := Ariadne.mapGet «this».2.2.1 «k»
-  let «this» : ty.«Book».denote := («this».1, «this».2.1, Ariadne.mapPut «this».2.2.1 «k» (match «c» with | none => (1 : Int) | some «c» => «c» + (1 : Int)), «this».2.2.2)
+  let «this» : «Book» := («this».1, «this».2.1, Ariadne.mapPut «this».2.2.1 «k» (match «c» with | none => (1 : Int) | some «c» => «c» + (1 : Int)), «this».2.2.2)
   «this»
 
 /-- The inputs on which `bump` stays within what the model covers. -/
-def «bump».safe («this» : ty.«Book».denote) («k» : JSString) : Bool :=
+def «bump».safe («this» : «Book») («k» : JSString) : Bool :=
   let «c» : Option (Int) := Ariadne.mapGet «this».2.2.1 «k»
-  (match «c» with | none => true | some «c» => Ariadne.inRange («c» + (1 : Int))) && (let «this» : ty.«Book».denote := («this».1, «this».2.1, Ariadne.mapPut «this».2.2.1 «k» (match «c» with | none => (1 : Int) | some «c» => «c» + (1 : Int)), «this».2.2.2)
+  (match «c» with | none => true | some «c» => Ariadne.inRange («c» + (1 : Int))) && (let «this» : «Book» := («this».1, «this».2.1, Ariadne.mapPut «this».2.2.1 «k» (match «c» with | none => (1 : Int) | some «c» => «c» + (1 : Int)), «this».2.2.2)
   true)
 
-def «put» («this» : ty.«Book».denote) («k» : JSString) («e» : ty.«Entry».denote) : ty.«Book».denote :=
-  let «cur» : Option (ty.«Entry».denote) := Ariadne.mapGet «this».1 «k»
+def «put» («this» : «Book») («k» : JSString) («e» : «Entry») : «Book» :=
+  let «cur» : Option («Entry») := Ariadne.mapGet «this».1 «k»
   match «cur» with
   | some «cur» =>
     if !(«newer» («cur».2.1) («e».2.1)) then
       «this»
     else
       let «cur» := some «cur»
-      let «this» : ty.«Book».denote := (Ariadne.mapPut «this».1 «k» «e», «this».2)
-      let «this» : ty.«Book».denote := «bump» «this» «k»
+      let «this» : «Book» := (Ariadne.mapPut «this».1 «k» «e», «this».2)
+      let «this» : «Book» := «bump» «this» «k»
       «this»
   | none =>
-    let «this» : ty.«Book».denote := (Ariadne.mapPut «this».1 «k» «e», «this».2)
-    let «this» : ty.«Book».denote := «bump» «this» «k»
+    let «this» : «Book» := (Ariadne.mapPut «this».1 «k» «e», «this».2)
+    let «this» : «Book» := «bump» «this» «k»
     «this»
 
 /-- The inputs on which `put` stays within what the model covers. -/
-def «put».safe («this» : ty.«Book».denote) («k» : JSString) («e» : ty.«Entry».denote) : Bool :=
-  let «cur» : Option (ty.«Entry».denote) := Ariadne.mapGet «this».1 «k»
+def «put».safe («this» : «Book») («k» : JSString) («e» : «Entry») : Bool :=
+  let «cur» : Option («Entry») := Ariadne.mapGet «this».1 «k»
   match «cur» with
   | some «cur» =>
     if !(«newer» («cur».2.1) («e».2.1)) then
       true
     else
       let «cur» := some «cur»
-      let «this» : ty.«Book».denote := (Ariadne.mapPut «this».1 «k» «e», «this».2)
-      «bump».safe «this» «k» && (let «this» : ty.«Book».denote := «bump» «this» «k»
+      let «this» : «Book» := (Ariadne.mapPut «this».1 «k» «e», «this».2)
+      «bump».safe «this» «k» && (let «this» : «Book» := «bump» «this» «k»
       true)
   | none =>
-    let «this» : ty.«Book».denote := (Ariadne.mapPut «this».1 «k» «e», «this».2)
-    «bump».safe «this» «k» && (let «this» : ty.«Book».denote := «bump» «this» «k»
+    let «this» : «Book» := (Ariadne.mapPut «this».1 «k» «e», «this».2)
+    «bump».safe «this» «k» && (let «this» : «Book» := «bump» «this» «k»
     true)
 
-def «rename» («this» : ty.«Book».denote) («k» : JSString) («n» : JSString) : ty.«Book».denote :=
-  let «this» : ty.«Book».denote := («this».1, Ariadne.mapPut «this».2.1 «k» «n», «this».2.2)
+def «rename» («this» : «Book») («k» : JSString) («n» : JSString) : «Book» :=
+  let «this» : «Book» := («this».1, Ariadne.mapPut «this».2.1 «k» «n», «this».2.2)
   let after2' := fun s2' =>
     let «this» := s2'.1
     «this»
   if !((Ariadne.mapGet «this».1 «k»).isSome) then
-    let «this» : ty.«Book».denote := (Ariadne.mapPut «this».1 «k» (((0 : Int), (js ""), none, ())), «this».2)
+    let «this» : «Book» := (Ariadne.mapPut «this».1 «k» (((0 : Int), (js ""), none, ())), «this».2)
     after2' («this», «k», «n», ())
   else
     after2' («this», «k», «n», ())
 
-def «drop» («this» : ty.«Book».denote) («k» : JSString) : ty.«Book».denote :=
-  let «this» : ty.«Book».denote := (Ariadne.mapDel «this».1 «k», «this».2)
-  let «this» : ty.«Book».denote := («this».1, Ariadne.mapDel «this».2.1 «k», «this».2.2)
+def «drop» («this» : «Book») («k» : JSString) : «Book» :=
+  let «this» : «Book» := (Ariadne.mapDel «this».1 «k», «this».2)
+  let «this» : «Book» := («this».1, Ariadne.mapDel «this».2.1 «k», «this».2.2)
   «this»
 
-def «touchAll» («this» : ty.«Book».denote) («ks» : List (JSString)) : ty.«Book».denote :=
+def «touchAll» («this» : «Book») («ks» : List (JSString)) : «Book» :=
   Ariadne.forIn «ks» (fun «k» next2' exit2' s2' =>
     let «this» := s2'.1
     let «ks» := s2'.2.1
-    let «this» : ty.«Book».denote := «bump» «this» «k»
+    let «this» : «Book» := «bump» «this» «k»
     next2' («this», «ks», ()))
     (fun s2' =>
     let «this» := s2'.1
@@ -260,26 +272,26 @@ def «touchAll» («this» : ty.«Book».denote) («ks» : List (JSString)) : ty
     («this», «ks», ())
 
 /-- The inputs on which `touchAll` stays within what the model covers. -/
-def «touchAll».safe («this» : ty.«Book».denote) («ks» : List (JSString)) : Bool :=
+def «touchAll».safe («this» : «Book») («ks» : List (JSString)) : Bool :=
   Ariadne.forIn «ks» (fun «k» next2' exit2' s2' =>
     let «this» := s2'.1
     let «ks» := s2'.2.1
-    «bump».safe «this» «k» && (let «this» : ty.«Book».denote := «bump» «this» «k»
+    «bump».safe «this» «k» && (let «this» : «Book» := «bump» «this» «k»
     next2' («this», «ks», ())))
     (fun s2' =>
     true)
     («this», «ks», ())
 
-def «get» («this» : ty.«Book».denote) («k» : JSString) : Option (ty.«Entry».denote) :=
+def «get» («this» : «Book») («k» : JSString) : Option («Entry») :=
   Ariadne.mapGet «this».1 «k»
 
-def «count» («this» : ty.«Book».denote) : Int :=
+def «count» («this» : «Book») : Int :=
   (List.length «this».1 : Int)
 
-def «keys» («this» : ty.«Book».denote) : List (JSString) :=
+def «keys» («this» : «Book») : List (JSString) :=
   (List.map Prod.fst «this».1) ++ ([])
 
-def «latest» («this» : ty.«Book».denote) : Int :=
+def «latest» («this» : «Book») : Int :=
   let «best» : Int := (0 : Int)
   Ariadne.forIn ((List.map Prod.snd «this».1) ++ ([])) (fun «e» next2' exit2' s2' =>
     let «best» := s2'.1
@@ -294,11 +306,11 @@ def «latest» («this» : ty.«Book».denote) : Int :=
     «best»)
     («best», «this», ())
 
-def «nameOf» («this» : ty.«Book».denote) («k» : JSString) : JSString :=
+def «nameOf» («this» : «Book») («k» : JSString) : JSString :=
   let «n» : Option (JSString) := Ariadne.mapGet «this».2.1 «k»
   match «n» with | none => «k» | some «n» => «n»
 
-def «labels» («this» : ty.«Book».denote) : List (JSString) :=
+def «labels» («this» : «Book») : List (JSString) :=
   List.map (fun «k» => («nameOf» «this» «k») ++ (js "!")) ((List.map Prod.fst «this».2.1) ++ ([]))
 
 /-! ## Denotation
@@ -498,7 +510,7 @@ theorem «new Book».source  (vs' : List JSValue)
 
 /-- Every run of `bump` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «bump».source («this» : ty.«Book».denote) («k» : JSString) (this' : JSValue) (vs' : List JSValue)
+theorem «bump».source («this» : «Book») («k» : JSString) (this' : JSValue) (vs' : List JSValue)
     (args' : ArgsRep sig.«bump».params (this' :: vs') («this», «k», ()))
     (safe' : «bump».safe «this» «k» = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "bump" this' vs') (.ok (w', t')) ∧
@@ -507,7 +519,7 @@ theorem «bump».source («this» : ty.«Book».denote) («k» : JSString) (this
 
 /-- Every run of `put` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «put».source («this» : ty.«Book».denote) («k» : JSString) («e» : ty.«Entry».denote) (this' : JSValue) (vs' : List JSValue)
+theorem «put».source («this» : «Book») («k» : JSString) («e» : «Entry») (this' : JSValue) (vs' : List JSValue)
     (args' : ArgsRep sig.«put».params (this' :: vs') («this», «k», «e», ()))
     (safe' : «put».safe «this» «k» «e» = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "put" this' vs') (.ok (w', t')) ∧
@@ -516,7 +528,7 @@ theorem «put».source («this» : ty.«Book».denote) («k» : JSString) («e»
 
 /-- Every run of `rename` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «rename».source («this» : ty.«Book».denote) («k» : JSString) («n» : JSString) (this' : JSValue) (vs' : List JSValue)
+theorem «rename».source («this» : «Book») («k» : JSString) («n» : JSString) (this' : JSValue) (vs' : List JSValue)
     (args' : ArgsRep sig.«rename».params (this' :: vs') («this», «k», «n», ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "rename" this' vs') (.ok (w', t')) ∧
       Ty.Rep ty.«Book» t' («rename» «this» «k» «n») :=
@@ -524,7 +536,7 @@ theorem «rename».source («this» : ty.«Book».denote) («k» : JSString) («
 
 /-- Every run of `drop` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «drop».source («this» : ty.«Book».denote) («k» : JSString) (this' : JSValue) (vs' : List JSValue)
+theorem «drop».source («this» : «Book») («k» : JSString) (this' : JSValue) (vs' : List JSValue)
     (args' : ArgsRep sig.«drop».params (this' :: vs') («this», «k», ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "drop" this' vs') (.ok (w', t')) ∧
       Ty.Rep ty.«Book» t' («drop» «this» «k») :=
@@ -532,7 +544,7 @@ theorem «drop».source («this» : ty.«Book».denote) («k» : JSString) (this
 
 /-- Every run of `touchAll` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «touchAll».source («this» : ty.«Book».denote) («ks» : List (JSString)) (this' : JSValue) (vs' : List JSValue)
+theorem «touchAll».source («this» : «Book») («ks» : List (JSString)) (this' : JSValue) (vs' : List JSValue)
     (args' : ArgsRep sig.«touchAll».params (this' :: vs') («this», «ks», ()))
     (safe' : «touchAll».safe «this» «ks» = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "touchAll" this' vs') (.ok (w', t')) ∧
@@ -541,7 +553,7 @@ theorem «touchAll».source («this» : ty.«Book».denote) («ks» : List (JSSt
 
 /-- Every run of `get` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «get».source («this» : ty.«Book».denote) («k» : JSString) (vs' : List JSValue)
+theorem «get».source («this» : «Book») («k» : JSString) (vs' : List JSValue)
     (args' : ArgsRep sig.«get».params vs' («this», «k», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "get" vs') (.ok w') ∧
       Ty.Rep (.option .undef ty.«Entry») w' («get» «this» «k») :=
@@ -549,7 +561,7 @@ theorem «get».source («this» : ty.«Book».denote) («k» : JSString) (vs' :
 
 /-- Every run of `count` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «count».source («this» : ty.«Book».denote) (vs' : List JSValue)
+theorem «count».source («this» : «Book») (vs' : List JSValue)
     (args' : ArgsRep sig.«count».params vs' («this», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "count" vs') (.ok w') ∧
       Ty.Rep .number w' («count» «this») :=
@@ -557,7 +569,7 @@ theorem «count».source («this» : ty.«Book».denote) (vs' : List JSValue)
 
 /-- Every run of `keys` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «keys».source («this» : ty.«Book».denote) (vs' : List JSValue)
+theorem «keys».source («this» : «Book») (vs' : List JSValue)
     (args' : ArgsRep sig.«keys».params vs' («this», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "keys" vs') (.ok w') ∧
       Ty.Rep (.array .string) w' («keys» «this») :=
@@ -565,7 +577,7 @@ theorem «keys».source («this» : ty.«Book».denote) (vs' : List JSValue)
 
 /-- Every run of `latest` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «latest».source («this» : ty.«Book».denote) (vs' : List JSValue)
+theorem «latest».source («this» : «Book») (vs' : List JSValue)
     (args' : ArgsRep sig.«latest».params vs' («this», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "latest" vs') (.ok w') ∧
       Ty.Rep .number w' («latest» «this») :=
@@ -573,7 +585,7 @@ theorem «latest».source («this» : ty.«Book».denote) (vs' : List JSValue)
 
 /-- Every run of `nameOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «nameOf».source («this» : ty.«Book».denote) («k» : JSString) (vs' : List JSValue)
+theorem «nameOf».source («this» : «Book») («k» : JSString) (vs' : List JSValue)
     (args' : ArgsRep sig.«nameOf».params vs' («this», «k», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "nameOf" vs') (.ok w') ∧
       Ty.Rep .string w' («nameOf» «this» «k») :=
@@ -581,7 +593,7 @@ theorem «nameOf».source («this» : ty.«Book».denote) («k» : JSString) (vs
 
 /-- Every run of `labels` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «labels».source («this» : ty.«Book».denote) (vs' : List JSValue)
+theorem «labels».source («this» : «Book») (vs' : List JSValue)
     (args' : ArgsRep sig.«labels».params vs' («this», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "labels" vs') (.ok w') ∧
       Ty.Rep (.array .string) w' («labels» «this») :=

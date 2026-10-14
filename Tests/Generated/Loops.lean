@@ -146,6 +146,21 @@ noncomputable def ast : Program := [
 noncomputable abbrev ty.«Item» : Ty := (.record (.cons "id" .number (.cons "size" .number (.cons "tags" (.array .string) .nil))))
 noncomputable abbrev ty.«Shape» : Ty := (.union "kind" (.cons (.str (js "circle")) (.cons "r" .number .nil) (.one (.str (js "square")) (.cons "side" .number .nil))))
 
+/-- The source's `Item`. -/
+abbrev «Item» : Type := ty.«Item».denote
+@[reducible] def «Item».«id» (r : «Item») : Int := r.1
+@[reducible] def «Item».«size» (r : «Item») : Int := r.2.1
+@[reducible] def «Item».«tags» (r : «Item») : List (JSString) := r.2.2.1
+
+/-- The source's `Shape`. -/
+abbrev «Shape» : Type := ty.«Shape».denote
+abbrev «Shape».Variant.«circle» : Type := ((.record (.cons "r" .number .nil)) : Ty).denote
+@[reducible] def «Shape».Variant.«circle».«r» (r : «Shape».Variant.«circle») : Int := r.1
+@[reducible] def «Shape».«circle» (x : «Shape».Variant.«circle») : «Shape» := (Sum.inl x)
+abbrev «Shape».Variant.«square» : Type := ((.record (.cons "side" .number .nil)) : Ty).denote
+@[reducible] def «Shape».Variant.«square».«side» (r : «Shape».Variant.«square») : Int := r.1
+@[reducible] def «Shape».«square» (x : «Shape».Variant.«square») : «Shape» := (Sum.inr x)
+
 noncomputable def sig.«sum» : Sig := { name := "sum", params := [("xs", (.array .number))], result := .number, trivial := false }
 noncomputable def sig.«firstLarge» : Sig := { name := "firstLarge", params := [("items", (.array ty.«Item»)), ("limit", .number)], result := (.option .undef ty.«Item»), trivial := true }
 noncomputable def sig.«indexOf» : Sig := { name := "indexOf", params := [("xs", (.array .string)), ("target", .string)], result := .number, trivial := true }
@@ -389,7 +404,7 @@ def «sum».safe («xs» : List (Int)) : Bool :=
     true)
     («total», «xs», ())
 
-def «firstLarge» («items» : List (ty.«Item».denote)) («limit» : Int) : Option (ty.«Item».denote) :=
+def «firstLarge» («items» : List («Item»)) («limit» : Int) : Option («Item») :=
   Ariadne.forIn «items» (fun «it» next2' exit2' s2' =>
     let «items» := s2'.1
     let «limit» := s2'.2.1
@@ -415,7 +430,7 @@ def «indexOf» («xs» : List (JSString)) («target» : JSString) : Int :=
     (-(1 : Int)))
     («xs», «target», ())
 
-def «countTagged» («items» : List (ty.«Item».denote)) («tag» : JSString) : Int :=
+def «countTagged» («items» : List («Item»)) («tag» : JSString) : Int :=
   let «n» : Int := (0 : Int)
   Ariadne.forIn «items» (fun «it» next2' exit2' s2' =>
     let «n» := s2'.1
@@ -432,7 +447,7 @@ def «countTagged» («items» : List (ty.«Item».denote)) («tag» : JSString)
     («n», «items», «tag», ())
 
 /-- The inputs on which `countTagged` stays within what the model covers. -/
-def «countTagged».safe («items» : List (ty.«Item».denote)) («tag» : JSString) : Bool :=
+def «countTagged».safe («items» : List («Item»)) («tag» : JSString) : Bool :=
   let «n» : Int := (0 : Int)
   Ariadne.forIn «items» (fun «it» next2' exit2' s2' =>
     let «n» := s2'.1
@@ -463,18 +478,18 @@ def «prefixUntil» («xs» : List (Int)) («stop» : Int) : List (Int) :=
     «out»)
     («out», «xs», «stop», ())
 
-def «largest» («items» : List (ty.«Item».denote)) : Option (ty.«Item».denote) :=
-  let «best» : Option (ty.«Item».denote) := none
+def «largest» («items» : List («Item»)) : Option («Item») :=
+  let «best» : Option («Item») := none
   Ariadne.forIn «items» (fun «it» next2' exit2' s2' =>
     let «best» := s2'.1
     let «items» := s2'.2.1
     match «best» with
     | none =>
-      let «best» : Option (ty.«Item».denote) := some «it»
+      let «best» : Option («Item») := some «it»
       next2' («best», «items», ())
     | some «best» =>
       if decide ((«it».2.1) > («best».2.1)) then
-        let «best» : ty.«Item».denote := «it»
+        let «best» : «Item» := «it»
         let «best» := some «best»
         next2' («best», «items», ())
       else
@@ -603,7 +618,7 @@ def «grid».safe («rows» : List (List (Int))) : Bool :=
     true)
     («total», «rows», ())
 
-def «perimeters» («shapes» : List (ty.«Shape».denote)) : Int :=
+def «perimeters» («shapes» : List («Shape»)) : Int :=
   let «t» : Int := (0 : Int)
   Ariadne.forIn «shapes» (fun «sh» next2' exit2' s2' =>
     let «t» := s2'.1
@@ -612,12 +627,12 @@ def «perimeters» («shapes» : List (ty.«Shape».denote)) : Int :=
     | Sum.inl p' =>
       let «sh» := ((), p')
       let «t» : Int := «t» + ((6 : Int) * («sh».2.1))
-      let «sh» := ((Sum.inl «sh».2) : ty.«Shape».denote)
+      let «sh» := ((Sum.inl «sh».2) : «Shape»)
       next2' («t», «shapes», ())
     | Sum.inr p' =>
       let «sh» := ((), p')
       let «t» : Int := «t» + ((4 : Int) * («sh».2.1))
-      let «sh» := ((Sum.inr «sh».2) : ty.«Shape».denote)
+      let «sh» := ((Sum.inr «sh».2) : «Shape»)
       next2' («t», «shapes», ()))
     (fun s2' =>
     let «t» := s2'.1
@@ -625,7 +640,7 @@ def «perimeters» («shapes» : List (ty.«Shape».denote)) : Int :=
     («t», «shapes», ())
 
 /-- The inputs on which `perimeters` stays within what the model covers. -/
-def «perimeters».safe («shapes» : List (ty.«Shape».denote)) : Bool :=
+def «perimeters».safe («shapes» : List («Shape»)) : Bool :=
   let «t» : Int := (0 : Int)
   Ariadne.forIn «shapes» (fun «sh» next2' exit2' s2' =>
     let «t» := s2'.1
@@ -634,12 +649,12 @@ def «perimeters».safe («shapes» : List (ty.«Shape».denote)) : Bool :=
     | Sum.inl p' =>
       let «sh» := ((), p')
       (Ariadne.inRange ((6 : Int) * («sh».2.1)) && Ariadne.inRange («t» + ((6 : Int) * («sh».2.1)))) && (let «t» : Int := «t» + ((6 : Int) * («sh».2.1))
-      let «sh» := ((Sum.inl «sh».2) : ty.«Shape».denote)
+      let «sh» := ((Sum.inl «sh».2) : «Shape»)
       next2' («t», «shapes», ()))
     | Sum.inr p' =>
       let «sh» := ((), p')
       (Ariadne.inRange ((4 : Int) * («sh».2.1)) && Ariadne.inRange («t» + ((4 : Int) * («sh».2.1)))) && (let «t» : Int := «t» + ((4 : Int) * («sh».2.1))
-      let «sh» := ((Sum.inr «sh».2) : ty.«Shape».denote)
+      let «sh» := ((Sum.inr «sh».2) : «Shape»)
       next2' («t», «shapes», ())))
     (fun s2' =>
     true)
@@ -949,7 +964,7 @@ theorem «sum».source («xs» : List (Int)) (vs' : List JSValue)
 
 /-- Every run of `firstLarge` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «firstLarge».source («items» : List (ty.«Item».denote)) («limit» : Int) (vs' : List JSValue)
+theorem «firstLarge».source («items» : List («Item»)) («limit» : Int) (vs' : List JSValue)
     (args' : ArgsRep sig.«firstLarge».params vs' («items», «limit», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "firstLarge" vs') (.ok w') ∧
       Ty.Rep (.option .undef ty.«Item») w' («firstLarge» «items» «limit») :=
@@ -965,7 +980,7 @@ theorem «indexOf».source («xs» : List (JSString)) («target» : JSString) (v
 
 /-- Every run of `countTagged` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «countTagged».source («items» : List (ty.«Item».denote)) («tag» : JSString) (vs' : List JSValue)
+theorem «countTagged».source («items» : List («Item»)) («tag» : JSString) (vs' : List JSValue)
     (args' : ArgsRep sig.«countTagged».params vs' («items», «tag», ()))
     (safe' : «countTagged».safe «items» «tag» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "countTagged" vs') (.ok w') ∧
@@ -982,7 +997,7 @@ theorem «prefixUntil».source («xs» : List (Int)) («stop» : Int) (vs' : Lis
 
 /-- Every run of `largest` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «largest».source («items» : List (ty.«Item».denote)) (vs' : List JSValue)
+theorem «largest».source («items» : List («Item»)) (vs' : List JSValue)
     (args' : ArgsRep sig.«largest».params vs' («items», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "largest" vs') (.ok w') ∧
       Ty.Rep (.option .undef ty.«Item») w' («largest» «items») :=
@@ -1017,7 +1032,7 @@ theorem «grid».source («rows» : List (List (Int))) (vs' : List JSValue)
 
 /-- Every run of `perimeters` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «perimeters».source («shapes» : List (ty.«Shape».denote)) (vs' : List JSValue)
+theorem «perimeters».source («shapes» : List («Shape»)) (vs' : List JSValue)
     (args' : ArgsRep sig.«perimeters».params vs' («shapes», ()))
     (safe' : «perimeters».safe «shapes» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "perimeters" vs') (.ok w') ∧

@@ -96,6 +96,38 @@ noncomputable abbrev ty.«Recovery» : Ty := (.lits (js "none") [(js "ok"), (js 
 noncomputable abbrev ty.«Fact» : Ty := (.union "kind" (.cons (.str (js "unopened")) .nil (.cons (.str (js "damaged")) .nil (.one (.str (js "opened")) (.cons "written" .int (.cons "recovery" (.lits (js "none") [(js "ok"), (js "legacy"), (js "bad")]) (.cons "kid" (.option .undef .string) .nil)))))))
 noncomputable abbrev ty.«Choice» : Ty := (.union "ok" (.cons (.bool true) (.cons "value" .int .nil) (.one (.bool false) (.cons "reason" .string .nil))))
 
+/-- The source's `Point`. -/
+abbrev «Point» : Type := ty.«Point».denote
+@[reducible] def «Point».«x» (r : «Point») : Int := r.1
+@[reducible] def «Point».«y» (r : «Point») : Int := r.2.1
+@[reducible] def «Point».«label» (r : «Point») : Option (JSString) := r.2.2.1
+
+/-- The source's `Recovery`. -/
+abbrev «Recovery» : Type := ty.«Recovery».denote
+@[reducible] def «Recovery».«none» : «Recovery» := ⟨0, by decide⟩
+@[reducible] def «Recovery».«ok» : «Recovery» := ⟨1, by decide⟩
+@[reducible] def «Recovery».«legacy» : «Recovery» := ⟨2, by decide⟩
+@[reducible] def «Recovery».«bad» : «Recovery» := ⟨3, by decide⟩
+
+/-- The source's `Fact`. -/
+abbrev «Fact» : Type := ty.«Fact».denote
+@[reducible] def «Fact».«unopened» : «Fact» := (Sum.inl ())
+@[reducible] def «Fact».«damaged» : «Fact» := (Sum.inr (Sum.inl ()))
+abbrev «Fact».Variant.«opened» : Type := ((.record (.cons "written" .int (.cons "recovery" ty.«Recovery» (.cons "kid" (.option .undef .string) .nil)))) : Ty).denote
+@[reducible] def «Fact».Variant.«opened».«written» (r : «Fact».Variant.«opened») : Int := r.1
+@[reducible] def «Fact».Variant.«opened».«recovery» (r : «Fact».Variant.«opened») : «Recovery» := r.2.1
+@[reducible] def «Fact».Variant.«opened».«kid» (r : «Fact».Variant.«opened») : Option (JSString) := r.2.2.1
+@[reducible] def «Fact».«opened» (x : «Fact».Variant.«opened») : «Fact» := (Sum.inr (Sum.inr x))
+
+/-- The source's `Choice`. -/
+abbrev «Choice» : Type := ty.«Choice».denote
+abbrev «Choice».Variant.«true» : Type := ((.record (.cons "value" .int .nil)) : Ty).denote
+@[reducible] def «Choice».Variant.«true».«value» (r : «Choice».Variant.«true») : Int := r.1
+@[reducible] def «Choice».«true» (x : «Choice».Variant.«true») : «Choice» := (Sum.inl x)
+abbrev «Choice».Variant.«false» : Type := ((.record (.cons "reason" .string .nil)) : Ty).denote
+@[reducible] def «Choice».Variant.«false».«reason» (r : «Choice».Variant.«false») : JSString := r.1
+@[reducible] def «Choice».«false» (x : «Choice».Variant.«false») : «Choice» := (Sum.inr x)
+
 noncomputable def sig.«origin» : Sig := { name := "origin", params := [], result := ty.«Point», trivial := true }
 noncomputable def sig.«moved» : Sig := { name := "moved", params := [("p", ty.«Point»), ("dx", .int)], result := ty.«Point», trivial := true }
 noncomputable def sig.«labelOf» : Sig := { name := "labelOf", params := [("p", ty.«Point»)], result := .string, trivial := true }
@@ -217,16 +249,16 @@ theorem wf : typed.WF := TProgram.wf_of typed erased bodies_ok ast_scoped
 
 /-! ## Readable definitions -/
 
-def «origin»  : ty.«Point».denote :=
+def «origin»  : «Point» :=
   ((0 : Int), (0 : Int), none, ())
 
-def «moved» («p» : ty.«Point».denote) («dx» : Int) : ty.«Point».denote :=
+def «moved» («p» : «Point») («dx» : Int) : «Point» :=
   let r' := «p»; (((«p».1) + «dx»), r'.2.1, (some (js "moved")), ())
 
-def «labelOf» («p» : ty.«Point».denote) : JSString :=
+def «labelOf» («p» : «Point») : JSString :=
   match «p».2.2.1 with | some v' => v' | none => (js "unnamed")
 
-def «hasLabel» («p» : ty.«Point».denote) : Bool :=
+def «hasLabel» («p» : «Point») : Bool :=
   let «l» : Option (JSString) := «p».2.2.1
   match «l» with
   | none =>
@@ -234,7 +266,7 @@ def «hasLabel» («p» : ty.«Point».denote) : Bool :=
   | some «l» =>
     «l» != (js "")
 
-def «describe» («f» : ty.«Fact».denote) : JSString :=
+def «describe» («f» : «Fact») : JSString :=
   match «f» with
   | Sum.inl p' =>
     let «f» := ((), p')
@@ -253,7 +285,7 @@ def «describe» («f» : ty.«Fact».denote) : JSString :=
       else
         (js "o") ++ «suffix»
 
-def «trusted» («f» : ty.«Fact».denote) : Bool :=
+def «trusted» («f» : «Fact») : Bool :=
   match «f» with
   | Sum.inl p' =>
     let «f» := ((), p')
@@ -267,7 +299,7 @@ def «trusted» («f» : ty.«Fact».denote) : Bool :=
       let «f» := ((), p')
       ((«f».2.2.1) != (3 : Fin 4)) && ((«f».2.2.1) != (2 : Fin 4))
 
-def «choose» («n» : Int) («floor» : Option (Int)) : ty.«Choice».denote :=
+def «choose» («n» : Int) («floor» : Option (Int)) : «Choice» :=
   match «floor» with
   | some «floor» =>
     if decide («n» < «floor») then
@@ -284,7 +316,7 @@ def «choose» («n» : Int) («floor» : Option (Int)) : ty.«Choice».denote :
     else
       (Sum.inr (((), (js "non-positive"), ())).2)
 
-def «orDefault» («c» : ty.«Choice».denote) : Int :=
+def «orDefault» («c» : «Choice») : Int :=
   match «c» with
   | Sum.inl p' =>
     let «c» := ((), p')
@@ -293,11 +325,11 @@ def «orDefault» («c» : ty.«Choice».denote) : Int :=
     let «c» := ((), p')
     (-(1 : Int))
 
-def «pick» («a» : ty.«Point».denote) («b» : ty.«Point».denote) («preferA» : Bool) : ty.«Point».denote :=
-  let «chosen» : ty.«Point».denote := if «preferA» then «a» else «b»
+def «pick» («a» : «Point») («b» : «Point») («preferA» : Bool) : «Point» :=
+  let «chosen» : «Point» := if «preferA» then «a» else «b»
   let r' := «chosen»; (r'.1, r'.2.1, (some (match «chosen».2.2.1 with | some v' => v' | none => (js "picked"))), ())
 
-def «rank» («f» : ty.«Fact».denote) : Int :=
+def «rank» («f» : «Fact») : Int :=
   match «f» with
   | Sum.inl p' =>
     (-(1 : Int))
@@ -309,7 +341,7 @@ def «rank» («f» : ty.«Fact».denote) : Int :=
       let «f» := ((), p')
       «f».2.1
 
-def «isOpened» («f» : ty.«Fact».denote) : Bool :=
+def «isOpened» («f» : «Fact») : Bool :=
   match «f» with
   | Sum.inl p' =>
     false
@@ -321,7 +353,7 @@ def «isOpened» («f» : ty.«Fact».denote) : Bool :=
       let «f» := ((), p')
       true
 
-def «weight» («f» : ty.«Fact».denote) : Int :=
+def «weight» («f» : «Fact») : Int :=
   let «w» : Int := (0 : Int)
   match «f» with
   | Sum.inl p' =>
@@ -332,7 +364,7 @@ def «weight» («f» : ty.«Fact».denote) : Int :=
     | Sum.inl p' =>
       let «f» := ((), p')
       let «w» : Int := (5 : Int)
-      let «f» := ((Sum.inr (Sum.inl «f».2)) : ty.«Fact».denote)
+      let «f» := ((Sum.inr (Sum.inl «f».2)) : «Fact»)
       «w»
     | Sum.inr p' =>
       let «w» : Int := (1 : Int)
@@ -517,7 +549,7 @@ theorem «origin».source  (vs' : List JSValue)
 
 /-- Every run of `moved` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «moved».source («p» : ty.«Point».denote) («dx» : Int) (vs' : List JSValue)
+theorem «moved».source («p» : «Point») («dx» : Int) (vs' : List JSValue)
     (args' : ArgsRep sig.«moved».params vs' («p», «dx», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "moved" vs') (.ok w') ∧
       Ty.Rep ty.«Point» w' («moved» «p» «dx») :=
@@ -525,7 +557,7 @@ theorem «moved».source («p» : ty.«Point».denote) («dx» : Int) (vs' : Lis
 
 /-- Every run of `labelOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «labelOf».source («p» : ty.«Point».denote) (vs' : List JSValue)
+theorem «labelOf».source («p» : «Point») (vs' : List JSValue)
     (args' : ArgsRep sig.«labelOf».params vs' («p», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "labelOf" vs') (.ok w') ∧
       Ty.Rep .string w' («labelOf» «p») :=
@@ -533,7 +565,7 @@ theorem «labelOf».source («p» : ty.«Point».denote) (vs' : List JSValue)
 
 /-- Every run of `hasLabel` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «hasLabel».source («p» : ty.«Point».denote) (vs' : List JSValue)
+theorem «hasLabel».source («p» : «Point») (vs' : List JSValue)
     (args' : ArgsRep sig.«hasLabel».params vs' («p», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "hasLabel" vs') (.ok w') ∧
       Ty.Rep .bool w' («hasLabel» «p») :=
@@ -541,7 +573,7 @@ theorem «hasLabel».source («p» : ty.«Point».denote) (vs' : List JSValue)
 
 /-- Every run of `describe` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «describe».source («f» : ty.«Fact».denote) (vs' : List JSValue)
+theorem «describe».source («f» : «Fact») (vs' : List JSValue)
     (args' : ArgsRep sig.«describe».params vs' («f», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "describe" vs') (.ok w') ∧
       Ty.Rep .string w' («describe» «f») :=
@@ -549,7 +581,7 @@ theorem «describe».source («f» : ty.«Fact».denote) (vs' : List JSValue)
 
 /-- Every run of `trusted` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «trusted».source («f» : ty.«Fact».denote) (vs' : List JSValue)
+theorem «trusted».source («f» : «Fact») (vs' : List JSValue)
     (args' : ArgsRep sig.«trusted».params vs' («f», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "trusted" vs') (.ok w') ∧
       Ty.Rep .bool w' («trusted» «f») :=
@@ -565,7 +597,7 @@ theorem «choose».source («n» : Int) («floor» : Option (Int)) (vs' : List J
 
 /-- Every run of `orDefault` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «orDefault».source («c» : ty.«Choice».denote) (vs' : List JSValue)
+theorem «orDefault».source («c» : «Choice») (vs' : List JSValue)
     (args' : ArgsRep sig.«orDefault».params vs' («c», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "orDefault" vs') (.ok w') ∧
       Ty.Rep .int w' («orDefault» «c») :=
@@ -573,7 +605,7 @@ theorem «orDefault».source («c» : ty.«Choice».denote) (vs' : List JSValue)
 
 /-- Every run of `pick` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «pick».source («a» : ty.«Point».denote) («b» : ty.«Point».denote) («preferA» : Bool) (vs' : List JSValue)
+theorem «pick».source («a» : «Point») («b» : «Point») («preferA» : Bool) (vs' : List JSValue)
     (args' : ArgsRep sig.«pick».params vs' («a», «b», «preferA», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "pick" vs') (.ok w') ∧
       Ty.Rep ty.«Point» w' («pick» «a» «b» «preferA») :=
@@ -581,7 +613,7 @@ theorem «pick».source («a» : ty.«Point».denote) («b» : ty.«Point».deno
 
 /-- Every run of `rank` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «rank».source («f» : ty.«Fact».denote) (vs' : List JSValue)
+theorem «rank».source («f» : «Fact») (vs' : List JSValue)
     (args' : ArgsRep sig.«rank».params vs' («f», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "rank" vs') (.ok w') ∧
       Ty.Rep .int w' («rank» «f») :=
@@ -589,7 +621,7 @@ theorem «rank».source («f» : ty.«Fact».denote) (vs' : List JSValue)
 
 /-- Every run of `isOpened` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «isOpened».source («f» : ty.«Fact».denote) (vs' : List JSValue)
+theorem «isOpened».source («f» : «Fact») (vs' : List JSValue)
     (args' : ArgsRep sig.«isOpened».params vs' («f», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "isOpened" vs') (.ok w') ∧
       Ty.Rep .bool w' («isOpened» «f») :=
@@ -597,7 +629,7 @@ theorem «isOpened».source («f» : ty.«Fact».denote) (vs' : List JSValue)
 
 /-- Every run of `weight` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «weight».source («f» : ty.«Fact».denote) (vs' : List JSValue)
+theorem «weight».source («f» : «Fact») (vs' : List JSValue)
     (args' : ArgsRep sig.«weight».params vs' («f», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "weight" vs') (.ok w') ∧
       Ty.Rep .int w' («weight» «f») :=

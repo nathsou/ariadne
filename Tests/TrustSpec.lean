@@ -24,21 +24,15 @@ theorem rotated_past (copySeeds ownSeeds : List JSString) :
   simp only [«rotatedPast», List.any_eq_true, Bool.not_eq_true', List.any_eq_false, beq_iff_eq]
   exact exists_congr fun s => and_congr_right fun _ => ⟨fun h hs => h s hs rfl, fun h y hy he => h (he ▸ hy)⟩
 
-/-- A provider's copy, as the sum Ariadne denotes `StoredCopy` by. -/
-abbrev StoredCopy := ty.«StoredCopy».denote
-
-/-- The provider couldn't say. -/
-def unknown : StoredCopy := .inr (.inl ())
-
-theorem answered_iff (c : StoredCopy) : «answered» c = true ↔ c ≠ unknown := by
-  rcases c with _ | _ | _ | _ | _ | _ <;> simp [«answered», unknown]
+theorem answered_iff (c : StoredCopy) : «answered» c = true ↔ c ≠ StoredCopy.unknown := by
+  rcases c with _ | _ | _ | _ | _ | _ <;> simp [«answered»]
 
 /-- Whether a repair may overwrite one provider's copy: never when the session is stale
 or read-only; a missing copy only when every provider answered; a copy of the
 session's generation only when older; an older or damaged copy always; an unknown or
 foreign one never. -/
 def MayOverwrite (copies : List StoredCopy) (own : Int) (stale readOnly : Bool) : StoredCopy → Prop
-  | .inl _ => stale = false ∧ readOnly = false ∧ ∀ c ∈ copies, c ≠ unknown
+  | .inl _ => stale = false ∧ readOnly = false ∧ ∀ c ∈ copies, c ≠ StoredCopy.unknown
   | .inr (.inl _) => False
   | .inr (.inr (.inl (w, _))) => stale = false ∧ readOnly = false ∧ w < own
   | .inr (.inr (.inr (.inl _))) | .inr (.inr (.inr (.inr (.inl _)))) => stale = false ∧ readOnly = false
@@ -49,7 +43,7 @@ theorem repairs_exact (copies : List StoredCopy) (own : Int) (stale readOnly : B
     («repairs» copies own (stale, readOnly, ())).length = copies.length ∧
       ∀ (i : Nat) c, copies[i]? = some c →
         ((«repairs» copies own (stale, readOnly, ()))[i]? = some true ↔ MayOverwrite copies own stale readOnly c) := by
-  have hall : copies.all «answered» = true ↔ ∀ c ∈ copies, c ≠ unknown := by
+  have hall : copies.all «answered» = true ↔ ∀ c ∈ copies, c ≠ StoredCopy.unknown := by
     simp [List.all_eq_true, answered_iff]
   refine ⟨by simp only [«repairs»]; split <;> simp, fun i c hc => ?_⟩
   simp only [«repairs»]

@@ -204,6 +204,17 @@ theorem «f».source (x : Int) … (vs : List JSValue) (args : ArgsRep …) (saf
     ∃ w, Converges (fun fuel => run ast fuel "f" vs) (.ok w) ∧ Ty.Rep … w («f» x …) := …
 ```
 
+Each named type of the source also gets readable Lean names, so that statements about the definitions
+read like the TypeScript:
+- an alias (`Floor` for `ty.«Floor».denote`);
+- an accessor per record field (`fl.seed`);
+- a constant per literal of a literal union (`Commit.bad`);
+- for a union of records, a payload type per variant (`CopyFact.Variant.opened`, with its accessors) and
+  a constructor (`CopyFact.opened f`, `CopyFact.damaged`).
+
+They are reducible definitions, so they unfold to the projections and injections the readable definitions
+use. A type whose name a function or method uses gets none.
+
 Each `body_eq` compares one function's denotation with its readable definition, with callees taken as
 the earlier readable definitions, so no check unfolds a callee. The source theorems mention only `run`,
 `ast`, `Converges`, `Ty.Rep` and the readable definitions. `Tests/Properties.lean`,

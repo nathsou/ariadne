@@ -76,6 +76,13 @@ noncomputable def ast : Program := [
 
 noncomputable abbrev ty.«Entry» : Ty := (.record (.cons "id" .number (.cons "size" .number (.cons "name" .string (.cons "tags" (.array .string) .nil)))))
 
+/-- The source's `Entry`. -/
+abbrev «Entry» : Type := ty.«Entry».denote
+@[reducible] def «Entry».«id» (r : «Entry») : Int := r.1
+@[reducible] def «Entry».«size» (r : «Entry») : Int := r.2.1
+@[reducible] def «Entry».«name» (r : «Entry») : JSString := r.2.2.1
+@[reducible] def «Entry».«tags» (r : «Entry») : List (JSString) := r.2.2.2.1
+
 noncomputable def sig.«total» : Sig := { name := "total", params := [("a", .number), ("b", .number)], result := .number, trivial := false }
 noncomputable def sig.«negate» : Sig := { name := "negate", params := [("x", .number)], result := .number, trivial := false }
 noncomputable def sig.«clampIndex» : Sig := { name := "clampIndex", params := [("i", .number), ("n", .number)], result := .number, trivial := false }
@@ -242,54 +249,54 @@ def «clampIndex».safe («i» : Int) («n» : Int) : Bool :=
     else
       true
 
-def «count» («es» : List (ty.«Entry».denote)) : Int :=
+def «count» («es» : List («Entry»)) : Int :=
   (List.length «es» : Int)
 
-def «sizes» («es» : List (ty.«Entry».denote)) : List (Int) :=
+def «sizes» («es» : List («Entry»)) : List (Int) :=
   List.map (fun «e» => «e».2.1) «es»
 
-def «named» («es» : List (ty.«Entry».denote)) («name» : JSString) : Option (ty.«Entry».denote) :=
+def «named» («es» : List («Entry»)) («name» : JSString) : Option («Entry») :=
   List.find? (fun «e» => («e».2.2.1) == «name») «es»
 
-def «tagged» («es» : List (ty.«Entry».denote)) («tag» : JSString) : List (ty.«Entry».denote) :=
+def «tagged» («es» : List («Entry»)) («tag» : JSString) : List («Entry») :=
   List.filter (fun «e» => List.any («e».2.2.2.1) (fun y' => y' == «tag»)) «es»
 
-def «anyLarge» («es» : List (ty.«Entry».denote)) («limit» : Int) : Bool :=
+def «anyLarge» («es» : List («Entry»)) («limit» : Int) : Bool :=
   List.any «es» (fun «e» => decide ((«e».2.1) > «limit»))
 
-def «allNamed» («es» : List (ty.«Entry».denote)) : Bool :=
+def «allNamed» («es» : List («Entry»)) : Bool :=
   List.all «es» (fun «e» => decide ((List.length («e».2.2.1) : Int) > (0 : Int)))
 
-def «bySize» («es» : List (ty.«Entry».denote)) : List (ty.«Entry».denote) :=
+def «bySize» («es» : List («Entry»)) : List («Entry») :=
   Ariadne.sortedBy (fun «a» «b» => («a».2.1) - («b».2.1)) «es»
 
 /-- The inputs on which `bySize` stays within what the model covers. -/
-def «bySize».safe («es» : List (ty.«Entry».denote)) : Bool :=
+def «bySize».safe («es» : List («Entry»)) : Bool :=
   Ariadne.sortSafe (fun «a» «b» => («a».2.1) - («b».2.1)) false (fun «a» «b» => Ariadne.inRange ((«a».2.1) - («b».2.1))) «es»
 
-def «byName» («es» : List (ty.«Entry».denote)) : List (ty.«Entry».denote) :=
+def «byName» («es» : List («Entry»)) : List («Entry») :=
   Ariadne.sortedBy (fun «a» «b» => if Ariadne.strLt («a».2.2.1) («b».2.2.1) then (-(1 : Int)) else if Ariadne.strLt («b».2.2.1) («a».2.2.1) then (1 : Int) else (0 : Int)) «es»
 
 /-- The inputs on which `byName` stays within what the model covers. -/
-def «byName».safe («es» : List (ty.«Entry».denote)) : Bool :=
+def «byName».safe («es» : List («Entry»)) : Bool :=
   Ariadne.consistent (Ariadne.signs (fun «a» «b» => if Ariadne.strLt («a».2.2.1) («b».2.2.1) then (-(1 : Int)) else if Ariadne.strLt («b».2.2.1) («a».2.2.1) then (1 : Int) else (0 : Int)) «es»)
 
-def «ids» («es» : List (ty.«Entry».denote)) : List (Int) :=
+def «ids» («es» : List («Entry»)) : List (Int) :=
   (0 : Int) :: ((List.map (fun «e» => «e».1) «es») ++ ([(-(1 : Int))]))
 
-def «firstName» («es» : List (ty.«Entry».denote)) : JSString :=
-  let «e» : Option (ty.«Entry».denote) := Ariadne.listIndex «es» (0 : Int)
+def «firstName» («es» : List («Entry»)) : JSString :=
+  let «e» : Option («Entry») := Ariadne.listIndex «es» (0 : Int)
   match «e» with
   | none =>
     (js "")
   | some «e» =>
     «e».2.2.1
 
-def «grow» («es» : List (ty.«Entry».denote)) («by» : Int) : List (ty.«Entry».denote) :=
+def «grow» («es» : List («Entry»)) («by» : Int) : List («Entry») :=
   List.map (fun «e» => let r' := «e»; (r'.1, ((«e».2.1) + «by»), r'.2.2.1, r'.2.2.2.1, ())) «es»
 
 /-- The inputs on which `grow` stays within what the model covers. -/
-def «grow».safe («es» : List (ty.«Entry».denote)) («by» : Int) : Bool :=
+def «grow».safe («es» : List («Entry»)) («by» : Int) : Bool :=
   List.all «es» (fun «e» => Ariadne.inRange ((«e».2.1) + «by»))
 
 def «signs» («xs» : List (Int)) : List (JSString) :=
@@ -302,40 +309,40 @@ def «scaled» («xs» : List (Int)) («k» : Int) : List (Int) :=
 def «scaled».safe («xs» : List (Int)) («k» : Int) : Bool :=
   List.all (List.filter (fun «x» => «x» != (0 : Int)) «xs») (fun «x» => Ariadne.inRange («x» * «k»))
 
-def «totalOf» («es» : List (ty.«Entry».denote)) : Int :=
+def «totalOf» («es» : List («Entry»)) : Int :=
   «total» («count» «es») (1 : Int)
 
 /-- The inputs on which `totalOf` stays within what the model covers. -/
-def «totalOf».safe («es» : List (ty.«Entry».denote)) : Bool :=
+def «totalOf».safe («es» : List («Entry»)) : Bool :=
   «total».safe («count» «es») (1 : Int)
 
-def «isLarge» («e» : ty.«Entry».denote) : Bool :=
+def «isLarge» («e» : «Entry») : Bool :=
   decide ((«e».2.1) > (100 : Int))
 
-def «bySizeDesc» («a» : ty.«Entry».denote) («b» : ty.«Entry».denote) : Int :=
+def «bySizeDesc» («a» : «Entry») («b» : «Entry») : Int :=
   if («a».2.1) != («b».2.1) then
     if decide ((«a».2.1) > («b».2.1)) then (-(1 : Int)) else (1 : Int)
   else
     (0 : Int)
 
-def «large» («es» : List (ty.«Entry».denote)) : List (ty.«Entry».denote) :=
+def «large» («es» : List («Entry»)) : List («Entry») :=
   List.filter «isLarge» «es»
 
-def «ranked» («es» : List (ty.«Entry».denote)) : List (ty.«Entry».denote) :=
+def «ranked» («es» : List («Entry»)) : List («Entry») :=
   Ariadne.sortedBy «bySizeDesc» «es»
 
 /-- The inputs on which `ranked` stays within what the model covers. -/
-def «ranked».safe («es» : List (ty.«Entry».denote)) : Bool :=
+def «ranked».safe («es» : List («Entry»)) : Bool :=
   Ariadne.consistent (Ariadne.signs «bySizeDesc» «es»)
 
-def «flags» («es» : List (ty.«Entry».denote)) : List (Bool) :=
+def «flags» («es» : List («Entry»)) : List (Bool) :=
   List.map (fun _ => false) «es»
 
-def «summaries» («es» : List (ty.«Entry».denote)) : List (ty.«Entry».denote) :=
+def «summaries» («es» : List («Entry»)) : List («Entry») :=
   List.map (fun «e» => ((«e».1), ((«e».2.1) + (1 : Int)), («e».2.2.1), ([]), ())) «es»
 
 /-- The inputs on which `summaries` stays within what the model covers. -/
-def «summaries».safe («es» : List (ty.«Entry».denote)) : Bool :=
+def «summaries».safe («es» : List («Entry»)) : Bool :=
   List.all «es» (fun «e» => Ariadne.inRange ((«e».2.1) + (1 : Int)))
 
 /-! ## Denotation
@@ -669,7 +676,7 @@ theorem «clampIndex».source («i» : Int) («n» : Int) (vs' : List JSValue)
 
 /-- Every run of `count` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «count».source («es» : List (ty.«Entry».denote)) (vs' : List JSValue)
+theorem «count».source («es» : List («Entry»)) (vs' : List JSValue)
     (args' : ArgsRep sig.«count».params vs' («es», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "count" vs') (.ok w') ∧
       Ty.Rep .number w' («count» «es») :=
@@ -677,7 +684,7 @@ theorem «count».source («es» : List (ty.«Entry».denote)) (vs' : List JSVal
 
 /-- Every run of `sizes` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «sizes».source («es» : List (ty.«Entry».denote)) (vs' : List JSValue)
+theorem «sizes».source («es» : List («Entry»)) (vs' : List JSValue)
     (args' : ArgsRep sig.«sizes».params vs' («es», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "sizes" vs') (.ok w') ∧
       Ty.Rep (.array .number) w' («sizes» «es») :=
@@ -685,7 +692,7 @@ theorem «sizes».source («es» : List (ty.«Entry».denote)) (vs' : List JSVal
 
 /-- Every run of `named` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «named».source («es» : List (ty.«Entry».denote)) («name» : JSString) (vs' : List JSValue)
+theorem «named».source («es» : List («Entry»)) («name» : JSString) (vs' : List JSValue)
     (args' : ArgsRep sig.«named».params vs' («es», «name», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "named" vs') (.ok w') ∧
       Ty.Rep (.option .undef ty.«Entry») w' («named» «es» «name») :=
@@ -693,7 +700,7 @@ theorem «named».source («es» : List (ty.«Entry».denote)) («name» : JSStr
 
 /-- Every run of `tagged` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «tagged».source («es» : List (ty.«Entry».denote)) («tag» : JSString) (vs' : List JSValue)
+theorem «tagged».source («es» : List («Entry»)) («tag» : JSString) (vs' : List JSValue)
     (args' : ArgsRep sig.«tagged».params vs' («es», «tag», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "tagged" vs') (.ok w') ∧
       Ty.Rep (.array ty.«Entry») w' («tagged» «es» «tag») :=
@@ -701,7 +708,7 @@ theorem «tagged».source («es» : List (ty.«Entry».denote)) («tag» : JSStr
 
 /-- Every run of `anyLarge` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «anyLarge».source («es» : List (ty.«Entry».denote)) («limit» : Int) (vs' : List JSValue)
+theorem «anyLarge».source («es» : List («Entry»)) («limit» : Int) (vs' : List JSValue)
     (args' : ArgsRep sig.«anyLarge».params vs' («es», «limit», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "anyLarge" vs') (.ok w') ∧
       Ty.Rep .bool w' («anyLarge» «es» «limit») :=
@@ -709,7 +716,7 @@ theorem «anyLarge».source («es» : List (ty.«Entry».denote)) («limit» : I
 
 /-- Every run of `allNamed` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «allNamed».source («es» : List (ty.«Entry».denote)) (vs' : List JSValue)
+theorem «allNamed».source («es» : List («Entry»)) (vs' : List JSValue)
     (args' : ArgsRep sig.«allNamed».params vs' («es», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "allNamed" vs') (.ok w') ∧
       Ty.Rep .bool w' («allNamed» «es») :=
@@ -717,7 +724,7 @@ theorem «allNamed».source («es» : List (ty.«Entry».denote)) (vs' : List JS
 
 /-- Every run of `bySize` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «bySize».source («es» : List (ty.«Entry».denote)) (vs' : List JSValue)
+theorem «bySize».source («es» : List («Entry»)) (vs' : List JSValue)
     (args' : ArgsRep sig.«bySize».params vs' («es», ()))
     (safe' : «bySize».safe «es» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "bySize" vs') (.ok w') ∧
@@ -726,7 +733,7 @@ theorem «bySize».source («es» : List (ty.«Entry».denote)) (vs' : List JSVa
 
 /-- Every run of `byName` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «byName».source («es» : List (ty.«Entry».denote)) (vs' : List JSValue)
+theorem «byName».source («es» : List («Entry»)) (vs' : List JSValue)
     (args' : ArgsRep sig.«byName».params vs' («es», ()))
     (safe' : «byName».safe «es» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "byName" vs') (.ok w') ∧
@@ -735,7 +742,7 @@ theorem «byName».source («es» : List (ty.«Entry».denote)) (vs' : List JSVa
 
 /-- Every run of `ids` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «ids».source («es» : List (ty.«Entry».denote)) (vs' : List JSValue)
+theorem «ids».source («es» : List («Entry»)) (vs' : List JSValue)
     (args' : ArgsRep sig.«ids».params vs' («es», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "ids" vs') (.ok w') ∧
       Ty.Rep (.array .number) w' («ids» «es») :=
@@ -743,7 +750,7 @@ theorem «ids».source («es» : List (ty.«Entry».denote)) (vs' : List JSValue
 
 /-- Every run of `firstName` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «firstName».source («es» : List (ty.«Entry».denote)) (vs' : List JSValue)
+theorem «firstName».source («es» : List («Entry»)) (vs' : List JSValue)
     (args' : ArgsRep sig.«firstName».params vs' («es», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "firstName" vs') (.ok w') ∧
       Ty.Rep .string w' («firstName» «es») :=
@@ -751,7 +758,7 @@ theorem «firstName».source («es» : List (ty.«Entry».denote)) (vs' : List J
 
 /-- Every run of `grow` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «grow».source («es» : List (ty.«Entry».denote)) («by» : Int) (vs' : List JSValue)
+theorem «grow».source («es» : List («Entry»)) («by» : Int) (vs' : List JSValue)
     (args' : ArgsRep sig.«grow».params vs' («es», «by», ()))
     (safe' : «grow».safe «es» «by» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "grow" vs') (.ok w') ∧
@@ -777,7 +784,7 @@ theorem «scaled».source («xs» : List (Int)) («k» : Int) (vs' : List JSValu
 
 /-- Every run of `totalOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «totalOf».source («es» : List (ty.«Entry».denote)) (vs' : List JSValue)
+theorem «totalOf».source («es» : List («Entry»)) (vs' : List JSValue)
     (args' : ArgsRep sig.«totalOf».params vs' («es», ()))
     (safe' : «totalOf».safe «es» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "totalOf" vs') (.ok w') ∧
@@ -786,7 +793,7 @@ theorem «totalOf».source («es» : List (ty.«Entry».denote)) (vs' : List JSV
 
 /-- Every run of `isLarge` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «isLarge».source («e» : ty.«Entry».denote) (vs' : List JSValue)
+theorem «isLarge».source («e» : «Entry») (vs' : List JSValue)
     (args' : ArgsRep sig.«isLarge».params vs' («e», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "isLarge" vs') (.ok w') ∧
       Ty.Rep .bool w' («isLarge» «e») :=
@@ -794,7 +801,7 @@ theorem «isLarge».source («e» : ty.«Entry».denote) (vs' : List JSValue)
 
 /-- Every run of `bySizeDesc` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «bySizeDesc».source («a» : ty.«Entry».denote) («b» : ty.«Entry».denote) (vs' : List JSValue)
+theorem «bySizeDesc».source («a» : «Entry») («b» : «Entry») (vs' : List JSValue)
     (args' : ArgsRep sig.«bySizeDesc».params vs' («a», «b», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "bySizeDesc" vs') (.ok w') ∧
       Ty.Rep .number w' («bySizeDesc» «a» «b») :=
@@ -802,7 +809,7 @@ theorem «bySizeDesc».source («a» : ty.«Entry».denote) («b» : ty.«Entry�
 
 /-- Every run of `large` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «large».source («es» : List (ty.«Entry».denote)) (vs' : List JSValue)
+theorem «large».source («es» : List («Entry»)) (vs' : List JSValue)
     (args' : ArgsRep sig.«large».params vs' («es», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "large" vs') (.ok w') ∧
       Ty.Rep (.array ty.«Entry») w' («large» «es») :=
@@ -810,7 +817,7 @@ theorem «large».source («es» : List (ty.«Entry».denote)) (vs' : List JSVal
 
 /-- Every run of `ranked` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «ranked».source («es» : List (ty.«Entry».denote)) (vs' : List JSValue)
+theorem «ranked».source («es» : List («Entry»)) (vs' : List JSValue)
     (args' : ArgsRep sig.«ranked».params vs' («es», ()))
     (safe' : «ranked».safe «es» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "ranked" vs') (.ok w') ∧
@@ -819,7 +826,7 @@ theorem «ranked».source («es» : List (ty.«Entry».denote)) (vs' : List JSVa
 
 /-- Every run of `flags` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «flags».source («es» : List (ty.«Entry».denote)) (vs' : List JSValue)
+theorem «flags».source («es» : List («Entry»)) (vs' : List JSValue)
     (args' : ArgsRep sig.«flags».params vs' («es», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "flags" vs') (.ok w') ∧
       Ty.Rep (.array .bool) w' («flags» «es») :=
@@ -827,7 +834,7 @@ theorem «flags».source («es» : List (ty.«Entry».denote)) (vs' : List JSVal
 
 /-- Every run of `summaries` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «summaries».source («es» : List (ty.«Entry».denote)) (vs' : List JSValue)
+theorem «summaries».source («es» : List («Entry»)) (vs' : List JSValue)
     (args' : ArgsRep sig.«summaries».params vs' («es», ()))
     (safe' : «summaries».safe «es» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "summaries" vs') (.ok w') ∧

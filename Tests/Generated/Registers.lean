@@ -272,6 +272,99 @@ noncomputable abbrev ty.«AlbumRec» : Ty := (.record (.cons "id" .string (.cons
 noncomputable abbrev ty.«AlbumItem» : Ty := (.record (.cons "aid" .string (.cons "id" .string (.cons "s" .string (.cons "present" .bool .nil)))))
 noncomputable abbrev ty.«Registers» : Ty := (.record (.cons "placed" (.map (.record (.cons "p" .string (.cons "cls" .string (.cons "at" .number (.cons "s" .string (.cons "gone" .bool (.cons "u" (.option .undef .string) .nil)))))))) (.cons "providers" (.map (.array .string)) (.cons "marks" (.map (.record (.cons "ref" .string (.cons "p" .string (.cons "since" .number (.cons "s" .string (.cons "on" .bool (.cons "reason" (.option .undef .string) .nil)))))))) (.cons "packs" (.map (.record (.cons "id" .string (.cons "size" .number (.cons "csize" .number (.cons "at" .number (.cons "s" (.option .undef .string) (.cons "hn" (.option .undef .string) .nil)))))))) (.cons "totals" (.map (.record (.cons "p" .string (.cons "month" .string (.cons "device" .string (.cons "c" (.record (.cons "put" .number (.cons "get" .number (.cons "list" .number (.cons "head" .number (.cons "delete" .number (.cons "copy" .number (.cons "restore" .number (.cons "ingress" .number (.cons "egress" .number .nil)))))))))) .nil)))))) (.cons "increments" (.map (.record (.cons "p" .string (.cons "month" .string (.cons "c" (.record (.cons "put" .number (.cons "get" .number (.cons "list" .number (.cons "head" .number (.cons "delete" .number (.cons "copy" .number (.cons "restore" .number (.cons "ingress" .number (.cons "egress" .number .nil)))))))))) .nil))))) (.cons "periods" (.map (.record (.cons "p" .string (.cons "month" .string (.cons "devices" (.array .string) .nil))))) (.cons "albums" (.map (.record (.cons "id" .string (.cons "name" .string (.cons "created" .number (.cons "cover" (.option .undef .string) (.cons "deleted" (.option .undef .string) (.cons "nameS" (.option .undef .string) (.cons "coverS" (.option .undef .string) .nil))))))))) (.cons "items" (.map (.record (.cons "aid" .string (.cons "id" .string (.cons "s" .string (.cons "present" .bool .nil)))))) .nil))))))))))
 
+/-- The source's `Placed`. -/
+abbrev «Placed» : Type := ty.«Placed».denote
+@[reducible] def «Placed».«p» (r : «Placed») : JSString := r.1
+@[reducible] def «Placed».«cls» (r : «Placed») : JSString := r.2.1
+@[reducible] def «Placed».«at» (r : «Placed») : Int := r.2.2.1
+@[reducible] def «Placed».«s» (r : «Placed») : JSString := r.2.2.2.1
+@[reducible] def «Placed».«gone» (r : «Placed») : Bool := r.2.2.2.2.1
+@[reducible] def «Placed».«u» (r : «Placed») : Option (JSString) := r.2.2.2.2.2.1
+
+/-- The source's `Mark`. -/
+abbrev «Mark» : Type := ty.«Mark».denote
+@[reducible] def «Mark».«ref» (r : «Mark») : JSString := r.1
+@[reducible] def «Mark».«p» (r : «Mark») : JSString := r.2.1
+@[reducible] def «Mark».«since» (r : «Mark») : Int := r.2.2.1
+@[reducible] def «Mark».«s» (r : «Mark») : JSString := r.2.2.2.1
+@[reducible] def «Mark».«on» (r : «Mark») : Bool := r.2.2.2.2.1
+@[reducible] def «Mark».«reason» (r : «Mark») : Option (JSString) := r.2.2.2.2.2.1
+
+/-- The source's `Pack`. -/
+abbrev «Pack» : Type := ty.«Pack».denote
+@[reducible] def «Pack».«id» (r : «Pack») : JSString := r.1
+@[reducible] def «Pack».«size» (r : «Pack») : Int := r.2.1
+@[reducible] def «Pack».«csize» (r : «Pack») : Int := r.2.2.1
+@[reducible] def «Pack».«at» (r : «Pack») : Int := r.2.2.2.1
+@[reducible] def «Pack».«s» (r : «Pack») : Option (JSString) := r.2.2.2.2.1
+@[reducible] def «Pack».«hn» (r : «Pack») : Option (JSString) := r.2.2.2.2.2.1
+
+/-- The source's `Counters`. -/
+abbrev «Counters» : Type := ty.«Counters».denote
+@[reducible] def «Counters».«put» (r : «Counters») : Int := r.1
+@[reducible] def «Counters».«get» (r : «Counters») : Int := r.2.1
+@[reducible] def «Counters».«list» (r : «Counters») : Int := r.2.2.1
+@[reducible] def «Counters».«head» (r : «Counters») : Int := r.2.2.2.1
+@[reducible] def «Counters».«delete» (r : «Counters») : Int := r.2.2.2.2.1
+@[reducible] def «Counters».«copy» (r : «Counters») : Int := r.2.2.2.2.2.1
+@[reducible] def «Counters».«restore» (r : «Counters») : Int := r.2.2.2.2.2.2.1
+@[reducible] def «Counters».«ingress» (r : «Counters») : Int := r.2.2.2.2.2.2.2.1
+@[reducible] def «Counters».«egress» (r : «Counters») : Int := r.2.2.2.2.2.2.2.2.1
+
+/-- The source's `Total`. -/
+abbrev «Total» : Type := ty.«Total».denote
+@[reducible] def «Total».«p» (r : «Total») : JSString := r.1
+@[reducible] def «Total».«month» (r : «Total») : JSString := r.2.1
+@[reducible] def «Total».«device» (r : «Total») : JSString := r.2.2.1
+@[reducible] def «Total».«c» (r : «Total») : «Counters» := r.2.2.2.1
+
+/-- The source's `Increments`. -/
+abbrev «Increments» : Type := ty.«Increments».denote
+@[reducible] def «Increments».«p» (r : «Increments») : JSString := r.1
+@[reducible] def «Increments».«month» (r : «Increments») : JSString := r.2.1
+@[reducible] def «Increments».«c» (r : «Increments») : «Counters» := r.2.2.1
+
+/-- The source's `Period`. -/
+abbrev «Period» : Type := ty.«Period».denote
+@[reducible] def «Period».«p» (r : «Period») : JSString := r.1
+@[reducible] def «Period».«month» (r : «Period») : JSString := r.2.1
+@[reducible] def «Period».«devices» (r : «Period») : List (JSString) := r.2.2.1
+
+/-- The source's `Usage`. -/
+abbrev «Usage» : Type := ty.«Usage».denote
+@[reducible] def «Usage».«p» (r : «Usage») : JSString := r.1
+@[reducible] def «Usage».«month» (r : «Usage») : JSString := r.2.1
+@[reducible] def «Usage».«c» (r : «Usage») : «Counters» := r.2.2.1
+
+/-- The source's `AlbumRec`. -/
+abbrev «AlbumRec» : Type := ty.«AlbumRec».denote
+@[reducible] def «AlbumRec».«id» (r : «AlbumRec») : JSString := r.1
+@[reducible] def «AlbumRec».«name» (r : «AlbumRec») : JSString := r.2.1
+@[reducible] def «AlbumRec».«created» (r : «AlbumRec») : Int := r.2.2.1
+@[reducible] def «AlbumRec».«cover» (r : «AlbumRec») : Option (JSString) := r.2.2.2.1
+@[reducible] def «AlbumRec».«deleted» (r : «AlbumRec») : Option (JSString) := r.2.2.2.2.1
+@[reducible] def «AlbumRec».«nameS» (r : «AlbumRec») : Option (JSString) := r.2.2.2.2.2.1
+@[reducible] def «AlbumRec».«coverS» (r : «AlbumRec») : Option (JSString) := r.2.2.2.2.2.2.1
+
+/-- The source's `AlbumItem`. -/
+abbrev «AlbumItem» : Type := ty.«AlbumItem».denote
+@[reducible] def «AlbumItem».«aid» (r : «AlbumItem») : JSString := r.1
+@[reducible] def «AlbumItem».«id» (r : «AlbumItem») : JSString := r.2.1
+@[reducible] def «AlbumItem».«s» (r : «AlbumItem») : JSString := r.2.2.1
+@[reducible] def «AlbumItem».«present» (r : «AlbumItem») : Bool := r.2.2.2.1
+
+/-- The source's `Registers`. -/
+abbrev «Registers» : Type := ty.«Registers».denote
+@[reducible] def «Registers».«placed» (r : «Registers») : List (JSString × «Placed») := r.1
+@[reducible] def «Registers».«providers» (r : «Registers») : List (JSString × List (JSString)) := r.2.1
+@[reducible] def «Registers».«marks» (r : «Registers») : List (JSString × «Mark») := r.2.2.1
+@[reducible] def «Registers».«packs» (r : «Registers») : List (JSString × «Pack») := r.2.2.2.1
+@[reducible] def «Registers».«totals» (r : «Registers») : List (JSString × «Total») := r.2.2.2.2.1
+@[reducible] def «Registers».«increments» (r : «Registers») : List (JSString × «Increments») := r.2.2.2.2.2.1
+@[reducible] def «Registers».«periods» (r : «Registers») : List (JSString × «Period») := r.2.2.2.2.2.2.1
+@[reducible] def «Registers».«albums» (r : «Registers») : List (JSString × «AlbumRec») := r.2.2.2.2.2.2.2.1
+@[reducible] def «Registers».«items» (r : «Registers») : List (JSString × «AlbumItem») := r.2.2.2.2.2.2.2.2.1
+
 noncomputable def sig.«key» : Sig := { name := "key", params := [("a", .string), ("b", .string)], result := .string, trivial := true }
 noncomputable def sig.«byString» : Sig := { name := "byString", params := [("a", .string), ("b", .string)], result := .number, trivial := true }
 noncomputable def sig.«newer» : Sig := { name := "newer", params := [("s", (.option .undef .string)), ("stamp", .string)], result := .bool, trivial := true }
@@ -852,7 +945,7 @@ def «given» («s» : Option (JSString)) : Bool :=
 def «otherwise» («s» : Option (JSString)) («fallback» : JSString) : JSString :=
   match «s» with | none => «fallback» | some «s» => «s»
 
-def «described» («cur» : Option (ty.«Pack».denote)) («stamp» : JSString) («at» : Int) : Bool :=
+def «described» («cur» : Option («Pack»)) («stamp» : JSString) («at» : Int) : Bool :=
   match «cur» with
   | none =>
     false
@@ -867,70 +960,70 @@ def «described» («cur» : Option (ty.«Pack».denote)) («stamp» : JSString)
 def «larger» («a» : Int) («b» : Int) : Int :=
   if decide («a» > «b») then «a» else «b»
 
-def «zero»  : ty.«Counters».denote :=
+def «zero»  : «Counters» :=
   ((0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), ())
 
-def «highest» («a» : ty.«Counters».denote) («b» : ty.«Counters».denote) : ty.«Counters».denote :=
+def «highest» («a» : «Counters») («b» : «Counters») : «Counters» :=
   ((«larger» («a».1) («b».1)), («larger» («a».2.1) («b».2.1)), («larger» («a».2.2.1) («b».2.2.1)), («larger» («a».2.2.2.1) («b».2.2.2.1)), («larger» («a».2.2.2.2.1) («b».2.2.2.2.1)), («larger» («a».2.2.2.2.2.1) («b».2.2.2.2.2.1)), («larger» («a».2.2.2.2.2.2.1) («b».2.2.2.2.2.2.1)), («larger» («a».2.2.2.2.2.2.2.1) («b».2.2.2.2.2.2.2.1)), («larger» («a».2.2.2.2.2.2.2.2.1) («b».2.2.2.2.2.2.2.2.1)), ())
 
-def «sum» («a» : ty.«Counters».denote) («b» : ty.«Counters».denote) : ty.«Counters».denote :=
+def «sum» («a» : «Counters») («b» : «Counters») : «Counters» :=
   (((«a».1) + («b».1)), ((«a».2.1) + («b».2.1)), ((«a».2.2.1) + («b».2.2.1)), ((«a».2.2.2.1) + («b».2.2.2.1)), ((«a».2.2.2.2.1) + («b».2.2.2.2.1)), ((«a».2.2.2.2.2.1) + («b».2.2.2.2.2.1)), ((«a».2.2.2.2.2.2.1) + («b».2.2.2.2.2.2.1)), ((«a».2.2.2.2.2.2.2.1) + («b».2.2.2.2.2.2.2.1)), ((«a».2.2.2.2.2.2.2.2.1) + («b».2.2.2.2.2.2.2.2.1)), ())
 
 /-- The inputs on which `sum` stays within what the model covers. -/
-def «sum».safe («a» : ty.«Counters».denote) («b» : ty.«Counters».denote) : Bool :=
+def «sum».safe («a» : «Counters») («b» : «Counters») : Bool :=
   Ariadne.inRange ((«a».1) + («b».1)) && (Ariadne.inRange ((«a».2.1) + («b».2.1)) && (Ariadne.inRange ((«a».2.2.1) + («b».2.2.1)) && (Ariadne.inRange ((«a».2.2.2.1) + («b».2.2.2.1)) && (Ariadne.inRange ((«a».2.2.2.2.1) + («b».2.2.2.2.1)) && (Ariadne.inRange ((«a».2.2.2.2.2.1) + («b».2.2.2.2.2.1)) && (Ariadne.inRange ((«a».2.2.2.2.2.2.1) + («b».2.2.2.2.2.2.1)) && (Ariadne.inRange ((«a».2.2.2.2.2.2.2.1) + («b».2.2.2.2.2.2.2.1)) && Ariadne.inRange ((«a».2.2.2.2.2.2.2.2.1) + («b».2.2.2.2.2.2.2.2.1)))))))))
 
-def «new Registers»  : ty.«Registers».denote :=
-  (([] : List (JSString × ty.«Placed».denote)), ([] : List (JSString × List (JSString))), ([] : List (JSString × ty.«Mark».denote)), ([] : List (JSString × ty.«Pack».denote)), ([] : List (JSString × ty.«Total».denote)), ([] : List (JSString × ty.«Increments».denote)), ([] : List (JSString × ty.«Period».denote)), ([] : List (JSString × ty.«AlbumRec».denote)), ([] : List (JSString × ty.«AlbumItem».denote)), ())
+def «new Registers»  : «Registers» :=
+  (([] : List (JSString × «Placed»)), ([] : List (JSString × List (JSString))), ([] : List (JSString × «Mark»)), ([] : List (JSString × «Pack»)), ([] : List (JSString × «Total»)), ([] : List (JSString × «Increments»)), ([] : List (JSString × «Period»)), ([] : List (JSString × «AlbumRec»)), ([] : List (JSString × «AlbumItem»)), ())
 
-def «noteUnplace» («this» : ty.«Registers».denote) («ref» : JSString) («p» : JSString) («u» : JSString) : ty.«Registers».denote :=
-  let «cur» : Option (ty.«Placed».denote) := Ariadne.mapGet «this».1 («key» «ref» «p»)
+def «noteUnplace» («this» : «Registers») («ref» : JSString) («p» : JSString) («u» : JSString) : «Registers» :=
+  let «cur» : Option («Placed») := Ariadne.mapGet «this».1 («key» «ref» «p»)
   match «cur» with
   | none =>
     «this»
   | some «cur» =>
-    let «this» : ty.«Registers».denote := (Ariadne.mapPut «this».1 («key» «ref» «p») (let r' := «cur»; (r'.1, r'.2.1, r'.2.2.1, r'.2.2.2.1, r'.2.2.2.2.1, (some «u»), ())), «this».2)
+    let «this» : «Registers» := (Ariadne.mapPut «this».1 («key» «ref» «p») (let r' := «cur»; (r'.1, r'.2.1, r'.2.2.1, r'.2.2.2.1, r'.2.2.2.2.1, (some «u»), ())), «this».2)
     «this»
 
-def «providersOf» («this» : ty.«Registers».denote) («ref» : JSString) : List (JSString) :=
+def «providersOf» («this» : «Registers») («ref» : JSString) : List (JSString) :=
   let «ps» : Option (List (JSString)) := Ariadne.mapGet «this».2.1 «ref»
   match «ps» with | none => [] | some «ps» => «ps»
 
-def «put» («this» : ty.«Registers».denote) («ref» : JSString) («p» : JSString) («e» : ty.«Placed».denote) : ty.«Registers».denote :=
+def «put» («this» : «Registers») («ref» : JSString) («p» : JSString) («e» : «Placed») : «Registers» :=
   let after2' := fun s2' =>
     let «this» := s2'.1
     let «ref» := s2'.2.1
     let «p» := s2'.2.2.1
     let «e» := s2'.2.2.2.1
-    let «this» : ty.«Registers».denote := (Ariadne.mapPut «this».1 («key» «ref» «p») «e», «this».2)
+    let «this» : «Registers» := (Ariadne.mapPut «this».1 («key» «ref» «p») «e», «this».2)
     «this»
   if !((Ariadne.mapGet «this».1 («key» «ref» «p»)).isSome) then
-    let «this» : ty.«Registers».denote := («this».1, Ariadne.mapPut «this».2.1 «ref» (Ariadne.sortedBy «byString» ((«providersOf» «this» «ref») ++ ([«p»]))), «this».2.2)
+    let «this» : «Registers» := («this».1, Ariadne.mapPut «this».2.1 «ref» (Ariadne.sortedBy «byString» ((«providersOf» «this» «ref») ++ ([«p»]))), «this».2.2)
     after2' («this», «ref», «p», «e», ())
   else
     after2' («this», «ref», «p», «e», ())
 
 /-- The inputs on which `put` stays within what the model covers. -/
-def «put».safe («this» : ty.«Registers».denote) («ref» : JSString) («p» : JSString) («e» : ty.«Placed».denote) : Bool :=
+def «put».safe («this» : «Registers») («ref» : JSString) («p» : JSString) («e» : «Placed») : Bool :=
   let after2' := fun s2' =>
     let «this» := s2'.1
     let «ref» := s2'.2.1
     let «p» := s2'.2.2.1
     let «e» := s2'.2.2.2.1
-    let «this» : ty.«Registers».denote := (Ariadne.mapPut «this».1 («key» «ref» «p») «e», «this».2)
+    let «this» : «Registers» := (Ariadne.mapPut «this».1 («key» «ref» «p») «e», «this».2)
     true
   if !((Ariadne.mapGet «this».1 («key» «ref» «p»)).isSome) then
-    Ariadne.consistent (Ariadne.signs «byString» ((«providersOf» «this» «ref») ++ ([«p»]))) && (let «this» : ty.«Registers».denote := («this».1, Ariadne.mapPut «this».2.1 «ref» (Ariadne.sortedBy «byString» ((«providersOf» «this» «ref») ++ ([«p»]))), «this».2.2)
+    Ariadne.consistent (Ariadne.signs «byString» ((«providersOf» «this» «ref») ++ ([«p»]))) && (let «this» : «Registers» := («this».1, Ariadne.mapPut «this».2.1 «ref» (Ariadne.sortedBy «byString» ((«providersOf» «this» «ref») ++ ([«p»]))), «this».2.2)
     after2' («this», «ref», «p», «e», ()))
   else
     after2' («this», «ref», «p», «e», ())
 
-def «dropMarkBefore» («this» : ty.«Registers».denote) («ref» : JSString) («p» : JSString) («u» : Option (JSString)) : ty.«Registers».denote :=
+def «dropMarkBefore» («this» : «Registers») («ref» : JSString) («p» : JSString) («u» : Option (JSString)) : «Registers» :=
   match «u» with
   | none =>
     «this»
   | some «u» =>
-    let «mark» : Option (ty.«Mark».denote) := Ariadne.mapGet «this».2.2.1 («key» «ref» «p»)
+    let «mark» : Option («Mark») := Ariadne.mapGet «this».2.2.1 («key» «ref» «p»)
     match «mark» with
     | none =>
       «this»
@@ -938,20 +1031,20 @@ def «dropMarkBefore» («this» : ty.«Registers».denote) («ref» : JSString)
       if («u» == (js "")) || (Ariadne.strLt «u» («mark».2.2.2.1)) then
         «this»
       else
-        let «this» : ty.«Registers».denote := («this».1, «this».2.1, Ariadne.mapDel «this».2.2.1 («key» «ref» «p»), «this».2.2.2)
+        let «this» : «Registers» := («this».1, «this».2.1, Ariadne.mapDel «this».2.2.1 («key» «ref» «p»), «this».2.2.2)
         «this»
 
-def «place» («this» : ty.«Registers».denote) («ref» : JSString) («p» : JSString) («placed» : Bool) («cls» : JSString) («stamp» : JSString) («at» : Int) : ty.«Registers».denote :=
-  let «cur» : Option (ty.«Placed».denote) := Ariadne.mapGet «this».1 («key» «ref» «p»)
+def «place» («this» : «Registers») («ref» : JSString) («p» : JSString) («placed» : Bool) («cls» : JSString) («stamp» : JSString) («at» : Int) : «Registers» :=
+  let «cur» : Option («Placed») := Ariadne.mapGet «this».1 («key» «ref» «p»)
   let «seen» : Option (JSString) := match «cur» with | none => none | some «cur» => «cur».2.2.2.2.2.1
   let «u» : Option (JSString) := if «placed» then «seen» else some («newest» «seen» «stamp»)
-  let «this» : ty.«Registers».denote := «dropMarkBefore» «this» «ref» «p» «u»
+  let «this» : «Registers» := «dropMarkBefore» «this» «ref» «p» «u»
   if !(«newer» (match «cur» with | none => none | some «cur» => some («cur».2.2.2.1)) «stamp») then
     let after4' := fun s4' =>
       let «this» := s4'.2.2.2.1
       «this»
     if !«placed» then
-      let «this» : ty.«Registers».denote := «noteUnplace» «this» «ref» «p» («newest» «seen» «stamp»)
+      let «this» : «Registers» := «noteUnplace» «this» «ref» «p» («newest» «seen» «stamp»)
       after4' («u», «seen», «cur», «this», «ref», «p», «placed», «cls», «stamp», «at», ())
     else
       after4' («u», «seen», «cur», «this», «ref», «p», «placed», «cls», «stamp», «at», ())
@@ -960,23 +1053,23 @@ def «place» («this» : ty.«Registers».denote) («ref» : JSString) («p» :
       let «this» := s4'.2.2.2.1
       «this»
     if «placed» then
-      let «this» : ty.«Registers».denote := «put» «this» «ref» «p» ((«p», «cls», «at», «stamp», false, «u», ()))
+      let «this» : «Registers» := «put» «this» «ref» «p» ((«p», «cls», «at», «stamp», false, «u», ()))
       after4' («u», «seen», «cur», «this», «ref», «p», «placed», «cls», «stamp», «at», ())
     else
-      let «this» : ty.«Registers».denote := «put» «this» «ref» «p» ((«p», (js ""), «at», «stamp», true, «u», ()))
+      let «this» : «Registers» := «put» «this» «ref» «p» ((«p», (js ""), «at», «stamp», true, «u», ()))
       after4' («u», «seen», «cur», «this», «ref», «p», «placed», «cls», «stamp», «at», ())
 
 /-- The inputs on which `place` stays within what the model covers. -/
-def «place».safe («this» : ty.«Registers».denote) («ref» : JSString) («p» : JSString) («placed» : Bool) («cls» : JSString) («stamp» : JSString) («at» : Int) : Bool :=
-  let «cur» : Option (ty.«Placed».denote) := Ariadne.mapGet «this».1 («key» «ref» «p»)
+def «place».safe («this» : «Registers») («ref» : JSString) («p» : JSString) («placed» : Bool) («cls» : JSString) («stamp» : JSString) («at» : Int) : Bool :=
+  let «cur» : Option («Placed») := Ariadne.mapGet «this».1 («key» «ref» «p»)
   let «seen» : Option (JSString) := match «cur» with | none => none | some «cur» => «cur».2.2.2.2.2.1
   let «u» : Option (JSString) := if «placed» then «seen» else some («newest» «seen» «stamp»)
-  let «this» : ty.«Registers».denote := «dropMarkBefore» «this» «ref» «p» «u»
+  let «this» : «Registers» := «dropMarkBefore» «this» «ref» «p» «u»
   if !(«newer» (match «cur» with | none => none | some «cur» => some («cur».2.2.2.1)) «stamp») then
     let after4' := fun s4' =>
       true
     if !«placed» then
-      let «this» : ty.«Registers».denote := «noteUnplace» «this» «ref» «p» («newest» «seen» «stamp»)
+      let «this» : «Registers» := «noteUnplace» «this» «ref» «p» («newest» «seen» «stamp»)
       after4' («u», «seen», «cur», «this», «ref», «p», «placed», «cls», «stamp», «at», ())
     else
       after4' («u», «seen», «cur», «this», «ref», «p», «placed», «cls», «stamp», «at», ())
@@ -984,36 +1077,36 @@ def «place».safe («this» : ty.«Registers».denote) («ref» : JSString) («
     let after4' := fun s4' =>
       true
     if «placed» then
-      «put».safe «this» «ref» «p» ((«p», «cls», «at», «stamp», false, «u», ())) && (let «this» : ty.«Registers».denote := «put» «this» «ref» «p» ((«p», «cls», «at», «stamp», false, «u», ()))
+      «put».safe «this» «ref» «p» ((«p», «cls», «at», «stamp», false, «u», ())) && (let «this» : «Registers» := «put» «this» «ref» «p» ((«p», «cls», «at», «stamp», false, «u», ()))
       after4' («u», «seen», «cur», «this», «ref», «p», «placed», «cls», «stamp», «at», ()))
     else
-      «put».safe «this» «ref» «p» ((«p», (js ""), «at», «stamp», true, «u», ())) && (let «this» : ty.«Registers».denote := «put» «this» «ref» «p» ((«p», (js ""), «at», «stamp», true, «u», ()))
+      «put».safe «this» «ref» «p» ((«p», (js ""), «at», «stamp», true, «u», ())) && (let «this» : «Registers» := «put» «this» «ref» «p» ((«p», (js ""), «at», «stamp», true, «u», ()))
       after4' («u», «seen», «cur», «this», «ref», «p», «placed», «cls», «stamp», «at», ()))
 
-def «mark» («this» : ty.«Registers».denote) («ref» : JSString) («p» : JSString) («on» : Bool) («reason» : Option (JSString)) («stamp» : JSString) («at» : Int) : ty.«Registers».denote :=
-  let «placed» : Option (ty.«Placed».denote) := Ariadne.mapGet «this».1 («key» «ref» «p»)
+def «mark» («this» : «Registers») («ref» : JSString) («p» : JSString) («on» : Bool) («reason» : Option (JSString)) («stamp» : JSString) («at» : Int) : «Registers» :=
+  let «placed» : Option («Placed») := Ariadne.mapGet «this».1 («key» «ref» «p»)
   if «before» «stamp» (match «placed» with | none => none | some «placed» => «placed».2.2.2.2.2.1) then
     «this»
   else
-    let «cur» : Option (ty.«Mark».denote) := Ariadne.mapGet «this».2.2.1 («key» «ref» «p»)
+    let «cur» : Option («Mark») := Ariadne.mapGet «this».2.2.1 («key» «ref» «p»)
     if !(«newer» (match «cur» with | none => none | some «cur» => some («cur».2.2.2.1)) «stamp») then
       «this»
     else
-      let «this» : ty.«Registers».denote := («this».1, «this».2.1, Ariadne.mapPut «this».2.2.1 («key» «ref» «p») ((«ref», «p», «at», «stamp», «on», «reason», ())), «this».2.2.2)
+      let «this» : «Registers» := («this».1, «this».2.1, Ariadne.mapPut «this».2.2.1 («key» «ref» «p») ((«ref», «p», «at», «stamp», «on», «reason», ())), «this».2.2.2)
       «this»
 
-def «placements» («this» : ty.«Registers».denote) («ref» : JSString) : List (ty.«Placed».denote) :=
-  let «out» : List (ty.«Placed».denote) := []
+def «placements» («this» : «Registers») («ref» : JSString) : List («Placed») :=
+  let «out» : List («Placed») := []
   Ariadne.forIn («providersOf» «this» «ref») (fun «p» next2' exit2' s2' =>
     let «out» := s2'.1
     let «this» := s2'.2.1
     let «ref» := s2'.2.2.1
-    let «e» : Option (ty.«Placed».denote) := Ariadne.mapGet «this».1 («key» «ref» «p»)
+    let «e» : Option («Placed») := Ariadne.mapGet «this».1 («key» «ref» «p»)
     match «e» with
     | none =>
       next2' («out», «this», «ref», ())
     | some «e» =>
-      let «out» : List (ty.«Placed».denote) := «out» ++ ([«e»])
+      let «out» : List («Placed») := «out» ++ ([«e»])
       let «e» := some «e»
       next2' («out», «this», «ref», ()))
     (fun s2' =>
@@ -1021,97 +1114,97 @@ def «placements» («this» : ty.«Registers».denote) («ref» : JSString) : L
     «out»)
     («out», «this», «ref», ())
 
-def «isPlaced» («this» : ty.«Registers».denote) («ref» : JSString) : Bool :=
+def «isPlaced» («this» : «Registers») («ref» : JSString) : Bool :=
   (Ariadne.mapGet «this».2.1 «ref»).isSome
 
-def «placedRefs» («this» : ty.«Registers».denote) : List (JSString) :=
+def «placedRefs» («this» : «Registers») : List (JSString) :=
   (List.map Prod.fst «this».2.1) ++ ([])
 
-def «markOf» («this» : ty.«Registers».denote) («ref» : JSString) («p» : JSString) : Option (ty.«Mark».denote) :=
+def «markOf» («this» : «Registers») («ref» : JSString) («p» : JSString) : Option («Mark») :=
   Ariadne.mapGet «this».2.2.1 («key» «ref» «p»)
 
-def «markList» («this» : ty.«Registers».denote) : List (ty.«Mark».denote) :=
+def «markList» («this» : «Registers») : List («Mark») :=
   (List.map Prod.snd «this».2.2.1) ++ ([])
 
-def «pack» («this» : ty.«Registers».denote) («id» : JSString) («size» : Int) («csize» : Int) («stamp» : JSString) («at» : Int) («hn» : Option (JSString)) : ty.«Registers».denote :=
+def «pack» («this» : «Registers») («id» : JSString) («size» : Int) («csize» : Int) («stamp» : JSString) («at» : Int) («hn» : Option (JSString)) : «Registers» :=
   if «described» (Ariadne.mapGet «this».2.2.2.1 «id») «stamp» «at» then
     «this»
   else
-    let «this» : ty.«Registers».denote := («this».1, «this».2.1, «this».2.2.1, Ariadne.mapPut «this».2.2.2.1 «id» ((«id», «size», «csize», «at», (some «stamp»), «hn», ())), «this».2.2.2.2)
+    let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, Ariadne.mapPut «this».2.2.2.1 «id» ((«id», «size», «csize», «at», (some «stamp»), «hn», ())), «this».2.2.2.2)
     «this»
 
-def «packOf» («this» : ty.«Registers».denote) («id» : JSString) : Option (ty.«Pack».denote) :=
+def «packOf» («this» : «Registers») («id» : JSString) : Option («Pack») :=
   Ariadne.mapGet «this».2.2.2.1 «id»
 
-def «packList» («this» : ty.«Registers».denote) : List (ty.«Pack».denote) :=
+def «packList» («this» : «Registers») : List («Pack») :=
   (List.map Prod.snd «this».2.2.2.1) ++ ([])
 
-def «track» («this» : ty.«Registers».denote) («p» : JSString) («month» : JSString) («device» : JSString) («total» : Bool) : ty.«Registers».denote :=
-  let «cur» : Option (ty.«Period».denote) := Ariadne.mapGet «this».2.2.2.2.2.2.1 («key» «p» «month»)
+def «track» («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («total» : Bool) : «Registers» :=
+  let «cur» : Option («Period») := Ariadne.mapGet «this».2.2.2.2.2.2.1 («key» «p» «month»)
   let «devices» : List (JSString) := match «cur» with | none => [] | some «cur» => «cur».2.2.1
   let after2' := fun s2' =>
     let «this» := s2'.2.2.1
     «this»
   if «total» && (!(List.any «devices» (fun y' => y' == «device»))) then
-    let «this» : ty.«Registers».denote := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.1 («key» «p» «month») ((«p», «month», (Ariadne.sortedBy «byString» («devices» ++ ([«device»]))), ())), «this».2.2.2.2.2.2.2)
+    let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.1 («key» «p» «month») ((«p», «month», (Ariadne.sortedBy «byString» («devices» ++ ([«device»]))), ())), «this».2.2.2.2.2.2.2)
     after2' («devices», «cur», «this», «p», «month», «device», «total», ())
   else
     if !((Ariadne.mapGet «this».2.2.2.2.2.2.1 («key» «p» «month»)).isSome) then
-      let «this» : ty.«Registers».denote := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.1 («key» «p» «month») ((«p», «month», «devices», ())), «this».2.2.2.2.2.2.2)
+      let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.1 («key» «p» «month») ((«p», «month», «devices», ())), «this».2.2.2.2.2.2.2)
       after2' («devices», «cur», «this», «p», «month», «device», «total», ())
     else
       after2' («devices», «cur», «this», «p», «month», «device», «total», ())
 
 /-- The inputs on which `track` stays within what the model covers. -/
-def «track».safe («this» : ty.«Registers».denote) («p» : JSString) («month» : JSString) («device» : JSString) («total» : Bool) : Bool :=
-  let «cur» : Option (ty.«Period».denote) := Ariadne.mapGet «this».2.2.2.2.2.2.1 («key» «p» «month»)
+def «track».safe («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («total» : Bool) : Bool :=
+  let «cur» : Option («Period») := Ariadne.mapGet «this».2.2.2.2.2.2.1 («key» «p» «month»)
   let «devices» : List (JSString) := match «cur» with | none => [] | some «cur» => «cur».2.2.1
   let after2' := fun s2' =>
     true
   if «total» && (!(List.any «devices» (fun y' => y' == «device»))) then
-    Ariadne.consistent (Ariadne.signs «byString» («devices» ++ ([«device»]))) && (let «this» : ty.«Registers».denote := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.1 («key» «p» «month») ((«p», «month», (Ariadne.sortedBy «byString» («devices» ++ ([«device»]))), ())), «this».2.2.2.2.2.2.2)
+    Ariadne.consistent (Ariadne.signs «byString» («devices» ++ ([«device»]))) && (let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.1 («key» «p» «month») ((«p», «month», (Ariadne.sortedBy «byString» («devices» ++ ([«device»]))), ())), «this».2.2.2.2.2.2.2)
     after2' («devices», «cur», «this», «p», «month», «device», «total», ()))
   else
     if !((Ariadne.mapGet «this».2.2.2.2.2.2.1 («key» «p» «month»)).isSome) then
-      let «this» : ty.«Registers».denote := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.1 («key» «p» «month») ((«p», «month», «devices», ())), «this».2.2.2.2.2.2.2)
+      let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.1 («key» «p» «month») ((«p», «month», «devices», ())), «this».2.2.2.2.2.2.2)
       after2' («devices», «cur», «this», «p», «month», «device», «total», ())
     else
       after2' («devices», «cur», «this», «p», «month», «device», «total», ())
 
-def «total» («this» : ty.«Registers».denote) («p» : JSString) («month» : JSString) («device» : JSString) («c» : ty.«Counters».denote) : ty.«Registers».denote :=
-  let «cur» : Option (ty.«Total».denote) := Ariadne.mapGet «this».2.2.2.2.1 («key» («key» «p» «month») «device»)
-  let «this» : ty.«Registers».denote := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, Ariadne.mapPut «this».2.2.2.2.1 («key» («key» «p» «month») «device») ((«p», «month», «device», («highest» (match «cur» with | none => «zero» | some «cur» => «cur».2.2.2.1) «c»), ())), «this».2.2.2.2.2)
-  let «this» : ty.«Registers».denote := «track» «this» «p» «month» «device» true
+def «total» («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («c» : «Counters») : «Registers» :=
+  let «cur» : Option («Total») := Ariadne.mapGet «this».2.2.2.2.1 («key» («key» «p» «month») «device»)
+  let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, Ariadne.mapPut «this».2.2.2.2.1 («key» («key» «p» «month») «device») ((«p», «month», «device», («highest» (match «cur» with | none => «zero» | some «cur» => «cur».2.2.2.1) «c»), ())), «this».2.2.2.2.2)
+  let «this» : «Registers» := «track» «this» «p» «month» «device» true
   «this»
 
 /-- The inputs on which `total` stays within what the model covers. -/
-def «total».safe («this» : ty.«Registers».denote) («p» : JSString) («month» : JSString) («device» : JSString) («c» : ty.«Counters».denote) : Bool :=
-  let «cur» : Option (ty.«Total».denote) := Ariadne.mapGet «this».2.2.2.2.1 («key» («key» «p» «month») «device»)
-  let «this» : ty.«Registers».denote := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, Ariadne.mapPut «this».2.2.2.2.1 («key» («key» «p» «month») «device») ((«p», «month», «device», («highest» (match «cur» with | none => «zero» | some «cur» => «cur».2.2.2.1) «c»), ())), «this».2.2.2.2.2)
-  «track».safe «this» «p» «month» «device» true && (let «this» : ty.«Registers».denote := «track» «this» «p» «month» «device» true
+def «total».safe («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («c» : «Counters») : Bool :=
+  let «cur» : Option («Total») := Ariadne.mapGet «this».2.2.2.2.1 («key» («key» «p» «month») «device»)
+  let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, Ariadne.mapPut «this».2.2.2.2.1 («key» («key» «p» «month») «device») ((«p», «month», «device», («highest» (match «cur» with | none => «zero» | some «cur» => «cur».2.2.2.1) «c»), ())), «this».2.2.2.2.2)
+  «track».safe «this» «p» «month» «device» true && (let «this» : «Registers» := «track» «this» «p» «month» «device» true
   true)
 
-def «add» («this» : ty.«Registers».denote) («p» : JSString) («month» : JSString) («c» : ty.«Counters».denote) : ty.«Registers».denote :=
-  let «cur» : Option (ty.«Increments».denote) := Ariadne.mapGet «this».2.2.2.2.2.1 («key» «p» «month»)
-  let «this» : ty.«Registers».denote := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.1 («key» «p» «month») ((«p», «month», («sum» (match «cur» with | none => «zero» | some «cur» => «cur».2.2.1) «c»), ())), «this».2.2.2.2.2.2)
-  let «this» : ty.«Registers».denote := «track» «this» «p» «month» (js "") false
+def «add» («this» : «Registers») («p» : JSString) («month» : JSString) («c» : «Counters») : «Registers» :=
+  let «cur» : Option («Increments») := Ariadne.mapGet «this».2.2.2.2.2.1 («key» «p» «month»)
+  let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.1 («key» «p» «month») ((«p», «month», («sum» (match «cur» with | none => «zero» | some «cur» => «cur».2.2.1) «c»), ())), «this».2.2.2.2.2.2)
+  let «this» : «Registers» := «track» «this» «p» «month» (js "") false
   «this»
 
 /-- The inputs on which `add` stays within what the model covers. -/
-def «add».safe («this» : ty.«Registers».denote) («p» : JSString) («month» : JSString) («c» : ty.«Counters».denote) : Bool :=
-  let «cur» : Option (ty.«Increments».denote) := Ariadne.mapGet «this».2.2.2.2.2.1 («key» «p» «month»)
-  («sum».safe (match «cur» with | none => «zero» | some «cur» => «cur».2.2.1) «c») && (let «this» : ty.«Registers».denote := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.1 («key» «p» «month») ((«p», «month», («sum» (match «cur» with | none => «zero» | some «cur» => «cur».2.2.1) «c»), ())), «this».2.2.2.2.2.2)
-  «track».safe «this» «p» «month» (js "") false && (let «this» : ty.«Registers».denote := «track» «this» «p» «month» (js "") false
+def «add».safe («this» : «Registers») («p» : JSString) («month» : JSString) («c» : «Counters») : Bool :=
+  let «cur» : Option («Increments») := Ariadne.mapGet «this».2.2.2.2.2.1 («key» «p» «month»)
+  («sum».safe (match «cur» with | none => «zero» | some «cur» => «cur».2.2.1) «c») && (let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.1 («key» «p» «month») ((«p», «month», («sum» (match «cur» with | none => «zero» | some «cur» => «cur».2.2.1) «c»), ())), «this».2.2.2.2.2.2)
+  «track».safe «this» «p» «month» (js "") false && (let «this» : «Registers» := «track» «this» «p» «month» (js "") false
   true))
 
-def «totalOf» («this» : ty.«Registers».denote) («p» : JSString) («month» : JSString) («device» : JSString) : ty.«Counters».denote :=
-  let «t» : Option (ty.«Total».denote) := Ariadne.mapGet «this».2.2.2.2.1 («key» («key» «p» «month») «device»)
+def «totalOf» («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) : «Counters» :=
+  let «t» : Option («Total») := Ariadne.mapGet «this».2.2.2.2.1 («key» («key» «p» «month») «device»)
   match «t» with | none => «zero» | some «t» => «t».2.2.2.1
 
-def «usageOf» («this» : ty.«Registers».denote) («p» : JSString) («month» : JSString) : ty.«Counters».denote :=
-  let «inc» : Option (ty.«Increments».denote) := Ariadne.mapGet «this».2.2.2.2.2.1 («key» «p» «month»)
-  let «out» : ty.«Counters».denote := match «inc» with | none => «zero» | some «inc» => «inc».2.2.1
-  let «period» : Option (ty.«Period».denote) := Ariadne.mapGet «this».2.2.2.2.2.2.1 («key» «p» «month»)
+def «usageOf» («this» : «Registers») («p» : JSString) («month» : JSString) : «Counters» :=
+  let «inc» : Option («Increments») := Ariadne.mapGet «this».2.2.2.2.2.1 («key» «p» «month»)
+  let «out» : «Counters» := match «inc» with | none => «zero» | some «inc» => «inc».2.2.1
+  let «period» : Option («Period») := Ariadne.mapGet «this».2.2.2.2.2.2.1 («key» «p» «month»)
   match «period» with
   | none =>
     «out»
@@ -1123,12 +1216,12 @@ def «usageOf» («this» : ty.«Registers».denote) («p» : JSString) («month
       let «this» := s4'.2.2.2.1
       let «p» := s4'.2.2.2.2.1
       let «month» := s4'.2.2.2.2.2.1
-      let «t» : Option (ty.«Total».denote) := Ariadne.mapGet «this».2.2.2.2.1 («key» («key» «p» «month») «d»)
+      let «t» : Option («Total») := Ariadne.mapGet «this».2.2.2.2.1 («key» («key» «p» «month») «d»)
       match «t» with
       | none =>
         next4' («period», «out», «inc», «this», «p», «month», ())
       | some «t» =>
-        let «out» : ty.«Counters».denote := «sum» «out» («t».2.2.2.1)
+        let «out» : «Counters» := «sum» «out» («t».2.2.2.1)
         let «t» := some «t»
         next4' («period», «out», «inc», «this», «p», «month», ()))
       (fun s4' =>
@@ -1137,10 +1230,10 @@ def «usageOf» («this» : ty.«Registers».denote) («p» : JSString) («month
       («period», «out», «inc», «this», «p», «month», ())
 
 /-- The inputs on which `usageOf` stays within what the model covers. -/
-def «usageOf».safe («this» : ty.«Registers».denote) («p» : JSString) («month» : JSString) : Bool :=
-  let «inc» : Option (ty.«Increments».denote) := Ariadne.mapGet «this».2.2.2.2.2.1 («key» «p» «month»)
-  let «out» : ty.«Counters».denote := match «inc» with | none => «zero» | some «inc» => «inc».2.2.1
-  let «period» : Option (ty.«Period».denote) := Ariadne.mapGet «this».2.2.2.2.2.2.1 («key» «p» «month»)
+def «usageOf».safe («this» : «Registers») («p» : JSString) («month» : JSString) : Bool :=
+  let «inc» : Option («Increments») := Ariadne.mapGet «this».2.2.2.2.2.1 («key» «p» «month»)
+  let «out» : «Counters» := match «inc» with | none => «zero» | some «inc» => «inc».2.2.1
+  let «period» : Option («Period») := Ariadne.mapGet «this».2.2.2.2.2.2.1 («key» «p» «month»)
   match «period» with
   | none =>
     true
@@ -1152,58 +1245,58 @@ def «usageOf».safe («this» : ty.«Registers».denote) («p» : JSString) («
       let «this» := s4'.2.2.2.1
       let «p» := s4'.2.2.2.2.1
       let «month» := s4'.2.2.2.2.2.1
-      let «t» : Option (ty.«Total».denote) := Ariadne.mapGet «this».2.2.2.2.1 («key» («key» «p» «month») «d»)
+      let «t» : Option («Total») := Ariadne.mapGet «this».2.2.2.2.1 («key» («key» «p» «month») «d»)
       match «t» with
       | none =>
         next4' («period», «out», «inc», «this», «p», «month», ())
       | some «t» =>
-        «sum».safe «out» («t».2.2.2.1) && (let «out» : ty.«Counters».denote := «sum» «out» («t».2.2.2.1)
+        «sum».safe «out» («t».2.2.2.1) && (let «out» : «Counters» := «sum» «out» («t».2.2.2.1)
         let «t» := some «t»
         next4' («period», «out», «inc», «this», «p», «month», ())))
       (fun s4' =>
       true)
       («period», «out», «inc», «this», «p», «month», ())
 
-def «usageList» («this» : ty.«Registers».denote) : List (ty.«Increments».denote) :=
+def «usageList» («this» : «Registers») : List («Increments») :=
   List.map (fun «x» => ((«x».1), («x».2.1), («usageOf» «this» («x».1) («x».2.1)), ())) ((List.map Prod.snd «this».2.2.2.2.2.2.1) ++ ([]))
 
 /-- The inputs on which `usageList` stays within what the model covers. -/
-def «usageList».safe («this» : ty.«Registers».denote) : Bool :=
+def «usageList».safe («this» : «Registers») : Bool :=
   List.all ((List.map Prod.snd «this».2.2.2.2.2.2.1) ++ ([])) (fun «x» => «usageOf».safe «this» («x».1) («x».2.1))
 
-def «totalList» («this» : ty.«Registers».denote) : List (ty.«Total».denote) :=
+def «totalList» («this» : «Registers») : List («Total») :=
   (List.map Prod.snd «this».2.2.2.2.1) ++ ([])
 
-def «touchAlbum» («this» : ty.«Registers».denote) («aid» : JSString) («at» : Int) : ty.«Registers».denote :=
-  let «a» : Option (ty.«AlbumRec».denote) := Ariadne.mapGet «this».2.2.2.2.2.2.2.1 «aid»
-  let «this» : ty.«Registers».denote := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.2.1 «aid» (match «a» with | none => («aid», (js "Untitled album"), «at», none, none, none, none, ()) | some «a» => if decide («at» < («a».2.2.1)) then let r' := «a»; (r'.1, r'.2.1, «at», r'.2.2.2.1, r'.2.2.2.2.1, r'.2.2.2.2.2.1, r'.2.2.2.2.2.2.1, ()) else «a»), «this».2.2.2.2.2.2.2.2)
+def «touchAlbum» («this» : «Registers») («aid» : JSString) («at» : Int) : «Registers» :=
+  let «a» : Option («AlbumRec») := Ariadne.mapGet «this».2.2.2.2.2.2.2.1 «aid»
+  let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.2.1 «aid» (match «a» with | none => («aid», (js "Untitled album"), «at», none, none, none, none, ()) | some «a» => if decide («at» < («a».2.2.1)) then let r' := «a»; (r'.1, r'.2.1, «at», r'.2.2.2.1, r'.2.2.2.2.1, r'.2.2.2.2.2.1, r'.2.2.2.2.2.2.1, ()) else «a»), «this».2.2.2.2.2.2.2.2)
   «this»
 
-def «album» («this» : ty.«Registers».denote) («aid» : JSString) («stamp» : JSString) («at» : Int) («name» : Option (JSString)) («cover» : Option (JSString)) («deleted» : Bool) : ty.«Registers».denote :=
-  let «this» : ty.«Registers».denote := «touchAlbum» «this» «aid» «at»
-  let «a» : Option (ty.«AlbumRec».denote) := Ariadne.mapGet «this».2.2.2.2.2.2.2.1 «aid»
+def «album» («this» : «Registers») («aid» : JSString) («stamp» : JSString) («at» : Int) («name» : Option (JSString)) («cover» : Option (JSString)) («deleted» : Bool) : «Registers» :=
+  let «this» : «Registers» := «touchAlbum» «this» «aid» «at»
+  let «a» : Option («AlbumRec») := Ariadne.mapGet «this».2.2.2.2.2.2.2.1 «aid»
   match «a» with
   | none =>
     «this»
   | some «a» =>
     let «renamed» : Bool := («given» «name») && («newer» («a».2.2.2.2.2.1) «stamp»)
     let «covered» : Bool := («given» «cover») && («newer» («a».2.2.2.2.2.2.1) «stamp»)
-    let «this» : ty.«Registers».denote := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.2.1 «aid» (let r' := «a»; (r'.1, (if «renamed» then «otherwise» «name» («a».2.1) else «a».2.1), r'.2.2.1, (if «covered» then «cover» else «a».2.2.2.1), (if «deleted» && («earlier» («a».2.2.2.2.1) «stamp») then some «stamp» else «a».2.2.2.2.1), (if «renamed» then some «stamp» else «a».2.2.2.2.2.1), (if «covered» then some «stamp» else «a».2.2.2.2.2.2.1), ())), «this».2.2.2.2.2.2.2.2)
+    let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.2.1 «aid» (let r' := «a»; (r'.1, (if «renamed» then «otherwise» «name» («a».2.1) else «a».2.1), r'.2.2.1, (if «covered» then «cover» else «a».2.2.2.1), (if «deleted» && («earlier» («a».2.2.2.2.1) «stamp») then some «stamp» else «a».2.2.2.2.1), (if «renamed» then some «stamp» else «a».2.2.2.2.2.1), (if «covered» then some «stamp» else «a».2.2.2.2.2.2.1), ())), «this».2.2.2.2.2.2.2.2)
     «this»
 
-def «item» («this» : ty.«Registers».denote) («aid» : JSString) («id» : JSString) («stamp» : JSString) («present» : Bool) : ty.«Registers».denote :=
-  let «cur» : Option (ty.«AlbumItem».denote) := Ariadne.mapGet «this».2.2.2.2.2.2.2.2.1 («key» «aid» «id»)
+def «item» («this» : «Registers») («aid» : JSString) («id» : JSString) («stamp» : JSString) («present» : Bool) : «Registers» :=
+  let «cur» : Option («AlbumItem») := Ariadne.mapGet «this».2.2.2.2.2.2.2.2.1 («key» «aid» «id»)
   let after2' := fun s2' =>
     let «this» := s2'.2.1
     «this»
   if «newer» (match «cur» with | none => none | some «cur» => some («cur».2.2.1)) «stamp» then
-    let «this» : ty.«Registers».denote := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, «this».2.2.2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.2.2.1 («key» «aid» «id») ((«aid», «id», «stamp», «present», ())), «this».2.2.2.2.2.2.2.2.2)
+    let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, «this».2.2.2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.2.2.1 («key» «aid» «id») ((«aid», «id», «stamp», «present», ())), «this».2.2.2.2.2.2.2.2.2)
     after2' («cur», «this», «aid», «id», «stamp», «present», ())
   else
     after2' («cur», «this», «aid», «id», «stamp», «present», ())
 
-def «albumItems» («this» : ty.«Registers».denote) («aid» : JSString) («stamp» : JSString) («at» : Int) («add» : List (JSString)) («remove» : List (JSString)) : ty.«Registers».denote :=
-  let «this» : ty.«Registers».denote := «touchAlbum» «this» «aid» «at»
+def «albumItems» («this» : «Registers») («aid» : JSString) («stamp» : JSString) («at» : Int) («add» : List (JSString)) («remove» : List (JSString)) : «Registers» :=
+  let «this» : «Registers» := «touchAlbum» «this» «aid» «at»
   Ariadne.forIn «add» (fun «id» next2' exit2' s2' =>
     let «this» := s2'.1
     let «aid» := s2'.2.1
@@ -1211,7 +1304,7 @@ def «albumItems» («this» : ty.«Registers».denote) («aid» : JSString) («
     let «at» := s2'.2.2.2.1
     let «add» := s2'.2.2.2.2.1
     let «remove» := s2'.2.2.2.2.2.1
-    let «this» : ty.«Registers».denote := «item» «this» «aid» «id» «stamp» true
+    let «this» : «Registers» := «item» «this» «aid» «id» «stamp» true
     next2' («this», «aid», «stamp», «at», «add», «remove», ()))
     (fun s2' =>
     let «this» := s2'.1
@@ -1227,7 +1320,7 @@ def «albumItems» («this» : ty.«Registers».denote) («aid» : JSString) («
       let «at» := s4'.2.2.2.1
       let «add» := s4'.2.2.2.2.1
       let «remove» := s4'.2.2.2.2.2.1
-      let «this» : ty.«Registers».denote := «item» «this» «aid» «id» «stamp» false
+      let «this» : «Registers» := «item» «this» «aid» «id» «stamp» false
       next4' («this», «aid», «stamp», «at», «add», «remove», ()))
       (fun s4' =>
       let «this» := s4'.1
@@ -1235,57 +1328,57 @@ def «albumItems» («this» : ty.«Registers».denote) («aid» : JSString) («
       («this», «aid», «stamp», «at», «add», «remove», ()))
     («this», «aid», «stamp», «at», «add», «remove», ())
 
-def «albumList» («this» : ty.«Registers».denote) : List (ty.«AlbumRec».denote) :=
+def «albumList» («this» : «Registers») : List («AlbumRec») :=
   (List.map Prod.snd «this».2.2.2.2.2.2.2.1) ++ ([])
 
-def «itemList» («this» : ty.«Registers».denote) : List (ty.«AlbumItem».denote) :=
+def «itemList» («this» : «Registers») : List («AlbumItem») :=
   (List.map Prod.snd «this».2.2.2.2.2.2.2.2.1) ++ ([])
 
-def «loadPlacement» («this» : ty.«Registers».denote) («ref» : JSString) («e» : ty.«Placed».denote) : ty.«Registers».denote :=
-  let «this» : ty.«Registers».denote := «put» «this» «ref» («e».1) «e»
+def «loadPlacement» («this» : «Registers») («ref» : JSString) («e» : «Placed») : «Registers» :=
+  let «this» : «Registers» := «put» «this» «ref» («e».1) «e»
   «this»
 
 /-- The inputs on which `loadPlacement` stays within what the model covers. -/
-def «loadPlacement».safe («this» : ty.«Registers».denote) («ref» : JSString) («e» : ty.«Placed».denote) : Bool :=
-  «put».safe «this» «ref» («e».1) «e» && (let «this» : ty.«Registers».denote := «put» «this» «ref» («e».1) «e»
+def «loadPlacement».safe («this» : «Registers») («ref» : JSString) («e» : «Placed») : Bool :=
+  «put».safe «this» «ref» («e».1) «e» && (let «this» : «Registers» := «put» «this» «ref» («e».1) «e»
   true)
 
-def «loadMark» («this» : ty.«Registers».denote) («m» : ty.«Mark».denote) : ty.«Registers».denote :=
-  let «this» : ty.«Registers».denote := («this».1, «this».2.1, Ariadne.mapPut «this».2.2.1 («key» («m».1) («m».2.1)) «m», «this».2.2.2)
+def «loadMark» («this» : «Registers») («m» : «Mark») : «Registers» :=
+  let «this» : «Registers» := («this».1, «this».2.1, Ariadne.mapPut «this».2.2.1 («key» («m».1) («m».2.1)) «m», «this».2.2.2)
   «this»
 
-def «loadPack» («this» : ty.«Registers».denote) («pk» : ty.«Pack».denote) : ty.«Registers».denote :=
-  let «this» : ty.«Registers».denote := («this».1, «this».2.1, «this».2.2.1, Ariadne.mapPut «this».2.2.2.1 («pk».1) «pk», «this».2.2.2.2)
+def «loadPack» («this» : «Registers») («pk» : «Pack») : «Registers» :=
+  let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, Ariadne.mapPut «this».2.2.2.1 («pk».1) «pk», «this».2.2.2.2)
   «this»
 
-def «loadTotal» («this» : ty.«Registers».denote) («t» : ty.«Total».denote) : ty.«Registers».denote :=
-  let «this» : ty.«Registers».denote := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, Ariadne.mapPut «this».2.2.2.2.1 («key» («key» («t».1) («t».2.1)) («t».2.2.1)) «t», «this».2.2.2.2.2)
-  let «this» : ty.«Registers».denote := «track» «this» («t».1) («t».2.1) («t».2.2.1) true
+def «loadTotal» («this» : «Registers») («t» : «Total») : «Registers» :=
+  let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, Ariadne.mapPut «this».2.2.2.2.1 («key» («key» («t».1) («t».2.1)) («t».2.2.1)) «t», «this».2.2.2.2.2)
+  let «this» : «Registers» := «track» «this» («t».1) («t».2.1) («t».2.2.1) true
   «this»
 
 /-- The inputs on which `loadTotal` stays within what the model covers. -/
-def «loadTotal».safe («this» : ty.«Registers».denote) («t» : ty.«Total».denote) : Bool :=
-  let «this» : ty.«Registers».denote := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, Ariadne.mapPut «this».2.2.2.2.1 («key» («key» («t».1) («t».2.1)) («t».2.2.1)) «t», «this».2.2.2.2.2)
-  «track».safe «this» («t».1) («t».2.1) («t».2.2.1) true && (let «this» : ty.«Registers».denote := «track» «this» («t».1) («t».2.1) («t».2.2.1) true
+def «loadTotal».safe («this» : «Registers») («t» : «Total») : Bool :=
+  let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, Ariadne.mapPut «this».2.2.2.2.1 («key» («key» («t».1) («t».2.1)) («t».2.2.1)) «t», «this».2.2.2.2.2)
+  «track».safe «this» («t».1) («t».2.1) («t».2.2.1) true && (let «this» : «Registers» := «track» «this» («t».1) («t».2.1) («t».2.2.1) true
   true)
 
-def «loadIncrements» («this» : ty.«Registers».denote) («i» : ty.«Increments».denote) : ty.«Registers».denote :=
-  let «this» : ty.«Registers».denote := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.1 («key» («i».1) («i».2.1)) «i», «this».2.2.2.2.2.2)
-  let «this» : ty.«Registers».denote := «track» «this» («i».1) («i».2.1) (js "") false
+def «loadIncrements» («this» : «Registers») («i» : «Increments») : «Registers» :=
+  let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.1 («key» («i».1) («i».2.1)) «i», «this».2.2.2.2.2.2)
+  let «this» : «Registers» := «track» «this» («i».1) («i».2.1) (js "") false
   «this»
 
 /-- The inputs on which `loadIncrements` stays within what the model covers. -/
-def «loadIncrements».safe («this» : ty.«Registers».denote) («i» : ty.«Increments».denote) : Bool :=
-  let «this» : ty.«Registers».denote := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.1 («key» («i».1) («i».2.1)) «i», «this».2.2.2.2.2.2)
-  «track».safe «this» («i».1) («i».2.1) (js "") false && (let «this» : ty.«Registers».denote := «track» «this» («i».1) («i».2.1) (js "") false
+def «loadIncrements».safe («this» : «Registers») («i» : «Increments») : Bool :=
+  let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.1 («key» («i».1) («i».2.1)) «i», «this».2.2.2.2.2.2)
+  «track».safe «this» («i».1) («i».2.1) (js "") false && (let «this» : «Registers» := «track» «this» («i».1) («i».2.1) (js "") false
   true)
 
-def «loadAlbum» («this» : ty.«Registers».denote) («a» : ty.«AlbumRec».denote) : ty.«Registers».denote :=
-  let «this» : ty.«Registers».denote := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.2.1 («a».1) «a», «this».2.2.2.2.2.2.2.2)
+def «loadAlbum» («this» : «Registers») («a» : «AlbumRec») : «Registers» :=
+  let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.2.1 («a».1) «a», «this».2.2.2.2.2.2.2.2)
   «this»
 
-def «loadItem» («this» : ty.«Registers».denote) («i» : ty.«AlbumItem».denote) : ty.«Registers».denote :=
-  let «this» : ty.«Registers».denote := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, «this».2.2.2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.2.2.1 («key» («i».1) («i».2.1)) «i», «this».2.2.2.2.2.2.2.2.2)
+def «loadItem» («this» : «Registers») («i» : «AlbumItem») : «Registers» :=
+  let «this» : «Registers» := («this».1, «this».2.1, «this».2.2.1, «this».2.2.2.1, «this».2.2.2.2.1, «this».2.2.2.2.2.1, «this».2.2.2.2.2.2.1, «this».2.2.2.2.2.2.2.1, Ariadne.mapPut «this».2.2.2.2.2.2.2.2.1 («key» («i».1) («i».2.1)) «i», «this».2.2.2.2.2.2.2.2.2)
   «this»
 
 /-! ## Denotation
@@ -1980,7 +2073,7 @@ theorem «otherwise».source («s» : Option (JSString)) («fallback» : JSStrin
 
 /-- Every run of `described` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «described».source («cur» : Option (ty.«Pack».denote)) («stamp» : JSString) («at» : Int) (vs' : List JSValue)
+theorem «described».source («cur» : Option («Pack»)) («stamp» : JSString) («at» : Int) (vs' : List JSValue)
     (args' : ArgsRep sig.«described».params vs' («cur», «stamp», «at», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "described" vs') (.ok w') ∧
       Ty.Rep .bool w' («described» «cur» «stamp» «at») :=
@@ -2004,7 +2097,7 @@ theorem «zero».source  (vs' : List JSValue)
 
 /-- Every run of `highest` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «highest».source («a» : ty.«Counters».denote) («b» : ty.«Counters».denote) (vs' : List JSValue)
+theorem «highest».source («a» : «Counters») («b» : «Counters») (vs' : List JSValue)
     (args' : ArgsRep sig.«highest».params vs' («a», «b», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "highest" vs') (.ok w') ∧
       Ty.Rep ty.«Counters» w' («highest» «a» «b») :=
@@ -2012,7 +2105,7 @@ theorem «highest».source («a» : ty.«Counters».denote) («b» : ty.«Counte
 
 /-- Every run of `sum` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «sum».source («a» : ty.«Counters».denote) («b» : ty.«Counters».denote) (vs' : List JSValue)
+theorem «sum».source («a» : «Counters») («b» : «Counters») (vs' : List JSValue)
     (args' : ArgsRep sig.«sum».params vs' («a», «b», ()))
     (safe' : «sum».safe «a» «b» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "sum" vs') (.ok w') ∧
@@ -2029,7 +2122,7 @@ theorem «new Registers».source  (vs' : List JSValue)
 
 /-- Every run of `noteUnplace` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «noteUnplace».source («this» : ty.«Registers».denote) («ref» : JSString) («p» : JSString) («u» : JSString) (this' : JSValue) (vs' : List JSValue)
+theorem «noteUnplace».source («this» : «Registers») («ref» : JSString) («p» : JSString) («u» : JSString) (this' : JSValue) (vs' : List JSValue)
     (args' : ArgsRep sig.«noteUnplace».params (this' :: vs') («this», «ref», «p», «u», ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "noteUnplace" this' vs') (.ok (w', t')) ∧
       Ty.Rep ty.«Registers» t' («noteUnplace» «this» «ref» «p» «u») :=
@@ -2037,7 +2130,7 @@ theorem «noteUnplace».source («this» : ty.«Registers».denote) («ref» : J
 
 /-- Every run of `providersOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «providersOf».source («this» : ty.«Registers».denote) («ref» : JSString) (vs' : List JSValue)
+theorem «providersOf».source («this» : «Registers») («ref» : JSString) (vs' : List JSValue)
     (args' : ArgsRep sig.«providersOf».params vs' («this», «ref», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "providersOf" vs') (.ok w') ∧
       Ty.Rep (.array .string) w' («providersOf» «this» «ref») :=
@@ -2045,7 +2138,7 @@ theorem «providersOf».source («this» : ty.«Registers».denote) («ref» : J
 
 /-- Every run of `put` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «put».source («this» : ty.«Registers».denote) («ref» : JSString) («p» : JSString) («e» : ty.«Placed».denote) (this' : JSValue) (vs' : List JSValue)
+theorem «put».source («this» : «Registers») («ref» : JSString) («p» : JSString) («e» : «Placed») (this' : JSValue) (vs' : List JSValue)
     (args' : ArgsRep sig.«put».params (this' :: vs') («this», «ref», «p», «e», ()))
     (safe' : «put».safe «this» «ref» «p» «e» = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "put" this' vs') (.ok (w', t')) ∧
@@ -2054,7 +2147,7 @@ theorem «put».source («this» : ty.«Registers».denote) («ref» : JSString)
 
 /-- Every run of `dropMarkBefore` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «dropMarkBefore».source («this» : ty.«Registers».denote) («ref» : JSString) («p» : JSString) («u» : Option (JSString)) (this' : JSValue) (vs' : List JSValue)
+theorem «dropMarkBefore».source («this» : «Registers») («ref» : JSString) («p» : JSString) («u» : Option (JSString)) (this' : JSValue) (vs' : List JSValue)
     (args' : ArgsRep sig.«dropMarkBefore».params (this' :: vs') («this», «ref», «p», «u», ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "dropMarkBefore" this' vs') (.ok (w', t')) ∧
       Ty.Rep ty.«Registers» t' («dropMarkBefore» «this» «ref» «p» «u») :=
@@ -2062,7 +2155,7 @@ theorem «dropMarkBefore».source («this» : ty.«Registers».denote) («ref» 
 
 /-- Every run of `place` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «place».source («this» : ty.«Registers».denote) («ref» : JSString) («p» : JSString) («placed» : Bool) («cls» : JSString) («stamp» : JSString) («at» : Int) (this' : JSValue) (vs' : List JSValue)
+theorem «place».source («this» : «Registers») («ref» : JSString) («p» : JSString) («placed» : Bool) («cls» : JSString) («stamp» : JSString) («at» : Int) (this' : JSValue) (vs' : List JSValue)
     (args' : ArgsRep sig.«place».params (this' :: vs') («this», «ref», «p», «placed», «cls», «stamp», «at», ()))
     (safe' : «place».safe «this» «ref» «p» «placed» «cls» «stamp» «at» = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "place" this' vs') (.ok (w', t')) ∧
@@ -2071,7 +2164,7 @@ theorem «place».source («this» : ty.«Registers».denote) («ref» : JSStrin
 
 /-- Every run of `mark` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «mark».source («this» : ty.«Registers».denote) («ref» : JSString) («p» : JSString) («on» : Bool) («reason» : Option (JSString)) («stamp» : JSString) («at» : Int) (this' : JSValue) (vs' : List JSValue)
+theorem «mark».source («this» : «Registers») («ref» : JSString) («p» : JSString) («on» : Bool) («reason» : Option (JSString)) («stamp» : JSString) («at» : Int) (this' : JSValue) (vs' : List JSValue)
     (args' : ArgsRep sig.«mark».params (this' :: vs') («this», «ref», «p», «on», «reason», «stamp», «at», ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "mark" this' vs') (.ok (w', t')) ∧
       Ty.Rep ty.«Registers» t' («mark» «this» «ref» «p» «on» «reason» «stamp» «at») :=
@@ -2079,7 +2172,7 @@ theorem «mark».source («this» : ty.«Registers».denote) («ref» : JSString
 
 /-- Every run of `placements` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «placements».source («this» : ty.«Registers».denote) («ref» : JSString) (vs' : List JSValue)
+theorem «placements».source («this» : «Registers») («ref» : JSString) (vs' : List JSValue)
     (args' : ArgsRep sig.«placements».params vs' («this», «ref», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "placements" vs') (.ok w') ∧
       Ty.Rep (.array ty.«Placed») w' («placements» «this» «ref») :=
@@ -2087,7 +2180,7 @@ theorem «placements».source («this» : ty.«Registers».denote) («ref» : JS
 
 /-- Every run of `isPlaced` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «isPlaced».source («this» : ty.«Registers».denote) («ref» : JSString) (vs' : List JSValue)
+theorem «isPlaced».source («this» : «Registers») («ref» : JSString) (vs' : List JSValue)
     (args' : ArgsRep sig.«isPlaced».params vs' («this», «ref», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "isPlaced" vs') (.ok w') ∧
       Ty.Rep .bool w' («isPlaced» «this» «ref») :=
@@ -2095,7 +2188,7 @@ theorem «isPlaced».source («this» : ty.«Registers».denote) («ref» : JSSt
 
 /-- Every run of `placedRefs` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «placedRefs».source («this» : ty.«Registers».denote) (vs' : List JSValue)
+theorem «placedRefs».source («this» : «Registers») (vs' : List JSValue)
     (args' : ArgsRep sig.«placedRefs».params vs' («this», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "placedRefs" vs') (.ok w') ∧
       Ty.Rep (.array .string) w' («placedRefs» «this») :=
@@ -2103,7 +2196,7 @@ theorem «placedRefs».source («this» : ty.«Registers».denote) (vs' : List J
 
 /-- Every run of `markOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «markOf».source («this» : ty.«Registers».denote) («ref» : JSString) («p» : JSString) (vs' : List JSValue)
+theorem «markOf».source («this» : «Registers») («ref» : JSString) («p» : JSString) (vs' : List JSValue)
     (args' : ArgsRep sig.«markOf».params vs' («this», «ref», «p», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "markOf" vs') (.ok w') ∧
       Ty.Rep (.option .undef ty.«Mark») w' («markOf» «this» «ref» «p») :=
@@ -2111,7 +2204,7 @@ theorem «markOf».source («this» : ty.«Registers».denote) («ref» : JSStri
 
 /-- Every run of `markList` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «markList».source («this» : ty.«Registers».denote) (vs' : List JSValue)
+theorem «markList».source («this» : «Registers») (vs' : List JSValue)
     (args' : ArgsRep sig.«markList».params vs' («this», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "markList" vs') (.ok w') ∧
       Ty.Rep (.array ty.«Mark») w' («markList» «this») :=
@@ -2119,7 +2212,7 @@ theorem «markList».source («this» : ty.«Registers».denote) (vs' : List JSV
 
 /-- Every run of `pack` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «pack».source («this» : ty.«Registers».denote) («id» : JSString) («size» : Int) («csize» : Int) («stamp» : JSString) («at» : Int) («hn» : Option (JSString)) (this' : JSValue) (vs' : List JSValue)
+theorem «pack».source («this» : «Registers») («id» : JSString) («size» : Int) («csize» : Int) («stamp» : JSString) («at» : Int) («hn» : Option (JSString)) (this' : JSValue) (vs' : List JSValue)
     (args' : ArgsRep sig.«pack».params (this' :: vs') («this», «id», «size», «csize», «stamp», «at», «hn», ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "pack" this' vs') (.ok (w', t')) ∧
       Ty.Rep ty.«Registers» t' («pack» «this» «id» «size» «csize» «stamp» «at» «hn») :=
@@ -2127,7 +2220,7 @@ theorem «pack».source («this» : ty.«Registers».denote) («id» : JSString)
 
 /-- Every run of `packOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «packOf».source («this» : ty.«Registers».denote) («id» : JSString) (vs' : List JSValue)
+theorem «packOf».source («this» : «Registers») («id» : JSString) (vs' : List JSValue)
     (args' : ArgsRep sig.«packOf».params vs' («this», «id», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "packOf" vs') (.ok w') ∧
       Ty.Rep (.option .undef ty.«Pack») w' («packOf» «this» «id») :=
@@ -2135,7 +2228,7 @@ theorem «packOf».source («this» : ty.«Registers».denote) («id» : JSStrin
 
 /-- Every run of `packList` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «packList».source («this» : ty.«Registers».denote) (vs' : List JSValue)
+theorem «packList».source («this» : «Registers») (vs' : List JSValue)
     (args' : ArgsRep sig.«packList».params vs' («this», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "packList" vs') (.ok w') ∧
       Ty.Rep (.array ty.«Pack») w' («packList» «this») :=
@@ -2143,7 +2236,7 @@ theorem «packList».source («this» : ty.«Registers».denote) (vs' : List JSV
 
 /-- Every run of `track` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «track».source («this» : ty.«Registers».denote) («p» : JSString) («month» : JSString) («device» : JSString) («total» : Bool) (this' : JSValue) (vs' : List JSValue)
+theorem «track».source («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («total» : Bool) (this' : JSValue) (vs' : List JSValue)
     (args' : ArgsRep sig.«track».params (this' :: vs') («this», «p», «month», «device», «total», ()))
     (safe' : «track».safe «this» «p» «month» «device» «total» = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "track" this' vs') (.ok (w', t')) ∧
@@ -2152,7 +2245,7 @@ theorem «track».source («this» : ty.«Registers».denote) («p» : JSString)
 
 /-- Every run of `total` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «total».source («this» : ty.«Registers».denote) («p» : JSString) («month» : JSString) («device» : JSString) («c» : ty.«Counters».denote) (this' : JSValue) (vs' : List JSValue)
+theorem «total».source («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («c» : «Counters») (this' : JSValue) (vs' : List JSValue)
     (args' : ArgsRep sig.«total».params (this' :: vs') («this», «p», «month», «device», «c», ()))
     (safe' : «total».safe «this» «p» «month» «device» «c» = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "total" this' vs') (.ok (w', t')) ∧
@@ -2161,7 +2254,7 @@ theorem «total».source («this» : ty.«Registers».denote) («p» : JSString)
 
 /-- Every run of `add` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «add».source («this» : ty.«Registers».denote) («p» : JSString) («month» : JSString) («c» : ty.«Counters».denote) (this' : JSValue) (vs' : List JSValue)
+theorem «add».source («this» : «Registers») («p» : JSString) («month» : JSString) («c» : «Counters») (this' : JSValue) (vs' : List JSValue)
     (args' : ArgsRep sig.«add».params (this' :: vs') («this», «p», «month», «c», ()))
     (safe' : «add».safe «this» «p» «month» «c» = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "add" this' vs') (.ok (w', t')) ∧
@@ -2170,7 +2263,7 @@ theorem «add».source («this» : ty.«Registers».denote) («p» : JSString) (
 
 /-- Every run of `totalOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «totalOf».source («this» : ty.«Registers».denote) («p» : JSString) («month» : JSString) («device» : JSString) (vs' : List JSValue)
+theorem «totalOf».source («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) (vs' : List JSValue)
     (args' : ArgsRep sig.«totalOf».params vs' («this», «p», «month», «device», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "totalOf" vs') (.ok w') ∧
       Ty.Rep ty.«Counters» w' («totalOf» «this» «p» «month» «device») :=
@@ -2178,7 +2271,7 @@ theorem «totalOf».source («this» : ty.«Registers».denote) («p» : JSStrin
 
 /-- Every run of `usageOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «usageOf».source («this» : ty.«Registers».denote) («p» : JSString) («month» : JSString) (vs' : List JSValue)
+theorem «usageOf».source («this» : «Registers») («p» : JSString) («month» : JSString) (vs' : List JSValue)
     (args' : ArgsRep sig.«usageOf».params vs' («this», «p», «month», ()))
     (safe' : «usageOf».safe «this» «p» «month» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "usageOf" vs') (.ok w') ∧
@@ -2187,7 +2280,7 @@ theorem «usageOf».source («this» : ty.«Registers».denote) («p» : JSStrin
 
 /-- Every run of `usageList` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «usageList».source («this» : ty.«Registers».denote) (vs' : List JSValue)
+theorem «usageList».source («this» : «Registers») (vs' : List JSValue)
     (args' : ArgsRep sig.«usageList».params vs' («this», ()))
     (safe' : «usageList».safe «this» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "usageList" vs') (.ok w') ∧
@@ -2196,7 +2289,7 @@ theorem «usageList».source («this» : ty.«Registers».denote) (vs' : List JS
 
 /-- Every run of `totalList` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «totalList».source («this» : ty.«Registers».denote) (vs' : List JSValue)
+theorem «totalList».source («this» : «Registers») (vs' : List JSValue)
     (args' : ArgsRep sig.«totalList».params vs' («this», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "totalList" vs') (.ok w') ∧
       Ty.Rep (.array ty.«Total») w' («totalList» «this») :=
@@ -2204,7 +2297,7 @@ theorem «totalList».source («this» : ty.«Registers».denote) (vs' : List JS
 
 /-- Every run of `touchAlbum` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «touchAlbum».source («this» : ty.«Registers».denote) («aid» : JSString) («at» : Int) (this' : JSValue) (vs' : List JSValue)
+theorem «touchAlbum».source («this» : «Registers») («aid» : JSString) («at» : Int) (this' : JSValue) (vs' : List JSValue)
     (args' : ArgsRep sig.«touchAlbum».params (this' :: vs') («this», «aid», «at», ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "touchAlbum" this' vs') (.ok (w', t')) ∧
       Ty.Rep ty.«Registers» t' («touchAlbum» «this» «aid» «at») :=
@@ -2212,7 +2305,7 @@ theorem «touchAlbum».source («this» : ty.«Registers».denote) («aid» : JS
 
 /-- Every run of `album` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «album».source («this» : ty.«Registers».denote) («aid» : JSString) («stamp» : JSString) («at» : Int) («name» : Option (JSString)) («cover» : Option (JSString)) («deleted» : Bool) (this' : JSValue) (vs' : List JSValue)
+theorem «album».source («this» : «Registers») («aid» : JSString) («stamp» : JSString) («at» : Int) («name» : Option (JSString)) («cover» : Option (JSString)) («deleted» : Bool) (this' : JSValue) (vs' : List JSValue)
     (args' : ArgsRep sig.«album».params (this' :: vs') («this», «aid», «stamp», «at», «name», «cover», «deleted», ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "album" this' vs') (.ok (w', t')) ∧
       Ty.Rep ty.«Registers» t' («album» «this» «aid» «stamp» «at» «name» «cover» «deleted») :=
@@ -2220,7 +2313,7 @@ theorem «album».source («this» : ty.«Registers».denote) («aid» : JSStrin
 
 /-- Every run of `item` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «item».source («this» : ty.«Registers».denote) («aid» : JSString) («id» : JSString) («stamp» : JSString) («present» : Bool) (this' : JSValue) (vs' : List JSValue)
+theorem «item».source («this» : «Registers») («aid» : JSString) («id» : JSString) («stamp» : JSString) («present» : Bool) (this' : JSValue) (vs' : List JSValue)
     (args' : ArgsRep sig.«item».params (this' :: vs') («this», «aid», «id», «stamp», «present», ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "item" this' vs') (.ok (w', t')) ∧
       Ty.Rep ty.«Registers» t' («item» «this» «aid» «id» «stamp» «present») :=
@@ -2228,7 +2321,7 @@ theorem «item».source («this» : ty.«Registers».denote) («aid» : JSString
 
 /-- Every run of `albumItems` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «albumItems».source («this» : ty.«Registers».denote) («aid» : JSString) («stamp» : JSString) («at» : Int) («add» : List (JSString)) («remove» : List (JSString)) (this' : JSValue) (vs' : List JSValue)
+theorem «albumItems».source («this» : «Registers») («aid» : JSString) («stamp» : JSString) («at» : Int) («add» : List (JSString)) («remove» : List (JSString)) (this' : JSValue) (vs' : List JSValue)
     (args' : ArgsRep sig.«albumItems».params (this' :: vs') («this», «aid», «stamp», «at», «add», «remove», ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "albumItems" this' vs') (.ok (w', t')) ∧
       Ty.Rep ty.«Registers» t' («albumItems» «this» «aid» «stamp» «at» «add» «remove») :=
@@ -2236,7 +2329,7 @@ theorem «albumItems».source («this» : ty.«Registers».denote) («aid» : JS
 
 /-- Every run of `albumList` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «albumList».source («this» : ty.«Registers».denote) (vs' : List JSValue)
+theorem «albumList».source («this» : «Registers») (vs' : List JSValue)
     (args' : ArgsRep sig.«albumList».params vs' («this», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "albumList" vs') (.ok w') ∧
       Ty.Rep (.array ty.«AlbumRec») w' («albumList» «this») :=
@@ -2244,7 +2337,7 @@ theorem «albumList».source («this» : ty.«Registers».denote) (vs' : List JS
 
 /-- Every run of `itemList` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «itemList».source («this» : ty.«Registers».denote) (vs' : List JSValue)
+theorem «itemList».source («this» : «Registers») (vs' : List JSValue)
     (args' : ArgsRep sig.«itemList».params vs' («this», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "itemList" vs') (.ok w') ∧
       Ty.Rep (.array ty.«AlbumItem») w' («itemList» «this») :=
@@ -2252,7 +2345,7 @@ theorem «itemList».source («this» : ty.«Registers».denote) (vs' : List JSV
 
 /-- Every run of `loadPlacement` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «loadPlacement».source («this» : ty.«Registers».denote) («ref» : JSString) («e» : ty.«Placed».denote) (this' : JSValue) (vs' : List JSValue)
+theorem «loadPlacement».source («this» : «Registers») («ref» : JSString) («e» : «Placed») (this' : JSValue) (vs' : List JSValue)
     (args' : ArgsRep sig.«loadPlacement».params (this' :: vs') («this», «ref», «e», ()))
     (safe' : «loadPlacement».safe «this» «ref» «e» = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "loadPlacement" this' vs') (.ok (w', t')) ∧
@@ -2261,7 +2354,7 @@ theorem «loadPlacement».source («this» : ty.«Registers».denote) («ref» :
 
 /-- Every run of `loadMark` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «loadMark».source («this» : ty.«Registers».denote) («m» : ty.«Mark».denote) (this' : JSValue) (vs' : List JSValue)
+theorem «loadMark».source («this» : «Registers») («m» : «Mark») (this' : JSValue) (vs' : List JSValue)
     (args' : ArgsRep sig.«loadMark».params (this' :: vs') («this», «m», ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "loadMark" this' vs') (.ok (w', t')) ∧
       Ty.Rep ty.«Registers» t' («loadMark» «this» «m») :=
@@ -2269,7 +2362,7 @@ theorem «loadMark».source («this» : ty.«Registers».denote) («m» : ty.«M
 
 /-- Every run of `loadPack` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «loadPack».source («this» : ty.«Registers».denote) («pk» : ty.«Pack».denote) (this' : JSValue) (vs' : List JSValue)
+theorem «loadPack».source («this» : «Registers») («pk» : «Pack») (this' : JSValue) (vs' : List JSValue)
     (args' : ArgsRep sig.«loadPack».params (this' :: vs') («this», «pk», ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "loadPack" this' vs') (.ok (w', t')) ∧
       Ty.Rep ty.«Registers» t' («loadPack» «this» «pk») :=
@@ -2277,7 +2370,7 @@ theorem «loadPack».source («this» : ty.«Registers».denote) («pk» : ty.«
 
 /-- Every run of `loadTotal` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «loadTotal».source («this» : ty.«Registers».denote) («t» : ty.«Total».denote) (this' : JSValue) (vs' : List JSValue)
+theorem «loadTotal».source («this» : «Registers») («t» : «Total») (this' : JSValue) (vs' : List JSValue)
     (args' : ArgsRep sig.«loadTotal».params (this' :: vs') («this», «t», ()))
     (safe' : «loadTotal».safe «this» «t» = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "loadTotal" this' vs') (.ok (w', t')) ∧
@@ -2286,7 +2379,7 @@ theorem «loadTotal».source («this» : ty.«Registers».denote) («t» : ty.«
 
 /-- Every run of `loadIncrements` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «loadIncrements».source («this» : ty.«Registers».denote) («i» : ty.«Increments».denote) (this' : JSValue) (vs' : List JSValue)
+theorem «loadIncrements».source («this» : «Registers») («i» : «Increments») (this' : JSValue) (vs' : List JSValue)
     (args' : ArgsRep sig.«loadIncrements».params (this' :: vs') («this», «i», ()))
     (safe' : «loadIncrements».safe «this» «i» = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "loadIncrements" this' vs') (.ok (w', t')) ∧
@@ -2295,7 +2388,7 @@ theorem «loadIncrements».source («this» : ty.«Registers».denote) («i» : 
 
 /-- Every run of `loadAlbum` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «loadAlbum».source («this» : ty.«Registers».denote) («a» : ty.«AlbumRec».denote) (this' : JSValue) (vs' : List JSValue)
+theorem «loadAlbum».source («this» : «Registers») («a» : «AlbumRec») (this' : JSValue) (vs' : List JSValue)
     (args' : ArgsRep sig.«loadAlbum».params (this' :: vs') («this», «a», ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "loadAlbum" this' vs') (.ok (w', t')) ∧
       Ty.Rep ty.«Registers» t' («loadAlbum» «this» «a») :=
@@ -2303,7 +2396,7 @@ theorem «loadAlbum».source («this» : ty.«Registers».denote) («a» : ty.«
 
 /-- Every run of `loadItem` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «loadItem».source («this» : ty.«Registers».denote) («i» : ty.«AlbumItem».denote) (this' : JSValue) (vs' : List JSValue)
+theorem «loadItem».source («this» : «Registers») («i» : «AlbumItem») (this' : JSValue) (vs' : List JSValue)
     (args' : ArgsRep sig.«loadItem».params (this' :: vs') («this», «i», ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "loadItem" this' vs') (.ok (w', t')) ∧
       Ty.Rep ty.«Registers» t' («loadItem» «this» «i») :=
