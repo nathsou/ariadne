@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ariadne Playground</title>
+  <meta name="description" content="Translate TypeScript into Lean 4 in your browser, with a theorem that the JavaScript computes what the Lean definitions say.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="fonts/inter/index.css">
+  <link rel="stylesheet" href="fonts/jetbrains-mono/index.css">
+  <link rel="stylesheet" href="main.css?v=%VERSION%">
+  <script>
+    try {
+      const t = localStorage.getItem("ariadne-theme");
+      if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
+    } catch {}
+  </script>
+</head>
+<body>
+  <div id="app">
+    <div class="boot">
+      <svg class="boot-mark" viewBox="0 0 32 32" aria-hidden="true"><use href="#mark"/></svg>
+      <p>Loading the translator…</p>
+    </div>
+  </div>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="mark" viewBox="0 0 32 32">
+      <path d="M16 3.5a12.5 12.5 0 1 0 12.5 12.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M16 8.5a7.5 7.5 0 1 0 7.5 7.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity=".55"/>
+      <path d="M28.5 16C28.5 10 22 8.5 16 13.5c-2.6 2.2-1.6 5 .9 5" fill="none" stroke="var(--thread)" stroke-width="2.2" stroke-linecap="round"/>
+      <circle cx="16.9" cy="18.5" r="1.9" fill="var(--thread)"/>
+    </symbol>
+  </svg>
+  <script type="module" src="main.js?v=%VERSION%"></script>
+</body>
+</html>
