@@ -188,6 +188,26 @@ own `checkout`/`upload-artifact` actions, pinned by commit, are CI infrastructur
 - **Tests:** the differential harness now runs class methods through `runMethodStore` (41,700 calls); 4,153 theorems
   audited.
 
+### Mutation and numbers: what is covered
+
+- **Local mutation.**
+  - Covered: `let`, assignment to `let`s and parameters, and `+=`/`-=`/`*=`, `x++`/`x--` as statements.
+  - Covered: a class's `Map` fields changed through `this.f.set/delete` and `this.m()` in `void` methods. That
+    in-place mutation is proved equal to the value model (L8).
+  - Refused: changing an array or record in place (`push`, `xs[i] = v`, `p.x = v`, in-place `sort`), local
+    `Map`/`Set`, `++x`, and `x++` inside an expression.
+  - Arrays and records are values, `===` on objects is refused, and `this` is never a value, so nothing can be
+    aliased. Callbacks have expression bodies, so they cannot assign.
+- **Numbers.**
+  - `number` is an integer: literals must be safe integers, and `/`, `%`, `**`, bitwise operators and `Math` are
+    refused.
+  - `+`, `-`, `*` and negation are modeled exactly. Each result must stay within ±(2^53 − 1): the model faults
+    otherwise, and the function's safety condition (`«f».safe`, a hypothesis of every source theorem) requires it.
+    So an overflowing computation is outside the theorem's claim; it is never claimed to compute a wrong value.
+  - `bigint` is unbounded and needs no condition, except that division, `%`, `**` and shifts are refused.
+  - Not modeled: `-0` (the model returns `0`; unobservable inside the subset), and non-integer, NaN or infinite
+    `number` arguments (the theorem's argument relation only admits integers).
+
 ## Checkpoint after M4: is adding constructs viable?
 
 The design asked to compare the adequacy proof's size per construct and stop if it grew faster than linearly or a
