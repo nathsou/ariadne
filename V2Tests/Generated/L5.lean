@@ -478,109 +478,109 @@ theorem safety_eq : typed.safety = («labels».safety, «nameOf».safety, «late
 
 /-- Every run of `newer` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «newer».source («s» : JSString) («stamp» : JSString) (vs : List JSValue)
-    (args : ArgsRep sig.«newer».params vs («s», «stamp», ())) :
-    ∃ w, Converges (fun fuel' => run ast fuel' "newer" vs) (.ok w) ∧
-      Ty.Rep .bool w («newer» «s» «stamp») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "newer" sig.«newer») rfl («s», «stamp», ()) vs args rfl
+theorem «newer».source («s» : JSString) («stamp» : JSString) (vs' : List JSValue)
+    (args' : ArgsRep sig.«newer».params vs' («s», «stamp», ())) :
+    ∃ w', Converges (fun fuel' => run ast fuel' "newer" vs') (.ok w') ∧
+      Ty.Rep .bool w' («newer» «s» «stamp») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "newer" sig.«newer») rfl («s», «stamp», ()) vs' args' rfl
 
 /-- Every run of `new Book` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «new Book».source  (vs : List JSValue)
-    (args : ArgsRep sig.«new Book».params vs (())) :
-    ∃ w, Converges (fun fuel' => run ast fuel' "new Book" vs) (.ok w) ∧
-      Ty.Rep ty.«Book» w («new Book») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "new Book" sig.«new Book») rfl (()) vs args rfl
+theorem «new Book».source  (vs' : List JSValue)
+    (args' : ArgsRep sig.«new Book».params vs' (())) :
+    ∃ w', Converges (fun fuel' => run ast fuel' "new Book" vs') (.ok w') ∧
+      Ty.Rep ty.«Book» w' («new Book») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "new Book" sig.«new Book») rfl (()) vs' args' rfl
 
 /-- Every run of `bump` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «bump».source («this» : ty.«Book».denote) («k» : JSString) (this' : JSValue) (vs : List JSValue)
-    (args : ArgsRep sig.«bump».params (this' :: vs) («this», «k», ()))
-    (safe : «bump».safe «this» «k» = true) :
-    ∃ w t, Converges (fun fuel' => runMethod ast fuel' "bump" this' vs) (.ok (w, t)) ∧
-      Ty.Rep ty.«Book» t («bump» «this» «k») :=
-  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "bump" sig.«bump») rfl («this», «k», ()) this' vs args safe
+theorem «bump».source («this» : ty.«Book».denote) («k» : JSString) (this' : JSValue) (vs' : List JSValue)
+    (args' : ArgsRep sig.«bump».params (this' :: vs') («this», «k», ()))
+    (safe' : «bump».safe «this» «k» = true) :
+    ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "bump" this' vs') (.ok (w', t')) ∧
+      Ty.Rep ty.«Book» t' («bump» «this» «k») :=
+  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "bump" sig.«bump») rfl («this», «k», ()) this' vs' args' safe'
 
 /-- Every run of `put` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «put».source («this» : ty.«Book».denote) («k» : JSString) («e» : ty.«Entry».denote) (this' : JSValue) (vs : List JSValue)
-    (args : ArgsRep sig.«put».params (this' :: vs) («this», «k», «e», ()))
-    (safe : «put».safe «this» «k» «e» = true) :
-    ∃ w t, Converges (fun fuel' => runMethod ast fuel' "put" this' vs) (.ok (w, t)) ∧
-      Ty.Rep ty.«Book» t («put» «this» «k» «e») :=
-  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "put" sig.«put») rfl («this», «k», «e», ()) this' vs args safe
+theorem «put».source («this» : ty.«Book».denote) («k» : JSString) («e» : ty.«Entry».denote) (this' : JSValue) (vs' : List JSValue)
+    (args' : ArgsRep sig.«put».params (this' :: vs') («this», «k», «e», ()))
+    (safe' : «put».safe «this» «k» «e» = true) :
+    ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "put" this' vs') (.ok (w', t')) ∧
+      Ty.Rep ty.«Book» t' («put» «this» «k» «e») :=
+  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "put" sig.«put») rfl («this», «k», «e», ()) this' vs' args' safe'
 
 /-- Every run of `rename` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «rename».source («this» : ty.«Book».denote) («k» : JSString) («n» : JSString) (this' : JSValue) (vs : List JSValue)
-    (args : ArgsRep sig.«rename».params (this' :: vs) («this», «k», «n», ())) :
-    ∃ w t, Converges (fun fuel' => runMethod ast fuel' "rename" this' vs) (.ok (w, t)) ∧
-      Ty.Rep ty.«Book» t («rename» «this» «k» «n») :=
-  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) : FVar sigs "rename" sig.«rename») rfl («this», «k», «n», ()) this' vs args rfl
+theorem «rename».source («this» : ty.«Book».denote) («k» : JSString) («n» : JSString) (this' : JSValue) (vs' : List JSValue)
+    (args' : ArgsRep sig.«rename».params (this' :: vs') («this», «k», «n», ())) :
+    ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "rename" this' vs') (.ok (w', t')) ∧
+      Ty.Rep ty.«Book» t' («rename» «this» «k» «n») :=
+  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) : FVar sigs "rename" sig.«rename») rfl («this», «k», «n», ()) this' vs' args' rfl
 
 /-- Every run of `drop` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «drop».source («this» : ty.«Book».denote) («k» : JSString) (this' : JSValue) (vs : List JSValue)
-    (args : ArgsRep sig.«drop».params (this' :: vs) («this», «k», ())) :
-    ∃ w t, Converges (fun fuel' => runMethod ast fuel' "drop" this' vs) (.ok (w, t)) ∧
-      Ty.Rep ty.«Book» t («drop» «this» «k») :=
-  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there .here))))))) : FVar sigs "drop" sig.«drop») rfl («this», «k», ()) this' vs args rfl
+theorem «drop».source («this» : ty.«Book».denote) («k» : JSString) (this' : JSValue) (vs' : List JSValue)
+    (args' : ArgsRep sig.«drop».params (this' :: vs') («this», «k», ())) :
+    ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "drop" this' vs') (.ok (w', t')) ∧
+      Ty.Rep ty.«Book» t' («drop» «this» «k») :=
+  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there .here))))))) : FVar sigs "drop" sig.«drop») rfl («this», «k», ()) this' vs' args' rfl
 
 /-- Every run of `touchAll` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «touchAll».source («this» : ty.«Book».denote) («ks» : List (JSString)) (this' : JSValue) (vs : List JSValue)
-    (args : ArgsRep sig.«touchAll».params (this' :: vs) («this», «ks», ()))
-    (safe : «touchAll».safe «this» «ks» = true) :
-    ∃ w t, Converges (fun fuel' => runMethod ast fuel' "touchAll" this' vs) (.ok (w, t)) ∧
-      Ty.Rep ty.«Book» t («touchAll» «this» «ks») :=
-  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "touchAll" sig.«touchAll») rfl («this», «ks», ()) this' vs args safe
+theorem «touchAll».source («this» : ty.«Book».denote) («ks» : List (JSString)) (this' : JSValue) (vs' : List JSValue)
+    (args' : ArgsRep sig.«touchAll».params (this' :: vs') («this», «ks», ()))
+    (safe' : «touchAll».safe «this» «ks» = true) :
+    ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "touchAll" this' vs') (.ok (w', t')) ∧
+      Ty.Rep ty.«Book» t' («touchAll» «this» «ks») :=
+  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "touchAll" sig.«touchAll») rfl («this», «ks», ()) this' vs' args' safe'
 
 /-- Every run of `get` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «get».source («this» : ty.«Book».denote) («k» : JSString) (vs : List JSValue)
-    (args : ArgsRep sig.«get».params vs («this», «k», ())) :
-    ∃ w, Converges (fun fuel' => run ast fuel' "get" vs) (.ok w) ∧
-      Ty.Rep (.option .undef ty.«Entry») w («get» «this» «k») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "get" sig.«get») rfl («this», «k», ()) vs args rfl
+theorem «get».source («this» : ty.«Book».denote) («k» : JSString) (vs' : List JSValue)
+    (args' : ArgsRep sig.«get».params vs' («this», «k», ())) :
+    ∃ w', Converges (fun fuel' => run ast fuel' "get" vs') (.ok w') ∧
+      Ty.Rep (.option .undef ty.«Entry») w' («get» «this» «k») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "get" sig.«get») rfl («this», «k», ()) vs' args' rfl
 
 /-- Every run of `count` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «count».source («this» : ty.«Book».denote) (vs : List JSValue)
-    (args : ArgsRep sig.«count».params vs («this», ())) :
-    ∃ w, Converges (fun fuel' => run ast fuel' "count" vs) (.ok w) ∧
-      Ty.Rep .number w («count» «this») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "count" sig.«count») rfl («this», ()) vs args rfl
+theorem «count».source («this» : ty.«Book».denote) (vs' : List JSValue)
+    (args' : ArgsRep sig.«count».params vs' («this», ())) :
+    ∃ w', Converges (fun fuel' => run ast fuel' "count" vs') (.ok w') ∧
+      Ty.Rep .number w' («count» «this») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "count" sig.«count») rfl («this», ()) vs' args' rfl
 
 /-- Every run of `keys` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «keys».source («this» : ty.«Book».denote) (vs : List JSValue)
-    (args : ArgsRep sig.«keys».params vs («this», ())) :
-    ∃ w, Converges (fun fuel' => run ast fuel' "keys" vs) (.ok w) ∧
-      Ty.Rep (.array .string) w («keys» «this») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "keys" sig.«keys») rfl («this», ()) vs args rfl
+theorem «keys».source («this» : ty.«Book».denote) (vs' : List JSValue)
+    (args' : ArgsRep sig.«keys».params vs' («this», ())) :
+    ∃ w', Converges (fun fuel' => run ast fuel' "keys" vs') (.ok w') ∧
+      Ty.Rep (.array .string) w' («keys» «this») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "keys" sig.«keys») rfl («this», ()) vs' args' rfl
 
 /-- Every run of `latest` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «latest».source («this» : ty.«Book».denote) (vs : List JSValue)
-    (args : ArgsRep sig.«latest».params vs («this», ())) :
-    ∃ w, Converges (fun fuel' => run ast fuel' "latest" vs) (.ok w) ∧
-      Ty.Rep .number w («latest» «this») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "latest" sig.«latest») rfl («this», ()) vs args rfl
+theorem «latest».source («this» : ty.«Book».denote) (vs' : List JSValue)
+    (args' : ArgsRep sig.«latest».params vs' («this», ())) :
+    ∃ w', Converges (fun fuel' => run ast fuel' "latest" vs') (.ok w') ∧
+      Ty.Rep .number w' («latest» «this») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "latest" sig.«latest») rfl («this», ()) vs' args' rfl
 
 /-- Every run of `nameOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «nameOf».source («this» : ty.«Book».denote) («k» : JSString) (vs : List JSValue)
-    (args : ArgsRep sig.«nameOf».params vs («this», «k», ())) :
-    ∃ w, Converges (fun fuel' => run ast fuel' "nameOf" vs) (.ok w) ∧
-      Ty.Rep .string w («nameOf» «this» «k») :=
-  source_of erased wf denote_eq safety_eq ((.there .here) : FVar sigs "nameOf" sig.«nameOf») rfl («this», «k», ()) vs args rfl
+theorem «nameOf».source («this» : ty.«Book».denote) («k» : JSString) (vs' : List JSValue)
+    (args' : ArgsRep sig.«nameOf».params vs' («this», «k», ())) :
+    ∃ w', Converges (fun fuel' => run ast fuel' "nameOf" vs') (.ok w') ∧
+      Ty.Rep .string w' («nameOf» «this» «k») :=
+  source_of erased wf denote_eq safety_eq ((.there .here) : FVar sigs "nameOf" sig.«nameOf») rfl («this», «k», ()) vs' args' rfl
 
 /-- Every run of `labels` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «labels».source («this» : ty.«Book».denote) (vs : List JSValue)
-    (args : ArgsRep sig.«labels».params vs («this», ())) :
-    ∃ w, Converges (fun fuel' => run ast fuel' "labels" vs) (.ok w) ∧
-      Ty.Rep (.array .string) w («labels» «this») :=
-  source_of erased wf denote_eq safety_eq (.here : FVar sigs "labels" sig.«labels») rfl («this», ()) vs args rfl
+theorem «labels».source («this» : ty.«Book».denote) (vs' : List JSValue)
+    (args' : ArgsRep sig.«labels».params vs' («this», ())) :
+    ∃ w', Converges (fun fuel' => run ast fuel' "labels" vs') (.ok w') ∧
+      Ty.Rep (.array .string) w' («labels» «this») :=
+  source_of erased wf denote_eq safety_eq (.here : FVar sigs "labels" sig.«labels») rfl («this», ()) vs' args' rfl
 
 end V2Tests.Generated.L5

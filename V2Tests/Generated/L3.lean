@@ -847,106 +847,106 @@ theorem safety_eq : typed.safety = («score».safety, «steps».safety, «perime
 
 /-- Every run of `sum` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «sum».source («xs» : List (Int)) (vs : List JSValue)
-    (args : ArgsRep sig.«sum».params vs («xs», ()))
-    (safe : «sum».safe «xs» = true) :
-    ∃ w, Converges (fun fuel' => run ast fuel' "sum" vs) (.ok w) ∧
-      Ty.Rep .number w («sum» «xs») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "sum" sig.«sum») rfl («xs», ()) vs args safe
+theorem «sum».source («xs» : List (Int)) (vs' : List JSValue)
+    (args' : ArgsRep sig.«sum».params vs' («xs», ()))
+    (safe' : «sum».safe «xs» = true) :
+    ∃ w', Converges (fun fuel' => run ast fuel' "sum" vs') (.ok w') ∧
+      Ty.Rep .number w' («sum» «xs») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "sum" sig.«sum») rfl («xs», ()) vs' args' safe'
 
 /-- Every run of `firstLarge` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «firstLarge».source («items» : List (ty.«Item».denote)) («limit» : Int) (vs : List JSValue)
-    (args : ArgsRep sig.«firstLarge».params vs («items», «limit», ())) :
-    ∃ w, Converges (fun fuel' => run ast fuel' "firstLarge" vs) (.ok w) ∧
-      Ty.Rep (.option .undef ty.«Item») w («firstLarge» «items» «limit») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "firstLarge" sig.«firstLarge») rfl («items», «limit», ()) vs args rfl
+theorem «firstLarge».source («items» : List (ty.«Item».denote)) («limit» : Int) (vs' : List JSValue)
+    (args' : ArgsRep sig.«firstLarge».params vs' («items», «limit», ())) :
+    ∃ w', Converges (fun fuel' => run ast fuel' "firstLarge" vs') (.ok w') ∧
+      Ty.Rep (.option .undef ty.«Item») w' («firstLarge» «items» «limit») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "firstLarge" sig.«firstLarge») rfl («items», «limit», ()) vs' args' rfl
 
 /-- Every run of `indexOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «indexOf».source («xs» : List (JSString)) («target» : JSString) (vs : List JSValue)
-    (args : ArgsRep sig.«indexOf».params vs («xs», «target», ())) :
-    ∃ w, Converges (fun fuel' => run ast fuel' "indexOf" vs) (.ok w) ∧
-      Ty.Rep .number w («indexOf» «xs» «target») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "indexOf" sig.«indexOf») rfl («xs», «target», ()) vs args rfl
+theorem «indexOf».source («xs» : List (JSString)) («target» : JSString) (vs' : List JSValue)
+    (args' : ArgsRep sig.«indexOf».params vs' («xs», «target», ())) :
+    ∃ w', Converges (fun fuel' => run ast fuel' "indexOf" vs') (.ok w') ∧
+      Ty.Rep .number w' («indexOf» «xs» «target») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "indexOf" sig.«indexOf») rfl («xs», «target», ()) vs' args' rfl
 
 /-- Every run of `countTagged` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «countTagged».source («items» : List (ty.«Item».denote)) («tag» : JSString) (vs : List JSValue)
-    (args : ArgsRep sig.«countTagged».params vs («items», «tag», ()))
-    (safe : «countTagged».safe «items» «tag» = true) :
-    ∃ w, Converges (fun fuel' => run ast fuel' "countTagged" vs) (.ok w) ∧
-      Ty.Rep .number w («countTagged» «items» «tag») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) : FVar sigs "countTagged" sig.«countTagged») rfl («items», «tag», ()) vs args safe
+theorem «countTagged».source («items» : List (ty.«Item».denote)) («tag» : JSString) (vs' : List JSValue)
+    (args' : ArgsRep sig.«countTagged».params vs' («items», «tag», ()))
+    (safe' : «countTagged».safe «items» «tag» = true) :
+    ∃ w', Converges (fun fuel' => run ast fuel' "countTagged" vs') (.ok w') ∧
+      Ty.Rep .number w' («countTagged» «items» «tag») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) : FVar sigs "countTagged" sig.«countTagged») rfl («items», «tag», ()) vs' args' safe'
 
 /-- Every run of `prefixUntil` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «prefixUntil».source («xs» : List (Int)) («stop» : Int) (vs : List JSValue)
-    (args : ArgsRep sig.«prefixUntil».params vs («xs», «stop», ())) :
-    ∃ w, Converges (fun fuel' => run ast fuel' "prefixUntil" vs) (.ok w) ∧
-      Ty.Rep (.array .number) w («prefixUntil» «xs» «stop») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there .here))))))) : FVar sigs "prefixUntil" sig.«prefixUntil») rfl («xs», «stop», ()) vs args rfl
+theorem «prefixUntil».source («xs» : List (Int)) («stop» : Int) (vs' : List JSValue)
+    (args' : ArgsRep sig.«prefixUntil».params vs' («xs», «stop», ())) :
+    ∃ w', Converges (fun fuel' => run ast fuel' "prefixUntil" vs') (.ok w') ∧
+      Ty.Rep (.array .number) w' («prefixUntil» «xs» «stop») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there .here))))))) : FVar sigs "prefixUntil" sig.«prefixUntil») rfl («xs», «stop», ()) vs' args' rfl
 
 /-- Every run of `largest` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «largest».source («items» : List (ty.«Item».denote)) (vs : List JSValue)
-    (args : ArgsRep sig.«largest».params vs («items», ())) :
-    ∃ w, Converges (fun fuel' => run ast fuel' "largest" vs) (.ok w) ∧
-      Ty.Rep (.option .undef ty.«Item») w («largest» «items») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "largest" sig.«largest») rfl («items», ()) vs args rfl
+theorem «largest».source («items» : List (ty.«Item».denote)) (vs' : List JSValue)
+    (args' : ArgsRep sig.«largest».params vs' («items», ())) :
+    ∃ w', Converges (fun fuel' => run ast fuel' "largest" vs') (.ok w') ∧
+      Ty.Rep (.option .undef ty.«Item») w' («largest» «items») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "largest" sig.«largest») rfl («items», ()) vs' args' rfl
 
 /-- Every run of `classify` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «classify».source («xs» : List (Int)) (vs : List JSValue)
-    (args : ArgsRep sig.«classify».params vs («xs», ()))
-    (safe : «classify».safe «xs» = true) :
-    ∃ w, Converges (fun fuel' => run ast fuel' "classify" vs) (.ok w) ∧
-      Ty.Rep .string w («classify» «xs») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "classify" sig.«classify») rfl («xs», ()) vs args safe
+theorem «classify».source («xs» : List (Int)) (vs' : List JSValue)
+    (args' : ArgsRep sig.«classify».params vs' («xs», ()))
+    (safe' : «classify».safe «xs» = true) :
+    ∃ w', Converges (fun fuel' => run ast fuel' "classify" vs') (.ok w') ∧
+      Ty.Rep .string w' («classify» «xs») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "classify" sig.«classify») rfl («xs», ()) vs' args' safe'
 
 /-- Every run of `bump` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «bump».source («n» : Int) (vs : List JSValue)
-    (args : ArgsRep sig.«bump».params vs («n», ()))
-    (safe : «bump».safe «n» = true) :
-    ∃ w, Converges (fun fuel' => run ast fuel' "bump" vs) (.ok w) ∧
-      Ty.Rep .number w («bump» «n») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "bump" sig.«bump») rfl («n», ()) vs args safe
+theorem «bump».source («n» : Int) (vs' : List JSValue)
+    (args' : ArgsRep sig.«bump».params vs' («n», ()))
+    (safe' : «bump».safe «n» = true) :
+    ∃ w', Converges (fun fuel' => run ast fuel' "bump" vs') (.ok w') ∧
+      Ty.Rep .number w' («bump» «n») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "bump" sig.«bump») rfl («n», ()) vs' args' safe'
 
 /-- Every run of `grid` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «grid».source («rows» : List (List (Int))) (vs : List JSValue)
-    (args : ArgsRep sig.«grid».params vs («rows», ()))
-    (safe : «grid».safe «rows» = true) :
-    ∃ w, Converges (fun fuel' => run ast fuel' "grid" vs) (.ok w) ∧
-      Ty.Rep .number w («grid» «rows») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "grid" sig.«grid») rfl («rows», ()) vs args safe
+theorem «grid».source («rows» : List (List (Int))) (vs' : List JSValue)
+    (args' : ArgsRep sig.«grid».params vs' («rows», ()))
+    (safe' : «grid».safe «rows» = true) :
+    ∃ w', Converges (fun fuel' => run ast fuel' "grid" vs') (.ok w') ∧
+      Ty.Rep .number w' («grid» «rows») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "grid" sig.«grid») rfl («rows», ()) vs' args' safe'
 
 /-- Every run of `perimeters` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «perimeters».source («shapes» : List (ty.«Shape».denote)) (vs : List JSValue)
-    (args : ArgsRep sig.«perimeters».params vs («shapes», ()))
-    (safe : «perimeters».safe «shapes» = true) :
-    ∃ w, Converges (fun fuel' => run ast fuel' "perimeters" vs) (.ok w) ∧
-      Ty.Rep .number w («perimeters» «shapes») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "perimeters" sig.«perimeters») rfl («shapes», ()) vs args safe
+theorem «perimeters».source («shapes» : List (ty.«Shape».denote)) (vs' : List JSValue)
+    (args' : ArgsRep sig.«perimeters».params vs' («shapes», ()))
+    (safe' : «perimeters».safe «shapes» = true) :
+    ∃ w', Converges (fun fuel' => run ast fuel' "perimeters" vs') (.ok w') ∧
+      Ty.Rep .number w' («perimeters» «shapes») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "perimeters" sig.«perimeters») rfl («shapes», ()) vs' args' safe'
 
 /-- Every run of `steps` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «steps».source («n» : Int) (vs : List JSValue)
-    (args : ArgsRep sig.«steps».params vs («n», ()))
-    (safe : «steps».safe «n» = true) :
-    ∃ w, Converges (fun fuel' => run ast fuel' "steps" vs) (.ok w) ∧
-      Ty.Rep .number w («steps» «n») :=
-  source_of erased wf denote_eq safety_eq ((.there .here) : FVar sigs "steps" sig.«steps») rfl («n», ()) vs args safe
+theorem «steps».source («n» : Int) (vs' : List JSValue)
+    (args' : ArgsRep sig.«steps».params vs' («n», ()))
+    (safe' : «steps».safe «n» = true) :
+    ∃ w', Converges (fun fuel' => run ast fuel' "steps" vs') (.ok w') ∧
+      Ty.Rep .number w' («steps» «n») :=
+  source_of erased wf denote_eq safety_eq ((.there .here) : FVar sigs "steps" sig.«steps») rfl («n», ()) vs' args' safe'
 
 /-- Every run of `score` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «score».source («a» : Int) («b» : Int) (vs : List JSValue)
-    (args : ArgsRep sig.«score».params vs («a», «b», ()))
-    (safe : «score».safe «a» «b» = true) :
-    ∃ w, Converges (fun fuel' => run ast fuel' "score" vs) (.ok w) ∧
-      Ty.Rep .number w («score» «a» «b») :=
-  source_of erased wf denote_eq safety_eq (.here : FVar sigs "score" sig.«score») rfl («a», «b», ()) vs args safe
+theorem «score».source («a» : Int) («b» : Int) (vs' : List JSValue)
+    (args' : ArgsRep sig.«score».params vs' («a», «b», ()))
+    (safe' : «score».safe «a» «b» = true) :
+    ∃ w', Converges (fun fuel' => run ast fuel' "score" vs') (.ok w') ∧
+      Ty.Rep .number w' («score» «a» «b») :=
+  source_of erased wf denote_eq safety_eq (.here : FVar sigs "score" sig.«score») rfl («a», «b», ()) vs' args' safe'
 
 end V2Tests.Generated.L3

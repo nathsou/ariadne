@@ -1436,18 +1436,19 @@ readable definitions as its environment, so no check unfolds a callee. -/\n\n"
     let tuple := "(" ++ ", ".intercalate (s.params.map (ident ·.1) ++ ["()"]) ++ ")"
     let call := if s.params.isEmpty then ident s.name else s!"{ident s.name} {names}"
     let safeHyp := if s.trivial then "" else
-      s!"\n    (safe : {" ".intercalate (s!"{ident s.name}.safe" :: s.params.map (ident ·.1))} = true)"
-    let safeArg := if s.trivial then "rfl" else "safe"
+      s!"\n    (safe' : {" ".intercalate (s!"{ident s.name}.safe" :: s.params.map (ident ·.1))} = true)"
+    let safeArg := if s.trivial then "rfl" else "safe'"
+    -- Binders are primed: JavaScript names cannot clash with them.
     if s.void then
       out := out ++ s!"/-- Every run of `{s.name}` on a state and arguments representing its inputs converges to a\nstate representing the readable definition's result. -/\n"
-      out := out ++ s!"theorem {ident s.name}.source {binders} (this' : JSValue) (vs : List JSValue)\n    (args : ArgsRep {sigName s.name}.params (this' :: vs) {tuple}){safeHyp} :\n"
-      out := out ++ s!"    ∃ w t, Converges (fun fuel' => runMethod ast fuel' {leanString s.name} this' vs) (.ok (w, t)) ∧\n      Ty.Rep {T.print s.result} t ({call}) :=\n"
-      out := out ++ s!"  source_state_of erased wf denote_eq safety_eq {fvar} rfl {tuple} this' vs args {safeArg}\n\n"
+      out := out ++ s!"theorem {ident s.name}.source {binders} (this' : JSValue) (vs' : List JSValue)\n    (args' : ArgsRep {sigName s.name}.params (this' :: vs') {tuple}){safeHyp} :\n"
+      out := out ++ s!"    ∃ w' t', Converges (fun fuel' => runMethod ast fuel' {leanString s.name} this' vs') (.ok (w', t')) ∧\n      Ty.Rep {T.print s.result} t' ({call}) :=\n"
+      out := out ++ s!"  source_state_of erased wf denote_eq safety_eq {fvar} rfl {tuple} this' vs' args' {safeArg}\n\n"
     else
       out := out ++ s!"/-- Every run of `{s.name}` on arguments representing its inputs converges to a value\nrepresenting the readable definition's result. -/\n"
-      out := out ++ s!"theorem {ident s.name}.source {binders} (vs : List JSValue)\n    (args : ArgsRep {sigName s.name}.params vs {tuple}){safeHyp} :\n"
-      out := out ++ s!"    ∃ w, Converges (fun fuel' => run ast fuel' {leanString s.name} vs) (.ok w) ∧\n      Ty.Rep {T.print s.result} w ({call}) :=\n"
-      out := out ++ s!"  source_of erased wf denote_eq safety_eq {fvar} rfl {tuple} vs args {safeArg}\n\n"
+      out := out ++ s!"theorem {ident s.name}.source {binders} (vs' : List JSValue)\n    (args' : ArgsRep {sigName s.name}.params vs' {tuple}){safeHyp} :\n"
+      out := out ++ s!"    ∃ w', Converges (fun fuel' => run ast fuel' {leanString s.name} vs') (.ok w') ∧\n      Ty.Rep {T.print s.result} w' ({call}) :=\n"
+      out := out ++ s!"  source_of erased wf denote_eq safety_eq {fvar} rfl {tuple} vs' args' {safeArg}\n\n"
   out := out ++ s!"end {namespace_}\n"
   return out
 
