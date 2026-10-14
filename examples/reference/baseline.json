@@ -1,6 +1,0 @@
-{
-  "commit": "209d1559cb3e0ea8866597cdacef07cd06de7a16",
-  "decision.ts": { "code": "A1000", "message": "expected a type" },
-  "registers.ts": { "code": "A0003", "message": "unsupported string escape" },
-  "tree.ts": { "code": "A1001", "message": "'class' is outside the supported TypeScript subset" }
-}

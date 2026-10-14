@@ -4,8 +4,9 @@ namespace Ariadne
 
 open Lean Meta Elab Tactic
 
-/-- Check a closed computation equation directly in the kernel. This avoids
-elaborator reduction limits; it does not use native evaluation or add axioms. -/
+/-- Prove a closed equation by checking `Eq.refl` in the kernel only. The
+elaborator's unifier is skipped (it is far slower on large denotations); the
+kernel still checks the definitional equality. No axioms, no native code. -/
 elab "kernel_rfl" : tactic => do
   let goal ← getMainGoal
   let target ← instantiateMVars (← goal.getType)

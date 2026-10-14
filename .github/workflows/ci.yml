@@ -7,7 +7,9 @@ permissions:
   contents: read
 
 jobs:
-  prepare:
+  # The general theorem, kernel-checked fixtures, the model against JavaScript,
+  # differential and negative tests, and the axiom audit.
+  verify:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -16,122 +18,5 @@ jobs:
         run: bash scripts/install-ci-tools.sh
       # No build cache: Lean imports compiled modules without re-checking their
       # proofs, so every module this run reports as checked is built here.
-      - name: Build library and check regeneration
-        run: scripts/check.sh prepare
-      # Tar retains the executable's permissions and Lake's complete build traces.
-      - name: Package library build
-        run: |
-          mkdir -p work/ci-artifacts
-          tar -czf work/ci-artifacts/library.tar.gz .lake/build
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: library
-          path: work/ci-artifacts/library.tar.gz
-          compression-level: 0
-          retention-days: 1
-          if-no-files-found: error
-
-  examples:
-    needs: prepare
-    name: ${{ matrix.phase }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        phase: [operational, shallow-data, shallow-values, tests]
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-      - name: Install checksum-pinned Lean and Bun
-        run: bash scripts/install-ci-tools.sh
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: library
-          path: work/ci-artifacts
-      - name: Restore library build
-        run: tar -xzf work/ci-artifacts/library.tar.gz
-      # Each runner checks its certificates serially to bound kernel memory.
-      - name: Kernel-check modules serially
-        run: scripts/check.sh "${{ matrix.phase }}"
-      - name: Package checked modules
-        run: |
-          if [[ "${{ matrix.phase }}" == tests ]]; then
-            tar -czf work/ci-artifacts/checked-examples-tests.tar.gz \
-              .lake/build/lib/lean/Tests* .lake/build/ir/Tests*
-          else
-            tar -czf work/ci-artifacts/checked-examples-${{ matrix.phase }}.tar.gz \
-              .lake/build/lib/lean/Examples .lake/build/ir/Examples
-          fi
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: checked-examples-${{ matrix.phase }}
-          path: work/ci-artifacts/checked-examples-${{ matrix.phase }}.tar.gz
-          compression-level: 0
-          retention-days: 1
-          if-no-files-found: error
-
-  checks:
-    needs: [prepare, examples]
-    if: ${{ always() }}
-    name: ${{ matrix.phase }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        phase: [verify-basic, verify-data, verify-source]
-    steps:
-      - name: Require successful preparation and all example jobs
-        env:
-          PREPARE_RESULT: ${{ needs.prepare.result }}
-          EXAMPLES_RESULT: ${{ needs.examples.result }}
-        run: test "$PREPARE_RESULT" = success && test "$EXAMPLES_RESULT" = success
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-      - name: Install checksum-pinned Lean and Bun
-        run: bash scripts/install-ci-tools.sh
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: library
-          path: work/ci-artifacts
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          pattern: checked-examples-*
-          merge-multiple: true
-          path: work/ci-artifacts
-      - name: Restore library and checked examples
-        run: |
-          tar -xzf work/ci-artifacts/library.tar.gz
-          for archive in work/ci-artifacts/checked-examples-*.tar.gz; do
-            tar -xzf "$archive"
-          done
-      - name: Run serial verification phase
-        run: scripts/check.sh "${{ matrix.phase }}"
-
-  # Ariadne v2: general theorem, kernel-checked fixtures, differential and negative tests.
-  v2:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-      - name: Install checksum-pinned Lean and Bun
-        run: bash scripts/install-ci-tools.sh
-      # No build cache, as for v1: every module reported as checked is built here.
-      - name: Check v2
-        run: scripts/v2-check.sh
-
-  # Retain one required status which fails if any check was skipped or failed.
-  verify:
-    needs: [prepare, examples, checks, v2]
-    if: ${{ always() }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Require every verification phase
-        env:
-          PREPARE_RESULT: ${{ needs.prepare.result }}
-          EXAMPLES_RESULT: ${{ needs.examples.result }}
-          CHECKS_RESULT: ${{ needs.checks.result }}
-          V2_RESULT: ${{ needs.v2.result }}
-        run: >-
-          test "$PREPARE_RESULT" = success && test "$EXAMPLES_RESULT" = success &&
-          test "$CHECKS_RESULT" = success && test "$V2_RESULT" = success
+      - name: Check
+        run: scripts/check.sh

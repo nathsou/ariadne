@@ -1,6 +1,6 @@
 name = "ariadne"
-version = "0.2.0"
-defaultTargets = ["ariadne", "Ariadne", "Tests"]
+version = "0.3.0"
+defaultTargets = ["ariadne", "Ariadne"]
 
 [[lean_lib]]
 name = "Ariadne"
@@ -8,20 +8,6 @@ name = "Ariadne"
 [[lean_lib]]
 name = "Tests"
 
-[[lean_lib]]
-name = "Examples"
-
 [[lean_exe]]
 name = "ariadne"
 root = "Main"
-
-
-[[lean_lib]]
-name = "V2"
-
-[[lean_lib]]
-name = "V2Tests"
-
-[[lean_exe]]
-name = "ariadne2"
-root = "V2Main"
