@@ -140,6 +140,11 @@ mutual
     | .filter a p, ρ => (a.denote fs ρ).filter (p.denote fs ρ)
     | .map a f, ρ => (a.denote fs ρ).map (f.denote fs ρ)
     | .sorted a c, ρ => sortedBy (c.denote fs ρ) (a.denote fs ρ)
+    | .newMap _, _ => []
+    | .stateGet v i _ k, ρ => mapGet (i.get (v.get ρ)) (k.denote fs ρ)
+    | .stateHas v i k, ρ => (mapGet (i.get (v.get ρ)) (k.denote fs ρ)).isSome
+    | .stateSize v i, ρ => ((i.get (v.get ρ)).length : Int)
+    | .callThis fn v args, ρ => fn.get fs (v.get ρ, args.denote fs ρ)
 
   def TArgs.denote (fs : Φ.denote) : TArgs Φ Γ ps → Γ.denote → ps.denote
     | .nil, _ => ()
@@ -163,6 +168,8 @@ mutual
     | .nil, _ => []
     | .cons e rest, ρ => e.denote fs ρ :: rest.denote fs ρ
     | .spread a rest, ρ => a.denote fs ρ ++ rest.denote fs ρ
+    | .spreadKeys v i rest, ρ => (i.get (v.get ρ)).map Prod.fst ++ rest.denote fs ρ
+    | .spreadValues v i rest, ρ => (i.get (v.get ρ)).map Prod.snd ++ rest.denote fs ρ
 end
 
 /-- `a && b`, where a static flag marks a conjunct that holds whatever the
@@ -207,6 +214,10 @@ mutual
     | .filter a p, ρ | .map a p, ρ => andT a.trivial (a.safe fs ss ρ) p.trivial ((a.denote fs ρ).all (p.safe fs ss ρ))
     | .sorted a c, ρ => (a.trivial || a.safe fs ss ρ) &&
       sortSafe (c.denote fs ρ) c.trivial (c.safe fs ss ρ) (a.denote fs ρ)
+    | .newMap _, _ | .stateSize _ _, _ => true
+    | .stateGet _ _ _ k, ρ | .stateHas _ _ k, ρ => k.safe fs ss ρ
+    | .callThis (t := t) fn v args, ρ =>
+      andT args.trivial (args.safe fs ss ρ) t (fn.safe ss (v.get ρ, args.denote fs ρ))
 
   def TArgs.safe (fs : Φ.denote) (ss : Φ.safety) : TArgs Φ Γ ps → Γ.denote → Bool
     | .nil, _ | .omitted _, _ => true
@@ -228,6 +239,7 @@ mutual
   def TElems.safe (fs : Φ.denote) (ss : Φ.safety) : TElems Φ Γ τ → Γ.denote → Bool
     | .nil, _ => true
     | .cons e rest, ρ | .spread e rest, ρ => andT e.trivial (e.safe fs ss ρ) rest.trivial (rest.safe fs ss ρ)
+    | .spreadKeys _ _ rest, ρ | .spreadValues _ _ rest, ρ => rest.safe fs ss ρ
 end
 
 /-! ## Statements -/
@@ -270,6 +282,12 @@ mutual
     | .switchG v _ arms rest, k, ρ =>
       Variants.elim _ (v.get ρ) fun i y =>
         arms.denote fs { k with normal := rest.denote fs k, brk := rest.denote fs k } ρ i y (rest.denote fs k ρ)
+    | .stateSet v i _ key e rest, k, ρ =>
+      rest.denote fs k (v.set ρ (i.set (v.get ρ) (mapPut (i.get (v.get ρ)) (key.denote fs ρ) (e.denote fs ρ))))
+    | .stateDelete v i _ key rest, k, ρ =>
+      rest.denote fs k (v.set ρ (i.set (v.get ρ) (mapDel (i.get (v.get ρ)) (key.denote fs ρ))))
+    | .callVoid fn v args rest, k, ρ => rest.denote fs k (v.set ρ (fn.get fs (v.get ρ, args.denote fs ρ)))
+    | .retVoid v _, _, ρ => v.get ρ
 
   /-- Running the cases from this one on (after a match). -/
   def TArms.first {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} (fs : Φ.denote) : TArms Φ Γ τ v → K Γ τ.denote → Γ.denote → τ.denote
@@ -324,6 +342,14 @@ mutual
     | .switchG v _ arms rest, k, ρ =>
       Variants.elim _ (v.get ρ) fun i y =>
         arms.safe fs ss { k with normal := rest.safe fs ss k, brk := rest.safe fs ss k } ρ i y (rest.safe fs ss k ρ)
+    | .stateSet v i _ key e rest, k, ρ => andT key.trivial (key.safe fs ss ρ) e.trivial (e.safe fs ss ρ) &&
+      rest.safe fs ss k (v.set ρ (i.set (v.get ρ) (mapPut (i.get (v.get ρ)) (key.denote fs ρ) (e.denote fs ρ))))
+    | .stateDelete v i _ key rest, k, ρ => (key.trivial || key.safe fs ss ρ) &&
+      rest.safe fs ss k (v.set ρ (i.set (v.get ρ) (mapDel (i.get (v.get ρ)) (key.denote fs ρ))))
+    | .callVoid (t := t) fn v args rest, k, ρ =>
+      andT args.trivial (args.safe fs ss ρ) t (fn.safe ss (v.get ρ, args.denote fs ρ)) &&
+        rest.safe fs ss k (v.set ρ (fn.get fs (v.get ρ, args.denote fs ρ)))
+    | .retVoid _ _, _, _ => true
 
   def TArms.firstSafe {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} (fs : Φ.denote) (ss : Φ.safety) : TArms Φ Γ τ v → K Γ Bool → Γ.denote → Bool
     | .nil, k, ρ => k.normal ρ

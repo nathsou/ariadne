@@ -15,7 +15,9 @@ private def usage : String :=
   "line, the function name then its arguments as observations, and prints one\n" ++
   "observation per line. Observations: [\"undefined\"], [\"null\"], [\"bool\", b],\n" ++
   "[\"number\", \"n\"], [\"bigint\", \"n\"], [\"string\", [code units]], [\"array\", [...]],\n" ++
-  "[\"record\", [[key, value], ...]] (insertion order), [\"function\"], or [\"error\", fault]."
+  "[\"record\", [[key, value], ...]] (insertion order), [\"map\", [[key units, value], ...]],\n" ++
+  "[\"function\"], or [\"error\", fault]. A call [\"@m\", state, args...] runs method m on the\n" ++
+  "state and prints [\"method\", result, state]."
 
 private def option (args : List String) (key : String) : Option String :=
   match args with
@@ -33,6 +35,8 @@ partial def observe : JSValue → Json
   | .record kvs => Json.arr #["record", Json.arr (kvs.toArray.map fun (k, v) => Json.arr #[toJson k, observe v])]
   | .array xs => Json.arr #["array", Json.arr (xs.toArray.map observe)]
   | .closure .. | .function _ => Json.arr #["function"]
+  | .map kvs => Json.arr #["map", Json.arr (kvs.toArray.map fun (k, v) =>
+      Json.arr #[Json.arr (k.toArray.map fun u => toJson u.toNat), observe v])]
 
 partial def unobserve (j : Json) : Except String JSValue := do
   let .arr parts := j | throw s!"bad value {j}"
@@ -53,6 +57,9 @@ partial def unobserve (j : Json) : Except String JSValue := do
   | "record" => return .record (← (← arg.getArr?).toList.mapM fun kv => do
       let .arr #[k, v] := kv | throw "bad field"
       return (← k.getStr?, ← unobserve v))
+  | "map" => return .map (← (← arg.getArr?).toList.mapM fun kv => do
+      let .arr #[k, v] := kv | throw "bad entry"
+      return ((← k.getArr?).toList.map fun u => (u.getNat?.toOption.getD 0).toUInt16, ← unobserve v))
   | t => throw s!"bad tag {t}"
 
 private def showFault : Fault → Json
@@ -91,9 +98,16 @@ def main (args : List String) : IO UInt32 := do
         let f ← (parts[0]?.getD Json.null).getStr?
         return (f, ← (parts.toList.drop 1).mapM unobserve)
       match call with
-      | .ok (f, values) => stdout.putStrLn (match run parsed 100000 f values with
-          | .ok v => (observe v).compress
-          | .error e => (showFault e).compress)
+      | .ok (f, values) =>
+        -- `@m`: method `m` on the state given first; the result and the state it leaves.
+        if f.startsWith "@" then
+          stdout.putStrLn (match runMethod parsed 100000 (f.drop 1).toString (values.headD .undefined) values.tail with
+            | .ok (v, t) => (Json.arr #["method", observe v, observe t]).compress
+            | .error e => (showFault e).compress)
+        else
+          stdout.putStrLn (match run parsed 100000 f values with
+            | .ok v => (observe v).compress
+            | .error e => (showFault e).compress)
       | .error e => IO.eprintln e; return 2
     stdout.flush
     return 0

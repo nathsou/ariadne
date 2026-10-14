@@ -13,6 +13,7 @@ export function observe(v) {
     case 'function': return ['function'];
     case 'object':
       if (Array.isArray(v)) return ['array', v.map(observe)];
+      if (v instanceof Map) return ['map', [...v].map(([k, x]) => [units(k), observe(x)])];
       return ['record', Object.entries(v).map(([k, x]) => [k, observe(x)])];
     default: throw new Error(`unexpected value ${typeof v}`);
   }

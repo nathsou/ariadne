@@ -60,6 +60,7 @@ mutual
       | .record fs => s!"(.record {printFields named fs})"
       | .union key vs => s!"(.union {leanString key} {printVariants named vs})"
       | .array τ => s!"(.array {printTyWith named τ})"
+      | .map τ => s!"(.map {printTyWith named τ})"
 
   partial def printFields (named : Ty → Option String) : Fields → String
     | .nil => ".nil"
@@ -75,7 +76,7 @@ def printTy : Ty → String := printTyWith fun _ => none
 def _root_.V2.Ty.ts : Ty → String
   | .bool => "boolean" | .int => "bigint" | .number => "number" | .string => "string"
   | .tag t => tagLitTS t | .lits .. => "a string literal union" | .option .. => "an optional"
-  | .record _ => "a record" | .union .. => "a union" | .array _ => "an array"
+  | .record _ => "a record" | .union .. => "a union" | .array _ => "an array" | .map _ => "a Map"
 
 /-- Named types (aliases and interfaces) and their resolved forms. -/
 structure Types where
@@ -93,6 +94,7 @@ partial def Types.lean (T : Types) : Ty → String
   | τ => match T.name τ, τ with
     | some n, _ => s!"{n}.denote"
     | none, .array σ => s!"List ({T.lean σ})"
+    | none, .map σ => s!"List (JSString × {T.lean σ})"
     | none, .option _ σ => s!"Option ({T.lean σ})"
     | none, _ => s!"(({T.print τ} : Ty)).denote"
 
@@ -198,6 +200,9 @@ structure FnSig where
   result : Ty
   /-- The body is trivially safe (no operation that can leave the model). -/
   trivial : Bool := true
+  /-- A method (its first parameter is `this`), and whether it changes the state. -/
+  method : Bool := false
+  void : Bool := false
   deriving Inhabited
 
 structure Scope where
@@ -206,6 +211,8 @@ structure Scope where
   locals : List (String × Ty)
   /-- The assignable bindings: parameters and `let` declarations. -/
   mutables : List String := []
+  /-- In a method that changes the state (`return;` gives the state). -/
+  void : Bool := false
 
 /-- A variable reference past the bindings `skipped` (innermost first). Each step
 cites a named lemma `ne.«x».«y»` (emitted by `printFile`): a postponed `by decide`
@@ -343,7 +350,7 @@ def Scope.nullNarrowing (s : Scope) (span : Span) (x : String) : Checked (Narrow
 def protoName (f : String) : Bool := protoNames.contains f
 
 def declare (s : Scope) (span : Span) (x : String) (τ : Ty) : Checked Scope := do
-  if s.locals.any (·.1 == x) || s.fns.any (·.name == x) then
+  if x == "this" || s.locals.any (·.1 == x) || s.fns.any (fun f => f.name == x && !f.method) then
     throw { code := "A2004", message := s!"'{x}' shadows a declaration in scope", span,
             help := some "Rename it: the model requires names in scope to be distinct." }
   pure { s with locals := (x, τ) :: s.locals }
@@ -372,9 +379,30 @@ structure Fn where
 /-- A declared function used as a value: its `FVar` path and signature. -/
 def Scope.fnRef (s : Scope) (span : Span) (f : String) : Checked (String × FnSig) := do
   if s.locals.any (·.1 == f) then mismatch span s!"'{f}' is a local, not a declared function"
-  let some j := s.fns.findIdx? (·.name == f)
+  let some j := s.fns.findIdx? (fun g => g.name == f && !g.method)
     | throw { code := "A2001", message := s!"'{f}' is not a function declared earlier", span }
   return (fnPath (s.fns.length - 1 - j), s.fns[j]!)
+
+/-- The state (`this`) of the method being checked: its path, record fields, and
+the field `f` (a map) with its index and value type. -/
+def Scope.stateField (s : Scope) (span : Span) (f : String) : Checked (String × Fields × Nat × Ty) := do
+  let some (i, .record fs) := s.lookup "this" | mismatch span "'this' outside a method"
+  let fields := Fields.toList fs
+  let some j := fields.findIdx? (·.1 == f) | mismatch span s!"no field '{f}'"
+  let .map τ := fields[j]!.2 | mismatch span s!"field '{f}' is not a Map"
+  return (s.varPath i, fs, j, τ)
+
+/-- A method of the class, by name: its `FVar` path and signature. -/
+def Scope.methodRef (s : Scope) (span : Span) (m : String) : Checked (String × FnSig) := do
+  let some j := s.fns.findIdx? (fun g => g.name == m && g.method)
+    | throw { code := "A2001", message := s!"'{m}' is not a method declared earlier (or it calls itself)", span }
+  return (fnPath (s.fns.length - 1 - j), s.fns[j]!)
+
+/-- Readable `this` with field `j` (of `n`) replaced. -/
+def tupleSetText (e : String) (j n : Nat) (v : String) : String :=
+  let before := (List.range j).map (projText e)
+  let _ := n
+  "(" ++ ", ".intercalate (before ++ [v, e ++ String.join (List.replicate (j + 1) ".2")]) ++ ")"
 
 mutual
   partial def checkExpr (T : Types) (s : Scope) (e : Parse.Expr) (expected : Option Ty) : Checked Out := do
@@ -420,6 +448,7 @@ mutual
         return { ty := τ, typed := s!"(.null {printNullish n} {T.print σ} (by decide))", readable := "none",
                  atomic := true }
       | _ => mismatch span "null needs an optional type here"
+    | .var "this" span => mismatch span "'this' used as a value (only this.f.get/has/size/set/delete and this.m())"
     | .var x span =>
       match s.lookup x with
       | some (i, τ) => return { ty := τ, typed := s!"(.var {s.varPath i})", readable := ident x, atomic := true }
@@ -460,8 +489,42 @@ mutual
                  trivial := c.trivial && a.trivial && b.trivial,
                  safe := andTText c.trivial c.safe (a.trivial && b.trivial)
                    s!"if {c.readable} then {paren a.ok} else {paren b.ok}" }
+    | .call (.member (.member (.var "this" _) f _) "get" _) [k] span => do
+      let (path, _, j, τ) ← s.stateField span f
+      if !τ.nonNullish then mismatch span "a Map whose values may be undefined (get would be ambiguous)"
+      let k ← checkExpr T s k (some .string)
+      return { ty := .option .undef τ, typed := s!"(.stateGet {path} {fidxPath j} (by decide) {k.typed})",
+               readable := s!"V2.mapGet {projText (ident "this") j} {k.term}", trivial := k.trivial, safe := k.safe }
+    | .call (.member (.member (.var "this" _) f _) "has" _) [k] span => do
+      let (path, _, j, _) ← s.stateField span f
+      let k ← checkExpr T s k (some .string)
+      return { ty := .bool, typed := s!"(.stateHas {path} {fidxPath j} {k.typed})",
+               readable := s!"(V2.mapGet {projText (ident "this") j} {k.term}).isSome", trivial := k.trivial,
+               safe := k.safe }
+    | .member (.member (.var "this" _) f _) "size" span => do
+      let (path, _, j, _) ← s.stateField span f
+      return { ty := .number, typed := s!"(.stateSize {path} {fidxPath j})",
+               readable := s!"(List.length {projText (ident "this") j} : Int)", atomic := true }
+    | .call (.member (.var "this" _) m _) args span => do
+      let (fpath, sig) ← s.methodRef span m
+      if sig.void then mismatch span s!"'{m}' changes the state: call it as a statement"
+      let some (i, _) := s.lookup "this" | mismatch span "'this' outside a method"
+      let ps := sig.params.drop 1
+      if args.length != ps.length then mismatch span s!"'{m}' takes {ps.length} arguments"
+      let given ← (args.zip ps).mapM fun (a, (_, τ)) => checkExpr T s a (some τ)
+      let typedArgs := given.foldr (fun a acc => s!"(.cons {a.typed} {acc})") ".nil"
+      let readableArgs := ident "this" :: given.map (·.term)
+      let (argsT, argsS) := foldSafe given
+      return { ty := sig.result, typed := s!"(.callThis {fpath} {s.varPath i} {typedArgs})",
+               readable := " ".intercalate (ident m :: readableArgs), trivial := argsT && sig.trivial,
+               safe := andTText argsT argsS sig.trivial (" ".intercalate (s!"{ident m}.safe" :: readableArgs)) }
+    | .newMap .string _ span =>
+      match expected with
+      | some τ@(.map σ) => return { ty := τ, typed := s!"(.newMap {T.print σ})",
+                                     readable := s!"([] : {T.lean τ})", atomic := true }
+      | _ => mismatch span "new Map() needs a known type here"
     | .call (.var f _) args span => do
-      let some j := s.fns.findIdx? (·.name == f)
+      let some j := s.fns.findIdx? (fun g => g.name == f && !g.method)
         | throw { code := "A2001", message := s!"'{f}' is not a function declared earlier", span }
       if s.locals.any (·.1 == f) then mismatch span s!"'{f}' is shadowed by a local"
       let sig := s.fns[j]!
@@ -506,16 +569,35 @@ mutual
       let τ ← match expected with
         | some (.array τ) => pure τ
         | _ => match elems with
+          | .spread (.call (.member (.member (.var "this" _) _ _) "keys" _) [] _) _ :: _ => pure .string
+          | .spread (.call (.member (.member (.var "this" _) f _) "values" _) [] _) _ :: _ => do
+            pure (← s.stateField span f).2.2.2
           | .spread x _ :: _ => do
             let o ← inferExpr T s x none
             let .array τ := o.ty | mismatch span s!"spreading {o.ty.ts}"
             pure τ
           | x :: _ => pure (← inferExpr T s x none).ty
           | [] => mismatch span "an empty array literal needs a known type here"
+      -- Each element: its constructor (with what precedes the rest), and its check.
       let outs ← elems.mapM fun
-        | .spread x _ => return (true, ← checkExpr T s x (some (.array τ)))
-        | x => return (false, ← checkExpr T s x (some τ))
-      let typed := outs.foldr (fun (sp, o) acc => s!"(.{if sp then "spread" else "cons"} {o.typed} {acc})") ".nil"
+        | .spread (.call (.member (.member (.var "this" _) f _) "keys" _) [] _) sp => do
+          let (path, _, j, _) ← s.stateField sp f
+          if τ != .string then mismatch sp "map keys (strings) where another element type is expected"
+          return (true, ({ ty := .array τ, typed := "", readable := s!"List.map Prod.fst {projText (ident "this") j}" } : Out),
+            s!"spreadKeys {path} {fidxPath j}")
+        | .spread (.call (.member (.member (.var "this" _) f _) "values" _) [] _) sp => do
+          let (path, _, j, σ) ← s.stateField sp f
+          if τ != σ then mismatch sp s!"map values ({σ.ts}) where {τ.ts} is expected"
+          return (true, ({ ty := .array τ, typed := "", readable := s!"List.map Prod.snd {projText (ident "this") j}" } : Out),
+            s!"spreadValues {path} {fidxPath j}")
+        | .spread x _ => do
+          let o ← checkExpr T s x (some (.array τ))
+          return (true, o, s!"spread {o.typed}")
+        | x => do
+          let o ← checkExpr T s x (some τ)
+          return (false, o, s!"cons {o.typed}")
+      let typed := outs.foldr (fun (_, _, c) acc => s!"(.{c} {acc})") ".nil"
+      let outs := outs.map fun (sp, o, _) => (sp, o)
       let readable := elemsText (outs.map fun (sp, o) => (sp, o.term))
       let (t, safe) := foldSafe (outs.map (·.2))
       return { ty := .array τ, typed := s!"(.array (τ := {T.print τ}) {typed})", readable, trivial := t, safe }
@@ -906,7 +988,8 @@ mutual
       let rest ← checkStmts T s result rest
       pure { typed := s!"(.cont {rest.typed})", readable := (fun i k => k.cont i), safe := (fun i k => k.cont i),
              trivial := rest.trivial, falls := false, breaks := false, continues := true }
-    | .forOf false x e (.block body _) span :: rest => do
+    | .forOf false x e body span :: rest => do
+      let body := branchStmts body
       let a ← inferExpr T s e none
       let .array σ := a.ty | mismatch span s!"for-of over {a.ty.ts}"
       let body ← checkStmts T (← declare s span x σ) result body
@@ -931,11 +1014,62 @@ mutual
              readable := text (·.readable), safe := fun i k => andText a.ok (text (·.safe) i k),
              trivial := a.trivial && body.trivial && rest.trivial,
              falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
-    | .return_ e _ :: rest => do
+    | .return_ e span :: rest => do
+      if s.void then
+        let .literal .undefined _ := e | mismatch span "a value returned from a method returning void"
+        let some (ti, _) := s.lookup "this" | mismatch span "'this' outside a method"
+        let rest ← checkStmts T s result rest
+        return { typed := s!"(.retVoid {s.varPath ti} {rest.typed})", readable := fun _ _ => ident "this",
+                 safe := fun _ _ => "true", trivial := rest.trivial, falls := false, breaks := false, continues := false }
       let v ← checkExpr T s e (some result)
       let rest ← checkStmts T s result rest
       pure { typed := s!"(.ret {v.typed} {rest.typed})", readable := fun _ _ => v.readable, safe := fun _ _ => v.ok,
              trivial := v.trivial && rest.trivial, falls := false, breaks := false, continues := false }
+    | .expr (.call (.member (.member (.var "this" _) f _) op _) args _) span :: rest => do
+      if !s.void then mismatch span "only a method returning void may change the state"
+      let (path, fs, j, τ) ← s.stateField span f
+      let some (_, σ) := s.lookup "this" | mismatch span "'this' outside a method"
+      let n := (Fields.toList fs).length
+      let field := projText (ident "this") j
+      let (typedOp, newMap, key, others) ← match op, args with
+        | "set", [k, v] => do
+          let key ← checkExpr T s k (some .string)
+          let v ← checkExpr T s v (some τ)
+          pure (s!"(.stateSet {path} {fidxPath j} (by decide) {key.typed} {v.typed}",
+            s!"V2.mapPut {field} {key.term} {v.term}", key, [v])
+        | "delete", [k] => do
+          let key ← checkExpr T s k (some .string)
+          pure (s!"(.stateDelete {path} {fidxPath j} (by decide) {key.typed}", s!"V2.mapDel {field} {key.term}", key, [])
+        | _, _ => unsupportedTy span s!"this.{f}.{op}(…) as a statement"
+      let rest ← checkStmts T s result rest
+      let upd := s!"let {ident "this"} : {T.lean σ} := {tupleSetText (ident "this") j n newMap}"
+      let operands := match others with
+        | [v] => both key v
+        | _ => key.ok
+      pure { typed := s!"{typedOp}\n  {rest.typed})",
+             readable := fun i k => s!"{upd}\n{i}{rest.readable i k}",
+             safe := fun i k => andText operands s!"{upd}\n{i}{rest.safe i k}",
+             trivial := key.trivial && others.all (·.trivial) && rest.trivial,
+             falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
+    | .expr (.call (.member (.var "this" _) m _) args _) span :: rest => do
+      if !s.void then mismatch span "only a method returning void may change the state"
+      let (fpath, sig) ← s.methodRef span m
+      if !sig.void then mismatch span s!"'{m}' returns a value: use its result"
+      let some (ti, σ) := s.lookup "this" | mismatch span "'this' outside a method"
+      let ps := sig.params.drop 1
+      if args.length != ps.length then mismatch span s!"'{m}' takes {ps.length} arguments"
+      let given ← (args.zip ps).mapM fun (a, (_, τ)) => checkExpr T s a (some τ)
+      let typedArgs := given.foldr (fun a acc => s!"(.cons {a.typed} {acc})") ".nil"
+      let readableArgs := ident "this" :: given.map (·.term)
+      let (argsT, argsS) := foldSafe given
+      let rest ← checkStmts T s result rest
+      let upd := s!"let {ident "this"} : {T.lean σ} := {" ".intercalate (ident m :: readableArgs)}"
+      let callSafe := andTText argsT argsS sig.trivial (" ".intercalate (s!"{ident m}.safe" :: readableArgs))
+      pure { typed := s!"(.callVoid {fpath} {s.varPath ti} {typedArgs}\n  {rest.typed})",
+             readable := fun i k => s!"{upd}\n{i}{rest.readable i k}",
+             safe := fun i k => andText callSafe s!"{upd}\n{i}{rest.safe i k}",
+             trivial := argsT && sig.trivial && rest.trivial,
+             falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
     | .break_ _ :: rest => do
       let rest ← checkStmts T s result rest
       pure { typed := s!"(.brk {rest.typed})", readable := (fun i k => k.brk i), safe := (fun i k => k.brk i),
@@ -1083,34 +1217,64 @@ structure CheckedFn where
   sig : FnSig
   body : Block
 
-def checkFunction (T : Types) (fns : List FnSig) (f : Parse.Function) : Checked CheckedFn := do
+/-- A function, or a method of a class whose state has type `this` (a method
+returning `void` changes the state and denotes the state it leaves). -/
+def checkFunction (T : Types) (fns : List FnSig) (f : Parse.Function) (this : Option Ty := none) :
+    Checked CheckedFn := do
   if fns.any (·.name == f.name) then
     throw { code := "A2004", message := s!"'{f.name}' is declared twice", span := f.span }
-  let result ← T.resolve f.span 64 f.result
-  let mut s : Scope := { fns, locals := [] }
-  let mut params := []
+  let void := this.isSome && f.result matches .void
+  let result ← match this, void with
+    | some σ, true => pure σ
+    | _, _ => T.resolve f.span 64 f.result
+  let mut s : Scope := { fns, locals := (this.map fun σ => [("this", σ)]).getD [], void }
+  let mut params := (this.map fun σ => [("this", σ)]).getD []
   for p in f.params do
     let τ ← T.param p
     params := params ++ [(p.name, τ)]
-    if s.locals.any (·.1 == p.name) || fns.any (·.name == p.name) || p.name == f.name then
+    if s.locals.any (·.1 == p.name) || fns.any (fun g => g.name == p.name && !g.method) ||
+        (this.isNone && p.name == f.name) then
       throw { code := "A2004", message := s!"'{p.name}' shadows a declaration in scope", span := p.span }
     s := { s with locals := s.locals ++ [(p.name, τ)], mutables := p.name :: s.mutables }
   let .block body _ := f.body | unsupportedTy f.span "this function body"
+  -- Falling off the end of a `void` method returns, as the converted program says.
+  let body := if void then body ++ [.return_ (.literal .undefined f.span) f.span] else body
   let block ← checkStmts T s result body
   if block.falls then
     throw { code := "A2003", message := s!"'{f.name}' may finish without returning a value", span := f.span }
   if block.breaks || block.continues then
     throw { code := "A2003", message := "break or continue outside a loop or switch", span := f.span }
-  pure { sig := { name := f.name, params, result, trivial := block.trivial }, body := block }
+  pure { sig := { name := f.name, params, result, trivial := block.trivial, method := this.isSome, void },
+         body := block }
 
 def checkProgram (p : Parse.Program) : Checked (Types × List CheckedFn) := do
-  let T ← Types.ofProgram p
+  let mut T ← Types.ofProgram p
   let mut fns := []
   let mut out := []
   for f in p.functions do
     let c ← checkFunction T fns f
     fns := fns ++ [c.sig]
     out := out ++ [c]
+  if let some c := p.classes[1]? then unsupportedTy c.span "a second class"
+  if let some c := p.classes.head? then
+    if let some ctor := c.constructor_ then unsupportedTy ctor.span "a constructor"
+    let fields ← c.fields.mapM fun fld => match fld.value with
+      | .newMap .string v sp => return (fld.name, Ty.map (← T.resolve sp 64 v))
+      | _ => unsupportedTy fld.span "a field other than a Map with string keys"
+    let σ := Ty.record (Fields.ofList fields)
+    T := { T with named := T.named ++ [(c.name, σ)] }
+    -- `new C()`: the state with every map empty.
+    let initBody : List Parse.Stmt :=
+      [.return_ (.record (c.fields.map fun fld => (fld.name, fld.value)) c.span) c.span]
+    let block ← checkStmts T { fns, locals := [] } σ initBody
+    let initFn : CheckedFn :=
+      { sig := { name := s!"new {c.name}", params := [], result := σ, trivial := block.trivial }, body := block }
+    fns := fns ++ [initFn.sig]
+    out := out ++ [initFn]
+    for m in ← orderMethods c.methods do
+      let cm ← checkFunction T fns m (some σ)
+      fns := fns ++ [cm.sig]
+      out := out ++ [cm]
   pure (T, out)
 
 /-! ## Printing the AST -/
@@ -1144,6 +1308,13 @@ partial def printExpr : Expr → String
   | .index e i => s!"(.index {printExpr e} {printExpr i})"
   | .method e m args => s!"(.method {printExpr e} {leanString m} [{", ".intercalate (args.map printExpr)}])"
   | .arrow ps body => s!"(.arrow {ps.map leanString} {printExpr body})"
+  | .newMap => ".newMap"
+  | .stateGet f k => s!"(.stateGet {leanString f} {printExpr k})"
+  | .stateHas f k => s!"(.stateHas {leanString f} {printExpr k})"
+  | .stateSize f => s!"(.stateSize {leanString f})"
+  | .stateKeys f => s!"(.stateKeys {leanString f})"
+  | .stateValues f => s!"(.stateValues {leanString f})"
+  | .callThis m args => s!"(.callThis {leanString m} [{", ".intercalate (args.map printExpr)}])"
 
 mutual
   partial def printStmt (indent : String) : Stmt → String
@@ -1165,6 +1336,9 @@ mutual
     | .forOf x e body => s!".forOf {leanString x} {printExpr e} {printStmts (indent ++ "  ") body}"
     | .forEntries i x e body =>
       s!".forEntries {leanString i} {leanString x} {printExpr e} {printStmts (indent ++ "  ") body}"
+    | .stateSet f k v => s!".stateSet {leanString f} {printExpr k} {printExpr v}"
+    | .stateDelete f k => s!".stateDelete {leanString f} {printExpr k}"
+    | .callThis m args => s!".callThis {leanString m} [{", ".intercalate (args.map printExpr)}]"
 
   partial def printStmts (indent : String) (ss : List Stmt) : String :=
     if ss.isEmpty then "[]" else
@@ -1173,7 +1347,7 @@ end
 
 def printFunction (fn : Function) : String :=
   "{ name := " ++ leanString fn.name ++ s!", params := {fn.params.map leanString}, body := " ++
-    printStmts "    " fn.body ++ " }"
+    printStmts "    " fn.body ++ (if fn.method then ", method := true }" else " }")
 
 /-! ## The generated file -/
 
@@ -1194,8 +1368,9 @@ def printFile (source namespace_ : String) (ast : Program) (T : Types) (fns : Li
   for fn in fns do
     let s := fn.sig
     let ctx := "[" ++ ", ".intercalate (s.params.map fun (x, τ) => s!"({leanString x}, {T.print τ})") ++ "]"
+    let kind := if s.method then s!", method := true, void := {s.void}" else ""
     out := out ++ s!"def {sigName s.name} : Sig := " ++ "{ name := " ++ leanString s.name ++
-      s!", params := {ctx}, result := {T.print s.result}, trivial := {s.trivial} " ++ "}\n"
+      s!", params := {ctx}, result := {T.print s.result}, trivial := {s.trivial}{kind} " ++ "}\n"
   out := out ++ "\n"
   let nes := (fns.foldl (fun acc fn => acc ++ collectNe fn.body.typed) []).eraseDups
   for (a, b) in nes do
@@ -1260,12 +1435,19 @@ readable definitions as its environment, so no check unfolds a callee. -/\n\n"
     let names := " ".intercalate (s.params.map (ident ·.1))
     let tuple := "(" ++ ", ".intercalate (s.params.map (ident ·.1) ++ ["()"]) ++ ")"
     let call := if s.params.isEmpty then ident s.name else s!"{ident s.name} {names}"
-    out := out ++ s!"/-- Every run of `{s.name}` on arguments representing its inputs converges to a value\nrepresenting the readable definition's result. -/\n"
     let safeHyp := if s.trivial then "" else
       s!"\n    (safe : {" ".intercalate (s!"{ident s.name}.safe" :: s.params.map (ident ·.1))} = true)"
-    out := out ++ s!"theorem {ident s.name}.source {binders} (vs : List JSValue)\n    (args : ArgsRep {sigName s.name}.params vs {tuple}){safeHyp} :\n"
-    out := out ++ s!"    ∃ w, Converges (fun fuel' => run ast fuel' {leanString s.name} vs) (.ok w) ∧\n      Ty.Rep {T.print s.result} w ({call}) :=\n"
-    out := out ++ s!"  source_of erased wf denote_eq safety_eq {fvar} {tuple} vs args {if s.trivial then "rfl" else "safe"}\n\n"
+    let safeArg := if s.trivial then "rfl" else "safe"
+    if s.void then
+      out := out ++ s!"/-- Every run of `{s.name}` on a state and arguments representing its inputs converges to a\nstate representing the readable definition's result. -/\n"
+      out := out ++ s!"theorem {ident s.name}.source {binders} (this' : JSValue) (vs : List JSValue)\n    (args : ArgsRep {sigName s.name}.params (this' :: vs) {tuple}){safeHyp} :\n"
+      out := out ++ s!"    ∃ w t, Converges (fun fuel' => runMethod ast fuel' {leanString s.name} this' vs) (.ok (w, t)) ∧\n      Ty.Rep {T.print s.result} t ({call}) :=\n"
+      out := out ++ s!"  source_state_of erased wf denote_eq safety_eq {fvar} rfl {tuple} this' vs args {safeArg}\n\n"
+    else
+      out := out ++ s!"/-- Every run of `{s.name}` on arguments representing its inputs converges to a value\nrepresenting the readable definition's result. -/\n"
+      out := out ++ s!"theorem {ident s.name}.source {binders} (vs : List JSValue)\n    (args : ArgsRep {sigName s.name}.params vs {tuple}){safeHyp} :\n"
+      out := out ++ s!"    ∃ w, Converges (fun fuel' => run ast fuel' {leanString s.name} vs) (.ok w) ∧\n      Ty.Rep {T.print s.result} w ({call}) :=\n"
+      out := out ++ s!"  source_of erased wf denote_eq safety_eq {fvar} rfl {tuple} vs args {safeArg}\n\n"
   out := out ++ s!"end {namespace_}\n"
   return out
 
@@ -1282,16 +1464,24 @@ partial def tyJson : Ty → String
   | .union key vs => "{\"t\":\"union\",\"key\":" ++ leanString key ++ ",\"variants\":[" ++
       ",".intercalate ((Variants.toList vs).map fun (t, fs) => "{\"tag\":" ++ tyJson (.tag t) ++ ",\"fields\":" ++ fieldsJson fs ++ "}") ++ "]}"
   | .array τ => "{\"t\":\"array\",\"of\":" ++ tyJson τ ++ "}"
+  | .map τ => "{\"t\":\"map\",\"of\":" ++ tyJson τ ++ "}"
 where
   fieldsJson (fs : Fields) : String :=
     "[" ++ ",".intercalate ((Fields.toList fs).map fun (f, τ) => "[" ++ leanString f ++ "," ++ tyJson τ ++ "]") ++ "]"
 
-/-- Each function's name, whether it is exported, and its parameter and result types, as JSON lines. -/
+/-- Each function's name, whether it is exported, and its parameter and result types, as JSON lines.
+A class's constructor (`new C`) and methods are marked with the class (a method's
+parameters start with the state). -/
 def signatures (text : String) : Checked (List String) := do
   let parsed ← Parse.parse text
   let (_, fns) ← checkProgram parsed
-  return (parsed.functions.zip fns).map fun (f, c) =>
-    "{\"name\":" ++ leanString c.sig.name ++ ",\"exported\":" ++ toString f.exported ++ ",\"params\":[" ++
+  let cls := (parsed.classes.head?.map fun c => leanString c.name).getD "null"
+  return fns.map fun c =>
+    let exported := parsed.functions.any fun f => f.name == c.sig.name && f.exported
+    let classSide := c.sig.method || c.sig.name.startsWith "new "
+    "{\"name\":" ++ leanString c.sig.name ++ ",\"exported\":" ++ toString (exported || classSide) ++
+      ",\"class\":" ++ (if classSide then cls else "null") ++ ",\"method\":" ++ toString c.sig.method ++
+      ",\"void\":" ++ toString c.sig.void ++ ",\"params\":[" ++
       ",".intercalate (c.sig.params.map (tyJson ·.2)) ++ "],\"result\":" ++ tyJson c.sig.result ++ "}"
 
 /-- Parse, convert and check a TypeScript file, returning the generated Lean source. -/

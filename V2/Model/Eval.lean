@@ -42,6 +42,10 @@ inductive JSValue where
   | closure (params : List String) (body : Expr) (env : List (String × JSValue))
   /-- A declared function used as a value. -/
   | function (name : String)
+  /-- A `Map` with string keys, in insertion order. Maps are only held in the fields
+  of the object a method runs on (`this`), which the subset never hands out, so a
+  map is never shared and changing it in place equals replacing it. -/
+  | map (kvs : List (JSString × JSValue))
   deriving Repr, Inhabited
 
 inductive Fault where
@@ -58,7 +62,8 @@ abbrev Env := List (String × JSValue)
 inductive Outcome where
   /-- Ran to the end of the list; the environment includes its declarations. -/
   | normal (env : Env)
-  | returned (value : JSValue)
+  /-- A `return`, with the environment it ran in (a method's state is read from it). -/
+  | returned (value : JSValue) (env : Env)
   | broke (env : Env)
   | continued (env : Env)
   deriving Repr, Inhabited
@@ -181,6 +186,37 @@ def includes (x : JSValue) : List JSValue → Except Fault Bool
   | [] => .ok false
   | y :: ys => do if ← strictEq y x then return true else includes x ys
 
+/-! ## Maps and the object's state
+
+A method's object is the binding `this`: a record of its fields. The subset reads
+and changes its `Map` fields only through the `state*` forms. -/
+
+/-- `m.get(k)`. (The map operations are generic in the values: readable definitions
+use them too.) -/
+def mapGet {α : Type} (kvs : List (JSString × α)) (k : JSString) : Option α := kvs.lookup k
+
+/-- `m.set(k, v)`: an existing key keeps its position, a new one goes last. -/
+def mapPut {α : Type} : List (JSString × α) → JSString → α → List (JSString × α)
+  | [], k, v => [(k, v)]
+  | (k', w) :: rest, k, v => if k' == k then (k', v) :: rest else (k', w) :: mapPut rest k v
+
+/-- `m.delete(k)` (keys are distinct, since only `mapPut` adds them). -/
+def mapDel {α : Type} (kvs : List (JSString × α)) (k : JSString) : List (JSString × α) :=
+  kvs.filter (·.1 != k)
+
+/-- The `Map` in field `f` of `this`. -/
+def stateMap (env : Env) (f : String) : Except Fault (List (JSString × JSValue)) :=
+  match env.lookup "this" with
+  | some (.record fs) => match fs.lookup f with
+    | some (.map kvs) => .ok kvs
+    | _ => .error (.unsupported s!"field {f} is not a map")
+  | _ => .error (.referenceError "this")
+
+/-- A map key: a string. -/
+def mapKey : JSValue → Except Fault JSString
+  | .string s => .ok s
+  | _ => .error (.unsupported "a map key that is not a string")
+
 /-! ## Sorting
 
 `toSorted` with a comparator gives the one stable order of a consistent comparator
@@ -223,26 +259,37 @@ def distinct : List String → Bool
   | x :: xs => !xs.contains x && distinct xs
 
 /-- What the static check tracks: function names, names in scope, the assignable
-ones, and whether `break`/`continue` have a target. -/
+ones, and whether `break`/`continue` have a target. Methods are named apart from
+functions and locals (JavaScript reaches them only as `this.m`). -/
 structure Scope where
   fns : List String
   names : List String
   mutable : List String
   inLoop : Bool := false
   inSwitch : Bool := false
+  /-- The class's methods, and those that change no state. -/
+  methods : List String := []
+  pure : List String := []
 
-def Scope.fresh (s : Scope) (x : String) : Bool := !s.names.contains x && !s.fns.contains x
+def Scope.fresh (s : Scope) (x : String) : Bool := x != "this" && !s.names.contains x && !s.fns.contains x
 
 def Scope.bind (s : Scope) (x : String) (mutable : Bool) : Scope :=
   { s with names := x :: s.names, mutable := if mutable then x :: s.mutable else s.mutable }
 
 mutual
   def Expr.scoped (s : Scope) : Expr → Bool
-    | .lit _ | .var _ => true
-    | .unary _ e | .field e _ => e.scoped s
+    | .lit _ | .newMap | .stateSize _ => true
+    -- `this` is never a value, so the object's maps are never shared; a method is
+    -- called only on `this`.
+    | .var x => x != "this" && (s.names.contains x || !s.methods.contains x)
+    | .unary _ e | .field e _ | .stateGet _ e | .stateHas _ e => e.scoped s
     | .binary _ a b | .index a b => a.scoped s && b.scoped s
     | .cond c a b => c.scoped s && a.scoped s && b.scoped s
-    | .call _ args => Expr.scopedList s args
+    | .call f args => (s.names.contains f || !s.methods.contains f) && Expr.scopedList s args
+    -- A call in an expression cannot pass the state it leaves back.
+    | .callThis m args => s.pure.contains m && Expr.scopedList s args
+    -- Iterators: only spread into an array literal (`scopedElems`).
+    | .stateKeys _ | .stateValues _ => false
     | .method e _ args => e.scoped s && Expr.scopedCallbacks s args
     | .record entries => Expr.scopedEntries s entries
     | .array elems => Expr.scopedElems s elems
@@ -269,6 +316,7 @@ mutual
 
   def Expr.scopedElems (s : Scope) : List (Bool × Expr) → Bool
     | [] => true
+    | (true, .stateKeys _) :: es | (true, .stateValues _) :: es => Expr.scopedElems s es
     | (_, e) :: es => e.scoped s && Expr.scopedElems s es
 end
 
@@ -296,6 +344,9 @@ mutual
     | .forOf x e body => s.fresh x && e.scoped s && stmtsScoped { s.bind x false with inLoop := true } body
     | .forEntries i x e body => i != x && s.fresh i && s.fresh x && e.scoped s &&
         stmtsScoped { (s.bind i false).bind x false with inLoop := true } body
+    | .stateSet _ k v => k.scoped s && v.scoped s
+    | .stateDelete _ k => k.scoped s
+    | .callThis m args => s.methods.contains m && Expr.scopedList s args
 
   /-- A `switch` body is one block: declarations in one case are in scope (and in
   their temporal dead zone) in the following ones. -/
@@ -306,11 +357,35 @@ mutual
         casesScoped (s.after body) rest
 end
 
+mutual
+  /-- The statements change the object's state (directly or by a method call). -/
+  def stmtsMutate : List Stmt → Bool
+    | [] => false
+    | st :: rest => stmtMutates st || stmtsMutate rest
+
+  def stmtMutates : Stmt → Bool
+    | .stateSet .. | .stateDelete .. | .callThis .. => true
+    | .ite _ yes no => stmtsMutate yes || stmtsMutate no
+    | .block ss | .forOf _ _ ss | .forEntries _ _ _ ss => stmtsMutate ss
+    | .switch _ cases => casesMutate cases
+    | _ => false
+
+  def casesMutate : List (Option Expr × List Stmt) → Bool
+    | [] => false
+    | (_, body) :: rest => stmtsMutate body || casesMutate rest
+end
+
+/-- A method's first parameter is `this`; other functions have no `this`. -/
+def Function.thisOk (fn : Function) : Bool :=
+  if fn.method then fn.params.head? == some "this" else !fn.params.contains "this"
+
 def Program.scoped (p : Program) : Bool :=
-  let fns := p.map (·.name)
-  distinct fns && p.all fun fn =>
-    distinct fn.params && fn.params.all (!fns.contains ·) &&
-      stmtsScoped { fns, names := fn.params, mutable := fn.params } fn.body
+  let fns := (p.filter (!·.method)).map (·.name)
+  let methods := (p.filter (·.method)).map (·.name)
+  let pure := (p.filter fun fn => fn.method && !stmtsMutate fn.body).map (·.name)
+  distinct (p.map (·.name)) && p.all fun fn =>
+    distinct fn.params && fn.params.all (!fns.contains ·) && fn.thisOk &&
+      stmtsScoped { fns, names := fn.params, mutable := fn.params.filter (· != "this"), methods, pure } fn.body
 
 /-! ## Evaluation -/
 
@@ -322,6 +397,18 @@ def restore (outer inner : Env) : Env := inner.drop (inner.length - outer.length
 def assign (x : String) (v : JSValue) : Env → Except Fault Env
   | [] => .error (.referenceError x)
   | (y, w) :: env => if y == x then .ok ((y, v) :: env) else return (y, w) :: (← assign x v env)
+
+/-- Replace the `Map` in field `f` of `this`. -/
+def setStateMap (env : Env) (f : String) (kvs : List (JSString × JSValue)) : Except Fault Env :=
+  match env.lookup "this" with
+  | some (.record fs) => assign "this" (.record (upsert fs f (.map kvs))) env
+  | _ => .error (.referenceError "this")
+
+/-- The object's state at the end of a method. -/
+def thisOf (env : Env) : Except Fault JSValue :=
+  match env.lookup "this" with
+  | some t => .ok t
+  | none => .error (.referenceError "this")
 
 /-- Parameters bound to arguments: missing arguments are `undefined`, extra ones are
 ignored, as in JavaScript. -/
@@ -338,7 +425,7 @@ def entryBindings (i x : String) (xs : List JSValue) : List Env :=
 an enclosing construct back into outcomes in the outer environment. -/
 def Outcome.restore (outer : Env) : Outcome → Outcome
   | .normal env => .normal (V2.restore outer env)
-  | .returned v => .returned v
+  | .returned v env => .returned v env
   | .broke env => .broke (V2.restore outer env)
   | .continued env => .continued (V2.restore outer env)
 
@@ -397,6 +484,21 @@ mutual
         else .error (.unsupported "inconsistent comparator")
       | _, _, _ => .error (.unsupported s!"method {m}")
     | _ + 1, env, .arrow ps body => .ok (.closure ps body env)
+    | _ + 1, _, .newMap => .ok (.map [])
+    | n + 1, env, .stateGet f k => do
+      let kvs ← stateMap env f
+      let key ← mapKey (← evalExpr p n env k)
+      return (mapGet kvs key).getD .undefined
+    | n + 1, env, .stateHas f k => do
+      let kvs ← stateMap env f
+      let key ← mapKey (← evalExpr p n env k)
+      return .bool (mapGet kvs key).isSome
+    | _ + 1, env, .stateSize f => do return .number (← stateMap env f).length
+    | _ + 1, env, .stateKeys f => do return .array ((← stateMap env f).map (.string ·.1))
+    | _ + 1, env, .stateValues f => do return .array ((← stateMap env f).map (·.2))
+    | n + 1, env, .callThis m args => do
+      let vs ← evalArgs p n env args
+      call p n m ((← thisOf env) :: vs)
 
   def evalArgs (p : Program) : Nat → Env → List Expr → Except Fault (List JSValue)
     | 0, _, _ => .error .timeout
@@ -499,9 +601,21 @@ mutual
       | none => .error (.referenceError f)
       | some fn => do
         match ← execStmts p n (bindParams fn.params vs) fn.body with
-        | .returned v => .ok v
+        | .returned v _ => .ok v
         | .normal _ => .ok .undefined
         | _ => .error (.unsupported "break or continue outside a loop")
+
+  /-- Call a method: its result and the object's state when it ends. -/
+  def callState (p : Program) : Nat → String → List JSValue → Except Fault (JSValue × JSValue)
+    | 0, _, _ => .error .timeout
+    | n + 1, m, vs => match p.find? (·.name == m) with
+      | none => .error (.referenceError m)
+      | some fn => if fn.method then do
+          match ← execStmts p n (bindParams fn.params vs) fn.body with
+          | .returned v env => return (v, ← thisOf env)
+          | .normal env => return (.undefined, ← thisOf env)
+          | _ => .error (.unsupported "break or continue outside a loop")
+        else .error (.unsupported s!"{m} is not a method")
 
   def execStmts (p : Program) : Nat → Env → List Stmt → Except Fault Outcome
     | 0, _, _ => .error .timeout
@@ -520,7 +634,7 @@ mutual
       let v ← evalExpr p n env e
       return .normal (← assign x v env)
     | n + 1, env, .ret e => do
-      return .returned (← evalExpr p n env e)
+      return .returned (← evalExpr p n env e) env
     | n + 1, env, .ite c yes no => do
       let branch ← match ← evalExpr p n env c with
         | .bool true => .ok yes
@@ -546,6 +660,20 @@ mutual
       match ← evalExpr p n env e with
       | .array xs => loop p n env (entryBindings i x xs) body
       | _ => .error (.unsupported "entries of a non-array")
+    | n + 1, env, .stateSet f k v => do
+      let kvs ← stateMap env f
+      let key ← mapKey (← evalExpr p n env k)
+      let w ← evalExpr p n env v
+      return .normal (← setStateMap env f (mapPut kvs key w))
+    | n + 1, env, .stateDelete f k => do
+      let kvs ← stateMap env f
+      let key ← mapKey (← evalExpr p n env k)
+      return .normal (← setStateMap env f (mapDel kvs key))
+    | n + 1, env, .callThis m args => do
+      let vs ← evalArgs p n env args
+      let t ← thisOf env
+      let (_, t') ← callState p n m (t :: vs)
+      return .normal (← assign "this" t' env)
 
   /-- One iteration per element: run the body with the iteration's bindings. -/
   def loop (p : Program) : Nat → Env → List Env → List Stmt → Except Fault Outcome
@@ -553,7 +681,7 @@ mutual
     | _ + 1, env, [], _ => .ok (.normal env)
     | n + 1, env, bs :: rest, body => do
       match (← execStmts p n (bs ++ env) body).restore env with
-      | .returned v => .ok (.returned v)
+      | .returned v env' => .ok (.returned v env')
       | .broke env' => .ok (.normal env')
       | .normal env' | .continued env' => loop p n env' rest body
 
@@ -574,6 +702,12 @@ end
 /-- Call `f` in `p`, refusing programs whose scoping the evaluator does not model. -/
 def run (p : Program) (fuel : Nat) (f : String) (args : List JSValue) : Except Fault JSValue :=
   if p.scoped then call p fuel f args else .error (.unsupported "program fails the static scoping check")
+
+/-- Call method `m` on an object whose state is `this`: its result and the state it
+leaves. -/
+def runMethod (p : Program) (fuel : Nat) (m : String) (this : JSValue) (args : List JSValue) :
+    Except Fault (JSValue × JSValue) :=
+  if p.scoped then callState p fuel m (this :: args) else .error (.unsupported "program fails the static scoping check")
 
 /-- `f` eventually stabilises at `a`: every budget from some point on gives `a`. -/
 def Converges (f : Nat → α) (a : α) : Prop := ∃ n, ∀ m, n ≤ m → f m = a

@@ -59,6 +59,20 @@ inductive Expr where
   | method (e : Expr) (name : String) (args : List Expr)
   /-- `(params) => body`. -/
   | arrow (params : List String) (body : Expr)
+  /-- `new Map()`. -/
+  | newMap
+  /-- `this.f.get(k)`, `this.f.has(k)` and `this.f.size` on a `Map` field of the
+  object a method runs on. -/
+  | stateGet (f : String) (k : Expr)
+  | stateHas (f : String) (k : Expr)
+  | stateSize (f : String)
+  /-- `this.f.keys()` and `this.f.values()`: iterators, accepted only as `...e` in
+  an array literal (`Expr.scoped`), where the model evaluates them to arrays. -/
+  | stateKeys (f : String)
+  | stateValues (f : String)
+  /-- `this.m(args)` in an expression: only of a method that changes no state
+  (`Expr.scoped`). -/
+  | callThis (m : String) (args : List Expr)
   deriving Repr, BEq, Inhabited
 
 inductive Stmt where
@@ -77,6 +91,11 @@ inductive Stmt where
   | forOf (x : String) (e : Expr) (body : List Stmt)
   /-- `for (const [i, x] of e.entries()) { body }`. -/
   | forEntries (i x : String) (e : Expr) (body : List Stmt)
+  /-- `this.f.set(k, v);` and `this.f.delete(k);` on a `Map` field. -/
+  | stateSet (f : String) (k v : Expr)
+  | stateDelete (f : String) (k : Expr)
+  /-- `this.m(args);`: a method call that may change the state. -/
+  | callThis (m : String) (args : List Expr)
   deriving Repr, BEq, Inhabited
 
 /-- Names a statement adds to the scope of the rest of its list. -/
@@ -88,6 +107,9 @@ structure Function where
   name : String
   params : List String
   body : List Stmt
+  /-- A method of the program's class: its first parameter is `this`, bound to the
+  object's state (a record of its fields). -/
+  method : Bool := false
   deriving Repr, BEq, Inhabited
 
 /-- Functions in source order. -/

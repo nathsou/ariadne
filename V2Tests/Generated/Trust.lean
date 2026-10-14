@@ -838,7 +838,7 @@ theorem «listed».source («kid» : Option (JSString)) («list» : Option (List
     (args : ArgsRep sig.«listed».params vs («kid», «list», ())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "listed" vs) (.ok w) ∧
       Ty.Rep .bool w («listed» «kid» «list») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "listed" sig.«listed») («kid», «list», ()) vs args rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "listed" sig.«listed») rfl («kid», «list», ()) vs args rfl
 
 /-- Every run of `byRank` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -846,7 +846,7 @@ theorem «byRank».source («a» : ty.«Candidate».denote) («b» : ty.«Candid
     (args : ArgsRep sig.«byRank».params vs («a», «b», ())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "byRank" vs) (.ok w) ∧
       Ty.Rep .number w («byRank» «a» «b») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) : FVar sigs "byRank" sig.«byRank») («a», «b», ()) vs args rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) : FVar sigs "byRank" sig.«byRank») rfl («a», «b», ()) vs args rfl
 
 /-- Every run of `chooseVaultCopy` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -855,7 +855,7 @@ theorem «chooseVaultCopy».source («facts» : List (ty.«CopyFact».denote)) (
     (safe : «chooseVaultCopy».safe «facts» «floor» = true) :
     ∃ w, Converges (fun fuel' => run ast fuel' "chooseVaultCopy" vs) (.ok w) ∧
       Ty.Rep ty.«Choice» w («chooseVaultCopy» «facts» «floor») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there .here))))))) : FVar sigs "chooseVaultCopy" sig.«chooseVaultCopy») («facts», «floor», ()) vs args safe
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there .here))))))) : FVar sigs "chooseVaultCopy" sig.«chooseVaultCopy») rfl («facts», «floor», ()) vs args safe
 
 /-- Every run of `chooseKeysCopy` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -863,7 +863,7 @@ theorem «chooseKeysCopy».source («facts» : List (ty.«CopyFact».denote)) (v
     (args : ArgsRep sig.«chooseKeysCopy».params vs («facts», ())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "chooseKeysCopy" vs) (.ok w) ∧
       Ty.Rep (.option .null ty.«KeysChoice») w («chooseKeysCopy» «facts») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "chooseKeysCopy" sig.«chooseKeysCopy») («facts», ()) vs args rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "chooseKeysCopy" sig.«chooseKeysCopy») rfl («facts», ()) vs args rfl
 
 /-- Every run of `newestOwnCopy` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -871,7 +871,7 @@ theorem «newestOwnCopy».source («own» : Int) («stamps» : List (Option (Int
     (args : ArgsRep sig.«newestOwnCopy».params vs («own», «stamps», ())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "newestOwnCopy" vs) (.ok w) ∧
       Ty.Rep .number w («newestOwnCopy» «own» «stamps») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "newestOwnCopy" sig.«newestOwnCopy») («own», «stamps», ()) vs args rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "newestOwnCopy" sig.«newestOwnCopy») rfl («own», «stamps», ()) vs args rfl
 
 /-- Every run of `mayChangeFrom` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -879,7 +879,7 @@ theorem «mayChangeFrom».source («written» : Int) («floorWritten» : Int) (v
     (args : ArgsRep sig.«mayChangeFrom».params vs («written», «floorWritten», ())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "mayChangeFrom" vs) (.ok w) ∧
       Ty.Rep .bool w («mayChangeFrom» «written» «floorWritten») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "mayChangeFrom" sig.«mayChangeFrom») («written», «floorWritten», ()) vs args rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "mayChangeFrom" sig.«mayChangeFrom») rfl («written», «floorWritten», ()) vs args rfl
 
 /-- Every run of `answered` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -887,7 +887,7 @@ theorem «answered».source («c» : ty.«StoredCopy».denote) (vs : List JSValu
     (args : ArgsRep sig.«answered».params vs («c», ())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "answered" vs) (.ok w) ∧
       Ty.Rep .bool w («answered» «c») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "answered" sig.«answered») («c», ()) vs args rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "answered" sig.«answered») rfl («c», ()) vs args rfl
 
 /-- Every run of `repairOne` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -895,7 +895,7 @@ theorem «repairOne».source («c» : ty.«StoredCopy».denote) («own» : Int) 
     (args : ArgsRep sig.«repairOne».params vs («c», «own», «allAnswered», ())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "repairOne" vs) (.ok w) ∧
       Ty.Rep .bool w («repairOne» «c» «own» «allAnswered») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "repairOne" sig.«repairOne») («c», «own», «allAnswered», ()) vs args rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "repairOne" sig.«repairOne») rfl («c», «own», «allAnswered», ()) vs args rfl
 
 /-- Every run of `repairs` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -903,7 +903,7 @@ theorem «repairs».source («copies» : List (ty.«StoredCopy».denote)) («own
     (args : ArgsRep sig.«repairs».params vs («copies», «own», «ctx», ())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "repairs" vs) (.ok w) ∧
       Ty.Rep (.array .bool) w («repairs» «copies» «own» «ctx») :=
-  source_of erased wf denote_eq safety_eq ((.there .here) : FVar sigs "repairs" sig.«repairs») («copies», «own», «ctx», ()) vs args rfl
+  source_of erased wf denote_eq safety_eq ((.there .here) : FVar sigs "repairs" sig.«repairs») rfl («copies», «own», «ctx», ()) vs args rfl
 
 /-- Every run of `rotatedPast` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -911,6 +911,6 @@ theorem «rotatedPast».source («copySeeds» : List (JSString)) («ownSeeds» :
     (args : ArgsRep sig.«rotatedPast».params vs («copySeeds», «ownSeeds», ())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "rotatedPast" vs) (.ok w) ∧
       Ty.Rep .bool w («rotatedPast» «copySeeds» «ownSeeds») :=
-  source_of erased wf denote_eq safety_eq (.here : FVar sigs "rotatedPast" sig.«rotatedPast») («copySeeds», «ownSeeds», ()) vs args rfl
+  source_of erased wf denote_eq safety_eq (.here : FVar sigs "rotatedPast" sig.«rotatedPast») rfl («copySeeds», «ownSeeds», ()) vs args rfl
 
 end V2Tests.Generated.Trust

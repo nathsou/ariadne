@@ -303,7 +303,7 @@ theorem «max».source («a» : Int) («b» : Int) (vs : List JSValue)
     (args : ArgsRep sig.«max».params vs («a», «b», ())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "max" vs) (.ok w) ∧
       Ty.Rep .int w («max» «a» «b») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "max" sig.«max») («a», «b», ()) vs args rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "max" sig.«max») rfl («a», «b», ()) vs args rfl
 
 /-- Every run of `clamp` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -311,7 +311,7 @@ theorem «clamp».source («x» : Int) («lo» : Int) («hi» : Int) (vs : List 
     (args : ArgsRep sig.«clamp».params vs («x», «lo», «hi», ())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "clamp" vs) (.ok w) ∧
       Ty.Rep .int w («clamp» «x» «lo» «hi») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "clamp" sig.«clamp») («x», «lo», «hi», ()) vs args rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "clamp" sig.«clamp») rfl («x», «lo», «hi», ()) vs args rfl
 
 /-- Every run of `sign` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -319,7 +319,7 @@ theorem «sign».source («n» : Int) (vs : List JSValue)
     (args : ArgsRep sig.«sign».params vs («n», ())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "sign" vs) (.ok w) ∧
       Ty.Rep .int w («sign» «n») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "sign" sig.«sign») («n», ()) vs args rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "sign" sig.«sign») rfl («n», ()) vs args rfl
 
 /-- Every run of `describe` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -327,7 +327,7 @@ theorem «describe».source («n» : Int) («label» : JSString) (vs : List JSVa
     (args : ArgsRep sig.«describe».params vs («n», «label», ())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "describe" vs) (.ok w) ∧
       Ty.Rep .string w («describe» «n» «label») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "describe" sig.«describe») («n», «label», ()) vs args rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "describe" sig.«describe») rfl («n», «label», ()) vs args rfl
 
 /-- Every run of `between` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -335,7 +335,7 @@ theorem «between».source («lo» : JSString) («x» : JSString) («hi» : JSSt
     (args : ArgsRep sig.«between».params vs («lo», «x», «hi», ())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "between" vs) (.ok w) ∧
       Ty.Rep .bool w («between» «lo» «x» «hi») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "between" sig.«between») («lo», «x», «hi», ()) vs args rfl
+  source_of erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "between" sig.«between») rfl («lo», «x», «hi», ()) vs args rfl
 
 /-- Every run of `polynomial` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -343,7 +343,7 @@ theorem «polynomial».source («x» : Int) (vs : List JSValue)
     (args : ArgsRep sig.«polynomial».params vs («x», ())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "polynomial" vs) (.ok w) ∧
       Ty.Rep .int w («polynomial» «x») :=
-  source_of erased wf denote_eq safety_eq ((.there .here) : FVar sigs "polynomial" sig.«polynomial») («x», ()) vs args rfl
+  source_of erased wf denote_eq safety_eq ((.there .here) : FVar sigs "polynomial" sig.«polynomial») rfl («x», ()) vs args rfl
 
 /-- Every run of `implies` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -351,6 +351,6 @@ theorem «implies».source («a» : Bool) («b» : Bool) (vs : List JSValue)
     (args : ArgsRep sig.«implies».params vs («a», «b», ())) :
     ∃ w, Converges (fun fuel' => run ast fuel' "implies" vs) (.ok w) ∧
       Ty.Rep .bool w («implies» «a» «b») :=
-  source_of erased wf denote_eq safety_eq (.here : FVar sigs "implies" sig.«implies») («a», «b», ()) vs args rfl
+  source_of erased wf denote_eq safety_eq (.here : FVar sigs "implies" sig.«implies») rfl («a», «b», ()) vs args rfl
 
 end V2Tests.Generated.L0

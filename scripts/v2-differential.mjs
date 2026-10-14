@@ -4,6 +4,9 @@
 // including JavaScript values the types allow beyond the canonical encoding:
 // records with extra fields in any order, optional fields absent or `undefined`,
 // either nullish value where a type admits both, and omitted trailing arguments.
+// A class's methods run on random states: an object of the class whose Map fields
+// hold random entries; the model gets the state's observation and returns the
+// method's result and the state it leaves, which must match the object's.
 import { readdir } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
@@ -42,6 +45,7 @@ function value(ty) {
       return record(v.fields, [[ty.key, value(v.tag)]]);
     }
     case 'array': return Array.from({ length: Math.floor(random() * 5) }, () => value(ty.of));
+    case 'map': return new Map(Array.from({ length: Math.floor(random() * 5) }, () => [pick(strings), value(ty.of)]));
     default: throw new Error(`no generator for ${JSON.stringify(ty)}`);
   }
 }
@@ -74,6 +78,27 @@ for (const file of (await readdir(dir)).filter(f => f.endsWith('.ts')).sort()) {
   for (const sig of signatures.stdout.trim().split('\n').map(l => JSON.parse(l))) {
     if (!sig.exported) continue;
     for (let i = 0; i < perFunction; i++) {
+      if (sig.method) {
+        // An object of the class with a random state (its fields in declaration order).
+        const cls = module[sig.class];
+        const self = Object.create(cls.prototype);
+        for (const [name, ty] of sig.params[0].fields) self[name] = value(ty);
+        const before = observe(self);
+        const args = sig.params.slice(1).map(value);
+        let result;
+        try { result = ['method', observe(self[sig.name](...args)), observe(self)]; } catch (e) { result = ['throws', String(e)]; }
+        lines.push(JSON.stringify(['@' + sig.name, before, ...args.map(observe)]));
+        expected.push({ call: `${sig.class}.${sig.name}(${args.map(a => observeText(a)).join(', ')}) on ${JSON.stringify(before)}`, result });
+        continue;
+      }
+      if (sig.class !== null) {
+        // The constructor: `new C()`.
+        let result;
+        try { result = observe(new module[sig.class]()); } catch (e) { result = ['throws', String(e)]; }
+        lines.push(JSON.stringify([sig.name]));
+        expected.push({ call: `new ${sig.class}()`, result });
+        continue;
+      }
       let args = sig.params.map(value);
       // Omit trailing arguments that may be undefined.
       while (args.length > 0 && args[args.length - 1] === undefined && chance(0.5)) args = args.slice(0, -1);
@@ -99,7 +124,8 @@ for (const file of (await readdir(dir)).filter(f => f.endsWith('.ts')).sort()) {
 }
 
 function observeText(v) {
-  return JSON.stringify(v, (_, x) => (typeof x === 'bigint' ? `${x}n` : x === undefined ? '<undefined>' : x));
+  return JSON.stringify(v, (_, x) => (typeof x === 'bigint' ? `${x}n` : x === undefined ? '<undefined>' :
+    x instanceof Map ? Object.fromEntries(x) : x));
 }
 
 if (failures > 0) {

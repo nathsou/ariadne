@@ -21,9 +21,15 @@ what follows is safe. -/
 def Exit {Γ : Ctx} {α : Type} (env0 env : Env) (kk : Γ.denote → α) (ks : Γ.denote → Bool) (r : α) : Prop :=
   ∃ bs envM ρ', env = bs ++ envM ∧ envM.length = env0.length ∧ EnvRel Γ envM ρ' ∧ r = kk ρ' ∧ ks ρ' = true
 
-def SRel (Γ : Ctx) (τ : Ty) (env0 : Env) (r : τ.denote) (k : K Γ τ.denote) (ks : K Γ Bool)
+/-- What a `return` gives: a value representing the result, or, in a method that
+changes the state (`vd`), a final state representing it. -/
+def RetRel (τ : Ty) : Bool → JSValue → Env → τ.denote → Prop
+  | false, w, _, r => τ.Rep w r
+  | true, _, env, r => ∃ t, env.lookup "this" = some t ∧ τ.Rep t r
+
+def SRel (Γ : Ctx) (τ : Ty) (vd : Bool) (env0 : Env) (r : τ.denote) (k : K Γ τ.denote) (ks : K Γ Bool)
     (falls breaks conts : Bool) : Outcome → Prop
-  | .returned w => τ.Rep w r
+  | .returned w env => RetRel τ vd w env r
   | .normal env => falls = true ∧ Exit env0 env k.normal ks.normal r
   | .broke env => breaks = true ∧ Exit env0 env k.brk ks.brk r
   | .continued env => conts = true ∧ Exit env0 env k.cont ks.cont r
@@ -43,25 +49,25 @@ theorem Exit.restore {Γ : Ctx} {α} {env0 env : Env} {kk : Γ.denote → α} {k
   rw [this]
   exact ⟨⟨[], envM, ρ', rfl, hl, he, hr, hk⟩, ρ', he, hr, hk⟩
 
-theorem SRel.restore {Γ τ env r k ks f b c o} (h : SRel Γ τ env r k ks f b c o) :
-    SRel Γ τ env r k ks f b c (o.restore env) := by
+theorem SRel.restore {Γ τ vd env r k ks f b c o} (h : SRel Γ τ vd env r k ks f b c o) :
+    SRel Γ τ vd env r k ks f b c (o.restore env) := by
   cases o with
   | returned => exact h
   | normal e => exact ⟨h.1, h.2.restore.1⟩
   | broke e => exact ⟨h.1, h.2.restore.1⟩
   | continued e => exact ⟨h.1, h.2.restore.1⟩
 
-theorem SRel.mono {Γ τ env r k ks f b c f' b' c' o} (h : SRel Γ τ env r k ks f b c o)
+theorem SRel.mono {Γ τ vd env r k ks f b c f' b' c' o} (h : SRel Γ τ vd env r k ks f b c o)
     (hf : f = true → f' = true) (hb : b = true → b' = true) (hc : c = true → c' = true) :
-    SRel Γ τ env r k ks f' b' c' o := by
+    SRel Γ τ vd env r k ks f' b' c' o := by
   cases o with
   | returned => exact h
   | normal e => exact ⟨hf h.1, h.2⟩
   | broke e => exact ⟨hb h.1, h.2⟩
   | continued e => exact ⟨hc h.1, h.2⟩
 
-theorem SRel.relen {Γ τ env env' r k ks f b c o} (h : SRel Γ τ env r k ks f b c o) (hl : env.length = env'.length) :
-    SRel Γ τ env' r k ks f b c o := by
+theorem SRel.relen {Γ τ vd env env' r k ks f b c o} (h : SRel Γ τ vd env r k ks f b c o) (hl : env.length = env'.length) :
+    SRel Γ τ vd env' r k ks f b c o := by
   cases o with
   | returned => exact h
   | normal e | broke e | continued e =>
@@ -74,18 +80,18 @@ theorem Exit.pop {Γ : Ctx} {x σ} {α} {w : JSValue} {env env' : Env} {kk : Γ.
   exact ⟨bs ++ [(x, w')], envM', ρ', by simp, by simpa using hl, he, hr, hk⟩
 
 /-- Leaving a declaration's scope. -/
-theorem SRel.pop {Γ x σ τ w env r k ks f b c o}
-    (h : SRel ((x, σ) :: Γ) τ ((x, w) :: env) r (k.map Prod.snd) (ks.map Prod.snd) f b c o) :
-    SRel Γ τ env r k ks f b c o := by
+theorem SRel.pop {Γ x σ τ vd w env r k ks f b c o}
+    (h : SRel ((x, σ) :: Γ) τ vd ((x, w) :: env) r (k.map Prod.snd) (ks.map Prod.snd) f b c o) :
+    SRel Γ τ vd env r k ks f b c o := by
   cases o with
   | returned => exact h
   | normal e | broke e | continued e => exact ⟨h.1, h.2.pop⟩
 
 /-- Leaving a narrowed context. -/
-theorem SRel.widen {Γ τ x τ0 σ} {v : Var Γ x τ0} {e : σ.denote → τ0.denote} {env r k ks f b c o}
+theorem SRel.widen {Γ τ vd x τ0 σ} {v : Var Γ x τ0} {e : σ.denote → τ0.denote} {env r k ks f b c o}
     (he : ∀ w y, σ.Rep w y → τ0.Rep w (e y))
-    (h : SRel (v.narrow σ) τ env r (k.map (v.widen e)) (ks.map (v.widen e)) f b c o) :
-    SRel Γ τ env r k ks f b c o := by
+    (h : SRel (v.narrow σ) τ vd env r (k.map (v.widen e)) (ks.map (v.widen e)) f b c o) :
+    SRel Γ τ vd env r k ks f b c o := by
   cases o with
   | returned => exact h
   | normal _ | broke _ | continued _ =>
@@ -97,9 +103,9 @@ def switchOutcome : Outcome → Outcome
   | .broke env => .normal env
   | o => o
 
-theorem SRel.switch {Γ τ env r} {k : K Γ τ.denote} {ks : K Γ Bool} {R RS f b c o}
-    (h : SRel Γ τ env r { k with normal := R, brk := R } { ks with normal := RS, brk := RS } f b c o) :
-    SRel Γ τ env r { k with normal := R } { ks with normal := RS } (f || b) false c (switchOutcome o) := by
+theorem SRel.switch {Γ τ vd env r} {k : K Γ τ.denote} {ks : K Γ Bool} {R RS f b c o}
+    (h : SRel Γ τ vd env r { k with normal := R, brk := R } { ks with normal := RS, brk := RS } f b c o) :
+    SRel Γ τ vd env r { k with normal := R } { ks with normal := RS } (f || b) false c (switchOutcome o) := by
   cases o with
   | returned => exact h
   | normal e => exact ⟨by simp [h.1], h.2⟩
@@ -339,7 +345,7 @@ end
 
 /-! ## The induction -/
 
-theorem SRel.restore_len {Γ τ env r k ks f b c o} (h : SRel Γ τ env r k ks f b c o) :
+theorem SRel.restore_len {Γ τ vd env r k ks f b c o} (h : SRel Γ τ vd env r k ks f b c o) :
     ∀ e, o.restore env = .normal e → e.length = env.length := by
   intro e he
   cases o with
@@ -358,7 +364,7 @@ theorem switchOutcome_len {env : Env} {o : Outcome} (h : ∀ e, o.restore env = 
   | broke e' => rw [ho] at he; simp [switchOutcome] at he; subst he; exact hb e' ho
   | _ => rw [ho] at he; simp [switchOutcome] at he
 
-theorem SRel.restore_len_broke {Γ τ env r k ks f b c o} (h : SRel Γ τ env r k ks f b c o) :
+theorem SRel.restore_len_broke {Γ τ vd env r k ks f b c o} (h : SRel Γ τ vd env r k ks f b c o) :
     ∀ e, o.restore env = .broke e → e.length = env.length := by
   intro e he
   cases o with
@@ -389,7 +395,7 @@ theorem conv_const {prog : Program} {e : Expr} {x : String} {env : Env} {w : JSV
 
 theorem conv_ret {prog : Program} {e : Expr} {env : Env} {w : JSValue}
     (h : Converges (fun n => evalExpr prog n env e) (.ok w)) :
-    Converges (fun n => execStmt prog n env (.ret e)) (.ok (.returned w)) := by
+    Converges (fun n => execStmt prog n env (.ret e)) (.ok (.returned w env)) := by
   obtain ⟨N, h⟩ := h
   exact Converges.of_succ N fun m hm => by simp [execStmt, h m hm, bind, Except.bind, pure, Except.pure]
 
@@ -414,6 +420,33 @@ theorem conv_assign {prog : Program} {e : Expr} {x : String} {env env' : Env} {w
     Converges (fun n => execStmt prog n env (.assign x e)) (.ok (.normal env')) := by
   obtain ⟨N, h⟩ := h
   exact Converges.of_succ N fun m hm => by simp [execStmt, h m hm, ha, bind, Except.bind, pure, Except.pure]
+
+theorem conv_stateSet {prog : Program} {f : String} {k v : Expr} {env env' : Env} {kvs : List (JSString × JSValue)}
+    {s : JSString} {w : JSValue} (hsm : stateMap env f = .ok kvs)
+    (hk : Converges (fun n => evalExpr prog n env k) (.ok (.string s)))
+    (hv : Converges (fun n => evalExpr prog n env v) (.ok w)) (hset : setStateMap env f (mapPut kvs s w) = .ok env') :
+    Converges (fun n => execStmt prog n env (.stateSet f k v)) (.ok (.normal env')) := by
+  obtain ⟨N1, h1⟩ := hk
+  obtain ⟨N2, h2⟩ := hv
+  exact Converges.of_succ (max N1 N2) fun m hm => by
+    simp [execStmt, hsm, h1 m (by omega), h2 m (by omega), mapKey, hset, bind, Except.bind, pure, Except.pure]
+
+theorem conv_stateDelete {prog : Program} {f : String} {k : Expr} {env env' : Env} {kvs : List (JSString × JSValue)}
+    {s : JSString} (hsm : stateMap env f = .ok kvs) (hk : Converges (fun n => evalExpr prog n env k) (.ok (.string s)))
+    (hset : setStateMap env f (mapDel kvs s) = .ok env') :
+    Converges (fun n => execStmt prog n env (.stateDelete f k)) (.ok (.normal env')) := by
+  obtain ⟨N1, h1⟩ := hk
+  exact Converges.of_succ N1 fun m hm => by
+    simp [execStmt, hsm, h1 m hm, mapKey, hset, bind, Except.bind, pure, Except.pure]
+
+theorem conv_callThis {prog : Program} {m : String} {args : List Expr} {env env' : Env} {vs : List JSValue}
+    {t w t' : JSValue} (ha : Converges (fun n => evalArgs prog n env args) (.ok vs)) (ht : thisOf env = .ok t)
+    (hc : Converges (fun n => callState prog n m (t :: vs)) (.ok (w, t'))) (hasg : assign "this" t' env = .ok env') :
+    Converges (fun n => execStmt prog n env (.callThis m args)) (.ok (.normal env')) := by
+  obtain ⟨N1, h1⟩ := ha
+  obtain ⟨N2, h2⟩ := hc
+  exact Converges.of_succ (max N1 N2) fun n hn => by
+    simp [execStmt, h1 n (by omega), ht, h2 n (by omega), hasg, bind, Except.bind, pure, Except.pure]
 
 theorem conv_cont {prog : Program} {env : Env} : Converges (fun n => execStmt prog n env .cont) (.ok (.continued env)) :=
   Converges.of_succ 0 fun m _ => by simp [execStmt]
@@ -443,17 +476,17 @@ theorem Exit.restore_length {Γ : Ctx} {α} {env0 env : Env} {kk : Γ.denote →
 
 /-- A loop: each iteration binds `bs` on top of the environment and runs the body;
 `break` leaves the loop, `continue` and completing go to the next iteration. -/
-theorem conv_loop {prog : Program} {Γ : Ctx} {τ : Ty} {α : Type} {body : List Stmt} {P : Env → α → Prop}
+theorem conv_loop {prog : Program} {Γ : Ctx} {τ : Ty} {vd : Bool} {α : Type} {body : List Stmt} {P : Env → α → Prop}
     {step : α → (Γ.denote → τ.denote) → (Γ.denote → τ.denote) → Γ.denote → τ.denote}
     {stepS : α → (Γ.denote → Bool) → (Γ.denote → Bool) → Γ.denote → Bool} {k : K Γ τ.denote} {ks : K Γ Bool}
     (hbody : ∀ bs y env ρ (next : Γ.denote → τ.denote) (nextS : Γ.denote → Bool), P bs y → EnvRel Γ env ρ →
       stepS y nextS ks.normal ρ = true →
       ∃ o, Converges (fun n => execStmts prog n (bs ++ env) body) (.ok o) ∧
-        SRel Γ τ env (step y next k.normal ρ) ⟨next, k.normal, next⟩ ⟨nextS, ks.normal, nextS⟩ true true true o) :
+        SRel Γ τ vd env (step y next k.normal ρ) ⟨next, k.normal, next⟩ ⟨nextS, ks.normal, nextS⟩ true true true o) :
     ∀ {bss : List Env} {items : List α}, Forall2 P bss items → ∀ {env : Env} {ρ : Γ.denote}, EnvRel Γ env ρ →
       forIn items stepS ks.normal ρ = true →
       ∃ o, Converges (fun n => loop prog n env bss body) (.ok o) ∧
-        SRel Γ τ env (forIn items step k.normal ρ) k ks true false false o ∧
+        SRel Γ τ vd env (forIn items step k.normal ρ) k ks true false false o ∧
         (∀ e, o = .normal e → e.length = env.length)
   | _, _, .nil, env, ρ, he, hs =>
     ⟨.normal env, Converges.of_succ 0 fun m _ => by simp [loop], ⟨rfl, [], env, ρ, rfl, rfl, he, rfl, hs⟩,
@@ -461,8 +494,8 @@ theorem conv_loop {prog : Program} {Γ : Ctx} {τ : Ty} {α : Type} {body : List
   | bs :: _, y :: ys, .cons hp rest, env, ρ, he, hs => by
     obtain ⟨o, ⟨N1, h1⟩, hr⟩ := hbody bs y env ρ (forIn ys step k.normal) (forIn ys stepS ks.normal) hp he hs
     cases o with
-    | returned w =>
-      exact ⟨.returned w, Converges.of_succ N1 fun m hm => by simp [loop, h1 m hm, Outcome.restore, bind, Except.bind],
+    | returned w e0 =>
+      exact ⟨.returned w e0, Converges.of_succ N1 fun m hm => by simp [loop, h1 m hm, Outcome.restore, bind, Except.bind],
         hr, by simp⟩
     | broke e0 =>
       obtain ⟨-, hx⟩ := hr
@@ -475,7 +508,7 @@ theorem conv_loop {prog : Program} {Γ : Ctx} {τ : Ty} {α : Type} {body : List
       obtain ⟨o2, ⟨N2, h2⟩, hr2, hl2⟩ := conv_loop hbody rest he' hs'
       refine ⟨o2, Converges.of_succ (max N1 N2) fun m hm => ?_, ?_, fun e h => (hl2 e h).trans hx.restore_length⟩
       · simp [loop, h1 m (by omega), h2 m (by omega), Outcome.restore, bind, Except.bind]
-      · show SRel Γ τ env (step y (forIn ys step k.normal) k.normal ρ) k ks true false false o2
+      · show SRel Γ τ vd env (step y (forIn ys step k.normal) k.normal ρ) k ks true false false o2
         rw [hr']; exact hr2.relen hx.restore_length
 
 section
@@ -483,16 +516,16 @@ variable {prog : Program} {Φ : Sigs} {fs : Φ.denote} {ss : Φ.safety} (hfs : F
 include hfs
 
 /-- A compound statement, then the rest of its list as its normal continuation. -/
-theorem then_rest {Γ τ} {s : Stmt} {rest : TStmts Φ Γ τ} {k : K Γ τ.denote} {ks : K Γ Bool} {env : Env}
+theorem then_rest {Γ τ vd} {s : Stmt} {rest : TStmts Φ Γ τ} {k : K Γ τ.denote} {ks : K Γ Bool} {env : Env}
     {r : τ.denote} {o : Outcome} {f b c : Bool}
     (hrest : ∀ envM ρ', envM.length = env.length → EnvRel Γ envM ρ' → rest.safe fs ss ks ρ' = true →
       ∃ o2, Converges (fun n => execStmts prog n envM rest.erase) (.ok o2) ∧
-        SRel Γ τ envM (rest.denote fs k ρ') k ks rest.falls rest.breaks rest.continues o2)
+        SRel Γ τ vd envM (rest.denote fs k ρ') k ks rest.falls rest.breaks rest.continues o2)
     (h1 : Converges (fun n => execStmt prog n env s) (.ok o))
-    (ho : SRel Γ τ env r { k with normal := rest.denote fs k } { ks with normal := rest.safe fs ss ks } f b c o)
+    (ho : SRel Γ τ vd env r { k with normal := rest.denote fs k } { ks with normal := rest.safe fs ss ks } f b c o)
     (hlen : ∀ e, o = .normal e → e.length = env.length) :
     ∃ out, Converges (fun n => execStmts prog n env (s :: rest.erase)) (.ok out) ∧
-      SRel Γ τ env r k ks (f && rest.falls) (b || (f && rest.breaks)) (c || (f && rest.continues)) out := by
+      SRel Γ τ vd env r k ks (f && rest.falls) (b || (f && rest.breaks)) (c || (f && rest.continues)) out := by
   cases o with
   | normal e =>
     obtain ⟨hf, bs, envM, ρ', rfl, hl, hrel, hr, hsafe⟩ := ho
@@ -511,12 +544,13 @@ theorem then_rest {Γ τ} {s : Stmt} {rest : TStmts Φ Γ τ} {k : K Γ τ.denot
 
 variable (hss : SafeSigs ss)
 include hss
+variable {vd : Bool}
 
 mutual
   theorem TStmts.adequate : ∀ {Γ : Ctx} {τ : Ty} (st : TStmts Φ Γ τ) (k : K Γ τ.denote) (ks : K Γ Bool)
-      {env : Env} {ρ : Γ.denote}, EnvRel Γ env ρ → st.safe fs ss ks ρ = true → st.wf = true →
+      {env : Env} {ρ : Γ.denote}, EnvRel Γ env ρ → st.safe fs ss ks ρ = true → st.wf vd = true →
       ∃ out, Converges (fun n => execStmts prog n env st.erase) (.ok out) ∧
-        SRel Γ τ env (st.denote fs k ρ) k ks st.falls st.breaks st.continues out
+        SRel Γ τ vd env (st.denote fs k ρ) k ks st.falls st.breaks st.continues out
     | _, _, .nil, k, ks, env, ρ, he, hs, _ =>
       ⟨_, conv_nil, rfl, [], env, ρ, rfl, rfl, he, rfl, hs⟩
     | _, _, .const x e rest, k, ks, env, ρ, he, hs, hw => by
@@ -525,9 +559,46 @@ mutual
       obtain ⟨o, hc2, hr⟩ := TStmts.adequate rest (k.map Prod.snd) (ks.map Prod.snd)
         (env := (x, w) :: env) (ρ := (e.denote fs ρ, ρ)) ⟨w, env, rfl, hrep, he⟩ hs.2 hw
       exact ⟨o, conv_cons_normal (conv_const hc) hc2, hr.pop⟩
-    | _, _, .ret e rest, k, ks, env, ρ, he, hs, _ => by
+    | _, _, .ret e rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.wf, Bool.and_eq_true, Bool.not_eq_true'] at hw
       obtain ⟨w, hc, hrep⟩ := TExpr.adequate hfs hss e he (TExpr.ok hs)
-      exact ⟨_, conv_cons_exit (conv_ret hc) (by simp), hrep⟩
+      exact ⟨_, conv_cons_exit (conv_ret hc) (by simp), by simp only [SRel, hw.1, RetRel]; exact hrep⟩
+    | _, _, .retVoid v rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.wf, Bool.and_eq_true] at hw
+      obtain ⟨t, hl, ht⟩ := v.lookup he
+      have hu : Converges (fun n => evalExpr prog n env (.lit .undefined)) (.ok .undefined) :=
+        Converges.of_succ 0 fun m _ => by simp [evalExpr, Lit.value]
+      exact ⟨_, conv_cons_exit (conv_ret hu) (by simp), by simp only [SRel, hw.1, RetRel]; exact ⟨t, hl, ht⟩⟩
+    | _, _, .stateSet v i nd key e rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.safe, Bool.and_eq_true] at hs
+      simp only [TStmts.wf, Bool.and_eq_true] at hw
+      have hke := andT_elim hs.1 (key.safe_of_trivial ρ) (e.safe_of_trivial ρ)
+      obtain ⟨kvs, hsm, hrel⟩ := stateMap_rep v i he
+      obtain ⟨wk, hck, hwk⟩ := TExpr.adequate hfs hss key he hke.1
+      simp only [Ty.Rep] at hwk; subst hwk
+      obtain ⟨w, hce, hw'⟩ := TExpr.adequate hfs hss e he hke.2
+      obtain ⟨env', hset, hlen, he'⟩ := setStateMap_rep v i nd he (mapPut_rep (key.denote fs ρ) hw' hrel)
+      obtain ⟨o, hc2, hr⟩ := TStmts.adequate rest k ks he' hs.2 hw.2
+      exact ⟨o, conv_cons_normal (conv_stateSet hsm hck hce hset) hc2, hr.relen hlen⟩
+    | _, _, .stateDelete v i nd key rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.safe, Bool.and_eq_true] at hs
+      simp only [TStmts.wf, Bool.and_eq_true] at hw
+      obtain ⟨kvs, hsm, hrel⟩ := stateMap_rep v i he
+      obtain ⟨wk, hck, hwk⟩ := TExpr.adequate hfs hss key he (TExpr.ok hs.1)
+      simp only [Ty.Rep] at hwk; subst hwk
+      obtain ⟨env', hset, hlen, he'⟩ := setStateMap_rep v i nd he (mapDel_rep (key.denote fs ρ) hrel)
+      obtain ⟨o, hc2, hr⟩ := TStmts.adequate rest k ks he' hs.2 hw.2
+      exact ⟨o, conv_cons_normal (conv_stateDelete hsm hck hset) hc2, hr.relen hlen⟩
+    | _, _, .callVoid fn v args rest, k, ks, env, ρ, he, hs, hw => by
+      simp only [TStmts.safe, Bool.and_eq_true] at hs
+      simp only [TStmts.wf, Bool.and_eq_true] at hw
+      have ha := andT_elim hs.1 (args.safe_of_trivial ρ) (hss fn _)
+      obtain ⟨vs, hca, hvs⟩ := TArgs.adequate hfs hss args he ha.1
+      obtain ⟨t, ht, hwt⟩ := thisOf_rep v he
+      obtain ⟨w, t', hc, hw'⟩ := hfs.convState fn (v.get ρ, args.denote fs ρ) (t :: vs) rfl ⟨t, _, rfl, hwt, hvs⟩ ha.2
+      obtain ⟨env', hasg, hlen, he'⟩ := v.assignRel he hw'
+      obtain ⟨o, hc2, hr⟩ := TStmts.adequate rest k ks he' hs.2 hw.2
+      exact ⟨o, conv_cons_normal (conv_callThis hca ht hc hasg) hc2, hr.relen hlen⟩
     | _, _, .brk rest, k, ks, env, ρ, he, hs, _ =>
       ⟨_, conv_cons_exit conv_brk (by simp), rfl, [], env, ρ, rfl, rfl, he, rfl, hs⟩
     | _, _, .cont rest, k, ks, env, ρ, he, hs, _ =>
@@ -722,7 +793,7 @@ mutual
       · have hcov : arms.covers = false := by
           simp only [TArms.covers, Bool.or_eq_false_iff, List.all_eq_false]
           exact ⟨by simpa using hnn, t, i.mem_tags, by simpa using hnt⟩
-        have ho : SRel Γ τ env (rest.denote fs k ρ) { k with normal := rest.denote fs k }
+        have ho : SRel Γ τ vd env (rest.denote fs k ρ) { k with normal := rest.denote fs k }
             { ks with normal := rest.safe fs ss ks } true false false (.normal env) :=
           ⟨rfl, [], env, ρ, rfl, rfl, he, rfl, show rest.safe fs ss ks ρ = true by rw [← hsafe]; exact hs⟩
         obtain ⟨out, h, hr⟩ := then_rest hfs hrest (conv_switch_none hd hf) ho (fun e he' => by cases he'; rfl)
@@ -732,9 +803,9 @@ mutual
 
   theorem TArms.first_adequate {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} :
       ∀ (arms : TArms Φ Γ τ v) (k : K Γ τ.denote) (ks : K Γ Bool) {env : Env} {ρ : Γ.denote}, EnvRel Γ env ρ →
-        arms.firstSafe fs ss ks ρ = true → arms.wf = true → arms.nextOk = true →
+        arms.firstSafe fs ss ks ρ = true → arms.wf vd = true → arms.nextOk = true →
         ∃ out, Converges (fun n => execStmts prog n env (arms.erase.flatMap (·.2))) (.ok out) ∧
-          SRel Γ τ env (arms.first fs k ρ) k ks (arms.isNil || arms.falls) arms.breaks arms.continues out
+          SRel Γ τ vd env (arms.first fs k ρ) k ks (arms.isNil || arms.falls) arms.breaks arms.continues out
     | .nil, k, ks, env, ρ, he, hs, _, _ => ⟨_, conv_nil, rfl, [], env, ρ, rfl, rfl, he, rfl, hs⟩
     | .empty l rest, k, ks, env, ρ, he, hs, hw, _ => by
       simp only [TArms.wf, Bool.and_eq_true] at hw
@@ -762,10 +833,10 @@ mutual
         {fds : Fields} (i : VIdx vs0 t fds) (y : fds.denote) (kvs : List (String × JSValue)) (i0 : Nat)
         (d : τ.denote) (dS : Bool),
         EnvRel Γ env ρ → env.lookup x = some (.record kvs) → (kvs.map Prod.fst).Nodup →
-        vs0.Rep key kvs (i.inj y) → vs0.tagsOk = true → arms.safe fs ss ks ρ i y dS = true → arms.wf = true →
+        vs0.Rep key kvs (i.inj y) → vs0.tagsOk = true → arms.safe fs ss ks ρ i y dS = true → arms.wf vd = true →
         (∃ j out, Converges (fun n => findCase prog n env t.value arms.erase i0) (.ok (some (i0 + j))) ∧
             Converges (fun n => execStmts prog n env ((arms.erase.drop j).flatMap (·.2))) (.ok out) ∧
-            SRel Γ τ env (arms.denote fs k ρ i y d) k ks arms.falls arms.breaks arms.continues out) ∨
+            SRel Γ τ vd env (arms.denote fs k ρ i y d) k ks arms.falls arms.breaks arms.continues out) ∨
           (Converges (fun n => findCase prog n env t.value arms.erase i0) (.ok none) ∧
             arms.denote fs k ρ i y d = d ∧ arms.safe fs ss ks ρ i y dS = dS ∧
             some t ∉ arms.labels ∧ none ∉ arms.labels)
@@ -823,7 +894,7 @@ mutual
       -- Running this case's body (and, if it is the last, nothing after it).
       have hrun : body.safe fs ss ks ρ = true → ∃ out,
           Converges (fun n => execStmts prog n env ((TArms.wide l body rest).erase.flatMap (·.2))) (.ok out) ∧
-          SRel Γ τ env (body.denote fs k ρ) k ks (TArms.wide l body rest).falls (TArms.wide l body rest).breaks
+          SRel Γ τ vd env (body.denote fs k ρ) k ks (TArms.wide l body rest).falls (TArms.wide l body rest).breaks
             (TArms.wide l body rest).continues out := fun hsb => by
         obtain ⟨o, hco, hro⟩ := TStmts.adequate body k ks he hsb hw.1.2
         refine ⟨o, ?_, hro.mono (fun h => by simp [TArms.falls, h]) (fun h => by simp [TArms.breaks, h])

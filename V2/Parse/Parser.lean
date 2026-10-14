@@ -452,7 +452,6 @@ mutual
           set next
           let collection ← expression n
           let _ ← expect ")"
-          if !(← isNext "{") then fail "A1001" "loop bodies require braces" (← peek)
           match second with
           | none => return .forOf mutable name collection (← statement n) t.span
           | some value => return .forOfPair mutable name value collection (← statement n) t.span
@@ -551,7 +550,6 @@ def classDeclaration (fuel : Nat) : P Class := do
         parseTy fuel
       if !(← isNext "{") then let _ ← expect "{"; pure ()
       let body ← statement fuel
-      if private_ then fail "A1001" "private methods are not supported" field
       pure (Sum.inr ({ name := field.text, params, result, body, span := field.span } : Function))
     else
       let ty ← if ← accept ":" then pure (some (← parseTy fuel)) else pure none

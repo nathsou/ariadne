@@ -73,6 +73,12 @@ structure Sig where
   /-- The function performs no operation that can leave what the model covers, so
   it is safe on every input (checked against its body by `TProgram.WF`). -/
   trivial : Bool := false
+  /-- A method of the program's class: its first parameter is `this`, the object's
+  state. -/
+  method : Bool := false
+  /-- A method that changes the state and returns nothing: it denotes the state it
+  leaves. -/
+  void : Bool := false
   deriving Repr, BEq, Inhabited
 
 abbrev Sig.denote (s : Sig) : Type := s.params.denote → s.result.denote
@@ -213,7 +219,7 @@ mutual
     | coalesce (h : τ.nonNullish = true) (a : TExpr Φ Γ (.option n τ)) (b : TExpr Φ Γ τ) : TExpr Φ Γ τ
     /-- `f(args)`, where no local in scope is named `f` (so the call reaches the
     declared function). -/
-    | call {f : String} {s : Sig} (fn : FVar Φ f s) (h : (Γ.map Prod.fst).contains f = false)
+    | call {f : String} {s : Sig} (fn : FVar Φ f s) (h : ((Γ.map Prod.fst).contains f || s.void) = false)
         (args : TArgs Φ Γ s.params) : TExpr Φ Γ s.result
     /-- `{ f: e, … }`. -/
     | record (es : TEntries Φ Γ src) (sel : Sel src fs) (h : src.literalNames = true) : TExpr Φ Γ (.record fs)
@@ -249,6 +255,21 @@ mutual
     | map (a : TExpr Φ Γ (.array τ)) (f : TFn Φ Γ τ σ) : TExpr Φ Γ (.array σ)
     /-- `a.toSorted(c)`. -/
     | sorted (a : TExpr Φ Γ (.array τ)) (c : TCmp Φ Γ τ) : TExpr Φ Γ (.array τ)
+    /-- `new Map()`. -/
+    | newMap (τ : Ty) : TExpr Φ Γ (.map τ)
+    /-- `this.f.get(k)`, for values that are never `undefined`. -/
+    | stateGet {f : String} {fs : Fields} (v : Var Γ "this" (.record fs)) (i : FIdx fs f (.map τ))
+        (h : τ.nonNullish = true) (k : TExpr Φ Γ .string) : TExpr Φ Γ (.option .undef τ)
+    /-- `this.f.has(k)`. -/
+    | stateHas {f : String} {fs : Fields} {σ : Ty} (v : Var Γ "this" (.record fs)) (i : FIdx fs f (.map σ))
+        (k : TExpr Φ Γ .string) : TExpr Φ Γ .bool
+    /-- `this.f.size`. -/
+    | stateSize {f : String} {fs : Fields} {σ : Ty} (v : Var Γ "this" (.record fs)) (i : FIdx fs f (.map σ)) :
+        TExpr Φ Γ .number
+    /-- `this.m(args)`, for a method that returns a value (and changes no state). -/
+    | callThis {m name : String} {σ : Ty} {ps : Ctx} {t : Bool}
+        (fn : FVar Φ m ⟨name, ("this", σ) :: ps, τ, t, true, false⟩) (v : Var Γ "this" σ) (args : TArgs Φ Γ ps) :
+        TExpr Φ Γ τ
 
   /-- Arguments for the parameters `ps`, evaluated in `Γ`. -/
   inductive TArgs (Φ : Sigs) : Ctx → Ctx → Type where
@@ -270,7 +291,7 @@ mutual
     /-- `() => body`. -/
     | const (body : TExpr Φ Γ σ) : TFn Φ Γ τ σ
     /-- A declared function of one parameter, where no local in scope has its name. -/
-    | ref {f p name : String} {t : Bool} (fn : FVar Φ f ⟨name, [(p, τ)], σ, t⟩)
+    | ref {f p name : String} {t : Bool} (fn : FVar Φ f ⟨name, [(p, τ)], σ, t, false, false⟩)
         (h : (Γ.map Prod.fst).contains f = false) : TFn Φ Γ τ σ
 
   /-- A comparator on elements of type `τ`. -/
@@ -278,7 +299,7 @@ mutual
     /-- `(x, y) => body`. -/
     | arrow (x y : String) (body : TExpr Φ ((x, τ) :: (y, τ) :: Γ) .number) : TCmp Φ Γ τ
     /-- A declared function of two parameters. -/
-    | ref {f p q name : String} {t : Bool} (fn : FVar Φ f ⟨name, [(p, τ), (q, τ)], .number, t⟩)
+    | ref {f p q name : String} {t : Bool} (fn : FVar Φ f ⟨name, [(p, τ), (q, τ)], .number, t, false, false⟩)
         (h : (Γ.map Prod.fst).contains f = false) : TCmp Φ Γ τ
 
   /-- An array literal's elements. -/
@@ -287,6 +308,12 @@ mutual
     | cons (e : TExpr Φ Γ τ) (rest : TElems Φ Γ τ) : TElems Φ Γ τ
     /-- `...a`. -/
     | spread (a : TExpr Φ Γ (.array τ)) (rest : TElems Φ Γ τ) : TElems Φ Γ τ
+    /-- `...this.f.keys()`. -/
+    | spreadKeys {f : String} {fs : Fields} {σ : Ty} (v : Var Γ "this" (.record fs)) (i : FIdx fs f (.map σ))
+        (rest : TElems Φ Γ .string) : TElems Φ Γ .string
+    /-- `...this.f.values()`. -/
+    | spreadValues {f : String} {fs : Fields} (v : Var Γ "this" (.record fs)) (i : FIdx fs f (.map τ))
+        (rest : TElems Φ Γ τ) : TElems Φ Γ τ
 end
 
 /-- Whether a union's tags are strings (else booleans). -/
@@ -331,6 +358,18 @@ mutual
     | switchG {x key : String} {vs : Variants} (v : Var Γ x (.union key vs))
         (h : (vs.tagsOk && !protoNames.contains key) = true)
         (arms : TArms Φ Γ τ v) (rest : TStmts Φ Γ τ) : TStmts Φ Γ τ
+    /-- `this.f.set(k, e);` (the state's field names are distinct). -/
+    | stateSet {f : String} {fs : Fields} {σ : Ty} (v : Var Γ "this" (.record fs)) (i : FIdx fs f (.map σ))
+        (h : fs.names.Nodup) (k : TExpr Φ Γ .string) (e : TExpr Φ Γ σ) (rest : TStmts Φ Γ τ) : TStmts Φ Γ τ
+    /-- `this.f.delete(k);`. -/
+    | stateDelete {f : String} {fs : Fields} {σ : Ty} (v : Var Γ "this" (.record fs)) (i : FIdx fs f (.map σ))
+        (h : fs.names.Nodup) (k : TExpr Φ Γ .string) (rest : TStmts Φ Γ τ) : TStmts Φ Γ τ
+    /-- `this.m(args);` for a method that changes the state. -/
+    | callVoid {m name : String} {σ : Ty} {ps : Ctx} {t : Bool}
+        (fn : FVar Φ m ⟨name, ("this", σ) :: ps, σ, t, true, true⟩) (v : Var Γ "this" σ) (args : TArgs Φ Γ ps)
+        (rest : TStmts Φ Γ τ) : TStmts Φ Γ τ
+    /-- `return;` in a method that changes the state: its result is the state. -/
+    | retVoid (v : Var Γ "this" τ) (rest : TStmts Φ Γ τ) : TStmts Φ Γ τ
 
   /-- The cases of `switchG`, one per source case (`none` is `default`). -/
   inductive TArms (Φ : Sigs) : (Γ : Ctx) → Ty → {x key : String} → {vs0 : Variants} →
@@ -398,6 +437,11 @@ mutual
     | .filter a p => .method a.erase "filter" [p.erase]
     | .map a f => .method a.erase "map" [f.erase]
     | .sorted a c => .method a.erase "toSorted" [c.erase]
+    | .newMap _ => .newMap
+    | .stateGet (f := f) _ _ _ k => .stateGet f k.erase
+    | .stateHas (f := f) _ _ k => .stateHas f k.erase
+    | .stateSize (f := f) _ _ => .stateSize f
+    | .callThis (m := m) _ _ args => .callThis m args.erase
 
   def TArgs.erase : TArgs Φ Γ ps → List Expr
     | .nil => []
@@ -421,6 +465,8 @@ mutual
     | .nil => []
     | .cons e rest => (false, e.erase) :: rest.erase
     | .spread a rest => (true, a.erase) :: rest.erase
+    | .spreadKeys (f := f) _ _ rest => (true, .stateKeys f) :: rest.erase
+    | .spreadValues (f := f) _ _ rest => (true, .stateValues f) :: rest.erase
 end
 
 mutual
@@ -440,6 +486,10 @@ mutual
     | @TStmts.ifNullExit _ _ _ _ _ x _ _ yes rest => .ite (nullTest x) yes.erase [] :: rest.erase
     | @TStmts.ifNotNull _ _ _ _ _ x _ _ yes no rest => .ite (notNullTest x) yes.erase no.erase :: rest.erase
     | @TStmts.switchG _ _ _ x key _ _ _ arms rest => .switch (.field (.var x) key) arms.erase :: rest.erase
+    | .stateSet (f := f) _ _ _ k e rest => .stateSet f k.erase e.erase :: rest.erase
+    | .stateDelete (f := f) _ _ _ k rest => .stateDelete f k.erase :: rest.erase
+    | .callVoid (m := m) _ _ args rest => .callThis m args.erase :: rest.erase
+    | .retVoid _ rest => .ret (.lit .undefined) :: rest.erase
 
   def TArms.erase {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} :
       TArms Φ Γ τ v → List (Option Expr × List Stmt)
@@ -453,7 +503,8 @@ end
 /-- Functions in source order (oldest first). -/
 def TProgram.erase : TProgram Φ → Program
   | .nil => []
-  | .cons s body rest => rest.erase ++ [{ name := s.name, params := s.params.map Prod.fst, body := body.erase }]
+  | .cons s body rest =>
+    rest.erase ++ [{ name := s.name, params := s.params.map Prod.fst, body := body.erase, method := s.method }]
 
 /-- The case labels, in order (`none` is `default`). -/
 def TArms.labels {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} : TArms Φ Γ τ v → List (Option TagLit)
@@ -481,6 +532,8 @@ mutual
     | .block body rest => body.falls && rest.falls
     | .brk _ | .cont _ => false
     | .let_ _ _ rest | .assign _ _ rest | .forOf _ _ _ rest | .forEntries _ _ _ _ rest => rest.falls
+    | .stateSet _ _ _ _ _ rest | .stateDelete _ _ _ _ rest | .callVoid _ _ _ rest => rest.falls
+    | .retVoid _ _ => false
     | .ifNullExit _ _ _ rest => rest.falls
     | .switchG _ _ cases rest => (cases.falls || cases.breaks || !cases.covers) && rest.falls
 
@@ -494,6 +547,8 @@ mutual
     | .brk _ => true
     | .cont _ => false
     | .let_ _ _ rest | .assign _ _ rest | .forOf _ _ _ rest | .forEntries _ _ _ _ rest => rest.breaks
+    | .stateSet _ _ _ _ _ rest | .stateDelete _ _ _ _ rest | .callVoid _ _ _ rest => rest.breaks
+    | .retVoid _ _ => false
     | .ifNullExit _ _ yes rest => yes.breaks || rest.breaks
     | .switchG _ _ cases rest => (cases.falls || cases.breaks || !cases.covers) && rest.breaks
 
@@ -507,6 +562,8 @@ mutual
     | .brk _ => false
     | .cont _ => true
     | .let_ _ _ rest | .assign _ _ rest | .forOf _ _ _ rest | .forEntries _ _ _ _ rest => rest.continues
+    | .stateSet _ _ _ _ _ rest | .stateDelete _ _ _ _ rest | .callVoid _ _ _ rest => rest.continues
+    | .retVoid _ _ => false
     | .ifNullExit _ _ yes rest => yes.continues || rest.continues
     | .switchG _ _ cases rest => cases.continues || ((cases.falls || cases.breaks || !cases.covers) && rest.continues)
 
@@ -532,23 +589,28 @@ mutual
     | .empty _ _ | .wide _ _ _ | .narrow _ _ _ => false
 
   /-- No case but the last falls through, and no `ifNullExit` branch completes
-  normally. -/
-  def TStmts.wf : TStmts Φ Γ τ → Bool
+  normally. In a method that changes the state (`vd`), `return;` gives the state
+  and `return e` is excluded; elsewhere the state is not changed. -/
+  def TStmts.wf (vd : Bool) : TStmts Φ Γ τ → Bool
     | .nil => true
-    | .const _ _ rest | .ret _ rest | .brk rest | .let_ _ _ rest | .assign _ _ rest | .cont rest => rest.wf
-    | .forOf _ _ body rest | .forEntries _ _ _ body rest => body.wf && rest.wf
-    | .ite _ yes no rest | .ifNull _ _ yes no rest | .ifNotNull _ _ yes no rest => yes.wf && no.wf && rest.wf
-    | .block body rest => body.wf && rest.wf
-    | .ifNullExit _ _ yes rest => !yes.falls && yes.wf && rest.wf
-    | .switchG _ _ cases rest => cases.wf && rest.wf
+    | .ret _ rest => !vd && rest.wf vd
+    | .retVoid _ rest | .stateSet _ _ _ _ _ rest | .stateDelete _ _ _ _ rest | .callVoid _ _ _ rest => vd && rest.wf vd
+    | .const _ _ rest | .brk rest | .let_ _ _ rest | .assign _ _ rest | .cont rest => rest.wf vd
+    | .forOf _ _ body rest | .forEntries _ _ _ body rest => body.wf vd && rest.wf vd
+    | .ite _ yes no rest | .ifNull _ _ yes no rest | .ifNotNull _ _ yes no rest =>
+      yes.wf vd && no.wf vd && rest.wf vd
+    | .block body rest => body.wf vd && rest.wf vd
+    | .ifNullExit _ _ yes rest => !yes.falls && yes.wf vd && rest.wf vd
+    | .switchG _ _ cases rest => cases.wf vd && rest.wf vd
 
   /-- Labels are tags of the union's kind (string or boolean); an empty case is not
   followed by a narrowing case; no body but the last completes normally. -/
-  def TArms.wf {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} : TArms Φ Γ τ v → Bool
+  def TArms.wf {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)}
+      (vd : Bool) : TArms Φ Γ τ v → Bool
     | .nil => true
-    | .empty l rest => l.all (·.isStr == vs0.strTags) && rest.nextOk && rest.wf
-    | .wide l body rest => l.all (·.isStr == vs0.strTags) && (rest.isNil || !body.falls) && body.wf && rest.wf
-    | .narrow _ body rest => (rest.isNil || !body.falls) && body.wf && rest.wf
+    | .empty l rest => l.all (·.isStr == vs0.strTags) && rest.nextOk && rest.wf vd
+    | .wide l body rest => l.all (·.isStr == vs0.strTags) && (rest.isNil || !body.falls) && body.wf vd && rest.wf vd
+    | .narrow _ body rest => (rest.isNil || !body.falls) && body.wf vd && rest.wf vd
 
   /-- What may follow an empty case: anything but a narrowing case. -/
   def TArms.nextOk {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} : TArms Φ Γ τ v → Bool
@@ -580,6 +642,9 @@ mutual
     | .any a p | .all a p | .find a p | .filter a p | .map a p => a.trivial && p.trivial
     | .array es => es.trivial
     | .length e | .slength e => e.trivial
+    | .newMap _ | .stateSize _ _ => true
+    | .stateGet _ _ _ k | .stateHas _ _ k => k.trivial
+    | .callThis (t := t) _ _ args => t && args.trivial
 
   def TArgs.trivial : TArgs Φ Γ ps → Bool
     | .nil | .omitted _ => true
@@ -600,6 +665,7 @@ mutual
   def TElems.trivial : TElems Φ Γ τ → Bool
     | .nil => true
     | .cons e rest | .spread e rest => e.trivial && rest.trivial
+    | .spreadKeys _ _ rest | .spreadValues _ _ rest => rest.trivial
 end
 
 mutual
@@ -614,6 +680,10 @@ mutual
     | .ifNull _ _ yes no rest | .ifNotNull _ _ yes no rest => yes.trivial && no.trivial && rest.trivial
     | .ifNullExit _ _ yes rest => yes.trivial && rest.trivial
     | .switchG _ _ cases rest => cases.trivial && rest.trivial
+    | .stateSet _ _ _ k e rest => k.trivial && e.trivial && rest.trivial
+    | .stateDelete _ _ _ k rest => k.trivial && rest.trivial
+    | .callVoid (t := t) _ _ args rest => t && args.trivial && rest.trivial
+    | .retVoid _ rest => rest.trivial
 
   def TArms.trivial {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} : TArms Φ Γ τ v → Bool
     | .nil => true
@@ -630,7 +700,7 @@ def TProgram.names : TProgram Φ → List String
 `continue` outside a loop or `switch`. -/
 def TProgram.bodiesOk : TProgram Φ → Bool
   | .nil => true
-  | .cons s body rest => body.wf && !body.falls && !body.breaks && !body.continues &&
+  | .cons s body rest => body.wf s.void && (!s.void || s.method) && !body.falls && !body.breaks && !body.continues &&
       (!s.trivial || body.trivial) && rest.bodiesOk
 
 end V2

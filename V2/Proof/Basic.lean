@@ -80,7 +80,8 @@ theorem Ty.rep_not_nullish : ∀ {τ : Ty} {w : JSValue} {x : τ.denote}, τ.non
     simp only [Ty.Rep] at h; subst h; rfl
   | .tag t, _, _, _, h => by simp only [Ty.Rep] at h; subst h; cases t <;> rfl
   | .option _ _, _, _, hn, _ => by simp [Ty.nonNullish] at hn
-  | .record _, _, _, _, ⟨_, h, _⟩ | .union _ _, _, _, _, ⟨_, h, _⟩ | .array _, _, _, _, ⟨_, h, _⟩ => by subst h; rfl
+  | .record _, _, _, _, ⟨_, h, _⟩ | .union _ _, _, _, _, ⟨_, h, _⟩ | .array _, _, _, _, ⟨_, h, _⟩
+  | .map _, _, _, _, ⟨_, h, _⟩ => by subst h; rfl
 
 theorem Nullish.admits_nullish : ∀ {n : Nullish} {w : JSValue}, n.admits w → w.nullish = true
   | .undef, _, h | .null, _, h => by simp only [Nullish.admits] at h; subst h; rfl
@@ -123,7 +124,7 @@ theorem Ty.strictEq_rep : ∀ {τ : Ty} {w₁ w₂ : JSValue} {a b : τ.denote},
   | .tag t, _, _, _, _, _, h₁, h₂ => by
     simp only [Ty.Rep] at h₁ h₂; subst h₁; subst h₂; cases t <;> simp [TagLit.value, strictEq, Ty.beq]
   | .option _ _, _, _, _, _, h, _, _ | .record _, _, _, _, _, h, _, _ | .union _ _, _, _, _, _, h, _, _
-  | .array _, _, _, _, _, h, _, _ => by simp [Ty.prim] at h
+  | .array _, _, _, _, _, h, _, _ | .map _, _, _, _, _, h, _, _ => by simp [Ty.prim] at h
 
 theorem VIdx.rep : ∀ {vs : Variants} {t fs} (i : VIdx vs t fs) {key kvs} {y : fs.denote},
     fieldOf kvs key = t.value → fs.Rep kvs y → vs.Rep key kvs (i.inj y)

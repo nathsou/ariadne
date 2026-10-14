@@ -70,6 +70,8 @@ mutual
     /-- A union of records told apart by the literal field `key`. -/
     | union (key : String) (vs : Variants)
     | array (τ : Ty)
+    /-- `Map<string, τ>`. -/
+    | map (τ : Ty)
     deriving Repr, BEq, Inhabited
 
   inductive Fields where
@@ -95,6 +97,7 @@ mutual
     | .record fs => fs.denote
     | .union _ vs => vs.denote
     | .array τ => List τ.denote
+    | .map τ => List (JSString × τ.denote)
 
   @[reducible] def Fields.denote : Fields → Type
     | .nil => Unit
@@ -117,6 +120,7 @@ mutual
     | .record fs => fs.default
     | .union _ vs => vs.default
     | .array _ => []
+    | .map _ => []
 
   def Fields.default : (fs : Fields) → fs.denote
     | .nil => ()
@@ -149,6 +153,7 @@ mutual
     | .record fs, v, x => ∃ kvs, v = .record kvs ∧ (kvs.map Prod.fst).Nodup ∧ fs.Rep kvs x
     | .union key vs, v, x => ∃ kvs, v = .record kvs ∧ (kvs.map Prod.fst).Nodup ∧ vs.Rep key kvs x
     | .array τ, v, xs => ∃ vs, v = .array vs ∧ Forall2 (fun w x => τ.Rep w x) vs xs
+    | .map τ, v, m => ∃ kvs, v = .map kvs ∧ Forall2 (fun p q => p.1 = q.1 ∧ τ.Rep p.2 q.2) kvs m
 
   def Fields.Rep : (fs : Fields) → List (String × JSValue) → fs.denote → Prop
     | .nil, _, _ => True
@@ -204,6 +209,10 @@ inductive FIdx : Fields → String → Ty → Type where
 def FIdx.get : {fs : Fields} → FIdx fs f τ → fs.denote → τ.denote
   | .cons .., .here, (x, _) => x
   | .cons .., .there i, (_, xs) => i.get xs
+
+def FIdx.set : {fs : Fields} → FIdx fs f τ → fs.denote → τ.denote → fs.denote
+  | .cons .., .here, (_, xs), y => (y, xs)
+  | .cons .., .there i, (x, xs), y => (x, i.set xs y)
 
 def Fields.names : Fields → List String
   | .nil => []

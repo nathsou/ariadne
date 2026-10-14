@@ -12,9 +12,18 @@ typing decisions. The non-identity mappings, each with JavaScript's meaning:
 - `x += e`, `x -= e`, `x *= e` and `x++`, `x--` on a local `x` are `x = x op e`
   (the parser produces this form; `x` is read before `e` is evaluated).
 - An expression-bodied arrow `(ps) => e` is the model's `arrow ps e`.
-- A single unbraced statement as an `if` branch is a one-statement list (it is
-  not a block, but a single non-declaration statement has no scope effect).
+- A single unbraced statement as an `if` branch or a `for…of` body is a
+  one-statement list (it is not a block, but a single non-declaration statement has
+  no scope effect).
 - `for (const [i, x] of e.entries())` is `forEntries i x e`.
+- A class: `new C()` is the function `new C` returning a record of its fields, each
+  a `new Map()` (field initializers run in order); a method `m(ps)` is the function
+  `m` with parameters `this :: ps`, and a `void` method gets a final `return;`
+  (which is what falling off its end does). `this.f.get(k)`, `this.f.has(k)`,
+  `this.f.size`, `...this.f.keys()`, `...this.f.values()`, `this.f.set(k, v);`,
+  `this.f.delete(k);` and `this.m(args)` are the model's `state*` and `callThis`
+  forms. Methods are listed so that each comes after the methods it calls (the
+  model finds functions by name, so their order has no meaning).
 -/
 
 namespace V2.Front
@@ -62,6 +71,11 @@ mutual
     | .conditional c a b _ => return .cond (← convertExpr c) (← convertExpr a) (← convertExpr b)
     | .call (.var f span) args _ =>
       if f.startsWith "#" then unsupported span "a template literal" else return .call f (← convertExprs args)
+    | .call (.member (.member (.var "this" _) f _) "get" _) [k] _ => return .stateGet f (← convertExpr k)
+    | .call (.member (.member (.var "this" _) f _) "has" _) [k] _ => return .stateHas f (← convertExpr k)
+    | .member (.member (.var "this" _) f _) "size" _ => pure (.stateSize f)
+    | .call (.member (.var "this" _) m _) args _ => return .callThis m (← convertExprs args)
+    | .newMap .string _ _ => pure .newMap
     | .call (.member e m _) args _ => return .method (← convertExpr e) m (← convertExprs args)
     | .member e f _ => return .field (← convertExpr e) f
     | .index e i _ => return .index (← convertExpr e) (← convertExpr i)
@@ -76,6 +90,10 @@ mutual
 
   def convertElems : List Parse.Expr → Checked (List (Bool × Expr))
     | [] => pure []
+    | .spread (.call (.member (.member (.var "this" _) f _) "keys" _) [] _) _ :: es =>
+      return (true, .stateKeys f) :: (← convertElems es)
+    | .spread (.call (.member (.member (.var "this" _) f _) "values" _) [] _) _ :: es =>
+      return (true, .stateValues f) :: (← convertElems es)
     | .spread e _ :: es => return (true, ← convertExpr e) :: (← convertElems es)
     | e :: es => return (false, ← convertExpr e) :: (← convertElems es)
 
@@ -96,9 +114,14 @@ mutual
     | .switch_ e cases _ => return .switch (← convertExpr e) (← convertCases cases)
     | .break_ _ => pure .brk
     | .continue_ _ => pure .cont
-    | .forOf false x e (.block body _) _ => return .forOf x (← convertExpr e) (← convertStmts body)
+    | .forOf false x e body _ => return .forOf x (← convertExpr e) (← convertBranch body)
     | .forOfPair false i x (.call (.member e "entries" _) [] _) (.block body _) _ =>
       return .forEntries i x (← convertExpr e) (← convertStmts body)
+    | .expr (.call (.member (.member (.var "this" _) f _) "set" _) [k, v] _) _ =>
+      return .stateSet f (← convertExpr k) (← convertExpr v)
+    | .expr (.call (.member (.member (.var "this" _) f _) "delete" _) [k] _) _ =>
+      return .stateDelete f (← convertExpr k)
+    | .expr (.call (.member (.var "this" _) m _) args _) _ => return .callThis m (← convertExprs args)
     | s => unsupported s.span "this statement"
 
   /-- An `if` branch: a braced block's statements, or one statement. -/
@@ -125,10 +148,68 @@ def convertFunction (f : Parse.Function) : Checked Function := do
   let .block body _ := f.body | unsupported f.span "this function body"
   return { name := f.name, params := f.params.map (·.name), body := ← convertStmts body }
 
-/-- The model program for a parsed file, in source order. Type declarations are
-erased. -/
+mutual
+  /-- The methods an expression calls on `this`. -/
+  partial def thisCallsExpr : Parse.Expr → List String
+    | .call (.member (.var "this" _) m _) args _ => m :: args.flatMap thisCallsExpr
+    | .call f args _ => thisCallsExpr f ++ args.flatMap thisCallsExpr
+    | .unary _ a _ | .member a _ _ | .spread a _ => thisCallsExpr a
+    | .binary _ a b _ | .index a b _ => thisCallsExpr a ++ thisCallsExpr b
+    | .conditional c a b _ => thisCallsExpr c ++ thisCallsExpr a ++ thisCallsExpr b
+    | .array es _ | .newClass _ es _ => es.flatMap thisCallsExpr
+    | .record fs _ => fs.flatMap (thisCallsExpr ·.2)
+    | .lambda _ body _ => thisCallsStmt body
+    | _ => []
+
+  partial def thisCallsStmt : Parse.Stmt → List String
+    | .block ss _ => ss.flatMap thisCallsStmt
+    | .let_ _ _ _ e _ | .expr e _ | .return_ e _ => thisCallsExpr e
+    | .assign a e _ | .update a _ e _ => thisCallsExpr a ++ thisCallsExpr e
+    | .if_ c a b _ => thisCallsExpr c ++ thisCallsStmt a ++ thisCallsStmt b
+    | .while_ c b _ | .measured c b _ => thisCallsExpr c ++ thisCallsStmt b
+    | .for_ i c u b _ => thisCallsStmt i ++ thisCallsExpr c ++ thisCallsStmt u ++ thisCallsStmt b
+    | .forOf _ _ e b _ | .forOfPair _ _ _ e b _ => thisCallsExpr e ++ thisCallsStmt b
+    | .switch_ e cases _ => thisCallsExpr e ++ cases.flatMap fun (l, ss) =>
+        (l.map thisCallsExpr).getD [] ++ ss.flatMap thisCallsStmt
+    | _ => []
+end
+
+/-- Methods in source order, except that each comes after the methods it calls. -/
+def orderMethods (ms : List Parse.Function) : Checked (List Parse.Function) := do
+  let names := ms.map (·.name)
+  let calls := ms.map fun m => ((thisCallsStmt m.body).filter (names.contains ·)).eraseDups
+  let mut placed : List Parse.Function := []
+  let mut left := ms.zip calls
+  for _ in ms do
+    match left.find? (fun (_, cs) => cs.all fun c => placed.any (·.name == c)) with
+    | some (m, _) =>
+      placed := placed ++ [m]
+      left := left.filter (·.1.name != m.name)
+    | none => break
+  if let some (m, _) := left.head? then unsupported m.span "a method that calls itself (directly or not)"
+  return placed
+
+/-- A class: its constructor function, then its methods. -/
+def convertClass (c : Parse.Class) : Checked (List Function) := do
+  if let some ctor := c.constructor_ then unsupported ctor.span "a constructor"
+  let fields ← c.fields.mapM fun f => match f.value with
+    | .newMap .string _ _ => pure f.name
+    | _ => unsupported f.span "a field other than a Map with string keys"
+  let init : Function :=
+    { name := s!"new {c.name}", params := [], body := [.ret (.record (fields.map fun f => (some f, .newMap)))] }
+  let methods ← (← orderMethods c.methods).mapM fun m => do
+    let fn ← convertFunction m
+    let body := if m.result matches .void then fn.body ++ [.ret (.lit .undefined)] else fn.body
+    return { fn with params := "this" :: fn.params, body, method := true }
+  return init :: methods
+
+/-- The model program for a parsed file: its functions in source order, then its
+class. Type declarations are erased. -/
 def convertProgram (p : Parse.Program) : Checked Program := do
-  if let some c := p.classes.head? then unsupported c.span "a class"
-  p.functions.mapM convertFunction
+  if let some c := p.classes[1]? then unsupported c.span "a second class"
+  let fns ← p.functions.mapM convertFunction
+  match p.classes.head? with
+  | some c => return fns ++ (← convertClass c)
+  | none => return fns
 
 end V2.Front

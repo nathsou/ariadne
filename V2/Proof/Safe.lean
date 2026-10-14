@@ -1,4 +1,4 @@
-import V2.Proof.Array
+import V2.Proof.State
 
 /-!
 # Trivially safe expressions
@@ -72,6 +72,12 @@ mutual
     | _, _, .update r es _ _, ρ, h => by
       simp only [TExpr.trivial, Bool.and_eq_true] at h
       simp [TExpr.safe, andT, h.1, h.2]
+    | _, _, .newMap _, _, _ | _, _, .stateSize _ _, _, _ => rfl
+    | _, _, .stateGet _ _ _ k, ρ, h | _, _, .stateHas _ _ k, ρ, h => by
+      simp only [TExpr.trivial] at h; simp [TExpr.safe, TExpr.safe_of_trivial k ρ h]
+    | _, _, .callThis fn v args, ρ, h => by
+      simp only [TExpr.trivial, Bool.and_eq_true] at h
+      simp [TExpr.safe, andT, h.1, h.2]
 
   theorem TArgs.safe_of_trivial : ∀ {Γ ps : Ctx} (args : TArgs Φ Γ ps) (ρ : Γ.denote), args.trivial = true →
       args.safe fs ss ρ = true
@@ -93,6 +99,8 @@ mutual
     | _, _, .cons e rest, ρ, h | _, _, .spread e rest, ρ, h => by
       simp only [TElems.trivial, Bool.and_eq_true] at h
       simp [TElems.safe, andT, h.1, h.2]
+    | _, _, .spreadKeys _ _ rest, ρ, h | _, _, .spreadValues _ _ rest, ρ, h => by
+      simp only [TElems.trivial] at h; simp [TElems.safe, TElems.safe_of_trivial rest ρ h]
 end
 
 theorem TFn.safe_of_trivial (hss : SafeSigs ss) : ∀ {Γ : Ctx} {τ σ : Ty} (p : TFn Φ Γ τ σ) (ρ : Γ.denote)

@@ -15,8 +15,13 @@ namespace V2
 /-- The functions in scope, called on arguments representing safe inputs, converge
 to values representing their denotations. -/
 structure FnsOK {Φ : Sigs} (prog : Program) (fs : Φ.denote) (ss : Φ.safety) : Prop where
-  conv : ∀ {f s} (v : FVar Φ f s) (xs : s.params.denote) (vs : List JSValue), ArgsRep s.params vs xs →
-    v.safe ss xs = true → ∃ w, Converges (fun n => call prog n f vs) (.ok w) ∧ s.result.Rep w (v.get fs xs)
+  conv : ∀ {f s} (v : FVar Φ f s) (xs : s.params.denote) (vs : List JSValue), s.void = false →
+    ArgsRep s.params vs xs → v.safe ss xs = true →
+      ∃ w, Converges (fun n => call prog n f vs) (.ok w) ∧ s.result.Rep w (v.get fs xs)
+  /-- Methods that change the state leave a state representing their denotation. -/
+  convState : ∀ {f s} (v : FVar Φ f s) (xs : s.params.denote) (vs : List JSValue), s.void = true →
+    ArgsRep s.params vs xs → v.safe ss xs = true →
+      ∃ w t, Converges (fun n => callState prog n f vs) (.ok (w, t)) ∧ s.result.Rep t (v.get fs xs)
   /-- Each function in scope is declared in the program (so its name evaluates to it). -/
   mem : ∀ {f s} (_v : FVar Φ f s), prog.any (·.name == f) = true
 
@@ -284,11 +289,50 @@ mutual
           by simpa [TExpr.denote, hx, Ty.Rep] using hwa⟩
     | _, _, .call fn hf args, env, ρ, he, hs => by
       simp only [TExpr.safe] at hs
+      simp only [Bool.or_eq_false_iff] at hf
       have hs := andT_elim hs (args.safe_of_trivial ρ) (hss fn _)
       obtain ⟨vs, ⟨Na, ha⟩, hvs⟩ := TArgs.adequate args he hs.1
-      obtain ⟨w, ⟨Nc, hc⟩, hw⟩ := hfs.conv fn _ vs hvs hs.2
+      obtain ⟨w, ⟨Nc, hc⟩, hw⟩ := hfs.conv fn _ vs hf.2 hvs hs.2
       exact ⟨w, Converges.of_succ (max Na Nc) fun m hm => by
-        simp [evalExpr, TExpr.erase, ha m (by omega), hc m (by omega), he.lookup_none hf, bind, Except.bind],
+        simp [evalExpr, TExpr.erase, ha m (by omega), hc m (by omega), he.lookup_none hf.1, bind, Except.bind],
+        hw⟩
+    | _, _, .newMap _, _, _, _, _ =>
+      ⟨.map [], Converges.of_succ 0 fun m _ => by simp [evalExpr, TExpr.erase], [], rfl, .nil⟩
+    | _, _, .stateGet v i hn k, env, ρ, he, hs => by
+      simp only [TExpr.safe] at hs
+      obtain ⟨kvs, hsm, hrel⟩ := stateMap_rep v i he
+      obtain ⟨wk, ⟨N, hk⟩, hwk⟩ := TExpr.adequate k he hs
+      simp only [Ty.Rep] at hwk; subst hwk
+      refine ⟨(mapGet kvs (k.denote fs ρ)).getD .undefined, Converges.of_succ N fun m hm => by
+        simp [evalExpr, TExpr.erase, hsm, hk m hm, mapKey, bind, Except.bind, pure, Except.pure], ?_⟩
+      show (Ty.option .undef _).Rep _ (mapGet _ _)
+      rcases mapGet_rep (k.denote fs ρ) hrel with ⟨h1, h2⟩ | ⟨w, x, h1, h2, hw⟩
+      · rw [h1, h2]; rfl
+      · rw [h1, h2]; exact hw
+    | _, _, .stateHas v i k, env, ρ, he, hs => by
+      simp only [TExpr.safe] at hs
+      obtain ⟨kvs, hsm, hrel⟩ := stateMap_rep v i he
+      obtain ⟨wk, ⟨N, hk⟩, hwk⟩ := TExpr.adequate k he hs
+      simp only [Ty.Rep] at hwk; subst hwk
+      have : (mapGet kvs (k.denote fs ρ)).isSome = (mapGet (i.get (v.get ρ)) (k.denote fs ρ)).isSome := by
+        rcases mapGet_rep (k.denote fs ρ) hrel with ⟨h1, h2⟩ | ⟨w, x, h1, h2, _⟩ <;> simp [h1, h2]
+      exact ⟨.bool (mapGet kvs (k.denote fs ρ)).isSome, Converges.of_succ N fun m hm => by
+        simp [evalExpr, TExpr.erase, hsm, hk m hm, mapKey, bind, Except.bind, pure, Except.pure], by
+        simp only [Ty.Rep, TExpr.denote, this]⟩
+    | _, _, .stateSize v i, env, ρ, he, _ => by
+      obtain ⟨kvs, hsm, hrel⟩ := stateMap_rep v i he
+      exact ⟨.number kvs.length, Converges.of_succ 0 fun m _ => by
+        simp [evalExpr, TExpr.erase, hsm, bind, Except.bind, pure, Except.pure], by
+        simp only [Ty.Rep, TExpr.denote, hrel.length_eq]⟩
+    | _, _, @TExpr.callThis _ _ _ m _ _ _ _ fn v args, env, ρ, he, hs => by
+      simp only [TExpr.safe] at hs
+      have hs := andT_elim hs (args.safe_of_trivial ρ) (hss fn _)
+      obtain ⟨vs, ⟨Na, ha⟩, hvs⟩ := TArgs.adequate args he hs.1
+      obtain ⟨t, ht, hwt⟩ := thisOf_rep v he
+      obtain ⟨w, ⟨Nc, hc⟩, hw⟩ := hfs.conv fn (v.get ρ, args.denote fs ρ) (t :: vs) rfl
+        ⟨t, _, rfl, hwt, hvs⟩ hs.2
+      exact ⟨w, Converges.of_succ (max Na Nc) fun n hn => by
+        simp [evalExpr, TExpr.erase, ha n (by omega), ht, hc n (by omega), bind, Except.bind, pure, Except.pure],
         hw⟩
     | _, _, .record es sel hl, env, ρ, he, hs => by
       obtain ⟨ps, ⟨N, hc⟩, hn, hr⟩ := TEntries.adequate es [] hl he hs
@@ -465,7 +509,7 @@ mutual
     | _, _, _, @TFn.ref _ _ _ _ f _ _ _ fn h, env, ρ, he =>
       ⟨.function f, conv_args1 (Converges.of_succ 0 fun m _ => by
           simp [evalExpr, TFn.erase, he.lookup_none h, hfs.mem fn]), fun extra w y hw hs => by
-        obtain ⟨r, ⟨N, hc⟩, hr⟩ := hfs.conv fn (y, ()) (w :: extra) ⟨w, [], rfl, hw, rfl⟩ hs
+        obtain ⟨r, ⟨N, hc⟩, hr⟩ := hfs.conv fn (y, ()) (w :: extra) rfl ⟨w, [], rfl, hw, rfl⟩ hs
         exact ⟨r, Converges.of_succ N fun m hm => by simp [apply, hc m hm], hr⟩⟩
 
   theorem TCmp.adequate : ∀ {Γ : Ctx} {τ : Ty} (c : TCmp Φ Γ τ) {env : Env} {ρ : Γ.denote}, EnvRel Γ env ρ →
@@ -479,7 +523,7 @@ mutual
     | _, _, @TCmp.ref _ _ _ f _ _ _ _ fn h, env, ρ, he =>
       ⟨.function f, conv_args1 (Converges.of_succ 0 fun m _ => by
           simp [evalExpr, TCmp.erase, he.lookup_none h, hfs.mem fn]), fun w₁ a₁ w₂ a₂ h₁ h₂ hs => by
-        obtain ⟨r, ⟨N, hc⟩, hr⟩ := hfs.conv fn (a₁, a₂, ()) [w₁, w₂] ⟨w₁, _, rfl, h₁, w₂, [], rfl, h₂, rfl⟩ hs
+        obtain ⟨r, ⟨N, hc⟩, hr⟩ := hfs.conv fn (a₁, a₂, ()) [w₁, w₂] rfl ⟨w₁, _, rfl, h₁, w₂, [], rfl, h₂, rfl⟩ hs
         simp only [Ty.Rep] at hr; subst hr
         exact Converges.of_succ N fun m hm => by simp [apply, hc m hm, TCmp.denote]⟩
 
@@ -504,6 +548,22 @@ mutual
       exact ⟨vs ++ ws, Converges.of_succ (max Ne Nr) fun m hm => by
         simp [evalElems, TElems.erase, hce m (by omega), hcr m (by omega), bind, Except.bind, pure, Except.pure],
         hvs.append hws⟩
+    | _, _, .spreadKeys v i rest, _, ρ, he, hs => by
+      simp only [TElems.safe] at hs
+      obtain ⟨kvs, hsm, hrel⟩ := stateMap_rep v i he
+      obtain ⟨ws, ⟨N, hcr⟩, hws⟩ := TElems.adequate rest he hs
+      exact ⟨_, Converges.of_succ (N + 1) fun n hn => by
+        obtain ⟨n, rfl⟩ : ∃ k, n = k + 1 := ⟨n - 1, by omega⟩
+        simp [evalElems, TElems.erase, evalExpr, hsm, hcr (n + 1) (by omega), bind, Except.bind, pure, Except.pure],
+        (keys_rep hrel).append hws⟩
+    | _, _, .spreadValues v i rest, _, ρ, he, hs => by
+      simp only [TElems.safe] at hs
+      obtain ⟨kvs, hsm, hrel⟩ := stateMap_rep v i he
+      obtain ⟨ws, ⟨N, hcr⟩, hws⟩ := TElems.adequate rest he hs
+      exact ⟨_, Converges.of_succ (N + 1) fun n hn => by
+        obtain ⟨n, rfl⟩ : ∃ k, n = k + 1 := ⟨n - 1, by omega⟩
+        simp [evalElems, TElems.erase, evalExpr, hsm, hcr (n + 1) (by omega), bind, Except.bind, pure, Except.pure],
+        (values_rep hrel).append hws⟩
 end
 
 end

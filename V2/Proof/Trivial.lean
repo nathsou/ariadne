@@ -56,6 +56,19 @@ mutual
     | _, _, .ret e _, _, ρ, _, h => by
       simp only [TStmts.trivial, Bool.and_eq_true] at h
       simp [TStmts.safe, h.1]
+    | _, _, .retVoid _ _, _, _, _, _ => rfl
+    | _, _, .stateSet _ _ _ key e rest, ks, ρ, hk, h => by
+      simp only [TStmts.trivial, Bool.and_eq_true] at h
+      simp only [TStmts.safe, andT, h.1.1, h.1.2, ite_true, Bool.true_and]
+      exact TStmts.safe_of_trivial rest _ _ hk h.2
+    | _, _, .stateDelete _ _ _ key rest, ks, ρ, hk, h => by
+      simp only [TStmts.trivial, Bool.and_eq_true] at h
+      simp only [TStmts.safe, h.1, Bool.true_or, Bool.true_and]
+      exact TStmts.safe_of_trivial rest _ _ hk h.2
+    | _, _, .callVoid _ _ args rest, ks, ρ, hk, h => by
+      simp only [TStmts.trivial, Bool.and_eq_true] at h
+      simp only [TStmts.safe, andT, h.1.1, h.1.2, ite_true, Bool.true_and]
+      exact TStmts.safe_of_trivial rest _ _ hk h.2
     | _, _, .ite c yes no rest, ks, ρ, hk, h => by
       simp only [TStmts.trivial, Bool.and_eq_true] at h
       have hk' : K.True { ks with normal := rest.safe fs ss ks } :=
