@@ -8,4 +8,5 @@ import V2Tests.Generated.Tree
 import V2Tests.Generated.Trust
 import V2Tests.Properties
 import V2Tests.RegistersSpec
+import V2Tests.TreeSpec
 import V2Tests.TrustSpec
