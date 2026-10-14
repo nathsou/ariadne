@@ -18,7 +18,8 @@ properties are proved in `Tests/*Spec.lean`.
 
 ## Build and use
 
-The repository pins Lean 4.35.0 (`lean-toolchain`) and has no Lake or npm dependencies. CI
+The repository pins Lean 4.35.0 (`lean-toolchain`) and has no Lake dependencies; its one npm
+dependency, the TypeScript compiler, is test-only (the parser cross-check) and pinned by `bun.lock`. CI
 downloads Lean and Bun 1.4.3 with reviewed SHA-256 hashes (`scripts/install-ci-tools.sh`).
 
 ```sh
@@ -56,24 +57,36 @@ Trusted:
 The type checker, the printer and every tactic are untrusted: a bug in any of them makes a
 per-file check fail, never a wrong theorem.
 
+Each source theorem assumes that its arguments represent the declared types (safe integers, records with
+their fields, arrays without holes). `ariadne validators FILE` prints TypeScript guards that check it
+where values enter from outside the subset.
+
 ## Using Ariadne in a project
 
-Require it in the project's `lakefile.toml`, pinned to a commit:
+Require it in the project's `lakefile.toml`, pinned to a release:
 
 ```toml
 [[require]]
 name = "ariadne"
 git = "https://github.com/nathsou/ariadne"
-rev = "<commit>"
+rev = "v0.4.0"
 ```
 
+[docs/GUIDE.md](docs/GUIDE.md) walks through a whole project, [`examples/quickstart`](examples/quickstart),
+which CI builds and audits: translating, stating and proving claims, the audit, and CI with a prebuilt
+release (`scripts/fetch-release.sh`, its hash pinned). [CHANGELOG.md](CHANGELOG.md) lists what each
+release changes.
+
 Translate each TypeScript file with `lake exe ariadne translate`, check the generated files in, and
-prove properties of the readable definitions. `Ariadne.Audit.run` gives the project the same soundness
+prove properties of the readable definitions (`Ariadne/Lib` has lemmas for their loops, maps, string
+order and sorting; `cmp_laws` proves a comparator lawful, which `toSorted`'s safety condition needs; a
+class's file states which fields each method leaves alone, as `«m».keeps.«f»`). `Ariadne.Audit.run` gives the project the same soundness
 gate, with its own lock: for example, every proposition defined under `Spec` must be proved exactly by
 the theorem of the same name under `Proofs`, and the lock records every statement, so a changed
 statement is a visible change in review.
 
 ## Documentation
 
+- [Guide: a project from TypeScript to proved properties](docs/GUIDE.md)
 - [Design: the model, the typed syntax, the theorem and the per-file checks](docs/DESIGN.md)
 - [Language: what is accepted, what is refused, and drive's kernel](docs/LANGUAGE.md)

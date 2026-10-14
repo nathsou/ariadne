@@ -9,13 +9,19 @@ accepted source form to the model construct with the same JavaScript meaning.
 It drops spans and type annotations and refuses everything else; it makes no
 typing decisions. The non-identity mappings, each with JavaScript's meaning:
 
-- `x += e`, `x -= e`, `x *= e` and `x++`, `x--` on a local `x` are `x = x op e`
-  (the parser produces this form; `x` is read before `e` is evaluated).
+- `x += e`, `x -= e` and `x *= e` on a local `x` are `x = x op e` (the parser produces this form; `x` is
+  read before `e` is evaluated); `x++` and `x--` are `x = inc x` and `x = dec x`, which add one in `x`'s
+  own numeric type (`1` or `1n`).
 - An expression-bodied arrow `(ps) => e` is the model's `arrow ps e`.
 - A single unbraced statement as an `if` branch or a `for…of` body is a
   one-statement list (it is not a block, but a single non-declaration statement has
   no scope effect).
 - `for (const [i, x] of e.entries())` is `forEntries i x e`.
+- `while (c) body` is `while_ c body` (an unbraced body is a one-statement list, as for `if`).
+- `Math.floor(a / b)` is `binary floorDiv a b`. `Math` is the global object: no declaration may
+  take the name.
+- `s.startsWith(t)`, `s.slice(a, b)` and the like are `method` calls, which the model runs only on
+  the receivers and arguments it has a meaning for.
 - `for (let i = 0; i < n; i++) body` on a local `n` is `forRange i n body` (whose
   static check requires `n` constant and `i` not assigned in `body`).
 - A class: `new C()` is the function `new C` returning a record of its fields, each
@@ -37,10 +43,12 @@ def unsupported (span : Span) (what : String) : Checked α :=
 def convertUnary (span : Span) : String → Checked UnOp
   | "!" => pure .not
   | "-" => pure .neg
+  | "++" => pure .inc
+  | "--" => pure .dec
   | op => unsupported span s!"unary '{op}'"
 
 def convertBinary (span : Span) : String → Checked BinOp
-  | "+" => pure .add | "-" => pure .sub | "*" => pure .mul
+  | "+" => pure .add | "-" => pure .sub | "*" => pure .mul | "/" => pure .div | "%" => pure .mod
   | "===" => pure .eq | "!==" => pure .ne
   | "<" => pure .lt | "<=" => pure .le | ">" => pure .gt | ">=" => pure .ge
   | "&&" => pure .and | "||" => pure .or | "??" => pure .coalesce
@@ -64,6 +72,16 @@ def convertLiteral (span : Span) : Parse.Literal → Checked Lit
   | .undefined => pure .undefined
   | .null => pure .null
 
+/-- The variable a counted loop's update increments: `i++`, `i += 1` or `i = i + 1`. -/
+def incrementOf : Parse.Stmt → Option String
+  | .assign (.var i _) (.unary "++" (.var i' _) _) _ => if i == i' then some i else none
+  | .assign (.var i _) (.binary "+" (.var i' _) (.literal (.number 1 0) _) _) _ => if i == i' then some i else none
+  | _ => none
+
+/-- A declaration's name: not `Math`, which `Math.floor` refers to. -/
+def declName (span : Span) (x : String) : Checked String :=
+  if x == "Math" then unsupported span "a declaration named Math" else pure x
+
 mutual
   def convertExpr : Parse.Expr → Checked Expr
     | .literal l span => return .lit (← convertLiteral span l)
@@ -78,12 +96,15 @@ mutual
     | .member (.member (.var "this" _) f _) "size" _ => pure (.stateSize f)
     | .call (.member (.var "this" _) m _) args _ => return .callThis m (← convertExprs args)
     | .newMap .string _ _ => pure .newMap
+    | .call (.member (.var "Math" _) "floor" _) [.binary "/" a b _] _ =>
+      return .binary .floorDiv (← convertExpr a) (← convertExpr b)
     | .call (.member e m _) args _ => return .method (← convertExpr e) m (← convertExprs args)
     | .member e f _ => return .field (← convertExpr e) f
     | .index e i _ => return .index (← convertExpr e) (← convertExpr i)
     | .array elems _ => return .array (← convertElems elems)
     | .record fields _ => return .record (← convertEntries fields)
-    | .lambda params (.return_ e _) _ => return .arrow (params.map (·.name)) (← convertExpr e)
+    | .lambda params (.return_ e span) _ => do
+      return .arrow (← params.mapM (declName span ·.name)) (← convertExpr e)
     | e => unsupported e.span "this expression"
 
   def convertExprs : List Parse.Expr → Checked (List Expr)
@@ -107,8 +128,8 @@ end
 
 mutual
   def convertStmt : Parse.Stmt → Checked Stmt
-    | .let_ false x _ e _ => return .const x (← convertExpr e)
-    | .let_ true x _ e _ => return .let_ x (← convertExpr e)
+    | .let_ false x _ e span => return .const (← declName span x) (← convertExpr e)
+    | .let_ true x _ e span => return .let_ (← declName span x) (← convertExpr e)
     | .assign (.var x _) e _ => return .assign x (← convertExpr e)
     | .return_ e _ => return .ret (← convertExpr e)
     | .if_ c yes no _ => return .ite (← convertExpr c) (← convertBranch yes) (← convertBranch no)
@@ -116,13 +137,13 @@ mutual
     | .switch_ e cases _ => return .switch (← convertExpr e) (← convertCases cases)
     | .break_ _ => pure .brk
     | .continue_ _ => pure .cont
-    | .forOf false x e body _ => return .forOf x (← convertExpr e) (← convertBranch body)
-    | .for_ (.let_ true i _ (.literal (.number 0 0) _) _) (.binary "<" (.var i₁ _) (.var n _) _)
-        (.assign (.var i₂ _) (.binary "+" (.var i₃ _) (.literal (.number 1 0) _) _) _) body span =>
-      if i₁ == i && i₂ == i && i₃ == i then return .forRange i n (← convertBranch body)
+    | .forOf false x e body span => return .forOf (← declName span x) (← convertExpr e) (← convertBranch body)
+    | .for_ (.let_ true i _ (.literal (.number 0 0) _) _) (.binary "<" (.var i₁ _) (.var n _) _) update body span =>
+      if i₁ == i && incrementOf update == some i then return .forRange (← declName span i) n (← convertBranch body)
       else unsupported span "this for loop"
-    | .forOfPair false i x (.call (.member e "entries" _) [] _) (.block body _) _ =>
-      return .forEntries i x (← convertExpr e) (← convertStmts body)
+    | .while_ c body _ => return .while_ (← convertExpr c) (← convertBranch body)
+    | .forOfPair false i x (.call (.member e "entries" _) [] _) (.block body _) span =>
+      return .forEntries (← declName span i) (← declName span x) (← convertExpr e) (← convertStmts body)
     | .expr (.call (.member (.member (.var "this" _) f _) "set" _) [k, v] _) _ =>
       return .stateSet f (← convertExpr k) (← convertExpr v)
     | .expr (.call (.member (.member (.var "this" _) f _) "delete" _) [k] _) _ =>
@@ -152,7 +173,8 @@ end
 def convertFunction (f : Parse.Function) : Checked Function := do
   if f.decreases.isSome then unsupported f.span "a termination measure"
   let .block body _ := f.body | unsupported f.span "this function body"
-  return { name := f.name, params := f.params.map (·.name), body := ← convertStmts body }
+  return { name := ← declName f.span f.name, params := ← f.params.mapM (declName f.span ·.name),
+           body := ← convertStmts body }
 
 mutual
   /-- The methods an expression calls on `this`. -/
@@ -197,6 +219,7 @@ def orderMethods (ms : List Parse.Function) : Checked (List Parse.Function) := d
 
 /-- A class: its constructor function, then its methods. -/
 def convertClass (c : Parse.Class) : Checked (List Function) := do
+  let _ ← declName c.span c.name
   if let some ctor := c.constructor_ then unsupported ctor.span "a constructor"
   let fields ← c.fields.mapM fun f => match f.value with
     | .newMap .string _ _ => pure f.name

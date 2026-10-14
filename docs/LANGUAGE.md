@@ -25,13 +25,15 @@ Anything else is refused with a diagnostic; `Tests/negative` has one fixture per
 **Statements**
 
 - `const`, `let`, and assignment to `let`s and parameters.
-- `+=`, `-=`, `*=`, `x++` and `x--`, as statements on a variable.
+- `+=`, `-=`, `*=`, `x++` and `x--`, as statements on a variable (a number or a bigint).
 - `if`/`else`, with braced or single-statement branches.
 - `if (x == null) return …;`, narrowing `x` for the rest of the block.
 - `switch` on a union's tag or on a literal union: cases in any order, grouped labels, `default` and
   fall-through, narrowing in each case.
 - `for (const x of xs)`, `for (const [i, x] of xs.entries())`, and
   `for (let i = 0; i < n; i++)` with a constant `n`.
+- `while (c) { … }`, with a condition free of number arithmetic. Its safety condition says that the loop
+  ends (see Numbers for how it is discharged).
 - `break`, `continue`, and `return` anywhere, including inside loops.
 
 **Expressions**
@@ -41,11 +43,14 @@ Anything else is refused with a diagnostic; `Tests/negative` has one fixture per
 - `===` and `!==` on primitives, and `== null`/`!= null`.
 - `<`, `<=`, `>` and `>=` on numbers, bigints and strings.
 - `+`, `-`, `*` and unary `-` on numbers and bigints; `+` on strings.
+- `%` on numbers and bigints, `/` on bigints, and `Math.floor(a / b)` on numbers.
 - `??`.
 - Field reads.
 - Object literals and `{ ...r, f: v }`.
 - Array literals with spreads, `xs.length` and `xs[i]` (of type `T | undefined`).
 - `includes` on primitives.
+- On strings: `s.length`, `startsWith`, `endsWith`, `includes`, `indexOf`, and `slice` with one or two
+  arguments.
 - `some`, `every`, `find`, `filter` and `map`. Their callbacks are arrow functions with an expression
   body, or declared functions.
 - `toSorted` with a comparator.
@@ -69,10 +74,12 @@ Anything else is refused with a diagnostic; `Tests/negative` has one fixture per
 | Shadowing, a name declared twice | The model resolves names dynamically (see DESIGN.md) |
 | Assigning a `const`, a loop variable or a counted loop's bound | Keeps loops and narrowing sound |
 | Block-bodied arrows, functions as values other than callbacks | Callbacks may not assign or declare |
-| `/`, `%`, `**`, bitwise operators, `Math`, unary `+` | Numbers are integers |
+| `/` on numbers other than in `Math.floor(a / b)`, `**`, bitwise operators, other `Math` functions, unary `+` | Numbers are integers |
+| A declaration named `Math` | `Math.floor` must be JavaScript's |
+| A `while` condition with number arithmetic, `do … while` | The condition's safety would join the loop's |
 | Non-integer literals, and literals outside ±(2^53 − 1) | Numbers are safe integers |
 | `++x`, `x++` inside an expression | Assignments are statements |
-| `while`, recursion, `throw`, `try`, `async` | Not yet modeled |
+| Recursion, `throw`, `try`, `async` | Not yet modeled |
 | A constructor with code, more than one class per file, inheritance | Not yet modeled |
 
 ## Mutation
@@ -97,7 +104,11 @@ Anything else is refused with a diagnostic; `Tests/negative` has one fixture per
     doesn't happen.
   - So an overflowing computation is outside the theorem's claim; it is never claimed to compute a wrong
     value.
+- `%` and `Math.floor(a / b)` need a divisor other than zero, and `Math.floor(a / b)` safe-integer
+  operands; bigint `/` and `%` need a divisor other than zero.
 - Comparisons, `===`, `length` and indexing are always safe.
+- A `while` loop must end within 2^64 iterations. Prove it with a measure that each iteration decreases
+  (`whileSafe_of_measure` in `Ariadne/Lib/Loop.lean`; `Tests/Properties.lean` has an example).
 - `bigint` denotes `Int` exactly and needs no condition.
 - Negative zero is not distinguished from zero, which is unobservable within the subset.
 - Non-integer, NaN or infinite `number` arguments fall outside the theorem's hypotheses: its argument

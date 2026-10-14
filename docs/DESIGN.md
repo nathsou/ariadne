@@ -51,8 +51,8 @@ Concluded per file:          every readable def is what the TypeScript function 
 | `Ariadne/Model/Store.lean` | Store model of classes (`runMethodStore`) | **Yes** |
 | `Ariadne/Typed/*` | Types, typed syntax, erasure, denotation, safety conditions, well-formedness | No |
 | `Ariadne/Eqns/*` | Equation lemmas of the typed syntax's large definitions (see Build time) | No |
-| `Ariadne/Proof/*` | The adequacy proof, and the store model's agreement with the value model | No |
-| `Ariadne/Lib/Sort.lean` | Laws that make comparators consistent (for `toSorted` safety conditions) | No |
+| `Ariadne/Proof/*` | The adequacy proof, the store model's agreement with the value model, and frames (which fields a method leaves) | No |
+| `Ariadne/Lib/*` | Lemmas for proofs about readable definitions: loops (invariants, folds), maps, string order, `toSorted` (its consistency conditions, what it returns, and `cmp_laws` for comparators), the `readable` simp set | No |
 | `Ariadne/Kernel.lean` | `kernel_rfl`: closed equations checked by the kernel alone | No |
 | `Ariadne/Audit.lean`, `Audit.lean` | The soundness gate, and its configuration for Ariadne (`trusted.lock`) | No |
 | `Ariadne/Front/Check.lean` | Type checker and printer | No |
@@ -95,9 +95,28 @@ called inside expressions that change no state. Reading a name before its declar
 ### Numbers
 
 `number` denotes `Int` restricted to ±(2^53 − 1), where binary64 arithmetic is exact. `+`, `-`, `*`
-and negation fault outside that range; the frontend refuses `/`, `%`, `**`, bitwise operators and
-literals that are not safe integers. Negative zero is not distinguished from zero: within the subset
-(no division, no `Object.is`) the two cannot be told apart. `bigint` denotes `Int` exactly.
+and negation fault outside that range. `%` is exact on integers (truncated, with the dividend's sign)
+and faults on a zero divisor. `/` on numbers gives fractions, so only `Math.floor(a / b)` is accepted, as
+one form (`floorDiv`): on safe integers the quotient's rounding error is below `|a| / |b| · 2^-53`, less
+than `1 / |b|`, the distance from a non-integer quotient to the nearest integer, so rounding never
+crosses an integer and the result is floor division (`Int.fdiv`). The model faults on a zero divisor or
+an unsafe operand. The frontend refuses `**`, bitwise operators and literals that are not safe
+integers. Negative zero is not distinguished from zero: within the subset (no `Object.is`, no division
+whose result is a fraction) the two cannot be told apart. `bigint` denotes `Int` exactly; its `/`
+truncates (`Int.tdiv`) and `%` is `Int.tmod`, faulting on a zero divisor (JavaScript throws).
+
+### Strings
+
+Strings are lists of UTF-16 code units. `startsWith`, `endsWith`, `includes` and `indexOf` take a string;
+`slice` takes one or two integers, counted from the end when negative and clamped to the string. All
+are total.
+
+### `while` loops
+
+`while (c) body` runs as `loop` over iterations that bind nothing, each starting with
+`if (!c) break;`. Like a counted loop, the model builds no more iterations than its fuel, so a loop
+that does not end is a timeout. The store model runs the same iterations through `sLoop`, so its
+agreement with the value model is the loop case already proved.
 
 ### Records, optionals and arrays
 
@@ -140,7 +159,10 @@ inductive TStmts (Φ : Sigs) : Ctx → Ty → Type  -- statement lists; declarat
   function) and `TCmp` (a two-parameter comparator).
 - **`switch`** takes a list of arms (`TArms`): cases in any order, grouped labels, `default`,
   fall-through.
-- **Binary operators** are one constructor indexed by an operator (`TExpr.bin (op : Op σ τ)`).
+- **Binary operators** are one constructor indexed by an operator (`TExpr.bin (op : Op σ τ)`); string
+  methods taking a string are one constructor indexed by the method (`TExpr.smethod`).
+- **`while`** (`TStmts.whileLoop`) needs a trivially safe condition, so a loop's safety is that of its
+  iterations and that it ends.
 - **Well-formedness** is a decidable predicate the kernel checks per file: `bodiesOk` (every path
   returns; no stray `break`/`continue`; state changes only in `void` methods) and the model's own
   `Program.scoped` on the parsed program, which also requires distinct names.
@@ -154,6 +176,13 @@ inductive TStmts (Φ : Sigs) : Ctx → Ty → Type  -- statement lists; declarat
   the readable `if c then a else b` definitionally equal to the denotation.
 - Loops denote through one combinator, `forIn items step exit` (a `foldr` building the continuation
   chain). Counted loops iterate over `range n`.
+- A `while` loop denotes `whileDo cond step exit`: up to `loopBound` (2^64) iterations, leaving after
+  that. Its safety condition, `whileSafe`, says that it ends within them, each iteration safe, so
+  termination is a proof obligation, met with a measure (`whileSafe_of_measure`). `whileDo` and
+  `whileSafe` carry the kernel's lowest unfolding priority: comparing a readable definition with the
+  denotation, the kernel unfolds the side with the greater definitional height first, and the
+  denotation reaches the loop through `&&` and other small definitions; with an ordinary height, it
+  would unroll the readable side's loop instead, through `loopBound` iterations.
 - The denotation is total. Where JavaScript can fault, a separate **safety condition** (computed from
   the same syntax) says that no fault occurs. Conjuncts from syntax that cannot fault are left out by
   definition, so a printed condition mentions only operations that can leave the model, for example
@@ -204,6 +233,40 @@ theorem «f».source (x : Int) … (vs : List JSValue) (args : ArgsRep …) (saf
     ∃ w, Converges (fun fuel => run ast fuel "f" vs) (.ok w) ∧ Ty.Rep … w («f» x …) := …
 ```
 
+Each named type of the source also gets readable Lean names, so that the definitions and statements about
+them read like the TypeScript:
+- an alias, written as the Lean type it denotes (`Floor := Int × JSString × … × Unit`, `Commit := Fin 4`);
+- for a record, an accessor per field (`fl.seed`), a constructor (`Candidate.mk index committed …`) and a
+  setter per field (`a.withName n`, for `{ ...a, name: n }`), unless a field takes one of those names;
+- a constant per literal of a literal union (`Commit.bad`);
+- for a union of records, a constructor per variant, usable as a pattern: of nothing (`CopyFact.damaged`),
+  of the variant's one field (`Choice.true order`), or of its payload (`CopyFact.opened f`, where
+  `f : CopyFact.Variant.opened` has accessors).
+
+They are reducible definitions in the simp set `readable`, so `simp [readable]` unfolds them to the
+projections, numerals and injections of the denotation. A type whose name a function or method uses gets
+none.
+
+The readable definitions use these names: fields are read and set by name, a `switch` is a `match` on the
+union's constructors that binds the narrowed variable to its payload, and a loop's or a join point's state
+is taken apart by a pattern (`fun (older, notOwner, …, ()) => …`). All of it is definitionally the
+denotation, which is what the per-file `body_eq` checks.
+
+A class's file also says which fields each method leaves alone:
+
+```lean
+theorem frames.«marks» : typed.frames "marks" = [false, true, …] := by decide +kernel
+theorem «pack».keeps.«marks» (this : Registers) … : («pack» this …).marks = this.marks :=
+  frame_of … denote_eq frames.«marks» …
+```
+
+`TProgram.frames g` marks a method that neither sets nor deletes in `this.g` and calls only marked
+methods; it is a syntactic check over the typed program, evaluated by the kernel. `TProgram.frame`
+(`Ariadne/Proof/Frame.lean`) proves once that a marked method returns a state with the same `g`: over
+any run of its body, every variable named `this` keeps `g`'s value, through loops, `switch` and the
+methods it calls. The translator predicts the marks to know which lemmas to write; a wrong prediction
+fails `frames.«g»`, never a lemma.
+
 Each `body_eq` compares one function's denotation with its readable definition, with callees taken as
 the earlier readable definitions, so no check unfolds a callee. The source theorems mention only `run`,
 `ast`, `Converges`, `Ty.Rep` and the readable definitions. `Tests/Properties.lean`,
@@ -216,8 +279,22 @@ readable definitions and transfer them to every run.
   model; every `t_*` function must agree, every `fault_*` function must be refused.
 - **Differential** (`scripts/differential.mjs`): every exported function of every fixture on random
   and edge inputs, including records with extra fields in any order, omitted optional arguments, and
-  objects with random `Map` states for methods (41,700 calls). Calls the model refuses are counted and
+  objects with random `Map` states for methods (46,800 calls). Calls the model refuses are counted and
   make no claim.
+- **Model fuzzing** (`scripts/fuzz-model.mjs`): random programs, generated by type so that most run to a
+  value (arithmetic near the safe-integer limits, strings with surrogates, arrays and their callbacks,
+  records, `switch`, loops with `break` and `continue`), run in Bun and in the model. Wherever the model
+  gives a value, JavaScript must give the same one.
+- **Parser cross-check** (`scripts/crosscheck.mjs`): an independent converter from the TypeScript
+  compiler's syntax tree to the model's syntax, following the mapping documented in
+  `Ariadne/Front/Convert.lean`. For every test file, and for random expressions dense in operators,
+  parentheses, literals and escapes, the program Ariadne's parser and converter produce (`ariadne ast`)
+  must be the one the compiler's tree gives; and Ariadne must refuse what the compiler finds a syntax
+  error.
+- **Validators** (`scripts/validators.mjs`): the guards `ariadne validators` prints accept every argument
+  list the differential test draws; on mutated ones (wrong types, fractions, numbers beyond the safe
+  integers, holes, getters, class instances, non-string map keys) JavaScript and the model must agree
+  wherever a guard accepts, and the model must be able to represent what it accepts.
 - **Regeneration**: each fixture's generated file must regenerate with no diff and kernel-check.
 - **Negative fixtures** (`scripts/negative.mjs`, `Tests/negative`): every refusal, with its diagnostic
   code.
@@ -246,6 +323,33 @@ readable definitions and transfer them to every run.
   derive them in modules that build in parallel, and the proofs import them.
 - Remaining superlinear terms per file: the static check compares names pairwise, and each source
   theorem resolves a function index of length up to the number of functions.
+
+## Why the kernel does not run the parser
+
+The parser and converter are trusted as compiled code: `ast` in a generated file is what the `ariadne`
+binary produced, not a theorem about the source text. Asking the kernel to check
+`Parse.parse source >>= convertProgram = .ok ast` was measured (Lean 4.35, `kernel_rfl`) and is not
+practical:
+
+| Input | Kernel time |
+| --- | --- |
+| lexing `basics.ts` (1.3 KB) | about 4 s |
+| parsing the first 98, 218 and 345 characters of `basics.ts` | 4 s, 13 s, 30 s |
+| parsing its first 643 characters | out of memory (8 GB) |
+| a loop of `peek`, `accept` and `identifier` over 200 and 400 tokens | 6 s, 18 s |
+
+The cost is in the parser's monadic style (state threaded through `StateT` over `Except`), which the
+kernel's call-by-need reduction evaluates in quadratic time with large intermediate terms; neither the
+token array (a list of remaining tokens costs the same) nor string comparisons are the cause. Drive's
+kernel files are 11 to 14 KB.
+
+What would work is a certificate the kernel checks rather than a computation it replays: the translator
+emits the tokens and a lossless parse tree (keeping parentheses and the source's forms), and the kernel
+checks that lexing the source gives the tokens, that printing the tree gives them back (a structural
+recursion, with precedence checked where a child has no parentheses), and that converting the tree gives
+`ast`. The printer would replace the parser in the trusted base, and be cross-checked against the
+TypeScript compiler as the parser is now. Until then, the trust in the front end rests on that
+cross-check (`scripts/crosscheck.mjs`), and on the regeneration check in CI.
 
 ## Practical rules
 

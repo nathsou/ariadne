@@ -1,0 +1,36 @@
+name: Release
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  # Runs every check on the tagged commit, then publishes its build (the library's compiled modules and the
+  # `ariadne` executable) with its SHA-256, for projects that pin the release (scripts/fetch-release.sh).
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Install checksum-pinned Lean and Bun
+        run: bash scripts/install-ci-tools.sh
+      - name: Check
+        run: scripts/check.sh
+      - name: Package the build
+        run: |
+          version=$(sed -n 's/^version = "\(.*\)"/\1/p' lakefile.toml)
+          test "v$version" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME does not match version $version"; exit 1; }
+          lean=$(sed 's/.*:v//' lean-toolchain)
+          archive="ariadne-$GITHUB_REF_NAME-lean-$lean-linux-x64.tar.zst"
+          tar --zstd -cf "$archive" .lake/build/lib .lake/build/ir .lake/build/bin
+          sha256sum "$archive" > "$archive.sha256"
+          cat "$archive.sha256"
+          echo "ARCHIVE=$archive" >> "$GITHUB_ENV"
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" "$ARCHIVE" "$ARCHIVE.sha256" --title "Ariadne $GITHUB_REF_NAME" \
+            --notes-file <(sed -n "/^## $GITHUB_REF_NAME/,/^## v/p" CHANGELOG.md | sed '$d')

@@ -1,5 +1,7 @@
 import Tests.Generated.Tree
-import Tests.RegistersSpec
+import Ariadne.Lib.Loop
+import Ariadne.Lib.Map
+import Ariadne.Lib.String
 
 /-!
 # Properties of drive's file tree
@@ -24,7 +26,6 @@ because a longer walk back to the node repeats a node and so has a shorter one.
 namespace Tests.TreeSpec
 
 open Ariadne Tests.Generated.Tree
-open Tests.RegistersSpec (strLt_irrefl strLt_asymm strLt_total strLt_trans mapGet_mapPut mapPut_mapPut)
 
 abbrev State := ty.«Tree».denote
 
@@ -42,15 +43,6 @@ theorem Frame.trans {r₁ r₂ r₃ : State} (h₁ : Frame r₁ r₂) (h₂ : Fr
 
 /-! ## Loops -/
 
-/-- An invariant of a loop: if each iteration, from a state satisfying `P`, ends in
-`Q` provided continuing and leaving do, and leaving from `P` ends in `Q`, then the
-loop does. -/
-theorem forIn_inv {α σ R : Type} (P : σ → Prop) (Q : R → Prop) {step : α → (σ → R) → (σ → R) → σ → R}
-    {exit : σ → R}
-    (hstep : ∀ y next ex s, P s → (∀ s', P s' → Q (next s')) → (∀ s', P s' → Q (ex s')) → Q (step y next ex s))
-    (hexit : ∀ s, P s → Q (exit s)) : ∀ (items : List α) s, P s → Q (forIn items step exit s)
-  | [], s, h => hexit s h
-  | y :: ys, s, h => hstep y _ exit s h (fun s' h' => forIn_inv P Q hstep hexit ys s' h') hexit
 
 /-! ## Re-deriving where nodes sit keeps the registers -/
 

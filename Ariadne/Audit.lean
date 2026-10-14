@@ -5,9 +5,9 @@ import Lean
 
 `Ariadne.Audit.run` checks a built Lean project and fails unless:
 
-1. **Every declaration of the project re-checks with Lean's kernel.** The project's constants are replayed
-   into an environment holding only what the project imports, so nothing added around the kernel (an
-   option, an environment extension) is believed.
+1. **Every declaration of the project re-checks with Lean's kernel.** The project's constants (and those of
+   the dependencies listed in `replay`) are replayed into an environment holding only what they import, so
+   nothing added around the kernel (an option, an environment extension) is believed.
 2. **Theorems use only the standard axioms** (`propext`, `Classical.choice`, `Quot.sound`; `sorry` and
    `native_decide` show up as axioms), and nothing they depend on in the project is `partial`, `unsafe`,
    opaque, `implemented_by` or `extern`. The locked definitions are held to the same rule, so what runs
@@ -34,6 +34,10 @@ structure Config where
   modules : Array Name
   /-- The project's root namespaces: their modules are replayed, and their theorems audited. -/
   project : List Name
+  /-- Dependencies' root namespaces whose modules are replayed too (and their theorems' axioms checked),
+  without locking them: with a prebuilt dependency (`ariadne-*.tar.zst`), nothing it was built with is
+  believed. -/
+  replay : List Name := []
   /-- Lock every declaration of the modules under these prefixes. -/
   lockModules : List Name := []
   /-- Lock every declaration under these namespaces. -/
@@ -77,14 +81,15 @@ unsafe def run (cfg : Config) (args : List String) : IO UInt32 := do
   let env ← importModules (cfg.modules.map fun m => { module := m }) {} (loadExts := true)
   let inProject (m : Name) := cfg.project.contains m.getRoot
   let ours (n : Name) := (moduleOf? env n).any inProject
+  let replayed (m : Name) := inProject m || cfg.replay.contains m.getRoot
 
   -- 1. Replay every project declaration through the kernel, on top of what the project imports.
   let mut imports : Array Import := #[]
   let mut constants : Std.HashMap Name ConstantInfo := {}
   for (m, data) in env.header.moduleNames.zip env.header.moduleData do
-    if !inProject m then continue
+    if !replayed m then continue
     for i in data.imports do
-      if !inProject i.module && !(imports.any (·.module == i.module)) then imports := imports.push i
+      if !replayed i.module && !(imports.any (·.module == i.module)) then imports := imports.push i
     for c in data.constants do constants := constants.insert c.name c
   let base ← importModules imports {}
   try
@@ -119,7 +124,7 @@ unsafe def run (cfg : Config) (args : List String) : IO UInt32 := do
   let mut count := 0
   todo := locked.toArray
   for (n, ci) in env.constants.map₁.toList do
-    if ours n && ci matches .thmInfo _ then
+    if (moduleOf? env n).any replayed && ci matches .thmInfo _ then
       count := count + 1
       todo := todo.push n
       let (axioms, _) ← (collectAxioms n : CoreM _).toIO { fileName := "audit", fileMap := default } { env }

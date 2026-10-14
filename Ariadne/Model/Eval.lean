@@ -101,6 +101,11 @@ def unary : UnOp → JSValue → Except Fault JSValue
   | .not, .bool b => .ok (.bool !b)
   | .neg, .number n => number (-n)
   | .neg, .bigint n => .ok (.bigint (-n))
+  -- `x++` adds `1` to a number and `1n` to a bigint.
+  | .inc, .number n => number (n + 1)
+  | .inc, .bigint n => .ok (.bigint (n + 1))
+  | .dec, .number n => number (n - 1)
+  | .dec, .bigint n => .ok (.bigint (n - 1))
   | _, _ => .error (.typeError "unary operand")
 
 /-- Strict equality of primitives of one type. Objects compare by identity in
@@ -123,6 +128,20 @@ def binary : BinOp → JSValue → JSValue → Except Fault JSValue
   | .sub, .bigint a, .bigint b => .ok (.bigint (a - b))
   | .mul, .number a, .number b => number (a * b)
   | .mul, .bigint a, .bigint b => .ok (.bigint (a * b))
+  -- `bigint` division truncates; by zero it throws a `RangeError`, which the model does not model.
+  | .div, .bigint a, .bigint b => if b = 0 then .error (.unsupported "division by zero") else .ok (.bigint (a.tdiv b))
+  | .mod, .bigint a, .bigint b => if b = 0 then .error (.unsupported "division by zero") else .ok (.bigint (a.tmod b))
+  -- On numbers, `/` mostly gives fractions, which the model does not have.
+  | .div, .number _, .number _ => .error (.unsupported "number division")
+  -- `%` on integers is exact in floating point, with the dividend's sign (by zero: `NaN`).
+  | .mod, .number a, .number b => if b = 0 then .error (.unsupported "remainder by zero") else number (a.tmod b)
+  -- `Math.floor(a / b)` on safe integers is floor division: the quotient's rounding error is below
+  -- `|a| / |b| · 2^-53 < 1 / |b|`, the distance from a non-integer quotient to the nearest integer, so
+  -- rounding never crosses one; and `|⌊a / b⌋| ≤ |a|` keeps the result safe.
+  | .floorDiv, .number a, .number b =>
+    if b = 0 || !(-maxSafe ≤ a ∧ a ≤ maxSafe) || !(-maxSafe ≤ b ∧ b ≤ maxSafe) then
+      .error (.unsupported "floor division outside the safe integers")
+    else .ok (.number (a.fdiv b))
   | .eq, a, b => return .bool (← strictEq a b)
   | .ne, a, b => return .bool !(← strictEq a b)
   | .lt, .number a, .number b | .lt, .bigint a, .bigint b => .ok (.bool (decide (a < b)))
@@ -180,6 +199,31 @@ def spreadInto (kvs : List (String × JSValue)) : JSValue → Except Fault (List
 def index : JSValue → JSValue → Except Fault JSValue
   | .array xs, .number i => .ok (if 0 ≤ i then (xs[i.toNat]?).getD .undefined else .undefined)
   | _, _ => .error (.unsupported "indexing")
+
+/-! ## Strings -/
+
+/-- `s.indexOf(t)`: the first position at which `t` occurs in `s`, or `-1`. -/
+def strIndexOf (s t : JSString) : Int := go s 0
+where
+  go : JSString → Nat → Int
+    | s, i => if t.isPrefixOf s then i else match s with
+      | [] => -1
+      | _ :: s' => go s' (i + 1)
+
+def strStartsWith (s t : JSString) : Bool := t.isPrefixOf s
+
+def strEndsWith (s t : JSString) : Bool := t.isSuffixOf s
+
+/-- `s.includes(t)`: whether `t` occurs in `s` (as `indexOf` finds it). -/
+def strIncludes (s t : JSString) : Bool := strIndexOf s t != -1
+
+/-- A `slice` bound: from the end if negative, clamped to the string. -/
+def sliceBound (len : Nat) (i : Int) : Nat := if i < 0 then (len + i).toNat else min i.toNat len
+
+/-- `s.slice(a, b)` on integers (`s.slice(a)` is `s.slice(a, s.length)`). -/
+def strSlice (s : JSString) (a b : Int) : JSString :=
+  let i := sliceBound s.length a
+  (s.drop i).take (sliceBound s.length b - i)
 
 /-- `xs.includes(x)` (SameValueZero, which is `===` on the model's primitives). -/
 def includes (x : JSValue) : List JSValue → Except Fault Bool
@@ -346,6 +390,7 @@ mutual
         stmtsScoped { (s.bind i false).bind x false with inLoop := true } body
     | .forRange i n body => s.fresh i && s.names.contains n && !s.mutable.contains n &&
         stmtsScoped { s.bind i false with inLoop := true } body
+    | .while_ c body => c.scoped s && stmtsScoped { s with inLoop := true } body
     | .stateSet _ k v => k.scoped s && v.scoped s
     | .stateDelete _ k => k.scoped s
     | .callThis m args => s.methods.contains m && Expr.scopedList s args
@@ -368,7 +413,7 @@ mutual
   def stmtMutates : Stmt → Bool
     | .stateSet .. | .stateDelete .. | .callThis .. => true
     | .ite _ yes no => stmtsMutate yes || stmtsMutate no
-    | .block ss | .forOf _ _ ss | .forEntries _ _ _ ss | .forRange _ _ ss => stmtsMutate ss
+    | .block ss | .forOf _ _ ss | .forEntries _ _ _ ss | .forRange _ _ ss | .while_ _ ss => stmtsMutate ss
     | .switch _ cases => casesMutate cases
     | _ => false
 
@@ -393,6 +438,7 @@ mutual
     | .forOf x _ body => x != "this" && stmtsThisFree body
     | .forEntries i x _ body => i != "this" && x != "this" && stmtsThisFree body
     | .forRange i _ body => i != "this" && stmtsThisFree body
+    | .while_ _ body => stmtsThisFree body
     | .ret _ | .brk | .cont | .stateSet .. | .stateDelete .. | .callThis .. => true
 
   def casesThisFree : List (Option Expr × List Stmt) → Bool
@@ -507,6 +553,12 @@ mutual
       | .array xs, "find", [f] => findApply p n f xs 0 recv
       | .array xs, "filter", [f] => return .array (← filterApply p n f xs 0 recv)
       | .array xs, "map", [f] => return .array (← mapApply p n f xs 0 recv)
+      | .string s, "startsWith", [.string t] => return .bool (strStartsWith s t)
+      | .string s, "endsWith", [.string t] => return .bool (strEndsWith s t)
+      | .string s, "includes", [.string t] => return .bool (strIncludes s t)
+      | .string s, "indexOf", [.string t] => return .number (strIndexOf s t)
+      | .string s, "slice", [.number a] => return .string (strSlice s a s.length)
+      | .string s, "slice", [.number a, .number b] => return .string (strSlice s a b)
       | .array xs, "toSorted", [f] => do
         let signs ← compareAll p n f xs xs
         if consistent signs then return .array ((sortIndices signs xs.length).filterMap (xs[·]?))
@@ -696,6 +748,9 @@ mutual
       | some (.number m) => loop p n env (rangeBindings i (min m n)) body
       | some _ => .error (.unsupported "a counted loop's bound that is not a number")
       | none => .error (.referenceError k)
+    -- `while (c) body` repeats `{ if (!c) break; body }`; like a counted loop, it builds no
+    -- more iterations than the fuel allows.
+    | n + 1, env, .while_ c body => loop p n env (List.replicate n []) (.ite c [] [.brk] :: body)
     | n + 1, env, .stateSet f k v => do
       let kvs ← stateMap env f
       let key ← mapKey (← evalExpr p n env k)

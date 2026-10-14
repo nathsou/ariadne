@@ -581,6 +581,17 @@ theorem agree_forRange {p : Program} (hp : p.storeOk) {n : Nat} (ih : Ag p n) (i
         exact free_singleton i _ hf.1) hu
     all_goals errs
 
+set_option linter.unusedVariables false in
+theorem agree_while {p : Program} (hp : p.storeOk) {n : Nat} (ih : Ag p n) (c : Expr) (body : List Stmt) :
+    AgOne p (n + 1) (.while_ c body) := by
+  obtain ⟨ihS, ihs, ihL, ihC⟩ := ih
+  unfold AgS AgOne AgL AgC at *
+  intro σ env hf hu
+  simp only [stmtThisFree] at hf
+  simp only [execStmt, sExecStmt]
+  exact ihL σ env _ _ (by simp [stmtsThisFree, stmtThisFree, hf])
+    (fun bs hb => by simp only [List.mem_replicate] at hb; rw [hb.2]; rfl) hu
+
 set_option maxHeartbeats 2000000 in
 set_option linter.unusedVariables false in
 theorem agree_stateSet {p : Program} (hp : p.storeOk) {n : Nat} (ih : Ag p n) (f : String) (k v : Expr) :
@@ -744,6 +755,7 @@ theorem agree {p : Program} (hp : p.storeOk) : ∀ n : Nat,
     | forOf x e body => exact agree_forOf hp ih x e body σ env
     | forEntries i x e body => exact agree_forEntries hp ih i x e body σ env
     | forRange i k body => exact agree_forRange hp ih i k body σ env
+    | while_ c body => exact agree_while hp ih c body σ env
     | stateSet f k v => exact agree_stateSet hp ih f k v σ env
     | stateDelete f k => exact agree_stateDelete hp ih f k σ env
     | callThis m args => exact agree_callThis hp ih m args σ env
@@ -920,6 +932,10 @@ theorem keeps_store {p : Program} : ∀ n : Nat,
         · exact ihL σ env _ body r hm h
         · simp at h
         · simp at h
+      | while_ c body =>
+        simp only [stmtMutates] at hm
+        simp only [sExecStmt] at h
+        exact ihL σ env _ _ r (by simp [stmtsMutate, stmtMutates, hm]) h
     · intro σ env bss body r hm h
       cases bss with
       | nil => simp [sLoop] at h; subst h; rfl

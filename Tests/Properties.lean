@@ -1,6 +1,9 @@
 import Tests.Generated.Records
 import Tests.Generated.Arrays
 import Tests.Generated.Loops
+import Ariadne.Lib.Loop
+import Ariadne.Lib.Cmp
+import Ariadne.Lib.Safe
 
 /-!
 # Using the source theorems
@@ -67,6 +70,40 @@ theorem forIn_sum (ys : List Int) (acc : Int) (zs : List Int) :
 /-- `sum` computes the sum of its array. -/
 theorem sum_eq (xs : List Int) : «sum» xs = xs.sum := by
   simpa [«sum»] using forIn_sum xs 0 xs
+
+/-- `sum`'s loop never leaves early, so it is a fold (`forIn_continue`). -/
+theorem sum_foldl (xs : List Int) : «sum» xs = (xs.foldl (fun s x => (s.1 + x, s.2)) ((0 : Int), xs, ())).1 :=
+  forIn_continue _ (fun _ _ _ _ => rfl) xs _
+
+/-- `countTagged`'s loop too, though its iterations branch. -/
+theorem countTagged_foldl (items : List «Item») (tag : JSString) :
+    «countTagged» items tag = (items.foldl (fun s it => if it.tags.any (· == s.2.2.1) then (s.1 + 1, s.2) else s)
+      ((0 : Int), items, tag, ())).1 := by
+  unfold «countTagged»
+  rw [forIn_continue (fun it s => if it.tags.any (· == s.2.2.1) then (s.1 + 1, s.2) else s)]
+  intro y next ex s
+  obtain ⟨n, is, t, ⟨⟩⟩ := s
+  by_cases h : y.tags.any (· == t) <;> simp [h]
+
+/-- `firstAbove`'s `while` loop ends, and its index stays exact, on arrays shorter than 2^53: the
+measure is the number of elements left. -/
+theorem firstAbove_safe (xs : List Int) (limit : Int) (h : xs.length < 2 ^ 53) : «firstAbove».safe xs limit = true := by
+  unfold «firstAbove».safe
+  refine whileSafe_of_measure (fun s => s.2.1 = xs ∧ 0 ≤ s.1) (fun s => ((xs.length : Int) - s.1).toNat) ?_
+    (fun _ _ => rfl) _ ⟨rfl, Int.le_refl 0⟩ (by simp [loopBound]; omega)
+  rintro next ex ⟨i, ys, l, ⟨⟩⟩ ⟨rfl, hi⟩ hc hn -
+  simp only [decide_eq_true_eq] at hc hi h
+  have hr : inRange (i + 1) = true := by simp only [inRange, Nat.ble_eq]; omega
+  dsimp only
+  split <;> split
+  all_goals first
+    | rfl
+    | rw [hr, Bool.true_and]; exact hn _ ⟨rfl, by omega⟩ (by simp only; omega)
+
+/-- `ranked` sorts by a declared comparator; `cmp_laws` proves it lawful, and `ariadne_safe` discharges
+`toSorted`'s safety condition with that. -/
+theorem ranked_safe (es : List Generated.Arrays.«Entry») : Generated.Arrays.«ranked».safe es = true := by
+  ariadne_safe [consistent_of_laws (show CmpLaws Generated.Arrays.«bySizeDesc» by cmp_laws)]
 
 /-- Every run of `sum` on an input where it stays exact returns the sum. -/
 theorem sum_run (xs : List Int) (vs : List JSValue) (args : ArgsRep sig.«sum».params vs (xs, ()))

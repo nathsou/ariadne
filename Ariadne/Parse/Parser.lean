@@ -377,8 +377,7 @@ mutual
           if op.lineBreak then fail "A1005" "postfix increment cannot follow a line break" op
           let _ ← pop
           match target with
-          | .var .. => pure (.assign target (.binary (if op.text == "++" then "+" else "-") target
-              (.literal (.number 1 0) op.span) op.span) target.span)
+          | .var .. => pure (.assign target (.unary op.text target op.span) target.span)
           | .member .. | .index .. =>
             pure (.update target (if op.text == "++" then "+" else "-")
               (.literal (.number 1 0) op.span) target.span)

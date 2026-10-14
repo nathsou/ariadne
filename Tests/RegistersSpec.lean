@@ -1,4 +1,6 @@
 import Tests.Generated.Registers
+import Ariadne.Lib.Map
+import Ariadne.Lib.String
 
 /-!
 # Properties of drive's registers
@@ -12,6 +14,8 @@ they hold of every run of the compiled methods.
   which is what lets a log be applied twice.
 - Album items converge: two `item` operations on the same item, applied in either
   order, leave the same register (the later stamp wins).
+- An operation on one register leaves the others, by the generated frame lemmas
+  (`«m».keeps.«f»`: method `m` never writes the map `f`).
 -/
 
 namespace Tests.RegistersSpec
@@ -19,95 +23,6 @@ namespace Tests.RegistersSpec
 open Ariadne Tests.Generated.Registers
 
 abbrev State := ty.«Registers».denote
-
-/-! ## Strings and maps -/
-
-theorem strLt_irrefl : ∀ s : JSString, strLt s s = false
-  | [] => rfl
-  | a :: as => by simp [strLt, strLt_irrefl as]
-
-theorem strLt_asymm : ∀ a b : JSString, strLt a b = true → strLt b a = false
-  | [], [], _ => rfl
-  | [], _ :: _, _ => rfl
-  | _ :: _, [], h => by simp [strLt] at h
-  | x :: xs, y :: ys, h => by
-    unfold strLt at h ⊢
-    by_cases h1 : x < y
-    · have : ¬ y < x := fun h2 => absurd (UInt16.lt_trans h1 h2) (UInt16.lt_irrefl x)
-      simp [h1, this]
-    · by_cases h2 : y < x
-      · simp [h1, h2] at h
-      · simp only [h1, h2, ite_false] at h ⊢
-        exact strLt_asymm xs ys h
-
-theorem strLt_total : ∀ a b : JSString, a ≠ b → strLt a b = true ∨ strLt b a = true
-  | [], [], h => absurd rfl h
-  | [], _ :: _, _ => .inl rfl
-  | _ :: _, [], _ => .inr rfl
-  | x :: xs, y :: ys, h => by
-    unfold strLt
-    by_cases h1 : x < y
-    · simp [h1]
-    · by_cases h2 : y < x
-      · simp [h2]
-      · have hxy : x = y := UInt16.le_antisymm (UInt16.not_lt.mp h2) (UInt16.not_lt.mp h1)
-        subst hxy
-        have : xs ≠ ys := fun h' => h (by rw [h'])
-        simpa [h1] using strLt_total xs ys this
-
-theorem strLt_trans : ∀ a b c : JSString, strLt a b = true → strLt b c = true → strLt a c = true
-  | [], [], _, h, _ => by simp [strLt] at h
-  | _ :: _, [], _, h, _ => by simp [strLt] at h
-  | _, _ :: _, [], _, h => by simp [strLt] at h
-  | [], _ :: _, _ :: _, _, _ => rfl
-  | x :: xs, y :: ys, z :: zs, h1, h2 => by
-    unfold strLt at h1 h2 ⊢
-    by_cases a1 : x < y
-    · by_cases b1 : y < z
-      · simp [UInt16.lt_trans a1 b1]
-      · by_cases b2 : z < y
-        · simp [b1, b2] at h2
-        · have hyz : y = z := UInt16.le_antisymm (UInt16.not_lt.mp b2) (UInt16.not_lt.mp b1)
-          subst hyz; simp [a1]
-    · by_cases a2 : y < x
-      · simp [a1, a2] at h1
-      · have hxy : x = y := UInt16.le_antisymm (UInt16.not_lt.mp a2) (UInt16.not_lt.mp a1)
-        subst hxy
-        simp only [a1, ite_false] at h1
-        by_cases b1 : x < z
-        · simp [b1]
-        · by_cases b2 : z < x
-          · simp [b1, b2] at h2
-          · have hxz : x = z := UInt16.le_antisymm (UInt16.not_lt.mp b2) (UInt16.not_lt.mp b1)
-            subst hxz
-            simp only [UInt16.lt_irrefl, ite_false] at h2 ⊢
-            exact strLt_trans xs ys zs h1 h2
-
-theorem mapGet_mapPut {α : Type} : ∀ (m : List (JSString × α)) (k j : JSString) (v : α),
-    mapGet (mapPut m k v) j = if j = k then some v else mapGet m j
-  | [], k, j, v => by by_cases h : j = k <;> simp [mapPut, mapGet, List.lookup, h, beq_eq_false_iff_ne.mpr]
-  | (k', w) :: rest, k, j, v => by
-    by_cases hk : k' = k
-    · subst hk
-      by_cases hj : j = k'
-      · subst hj; simp [mapPut, mapGet]
-      · simp [mapPut, mapGet, List.lookup, hj, beq_eq_false_iff_ne.mpr hj]
-    · have hk' : (k' == k) = false := beq_eq_false_iff_ne.mpr hk
-      simp only [mapPut, hk', Bool.false_eq_true, ite_false]
-      have ih := mapGet_mapPut rest k j v
-      simp only [mapGet] at ih ⊢
-      by_cases hj : j = k'
-      · subst hj; simp [List.lookup, hk]
-      · simp [List.lookup, beq_eq_false_iff_ne.mpr hj, ih]
-
-theorem mapPut_mapPut {α : Type} : ∀ (m : List (JSString × α)) (k : JSString) (v w : α),
-    mapPut (mapPut m k v) k w = mapPut m k w
-  | [], k, v, w => by simp [mapPut]
-  | (k', x) :: rest, k, v, w => by
-    by_cases hk : k' = k
-    · subst hk; simp [mapPut]
-    · have hk' : (k' == k) = false := beq_eq_false_iff_ne.mpr hk
-      simp [mapPut, hk', mapPut_mapPut rest k v w]
 
 /-! ## The operations, as updates of one map
 
@@ -231,5 +146,22 @@ theorem item_converges (r : State) (aid id s₁ s₂ : JSString) (p₁ p₂ : Bo
       have t : strLt c.2.2.1 s₂ = true → strLt c.2.2.1 s₁ = true := fun h => strLt_trans _ _ _ h hl
       by_cases hc1 : («newer» (some c.2.2.1) s₁) = true <;> by_cases hc2 : («newer» (some c.2.2.1) s₂) = true <;>
         simp_all [«newer»]
+
+/-! ## Operations leave the other registers -/
+
+/-- Marking a placement changes no pack. -/
+theorem packOf_mark (r : State) (ref p : JSString) (on : Bool) (reason : Option JSString) (stamp : JSString) (t : Int)
+    (id : JSString) : «packOf» («mark» r ref p on reason stamp t) id = «packOf» r id := by
+  simp only [«packOf», «mark».keeps.«packs»]
+
+/-- Placing or unplacing changes no pack. -/
+theorem packOf_place (r : State) (ref p : JSString) (placed : Bool) (cls stamp : JSString) (t : Int) (id : JSString) :
+    «packOf» («place» r ref p placed cls stamp t) id = «packOf» r id := by
+  simp only [«packOf», «place».keeps.«packs»]
+
+/-- Album operations leave which references are placed. -/
+theorem isPlaced_album (r : State) (aid stamp : JSString) (t : Int) (name cover : Option JSString) (deleted : Bool)
+    (ref : JSString) : «isPlaced» («album» r aid stamp t name cover deleted) ref = «isPlaced» r ref := by
+  simp only [«isPlaced», «album».keeps.«providers»]
 
 end Tests.RegistersSpec

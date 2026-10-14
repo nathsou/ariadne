@@ -78,3 +78,54 @@ function bump(n: number): number {
   n = n + 1;
   return n;
 }
+
+export function t_while(): number[] {
+  let out: number[] = [];
+  let i = 0;
+  while (i < 10) {
+    i++;
+    if (i % 2 === 0) continue;
+    if (i > 7) break;
+    const sq = i * i;
+    out = [...out, sq];
+  }
+  while (false) {
+    out = [...out, -1];
+  }
+  return [...out, i];
+}
+
+export function t_while_return(): string {
+  let s = "abcabc";
+  while (s.length > 0) {
+    if (s.startsWith("ca")) return s;
+    s = s.slice(1);
+  }
+  return "none";
+}
+
+export function fault_while_forever(): number {
+  let x = 0;
+  while (true) {
+    x = x + 0;
+  }
+  return x;
+}
+
+export function t_increments(): (number | bigint)[] {
+  let a = 9007199254740990;
+  a++;
+  let b = 1n;
+  b++;
+  b++;
+  b--;
+  let c = -9007199254740990;
+  c--;
+  return [a, b, c];
+}
+
+export function fault_increment_unsafe(): number {
+  let a = 9007199254740991;
+  a++;
+  return a;
+}

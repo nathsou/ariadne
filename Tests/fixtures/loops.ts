@@ -129,3 +129,42 @@ export function triangle(n: number, cap: number): number {
   }
   return t;
 }
+
+/** Euclid's algorithm. */
+export function gcd(a: number, b: number): number {
+  let x = a < 0 ? -a : a;
+  let y = b < 0 ? -b : b;
+  while (y !== 0) {
+    const r = x % y;
+    x = y;
+    y = r;
+  }
+  return x;
+}
+
+/** The index of the first element above `limit`, or -1. */
+export function firstAbove(xs: number[], limit: number): number {
+  let i = 0;
+  while (i < xs.length) {
+    const x = xs[i] ?? 0;
+    if (x > limit) return i;
+    i++;
+  }
+  return -1;
+}
+
+/** At most five numbers counting down from `n`, skipping multiples of 3. */
+export function countdown(n: number): number[] {
+  let out: number[] = [];
+  let k = n;
+  while (k > 0) {
+    if (k % 3 === 0) {
+      k--;
+      continue;
+    }
+    out = [...out, k];
+    if (out.length >= 5) break;
+    k--;
+  }
+  return out;
+}

@@ -92,7 +92,29 @@ theorem Op.sound (op : Op σ τ) {wa wb : JSValue} {x y : σ.denote} {s : Bool} 
     simp only [Ty.Rep] at ha hb; subst ha; subst hb
     simp only [Op.guard, Bool.and_eq_true] at hg
     exact ⟨_, number_ok hg.2, rfl⟩
+  | idiv | imod =>
+    simp only [Ty.Rep] at ha hb; subst ha; subst hb
+    simp only [Op.guard, Bool.and_eq_true, bne_iff_ne, ne_eq] at hg
+    exact ⟨_, by simp [Op.js, Op.apply, binary, hg.2], rfl⟩
+  | ndiv =>
+    simp only [Ty.Rep] at ha hb; subst ha; subst hb
+    simp only [Op.guard, Bool.and_eq_true, bne_iff_ne, ne_eq] at hg
+    exact ⟨_, by simp [Op.js, Op.apply, binary, hg.2.1.1, inRange_iff.mp hg.2.1.2, inRange_iff.mp hg.2.2], rfl⟩
+  | nmod =>
+    simp only [Ty.Rep] at ha hb; subst ha; subst hb
+    simp only [Op.guard, Bool.and_eq_true, bne_iff_ne, ne_eq] at hg
+    exact ⟨_, by simp [Op.js, Op.apply, binary, hg.2.1, number_ok hg.2.2], rfl⟩
   | _ => simp only [Ty.Rep] at ha hb; subst ha; subst hb; exact ⟨_, rfl, rfl⟩
+
+/-- A string method's result, as the model gives it. -/
+def SMethod.js : SMethod τ → JSString → JSString → JSValue
+  | .startsWith, s, t => .bool (strStartsWith s t)
+  | .endsWith, s, t => .bool (strEndsWith s t)
+  | .includes, s, t => .bool (strIncludes s t)
+  | .indexOf, s, t => .number (strIndexOf s t)
+
+theorem SMethod.rep (m : SMethod τ) (s t : JSString) : τ.Rep (m.js s t) (m.apply s t) := by
+  cases m <;> rfl
 
 /-- A binary operation whose operands converge. -/
 theorem converges_binary {prog : Program} {env : Env} {op : BinOp} {a b : Expr} {x y r : JSValue}
@@ -126,6 +148,19 @@ theorem conv_args1 {prog : Program} {env : Env} {e : Expr} {v : JSValue}
   refine Converges.of_succ (N + 1) fun m hm => ?_
   obtain ⟨k, rfl⟩ : ∃ k, m = k + 1 := ⟨m - 1, by omega⟩
   simp [evalArgs, h (k + 1) (by omega), bind, Except.bind, pure, Except.pure]
+
+theorem conv_args2 {prog : Program} {env : Env} {a b : Expr} {v w : JSValue}
+    (ha : Converges (fun n => evalExpr prog n env a) (.ok v)) (hb : Converges (fun n => evalExpr prog n env b) (.ok w)) :
+    Converges (fun n => evalArgs prog n env [a, b]) (.ok [v, w]) := by
+  obtain ⟨Na, ha⟩ := ha
+  obtain ⟨Nb, hb⟩ := conv_args1 hb
+  refine Converges.of_succ (max Na Nb + 1) fun m hm => ?_
+  obtain ⟨k, rfl⟩ : ∃ k, m = k + 1 := ⟨m - 1, by omega⟩
+  have h1 := ha (k + 1) (by omega)
+  have h2 := hb (k + 1) (by omega)
+  simp only at h1 h2
+  rw [evalArgs, h1]
+  simp only [bind, Except.bind, h2, pure, Except.pure]
 
 section
 variable {prog : Program} {Φ : Sigs} {fs : Φ.denote} {ss : Φ.safety} (hfs : FnsOK prog fs ss)
@@ -369,6 +404,19 @@ mutual
       simp only [Ty.Rep] at hw; subst hw
       exact ⟨.number (-e.denote fs ρ), Converges.of_succ N fun m hm => by
         simp [evalExpr, TExpr.erase, hc m hm, bind, Except.bind, unary, number_ok hs.2], rfl⟩
+    | _, _, .iinc up e, _, ρ, he, hs => by
+      obtain ⟨w, ⟨N, hc⟩, hw⟩ := TExpr.adequate e he hs
+      simp only [Ty.Rep] at hw; subst hw
+      exact ⟨.bigint (bif up then e.denote fs ρ + 1 else e.denote fs ρ - 1), Converges.of_succ N fun m hm => by
+        cases up <;> simp [evalExpr, TExpr.erase, hc m hm, bind, Except.bind, unary, pure, Except.pure], rfl⟩
+    | _, _, .ninc up e, _, ρ, he, hs => by
+      simp only [TExpr.safe, Bool.and_eq_true] at hs
+      obtain ⟨w, ⟨N, hc⟩, hw⟩ := TExpr.adequate e he (TExpr.ok hs.1)
+      simp only [Ty.Rep] at hw; subst hw
+      exact ⟨.number (bif up then e.denote fs ρ + 1 else e.denote fs ρ - 1), Converges.of_succ N fun m hm => by
+        have h2 := hs.2
+        cases up <;> simp only [Bool.cond_false, Bool.cond_true] at h2 <;>
+          simp [evalExpr, TExpr.erase, hc m hm, bind, Except.bind, unary, number_ok h2], rfl⟩
     | _, _, .array es, _, ρ, he, hs => by
       obtain ⟨ws, ⟨N, hc⟩, hws⟩ := TElems.adequate es he hs
       exact ⟨.array ws, Converges.of_succ N fun m hm => by
@@ -383,6 +431,40 @@ mutual
       simp only [Ty.Rep] at hw; subst hw
       exact ⟨.number (e.denote fs ρ).length, Converges.of_succ N fun m hm => by
         simp [evalExpr, TExpr.erase, hc m hm, bind, Except.bind, getField], rfl⟩
+    | _, _, .smethod m a b, env, ρ, he, hs => by
+      simp only [TExpr.safe] at hs
+      have hs := andT_elim hs (a.safe_of_trivial ρ) (b.safe_of_trivial ρ)
+      obtain ⟨wa, ⟨Na, ha⟩, hwa⟩ := TExpr.adequate a he hs.1
+      obtain ⟨wb, hb, hwb⟩ := TExpr.adequate b he hs.2
+      simp only [Ty.Rep] at hwa hwb; subst hwa hwb
+      obtain ⟨Nb, hb⟩ := conv_args1 hb
+      exact ⟨m.js (a.denote fs ρ) (b.denote fs ρ), Converges.of_succ (max Na Nb) fun k hk => by
+        cases m <;> simp [evalExpr, TExpr.erase, SMethod.name, SMethod.js, ha k (by omega), hb k (by omega), bind,
+          Except.bind, pure, Except.pure], m.rep _ _⟩
+    | _, _, .slice1 a i, env, ρ, he, hs => by
+      simp only [TExpr.safe] at hs
+      have hs := andT_elim hs (a.safe_of_trivial ρ) (i.safe_of_trivial ρ)
+      obtain ⟨wa, ⟨Na, ha⟩, hwa⟩ := TExpr.adequate a he hs.1
+      obtain ⟨wi, hi, hwi⟩ := TExpr.adequate i he hs.2
+      simp only [Ty.Rep] at hwa hwi; subst hwa hwi
+      obtain ⟨Ni, hi⟩ := conv_args1 hi
+      exact ⟨.string (strSlice (a.denote fs ρ) (i.denote fs ρ) (a.denote fs ρ).length),
+        Converges.of_succ (max Na Ni) fun k hk => by
+          simp [evalExpr, TExpr.erase, ha k (by omega), hi k (by omega), bind, Except.bind, pure, Except.pure], rfl⟩
+    | _, _, .slice2 a i j, env, ρ, he, hs => by
+      simp only [TExpr.safe] at hs
+      have hs := andT_elim hs (a.safe_of_trivial ρ) fun h => by
+        simp only [Bool.and_eq_true] at h
+        simp [andT, i.safe_of_trivial ρ h.1, j.safe_of_trivial ρ h.2]
+      have hs2 := andT_elim hs.2 (i.safe_of_trivial ρ) (j.safe_of_trivial ρ)
+      obtain ⟨wa, ⟨Na, ha⟩, hwa⟩ := TExpr.adequate a he hs.1
+      obtain ⟨wi, hi, hwi⟩ := TExpr.adequate i he hs2.1
+      obtain ⟨wj, hj, hwj⟩ := TExpr.adequate j he hs2.2
+      simp only [Ty.Rep] at hwa hwi hwj; subst hwa hwi hwj
+      obtain ⟨Ni, hij⟩ := conv_args2 hi hj
+      exact ⟨.string (strSlice (a.denote fs ρ) (i.denote fs ρ) (j.denote fs ρ)),
+        Converges.of_succ (max Na Ni) fun k hk => by
+          simp [evalExpr, TExpr.erase, ha k (by omega), hij k (by omega), bind, Except.bind, pure, Except.pure], rfl⟩
     | _, _, .index a i, _, ρ, he, hs => by
       simp only [TExpr.safe] at hs
       have hs := andT_elim hs (a.safe_of_trivial ρ) (i.safe_of_trivial ρ)
