@@ -16,9 +16,13 @@ for source in Tests/fixtures/*.ts; do
   .lake/build/bin/ariadne translate "$source" --out "Tests/Generated/$module.lean" \
     --namespace "Tests.Generated.$module"
 done
-git diff --exit-code -- Tests/Generated
+.lake/build/bin/ariadne translate examples/quickstart/src/ledger.ts --out examples/quickstart/Quickstart/Ledger.lean \
+  --namespace Quickstart.Ledger
+git diff --exit-code -- Tests/Generated examples/quickstart/Quickstart
 lake build Tests
 lake exe audit
+# The quickstart example, built and audited as a project depending on Ariadne.
+(cd examples/quickstart && lake build Quickstart audit && lake exe audit)
 
 "$js" scripts/differential.mjs
 "$js" scripts/negative.mjs

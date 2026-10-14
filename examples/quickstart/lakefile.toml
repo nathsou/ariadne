@@ -1,0 +1,19 @@
+name = "quickstart"
+defaultTargets = ["Quickstart"]
+
+# A project would pin a release instead:
+#   [[require]]
+#   name = "ariadne"
+#   git = "https://github.com/nathsou/ariadne"
+#   rev = "v0.4.0"
+[[require]]
+name = "ariadne"
+path = "../.."
+
+[[lean_lib]]
+name = "Quickstart"
+
+[[lean_exe]]
+name = "audit"
+root = "Audit"
+supportInterpreter = true
