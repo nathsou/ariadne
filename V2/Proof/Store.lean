@@ -8,6 +8,10 @@ For a program that passes the static check, running a method in the value model
 exactly the result of the store model (`runMethodStore`: one object changed in
 place). The proof is by induction on the fuel: the value model runs in the
 environment `fill σ env` where the store model runs in `env` with store `σ`.
+
+The store model evaluates expressions without threading the store. That is exact
+because a method an expression may call changes no state: `scoped_pure_keeps`
+proves that such a call, run in the store model, returns the store it was given.
 -/
 
 set_option linter.unusedSimpArgs false
@@ -612,5 +616,220 @@ theorem runMethod_store (p : Program) (fuel : Nat) (m : String) (σ : JSValue) (
   split
   · rename_i h; exact (agree (Program.storeOk_of_scoped h) fuel).2.2.2 m σ args
   · rfl
+
+/-! ## Methods that change no state
+
+A method called in an expression must have no statement that changes the state
+(`Program.scoped`). In the store model such a body leaves the store as it found
+it, so an expression call loses nothing by discarding the final state. -/
+
+theorem stmtsMutate_append : ∀ (a b : List Stmt), stmtsMutate (a ++ b) = (stmtsMutate a || stmtsMutate b)
+  | [], _ => by simp [stmtsMutate]
+  | s :: a, b => by simp [stmtsMutate, stmtsMutate_append a b, Bool.or_assoc]
+
+theorem casesMutate_drop : ∀ (cases : List (Option Expr × List Stmt)) (i : Nat), casesMutate cases = false →
+    stmtsMutate ((cases.drop i).flatMap (·.2)) = false
+  | [], _, _ => by simp [stmtsMutate]
+  | (_, body) :: rest, 0, h => by
+    simp only [casesMutate, Bool.or_eq_false_iff] at h
+    simp only [List.drop_zero, List.flatMap_cons, stmtsMutate_append, h.1, Bool.false_or]
+    simpa using casesMutate_drop rest 0 h.2
+  | (_, _) :: rest, i + 1, h => by
+    simp only [casesMutate, Bool.or_eq_false_iff] at h
+    simpa using casesMutate_drop rest i h.2
+
+theorem keeps_store {p : Program} : ∀ n : Nat,
+    (∀ σ env ss r, stmtsMutate ss = false → sExecStmts p n σ env ss = .ok r → r.2 = σ) ∧
+    (∀ σ env s r, stmtMutates s = false → sExecStmt p n σ env s = .ok r → r.2 = σ) ∧
+    (∀ σ env bss body r, stmtsMutate body = false → sLoop p n σ env bss body = .ok r → r.2 = σ)
+  | 0 => ⟨fun _ _ _ _ _ h => by simp [sExecStmts] at h, fun _ _ _ _ _ h => by simp [sExecStmt] at h,
+      fun _ _ _ _ _ _ h => by simp [sLoop] at h⟩
+  | n + 1 => by
+    obtain ⟨ihS, ihs, ihL⟩ := keeps_store (p := p) n
+    refine ⟨?_, ?_, ?_⟩
+    · intro σ env ss r hm h
+      cases ss with
+      | nil => simp [sExecStmts] at h; subst h; rfl
+      | cons s rest =>
+        simp only [stmtsMutate, Bool.or_eq_false_iff] at hm
+        simp only [sExecStmts] at h
+        cases hs : sExecStmt p n σ env s with
+        | error e => simp [hs, bind, Except.bind] at h
+        | ok r1 =>
+          obtain ⟨o, σ1⟩ := r1
+          have h1 := ihs σ env s _ hm.1 hs
+          simp only at h1; subst h1
+          cases o <;> simp [hs, bind, Except.bind] at h
+          · exact ihS _ _ rest r hm.2 h
+          all_goals (subst h; rfl)
+    · intro σ env s r hm h
+      cases s with
+      | const x e | let_ x e =>
+        simp only [sExecStmt] at h
+        cases he : evalExpr p n (fill σ env) e <;> simp [he, bind, Except.bind, pure, Except.pure] at h
+        subst h; rfl
+      | ret e =>
+        simp only [sExecStmt] at h
+        cases he : evalExpr p n (fill σ env) e <;> simp [he, bind, Except.bind, pure, Except.pure] at h
+        subst h; rfl
+      | assign x e =>
+        simp only [sExecStmt] at h
+        cases he : evalExpr p n (fill σ env) e <;> simp [he, bind, Except.bind] at h
+        rename_i v
+        cases ha : assign x v env <;> simp [ha, pure, Except.pure] at h
+        subst h; rfl
+      | brk | cont => simp [sExecStmt] at h; subst h; rfl
+      | stateSet _ _ _ | stateDelete _ _ | callThis _ _ => simp [stmtMutates] at hm
+      | block ss =>
+        simp only [stmtMutates] at hm
+        simp only [sExecStmt] at h
+        cases hs : sExecStmts p n σ env ss with
+        | error e => simp [hs, bind, Except.bind] at h
+        | ok r1 =>
+          simp [hs, bind, Except.bind, pure, Except.pure] at h; subst h
+          exact ihS σ env ss r1 hm hs
+      | ite c yes no =>
+        simp only [stmtMutates, Bool.or_eq_false_iff] at hm
+        simp only [sExecStmt] at h
+        cases hc : evalExpr p n (fill σ env) c with
+        | error e => simp [hc, bind, Except.bind] at h
+        | ok cv =>
+          have bc : ∀ b, stmtsMutate b = false →
+              (do let (o, σ') ← sExecStmts p n σ env b; pure (o.restore env, σ') : Except Fault _) = .ok r →
+                r.2 = σ := by
+            intro b hb hh
+            cases hs : sExecStmts p n σ env b with
+            | error e => simp [hs, bind, Except.bind] at hh
+            | ok r1 =>
+              simp [hs, bind, Except.bind, pure, Except.pure] at hh; subst hh; exact ihS σ env b r1 hb hs
+          simp only [hc, bind, Except.bind] at h
+          cases cv
+          case bool b =>
+            cases b
+            · exact bc no hm.2 h
+            · exact bc yes hm.1 h
+          all_goals simp at h
+      | switch e cases =>
+        simp only [stmtMutates] at hm
+        simp only [sExecStmt] at h
+        cases he : evalExpr p n (fill σ env) e with
+        | error err => simp [he, bind, Except.bind] at h
+        | ok v =>
+          simp only [he, bind, Except.bind] at h
+          cases hfc : findCase p n (fill σ env) v cases 0 with
+          | error err => simp [hfc] at h
+          | ok oi =>
+            cases oi with
+            | none => simp [hfc] at h; subst h; rfl
+            | some i =>
+              simp only [hfc] at h
+              cases hs : sExecStmts p n σ env ((cases.drop i).flatMap (·.2)) with
+              | error err => simp [hs] at h
+              | ok r1 =>
+                have := ihS σ env _ r1 (casesMutate_drop cases i hm) hs
+                obtain ⟨o, σ1⟩ := r1
+                simp only at this; subst this
+                simp only [hs] at h
+                split at h <;> simp at h <;> subst h <;> rfl
+      | forOf x e body =>
+        simp only [stmtMutates] at hm
+        simp only [sExecStmt] at h
+        cases he : evalExpr p n (fill σ env) e with
+        | error err => simp [he, bind, Except.bind] at h
+        | ok v =>
+          simp only [he, bind, Except.bind] at h
+          split at h
+          · exact ihL σ env _ body r hm h
+          · simp at h
+      | forEntries i x e body =>
+        simp only [stmtMutates] at hm
+        simp only [sExecStmt] at h
+        cases he : evalExpr p n (fill σ env) e with
+        | error err => simp [he, bind, Except.bind] at h
+        | ok v =>
+          simp only [he, bind, Except.bind] at h
+          split at h
+          · exact ihL σ env _ body r hm h
+          · simp at h
+      | forRange i k body =>
+        simp only [stmtMutates] at hm
+        simp only [sExecStmt] at h
+        split at h
+        · exact ihL σ env _ body r hm h
+        · simp at h
+        · simp at h
+    · intro σ env bss body r hm h
+      cases bss with
+      | nil => simp [sLoop] at h; subst h; rfl
+      | cons bs rest =>
+        simp only [sLoop] at h
+        cases hs : sExecStmts p n σ (bs ++ env) body with
+        | error e => simp [hs, bind, Except.bind] at h
+        | ok r1 =>
+          obtain ⟨o, σ1⟩ := r1
+          have h1 := ihS σ _ body _ hm hs
+          simp only at h1; subst h1
+          simp only [hs, bind, Except.bind] at h
+          split at h
+          · simp at h; subst h; rfl
+          · simp at h; subst h; rfl
+          · exact ihL _ _ rest body r hm h
+          · exact ihL _ _ rest body r hm h
+
+/-- A method with no statement that changes the state returns the store it was given. -/
+theorem sCallState_keeps {p : Program} (n : Nat) (m : String) (σ : JSValue) (vs : List JSValue)
+    (hpure : ∀ fn ∈ p, fn.name = m → stmtsMutate fn.body = false) {r : JSValue × JSValue}
+    (h : sCallState p n m σ vs = .ok r) : r.2 = σ := by
+  cases n with
+  | zero => simp [sCallState] at h
+  | succ n =>
+    simp only [sCallState] at h
+    cases hfind : p.find? (·.name == m) with
+    | none => simp [hfind] at h
+    | some fn =>
+      have hm := hpure fn (List.mem_of_find?_eq_some hfind) (by simpa using List.find?_some hfind)
+      simp only [hfind] at h
+      split at h
+      · cases hs : sExecStmts p n σ (bindParams fn.params (.undefined :: vs)) fn.body with
+        | error e => simp [hs, bind, Except.bind] at h
+        | ok r1 =>
+          have := (keeps_store n).1 σ _ fn.body r1 hm hs
+          obtain ⟨o, σ1⟩ := r1
+          simp only at this; subst this
+          simp only [hs, bind, Except.bind] at h
+          split at h <;> simp [storeOf] at h
+          all_goals (rename_i heq; simp only [Prod.mk.injEq] at heq; obtain ⟨-, rfl⟩ := heq; split at h <;> simp [pure, Except.pure] at h; subst h; rename_i hh; split at hh <;> simp_all)
+      · simp at h
+
+theorem nodup_of_distinct : ∀ {xs : List String}, distinct xs = true → xs.Nodup
+  | [], _ => List.nodup_nil
+  | x :: xs, h => by
+    simp only [distinct, Bool.and_eq_true, Bool.not_eq_true', List.contains_eq_mem, decide_eq_false_iff_not] at h
+    exact List.nodup_cons.mpr ⟨h.1, nodup_of_distinct h.2⟩
+
+theorem eq_of_nodup_map {α β} (f : α → β) : ∀ {l : List α}, (l.map f).Nodup → ∀ {a b}, a ∈ l → b ∈ l → f a = f b → a = b
+  | [], _, _, _, ha, _, _ => by simp at ha
+  | x :: l, h, a, b, ha, hb, he => by
+    simp only [List.map_cons, List.nodup_cons, List.mem_map] at h
+    simp only [List.mem_cons] at ha hb
+    rcases ha with rfl | ha <;> rcases hb with rfl | hb
+    · rfl
+    · exact absurd ⟨b, hb, he.symm⟩ h.1
+    · exact absurd ⟨a, ha, he⟩ h.1
+    · exact eq_of_nodup_map f h.2 ha hb he
+
+/-- In a program that passes the static check, a method an expression may call (one
+in the check's `pure` list) leaves the store as it found it: evaluating expressions
+without threading the store is exact. -/
+theorem scoped_pure_keeps {p : Program} (hp : p.scoped) {m : String}
+    (hm : m ∈ (p.filter fun fn => fn.method && !stmtsMutate fn.body).map (·.name))
+    {n : Nat} {σ : JSValue} {vs : List JSValue} {r : JSValue × JSValue}
+    (h : sCallState p n m σ vs = .ok r) : r.2 = σ := by
+  simp only [Program.scoped, Bool.and_eq_true] at hp
+  have hd := nodup_of_distinct hp.1
+  simp only [List.mem_map, List.mem_filter, Bool.and_eq_true, Bool.not_eq_true'] at hm
+  obtain ⟨fn0, ⟨hin0, -, hpure0⟩, rfl⟩ := hm
+  refine sCallState_keeps n _ σ vs (fun fn hin hn => ?_) h
+  rw [eq_of_nodup_map Function.name hd hin hin0 hn]; exact hpure0
 
 end V2

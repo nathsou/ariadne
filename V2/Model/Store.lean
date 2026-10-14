@@ -16,7 +16,8 @@ it returns. The environment keeps a placeholder binding for `this` (it marks tha
 method is running); nothing reads it. Expressions see the current store: they are
 evaluated by the value model in the environment where `this` is the store
 (`fill`), which is exact because nothing in an expression changes the state (an
-expression may only call a method that changes no state, `Program.scoped`).
+expression may only call a method that changes no state, `Program.scoped`; such a
+call leaves the store as it was, `scoped_pure_keeps`).
 
 `V2/Proof/Store.lean` proves that both models give the same result for every method
 of a program that passes the static check (`runMethod_store`), so the value model's
