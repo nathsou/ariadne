@@ -374,6 +374,26 @@ Remaining superlinear terms, with mitigations if larger files need them:
 - Each source theorem resolves an `FVar` path of length up to `n` (quadratic overall). Options: state source theorems
   through the readable tuple's projections, or batch them.
 
+### Build time (after L8)
+
+A clean `scripts/v2-check.sh` on the 4-core development container went from 4m12s to 2m54s:
+
+- **Equation lemmas.** Lean derives a recursive definition's equation lemmas the first time a proof unfolds it, in
+  that proof's module. For the typed syntax's large definitions (`TExpr.denote` alone takes 20 s) this was 84 of
+  the 111 s that `Proof/Safe`, `Proof/Expr` and `Proof/Stmt` spent one after the other. `V2/Eqns/*` derive them
+  in six modules that build in parallel right after `V2.Typed.Denote`: Safe 27 s → 4 s, Expr 41 s → 9 s, Stmt
+  43 s → 12 s.
+- **Parallel lemmas.** `agree`'s fuel step is split into one lemma per statement form, elaborated in parallel:
+  `Proof/Store` 51 s → 14 s alone.
+- **Generated files** (about a fifth less, Registers 47 s → 39 s): `wf` comes from `ast.scoped` and
+  `bodiesOk` (`TProgram.wf_of`), not from re-erasing the program and comparing names twice; scaffolding is
+  `noncomputable` (it was compiled for nothing); side conditions use `decide +kernel`.
+- **Differential run** 25 s → 10 s: 15 s were JavaScript running a fixture's counted loop to 2^53 on inputs where
+  the model runs out of fuel and makes no claim (its bound is now capped).
+
+What remains: the generated files (Registers about 40 s, Tree about 33 s in a full build) and the equation-lemma
+modules (`TExpr.denote` 23 s). In CI the v2 job is not the bottleneck: the v1 jobs take most of the pipeline.
+
 ## How to run
 
 ```sh
