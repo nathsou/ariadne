@@ -2,7 +2,7 @@
 import { marked } from "marked";
 import { CodeView, type HoverProvider } from "./editors";
 import type { ExampleData, LeanGoal, LeanInfo, LeanTheorem } from "./types";
-import { copyText, download, escapeHtml, fill, h, icon, leanPosMapper, toast } from "./util";
+import { copyText, download, escapeHtml, fill, h, icon, leanIdent, leanPosMapper, toast } from "./util";
 
 /** Hovers from `lake exe extract`, for a file whose text is the one CI elaborated. */
 export function leanHovers(text: string, info: LeanInfo): HoverProvider {
@@ -103,7 +103,7 @@ export class LeanView {
   /** Scroll to the readable definition of `name`. */
   revealDefinition(name: string) {
     const text = this.code.text;
-    const m = new RegExp(String.raw`^def «${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}»`, "m").exec(text);
+    const m = new RegExp(String.raw`^def ${leanIdent(name).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?=[\s:])`, "m").exec(text);
     if (m) {
       this.code.reveal(m.index, true);
       this.code.mark({ from: m.index, to: m.index + m[0].length }, "cm-hover-target");

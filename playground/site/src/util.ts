@@ -137,3 +137,18 @@ export function download(name: string, text: string) {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
+/** Lean's keywords: a name spelled as one stays quoted (as `ident` in Ariadne/Front/Check.lean). */
+const leanKeywords = new Set(
+  ("at by do else end fun have if import in let match mut namespace open section show then where with from for unless return " +
+    "break continue try catch finally this Type Sort Prop deriving instance structure inductive class theorem def abbrev example " +
+    "axiom universe variable macro syntax notation infix infixl infixr prefix postfix partial private protected noncomputable " +
+    "mutual calc suffices nomatch nofun local scoped attribute export set_option termination_by decreasing_by opaque extends " +
+    "using sorry admit forall exists matches omit include elab macro_rules unif_hint nonrec public meta module deprecated obtain rfl")
+    .split(" "),
+);
+
+/** A name as the generated Lean spells it: bare when it is a plain identifier, else quoted (`«wrong-key»`, `«this»`). */
+export function leanIdent(name: string): string {
+  return /^(?:[A-Za-z][A-Za-z0-9_]*|_[A-Za-z0-9_]+)$/.test(name) && !leanKeywords.has(name) ? name : `«${name}»`;
+}

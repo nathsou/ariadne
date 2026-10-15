@@ -4,7 +4,7 @@
 import { javascript, translator } from "./workers";
 import type { Hover, Obs, Signature } from "./types";
 import { faultText, sameObs, sample, showObs, showTy } from "./values";
-import { fill, h, icon } from "./util";
+import { fill, h, icon, leanIdent } from "./util";
 
 export type Presets = Record<string, string[] | string[][]>;
 
@@ -222,7 +222,7 @@ function comparison(name: string, model: Obs, js: Obs, valid: boolean | null) {
     v = verdict("info", "These arguments don't represent the declared types.",
       `The generated guard args.${name}(…) rejects them: the source theorem assumes it would accept them, so it claims nothing here.`);
   } else if (sameObs(model, js)) {
-    v = verdict("ok", "Same result.", `«${name}».source says so for every input where «${name}».safe holds, without running anything.`);
+    v = verdict("ok", "Same result.", `${leanIdent(name)}.source says so for every input where ${leanIdent(name)}.safe holds, without running anything.`);
   } else {
     v = verdict("err", "The model and JavaScript disagree.", "That would be a bug in the model: please report it.");
   }
