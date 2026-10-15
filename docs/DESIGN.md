@@ -225,12 +225,12 @@ theorem erased : typed.erase = ast := by kernel_rfl
 theorem bodies_ok : typed.bodiesOk = true := by decide +kernel
 theorem ast_scoped : ast.scoped = true := by decide +kernel
 theorem wf : typed.WF := TProgram.wf_of typed erased bodies_ok ast_scoped
-def «f» (x : Int) … : Int := …                   -- readable definitions
-def «f».safe (x : Int) … : Bool := …             -- safety conditions (when not trivial)
-theorem «f».body_eq : body.«f».denoteFn (earlier readable functions) = «f».uncurried := by kernel_rfl
+def f (x : Int) … : Int := …                   -- readable definitions
+def f.safe (x : Int) … : Bool := …             -- safety conditions (when not trivial)
+theorem f.body_eq : body.f.denoteFn (earlier readable functions) = f.uncurried := by kernel_rfl
 theorem denote_eq : typed.denote = (readable functions) := TProgram.denote_cons …
-theorem «f».source (x : Int) … (vs : List JSValue) (args : ArgsRep …) (safe : «f».safe x … = true) :
-    ∃ w, Converges (fun fuel => run ast fuel "f" vs) (.ok w) ∧ Ty.Rep … w («f» x …) := …
+theorem f.source (x : Int) … (vs : List JSValue) (args : ArgsRep …) (safe : f.safe x … = true) :
+    ∃ w, Converges (fun fuel => run ast fuel "f" vs) (.ok w) ∧ Ty.Rep … w (f x …) := …
 ```
 
 Each named type of the source also gets readable Lean names, so that the definitions and statements about
@@ -255,9 +255,9 @@ denotation, which is what the per-file `body_eq` checks.
 A class's file also says which fields each method leaves alone:
 
 ```lean
-theorem frames.«marks» : typed.frames "marks" = [false, true, …] := by decide +kernel
-theorem «pack».keeps.«marks» (this : Registers) … : («pack» this …).marks = this.marks :=
-  frame_of … denote_eq frames.«marks» …
+theorem frames.marks : typed.frames "marks" = [false, true, …] := by decide +kernel
+theorem pack.keeps.marks (this : Registers) … : (pack this …).marks = this.marks :=
+  frame_of … denote_eq frames.marks …
 ```
 
 `TProgram.frames g` marks a method that neither sets nor deletes in `this.g` and calls only marked
@@ -265,7 +265,7 @@ methods; it is a syntactic check over the typed program, evaluated by the kernel
 (`Ariadne/Proof/Frame.lean`) proves once that a marked method returns a state with the same `g`: over
 any run of its body, every variable named `this` keeps `g`'s value, through loops, `switch` and the
 methods it calls. The translator predicts the marks to know which lemmas to write; a wrong prediction
-fails `frames.«g»`, never a lemma.
+fails `frames.g`, never a lemma.
 
 Each `body_eq` compares one function's denotation with its readable definition, with callees taken as
 the earlier readable definitions, so no check unfolds a callee. The source theorems mention only `run`,

@@ -40,14 +40,14 @@ lake exe ariadne translate src/ledger.ts --out Quickstart/Ledger.lean --namespac
 
 Check the generated file in; CI regenerates it and fails on a difference. It holds:
 
-- readable definitions: `«balance»`, the class's methods `«credit»`, `«freeze»`, …, and the types'
-  names (`«Entry».«credit» amount`, `a.«balances»`, `a.«withBalances» m`);
-- `«f».safe`, the condition under which `f` stays within what the model covers, for each function
+- readable definitions: `balance`, the class's methods `credit`, `freeze`, …, and the types'
+  names (`Entry.credit amount`, `a.balances`, `a.withBalances m`);
+- `f.safe`, the condition under which `f` stays within what the model covers, for each function
   that can leave it (number overflow, a zero divisor, an inconsistent comparator, a `while` loop that
   does not end);
-- `«f».source`: every run of the TypeScript `f`, on arguments representing the inputs (and with
-  `«f».safe` holding), converges to what the readable definition gives;
-- for a class, `«m».keeps.«f»`: method `m` leaves the field `f` alone.
+- `f.source`: every run of the TypeScript `f`, on arguments representing the inputs (and with
+  `f.safe` holding), converges to what the readable definition gives;
+- for a class, `m.keeps.f`: method `m` leaves the field `f` alone.
 
 ## 3. State what you claim
 
@@ -56,10 +56,10 @@ of the same name in a proofs namespace:
 
 ```lean
 def balance_nonneg : Prop :=
-  ∀ entries : List «Entry», (∀ e ∈ entries, 0 ≤ amount e) → 0 ≤ «balance» entries
+  ∀ entries : List Entry, (∀ e ∈ entries, 0 ≤ amount e) → 0 ≤ balance entries
 ```
 
-A claim about the definitions holds of every run of the code through `«f».source`; a claim can also state
+A claim about the definitions holds of every run of the code through `f.source`; a claim can also state
 that directly, as `freeze_runs` does.
 
 ## 4. Prove
@@ -69,12 +69,12 @@ that directly, as `freeze_runs` does.
 - **Loops**: `forIn_inv` (an invariant), `forIn_prefix` (an invariant over the items seen so far, as in
   `balance_nonneg`), `forIn_continue` (a loop that never leaves early is a fold); for `while`,
   `whileDo_inv` and, for its safety condition, `whileSafe_of_measure`.
-- **Classes**: the generated `«m».keeps.«f»` lemmas, and `Ariadne/Lib/Map.lean` for the maps
+- **Classes**: the generated `m.keeps.f` lemmas, and `Ariadne/Lib/Map.lean` for the maps
   (`mapGet_mapPut`, …).
 - **Sorting**: `cmp_laws` proves a comparator lawful; then `consistent_of_laws` discharges `toSorted`'s
   safety condition, and `sortedBy_perm`, `sortedBy_sorted` say what it returns.
 - **Names**: `simp [readable]` unfolds the generated names to tuples, when a proof needs to.
-- **Safety conditions**: `ariadne_safe [facts]` (`Ariadne/Lib/Safe.lean`) unfolds `«f».safe`, splits its
+- **Safety conditions**: `ariadne_safe [facts]` (`Ariadne/Lib/Safe.lean`) unfolds `f.safe`, splits its
   cases and closes each by `simp` with the facts given (a comparator's laws, callees' `_safe` lemmas); what
   it leaves bounds numbers, for `inRange` and `omega`.
 
@@ -93,7 +93,7 @@ import { args } from './ledger.validators.ts';
 if (!args.balance(entries)) throw new Error('invalid entries');
 ```
 
-The guards are sufficient: a value they accept is represented. (Safety conditions, `«f».safe`, are
+The guards are sufficient: a value they accept is represented. (Safety conditions, `f.safe`, are
 separate: prove them, as in 4.)
 
 ## 6. Audit
