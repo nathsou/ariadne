@@ -470,6 +470,12 @@ theorem mapDel_conv {α β : Type} (f : α → β) (m : List (JSString × α)) (
     mapConv f (mapDel m k) = mapDel (mapConv f m) k := by
   simp only [mapDel, mapConv, List.filter_map]; rfl
 
+theorem Ty.conv_mapPut (σ : Ty) (m : Ty.den N (.map σ)) (k : JSString) (v : σ.den N) :
+    Ty.conv N I (.map σ) (mapPut m k v) = mapPut (Ty.conv N I (.map σ) m) k (Ty.conv N I σ v) := mapPut_conv _ m k v
+
+theorem Ty.conv_mapDel (σ : Ty) (m : Ty.den N (.map σ)) (k : JSString) :
+    Ty.conv N I (.map σ) (mapDel m k) = mapDel (Ty.conv N I (.map σ) m) k := mapDel_conv _ m k
+
 theorem listIndex_map {α β : Type} (f : α → β) (xs : List α) (i : Int) :
     listIndex (xs.map f) i = (listIndex xs i).map f := by
   simp only [listIndex]; split <;> simp
@@ -874,6 +880,325 @@ mutual
       simp only [TElems.safeS, TElems.safe]; rw [TExpr.safeS_eq e ρ, TElems.safeS_eq rest ρ]
     | _, _, .spreadKeys _ _ rest, ρ | _, _, .spreadValues _ _ rest, ρ => by
       simp only [TElems.safeS, TElems.safe]; exact TElems.safeS_eq rest ρ
+end
+
+end
+
+/-! ## Loops and cases through a conversion -/
+
+theorem foldl_conv {α β σ σ' : Type} (g : α → β) (f : σ → σ') (stepS : σ → α → σ) (stepC : σ' → β → σ')
+    (hs : ∀ s y, f (stepS s y) = stepC (f s) (g y)) : ∀ (xs : List α) (s : σ),
+    f (xs.foldl stepS s) = (xs.map g).foldl stepC (f s)
+  | [], _ => rfl
+  | y :: ys, s => by
+    simp only [List.foldl_cons, List.map_cons]
+    rw [foldl_conv g f stepS stepC hs ys, hs]
+
+theorem forIn_conv {α β σ σ' R R' : Type} (g : α → β) (fσ : σ → σ') (h : R → R')
+    (stepS : α → (σ → R) → (σ → R) → σ → R) (stepC : β → (σ' → R') → (σ' → R') → σ' → R')
+    (hs : ∀ y nS eS nC eC s, (∀ s', h (nS s') = nC (fσ s')) → (∀ s', h (eS s') = eC (fσ s')) →
+      h (stepS y nS eS s) = stepC (g y) nC eC (fσ s))
+    (exitS : σ → R) (exitC : σ' → R') (he : ∀ s, h (exitS s) = exitC (fσ s)) :
+    ∀ (xs : List α) (s : σ), h (forIn xs stepS exitS s) = forIn (xs.map g) stepC exitC (fσ s)
+  | [], s => he s
+  | y :: ys, s => hs y _ _ _ _ s (fun s' => forIn_conv g fσ h stepS stepC hs exitS exitC he ys s') he
+
+theorem whileIn_conv {σ σ' R R' : Type} (fσ : σ → σ') (h : R → R') (condS : σ → Bool) (condC : σ' → Bool)
+    (hc : ∀ s, condS s = condC (fσ s)) (stepS : (σ → R) → (σ → R) → σ → R) (stepC : (σ' → R') → (σ' → R') → σ' → R')
+    (hs : ∀ nS eS nC eC s, (∀ s', h (nS s') = nC (fσ s')) → (∀ s', h (eS s') = eC (fσ s')) →
+      h (stepS nS eS s) = stepC nC eC (fσ s))
+    (exitS stuckS : σ → R) (exitC stuckC : σ' → R') (he : ∀ s, h (exitS s) = exitC (fσ s))
+    (hst : ∀ s, h (stuckS s) = stuckC (fσ s)) :
+    ∀ (n : Nat) (s : σ), h (whileIn n condS stepS exitS stuckS s) = whileIn n condC stepC exitC stuckC (fσ s)
+  | 0, s => hst s
+  | n + 1, s => by
+    rw [whileIn_succ, whileIn_succ, hc]
+    split
+    · exact hs _ _ _ _ s (fun s' => whileIn_conv fσ h condS condC hc stepS stepC hs exitS stuckS exitC stuckC he hst n s') he
+    · exact he s
+
+theorem Variants.elimS_congr {N : Names} {R : Type} : ∀ (vs : Variants) (x : vs.den N)
+    (k k' : ∀ {t fs}, VIdx vs t fs → fs.den N → R), (∀ {t fs} (i : VIdx vs t fs) y, k i y = k' i y) →
+    Variants.elimS N vs x k = Variants.elimS N vs x k'
+  | .one _ _, _, _, _, h => h _ _
+  | .cons _ _ _, .inl _, _, _, h => h _ _
+  | .cons _ _ rest, .inr w, k, k', h => Variants.elimS_congr rest w _ _ fun i y => h (.there i) y
+
+/-! ## Statements -/
+
+section
+variable {N : Names} (I : Isos N) {Φ : Sigs} (fs : Φ.denS N)
+
+/-- Continuations that give, through `h`, what the denotation's do on the converted environments. -/
+def KRel {Γ : Ctx} {RS RC : Type} (h : RS → RC) (kS : KS N Γ RS) (kC : K Γ RC) : Prop :=
+  ∀ ρ, h (kS.normal ρ) = kC.normal (Ctx.conv N I Γ ρ) ∧ h (kS.brk ρ) = kC.brk (Ctx.conv N I Γ ρ) ∧
+    h (kS.cont ρ) = kC.cont (Ctx.conv N I Γ ρ)
+
+theorem KRel.map {Γ Γ' : Ctx} {RS RC : Type} {h : RS → RC} {kS : KS N Γ RS} {kC : K Γ RC}
+    (fS : Γ'.denS N → Γ.denS N) (fC : Γ'.denote → Γ.denote) (hf : ∀ ρ, Ctx.conv N I Γ (fS ρ) = fC (Ctx.conv N I Γ' ρ))
+    (hk : KRel I h kS kC) : KRel I h (kS.map fS) (kC.map fC) := fun ρ => by
+  simp only [KS.map, K.map, Function.comp, ← hf]; exact hk (fS ρ)
+
+theorem KRel.snd {x : String} {σ : Ty} {Γ : Ctx} {RS RC : Type} {h : RS → RC} {kS : KS N Γ RS} {kC : K Γ RC}
+    (hk : KRel I h kS kC) : KRel I (Γ := (x, σ) :: Γ) h (kS.map Prod.snd) (kC.map Prod.snd) :=
+  KRel.map (Γ' := (x, σ) :: Γ) I Prod.snd Prod.snd (fun ρ => by obtain ⟨a, ρ⟩ := ρ; rfl) hk
+
+theorem KRel.normal {Γ : Ctx} {RS RC : Type} {h : RS → RC} {kS : KS N Γ RS} {kC : K Γ RC}
+    {nS : Γ.denS N → RS} {nC : Γ.denote → RC} (hn : ∀ ρ, h (nS ρ) = nC (Ctx.conv N I Γ ρ)) (hk : KRel I h kS kC) :
+    KRel I h { kS with normal := nS } { kC with normal := nC } := fun ρ => ⟨hn ρ, (hk ρ).2⟩
+
+theorem KRel.all {Γ : Ctx} {RS RC : Type} {h : RS → RC} {nS : Γ.denS N → RS} {nC : Γ.denote → RC}
+    (hn : ∀ ρ, h (nS ρ) = nC (Ctx.conv N I Γ ρ)) : KRel I h (KS.all nS) (K.all nC) := fun ρ => ⟨hn ρ, hn ρ, hn ρ⟩
+
+theorem KRel.widen {Γ : Ctx} {x : String} {σ : Ty} {n : Nullish} {RS RC : Type} {h : RS → RC} {kS : KS N Γ RS}
+    {kC : K Γ RC} (v : Var Γ x (.option n σ)) (hk : KRel I h kS kC) :
+    KRel I h (kS.map (Var.widenS N v some)) (kC.map (v.widen some)) :=
+  KRel.map I _ _ (Var.conv_widenS I v some some (fun _ => rfl)) hk
+
+theorem KRel.allProj {Γ : Ctx} (m : Mask) :
+    KRel I (Ctx.tupConv N I (Γ.sub m)) (KS.all (Ctx.projS N Γ m)) (K.all (Ctx.proj Γ m)) :=
+  fun ρ => ⟨Ctx.tupConv_projS I Γ m ρ, Ctx.tupConv_projS I Γ m ρ, Ctx.tupConv_projS I Γ m ρ⟩
+
+/-- The states of a loop or branch relate through `Ctx.tupConv`. -/
+theorem projS_rel {Γ : Ctx} (m : Mask) (ρ : Γ.denS N) :
+    Ctx.tupConv N I (Γ.sub m) (Ctx.projS N Γ m ρ) = Ctx.proj Γ m (Ctx.conv N I Γ ρ) := Ctx.tupConv_projS I Γ m ρ
+
+mutual
+  theorem TStmts.denoteRS_conv : ∀ {Γ : Ctx} {τ : Ty} (st : TStmts Φ Γ τ) {RS RC : Type} (h : RS → RC)
+      (rS : τ.den N → RS) (rC : τ.denote → RC), (∀ v, h (rS v) = rC (Ty.conv N I τ v)) →
+      ∀ (kS : KS N Γ RS) (kC : K Γ RC), KRel I h kS kC → ∀ (ρ : Γ.denS N),
+      h (TStmts.denoteRS N I fs rS st kS ρ) = st.denoteR (Sigs.canon N I Φ fs) rC kC (Ctx.conv N I Γ ρ)
+    | _, _, .nil, _, _, _, _, _, _, _, _, hk, ρ => (hk ρ).1
+    | _, _, .brk _, _, _, _, _, _, _, _, _, hk, ρ => (hk ρ).2.1
+    | _, _, .cont _, _, _, _, _, _, _, _, _, hk, ρ => (hk ρ).2.2
+    | _, _, .ret e _, _, _, _, _, _, hr, _, _, _, ρ => by
+      simp only [TStmts.denoteRS, TStmts.denoteR]; rw [hr, TExpr.conv_denS I fs e ρ]
+    | _, _, .retVoid v _, _, _, _, _, _, hr, _, _, _, ρ => by
+      simp only [TStmts.denoteRS, TStmts.denoteR]; rw [hr, Var.conv_getS I v ρ]
+    | _, _, .const _ e rest, _, _, h, rS, rC, hr, kS, kC, hk, ρ => by
+      simp only [TStmts.denoteRS, TStmts.denoteR]
+      rw [TStmts.denoteRS_conv rest h rS rC hr _ _ (KRel.snd I hk), ← TExpr.conv_denS I fs e ρ]; rfl
+    | _, _, .let_ _ e rest, _, _, h, rS, rC, hr, kS, kC, hk, ρ => by
+      simp only [TStmts.denoteRS, TStmts.denoteR]
+      rw [TStmts.denoteRS_conv rest h rS rC hr _ _ (KRel.snd I hk), ← TExpr.conv_denS I fs e ρ]; rfl
+    | _, _, .assign v e rest, _, _, h, rS, rC, hr, kS, kC, hk, ρ => by
+      simp only [TStmts.denoteRS, TStmts.denoteR]
+      rw [TStmts.denoteRS_conv rest h rS rC hr kS kC hk, Var.conv_setS, TExpr.conv_denS I fs e ρ]
+    | _, _, .stateSet v i _ key e rest, _, _, h, rS, rC, hr, kS, kC, hk, ρ => by
+      simp only [TStmts.denoteRS, TStmts.denoteR]
+      rw [TStmts.denoteRS_conv rest h rS rC hr kS kC hk, Var.conv_setS, recSet_conv, Var.conv_getS]
+      have hk' : TExpr.denS N I fs key ρ = _ := TExpr.conv_denS I fs key ρ
+      rw [Ty.conv_mapPut, recGet_conv, Var.conv_getS, TExpr.conv_denS I fs e ρ, hk']
+    | _, _, .stateDelete v i _ key rest, _, _, h, rS, rC, hr, kS, kC, hk, ρ => by
+      simp only [TStmts.denoteRS, TStmts.denoteR]
+      rw [TStmts.denoteRS_conv rest h rS rC hr kS kC hk, Var.conv_setS, recSet_conv, Var.conv_getS]
+      have hk' : TExpr.denS N I fs key ρ = _ := TExpr.conv_denS I fs key ρ
+      rw [Ty.conv_mapDel, recGet_conv, Var.conv_getS, hk']
+    | _, _, .callVoid fn v args rest, _, _, h, rS, rC, hr, kS, kC, hk, ρ => by
+      simp only [TStmts.denoteRS, TStmts.denoteR]
+      rw [TStmts.denoteRS_conv rest h rS rC hr kS kC hk, Var.conv_setS]
+      congr 2
+      refine (FVar.conv_getS I fn fs _).trans ?_
+      show fn.get _ (Ty.conv N I _ (Var.getS N v ρ), Ctx.conv N I _ (TArgs.denS N I fs args ρ)) = _
+      rw [Var.conv_getS, TArgs.conv_denS I fs args ρ]
+    | _, _, .block body rest, _, _, h, rS, rC, hr, kS, kC, hk, ρ => by
+      simp only [TStmts.denoteRS, TStmts.denoteR]
+      exact TStmts.denoteRS_conv body h rS rC hr _ _
+        (KRel.normal I (TStmts.denoteRS_conv rest h rS rC hr kS kC hk) hk) ρ
+    | _, _, .ite c yes no rest, _, _, h, rS, rC, hr, kS, kC, hk, ρ => by
+      have hc : TExpr.denS N I fs c ρ = _ := TExpr.conv_denS I fs c ρ
+      simp only [TStmts.denoteRS, TStmts.denoteR, hc]
+      split
+      · rw [TStmts.denoteRS_conv rest h rS rC hr kS kC hk, Ctx.conv_mergeS]
+        congr 2
+        split
+        · exact TStmts.denoteRS_conv yes _ _ _ (fun _ => projS_rel I (Mask.or yes.writes no.writes) ρ) _ _ (KRel.allProj I (Mask.or yes.writes no.writes)) ρ
+        · exact TStmts.denoteRS_conv no _ _ _ (fun _ => projS_rel I (Mask.or yes.writes no.writes) ρ) _ _ (KRel.allProj I (Mask.or yes.writes no.writes)) ρ
+      · have hk' := KRel.normal I (TStmts.denoteRS_conv rest h rS rC hr kS kC hk) hk
+        split
+        · exact TStmts.denoteRS_conv yes h rS rC hr _ _ hk' ρ
+        · exact TStmts.denoteRS_conv no h rS rC hr _ _ hk' ρ
+    | _, _, .ifNull v _ yes no rest, _, _, h, rS, rC, hr, kS, kC, hk, ρ => by
+      have hv := Var.conv_getS I v ρ
+      simp only [TStmts.denoteRS, TStmts.denoteR]
+      split
+      · rw [TStmts.denoteRS_conv rest h rS rC hr kS kC hk, Ctx.conv_mergeS, ← hv]
+        congr 2
+        rcases Var.getS N v ρ with _ | y
+        · exact TStmts.denoteRS_conv yes _ _ _ (fun _ => projS_rel I (Mask.or yes.writes no.writes) ρ) _ _ (KRel.allProj I (Mask.or yes.writes no.writes)) ρ
+        · show _ = no.denoteR _ _ _ (v.narrowVal _ (Ty.conv N I _ y))
+          rw [← Var.conv_narrowValS]
+          exact TStmts.denoteRS_conv no _ _ _ (fun _ => projS_rel I (Mask.or yes.writes no.writes) ρ) _ _
+            (KRel.widen I v (KRel.allProj I (Mask.or yes.writes no.writes))) _
+      · have hk' := KRel.normal I (TStmts.denoteRS_conv rest h rS rC hr kS kC hk) hk
+        rw [← hv]
+        rcases Var.getS N v ρ with _ | y
+        · exact TStmts.denoteRS_conv yes h rS rC hr _ _ hk' ρ
+        · show _ = no.denoteR _ _ _ (v.narrowVal _ (Ty.conv N I _ y))
+          rw [← Var.conv_narrowValS]
+          exact TStmts.denoteRS_conv no h rS rC hr _ _ (KRel.widen I v hk') _
+    | _, _, .ifNotNull v _ yes no rest, _, _, h, rS, rC, hr, kS, kC, hk, ρ => by
+      have hv := Var.conv_getS I v ρ
+      simp only [TStmts.denoteRS, TStmts.denoteR]
+      split
+      · rw [TStmts.denoteRS_conv rest h rS rC hr kS kC hk, Ctx.conv_mergeS, ← hv]
+        congr 2
+        rcases Var.getS N v ρ with _ | y
+        · exact TStmts.denoteRS_conv no _ _ _ (fun _ => projS_rel I (Mask.or yes.writes no.writes) ρ) _ _ (KRel.allProj I (Mask.or yes.writes no.writes)) ρ
+        · show _ = yes.denoteR _ _ _ (v.narrowVal _ (Ty.conv N I _ y))
+          rw [← Var.conv_narrowValS]
+          exact TStmts.denoteRS_conv yes _ _ _ (fun _ => projS_rel I (Mask.or yes.writes no.writes) ρ) _ _
+            (KRel.widen I v (KRel.allProj I (Mask.or yes.writes no.writes))) _
+      · have hk' := KRel.normal I (TStmts.denoteRS_conv rest h rS rC hr kS kC hk) hk
+        rw [← hv]
+        rcases Var.getS N v ρ with _ | y
+        · exact TStmts.denoteRS_conv no h rS rC hr _ _ hk' ρ
+        · show _ = yes.denoteR _ _ _ (v.narrowVal _ (Ty.conv N I _ y))
+          rw [← Var.conv_narrowValS]
+          exact TStmts.denoteRS_conv yes h rS rC hr _ _ (KRel.widen I v hk') _
+    | _, _, .ifNullExit v _ yes rest, _, _, h, rS, rC, hr, kS, kC, hk, ρ => by
+      have hv := Var.conv_getS I v ρ
+      simp only [TStmts.denoteRS, TStmts.denoteR, ← hv]
+      rcases Var.getS N v ρ with _ | y
+      · exact TStmts.denoteRS_conv yes h rS rC hr kS kC hk ρ
+      · show _ = rest.denoteR _ _ _ (v.narrowVal _ (Ty.conv N I _ y))
+        rw [← Var.conv_narrowValS]
+        exact TStmts.denoteRS_conv rest h rS rC hr _ _ (KRel.widen I v hk) _
+    | _, _, .switchG v _ arms rest, _, _, h, rS, rC, hr, kS, kC, hk, ρ => by
+      have hv := Var.conv_getS I v ρ
+      simp only [TStmts.denoteRS, TStmts.denoteR, ← hv, Ty.conv_union, Variants.elim_conv, unionElim_eq]
+      split
+      · rw [TStmts.denoteRS_conv rest h rS rC hr kS kC hk, Ctx.conv_mergeS]
+        congr 2
+        rw [Variants.elimS_nat (Ctx.tupConv N I _)]
+        refine Variants.elimS_congr _ _ _ _ fun i y => ?_
+        exact TArms.denoteRS_conv arms _ _ _ (fun _ => projS_rel I arms.writes ρ) _ _
+          (KRel.allProj I arms.writes) ρ i y _ _ (projS_rel I arms.writes ρ)
+      · rw [Variants.elimS_nat h]
+        refine Variants.elimS_congr _ _ _ _ fun i y => ?_
+        have hrest := TStmts.denoteRS_conv rest h rS rC hr kS kC hk
+        exact TArms.denoteRS_conv arms h rS rC hr
+          { kS with normal := TStmts.denoteRS N I fs rS rest kS, brk := TStmts.denoteRS N I fs rS rest kS }
+          { kC with normal := rest.denoteR (Sigs.canon N I Φ fs) rC kC, brk := rest.denoteR (Sigs.canon N I Φ fs) rC kC }
+          (fun ρ' => ⟨hrest ρ', hrest ρ', (hk ρ').2.2⟩) ρ i y _ _ (hrest ρ)
+    | _, _, .forOf _ a body rest, _, _, h, rS, rC, hr, kS, kC, hk, ρ => by
+      have ha := TExpr.conv_denS I fs a ρ
+      simp only [TStmts.denoteRS, TStmts.denoteR, ← ha]
+      split
+      · rw [TStmts.denoteRS_conv rest h rS rC hr kS kC hk, Ctx.conv_mergeS]
+        congr 2
+        show _ = List.foldl _ _ (List.map _ _)
+        rw [foldl_conv (Ty.conv N I _) (Ctx.tupConv N I _) _ _ (fun s y => ?_), projS_rel]
+        exact (TStmts.denoteRS_conv body (Ctx.tupConv N I _) (fun _ => s) (fun _ => Ctx.tupConv N I _ s) (fun _ => rfl)
+          (KS.map Prod.snd (KS.all (Ctx.projS N _ body.writes.tail)))
+          (K.map Prod.snd (K.all (Ctx.proj _ body.writes.tail))) (KRel.snd I (KRel.allProj I body.writes.tail)) _).trans
+          (by simp only [Ctx.conv, Ctx.conv_mergeS] <;> rfl)
+      · show _ = forIn (List.map _ _) _ _ _
+        rw [← projS_rel]
+        refine forIn_conv _ _ h _ _ (fun y nS eS nC eC s hn he => ?_) _ _ (fun s => ?_) _ _
+        · refine (TStmts.denoteRS_conv body h rS rC hr _ (K.map Prod.snd ⟨nC ∘ Ctx.proj _ body.writes.tail,
+            eC ∘ Ctx.proj _ body.writes.tail, nC ∘ Ctx.proj _ body.writes.tail⟩) (KRel.snd I (fun ρ' => ?_)) _).trans ?_
+          · simp only [Function.comp]; rw [hn, he, projS_rel]; exact ⟨rfl, rfl, rfl⟩
+          · simp only [Ctx.conv, Ctx.conv_mergeS] <;> rfl
+        · rw [TStmts.denoteRS_conv rest h rS rC hr kS kC hk, Ctx.conv_mergeS]
+    | _, _, .forEntries _ _ a body rest, _, _, h, rS, rC, hr, kS, kC, hk, ρ => by
+      have ha := TExpr.conv_denS I fs a ρ
+      simp only [TStmts.denoteRS, TStmts.denoteR, ← ha]
+      split
+      · rw [TStmts.denoteRS_conv rest h rS rC hr kS kC hk, Ctx.conv_mergeS]
+        congr 2
+        show _ = List.foldl _ _ (List.zipIdx (List.map _ _))
+        rw [List.zipIdx_map, foldl_conv (Prod.map (Ty.conv N I _) id) (Ctx.tupConv N I _) _ _ (fun s p => ?_), projS_rel]
+        exact (TStmts.denoteRS_conv body (Ctx.tupConv N I _) (fun _ => s) (fun _ => Ctx.tupConv N I _ s) (fun _ => rfl)
+          (KS.map Prod.snd (KS.map Prod.snd (KS.all (Ctx.projS N _ body.writes.tail.tail))))
+          (K.map Prod.snd (K.map Prod.snd (K.all (Ctx.proj _ body.writes.tail.tail))))
+          (KRel.snd I (KRel.snd I (KRel.allProj I body.writes.tail.tail))) _).trans
+          (by simp only [Ctx.conv, Ctx.conv_mergeS] <;> rfl)
+      · show _ = forIn (List.zipIdx (List.map _ _)) _ _ _
+        rw [List.zipIdx_map, ← projS_rel]
+        refine forIn_conv _ _ h _ _ (fun p nS eS nC eC s hn he => ?_) _ _ (fun s => ?_) _ _
+        · refine (TStmts.denoteRS_conv body h rS rC hr _ (K.map Prod.snd (K.map Prod.snd
+            ⟨nC ∘ Ctx.proj _ body.writes.tail.tail, eC ∘ Ctx.proj _ body.writes.tail.tail,
+              nC ∘ Ctx.proj _ body.writes.tail.tail⟩)) (KRel.snd I (KRel.snd I (fun ρ' => ?_))) _).trans ?_
+          · simp only [Function.comp]; rw [hn, he, projS_rel]; exact ⟨rfl, rfl, rfl⟩
+          · simp only [Ctx.conv, Ctx.conv_mergeS] <;> rfl
+        · rw [TStmts.denoteRS_conv rest h rS rC hr kS kC hk, Ctx.conv_mergeS]
+    | _, _, .forRange _ v body rest, _, _, h, rS, rC, hr, kS, kC, hk, ρ => by
+      have hv : Var.getS N v ρ = _ := Var.conv_getS I v ρ
+      simp only [TStmts.denoteRS, TStmts.denoteR, hv]
+      split
+      · rw [TStmts.denoteRS_conv rest h rS rC hr kS kC hk, Ctx.conv_mergeS]
+        congr 2
+        conv => rhs; rw [← List.map_id (range _)]
+        rw [foldl_conv id (Ctx.tupConv N I _) _ _ (fun s j => ?_), projS_rel]
+        exact (TStmts.denoteRS_conv body (Ctx.tupConv N I _) (fun _ => s) (fun _ => Ctx.tupConv N I _ s) (fun _ => rfl)
+          (KS.map Prod.snd (KS.all (Ctx.projS N _ body.writes.tail)))
+          (K.map Prod.snd (K.all (Ctx.proj _ body.writes.tail))) (KRel.snd I (KRel.allProj I body.writes.tail)) _).trans
+          (by simp only [Ctx.conv, Ctx.conv_mergeS] <;> rfl)
+      · conv => rhs; rw [← List.map_id (range _)]
+        rw [← projS_rel]
+        refine forIn_conv _ _ h _ _ (fun j nS eS nC eC s hn he => ?_) _ _ (fun s => ?_) _ _
+        · refine (TStmts.denoteRS_conv body h rS rC hr _ (K.map Prod.snd ⟨nC ∘ Ctx.proj _ body.writes.tail,
+            eC ∘ Ctx.proj _ body.writes.tail, nC ∘ Ctx.proj _ body.writes.tail⟩) (KRel.snd I (fun ρ' => ?_)) _).trans ?_
+          · simp only [Function.comp]; rw [hn, he, projS_rel]; exact ⟨rfl, rfl, rfl⟩
+          · simp only [Ctx.conv, Ctx.conv_mergeS] <;> rfl
+        · rw [TStmts.denoteRS_conv rest h rS rC hr kS kC hk, Ctx.conv_mergeS]
+    | _, _, .whileLoop c body rest, _, _, h, rS, rC, hr, kS, kC, hk, ρ => by
+      simp only [TStmts.denoteRS, TStmts.denoteR]
+      rw [whileDo_def, whileDo_def, ← projS_rel]
+      refine whileIn_conv _ h _ _ (fun s => ?_) _ _ (fun nS eS nC eC s hn he => ?_) _ _ _ _ (fun s => ?_) (fun s => ?_) _ _
+      · have hc : TExpr.denS N I fs c _ = _ := TExpr.conv_denS I fs c (Ctx.mergeS N _ body.writes ρ s)
+        rw [hc, Ctx.conv_mergeS]
+      · refine (TStmts.denoteRS_conv body h rS rC hr _ ⟨nC ∘ Ctx.proj _ body.writes, eC ∘ Ctx.proj _ body.writes,
+          nC ∘ Ctx.proj _ body.writes⟩ (fun ρ' => ?_) _).trans ?_
+        · simp only [Function.comp]; rw [hn, he, projS_rel]; exact ⟨rfl, rfl, rfl⟩
+        · rw [Ctx.conv_mergeS]
+      · rw [TStmts.denoteRS_conv rest h rS rC hr kS kC hk, Ctx.conv_mergeS]
+      · rw [TStmts.denoteRS_conv rest h rS rC hr kS kC hk, Ctx.conv_mergeS]
+
+  theorem TArms.firstRS_conv {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} :
+      ∀ (arms : TArms Φ Γ τ v) {RS RC : Type} (h : RS → RC) (rS : τ.den N → RS) (rC : τ.denote → RC),
+      (∀ v, h (rS v) = rC (Ty.conv N I τ v)) → ∀ (kS : KS N Γ RS) (kC : K Γ RC), KRel I h kS kC → ∀ (ρ : Γ.denS N),
+      h (TArms.firstRS N I fs rS arms kS ρ) = arms.firstR (Sigs.canon N I Φ fs) rC kC (Ctx.conv N I Γ ρ)
+    | .nil, _, _, _, _, _, _, _, _, hk, ρ => (hk ρ).1
+    | .empty _ rest, _, _, h, rS, rC, hr, kS, kC, hk, ρ => TArms.firstRS_conv rest h rS rC hr kS kC hk ρ
+    | .wide _ body _, _, _, h, rS, rC, hr, kS, kC, hk, ρ => TStmts.denoteRS_conv body h rS rC hr kS kC hk ρ
+    | .narrow .., _, _, _, _, _, _, _, _, hk, ρ => (hk ρ).1
+
+  theorem TArms.denoteRS_conv {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} :
+      ∀ (arms : TArms Φ Γ τ v) {RS RC : Type} (h : RS → RC) (rS : τ.den N → RS) (rC : τ.denote → RC),
+      (∀ v, h (rS v) = rC (Ty.conv N I τ v)) → ∀ (kS : KS N Γ RS) (kC : K Γ RC), KRel I h kS kC → ∀ (ρ : Γ.denS N)
+      {t : TagLit} {fds : Fields} (i : VIdx vs0 t fds) (y : fds.den N) (dS : RS) (dC : RC), h dS = dC →
+      h (TArms.denoteRS N I fs rS arms kS ρ i y dS) =
+        arms.denoteR (Sigs.canon N I Φ fs) rC kC (Ctx.conv N I Γ ρ) i (Fields.conv N I fds y) dC
+    | .nil, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hd => hd
+    | .empty l rest, _, _, h, rS, rC, hr, kS, kC, hk, ρ, t, _, i, y, dS, dC, hd => by
+      simp only [TArms.denoteRS, TArms.denoteR]
+      split
+      · exact TArms.firstRS_conv rest h rS rC hr kS kC hk ρ
+      · refine TArms.denoteRS_conv rest h rS rC hr kS kC hk ρ i y _ _ ?_
+        split
+        · exact TArms.firstRS_conv rest h rS rC hr kS kC hk ρ
+        · exact hd
+    | .wide l body rest, _, _, h, rS, rC, hr, kS, kC, hk, ρ, t, _, i, y, dS, dC, hd => by
+      simp only [TArms.denoteRS, TArms.denoteR]
+      split
+      · exact TStmts.denoteRS_conv body h rS rC hr kS kC hk ρ
+      · refine TArms.denoteRS_conv rest h rS rC hr kS kC hk ρ i y _ _ ?_
+        split
+        · exact TStmts.denoteRS_conv body h rS rC hr kS kC hk ρ
+        · exact hd
+    | .narrow i' body rest, _, _, h, rS, rC, hr, kS, kC, hk, ρ, t, _, i, y, dS, dC, hd => by
+      simp only [TArms.denoteRS, TArms.denoteR]
+      rw [← Variants.conv_injS I i y, VIdx.proj_conv]
+      rcases VIdx.projS N i' (VIdx.injS N i y) with _ | y'
+      · exact TArms.denoteRS_conv rest h rS rC hr kS kC hk ρ i y dS dC hd
+      · show _ = body.denoteR _ rC _ (v.narrowVal _ ((), Fields.conv N I _ y'))
+        have hn : ((), Fields.conv N I _ y') = Ty.conv N I _ (vrecOf N I key i' y') :=
+          (Ty.conv_recMk I (.cons key (.tag _) _) ((), y')).symm
+        rw [hn, ← Var.conv_narrowValS]
+        exact TStmts.denoteRS_conv body h rS rC hr _ _
+          (KRel.map I _ _ (Var.conv_widenS I v _ _ (fun z => by rw [Narrowing.conv_embedS]; rfl)) hk) _
 end
 
 end
