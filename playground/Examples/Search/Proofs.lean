@@ -109,7 +109,7 @@ theorem indexOf_found (xs : List Int) (target : Int) (i : Int) (h : indexOf xs t
   rintro next ex ⟨hi, lo⟩ ⟨h0, hl, hh⟩ hc hn -
   simp only [decide_eq_true_eq] at hc
   have hm := midpoint_between lo hi hc
-  dsimp only
+  dsimp only [indexOf.loop]
   split
   · intro h; exact absurd rfl h
   · rename_i v hv
@@ -138,7 +138,7 @@ theorem indexOf_complete (xs : List Int) (target : Int) (sorted : xs.Pairwise (�
     have hm := midpoint_between lo hi hc
     have hmid : (0 : Int) ≤ midpoint lo hi := by omega
     have hlt : (midpoint lo hi).toNat < xs.length := by omega
-    dsimp only
+    dsimp only [indexOf.loop]
     split
     · rename_i hv
       simp [listIndex, hmid, hlt] at hv

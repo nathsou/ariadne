@@ -225,12 +225,17 @@ structure Hover where
 
 structure CheckLog where
   hovers : Array Hover := #[]
+  /-- Loops checked so far, to name their bodies. -/
+  loops : Nat := 0
   /-- The named types, once resolved, to print the logged types with. -/
   types : Option Types := none
 
 abbrev CheckM := ExceptT Diagnostic (StateM CheckLog)
 
 def logHover (h : Hover) : CheckM Unit := modify fun l => { l with hovers := l.hovers.push h }
+
+/-- A new loop's number. -/
+def nextLoop : CheckM Nat := modifyGet fun l => (l.loops, { l with loops := l.loops + 1 })
 
 def mismatch (span : Span) (message : String) : CheckM α :=
   throw { code := "A2002", message, span }
@@ -1280,31 +1285,65 @@ def iteText (render : Block → String → KText → String) (idiom : Bool) (s :
     let k' := { k with normal := fun j' => render rest j' k }
     s!"if {c} then\n{j}{render yes j k'}\n{i}else\n{j}{render no j k'}"
 
+/-- The Lean type of a variable's readable value: a narrowed variable is bound to its payload. -/
+def Scope.varTypeText (s : Scope) (T : Types) (x : String) : String :=
+  let τ := ((s.lookup x).map (·.2)).getD .bool
+  match s.payloads.lookup x, τ with
+  | some .single, .record (.cons _ _ fs) => match Fields.toList fs with
+    | [(_, σ)] => T.lean σ
+    | _ => T.lean τ
+  | some .multi, .record (.cons _ _ fs) =>
+    ((T.variantOf? τ).bind fun (u, i) => T.payloadName? u i).getD (T.lean (.record fs))
+  | some .unit, _ => "Unit"
+  | _, _ => T.lean τ
+
+/-- A loop's body as a named definition, `‹loopN› captured… : type := fun params => body`, between markers
+that `hoistLoops` takes out of a readable definition; and the term naming it. Its parameters are the
+variables of the scope the body reads, other than the state. -/
+def namedBody (s : Scope) (T : Types) (id : Nat) (state : List String) (ty lam body : String) : String × String :=
+  let uses (x : String) := (body.splitOn (ident x)).length > 1
+  let captured := (s.locals.reverse.filter fun (x, _) =>
+    !state.contains x && uses x && s.payloads.lookup x != some .unit).map (·.1)
+  let params := " ".intercalate (captured.map fun x => s!"({ident x} : {s.varTypeText T x})")
+  let name := s!"‹loop{id}›"
+  let call := if captured.isEmpty then name else s!"({name} {" ".intercalate (captured.map ident)})"
+  let header := if params.isEmpty then s!"def {name}" else s!"def {name} {params}"
+  (call, s!"⟦⟦{id}⟧⟧{header} : {ty} :=\n  {lam} =>\n    {body}⟦⟦/⟧⟧")
+
 /-- A loop: `Ariadne.forIn items (fun binder next exit state => body) (fun state => rest) state`, or, when its
 body is direct, `let state := Ariadne.fold state items (fun state binder => body); rest`. The readable
 definition's state is the variables the body assigns (`idiom`, `TStmts.denoteR`); the safety condition's is
 the whole environment. -/
 def loopText (render : Block → String → KText → String) (s : Scope) (items binder : String)
     (pre : String → String)
-    (body rest : Block) (idiom : Bool) (i : String) (k : KText) : String :=
+    (body rest : Block) (idiom : Bool) (i : String) (k : KText) (T : Types) (id : Nat) (binderTy resultTy : String) :
+    String :=
   let d := i.length
   let (nx, ex) := (s!"next{d}'", s!"exit{d}'")
   let tup := tupleText s
   let j := i ++ "  "
-  -- The state: the variables the body assigns (`TStmts.denoteR`).
+  -- The state: the variables the body assigns (`TStmts.denoteR`), and its type.
   let st := s.stateText body.writes
+  let vars := s.stateVars body.writes
+  let stTy := if vars.isEmpty then "Unit" else " × ".intercalate (vars.map fun x => s.varTypeText T x)
+  let jd := "    "
   -- A body with no `return` and no `break` of its own (`TStmts.direct`): a fold, the body ending with the
   -- state.
   if idiom && body.noRet && body.noBrk then
     let kd : KText := ⟨fun _ => st, fun _ => st, fun _ => st⟩
-    let bodyText := s!"{pre j}{render body j kd}"
+    let (call, defn) := namedBody s T id vars s!"{stTy} → {binderTy} → {stTy}" s!"fun {st} {binder}"
+      s!"{pre jd}{render body jd kd}"
     let restText := render rest i k
-    s!"let {st} := Ariadne.fold {st} {items} (fun {st} {binder} =>\n{j}{bodyText})\n{i}{restText}"
+    s!"let {st} := Ariadne.fold {st} {items} {call}{defn}\n{i}{restText}"
   else if idiom then
-    let kb : KText := ⟨fun _ => s!"{nx} {st}", fun _ => s!"{ex} {st}", fun _ => s!"{nx} {st}"⟩
-    let bodyText := s!"{pre j}{render body j kb}"
+    let kb : KText := ⟨fun _ => s!"next' {st}", fun _ => s!"exit' {st}", fun _ => s!"next' {st}"⟩
+    -- The result type: the function's, or any when the body cannot `return`.
+    let (r, implicit) := if body.noRet then ("R", "{R : Type} ") else (resultTy, "")
+    let (call, defn) := namedBody s T id vars s!"{binderTy} → ({stTy} → {r}) → ({stTy} → {r}) → {stTy} → {r}"
+      s!"fun {binder} next' exit' {st}" s!"{pre jd}{render body jd kb}"
+    let defn := defn.replace s!"def ‹loop{id}› " s!"def ‹loop{id}› {implicit}"
     let restText := render rest j k
-    s!"Ariadne.forIn {items} (fun {binder} {nx} {ex} {st} =>\n{j}{bodyText})\n{i}  " ++
+    s!"Ariadne.forIn {items} {call}{defn}\n{i}  " ++
       s!"(fun {st} =>\n{j}{restText})\n{i}  {st}"
   else
   let kb : KText := ⟨fun _ => s!"{nx} {tup}", fun _ => s!"{ex} {tup}", fun _ => s!"{nx} {tup}"⟩
@@ -1316,16 +1355,21 @@ def loopText (render : Block → String → KText → String) (s : Scope) (items
 /-- A `while` loop: `Ariadne.whileDo (fun state => c) (fun next exit state => body) (fun state => rest) tuple`,
 and `Ariadne.whileSafe` for the safety condition. -/
 def whileText (render : Block → String → KText → String) (s : Scope) (fn c : String) (body rest : Block)
-    (idiom : Bool) (i : String) (k : KText) : String :=
+    (idiom : Bool) (i : String) (k : KText) (T : Types) (id : Nat) (resultTy : String) : String :=
   let d := i.length
   let (nx, ex) := (s!"next{d}'", s!"exit{d}'")
   let j := i ++ "  "
   if idiom then
     let st := s.stateText body.writes
-    let kb : KText := ⟨fun _ => s!"{nx} {st}", fun _ => s!"{ex} {st}", fun _ => s!"{nx} {st}"⟩
-    let bodyText := render body j kb
+    let vars := s.stateVars body.writes
+    let stTy := if vars.isEmpty then "Unit" else " × ".intercalate (vars.map fun x => s.varTypeText T x)
+    let kb : KText := ⟨fun _ => s!"next' {st}", fun _ => s!"exit' {st}", fun _ => s!"next' {st}"⟩
+    let (r, implicit) := if body.noRet then ("R", "{R : Type} ") else (resultTy, "")
+    let (call, defn) := namedBody s T id vars s!"({stTy} → {r}) → ({stTy} → {r}) → {stTy} → {r}"
+      s!"fun next' exit' {st}" (render body "    " kb)
+    let defn := defn.replace s!"def ‹loop{id}› " s!"def ‹loop{id}› {implicit}"
     let restText := render rest j k
-    s!"{fn} (fun {st} => {c})\n{i}  (fun {nx} {ex} {st} =>\n{j}{bodyText})\n{i}  " ++
+    s!"{fn} (fun {st} => {c})\n{i}  {call}{defn}\n{i}  " ++
       s!"(fun {st} =>\n{j}{restText})\n{i}  {st}"
   else
   let tup := tupleText s
@@ -1396,9 +1440,10 @@ mutual
       if !c.trivial then unsupportedTy span "a while condition with number arithmetic or calls of unsafe functions"
       let body ← checkStmts T s result (branchStmts body)
       let rest ← checkStmts T s result rest
+      let id ← nextLoop
       pure { typed := s!"(.whileLoop {c.typed}\n  {body.typed}\n  {rest.typed})",
-             readable := whileText (·.readable) s "Ariadne.whileDo" c.readable body rest true,
-             safe := whileText (·.safe) s "Ariadne.whileSafe" c.readable body rest false,
+             readable := fun i k => whileText (·.readable) s "Ariadne.whileDo" c.readable body rest true i k T id (T.lean result),
+             safe := fun i k => whileText (·.safe) s "Ariadne.whileSafe" c.readable body rest false i k T id "",
              trivial := false, falls := rest.falls, breaks := rest.breaks, continues := rest.continues,
              writes := body.writes.unite rest.writes, noRet := body.noRet && rest.noRet, noBrk := rest.noBrk,
              noCont := rest.noCont }
@@ -1408,8 +1453,9 @@ mutual
       let .array σ := a.ty | mismatch span s!"for-of over {a.ty.ts}"
       let body ← checkStmts T (← declare s span x σ) result body
       let rest ← checkStmts T s result rest
-      let text (render : Block → String → KText → String) :=
-        loopText render s a.term (ident x) (fun _ => "") body rest
+      let id ← nextLoop
+      let text (render : Block → String → KText → String) (idiom : Bool) (i : String) (k : KText) :=
+        loopText render s a.term (ident x) (fun _ => "") body rest idiom i k T id (T.lean σ) (T.lean result)
       pure { typed := s!"(.forOf {leanString x} {a.typed}\n  {body.typed}\n  {rest.typed})",
              readable := text (·.readable) true, safe := fun i k => andText a.ok (text (·.safe) false i k),
              trivial := a.trivial && body.trivial && rest.trivial,
@@ -1426,8 +1472,9 @@ mutual
       let bodyStmts := branchStmts body
       let body ← checkStmts T (← declare s span i .number) result bodyStmts
       let rest ← checkStmts T s result rest
-      let text (render : Block → String → KText → String) :=
-        loopText render s s!"(Ariadne.range {ident n})" (ident i) (fun _ => "") body rest
+      let id ← nextLoop
+      let text (render : Block → String → KText → String) (idiom : Bool) (i' : String) (k : KText) :=
+        loopText render s s!"(Ariadne.range {ident n})" (ident i) (fun _ => "") body rest idiom i' k T id "Int" (T.lean result)
       pure { typed := s!"(.forRange {leanString i} {s.varPath j}\n  {body.typed}\n  {rest.typed})",
              readable := text (·.readable) true, safe := text (·.safe) false, trivial := body.trivial && rest.trivial,
              falls := rest.falls, breaks := rest.breaks, continues := rest.continues,
@@ -1440,9 +1487,10 @@ mutual
       let body ← checkStmts T (← declare (← declare s span ix .number) span x σ) result body
       let rest ← checkStmts T s result rest
       let p := s!"n{s.locals.length}'"
-      let text (render : Block → String → KText → String) :=
+      let id ← nextLoop
+      let text (render : Block → String → KText → String) (idiom : Bool) (i : String) (k : KText) :=
         loopText render s (if (listCall a.term "zipIdx").startsWith "List." then s!"({listCall a.term "zipIdx"})" else listCall a.term "zipIdx") s!"({ident x}, {p})"
-          (fun j => s!"let {ident ix} := ({p} : Int)\n{j}") body rest
+          (fun j => s!"let {ident ix} := ({p} : Int)\n{j}") body rest idiom i k T id s!"{atomText (T.lean σ)} × Nat" (T.lean result)
       pure { typed := s!"(.forEntries {leanString ix} {leanString x} {a.typed}\n  {body.typed}\n  {rest.typed})",
              readable := text (·.readable) true, safe := fun i k => andText a.ok (text (·.safe) false i k),
              trivial := a.trivial && body.trivial && rest.trivial,
@@ -1940,6 +1988,31 @@ def frameFlags (ast : Program) (fns : List CheckedFn) (g : String) : List Bool :
     keep := keep ++ [(fn.sig.name, b)]
   return keep.map (·.2)
 
+/-- Takes the named loop bodies (`namedBody`) out of a readable definition, innermost first, and names them
+`f.loop`, or `f.loop1`, `f.loop2`, … in order of appearance. -/
+partial def hoistLoops (f : String) (text : String) : String × List String := Id.run do
+  let ids := (((text.splitOn "⟦⟦").drop 1).filterMap fun p => (p.splitOn "⟧⟧").head?.bind (·.toNat?)).eraseDups
+  let name (n : Nat) : String :=
+    if ids.length == 1 then s!"{ident f}.loop" else s!"{ident f}.loop{ids.idxOf n + 1}"
+  let rename (t : String) := ids.foldl (fun t n => t.replace s!"‹loop{n}›" (name n)) t
+  let mut text := text
+  let mut defs : List String := []
+  let mut seen : List Nat := []
+  repeat
+    match text.splitOn "⟦⟦/⟧⟧" with
+    | first :: more@(_ :: _) =>
+      -- The first end closes the innermost body: the last start before it.
+      let ps := first.splitOn "⟦⟦"
+      let (n, defn) := match (ps.getLastD "").splitOn "⟧⟧" with
+        | a :: rest => (a.toNat!, "⟧⟧".intercalate rest)
+        | [] => (0, "")
+      text := "⟦⟦".intercalate ps.dropLast ++ "⟦⟦/⟧⟧".intercalate more
+      if !seen.contains n then
+        seen := seen ++ [n]
+        defs := defs ++ [rename defn]
+    | _ => break
+  return (rename text, defs)
+
 /-- The Lean source for a checked file: the AST, the typed program, readable
 definitions, and per-function source theorems. -/
 def printFile (source namespace_ : String) (ast : Program) (T : Types) (fns : List CheckedFn) : String := Id.run do
@@ -1982,8 +2055,10 @@ def printFile (source namespace_ : String) (ast : Program) (T : Types) (fns : Li
     let s := fn.sig
     let params := " ".intercalate (s.params.map fun (x, τ) => s!"({ident x} : {T.lean τ})")
     let dflt := s!"(Ty.default {T.print s.result})"
-    out := out ++ s!"def {ident s.name} {params} : {T.lean s.result} :=\n  " ++
-      fn.body.readable "  " ⟨fun _ => dflt, fun _ => dflt, fun _ => dflt⟩ ++ "\n\n"
+    let (text, loops) := hoistLoops s.name (fn.body.readable "  " ⟨fun _ => dflt, fun _ => dflt, fun _ => dflt⟩)
+    for l in loops do
+      out := out ++ s!"/-- A loop body of `{s.name}`. -/\n{l}\n\n"
+    out := out ++ s!"def {ident s.name} {params} : {T.lean s.result} :=\n  " ++ text ++ "\n\n"
     if !s.trivial then
       out := out ++ s!"/-- The inputs on which `{s.name}` stays within what the model covers. -/\n"
       out := out ++ s!"def {ident s.name}.safe {params} : Bool :=\n  " ++

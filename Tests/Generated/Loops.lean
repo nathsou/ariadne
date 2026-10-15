@@ -475,11 +475,15 @@ theorem wf : typed.WF := TProgram.wf_of typed erased bodies_ok ast_scoped
 
 /-! ## Readable definitions -/
 
+/-- A loop body of `sum`. -/
+def sum.loop : Int → Int → Int :=
+  fun total x =>
+    let total : Int := total + x
+    total
+
 def sum (xs : List Int) : Int :=
   let total : Int := (0 : Int)
-  let total := Ariadne.fold total xs (fun total x =>
-    let total : Int := total + x
-    total)
+  let total := Ariadne.fold total xs sum.loop
   total
 
 /-- The inputs on which `sum` stays within what the model covers. -/
@@ -492,35 +496,47 @@ def sum.safe (xs : List Int) : Bool :=
     true)
     (total, xs, ())
 
-def firstLarge (items : List Item) (limit : Int) : Option Item :=
-  Ariadne.forIn items (fun it next2' exit2' () =>
+/-- A loop body of `firstLarge`. -/
+def firstLarge.loop (limit : Int) : Item → (Unit → Option Item) → (Unit → Option Item) → Unit → Option Item :=
+  fun it next' exit' () =>
     if decide (it.size > limit) then
       some it
     else
-      next2' ())
+      next' ()
+
+def firstLarge (items : List Item) (limit : Int) : Option Item :=
+  Ariadne.forIn items (firstLarge.loop limit)
     (fun () =>
     none)
     ()
 
-def indexOf (xs : List JSString) (target : JSString) : Int :=
-  Ariadne.forIn xs.zipIdx (fun (x, n2') next2' exit2' () =>
+/-- A loop body of `indexOf`. -/
+def indexOf.loop (target : JSString) : JSString × Nat → (Unit → Int) → (Unit → Int) → Unit → Int :=
+  fun (x, n2') next' exit' () =>
     let i := (n2' : Int)
     if x == target then
       i
     else
-      next2' ())
+      next' ()
+
+def indexOf (xs : List JSString) (target : JSString) : Int :=
+  Ariadne.forIn xs.zipIdx (indexOf.loop target)
     (fun () =>
     (-(1 : Int)))
     ()
 
-def countTagged (items : List Item) (tag : JSString) : Int :=
-  let n : Int := (0 : Int)
-  let n := Ariadne.fold n items (fun n it =>
+/-- A loop body of `countTagged`. -/
+def countTagged.loop (tag : JSString) : Int → Item → Int :=
+  fun n it =>
     if !(it.tags.any (· == tag)) then
       n
     else
       let n : Int := n + (1 : Int)
-      n)
+      n
+
+def countTagged (items : List Item) (tag : JSString) : Int :=
+  let n : Int := (0 : Int)
+  let n := Ariadne.fold n items (countTagged.loop tag)
   n
 
 /-- The inputs on which `countTagged` stays within what the model covers. -/
@@ -536,21 +552,25 @@ def countTagged.safe (items : List Item) (tag : JSString) : Bool :=
     true)
     (n, items, tag, ())
 
-def prefixUntil (xs : List Int) (stop : Int) : List Int :=
-  let out : List Int := []
-  Ariadne.forIn xs (fun x next2' exit2' out =>
+/-- A loop body of `prefixUntil`. -/
+def prefixUntil.loop {R : Type} (stop : Int) : Int → (List Int → R) → (List Int → R) → List Int → R :=
+  fun x next' exit' out =>
     if x == stop then
-      exit2' out
+      exit' out
     else
       let out : List Int := out ++ ([x])
-      next2' out)
+      next' out
+
+def prefixUntil (xs : List Int) (stop : Int) : List Int :=
+  let out : List Int := []
+  Ariadne.forIn xs (prefixUntil.loop stop)
     (fun out =>
     out)
     out
 
-def largest (items : List Item) : Option Item :=
-  let best : Option Item := none
-  let best := Ariadne.fold best items (fun best it =>
+/-- A loop body of `largest`. -/
+def largest.loop : Option Item → Item → Option Item :=
+  fun best it =>
     match best with
     | none =>
       let best : Option Item := some it
@@ -563,13 +583,16 @@ def largest (items : List Item) : Option Item :=
         else
           best
       let best := some best
-      best)
+      best
+
+def largest (items : List Item) : Option Item :=
+  let best : Option Item := none
+  let best := Ariadne.fold best items largest.loop
   best
 
-def classify (xs : List Int) : JSString :=
-  let pos : Int := (0 : Int)
-  let neg : Int := (0 : Int)
-  let (neg, pos) := Ariadne.fold (neg, pos) xs (fun (neg, pos) x =>
+/-- A loop body of `classify`. -/
+def classify.loop : Int × Int → Int → Int × Int :=
+  fun (neg, pos) x =>
     let (neg, pos) :=
       if decide (x > (0 : Int)) then
         let pos : Int := pos + (1 : Int)
@@ -582,7 +605,12 @@ def classify (xs : List Int) : JSString :=
           else
             neg
         (neg, pos)
-    (neg, pos))
+    (neg, pos)
+
+def classify (xs : List Int) : JSString :=
+  let pos : Int := (0 : Int)
+  let neg : Int := (0 : Int)
+  let (neg, pos) := Ariadne.fold (neg, pos) xs classify.loop
   if decide (pos > neg) then
     (js "pos")
   else
@@ -624,19 +652,27 @@ def bump.safe (n : Int) : Bool :=
   Ariadne.inRange (n + (1 : Int)) && (let n : Int := n + (1 : Int)
   Ariadne.inRange (n * (2 : Int)))
 
-def grid (rows : List (List Int)) : Int :=
-  let total : Int := (0 : Int)
-  let total := Ariadne.fold total rows (fun total row =>
-    Ariadne.forIn row.zipIdx (fun (v, n3') next4' exit4' total =>
-      let j := (n3' : Int)
-      if decide (j > (2 : Int)) then
-        exit4' total
-      else
-        let total : Int := total + v
-        next4' total)
+/-- A loop body of `grid`. -/
+def grid.loop2 {R : Type} : Int × Nat → (Int → R) → (Int → R) → Int → R :=
+  fun (v, n3') next' exit' total =>
+    let j := (n3' : Int)
+    if decide (j > (2 : Int)) then
+      exit' total
+    else
+      let total : Int := total + v
+      next' total
+
+/-- A loop body of `grid`. -/
+def grid.loop1 : Int → List Int → Int :=
+  fun total row =>
+    Ariadne.forIn row.zipIdx grid.loop2
       (fun total =>
       total)
-      total)
+      total
+
+def grid (rows : List (List Int)) : Int :=
+  let total : Int := (0 : Int)
+  let total := Ariadne.fold total rows grid.loop1
   total
 
 /-- The inputs on which `grid` stays within what the model covers. -/
@@ -657,9 +693,9 @@ def grid.safe (rows : List (List Int)) : Bool :=
     true)
     (total, rows, ())
 
-def perimeters (shapes : List Shape) : Int :=
-  let t : Int := (0 : Int)
-  let t := Ariadne.fold t shapes (fun t sh =>
+/-- A loop body of `perimeters`. -/
+def perimeters.loop : Int → Shape → Int :=
+  fun t sh =>
     let t :=
       match sh with
       | Shape.circle sh =>
@@ -668,7 +704,11 @@ def perimeters (shapes : List Shape) : Int :=
       | Shape.square sh =>
         let t : Int := t + ((4 : Int) * sh)
         t
-    t)
+    t
+
+def perimeters (shapes : List Shape) : Int :=
+  let t : Int := (0 : Int)
+  let t := Ariadne.fold t shapes perimeters.loop
   t
 
 /-- The inputs on which `perimeters` stays within what the model covers. -/
@@ -688,16 +728,20 @@ def perimeters.safe (shapes : List Shape) : Bool :=
     true)
     (t, shapes, ())
 
-def steps (n : Int) : Int :=
-  let count : Int := (0 : Int)
-  let k : Int := n
-  Ariadne.forIn ([(1 : Int), (2 : Int), (3 : Int), (4 : Int), (5 : Int), (6 : Int), (7 : Int), (8 : Int)]) (fun «_» next2' exit2' (k, count) =>
+/-- A loop body of `steps`. -/
+def steps.loop {R : Type} (n : Int) : Int → (Int × Int → R) → (Int × Int → R) → Int × Int → R :=
+  fun «_» next' exit' (k, count) =>
     if decide (k ≤ (1 : Int)) then
-      exit2' (k, count)
+      exit' (k, count)
     else
       let k : Int := if decide (k > (100 : Int)) then k - (100 : Int) else k - (1 : Int)
       let count : Int := count + 1
-      next2' (k, count))
+      next' (k, count)
+
+def steps (n : Int) : Int :=
+  let count : Int := (0 : Int)
+  let k : Int := n
+  Ariadne.forIn ([(1 : Int), (2 : Int), (3 : Int), (4 : Int), (5 : Int), (6 : Int), (7 : Int), (8 : Int)]) (steps.loop n)
     (fun (k, count) =>
     count)
     (k, count)
@@ -752,18 +796,22 @@ def score.safe (a : Int) (b : Int) : Bool :=
     Ariadne.inRange (s - (1 : Int)) && (let s : Int := s - (1 : Int)
     after2' (s, a, b, ()))
 
+/-- A loop body of `triangle`. -/
+def triangle.loop {R : Type} (cap : Int) (n : Int) : Int → (Int → R) → (Int → R) → Int → R :=
+  fun i next' exit' t =>
+    if decide (i > cap) then
+      exit' t
+    else
+      if i == (3 : Int) then
+        next' t
+      else
+        let t : Int := t + i
+        next' t
+
 def triangle (n : Int) (cap : Int) : Int :=
   let m : Int := if decide (n < (1000 : Int)) then n else (1000 : Int)
   let t : Int := (0 : Int)
-  Ariadne.forIn (Ariadne.range m) (fun i next2' exit2' t =>
-    if decide (i > cap) then
-      exit2' t
-    else
-      if i == (3 : Int) then
-        next2' t
-      else
-        let t : Int := t + i
-        next2' t)
+  Ariadne.forIn (Ariadne.range m) (triangle.loop cap n)
     (fun t =>
     t)
     t
@@ -785,15 +833,19 @@ def triangle.safe (n : Int) (cap : Int) : Bool :=
     true)
     (t, m, n, cap, ())
 
+/-- A loop body of `gcd`. -/
+def gcd.loop {R : Type} : (Int × Int → R) → (Int × Int → R) → Int × Int → R :=
+  fun next' exit' (y, x) =>
+    let r : Int := Int.tmod x y
+    let x : Int := y
+    let y : Int := r
+    next' (y, x)
+
 def gcd (a : Int) (b : Int) : Int :=
   let x : Int := if decide (a < (0 : Int)) then (-a) else a
   let y : Int := if decide (b < (0 : Int)) then (-b) else b
   Ariadne.whileDo (fun (y, x) => y != (0 : Int))
-    (fun next2' exit2' (y, x) =>
-    let r : Int := Int.tmod x y
-    let x : Int := y
-    let y : Int := r
-    next2' (y, x))
+    gcd.loop
     (fun (y, x) =>
     x)
     (y, x)
@@ -812,16 +864,20 @@ def gcd.safe (a : Int) (b : Int) : Bool :=
     true)
     (y, x, a, b, ())))
 
-def firstAbove (xs : List Int) (limit : Int) : Int :=
-  let i : Int := (0 : Int)
-  Ariadne.whileDo (fun i => decide (i < (xs.length : Int)))
-    (fun next2' exit2' i =>
+/-- A loop body of `firstAbove`. -/
+def firstAbove.loop (limit : Int) (xs : List Int) : (Int → Int) → (Int → Int) → Int → Int :=
+  fun next' exit' i =>
     let x : Int := match Ariadne.listIndex xs i with | some v' => v' | none => (0 : Int)
     if decide (x > limit) then
       i
     else
       let i : Int := i + 1
-      next2' i)
+      next' i
+
+def firstAbove (xs : List Int) (limit : Int) : Int :=
+  let i : Int := (0 : Int)
+  Ariadne.whileDo (fun i => decide (i < (xs.length : Int)))
+    (firstAbove.loop limit xs)
     (fun i =>
     (-(1 : Int)))
     i
@@ -841,21 +897,25 @@ def firstAbove.safe (xs : List Int) (limit : Int) : Bool :=
     true)
     (i, xs, limit, ())
 
+/-- A loop body of `countdown`. -/
+def countdown.loop {R : Type} (n : Int) : (Int × List Int → R) → (Int × List Int → R) → Int × List Int → R :=
+  fun next' exit' (k, out) =>
+    if (Int.tmod k (3 : Int)) == (0 : Int) then
+      let k : Int := k - 1
+      next' (k, out)
+    else
+      let out : List Int := out ++ ([k])
+      if decide ((out.length : Int) ≥ (5 : Int)) then
+        exit' (k, out)
+      else
+        let k : Int := k - 1
+        next' (k, out)
+
 def countdown (n : Int) : List Int :=
   let out : List Int := []
   let k : Int := n
   Ariadne.whileDo (fun (k, out) => decide (k > (0 : Int)))
-    (fun next2' exit2' (k, out) =>
-    if (Int.tmod k (3 : Int)) == (0 : Int) then
-      let k : Int := k - 1
-      next2' (k, out)
-    else
-      let out : List Int := out ++ ([k])
-      if decide ((out.length : Int) ≥ (5 : Int)) then
-        exit2' (k, out)
-      else
-        let k : Int := k - 1
-        next2' (k, out))
+    (countdown.loop n)
     (fun (k, out) =>
     out)
     (k, out)

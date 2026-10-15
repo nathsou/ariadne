@@ -268,10 +268,14 @@ def drop («this» : Book) (k : JSString) : Book :=
   let «this» : Book := «this».withNames (Ariadne.mapDel «this».names k)
   «this»
 
-def touchAll («this» : Book) (ks : List JSString) : Book :=
-  let «this» := Ariadne.fold «this» ks (fun «this» k =>
+/-- A loop body of `touchAll`. -/
+def touchAll.loop : Book → JSString → Book :=
+  fun «this» k =>
     let «this» : Book := bump «this» k
-    «this»)
+    «this»
+
+def touchAll («this» : Book) (ks : List JSString) : Book :=
+  let «this» := Ariadne.fold «this» ks touchAll.loop
   «this»
 
 /-- The inputs on which `touchAll` stays within what the model covers. -/
@@ -292,16 +296,20 @@ def count («this» : Book) : Int :=
 def keys («this» : Book) : List JSString :=
   («this».items.map Prod.fst) ++ ([])
 
-def latest («this» : Book) : Int :=
-  let best : Int := (0 : Int)
-  let best := Ariadne.fold best ((«this».items.map Prod.snd) ++ ([])) (fun best e =>
+/-- A loop body of `latest`. -/
+def latest.loop : Int → Entry → Int :=
+  fun best e =>
     let best :=
       if decide (e.«at» > best) then
         let best : Int := e.«at»
         best
       else
         best
-    best)
+    best
+
+def latest («this» : Book) : Int :=
+  let best : Int := (0 : Int)
+  let best := Ariadne.fold best ((«this».items.map Prod.snd) ++ ([])) latest.loop
   best
 
 def nameOf («this» : Book) (k : JSString) : JSString :=

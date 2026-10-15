@@ -125,9 +125,9 @@ theorem wf : typed.WF := TProgram.wf_of typed erased bodies_ok ast_scoped
 
 /-! ## Readable definitions -/
 
-def balance (entries : List Entry) : Int :=
-  let total : Int := (0 : Int)
-  let total := Ariadne.fold total entries (fun total e =>
+/-- A loop body of `balance`. -/
+def balance.loop : Int → Entry → Int :=
+  fun total e =>
     let total :=
       match e with
       | Entry.credit e =>
@@ -141,7 +141,11 @@ def balance (entries : List Entry) : Int :=
           else
             total
         total
-    total)
+    total
+
+def balance (entries : List Entry) : Int :=
+  let total : Int := (0 : Int)
+  let total := Ariadne.fold total entries balance.loop
   total
 
 /-- The inputs on which `balance` stays within what the model covers. -/

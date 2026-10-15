@@ -566,16 +566,9 @@ def byRank (a : Candidate) (b : Candidate) : Int :=
           else
             (0 : Int)
 
-def chooseVaultCopy (facts : List CopyFact) (floor : Option Floor) : Choice :=
-  let committedFactors : Option (List JSString) := match floor with | none => none | some floor => floor.committed
-  let taggedFactors : Option (List JSString) := match floor with | none => none | some floor => floor.tagged
-  let floorSeed : JSString := match floor with | none => (js "") | some floor => floor.seed
-  let ok : List Candidate := []
-  let opened : Bool := false
-  let damaged : Bool := false
-  let notOwner : Bool := false
-  let older : Bool := false
-  let (older, notOwner, damaged, opened, ok) := Ariadne.fold (older, notOwner, damaged, opened, ok) facts.zipIdx (fun (older, notOwner, damaged, opened, ok) (f, n10') =>
+/-- A loop body of `chooseVaultCopy`. -/
+def chooseVaultCopy.loop (floor : Option Floor) (committedFactors : Option (List JSString)) (taggedFactors : Option (List JSString)) (floorSeed : JSString) : Bool × Bool × Bool × Bool × List Candidate → CopyFact × Nat → Bool × Bool × Bool × Bool × List Candidate :=
+  fun (older, notOwner, damaged, opened, ok) (f, n10') =>
     let index := (n10' : Int)
     match f with
     | CopyFact.unopened =>
@@ -598,7 +591,18 @@ def chooseVaultCopy (facts : List CopyFact) (floor : Option Floor) : Choice :=
             (older, notOwner, damaged, opened, ok)
           else
             let ok : List Candidate := ok ++ ([(Candidate.mk index (f.commit == Commit.ok) (f.recovery != Recovery.legacy) (f.seeds.length : Int) f.written)])
-            (older, notOwner, damaged, opened, ok))
+            (older, notOwner, damaged, opened, ok)
+
+def chooseVaultCopy (facts : List CopyFact) (floor : Option Floor) : Choice :=
+  let committedFactors : Option (List JSString) := match floor with | none => none | some floor => floor.committed
+  let taggedFactors : Option (List JSString) := match floor with | none => none | some floor => floor.tagged
+  let floorSeed : JSString := match floor with | none => (js "") | some floor => floor.seed
+  let ok : List Candidate := []
+  let opened : Bool := false
+  let damaged : Bool := false
+  let notOwner : Bool := false
+  let older : Bool := false
+  let (older, notOwner, damaged, opened, ok) := Ariadne.fold (older, notOwner, damaged, opened, ok) facts.zipIdx (chooseVaultCopy.loop floor committedFactors taggedFactors floorSeed)
   if decide ((ok.length : Int) > (0 : Int)) then
     let ranked : List Candidate := Ariadne.sortedBy byRank ok
     let anyCommitted : Bool := ranked.any (fun x => x.committed)
@@ -655,9 +659,9 @@ def chooseVaultCopy.safe (facts : List CopyFact) (floor : Option Floor) : Bool :
       true)
     (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ())
 
-def chooseKeysCopy (facts : List CopyFact) : Option KeysChoice :=
-  let best : Option BestKeys := none
-  let best := Ariadne.fold best facts.zipIdx (fun best (f, n2') =>
+/-- A loop body of `chooseKeysCopy`. -/
+def chooseKeysCopy.loop : Option BestKeys → CopyFact × Nat → Option BestKeys :=
+  fun best (f, n2') =>
     let index := (n2' : Int)
     match f with
     | CopyFact.unopened =>
@@ -676,13 +680,16 @@ def chooseKeysCopy (facts : List CopyFact) : Option KeysChoice :=
             best
           else
             best
-        best)
+        best
+
+def chooseKeysCopy (facts : List CopyFact) : Option KeysChoice :=
+  let best : Option BestKeys := none
+  let best := Ariadne.fold best facts.zipIdx chooseKeysCopy.loop
   match best with | none => none | some best => some (KeysChoice.mk best.index best.trusted)
 
-def newestOwnCopy (own : Int) (stamps : List (Option Int)) : Int :=
-  let best : Int := (-(1 : Int))
-  let newest : Int := own
-  let (newest, best) := Ariadne.fold (newest, best) stamps.zipIdx (fun (newest, best) (stamp, n4') =>
+/-- A loop body of `newestOwnCopy`. -/
+def newestOwnCopy.loop : Int × Int → (Option Int) × Nat → Int × Int :=
+  fun (newest, best) (stamp, n4') =>
     let i := (n4' : Int)
     match stamp with
     | none =>
@@ -695,7 +702,12 @@ def newestOwnCopy (own : Int) (stamps : List (Option Int)) : Int :=
           (newest, best)
         else
           (newest, best)
-      (newest, best))
+      (newest, best)
+
+def newestOwnCopy (own : Int) (stamps : List (Option Int)) : Int :=
+  let best : Int := (-(1 : Int))
+  let newest : Int := own
+  let (newest, best) := Ariadne.fold (newest, best) stamps.zipIdx newestOwnCopy.loop
   best
 
 def mayChangeFrom (written : Int) (floorWritten : Int) : Bool :=

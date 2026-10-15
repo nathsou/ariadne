@@ -112,11 +112,9 @@ def midpoint (lo : Int) (hi : Int) : Int :=
 def midpoint.safe (lo : Int) (hi : Int) : Bool :=
   (Ariadne.inRange (hi - lo) && ((2 : Int) != 0 && Ariadne.inRange (hi - lo) && Ariadne.inRange (2 : Int))) && Ariadne.inRange (lo + (Int.fdiv (hi - lo) (2 : Int)))
 
-def indexOf (xs : List Int) (target : Int) : Int :=
-  let lo : Int := (0 : Int)
-  let hi : Int := (xs.length : Int)
-  Ariadne.whileDo (fun (hi, lo) => decide (lo < hi))
-    (fun next2' exit2' (hi, lo) =>
+/-- A loop body of `indexOf`. -/
+def indexOf.loop (target : Int) (xs : List Int) : (Int × Int → Int) → (Int × Int → Int) → Int × Int → Int :=
+  fun next' exit' (hi, lo) =>
     let mid : Int := midpoint lo hi
     let v : Option Int := Ariadne.listIndex xs mid
     match v with
@@ -133,7 +131,13 @@ def indexOf (xs : List Int) (target : Int) : Int :=
           else
             let hi : Int := mid
             (hi, lo)
-        next2' (hi, lo))
+        next' (hi, lo)
+
+def indexOf (xs : List Int) (target : Int) : Int :=
+  let lo : Int := (0 : Int)
+  let hi : Int := (xs.length : Int)
+  Ariadne.whileDo (fun (hi, lo) => decide (lo < hi))
+    (indexOf.loop target xs)
     (fun (hi, lo) =>
     (-(1 : Int)))
     (hi, lo)

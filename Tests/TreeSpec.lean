@@ -109,6 +109,7 @@ theorem settle_keeps (r : State) (start : JSString) (all : Bool) : Keeps r (sett
   unfold settle; dsimp only
   refine forIn_inv (fun s => Keeps r s.2.2) (Keeps r) ?_ ?_ _ _ (Keeps.mk rfl rfl)
   · intro y next ex s ⟨h1, h2⟩ hn hx
+    dsimp only [settle.loop]
     repeat' split
     all_goals loop_leaf hn hx h1 h2
   · intro s ⟨h1, h2⟩; exact ⟨h1, h2⟩
@@ -325,6 +326,7 @@ theorem cycleOf_cycle (r : State) (id : JSString) : Cycle r id (cycleOf r id) :=
     (fun s => s.1 = true ∧ ∃ k, 1 ≤ k ∧ k ≤ r.1.length ∧ up r.1 k id = some id)
     (Cycle r id) ?_ ?_ ?_ _ _ ?_
   · intro y n next ex s ⟨h3, h4, h5⟩ hn hx
+    dsimp only [cycleOf.loop1]
     split
     · exact Or.inl rfl
     · rename_i sp hsp
@@ -344,6 +346,7 @@ theorem cycleOf_cycle (r : State) (id : JSString) : Cycle r id (cycleOf r id) :=
         t.1.getLast? = some t.2 ∧ ∃ j, j + n = r.1.length ∧ j < k ∧ up r.1 j id = some t.2)
       (fun _ => False) (Cycle r id) ?_ ?_ (fun _ h => h.elim) _ _ ?_
     · intro y n next ex t ⟨g3, g4, g5, j, hj1, hj2, hj3⟩ hn _
+      dsimp only [cycleOf.loop2]
       split
       · rename_i hsp
         have : up r.1 (j + 1) id = none := by simp [up, hj3, hsp]
@@ -378,6 +381,7 @@ theorem cycleOf_finds (r : State) (id : JSString) {k : Nat} (hk1 : 1 ≤ k) (hk2
     (fun n s => up r.1 (r.1.length - n) id = some s.2 ∧ n ≤ r.1.length ∧ r.1.length - n < k)
     (fun s => s.1 = true) (· ≠ []) ?_ ?_ ?_ _ _ ?_
   · intro y n next ex s ⟨h4, h5, h6⟩ hn hx
+    dsimp only [cycleOf.loop1]
     split
     · rename_i hsp
       have : up r.1 (r.1.length - n) id = none := by
@@ -401,6 +405,7 @@ theorem cycleOf_finds (r : State) (id : JSString) {k : Nat} (hk1 : 1 ≤ k) (hk2
     simp only [h3, Bool.not_true, Bool.false_eq_true, ite_false]
     refine forIn_inv_len (fun _ t => t.1 ≠ []) (fun _ => False) (· ≠ []) ?_ ?_ (fun _ h => h.elim) _ _ (by simp)
     · intro y n next ex t g hn _
+      dsimp only [cycleOf.loop2]
       split
       · exact g
       · split

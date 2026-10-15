@@ -25,6 +25,7 @@ theorem balance_nonneg (entries : List Entry) (h : ∀ e ∈ entries, 0 ≤ amou
   refine fold_inv (fun (t : Int) => 0 ≤ t) entries ?_ _ (Int.le_refl 0)
   intro t e he ht
   have ha : 0 ≤ amount e := h e he
+  dsimp only [balance.loop]
   rcases e with ⟨a, ⟨⟩⟩ | ⟨a, ⟨⟩⟩ <;> dsimp only
   · simp only [amount] at ha; omega
   · by_cases hd : a ≤ t <;> simp [hd] <;> omega

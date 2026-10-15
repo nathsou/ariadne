@@ -234,17 +234,21 @@ def even (n : Int) : Bool :=
 def even.safe (n : Int) : Bool :=
   (2 : Int) != 0 && Ariadne.inRange (Int.tmod n (2 : Int))
 
+/-- A loop body of `digits`. -/
+def digits.loop {R : Type} (n : Int) : Int → (Int × List Int → R) → (Int × List Int → R) → Int × List Int → R :=
+  fun i next' exit' (m, out) =>
+    let out : List Int := out ++ ([(Int.tmod m (10 : Int))])
+    let m : Int := Int.fdiv m (10 : Int)
+    if m == (0 : Int) then
+      exit' (m, out)
+    else
+      next' (m, out)
+
 def digits (n : Int) : List Int :=
   let out : List Int := []
   let m : Int := if decide (n < (0 : Int)) then (-n) else n
   let most : Int := (16 : Int)
-  Ariadne.forIn (Ariadne.range most) (fun i next2' exit2' (m, out) =>
-    let out : List Int := out ++ ([(Int.tmod m (10 : Int))])
-    let m : Int := Int.fdiv m (10 : Int)
-    if m == (0 : Int) then
-      exit2' (m, out)
-    else
-      next2' (m, out))
+  Ariadne.forIn (Ariadne.range most) (digits.loop n)
     (fun (m, out) =>
     out)
     (m, out)

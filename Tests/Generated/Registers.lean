@@ -1159,16 +1159,20 @@ def mark («this» : Registers) (ref : JSString) (p : JSString) (on : Bool) (rea
       let «this» : Registers := «this».withMarks (Ariadne.mapPut «this».marks (key ref p) (Mark.mk ref p «at» stamp on reason))
       «this»
 
-def placements («this» : Registers) (ref : JSString) : List Placed :=
-  let out : List Placed := []
-  let out := Ariadne.fold out (providersOf «this» ref) (fun out p =>
+/-- A loop body of `placements`. -/
+def placements.loop (ref : JSString) («this» : Registers) : List Placed → JSString → List Placed :=
+  fun out p =>
     let e : Option Placed := Ariadne.mapGet «this».placed (key ref p)
     match e with
     | none =>
       out
     | some e =>
       let out : List Placed := out ++ ([e])
-      out)
+      out
+
+def placements («this» : Registers) (ref : JSString) : List Placed :=
+  let out : List Placed := []
+  let out := Ariadne.fold out (providersOf «this» ref) (placements.loop ref «this»)
   out
 
 def isPlaced («this» : Registers) (ref : JSString) : Bool :=
@@ -1259,6 +1263,18 @@ def totalOf («this» : Registers) (p : JSString) (month : JSString) (device : J
   let t : Option Total := Ariadne.mapGet «this».totals (key (key p month) device)
   match t with | none => zero | some t => t.c
 
+/-- A loop body of `usageOf`. -/
+def usageOf.loop (month : JSString) (p : JSString) («this» : Registers) : Counters → JSString → Counters :=
+  fun out d =>
+    let t : Option Total := Ariadne.mapGet «this».totals (key (key p month) d)
+    match t with
+    | none =>
+      out
+    | some t =>
+      let out : Counters := sum out t.c
+      let t := some t
+      out
+
 def usageOf («this» : Registers) (p : JSString) (month : JSString) : Counters :=
   let inc : Option Increments := Ariadne.mapGet «this».increments (key p month)
   let out : Counters := match inc with | none => zero | some inc => inc.c
@@ -1267,15 +1283,7 @@ def usageOf («this» : Registers) (p : JSString) (month : JSString) : Counters 
   | none =>
     out
   | some period =>
-    let out := Ariadne.fold out period.devices (fun out d =>
-      let t : Option Total := Ariadne.mapGet «this».totals (key (key p month) d)
-      match t with
-      | none =>
-        out
-      | some t =>
-        let out : Counters := sum out t.c
-        let t := some t
-        out)
+    let out := Ariadne.fold out period.devices (usageOf.loop month p «this»)
     out
 
 /-- The inputs on which `usageOf` stays within what the model covers. -/
@@ -1337,14 +1345,22 @@ def item («this» : Registers) (aid : JSString) (id : JSString) (stamp : JSStri
       «this»
   «this»
 
+/-- A loop body of `albumItems`. -/
+def albumItems.loop1 (stamp : JSString) (aid : JSString) : Registers → JSString → Registers :=
+  fun «this» id =>
+    let «this» : Registers := item «this» aid id stamp true
+    «this»
+
+/-- A loop body of `albumItems`. -/
+def albumItems.loop2 (stamp : JSString) (aid : JSString) : Registers → JSString → Registers :=
+  fun «this» id =>
+    let «this» : Registers := item «this» aid id stamp false
+    «this»
+
 def albumItems («this» : Registers) (aid : JSString) (stamp : JSString) («at» : Int) (add : List JSString) (remove : List JSString) : Registers :=
   let «this» : Registers := touchAlbum «this» aid «at»
-  let «this» := Ariadne.fold «this» add (fun «this» id =>
-    let «this» : Registers := item «this» aid id stamp true
-    «this»)
-  let «this» := Ariadne.fold «this» remove (fun «this» id =>
-    let «this» : Registers := item «this» aid id stamp false
-    «this»)
+  let «this» := Ariadne.fold «this» add (albumItems.loop1 stamp aid)
+  let «this» := Ariadne.fold «this» remove (albumItems.loop2 stamp aid)
   «this»
 
 def albumList («this» : Registers) : List AlbumRec :=

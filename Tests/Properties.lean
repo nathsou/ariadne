@@ -58,11 +58,11 @@ section
 open Tests.Generated.Loops
 
 /-- The loop in `sum`, from an accumulator. -/
-theorem fold_sum (ys : List Int) (acc : Int) : Ariadne.fold acc ys (fun total x => total + x) = acc + ys.sum := by
+theorem fold_sum (ys : List Int) (acc : Int) : Ariadne.fold acc ys sum.loop = acc + ys.sum := by
   induction ys generalizing acc with
   | nil => simp [Ariadne.fold]
   | cons y ys ih =>
-    simp only [Ariadne.fold, List.foldl_cons] at ih ⊢
+    simp only [Ariadne.fold, List.foldl_cons, sum.loop] at ih ⊢
     rw [ih]; simp [List.sum_cons]; omega
 
 /-- `sum` computes the sum of its array. -/
@@ -78,7 +78,7 @@ theorem countTagged_foldl (items : List Item) (tag : JSString) :
   show List.foldl _ 0 items = _
   congr 1
   funext n it
-  by_cases h : it.tags.any (· == tag) <;> simp [h]
+  by_cases h : it.tags.any (· == tag) <;> simp [h, countTagged.loop]
 
 /-- `firstAbove`'s `while` loop ends, and its index stays exact, on arrays shorter than 2^53: the
 measure is the number of elements left. -/
