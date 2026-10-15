@@ -63,26 +63,22 @@ Quickstart.Ledger.ast : Ariadne.Program :=
 Quickstart.Ledger.balance : List Quickstart.Ledger.Entry → Int :=
   fun entries =>
   have total := 0;
-  match
-    Ariadne.fold (total, entries, ()) entries fun x e =>
-      match x with
-      | (total, entries, PUnit.unit) =>
+  have total :=
+    Ariadne.fold total entries fun total e =>
+      have total :=
         match e with
         | Sum.inl (e, PUnit.unit) =>
           have total := total + e;
-          have e := Quickstart.Ledger.Entry.credit e;
-          (total, entries, ())
+          total
         | Sum.inr (e, PUnit.unit) =>
-          have after6' := fun x =>
-            match x with
-            | ((PUnit.unit, e, PUnit.unit), total, entries, PUnit.unit) =>
-              have e := Quickstart.Ledger.Entry.debit e;
-              (total, entries, ());
-          if Decidable.decide (e ≤ total) = Bool.true then
-            have total := total - e;
-            after6' (((), e, ()), total, entries, ())
-          else after6' (((), e, ()), total, entries, ()) with
-  | (total, fst, PUnit.unit) => total
+          have total :=
+            if Decidable.decide (e ≤ total) = Bool.true then
+              have total := total - e;
+              total
+            else total;
+          total;
+      total;
+  total
 
 Quickstart.Ledger.credit : Quickstart.Ledger.Accounts → Ariadne.JSString → Int → Quickstart.Ledger.Accounts :=
   fun this id amount =>
@@ -139,17 +135,7 @@ Quickstart.Ledger.Accounts.withBalances : Quickstart.Ledger.Accounts → List (A
 Quickstart.Ledger.Accounts.withFrozen : Quickstart.Ledger.Accounts → List (Ariadne.JSString × Bool) → Quickstart.Ledger.Accounts :=
   fun r v => (r.fst, v, r.snd.snd)
 
-Quickstart.Ledger.Entry.credit : Int → Quickstart.Ledger.Entry :=
-  fun amount => Sum.inl (amount, ())
-
-Quickstart.Ledger.Entry.debit : Int → Quickstart.Ledger.Entry :=
-  fun amount => Sum.inr (amount, ())
-
-Quickstart.Ledger.balance.match_1 -- derived; fingerprint 3390760387 1413000852
-
-Quickstart.Ledger.balance.match_3 -- derived; fingerprint 1808640746 2617809018
-
-Quickstart.Ledger.balance.match_5 -- derived; fingerprint 1489801187 1165752680
+Quickstart.Ledger.balance.match_1 -- derived; fingerprint 1808640746 2617809018
 
 Quickstart.Ledger.credit.match_1 -- derived; fingerprint 2009189936 3390721761
 
