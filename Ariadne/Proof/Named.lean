@@ -1210,33 +1210,39 @@ end
 section
 variable {N : Names} (I : Isos N) {Φ : Sigs} (fs : Φ.denS N) (ss : Φ.safetyS N)
 
+/-- Join points relate when their continuations do. -/
+theorem joinS_rel {Γ : Ctx} (m : Mask) (ρ : Γ.denS N) {aS : Γ.denS N → Bool} {aC : Γ.denote → Bool}
+    (ha : ∀ ρ', aS ρ' = aC (Ctx.conv N I Γ ρ')) :
+    ∀ ρ', Ctx.joinS N Γ m ρ aS ρ' = Ctx.join Γ m (Ctx.conv N I Γ ρ) aC (Ctx.conv N I Γ ρ') := fun ρ' => by
+  simp only [Ctx.joinS, Ctx.join]; rw [ha, Ctx.conv_mergeS, projS_rel]
+
 set_option maxRecDepth 8192 in
 mutual
   theorem TStmts.safeS_eq : ∀ {Γ : Ctx} {τ : Ty} (st : TStmts Φ Γ τ) (kS : KS N Γ Bool) (kC : K Γ Bool),
       KRel I id kS kC → ∀ (ρ : Γ.denS N),
-      TStmts.safeS N I fs ss st kS ρ = st.safe (Sigs.canon N I Φ fs) (Sigs.canonSafety N I Φ ss) kC (Ctx.conv N I Γ ρ)
+      TStmts.safeS N I fs ss st kS ρ = st.safeR (Sigs.canon N I Φ fs) (Sigs.canonSafety N I Φ ss) kC (Ctx.conv N I Γ ρ)
     | _, _, .nil, _, _, hk, ρ => (hk ρ).1
     | _, _, .brk _, _, _, hk, ρ => (hk ρ).2.1
     | _, _, .cont _, _, _, hk, ρ => (hk ρ).2.2
     | _, _, .retVoid _ _, _, _, _, _ => rfl
     | _, _, .ret e _, _, _, _, ρ => by
-      simp only [TStmts.safeS, TStmts.safe]; rw [TExpr.safeS_eq I fs ss e ρ]
+      simp only [TStmts.safeS, TStmts.safeR]; rw [TExpr.safeS_eq I fs ss e ρ]
     | _, _, .const _ e rest, kS, kC, hk, ρ => by
-      simp only [TStmts.safeS, TStmts.safe]
+      simp only [TStmts.safeS, TStmts.safeR]
       rw [TExpr.safeS_eq I fs ss e ρ, TStmts.safeS_eq rest _ _ (KRel.snd I hk), ← TExpr.conv_denS I fs e ρ]; rfl
     | _, _, .let_ _ e rest, kS, kC, hk, ρ => by
-      simp only [TStmts.safeS, TStmts.safe]
+      simp only [TStmts.safeS, TStmts.safeR]
       rw [TExpr.safeS_eq I fs ss e ρ, TStmts.safeS_eq rest _ _ (KRel.snd I hk), ← TExpr.conv_denS I fs e ρ]; rfl
     | _, _, .assign v e rest, kS, kC, hk, ρ => by
-      simp only [TStmts.safeS, TStmts.safe]
+      simp only [TStmts.safeS, TStmts.safeR]
       rw [TExpr.safeS_eq I fs ss e ρ, TStmts.safeS_eq rest kS kC hk, Var.conv_setS, TExpr.conv_denS I fs e ρ]
     | _, _, .stateSet v i _ key e rest, kS, kC, hk, ρ => by
-      simp only [TStmts.safeS, TStmts.safe]
+      simp only [TStmts.safeS, TStmts.safeR]
       have hk' : TExpr.denS N I fs key ρ = _ := TExpr.conv_denS I fs key ρ
       rw [TExpr.safeS_eq I fs ss key ρ, TExpr.safeS_eq I fs ss e ρ, TStmts.safeS_eq rest kS kC hk, Var.conv_setS,
         recSet_conv, Var.conv_getS, Ty.conv_mapPut, recGet_conv, Var.conv_getS, TExpr.conv_denS I fs e ρ, hk']
     | _, _, .stateDelete v i _ key rest, kS, kC, hk, ρ => by
-      simp only [TStmts.safeS, TStmts.safe]
+      simp only [TStmts.safeS, TStmts.safeR]
       have hk' : TExpr.denS N I fs key ρ = _ := TExpr.conv_denS I fs key ρ
       rw [TExpr.safeS_eq I fs ss key ρ, TStmts.safeS_eq rest kS kC hk, Var.conv_setS, recSet_conv, Var.conv_getS,
         Ty.conv_mapDel, recGet_conv, Var.conv_getS, hk']
@@ -1246,96 +1252,112 @@ mutual
         refine (FVar.conv_getS I fn fs _).trans ?_
         show fn.get _ (Ty.conv N I _ (Var.getS N v ρ), Ctx.conv N I _ (TArgs.denS N I fs args ρ)) = _
         rw [Var.conv_getS, TArgs.conv_denS I fs args ρ]
-      simp only [TStmts.safeS, TStmts.safe]
+      simp only [TStmts.safeS, TStmts.safeR]
       rw [TArgs.safeS_eq I fs ss args ρ, TStmts.safeS_eq rest kS kC hk, Var.conv_setS, FVar.safeS_eq I, e1]
       simp only [Ctx.conv]
       rw [Var.conv_getS, TArgs.conv_denS I fs args ρ]
     | _, _, .block body rest, kS, kC, hk, ρ => by
-      simp only [TStmts.safeS, TStmts.safe]
+      simp only [TStmts.safeS, TStmts.safeR]
       exact TStmts.safeS_eq body _ _ (KRel.normal (h := id) I (TStmts.safeS_eq rest kS kC hk) hk) ρ
     | _, _, .ite c yes no rest, kS, kC, hk, ρ => by
       have hc : TExpr.denS N I fs c ρ = _ := TExpr.conv_denS I fs c ρ
-      simp only [TStmts.safeS, TStmts.safe, hc, TExpr.safeS_eq I fs ss c ρ]
-      have hk' := KRel.normal (h := id) I (TStmts.safeS_eq rest kS kC hk) hk
+      simp only [TStmts.safeS, TStmts.safeR, hc, TExpr.safeS_eq I fs ss c ρ]
+      have hk' := KRel.normal (h := id) I (joinS_rel I (Mask.or yes.writes no.writes) ρ (TStmts.safeS_eq rest kS kC hk)) hk
       split
       · rw [TStmts.safeS_eq yes _ _ hk' ρ]
       · rw [TStmts.safeS_eq no _ _ hk' ρ]
     | _, _, .ifNull v _ yes no rest, kS, kC, hk, ρ => by
       have hv := Var.conv_getS I v ρ
-      simp only [TStmts.safeS, TStmts.safe, ← hv]
-      have hk' := KRel.normal (h := id) I (TStmts.safeS_eq rest kS kC hk) hk
+      simp only [TStmts.safeS, TStmts.safeR, ← hv]
+      have hk' := KRel.normal (h := id) I (joinS_rel I (Mask.or yes.writes no.writes) ρ (TStmts.safeS_eq rest kS kC hk)) hk
       rcases Var.getS N v ρ with _ | y
       · exact TStmts.safeS_eq yes _ _ hk' ρ
-      · show _ = no.safe _ _ _ (v.narrowVal _ (Ty.conv N I _ y))
+      · show _ = no.safeR _ _ _ (v.narrowVal _ (Ty.conv N I _ y))
         rw [← Var.conv_narrowValS]
         exact TStmts.safeS_eq no _ _ (KRel.widen I v hk') _
     | _, _, .ifNotNull v _ yes no rest, kS, kC, hk, ρ => by
       have hv := Var.conv_getS I v ρ
-      simp only [TStmts.safeS, TStmts.safe, ← hv]
-      have hk' := KRel.normal (h := id) I (TStmts.safeS_eq rest kS kC hk) hk
+      simp only [TStmts.safeS, TStmts.safeR, ← hv]
+      have hk' := KRel.normal (h := id) I (joinS_rel I (Mask.or yes.writes no.writes) ρ (TStmts.safeS_eq rest kS kC hk)) hk
       rcases Var.getS N v ρ with _ | y
       · exact TStmts.safeS_eq no _ _ hk' ρ
-      · show _ = yes.safe _ _ _ (v.narrowVal _ (Ty.conv N I _ y))
+      · show _ = yes.safeR _ _ _ (v.narrowVal _ (Ty.conv N I _ y))
         rw [← Var.conv_narrowValS]
         exact TStmts.safeS_eq yes _ _ (KRel.widen I v hk') _
     | _, _, .ifNullExit v _ yes rest, kS, kC, hk, ρ => by
       have hv := Var.conv_getS I v ρ
-      simp only [TStmts.safeS, TStmts.safe, ← hv]
+      simp only [TStmts.safeS, TStmts.safeR, ← hv]
       rcases Var.getS N v ρ with _ | y
       · exact TStmts.safeS_eq yes kS kC hk ρ
-      · show _ = rest.safe _ _ _ (v.narrowVal _ (Ty.conv N I _ y))
+      · show _ = rest.safeR _ _ _ (v.narrowVal _ (Ty.conv N I _ y))
         rw [← Var.conv_narrowValS]
         exact TStmts.safeS_eq rest _ _ (KRel.widen I v hk) _
     | _, _, .switchG v _ arms rest, kS, kC, hk, ρ => by
       have hv := Var.conv_getS I v ρ
-      simp only [TStmts.safeS, TStmts.safe, ← hv, Ty.conv_union, Variants.elim_conv, unionElim_eq]
+      simp only [TStmts.safeS, TStmts.safeR, ← hv, Ty.conv_union, Variants.elim_conv, unionElim_eq]
       refine Variants.elimS_congr _ _ _ _ fun i y => ?_
       have hrest := TStmts.safeS_eq rest kS kC hk
+      have hj := joinS_rel I arms.writes ρ hrest
       exact TArms.safeS_eq arms
-        { kS with normal := TStmts.safeS N I fs ss rest kS, brk := TStmts.safeS N I fs ss rest kS }
-        { kC with normal := rest.safe (Sigs.canon N I Φ fs) (Sigs.canonSafety N I Φ ss) kC,
-                  brk := rest.safe (Sigs.canon N I Φ fs) (Sigs.canonSafety N I Φ ss) kC }
-        (fun ρ' => ⟨hrest ρ', hrest ρ', (hk ρ').2.2⟩) ρ i y _ _ (hrest ρ)
+        { kS with normal := Ctx.joinS N _ arms.writes ρ (TStmts.safeS N I fs ss rest kS),
+                  brk := Ctx.joinS N _ arms.writes ρ (TStmts.safeS N I fs ss rest kS) }
+        { kC with normal := Ctx.join _ arms.writes _ (rest.safeR (Sigs.canon N I Φ fs) (Sigs.canonSafety N I Φ ss) kC),
+                  brk := Ctx.join _ arms.writes _ (rest.safeR (Sigs.canon N I Φ fs) (Sigs.canonSafety N I Φ ss) kC) }
+        (fun ρ' => ⟨hj ρ', hj ρ', (hk ρ').2.2⟩) ρ i y _ _ (hrest ρ)
     | _, _, .forOf _ a body rest, kS, kC, hk, ρ => by
       have ha := TExpr.conv_denS I fs a ρ
-      simp only [TStmts.safeS, TStmts.safe, ← ha, TExpr.safeS_eq I fs ss a ρ]
+      simp only [TStmts.safeS, TStmts.safeR, ← ha, TExpr.safeS_eq I fs ss a ρ]
       congr 1
       show _ = forIn (List.map _ _) _ _ _
-      refine forIn_conv _ (Ctx.conv N I _) id _ _ (fun y nS eS nC eC s hn he => ?_) _ _
-        (fun s => TStmts.safeS_eq rest kS kC hk s) _ _
-      exact TStmts.safeS_eq body _ (K.map Prod.snd ⟨nC, eC, nC⟩)
-        (KRel.snd I (fun ρ' => ⟨hn ρ', he ρ', hn ρ'⟩)) _
+      rw [← projS_rel]
+      refine forIn_conv _ _ id _ _ (fun y nS eS nC eC s hn he => ?_) _ _ (fun s => ?_) _ _
+      · refine (TStmts.safeS_eq body _ (K.map Prod.snd ⟨nC ∘ Ctx.proj _ body.writes.tail,
+          eC ∘ Ctx.proj _ body.writes.tail, nC ∘ Ctx.proj _ body.writes.tail⟩) (KRel.snd I (fun ρ' => ?_)) _).trans ?_
+        · simp only [Function.comp]; rw [hn, he, projS_rel]; exact ⟨rfl, rfl, rfl⟩
+        · simp only [Ctx.conv, Ctx.conv_mergeS] <;> rfl
+      · simp only [id]; rw [TStmts.safeS_eq rest kS kC hk, Ctx.conv_mergeS]
     | _, _, .forEntries _ _ a body rest, kS, kC, hk, ρ => by
       have ha := TExpr.conv_denS I fs a ρ
-      simp only [TStmts.safeS, TStmts.safe, ← ha, TExpr.safeS_eq I fs ss a ρ]
+      simp only [TStmts.safeS, TStmts.safeR, ← ha, TExpr.safeS_eq I fs ss a ρ]
       congr 1
       show _ = forIn (List.zipIdx (List.map _ _)) _ _ _
-      rw [List.zipIdx_map]
-      refine forIn_conv _ (Ctx.conv N I _) id _ _ (fun p nS eS nC eC s hn he => ?_) _ _
-        (fun s => TStmts.safeS_eq rest kS kC hk s) _ _
-      exact TStmts.safeS_eq body _ (K.map Prod.snd (K.map Prod.snd ⟨nC, eC, nC⟩))
-        (KRel.snd I (KRel.snd I (fun ρ' => ⟨hn ρ', he ρ', hn ρ'⟩))) _
+      rw [List.zipIdx_map, ← projS_rel]
+      refine forIn_conv _ _ id _ _ (fun p nS eS nC eC s hn he => ?_) _ _ (fun s => ?_) _ _
+      · refine (TStmts.safeS_eq body _ (K.map Prod.snd (K.map Prod.snd
+          ⟨nC ∘ Ctx.proj _ body.writes.tail.tail, eC ∘ Ctx.proj _ body.writes.tail.tail,
+            nC ∘ Ctx.proj _ body.writes.tail.tail⟩)) (KRel.snd I (KRel.snd I (fun ρ' => ?_))) _).trans ?_
+        · simp only [Function.comp]; rw [hn, he, projS_rel]; exact ⟨rfl, rfl, rfl⟩
+        · simp only [Ctx.conv, Ctx.conv_mergeS] <;> rfl
+      · simp only [id]; rw [TStmts.safeS_eq rest kS kC hk, Ctx.conv_mergeS]
     | _, _, .forRange _ v body rest, kS, kC, hk, ρ => by
       have hv : Var.getS N v ρ = _ := Var.conv_getS I v ρ
-      simp only [TStmts.safeS, TStmts.safe, hv]
+      simp only [TStmts.safeS, TStmts.safeR, hv]
       conv => rhs; rw [← List.map_id (range _)]
-      refine forIn_conv _ (Ctx.conv N I _) id _ _ (fun j nS eS nC eC s hn he => ?_) _ _
-        (fun s => TStmts.safeS_eq rest kS kC hk s) _ _
-      exact TStmts.safeS_eq body _ (K.map Prod.snd ⟨nC, eC, nC⟩)
-        (KRel.snd I (fun ρ' => ⟨hn ρ', he ρ', hn ρ'⟩)) _
+      rw [← projS_rel]
+      refine forIn_conv _ _ id _ _ (fun j nS eS nC eC s hn he => ?_) _ _ (fun s => ?_) _ _
+      · refine (TStmts.safeS_eq body _ (K.map Prod.snd ⟨nC ∘ Ctx.proj _ body.writes.tail,
+          eC ∘ Ctx.proj _ body.writes.tail, nC ∘ Ctx.proj _ body.writes.tail⟩) (KRel.snd I (fun ρ' => ?_)) _).trans ?_
+        · simp only [Function.comp]; rw [hn, he, projS_rel]; exact ⟨rfl, rfl, rfl⟩
+        · simp only [Ctx.conv, Ctx.conv_mergeS] <;> rfl
+      · simp only [id]; rw [TStmts.safeS_eq rest kS kC hk, Ctx.conv_mergeS]
     | _, _, .whileLoop c body rest, kS, kC, hk, ρ => by
-      simp only [TStmts.safeS, TStmts.safe]
-      rw [whileSafe_def, whileSafe_def]
-      refine whileIn_conv (Ctx.conv N I _) id _ _ (fun s => ?_) _ _
-        (fun nS eS nC eC s hn he => ?_) _ _ _ _ (fun s => TStmts.safeS_eq rest kS kC hk s) (fun _ => rfl) _ _
-      · have hc : TExpr.denS N I fs c s = _ := TExpr.conv_denS I fs c s
-        exact hc
-      · exact TStmts.safeS_eq body _ ⟨nC, eC, nC⟩ (fun ρ' => ⟨hn ρ', he ρ', hn ρ'⟩) _
+      simp only [TStmts.safeS, TStmts.safeR]
+      rw [whileSafe_def, whileSafe_def, ← projS_rel]
+      refine whileIn_conv (R := Bool) (R' := Bool) (Ctx.tupConv N I _) id _ _ (fun s => ?_) _ _
+        (fun nS eS nC eC s hn he => ?_) _ _ _ _
+        (fun s => ?_) (fun _ => rfl) _ _
+      · have hc : TExpr.denS N I fs c _ = _ := TExpr.conv_denS I fs c (Ctx.mergeS N _ body.writes ρ s)
+        rw [hc, Ctx.conv_mergeS]
+      · refine (TStmts.safeS_eq body _ ⟨nC ∘ Ctx.proj _ body.writes, eC ∘ Ctx.proj _ body.writes,
+          nC ∘ Ctx.proj _ body.writes⟩ (fun ρ' => ?_) _).trans ?_
+        · simp only [Function.comp]; rw [hn, he, projS_rel]; exact ⟨rfl, rfl, rfl⟩
+        · rw [Ctx.conv_mergeS]
+      · simp only [id]; rw [TStmts.safeS_eq rest kS kC hk, Ctx.conv_mergeS]
 
   theorem TArms.firstSafeS_eq {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} :
       ∀ (arms : TArms Φ Γ τ v) (kS : KS N Γ Bool) (kC : K Γ Bool), KRel I id kS kC → ∀ (ρ : Γ.denS N),
       TArms.firstSafeS N I fs ss arms kS ρ =
-        arms.firstSafe (Sigs.canon N I Φ fs) (Sigs.canonSafety N I Φ ss) kC (Ctx.conv N I Γ ρ)
+        arms.firstSafeR (Sigs.canon N I Φ fs) (Sigs.canonSafety N I Φ ss) kC (Ctx.conv N I Γ ρ)
     | .nil, _, _, hk, ρ => (hk ρ).1
     | .empty _ rest, kS, kC, hk, ρ => TArms.firstSafeS_eq rest kS kC hk ρ
     | .wide _ body _, kS, kC, hk, ρ => TStmts.safeS_eq body kS kC hk ρ
@@ -1345,10 +1367,10 @@ mutual
       ∀ (arms : TArms Φ Γ τ v) (kS : KS N Γ Bool) (kC : K Γ Bool), KRel I id kS kC → ∀ (ρ : Γ.denS N)
       {t : TagLit} {fds : Fields} (i : VIdx vs0 t fds) (y : fds.den N) (dS dC : Bool), dS = dC →
       TArms.safeS N I fs ss arms kS ρ i y dS =
-        arms.safe (Sigs.canon N I Φ fs) (Sigs.canonSafety N I Φ ss) kC (Ctx.conv N I Γ ρ) i (Fields.conv N I fds y) dC
+        arms.safeR (Sigs.canon N I Φ fs) (Sigs.canonSafety N I Φ ss) kC (Ctx.conv N I Γ ρ) i (Fields.conv N I fds y) dC
     | .nil, _, _, _, _, _, _, _, _, _, _, hd => hd
     | .empty l rest, kS, kC, hk, ρ, t, _, i, y, dS, dC, hd => by
-      simp only [TArms.safeS, TArms.safe]
+      simp only [TArms.safeS, TArms.safeR]
       split
       · exact TArms.firstSafeS_eq rest kS kC hk ρ
       · refine TArms.safeS_eq rest kS kC hk ρ i y _ _ ?_
@@ -1356,7 +1378,7 @@ mutual
         · exact TArms.firstSafeS_eq rest kS kC hk ρ
         · exact hd
     | .wide l body rest, kS, kC, hk, ρ, t, _, i, y, dS, dC, hd => by
-      simp only [TArms.safeS, TArms.safe]
+      simp only [TArms.safeS, TArms.safeR]
       split
       · exact TStmts.safeS_eq body kS kC hk ρ
       · refine TArms.safeS_eq rest kS kC hk ρ i y _ _ ?_
@@ -1364,11 +1386,11 @@ mutual
         · exact TStmts.safeS_eq body kS kC hk ρ
         · exact hd
     | .narrow i' body rest, kS, kC, hk, ρ, t, _, i, y, dS, dC, hd => by
-      simp only [TArms.safeS, TArms.safe]
+      simp only [TArms.safeS, TArms.safeR]
       rw [← Variants.conv_injS I i y, VIdx.proj_conv]
       rcases VIdx.projS N i' (VIdx.injS N i y) with _ | y'
       · exact TArms.safeS_eq rest kS kC hk ρ i y dS dC hd
-      · show _ = body.safe _ _ _ (v.narrowVal _ ((), Fields.conv N I _ y'))
+      · show _ = body.safeR _ _ _ (v.narrowVal _ ((), Fields.conv N I _ y'))
         have hn : ((), Fields.conv N I _ y') = Ty.conv N I _ (vrecOf N I key i' y') :=
           (Ty.conv_recMk I (.cons key (.tag _) _) ((), y')).symm
         rw [hn, ← Var.conv_narrowValS]
@@ -1488,8 +1510,8 @@ theorem TStmts.denoteFn_eq_S {Φ : Sigs} {Γ : Ctx} {τ : Ty} (body : TStmts Φ 
 
 theorem TStmts.safeFn_eq_S {Φ : Sigs} {Γ : Ctx} {τ : Ty} (body : TStmts Φ Γ τ) (fs : Φ.denS N) (ss : Φ.safetyS N) :
     body.safeFn (Sigs.canon N I Φ fs) (Sigs.canonSafety N I Φ ss) = fun c => body.safeFnS N I fs ss (Ctx.convInv N I Γ c) := by
-  funext c
-  simp only [TStmts.safeFn, TStmts.safeFnS]
+  rw [TStmts.safeFn_eq_R]; funext c
+  simp only [TStmts.safeRFn, TStmts.safeFnS]
   split
   · rfl
   · conv => lhs; rw [← Ctx.conv_convInv I Γ c]

@@ -70,11 +70,11 @@ theorem chooseVaultCopy_safe (facts : List CopyFact) (floor : Option Floor) :
   unfold chooseVaultCopy.safe
   refine forIn_true (fun p next exit st hn _ => ?_) (fun st => ?_) _ _
   · obtain ⟨_, _⟩ := p
-    obtain ⟨_, _, _, _, _, _, _, _, _, _, ⟨⟩⟩ := st
+    obtain ⟨_, _, _, _, _⟩ := st
     dsimp only
     repeat' split
     all_goals exact hn _
-  · obtain ⟨_, _, _, _, _, _, _, _, _, _, ⟨⟩⟩ := st
+  · obtain ⟨_, _, _, _, _⟩ := st
     dsimp only
     split
     · simp [consistent_of_laws byRank_laws]

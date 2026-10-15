@@ -1272,17 +1272,6 @@ inductive Leaf where
 def Scope.valueText (s : Scope) (x : String) : String :=
   if s.payloads.lookup x == some .unit then "()" else ident x
 
-/-- The environment tuple of a scope, as readable text. -/
-def tupleText (s : Scope) : String :=
-  "(" ++ ", ".intercalate (s.locals.map (s.valueText ·.1) ++ ["()"]) ++ ")"
-
-/-- The pattern a continuation binds the environment tuple with: the scope's variables `text` uses, by
-name, `_` for the others. -/
-def statePattern (s : Scope) (text : String) : String :=
-  let uses (x : String) := mentions text x && s.payloads.lookup x != some .unit
-  if !s.locals.any (uses ·.1) then "_" else
-  "(" ++ ", ".intercalate (s.locals.map (fun (x, _) => if uses x then ident x else "_") ++ ["()"]) ++ ")"
-
 /-- The variables of the scope a statement assigns, in the scope's order (`Ctx.sub`). -/
 def Scope.stateVars (s : Scope) (ws : List String) : List String := (s.locals.filter (ws.contains ·.1)).map (·.1)
 
@@ -1300,6 +1289,21 @@ def branchValueText (s : Scope) (ws : List String) (branches : String → KText 
   let kv : KText := ⟨fun _ => st, fun _ => st, fun _ => st⟩
   let j := i ++ "  "
   s!"let {st} :=\n{j}{branches j kv}\n{i}{rest}"
+
+/-- The join point after branches assigning `ws` (`Ctx.join`): `let after := fun state => rest`, the branches
+going on with `after state`. It is bound before the branches, so `rest` sees the variables as they were
+before any narrowing. -/
+def joinText (s : Scope) (ws : List String) (rest : String) (branches : String → String) (i : String) : String :=
+  let after := s!"after{i.length}'"
+  let st := s.stateText ws
+  s!"let {after} := fun {st} =>\n{i}  {rest}\n{i}{branches s!"{after} {st}"}"
+
+/-- The safety condition after branches that narrow `x`: the rest in each branch, unless it reads `x` (the
+join point then gives it `x` as it was before the branches). -/
+def narrowedJoinText (s : Scope) (x : String) (ws : List String) (rest : String → String)
+    (branches : (String → String) → String) (i : String) : String :=
+  let text := rest (i ++ "  ")
+  if mentions text x then joinText s ws text (fun call => branches fun _ => call) i else branches rest
 
 /-- Readable `switch`: a match on the inductive's constructors (or nested matches on the union's sum), one
 leaf per variant; a narrowed variable is bound to its variant's payload. -/
@@ -1357,11 +1361,9 @@ def iteText (render : Block → String → KText → String) (idiom : Bool) (s :
       s!"if {c} then\n{j'}{render yes j' kv}\n{j}else\n{j'}{render no j' kv}") (render rest i k) i
   else
   if yes.falls && no.falls && rest.typed != ".nil" then
-    let after := s!"after{i.length}'"
-    let k' := { k with normal := fun _ => s!"{after} {tupleText s}" }
-    let restText := render rest j k
-    s!"let {after} := fun {statePattern s restText} =>\n{j}{restText}\n{i}" ++
-      s!"if {c} then\n{j}{render yes j k'}\n{i}else\n{j}{render no j k'}"
+    joinText s (yes.writes.unite no.writes) (render rest j k) (fun call =>
+      let k' := { k with normal := fun _ => call }
+      s!"if {c} then\n{j}{render yes j k'}\n{i}else\n{j}{render no j k'}") i
   else
     let k' := { k with normal := fun j' => render rest j' k }
     s!"if {c} then\n{j}{render yes j k'}\n{i}else\n{j}{render no j k'}"
@@ -1385,15 +1387,14 @@ def namedBody (s : Scope) (T : Types) (id : Nat) (state : List String) (ty lam b
 
 /-- A loop: `Ariadne.forIn items (fun binder next exit state => body) (fun state => rest) state`, or, when its
 body is direct, `let state := Ariadne.fold state items (fun state binder => body); rest`. The readable
-definition's state is the variables the body assigns (`idiom`, `TStmts.denoteR`); the safety condition's is
-the whole environment. -/
+definition's state, like the safety condition's (`TStmts.safeR`), is the variables the body assigns; the safety
+condition keeps every loop as `Ariadne.forIn`. -/
 def loopText (render : Block → String → KText → String) (s : Scope) (items binder : String)
     (pre : String → String)
     (body rest : Block) (idiom : Bool) (i : String) (k : KText) (T : Types) (id : Nat) (binderTy resultTy : String) :
     String :=
   let d := i.length
   let (nx, ex) := (s!"next{d}'", s!"exit{d}'")
-  let tup := tupleText s
   let j := i ++ "  "
   -- The state: the variables the body assigns (`TStmts.denoteR`), and its type.
   let st := s.stateText body.writes
@@ -1419,11 +1420,11 @@ def loopText (render : Block → String → KText → String) (s : Scope) (items
     s!"Ariadne.forIn {items} {call}{defn}\n{i}  " ++
       s!"(fun {st} =>\n{j}{restText})\n{i}  {st}"
   else
-  let kb : KText := ⟨fun _ => s!"{nx} {tup}", fun _ => s!"{ex} {tup}", fun _ => s!"{nx} {tup}"⟩
+  let kb : KText := ⟨fun _ => s!"{nx} {st}", fun _ => s!"{ex} {st}", fun _ => s!"{nx} {st}"⟩
   let bodyText := s!"{pre j}{render body j kb}"
   let restText := render rest j k
-  s!"Ariadne.forIn {items} (fun {binder} {nx} {ex} {statePattern s bodyText} =>\n{j}{bodyText})\n{i}  " ++
-    s!"(fun {statePattern s restText} =>\n{j}{restText})\n{i}  {tup}"
+  s!"Ariadne.forIn {items} (fun {binder} {nx} {ex} {st} =>\n{j}{bodyText})\n{i}  " ++
+    s!"(fun {st} =>\n{j}{restText})\n{i}  {st}"
 
 /-- A `while` loop: `Ariadne.whileDo (fun state => c) (fun next exit state => body) (fun state => rest) tuple`,
 and `Ariadne.whileSafe` for the safety condition. -/
@@ -1445,12 +1446,12 @@ def whileText (render : Block → String → KText → String) (s : Scope) (fn c
     s!"{fn} (fun {st} => {c})\n{i}  {call}{defn}\n{i}  " ++
       s!"(fun {st} =>\n{j}{restText})\n{i}  {st}"
   else
-  let tup := tupleText s
-  let kb : KText := ⟨fun _ => s!"{nx} {tup}", fun _ => s!"{ex} {tup}", fun _ => s!"{nx} {tup}"⟩
+  let st := s.stateText body.writes
+  let kb : KText := ⟨fun _ => s!"{nx} {st}", fun _ => s!"{ex} {st}", fun _ => s!"{nx} {st}"⟩
   let bodyText := render body j kb
   let restText := render rest j k
-  s!"{fn} (fun {statePattern s c} => {c})\n{i}  (fun {nx} {ex} {statePattern s bodyText} =>\n{j}{bodyText})\n{i}  " ++
-    s!"(fun {statePattern s restText} =>\n{j}{restText})\n{i}  {tup}"
+  s!"{fn} (fun {st} => {c})\n{i}  (fun {nx} {ex} {st} =>\n{j}{bodyText})\n{i}  " ++
+    s!"(fun {st} =>\n{j}{restText})\n{i}  {st}"
 
 def flagsIte (yes no rest : Block) : Bool × Bool × Bool :=
   ((yes.falls || no.falls) && rest.falls,
@@ -1684,7 +1685,9 @@ mutual
           s!"match {ident x} with\n{j}| none =>\n{j'}{render yes j' k'}\n{j}| some {ident x} =>\n{j'}{render no j' (k'.wrap n)}"
         if idiom && yes.closed && no.closed then
           branchValueText s (yes.writes.unite no.writes) arms (render rest i k) i
-        else arms i { k with normal := fun j' => render rest j' k }
+        else if idiom || !(yes.falls || no.falls) then arms i { k with normal := fun j' => render rest j' k }
+        else narrowedJoinText s x (yes.writes.unite no.writes) (fun j => render rest j k)
+          (fun kn => arms i { k with normal := kn }) i
       let (falls, breaks, continues) := flagsIte yes no rest
       return { typed := s!"(.ifNull {path} (by decide +kernel)\n  {yes.typed}\n  {no.typed}\n  {rest.typed})",
                readable := text (·.readable) true, safe := text (·.safe) false,
@@ -1701,7 +1704,9 @@ mutual
           s!"match {ident x} with\n{j}| some {ident x} =>\n{j'}{render yes j' (k'.wrap n)}\n{j}| none =>\n{j'}{render no j' k'}"
         if idiom && yes.closed && no.closed then
           branchValueText s (yes.writes.unite no.writes) arms (render rest i k) i
-        else arms i { k with normal := fun j' => render rest j' k }
+        else if idiom || !(yes.falls || no.falls) then arms i { k with normal := fun j' => render rest j' k }
+        else narrowedJoinText s x (yes.writes.unite no.writes) (fun j => render rest j k)
+          (fun kn => arms i { k with normal := kn }) i
       let (falls, breaks, continues) := flagsIte yes no rest
       return { typed := s!"(.ifNotNull {path} (by decide +kernel)\n  {yes.typed}\n  {no.typed}\n  {rest.typed})",
                readable := text (·.readable) true, safe := text (·.safe) false,
@@ -1783,9 +1788,11 @@ mutual
       if idiom && closed then
         branchValueText s armsWrites (fun j kv => switchLeaves render x (T.ctorNames? τ) reps leaves kv (ident x) j)
           (render rest ind k) ind
-      else
-      let kr := fun j => render rest j k
-      switchLeaves render x (T.ctorNames? τ) reps leaves { k with normal := kr, brk := kr } (ident x) ind
+      else if idiom || !f then
+        let kr := fun j => render rest j k
+        switchLeaves render x (T.ctorNames? τ) reps leaves { k with normal := kr, brk := kr } (ident x) ind
+      else narrowedJoinText s x armsWrites (fun j => render rest j k) (fun kn =>
+        switchLeaves render x (T.ctorNames? τ) reps leaves { k with normal := kn, brk := kn } (ident x) ind) ind
     pure { typed := s!"(.switchG {s.varPath i} (by decide +kernel)\n  {armsTyped}\n  {rest.typed})",
            readable := text (·.readable) true, safe := text (·.safe) false,
            trivial := bodies.all (·.trivial) && rest.trivial,

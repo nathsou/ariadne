@@ -407,10 +407,10 @@ def total (sc : Scene) : Int :=
 /-- The inputs on which `total` stays within what the model covers. -/
 def total.safe (sc : Scene) : Bool :=
   let t : Int := (0 : Int)
-  Ariadne.forIn sc.shapes (fun s next2' exit2' (t, sc, ()) =>
+  Ariadne.forIn sc.shapes (fun s next2' exit2' t =>
     (area.safe s && Ariadne.inRange (t + (area s))) && (let t : Int := t + (area s)
-    next2' (t, sc, ())))
-    (fun (t, sc, ()) =>
+    next2' t))
+    (fun t =>
     let f : Option Shape := sc.focus
     match f with
     | some f =>
@@ -418,7 +418,7 @@ def total.safe (sc : Scene) : Bool :=
       true)
     | none =>
       true)
-    (t, sc, ())
+    t
 
 def grow (sc : Scene) (d : Int) : Scene :=
   { sc with shapes := sc.shapes.map (fun s => widen s d) }

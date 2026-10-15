@@ -269,16 +269,16 @@ def digits.safe (n : Int) : Bool :=
   let out : List Int := []
   (if decide (n < (0 : Int)) then Ariadne.inRange (-n) else true) && (let m : Int := if decide (n < (0 : Int)) then (-n) else n
   let most : Int := (16 : Int)
-  Ariadne.forIn (Ariadne.range most) (fun i next2' exit2' (most, m, out, n, ()) =>
+  Ariadne.forIn (Ariadne.range most) (fun i next2' exit2' (m, out) =>
     ((10 : Int) != 0 && Ariadne.inRange (Int.tmod m (10 : Int))) && (let out : List Int := out ++ ([(Int.tmod m (10 : Int))])
     ((10 : Int) != 0 && Ariadne.inRange m && Ariadne.inRange (10 : Int)) && (let m : Int := Int.fdiv m (10 : Int)
     if m == (0 : Int) then
-      exit2' (most, m, out, n, ())
+      exit2' (m, out)
     else
-      next2' (most, m, out, n, ()))))
-    (fun _ =>
+      next2' (m, out))))
+    (fun (m, out) =>
     true)
-    (most, m, out, n, ()))
+    (m, out))
 
 /-! ## Denotation
 

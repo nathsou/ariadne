@@ -84,16 +84,16 @@ theorem countTagged_foldl (items : List Item) (tag : JSString) :
 measure is the number of elements left. -/
 theorem firstAbove_safe (xs : List Int) (limit : Int) (h : xs.length < 2 ^ 53) : firstAbove.safe xs limit = true := by
   unfold firstAbove.safe
-  refine whileSafe_of_measure (fun s => s.2.1 = xs ∧ 0 ≤ s.1) (fun s => ((xs.length : Int) - s.1).toNat) ?_
-    (fun _ _ => rfl) _ ⟨rfl, Int.le_refl 0⟩ (by simp [loopBound]; omega)
-  rintro next ex ⟨i, ys, l, ⟨⟩⟩ ⟨rfl, hi⟩ hc hn -
+  refine whileSafe_of_measure (fun i => 0 ≤ i) (fun i => ((xs.length : Int) - i).toNat) ?_
+    (fun _ _ => rfl) _ (Int.le_refl 0) (by simp [loopBound]; omega)
+  intro next ex i hi hc hn _
   simp only [decide_eq_true_eq] at hc hi h
   have hr : inRange (i + 1) = true := by simp only [inRange, Nat.ble_eq]; omega
   dsimp only
   split <;> split
   all_goals first
     | rfl
-    | rw [hr, Bool.true_and]; exact hn _ ⟨rfl, by omega⟩ (by simp only; omega)
+    | rw [hr, Bool.true_and]; exact hn _ (by omega) (by omega)
 
 /-- `ranked` sorts by a declared comparator; `cmp_laws` proves it lawful, and `ariadne_safe` discharges
 `toSorted`'s safety condition with that. -/

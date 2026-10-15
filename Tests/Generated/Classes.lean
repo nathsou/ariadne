@@ -285,12 +285,12 @@ def touchAll («this» : Book) (ks : List JSString) : Book :=
 
 /-- The inputs on which `touchAll` stays within what the model covers. -/
 def touchAll.safe («this» : Book) (ks : List JSString) : Bool :=
-  Ariadne.forIn ks (fun k next2' exit2' («this», ks, ()) =>
+  Ariadne.forIn ks (fun k next2' exit2' «this» =>
     bump.safe «this» k && (let «this» : Book := bump «this» k
-    next2' («this», ks, ())))
-    (fun _ =>
+    next2' «this»))
+    (fun «this» =>
     true)
-    («this», ks, ())
+    «this»
 
 def get («this» : Book) (k : JSString) : Option Entry :=
   Ariadne.mapGet «this».items k

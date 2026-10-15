@@ -72,10 +72,12 @@ that directly, as `freeze_runs` does.
 
 - **Loops**: a loop's body is a definition, `f.loop` (`dsimp only [f.loop]` unfolds it), and its state is
   the variables it assigns. A loop with no `return` and no `break` reads as `Ariadne.fold init items f.loop`,
-  a `List.foldl`; `fold_inv` gives it an invariant (as in `balance_nonneg`). Other loops read as `forIn`:
-  `forIn_inv` (an invariant), `forIn_prefix` (an invariant over the items seen so far), `forIn_continue`
-  (a loop that never leaves early is a fold); for `while`, `whileDo_inv` and, for its safety condition,
-  `whileSafe_of_measure`.
+  a `List.foldl`; `fold_inv` gives it an invariant (as in `balance_nonneg`), `fold_prefix` one over the
+  items seen so far, and `fold_eq` its closed form. Other loops read as `forIn`: `forIn_inv` (an
+  invariant), `forIn_prefix` (an invariant over the items seen so far), `forIn_continue` (a loop that never
+  leaves early is a fold); for `while`, `whileDo_inv` and, for its safety condition,
+  `whileSafe_of_measure`. A safety condition's loops are `forIn` (or `whileSafe`) over the same state as
+  the definition's, so one invariant serves both.
 - **Classes**: the generated `m.keeps.f` lemmas, and `Ariadne/Lib/Map.lean` for the maps
   (`mapGet_mapPut`, …).
 - **Sorting**: `cmp_laws` proves a comparator lawful; then `consistent_of_laws` discharges `toSorted`'s

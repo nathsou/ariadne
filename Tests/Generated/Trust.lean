@@ -680,38 +680,38 @@ def chooseVaultCopy.safe (facts : List CopyFact) (floor : Option Floor) : Bool :
   let damaged : Bool := false
   let notOwner : Bool := false
   let older : Bool := false
-  Ariadne.forIn facts.zipIdx (fun (f, n10') next2' exit2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ()) =>
+  Ariadne.forIn facts.zipIdx (fun (f, n10') next2' exit2' (older, notOwner, damaged, opened, ok) =>
     let index := (n10' : Int)
     match f with
     | CopyFact.unopened =>
-      next2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ())
+      next2' (older, notOwner, damaged, opened, ok)
     | CopyFact.damaged =>
       let damaged : Bool := true
-      next2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ())
+      next2' (older, notOwner, damaged, opened, ok)
     | CopyFact.opened f =>
       let opened : Bool := true
       if (f.commit == Commit.bad) || (f.recovery == Recovery.bad) then
         let notOwner : Bool := true
-        next2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ())
+        next2' (older, notOwner, damaged, opened, ok)
       else
         if ((f.commit == Commit.legacy) && (listed f.kid committedFactors)) || ((f.recovery == Recovery.legacy) && (listed f.kid taggedFactors)) then
           let notOwner : Bool := true
-          next2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ())
+          next2' (older, notOwner, damaged, opened, ok)
         else
           if (floorSeed != (js "")) && (!(f.seeds.any (· == floorSeed))) then
             let older : Bool := true
-            next2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ())
+            next2' (older, notOwner, damaged, opened, ok)
           else
             let ok : List Candidate := ok ++ ([(Candidate.mk index (f.commit == Commit.ok) (f.recovery != Recovery.legacy) (f.seeds.length : Int) f.written)])
-            next2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ()))
-    (fun (_, _, _, _, ok, _, _, _, _, _, ()) =>
+            next2' (older, notOwner, damaged, opened, ok))
+    (fun (older, notOwner, damaged, opened, ok) =>
     if decide ((ok.length : Int) > (0 : Int)) then
       Ariadne.consistent (Ariadne.signs byRank ok) && (let ranked : List Candidate := Ariadne.sortedBy byRank ok
       let anyCommitted : Bool := ranked.any (fun x => x.committed)
       true)
     else
       true)
-    (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ())
+    (older, notOwner, damaged, opened, ok)
 
 /-- A loop body of `chooseKeysCopy`. -/
 def chooseKeysCopy.loop : Option BestKeys → CopyFact × Nat → Option BestKeys :=
