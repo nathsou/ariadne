@@ -420,11 +420,13 @@ abbrev Sigs.safetyS (N : Names) : Sigs → Type
   | [] => Unit
   | s :: Φ => (s.params.denS N → Bool) × Sigs.safetyS N Φ
 
-def FVar.getS (N : Names) : FVar Φ f s → Φ.denS N → s.denS N
+/-- Reducible, so that unifying `FVar.getS N v fs` with a function's readable definition unfolds the
+lookup first rather than the definition (generated frame lemmas and source theorems rely on it). -/
+@[reducible] def FVar.getS (N : Names) : FVar Φ f s → Φ.denS N → s.denS N
   | .here, (g, _) => g
   | .there v, (_, fs) => FVar.getS N v fs
 
-def FVar.safeS (N : Names) : FVar Φ f s → Φ.safetyS N → s.params.denS N → Bool
+@[reducible] def FVar.safeS (N : Names) : FVar Φ f s → Φ.safetyS N → s.params.denS N → Bool
   | .here, (g, _) => g
   | .there v, (_, fs) => FVar.safeS N v fs
 
