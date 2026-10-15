@@ -63,21 +63,7 @@ Quickstart.Ledger.ast : Ariadne.Program :=
 Quickstart.Ledger.balance : List Quickstart.Ledger.Entry → Int :=
   fun entries =>
   have total := 0;
-  have total :=
-    Ariadne.fold total entries fun total e =>
-      have total :=
-        match e with
-        | Sum.inl (e, PUnit.unit) =>
-          have total := total + e;
-          total
-        | Sum.inr (e, PUnit.unit) =>
-          have total :=
-            if Decidable.decide (e ≤ total) = Bool.true then
-              have total := total - e;
-              total
-            else total;
-          total;
-      total;
+  have total := Ariadne.fold total entries Quickstart.Ledger.balance.loop;
   total
 
 Quickstart.Ledger.credit : Quickstart.Ledger.Accounts → Ariadne.JSString → Int → Quickstart.Ledger.Accounts :=
@@ -135,7 +121,21 @@ Quickstart.Ledger.Accounts.withBalances : Quickstart.Ledger.Accounts → List (A
 Quickstart.Ledger.Accounts.withFrozen : Quickstart.Ledger.Accounts → List (Ariadne.JSString × Bool) → Quickstart.Ledger.Accounts :=
   fun r v => (r.fst, v, r.snd.snd)
 
-Quickstart.Ledger.balance.match_1 -- derived; fingerprint 1808640746 2617809018
+Quickstart.Ledger.balance.loop : Int → Quickstart.Ledger.Entry → Int :=
+  fun total e =>
+  have total :=
+    match e with
+    | Sum.inl (e, PUnit.unit) =>
+      have total := total + e;
+      total
+    | Sum.inr (e, PUnit.unit) =>
+      have total :=
+        if Decidable.decide (e ≤ total) = Bool.true then
+          have total := total - e;
+          total
+        else total;
+      total;
+  total
 
 Quickstart.Ledger.credit.match_1 -- derived; fingerprint 2009189936 3390721761
 
@@ -155,3 +155,5 @@ Quickstart.Ledger.Entry.Variant.credit : Type :=
 
 Quickstart.Ledger.Entry.Variant.debit : Type :=
   Int × Unit
+
+Quickstart.Ledger.balance.loop.match_1 -- derived; fingerprint 1808640746 2617809018
