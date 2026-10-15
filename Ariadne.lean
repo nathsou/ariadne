@@ -5,12 +5,14 @@ import Ariadne.Front.Convert
 import Ariadne.Typed.Ty
 import Ariadne.Typed.Syntax
 import Ariadne.Typed.Denote
+import Ariadne.Typed.Direct
 import Ariadne.Proof.Expr
 import Ariadne.Proof.Stmt
 import Ariadne.Proof.Trivial
 import Ariadne.Proof.Store
 import Ariadne.Proof.Adequacy
 import Ariadne.Proof.Frame
+import Ariadne.Proof.Direct
 import Ariadne.Lib.Sort
 import Ariadne.Lib.Loop
 import Ariadne.Lib.Map

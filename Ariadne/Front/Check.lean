@@ -1246,14 +1246,44 @@ def iteText (render : Block → String → KText → String) (s : Scope) (c : St
     let k' := { k with normal := fun j' => render rest j' k }
     s!"if {c} then\n{j}{render yes j k'}\n{i}else\n{j}{render no j k'}"
 
-/-- A loop: `Ariadne.forIn items (fun binder next exit state => body) (fun state => rest) tuple`. -/
+/-- No `return` in the statements, at any depth: the typed syntax's `ret` and `retVoid` come from these only
+(`TStmts.noRet`). -/
+partial def stmtNoReturn : Parse.Stmt → Bool
+  | .block ss _ => ss.all stmtNoReturn
+  | .return_ .. => false
+  | .if_ _ yes no _ => stmtNoReturn yes && stmtNoReturn no
+  | .while_ _ body _ | .forOf _ _ _ body _ | .forOfPair _ _ _ _ body _ | .measured _ body _ => stmtNoReturn body
+  | .for_ _ _ _ body _ => stmtNoReturn body
+  | .switch_ _ cases _ => cases.all (·.2.all stmtNoReturn)
+  | _ => true
+
+/-- No `break` of the enclosing loop: none outside nested loops and `switch`es (`TStmts.noBrk`). -/
+partial def stmtNoBreak : Parse.Stmt → Bool
+  | .block ss _ => ss.all stmtNoBreak
+  | .break_ _ => false
+  | .if_ _ yes no _ => stmtNoBreak yes && stmtNoBreak no
+  | _ => true
+
+/-- A loop body the readable definition writes in direct style, as a fold (`TStmts.direct`). -/
+def directBody (body : List Parse.Stmt) : Bool := body.all stmtNoReturn && body.all stmtNoBreak
+
+/-- A loop: `Ariadne.forIn items (fun binder next exit state => body) (fun state => rest) tuple`, or, when its
+body is direct (`fold`), `let state := Ariadne.fold tuple items (fun state binder => body); rest`. -/
 def loopText (render : Block → String → KText → String) (s : Scope) (items binder : String)
     (pre : String → String)
-    (body rest : Block) (i : String) (k : KText) : String :=
+    (body rest : Block) (fold : Bool) (i : String) (k : KText) : String :=
   let d := i.length
   let (nx, ex) := (s!"next{d}'", s!"exit{d}'")
   let tup := tupleText s
   let j := i ++ "  "
+  -- A body with no `return` and no `break` of its own (`TStmts.direct`): a fold, the body ending with the
+  -- variables' new values.
+  if fold then
+    let kd : KText := ⟨fun _ => tup, fun _ => tup, fun _ => tup⟩
+    let bodyText := s!"{pre j}{render body j kd}"
+    let restText := render rest i k
+    s!"let {statePattern s restText} := Ariadne.fold {tup} {items} (fun {statePattern s bodyText} {binder} =>\n{j}{bodyText})\n{i}{restText}"
+  else
   let kb : KText := ⟨fun _ => s!"{nx} {tup}", fun _ => s!"{ex} {tup}", fun _ => s!"{nx} {tup}"⟩
   let bodyText := s!"{pre j}{render body j kb}"
   let restText := render rest j k
@@ -1337,6 +1367,7 @@ mutual
              trivial := false, falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
     | .forOf false x e body span :: rest => do
       let body := branchStmts body
+      let bodyStmts := body
       let a ← inferExpr T s e none
       let .array σ := a.ty | mismatch span s!"for-of over {a.ty.ts}"
       let body ← checkStmts T (← declare s span x σ) result body
@@ -1344,7 +1375,7 @@ mutual
       let text (render : Block → String → KText → String) :=
         loopText render s a.term (ident x) (fun _ => "") body rest
       pure { typed := s!"(.forOf {leanString x} {a.typed}\n  {body.typed}\n  {rest.typed})",
-             readable := text (·.readable), safe := fun i k => andText a.ok (text (·.safe) i k),
+             readable := text (·.readable) (directBody bodyStmts), safe := fun i k => andText a.ok (text (·.safe) false i k),
              trivial := a.trivial && body.trivial && rest.trivial,
              falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
     | .for_ (.let_ true i _ (.literal (.number 0 0) _) _) (.binary "<" (.var i₁ _) (.var n _) _)
@@ -1354,17 +1385,19 @@ mutual
       if τ != .number then mismatch span s!"the bound '{n}' is {τ.ts}, not a number"
       if s.mutables.contains n then mismatch span s!"the bound '{n}' must be a const"
       -- The index is not assignable in the body (it is not added to the mutables).
-      let body ← checkStmts T (← declare s span i .number) result (branchStmts body)
+      let bodyStmts := branchStmts body
+      let body ← checkStmts T (← declare s span i .number) result bodyStmts
       let rest ← checkStmts T s result rest
       let text (render : Block → String → KText → String) :=
         loopText render s s!"(Ariadne.range {ident n})" (ident i) (fun _ => "") body rest
       pure { typed := s!"(.forRange {leanString i} {s.varPath j}\n  {body.typed}\n  {rest.typed})",
-             readable := text (·.readable), safe := text (·.safe), trivial := body.trivial && rest.trivial,
+             readable := text (·.readable) (directBody bodyStmts), safe := text (·.safe) false, trivial := body.trivial && rest.trivial,
              falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
     | .forOfPair false ix x (.call (.member e "entries" _) [] _) (.block body _) span :: rest => do
       let a ← inferExpr T s e none
       let .array σ := a.ty | mismatch span s!"entries of {a.ty.ts}"
       if ix == x then mismatch span "an index and an element of the same name"
+      let bodyStmts := body
       let body ← checkStmts T (← declare (← declare s span ix .number) span x σ) result body
       let rest ← checkStmts T s result rest
       let p := s!"n{s.locals.length}'"
@@ -1372,7 +1405,7 @@ mutual
         loopText render s (if (listCall a.term "zipIdx").startsWith "List." then s!"({listCall a.term "zipIdx"})" else listCall a.term "zipIdx") s!"({ident x}, {p})"
           (fun j => s!"let {ident ix} := ({p} : Int)\n{j}") body rest
       pure { typed := s!"(.forEntries {leanString ix} {leanString x} {a.typed}\n  {body.typed}\n  {rest.typed})",
-             readable := text (·.readable), safe := fun i k => andText a.ok (text (·.safe) i k),
+             readable := text (·.readable) (directBody bodyStmts), safe := fun i k => andText a.ok (text (·.safe) false i k),
              trivial := a.trivial && body.trivial && rest.trivial,
              falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
     | .return_ e span :: rest => do
@@ -1841,7 +1874,7 @@ definitions, and per-function source theorems. -/
 def printFile (source namespace_ : String) (ast : Program) (T : Types) (fns : List CheckedFn) : String := Id.run do
   -- A line comment: a path may contain `/-`, which would open a block comment.
   let name := ((source.splitOn "/").getLast?.getD source).map fun c => if c == '\n' || c == '\r' then ' ' else c
-  let mut out := s!"import Ariadne.Proof.Adequacy\nimport Ariadne.Proof.Frame\nimport Ariadne.Lib.Readable\n\n-- Generated by ariadne from {name}. Do not edit.\n\n"
+  let mut out := s!"import Ariadne.Proof.Adequacy\nimport Ariadne.Proof.Frame\nimport Ariadne.Proof.Direct\nimport Ariadne.Lib.Readable\n\n-- Generated by ariadne from {name}. Do not edit.\n\n"
   out := out ++ s!"namespace {namespace_}\nopen Ariadne\n\nset_option maxRecDepth 8192\nset_option linter.unusedVariables false\n\n"
   out := out ++ "/-- The source file in the model's syntax. -/\nnoncomputable def ast : Program := [\n  " ++
     ",\n  ".intercalate (ast.map printFunction) ++ "]\n\n"
@@ -1902,7 +1935,8 @@ readable definitions as its environment, so no check unfolds a callee. -/\n\n"
     else
       let safeApplied := " ".intercalate (s!"{ident s.name}.safe" :: projections)
       out := out ++ s!"noncomputable def {ident s.name}.safety : {sigName s.name}.params.denote → Bool := fun xs => {safeApplied}\n\n"
-    out := out ++ s!"theorem {ident s.name}.body_eq :\n    body.{ident s.name}.denoteFn {tupleOf prior "uncurried"} = {ident s.name}.uncurried := by\n  kernel_rfl\n\n"
+    out := out ++ s!"theorem {ident s.name}.body_eqD :\n    body.{ident s.name}.denoteDFn {tupleOf prior "uncurried"} = {ident s.name}.uncurried := by\n  kernel_rfl\n\n"
+    out := out ++ s!"theorem {ident s.name}.body_eq :\n    body.{ident s.name}.denoteFn {tupleOf prior "uncurried"} = {ident s.name}.uncurried :=\n  (TStmts.denoteFn_eq _).trans {ident s.name}.body_eqD\n\n"
     out := out ++ s!"theorem {ident s.name}.safe_eq :\n    body.{ident s.name}.safeFn {tupleOf prior "uncurried"} {tupleOf prior "safety"} = {ident s.name}.safety := by\n  kernel_rfl\n\n"
     prior := s.name :: prior
   let proof := fns.foldl (fun acc fn => s!"(TProgram.denote_cons {acc} {ident fn.sig.name}.body_eq)") "rfl"
@@ -1929,7 +1963,8 @@ readable definitions as its environment, so no check unfolds a callee. -/\n\n"
           let args := "(" ++ ", ".intercalate (s.params.tail.map (ident ·.1) ++ ["()"]) ++ ")"
           out := out ++ s!"/-- `{s.name}` leaves `this.{g}` as it is. -/\n"
           out := out ++ s!"theorem {ident s.name}.keeps.{ident g} {binders} :\n    {T.fieldText σ call k} = {T.fieldText σ (ident "this") k} :=\n"
-          out := out ++ s!"  frame_of {fidxPath k} denote_eq frames.{ident g} {fvar} rfl {ident "this"} {args}\n\n"
+          out := out ++ s!"  frame_of_fn {fidxPath k} denote_eq frames.{ident g} {fvar} rfl (f := {ident s.name}.uncurried) rfl\n" ++
+            s!"    (acc := fun (r : {T.lean σ}) => {T.fieldText σ "r" k}) (fun _ => rfl) {ident "this"} {args}\n\n"
   out := out ++ "/-! ## Source theorems -/\n\n"
   let n := fns.length
   for (fn, i) in fns.zipIdx do

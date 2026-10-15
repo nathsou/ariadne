@@ -58,32 +58,30 @@ section
 open Tests.Generated.Loops
 
 /-- The loop in `sum`, from an accumulator. -/
-theorem forIn_sum (ys : List Int) (acc : Int) (zs : List Int) :
-    Ariadne.forIn ys (fun x next _ s => next (s.1 + x, s.2.1, ())) (fun s => s.1)
-      ((acc, zs, ()) : Int × List Int × Unit) = acc + ys.sum := by
+theorem fold_sum (ys zs : List Int) (acc : Int) :
+    (Ariadne.fold ((acc, zs, ()) : Int × List Int × Unit) ys (fun s x => (s.1 + x, s.2.1, ()))).1 = acc + ys.sum := by
   induction ys generalizing acc with
-  | nil => simp [Ariadne.forIn]
+  | nil => simp [Ariadne.fold]
   | cons y ys ih =>
-    simp only [Ariadne.forIn, List.foldr_cons] at ih ⊢
+    simp only [Ariadne.fold, List.foldl_cons] at ih ⊢
     rw [ih]; simp [List.sum_cons]; omega
 
 /-- `sum` computes the sum of its array. -/
 theorem sum_eq (xs : List Int) : sum xs = xs.sum := by
-  simpa [sum] using forIn_sum xs 0 xs
+  simpa [sum] using fold_sum xs xs 0
 
-/-- `sum`'s loop never leaves early, so it is a fold (`forIn_continue`). -/
-theorem sum_foldl (xs : List Int) : sum xs = (xs.foldl (fun s x => (s.1 + x, s.2)) ((0 : Int), xs, ())).1 :=
-  forIn_continue _ (fun _ _ _ _ => rfl) xs _
+/-- `sum`'s loop never leaves early, so its readable definition is a fold, by definition. -/
+theorem sum_foldl (xs : List Int) : sum xs = (xs.foldl (fun s x => (s.1 + x, s.2)) ((0 : Int), xs, ())).1 := rfl
 
 /-- `countTagged`'s loop too, though its iterations branch. -/
 theorem countTagged_foldl (items : List Item) (tag : JSString) :
     countTagged items tag = (items.foldl (fun s it => if it.tags.any (· == s.2.2.1) then (s.1 + 1, s.2) else s)
       ((0 : Int), items, tag, ())).1 := by
-  unfold countTagged
-  rw [forIn_continue (fun it s => if it.tags.any (· == s.2.2.1) then (s.1 + 1, s.2) else s)]
-  intro y next ex s
+  show (List.foldl _ ((0 : Int), items, tag, ()) items).1 = _
+  congr 2
+  funext s it
   obtain ⟨n, is, t, ⟨⟩⟩ := s
-  by_cases h : y.tags.any (· == t) <;> simp [h]
+  by_cases h : it.tags.any (· == t) <;> simp [h]
 
 /-- `firstAbove`'s `while` loop ends, and its index stays exact, on arrays shorter than 2^53: the
 measure is the number of elements left. -/

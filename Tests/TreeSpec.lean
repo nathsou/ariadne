@@ -127,17 +127,10 @@ theorem attach_keeps (r : State) (id : JSString) : Keeps r (attach r id) := by
 @[simp] theorem attach_p (r : State) (id : JSString) : (attach r id).2.2.2.2.2.1 = r.2.2.2.2.2.1 :=
   (attach_keeps r id).purged
 
-/-- Re-deriving where nodes sit after a node wants another place keeps both registers. -/
-theorem rearrange_keeps (r : State) (id : JSString) : Keeps r (rearrange r id) := by
-  unfold rearrange; dsimp only
-  refine forIn_inv (fun s => Keeps r s.2.2.1) (Keeps r) ?_ ?_ _ _ ⟨by simp, by simp⟩
-  · intro y next ex s ⟨h1, h2⟩ hn hx
-    exact hn _ ⟨by simp [h1], by simp [h2]⟩
-  · intro s ⟨h1, h2⟩
-    refine forIn_inv (fun s => Keeps r s.2.2.1) (Keeps r) ?_ ?_ _ _ ⟨h1, h2⟩
-    · intro y next ex s ⟨h1, h2⟩ hn hx
-      exact hn _ ⟨by simp [h1], by simp [h2]⟩
-    · intro s ⟨h1, h2⟩; exact ⟨h1, h2⟩
+/-- Re-deriving where nodes sit after a node wants another place keeps both registers: the generated frame
+lemmas say so. -/
+theorem rearrange_keeps (r : State) (id : JSString) : Keeps r (rearrange r id) :=
+  ⟨rearrange.keeps.spots r id, rearrange.keeps.purged r id⟩
 
 @[simp] theorem rearrange_1 (r : State) (id : JSString) : (rearrange r id).1 = r.1 := (rearrange_keeps r id).spots
 @[simp] theorem rearrange_p (r : State) (id : JSString) :

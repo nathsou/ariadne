@@ -1,4 +1,5 @@
 import Ariadne.Typed.Denote
+import Ariadne.Typed.Direct
 
 /-!
 # Loops
@@ -15,6 +16,13 @@ theorem forIn_nil {α σ R : Type} (step : α → (σ → R) → (σ → R) → 
 
 theorem forIn_cons {α σ R : Type} (y : α) (ys : List α) (step : α → (σ → R) → (σ → R) → σ → R)
     (exit : σ → R) (s : σ) : forIn (y :: ys) step exit s = step y (forIn ys step exit) exit s := rfl
+
+/-- An invariant of a fold (how a readable definition writes a loop that runs every iteration): what every
+step keeps holds after all of them. -/
+theorem fold_inv {α σ : Type} (P : σ → Prop) {step : σ → α → σ} (hstep : ∀ s y, P s → P (step s y)) :
+    ∀ (items : List α) (s : σ), P s → P (fold s items step)
+  | [], _, h => h
+  | y :: ys, s, h => fold_inv P hstep ys (step s y) (hstep s y h)
 
 /-- A loop whose every iteration only updates the state and continues is a fold. -/
 theorem forIn_fold {α σ R : Type} (g : α → σ → σ) (exit : σ → R) :
