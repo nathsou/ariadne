@@ -117,6 +117,79 @@ structure Isos (N : Names) where
     uelim i (umake i x) h = Variants.elimS N _ x h
   umake_uelim : ∀ i u, umake i (uelim i u fun j y => VIdx.injS N j y) = u
 
+/-- The correspondences of a list of named records, one per record. -/
+inductive RecIsos (N : Names) : List (Fields × Type) → Type 1 where
+  | nil : RecIsos N []
+  | cons {fs : Fields} {T : Type} {l : List (Fields × Type)} (view : T → fs.den N) (make : fs.den N → T)
+      (view_make : ∀ x, view (make x) = x) (make_view : ∀ r, make (view r) = r) (rest : RecIsos N l) :
+      RecIsos N ((fs, T) :: l)
+
+/-- The correspondences of a list of named unions, one per union. -/
+inductive UnionIsos (N : Names) : List (Variants × Type) → Type 1 where
+  | nil : UnionIsos N []
+  | cons {vs : Variants} {T : Type} {l : List (Variants × Type)}
+      (uelim : {R : Type} → T → (∀ {t fs}, VIdx vs t fs → Fields.den N fs → R) → R) (umake : vs.den N → T)
+      (uelim_umake : ∀ {R : Type} x (h : ∀ {t fs}, VIdx vs t fs → Fields.den N fs → R),
+        uelim (umake x) h = Variants.elimS N vs x h)
+      (umake_uelim : ∀ u, umake (uelim u fun j y => VIdx.injS N j y) = u) (rest : UnionIsos N l) :
+      UnionIsos N ((vs, T) :: l)
+
+namespace RecIsos
+variable {N : Names}
+
+def view : {l : List (Fields × Type)} → RecIsos N l → (i : Fin l.length) → l[i].2 → Fields.den N l[i].1
+  | _, .cons v _ _ _ _, ⟨0, _⟩ => v
+  | _, .cons _ _ _ _ rest, ⟨k + 1, h⟩ => rest.view ⟨k, Nat.lt_of_succ_lt_succ h⟩
+
+def make : {l : List (Fields × Type)} → RecIsos N l → (i : Fin l.length) → Fields.den N l[i].1 → l[i].2
+  | _, .cons _ m _ _ _, ⟨0, _⟩ => m
+  | _, .cons _ _ _ _ rest, ⟨k + 1, h⟩ => rest.make ⟨k, Nat.lt_of_succ_lt_succ h⟩
+
+theorem view_make : {l : List (Fields × Type)} → (rs : RecIsos N l) → ∀ i x, rs.view i (rs.make i x) = x
+  | _, .cons _ _ h _ _, ⟨0, _⟩, x => h x
+  | _, .cons _ _ _ _ rest, ⟨k + 1, _⟩, x => rest.view_make ⟨k, _⟩ x
+
+theorem make_view : {l : List (Fields × Type)} → (rs : RecIsos N l) → ∀ i r, rs.make i (rs.view i r) = r
+  | _, .cons _ _ _ h _, ⟨0, _⟩, r => h r
+  | _, .cons _ _ _ _ rest, ⟨k + 1, _⟩, r => rest.make_view ⟨k, _⟩ r
+
+end RecIsos
+
+namespace UnionIsos
+variable {N : Names}
+
+def uelim : {l : List (Variants × Type)} → UnionIsos N l → (i : Fin l.length) → {R : Type} → l[i].2 →
+    (∀ {t fs}, VIdx l[i].1 t fs → Fields.den N fs → R) → R
+  | _, .cons e _ _ _ _, ⟨0, _⟩ => e
+  | _, .cons _ _ _ _ rest, ⟨k + 1, h⟩ => rest.uelim ⟨k, Nat.lt_of_succ_lt_succ h⟩
+
+def umake : {l : List (Variants × Type)} → UnionIsos N l → (i : Fin l.length) → Variants.den N l[i].1 → l[i].2
+  | _, .cons _ m _ _ _, ⟨0, _⟩ => m
+  | _, .cons _ _ _ _ rest, ⟨k + 1, h⟩ => rest.umake ⟨k, Nat.lt_of_succ_lt_succ h⟩
+
+theorem uelim_umake : {l : List (Variants × Type)} → (us : UnionIsos N l) → ∀ i {R : Type} x
+    (h : ∀ {t fs}, VIdx l[i].1 t fs → Fields.den N fs → R), us.uelim i (us.umake i x) h = Variants.elimS N _ x h
+  | _, .cons _ _ e _ _, ⟨0, _⟩, _, x, h => e x h
+  | _, .cons _ _ _ _ rest, ⟨k + 1, _⟩, _, x, h => rest.uelim_umake ⟨k, _⟩ x h
+
+theorem umake_uelim : {l : List (Variants × Type)} → (us : UnionIsos N l) → ∀ i u,
+    us.umake i (us.uelim i u fun j y => VIdx.injS N j y) = u
+  | _, .cons _ _ _ e _, ⟨0, _⟩, u => e u
+  | _, .cons _ _ _ _ rest, ⟨k + 1, _⟩, u => rest.umake_uelim ⟨k, _⟩ u
+
+end UnionIsos
+
+/-- A program's `Isos`, from one correspondence per named record and per named union. -/
+def Isos.ofLists {N : Names} (rs : RecIsos N N.recs) (us : UnionIsos N N.unions) : Isos N where
+  view := rs.view
+  make := rs.make
+  view_make := rs.view_make
+  make_view := rs.make_view
+  uelim := us.uelim
+  umake := us.umake
+  uelim_umake := us.uelim_umake
+  umake_uelim := us.umake_uelim
+
 mutual
   theorem Ty.eqb_eq_true : ∀ (a b : Ty), a.eqb b = true → a = b
     | .bool, b, h | .int, b, h | .number, b, h | .string, b, h => by cases b <;> simp_all [Ty.eqb]
