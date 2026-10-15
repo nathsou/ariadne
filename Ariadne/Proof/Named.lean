@@ -1,5 +1,7 @@
 import Ariadne.Typed.Named
 import Ariadne.Proof.Idiom
+import Ariadne.Proof.Adequacy
+import Ariadne.Proof.Frame
 
 /-!
 # The denotation over named types is the denotation
@@ -1373,6 +1375,80 @@ mutual
         exact TStmts.safeS_eq body _ _
           (KRel.map I _ _ (Var.conv_widenS I v _ _ (fun z => by rw [Narrowing.conv_embedS]; rfl)) hk) _
 end
+
+end
+
+/-! ## Functions, programs, and what a generated file concludes -/
+
+section
+variable {N : Names} (I : Isos N)
+
+/-- **The denotation over named types is the denotation**: a function body's `denoteFn`, on the
+denotation's values, is its `denoteRSFn` on the converted values, converted back. -/
+theorem TStmts.denoteFn_eq_S {Φ : Sigs} {Γ : Ctx} {τ : Ty} (body : TStmts Φ Γ τ) (fs : Φ.denS N) :
+    body.denoteFn (Sigs.canon N I Φ fs) = fun c => Ty.conv N I τ (body.denoteRSFn N I fs (Ctx.convInv N I Γ c)) := by
+  rw [TStmts.denoteFn_eq_R]
+  funext c
+  conv => lhs; rw [← Ctx.conv_convInv I Γ c]
+  exact (TStmts.denoteRS_conv I fs body (Ty.conv N I τ) id id (fun _ => rfl) _ _
+    (KRel.all I fun _ => Ty.conv_defaultS I τ) (Ctx.convInv N I Γ c)).symm
+
+theorem TStmts.safeFn_eq_S {Φ : Sigs} {Γ : Ctx} {τ : Ty} (body : TStmts Φ Γ τ) (fs : Φ.denS N) (ss : Φ.safetyS N) :
+    body.safeFn (Sigs.canon N I Φ fs) (Sigs.canonSafety N I Φ ss) = fun c => body.safeFnS N I fs ss (Ctx.convInv N I Γ c) := by
+  funext c
+  simp only [TStmts.safeFn, TStmts.safeFnS]
+  split
+  · rfl
+  · conv => lhs; rw [← Ctx.conv_convInv I Γ c]
+    exact (TStmts.safeS_eq I fs ss body _ _ (KRel.all I fun _ => rfl) (Ctx.convInv N I Γ c)).symm
+
+/-- Assemble a program's denotation from per-function equations over named types. -/
+theorem TProgram.denote_consS {Φ : Sigs} {s : Sig} {body : TStmts Φ s.params s.result} {P : TProgram Φ}
+    {fs : Φ.denS N} {g : s.denS N} (hP : P.denote = Sigs.canon N I Φ fs) (hg : body.denoteRSFn N I fs = g) :
+    (TProgram.cons s body P).denote = Sigs.canon N I (s :: Φ) (g, fs) := by
+  rw [TProgram.denote, hP, TStmts.denoteFn_eq_S I body fs, hg]; rfl
+
+theorem TProgram.safety_consS {Φ : Sigs} {s : Sig} {body : TStmts Φ s.params s.result} {P : TProgram Φ}
+    {fs : Φ.denS N} {ss : Φ.safetyS N} {g : s.params.denS N → Bool} (hP : P.denote = Sigs.canon N I Φ fs)
+    (hS : P.safety = Sigs.canonSafety N I Φ ss) (hg : body.safeFnS N I fs ss = g) :
+    (TProgram.cons s body P).safety = Sigs.canonSafety N I (s :: Φ) (g, ss) := by
+  rw [TProgram.safety, hP, hS, TStmts.safeFn_eq_S I body fs ss, hg]; rfl
+
+/-- Adequacy for a file whose readable definitions use named types: every run on arguments representing
+the inputs (converted) converges to a value representing the readable definition's result (converted). -/
+theorem source_ofS {Φ : Sigs} {P : TProgram Φ} {ast : Program} {fs : Φ.denS N} {ss : Φ.safetyS N}
+    (erased : P.erase = ast) (wf : P.WF) (denote_eq : P.denote = Sigs.canon N I Φ fs)
+    (safety_eq : P.safety = Sigs.canonSafety N I Φ ss) {f : String} {s : Sig} (v : FVar Φ f s) (hv : s.void = false)
+    (xs : s.params.denS N) (vs : List JSValue) (args : ArgsRep s.params vs (Ctx.conv N I s.params xs))
+    (safe : FVar.safeS N v ss xs = true) :
+    ∃ w, Converges (fun n => run ast n f vs) (.ok w) ∧ s.result.Rep w (Ty.conv N I s.result (FVar.getS N v fs xs)) := by
+  have h := source_of erased wf denote_eq safety_eq v hv _ vs args (by rw [← FVar.safeS_eq I]; exact safe)
+  rwa [← FVar.conv_getS] at h
+
+theorem source_state_ofS {Φ : Sigs} {P : TProgram Φ} {ast : Program} {fs : Φ.denS N} {ss : Φ.safetyS N}
+    (erased : P.erase = ast) (wf : P.WF) (denote_eq : P.denote = Sigs.canon N I Φ fs)
+    (safety_eq : P.safety = Sigs.canonSafety N I Φ ss) {f : String} {s : Sig} (v : FVar Φ f s) (hv : s.void = true)
+    (xs : s.params.denS N) (this : JSValue) (vs : List JSValue)
+    (args : ArgsRep s.params (this :: vs) (Ctx.conv N I s.params xs)) (safe : FVar.safeS N v ss xs = true) :
+    ∃ w t, Converges (fun n => runMethod ast n f this vs) (.ok (w, t)) ∧
+      s.result.Rep t (Ty.conv N I s.result (FVar.getS N v fs xs)) := by
+  have h := source_state_of erased wf denote_eq safety_eq v hv _ this vs args (by rw [← FVar.safeS_eq I]; exact safe)
+  rwa [← FVar.conv_getS] at h
+
+/-- `frame_of_fn` for a file whose readable definitions use named types. -/
+theorem frame_of_fnS {fs0 : Fields} {g : String} {φ : Ty} (j : FIdx fs0 g φ) {Φ : Sigs} {P : TProgram Φ}
+    {fns : Φ.denS N} (denote_eq : P.denote = Sigs.canon N I Φ fns) {bs : List Bool} (frames_eq : P.frames g = bs)
+    {m name : String} {ps : Ctx} {t : Bool} (fn : FVar Φ m ⟨name, ("this", .record fs0) :: ps, .record fs0, t, true, true⟩)
+    (hf : fn.flag bs = true) {f : Ctx.denS N (("this", .record fs0) :: ps) → Ty.den N (.record fs0)}
+    (hfn : FVar.getS N fn fns = f) {acc : Ty.den N (.record fs0) → φ.den N} (hacc : ∀ r, recGet N I j r = acc r)
+    (this : Ty.den N (.record fs0)) (args : ps.denS N) : acc (f (this, args)) = acc this := by
+  rw [← hacc, ← hacc, ← hfn]
+  apply Ty.conv_injective I φ
+  rw [recGet_conv, recGet_conv]
+  have h := frame_of j denote_eq frames_eq fn hf (Ty.conv N I (.record fs0) this) (Ctx.conv N I ps args)
+  rw [show (Ty.conv N I (.record fs0) this, Ctx.conv N I ps args) = Ctx.conv N I (("this", .record fs0) :: ps) (this, args)
+    from rfl, ← FVar.conv_getS] at h
+  exact h
 
 end
 
