@@ -26,6 +26,23 @@ theorem fold_inv {α σ : Type} (P : σ → Prop) {step : σ → α → σ} :
     fold_inv P ys (fun s' y' hy => hstep s' y' (List.mem_cons_of_mem y hy)) (step s y)
       (hstep s y List.mem_cons_self h)
 
+/-- An invariant of `Ariadne.fold` over the items processed so far (the fold's `forIn_prefix`): each step knows where
+it is in the list. -/
+theorem fold_prefix {α σ : Type} (P : List α → σ → Prop) {step : σ → α → σ} (items : List α)
+    (hstep : ∀ pre y post s, items = pre ++ y :: post → P pre s → P (pre ++ [y]) (step s y)) :
+    ∀ s, P [] s → P items (fold s items step) := by
+  suffices h : ∀ post pre s, items = pre ++ post → P pre s → P items (post.foldl step s) from
+    fun s hs => h items [] s rfl hs
+  intro post
+  induction post with
+  | nil => intro pre s he hs; simp at he; subst he; exact hs
+  | cons y ys ih => intro pre s he hs; exact ih (pre ++ [y]) _ (by simp [he]) (hstep pre y ys s he hs)
+
+/-- A fold computes `g items` when its start is `g []` and each step takes `g pre` to `g (pre ++ [y])`. -/
+theorem fold_eq {α σ : Type} (g : List α → σ) {step : σ → α → σ} {init : σ} (h0 : init = g [])
+    (hstep : ∀ pre y, step (g pre) y = g (pre ++ [y])) (items : List α) : fold init items step = g items :=
+  fold_prefix (fun pre s => s = g pre) items (fun pre y _ _ _ hs => hs ▸ hstep pre y) init h0
+
 /-- A loop whose every iteration only updates the state and continues is a fold. -/
 theorem forIn_fold {α σ R : Type} (g : α → σ → σ) (exit : σ → R) :
     ∀ (items : List α) (s : σ), forIn items (fun y next _ s => next (g y s)) exit s = exit (items.foldl (fun s y => g y s) s)
