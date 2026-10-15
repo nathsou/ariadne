@@ -107,7 +107,7 @@ macro "loop_leaf" hn:ident hx:ident h1:ident h2:ident : tactic => `(tactic| firs
 
 theorem settle_keeps (r : State) (start : JSString) (all : Bool) : Keeps r (settle r start all) := by
   unfold settle; dsimp only
-  refine forIn_inv (fun s => Keeps r s.2.2.2.1) (Keeps r) ?_ ?_ _ _ (Keeps.mk rfl rfl)
+  refine forIn_inv (fun s => Keeps r s.2.2) (Keeps r) ?_ ?_ _ _ (Keeps.mk rfl rfl)
   · intro y next ex s ⟨h1, h2⟩ hn hx
     repeat' split
     all_goals loop_leaf hn hx h1 h2
@@ -321,46 +321,40 @@ theorem cycleOf_cycle (r : State) (id : JSString) : Cycle r id (cycleOf r id) :=
   unfold cycleOf; dsimp only
   have hlen : (Ariadne.range (List.length r.1 : Int)).length = r.1.length := by simp [Ariadne.range]
   refine forIn_inv_len
-    (fun n s => s.2.2.2.1 = r ∧ s.2.2.2.2.1 = id ∧ s.1 = false ∧ up r.1 (r.1.length - n) id = some s.2.1 ∧
-      n ≤ r.1.length ∧ s.2.2.1 = (r.1.length : Int))
-    (fun s => s.2.2.2.1 = r ∧ s.2.2.2.2.1 = id ∧ s.1 = true ∧ s.2.2.1 = (r.1.length : Int) ∧
-      ∃ k, 1 ≤ k ∧ k ≤ r.1.length ∧ up r.1 k id = some id)
+    (fun n s => s.1 = false ∧ up r.1 (r.1.length - n) id = some s.2 ∧ n ≤ r.1.length)
+    (fun s => s.1 = true ∧ ∃ k, 1 ≤ k ∧ k ≤ r.1.length ∧ up r.1 k id = some id)
     (Cycle r id) ?_ ?_ ?_ _ _ ?_
-  · intro y n next ex s ⟨h1, h2, h3, h4, h5, h6⟩ hn hx
+  · intro y n next ex s ⟨h3, h4, h5⟩ hn hx
     split
     · exact Or.inl rfl
     · rename_i sp hsp
-      rw [h1] at hsp
       have hup : up r.1 (r.1.length - n) id = some sp.1 := by
         have : r.1.length - n = (r.1.length - (n + 1)) + 1 := by omega
         rw [this]; simp [up, h4, hsp]
       split
       · rename_i heq
-        refine hx _ ⟨h1, h2, rfl, h6, r.1.length - n, by omega, by omega, ?_⟩
-        rw [hup]; simpa [h2] using heq
-      · exact hn _ ⟨h1, h2, h3, hup, by omega, h6⟩
-  · intro s ⟨_, _, h3, _, _⟩; simp [h3]; exact Or.inl rfl
-  · intro s ⟨h1, h2, h3, h4, k, hk1, hk2, hk⟩
+        refine hx _ ⟨rfl, r.1.length - n, by omega, by omega, ?_⟩
+        rw [hup]; simpa using heq
+      · exact hn _ ⟨h3, hup, by omega⟩
+  · intro s ⟨h3, _, _⟩; simp [h3]; exact Or.inl rfl
+  · intro s ⟨h3, k, hk1, hk2, hk⟩
     simp only [h3, Bool.not_true, Bool.false_eq_true, ite_false]
-    rw [h4]
     refine forIn_inv_len
-      (fun n t => t.2.2.2.2.1 = r ∧ t.2.2.2.2.2.1 = id ∧ t.1.head? = some id ∧ Chain r.1 t.1 ∧
-        t.1.getLast? = some t.2.2.1 ∧ ∃ j, j + n = r.1.length ∧ j < k ∧ up r.1 j id = some t.2.2.1)
+      (fun n t => t.1.head? = some id ∧ Chain r.1 t.1 ∧
+        t.1.getLast? = some t.2 ∧ ∃ j, j + n = r.1.length ∧ j < k ∧ up r.1 j id = some t.2)
       (fun _ => False) (Cycle r id) ?_ ?_ (fun _ h => h.elim) _ _ ?_
-    · intro y n next ex t ⟨g1, g2, g3, g4, g5, j, hj1, hj2, hj3⟩ hn _
+    · intro y n next ex t ⟨g3, g4, g5, j, hj1, hj2, hj3⟩ hn _
       split
       · rename_i hsp
-        rw [g1] at hsp
         have : up r.1 (j + 1) id = none := by simp [up, hj3, hsp]
         rw [up_none r.1 id this k (by omega)] at hk; simp at hk
       · rename_i sp hsp
-        rw [g1] at hsp
         have hup : up r.1 (j + 1) id = some sp.1 := by simp [up, hj3, hsp]
         split
         · rename_i heq
-          exact Or.inr ⟨g3, g4, _, sp, g5, hsp, by simpa [g2] using heq⟩
+          exact Or.inr ⟨g3, g4, _, sp, g5, hsp, by simpa using heq⟩
         · rename_i hne
-          refine hn _ ⟨g1, g2, ?_, ?_, by simp, j + 1, by omega, ?_, hup⟩
+          refine hn _ ⟨?_, ?_, by simp, j + 1, by omega, ?_, hup⟩
           · cases hp : t.1 with
             | nil => simp [hp] at g3
             | cons a l => simp [hp] at g3 ⊢; exact g3
@@ -368,11 +362,11 @@ theorem cycleOf_cycle (r : State) (id : JSString) : Cycle r id (cycleOf r id) :=
           · rcases Nat.lt_or_ge (j + 1) k with h | h
             · exact h
             · have : j + 1 = k := by omega
-              subst this; rw [hup] at hk; simp [g2] at hne; simp at hk; exact absurd hk hne
-    · intro t ⟨_, _, _, _, _, j, hj1, hj2, _⟩; omega
-    · refine ⟨h1, h2, by simp [h2], trivial, by simp [h2], 0, ?_, by omega, by simp [up, h2]⟩
+              subst this; rw [hup] at hk; simp at hne; simp at hk; exact absurd hk hne
+    · intro t ⟨_, _, _, j, hj1, hj2, _⟩; omega
+    · refine ⟨by simp, trivial, by simp, 0, ?_, by omega, by simp [up]⟩
       simp [Ariadne.range]
-  · exact ⟨rfl, rfl, rfl, by simp [hlen, up], by simp [hlen], rfl⟩
+  · exact ⟨rfl, by simp [hlen, up], by simp [hlen]⟩
 
 /-- **`cycleOf` finds every cycle** through `id` no longer than the number of nodes
 with a spot. -/
@@ -381,31 +375,28 @@ theorem cycleOf_finds (r : State) (id : JSString) {k : Nat} (hk1 : 1 ≤ k) (hk2
   unfold cycleOf; dsimp only
   have hlen : (Ariadne.range (List.length r.1 : Int)).length = r.1.length := by simp [Ariadne.range]
   refine forIn_inv_len
-    (fun n s => s.2.2.2.1 = r ∧ s.2.2.2.2.1 = id ∧ up r.1 (r.1.length - n) id = some s.2.1 ∧
-      n ≤ r.1.length ∧ r.1.length - n < k)
+    (fun n s => up r.1 (r.1.length - n) id = some s.2 ∧ n ≤ r.1.length ∧ r.1.length - n < k)
     (fun s => s.1 = true) (· ≠ []) ?_ ?_ ?_ _ _ ?_
-  · intro y n next ex s ⟨h1, h2, h4, h5, h6⟩ hn hx
+  · intro y n next ex s ⟨h4, h5, h6⟩ hn hx
     split
     · rename_i hsp
-      rw [h1] at hsp
       have : up r.1 (r.1.length - n) id = none := by
         have : r.1.length - n = (r.1.length - (n + 1)) + 1 := by omega
         rw [this]; simp [up, h4, hsp]
       rw [up_none r.1 id this k (by omega)] at hk; simp at hk
     · rename_i sp hsp
-      rw [h1] at hsp
       have hup : up r.1 (r.1.length - n) id = some sp.1 := by
         have : r.1.length - n = (r.1.length - (n + 1)) + 1 := by omega
         rw [this]; simp [up, h4, hsp]
       split
       · exact hx _ rfl
       · rename_i hne
-        refine hn _ ⟨h1, h2, hup, by omega, ?_⟩
+        refine hn _ ⟨hup, by omega, ?_⟩
         rcases Nat.lt_or_ge (r.1.length - n) k with h | h
         · exact h
         · have : r.1.length - n = k := by omega
-          rw [this] at hup; rw [hup] at hk; simp at hk; simp [h2, hk] at hne
-  · intro s ⟨_, _, _, _, h6⟩; omega
+          rw [this] at hup; rw [hup] at hk; simp at hk; simp [hk] at hne
+  · intro s ⟨_, _, h6⟩; omega
   · intro s h3
     simp only [h3, Bool.not_true, Bool.false_eq_true, ite_false]
     refine forIn_inv_len (fun _ t => t.1 ≠ []) (fun _ => False) (· ≠ []) ?_ ?_ (fun _ h => h.elim) _ _ (by simp)
@@ -416,7 +407,7 @@ theorem cycleOf_finds (r : State) (id : JSString) {k : Nat} (hk1 : 1 ≤ k) (hk2
         · exact g
         · exact hn _ (by simp)
     · intro t g; exact g
-  · exact ⟨rfl, rfl, by simp [hlen, up], by simp [hlen], by simp [hlen]; omega⟩
+  · exact ⟨by simp [hlen, up], by simp [hlen], by simp [hlen]; omega⟩
 
 /-! ### Every cycle is short enough
 

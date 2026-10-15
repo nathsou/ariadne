@@ -34,15 +34,25 @@ theorem midpoint_between (lo hi : Int) (h : lo < hi) : lo ≤ midpoint lo hi ∧
   simp only [midpoint, fdiv_two]
   omega
 
-/-- The search's loop state: `(hi, lo, xs, target)`. -/
-abbrev State := Int × Int × List Int × Int × Unit
+/-- The search's loop state: the variables it assigns, `(hi, lo)`. -/
+abbrev State := Int × Int
 
 /-- What stays true across iterations: the bounds stay inside the array. -/
-def Bounds (xs : List Int) (target : Int) : State → Prop
-  | (hi, lo, ys, t, ()) => xs = ys ∧ target = t ∧ 0 ≤ lo ∧ lo ≤ hi ∧ hi ≤ xs.length
+def Bounds (xs : List Int) : State → Prop
+  | (hi, lo) => 0 ≤ lo ∧ lo ≤ hi ∧ hi ≤ xs.length
 
 /-- The distance between the bounds, which every iteration shrinks. -/
 def distance : State → Nat
+  | (hi, lo) => (hi - lo).toNat
+
+/-- The safety condition's loop state: the whole environment, `(hi, lo, xs, target)`. -/
+abbrev Env := Int × Int × List Int × Int × Unit
+
+/-- `Bounds` in the safety condition's loop. -/
+def EnvBounds (xs : List Int) (target : Int) : Env → Prop
+  | (hi, lo, ys, t, ()) => xs = ys ∧ target = t ∧ 0 ≤ lo ∧ lo ≤ hi ∧ hi ≤ xs.length
+
+def envDistance : Env → Nat
   | (hi, lo, _) => (hi - lo).toNat
 
 /-- An invariant of a `while` loop that ends: like `whileDo_inv`, but the loop is left only where its
@@ -71,8 +81,8 @@ overflows: the distance `hi - lo` shrinks at every iteration. -/
 theorem indexOf_safe (xs : List Int) (target : Int) (h : xs.length < 2 ^ 53) :
     indexOf.safe xs target = true := by
   unfold indexOf.safe
-  refine whileSafe_of_measure (Bounds xs target) distance ?_ (fun _ _ => rfl) _
-    ⟨rfl, rfl, Int.le_refl 0, by simp, Int.le_refl _⟩ (by simp [distance, loopBound]; omega)
+  refine whileSafe_of_measure (EnvBounds xs target) envDistance ?_ (fun _ _ => rfl) _
+    ⟨rfl, rfl, Int.le_refl 0, by simp, Int.le_refl _⟩ (by simp [envDistance, loopBound]; omega)
   rintro next ex ⟨hi, lo, ys, t, ⟨⟩⟩ ⟨rfl, rfl, h0, hl, hh⟩ hc hn -
   simp only [decide_eq_true_eq] at hc
   have hs := midpoint_safe lo hi h0 (Int.le_of_lt hc) (by simp only [inRange, Nat.ble_eq]; omega)
@@ -85,8 +95,8 @@ theorem indexOf_safe (xs : List Int) (target : Int) (h : xs.length < 2 ^ 53) :
     · split
       · have hr : inRange (midpoint lo hi + 1) = true := by simp only [inRange, Nat.ble_eq]; omega
         rw [hr, Bool.true_and]
-        exact hn _ ⟨rfl, rfl, by omega, by omega, hh⟩ (by simp only [distance]; omega)
-      · exact hn _ ⟨rfl, rfl, h0, by omega, by omega⟩ (by simp only [distance]; omega)
+        exact hn _ ⟨rfl, rfl, by omega, by omega, hh⟩ (by simp only [envDistance]; omega)
+      · exact hn _ ⟨rfl, rfl, h0, by omega, by omega⟩ (by simp only [envDistance]; omega)
 
 /-- **Soundness.** A returned index other than -1 holds the target. -/
 theorem indexOf_found (xs : List Int) (target : Int) (i : Int) (h : indexOf xs target = i) (hi : i ≠ -1) :
@@ -94,9 +104,9 @@ theorem indexOf_found (xs : List Int) (target : Int) (i : Int) (h : indexOf xs t
   subst h
   revert hi
   unfold indexOf
-  refine whileDo_inv (Bounds xs target) (fun r => r ≠ -1 → 0 ≤ r ∧ xs[r.toNat]? = some target) ?_
-    (fun _ _ h => absurd rfl h) ((xs.length : Int), 0, xs, target, ()) ⟨rfl, rfl, Int.le_refl 0, by simp, Int.le_refl _⟩
-  rintro next ex ⟨hi, lo, ys, t, ⟨⟩⟩ ⟨rfl, rfl, h0, hl, hh⟩ hc hn -
+  refine whileDo_inv (Bounds xs) (fun r => r ≠ -1 → 0 ≤ r ∧ xs[r.toNat]? = some target) ?_
+    (fun _ _ h => absurd rfl h) ((xs.length : Int), 0) ⟨Int.le_refl 0, by simp, Int.le_refl _⟩
+  rintro next ex ⟨hi, lo⟩ ⟨h0, hl, hh⟩ hc hn -
   simp only [decide_eq_true_eq] at hc
   have hm := midpoint_between lo hi hc
   dsimp only
@@ -110,20 +120,20 @@ theorem indexOf_found (xs : List Int) (target : Int) (i : Int) (h : indexOf xs t
       simp only [listIndex, show 0 ≤ midpoint lo hi by omega, ite_true] at hv
       exact ⟨by omega, he ▸ hv⟩
     · split
-      · exact hn _ ⟨rfl, rfl, by omega, by omega, hh⟩
-      · exact hn _ ⟨rfl, rfl, h0, by omega, by omega⟩
+      · exact hn _ ⟨by omega, by omega, hh⟩
+      · exact hn _ ⟨h0, by omega, by omega⟩
 
 /-- Every occurrence of the target lies between the bounds. -/
 def Brackets (xs : List Int) (target : Int) : State → Prop
-  | (hi, lo, _) => ∀ k : Nat, xs[k]? = some target → lo ≤ k ∧ (k : Int) < hi
+  | (hi, lo) => ∀ k : Nat, xs[k]? = some target → lo ≤ k ∧ (k : Int) < hi
 
 /-- **Completeness.** In a sorted array, a target that is present is found. -/
 theorem indexOf_complete (xs : List Int) (target : Int) (sorted : xs.Pairwise (· ≤ ·)) (mem : target ∈ xs)
     (h : xs.length < 2 ^ 53) : indexOf xs target ≠ -1 := by
   unfold indexOf
-  refine whileDo_measure (fun s => Bounds xs target s ∧ Brackets xs target s) (· ≠ -1) distance ?_ ?_ _
-    ⟨⟨rfl, rfl, Int.le_refl 0, by simp, Int.le_refl _⟩, fun k hk => ?_⟩ (by simp [distance, loopBound]; omega)
-  · rintro next ex ⟨hi, lo, ys, t, ⟨⟩⟩ ⟨⟨rfl, rfl, h0, hl, hh⟩, hocc⟩ hc hn -
+  refine whileDo_measure (fun s => Bounds xs s ∧ Brackets xs target s) (· ≠ -1) distance ?_ ?_ _
+    ⟨⟨Int.le_refl 0, by simp, Int.le_refl _⟩, fun k hk => ?_⟩ (by simp [distance, loopBound]; omega)
+  · rintro next ex ⟨hi, lo⟩ ⟨⟨h0, hl, hh⟩, hocc⟩ hc hn -
     simp only [decide_eq_true_eq] at hc
     have hm := midpoint_between lo hi hc
     have hmid : (0 : Int) ≤ midpoint lo hi := by omega
@@ -141,7 +151,7 @@ theorem indexOf_complete (xs : List Int) (target : Int) (sorted : xs.Pairwise (�
         split
         · rename_i hvt
           simp only [decide_eq_true_eq] at hvt
-          refine hn _ ⟨⟨rfl, rfl, by omega, by omega, hh⟩, fun k hk => ?_⟩ (by simp only [distance]; omega)
+          refine hn _ ⟨⟨by omega, by omega, hh⟩, fun k hk => ?_⟩ (by simp only [distance]; omega)
           obtain ⟨hk1, hk2⟩ := hocc k hk
           refine ⟨?_, hk2⟩
           -- Every element up to the midpoint is at most `v`, which is below the target.
@@ -156,7 +166,7 @@ theorem indexOf_complete (xs : List Int) (target : Int) (sorted : xs.Pairwise (�
           omega
         · rename_i hvt
           simp only [decide_eq_true_eq, Int.not_lt] at hvt
-          refine hn _ ⟨⟨rfl, rfl, h0, by omega, by omega⟩, fun k hk => ?_⟩ (by simp only [distance]; omega)
+          refine hn _ ⟨⟨h0, by omega, by omega⟩, fun k hk => ?_⟩ (by simp only [distance]; omega)
           obtain ⟨hk1, hk2⟩ := hocc k hk
           refine ⟨hk1, ?_⟩
           -- Every element from the midpoint on is at least `v`, which is above the target.
@@ -170,7 +180,7 @@ theorem indexOf_complete (xs : List Int) (target : Int) (sorted : xs.Pairwise (�
             · simp [hk']
           omega
   · -- The loop ends with `lo ≥ hi`, but an occurrence would lie between them.
-    rintro ⟨hi, lo, ys, t, ⟨⟩⟩ ⟨⟨rfl, rfl, h0, hl, hh⟩, hocc⟩ hc
+    rintro ⟨hi, lo⟩ ⟨⟨h0, hl, hh⟩, hocc⟩ hc
     simp only [decide_eq_false_iff_not, Int.not_lt] at hc
     obtain ⟨k, hk⟩ := List.mem_iff_getElem?.mp mem
     have := hocc k hk

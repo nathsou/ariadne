@@ -58,8 +58,7 @@ section
 open Tests.Generated.Loops
 
 /-- The loop in `sum`, from an accumulator. -/
-theorem fold_sum (ys zs : List Int) (acc : Int) :
-    (Ariadne.fold ((acc, zs, ()) : Int × List Int × Unit) ys (fun s x => (s.1 + x, s.2.1, ()))).1 = acc + ys.sum := by
+theorem fold_sum (ys : List Int) (acc : Int) : Ariadne.fold acc ys (fun total x => total + x) = acc + ys.sum := by
   induction ys generalizing acc with
   | nil => simp [Ariadne.fold]
   | cons y ys ih =>
@@ -68,20 +67,18 @@ theorem fold_sum (ys zs : List Int) (acc : Int) :
 
 /-- `sum` computes the sum of its array. -/
 theorem sum_eq (xs : List Int) : sum xs = xs.sum := by
-  simpa [sum] using fold_sum xs xs 0
+  simpa [sum] using fold_sum xs 0
 
 /-- `sum`'s loop never leaves early, so its readable definition is a fold, by definition. -/
-theorem sum_foldl (xs : List Int) : sum xs = (xs.foldl (fun s x => (s.1 + x, s.2)) ((0 : Int), xs, ())).1 := rfl
+theorem sum_foldl (xs : List Int) : sum xs = xs.foldl (· + ·) 0 := rfl
 
 /-- `countTagged`'s loop too, though its iterations branch. -/
 theorem countTagged_foldl (items : List Item) (tag : JSString) :
-    countTagged items tag = (items.foldl (fun s it => if it.tags.any (· == s.2.2.1) then (s.1 + 1, s.2) else s)
-      ((0 : Int), items, tag, ())).1 := by
-  show (List.foldl _ ((0 : Int), items, tag, ()) items).1 = _
-  congr 2
-  funext s it
-  obtain ⟨n, is, t, ⟨⟩⟩ := s
-  by_cases h : it.tags.any (· == t) <;> simp [h]
+    countTagged items tag = items.foldl (fun n it => if it.tags.any (· == tag) then n + 1 else n) 0 := by
+  show List.foldl _ 0 items = _
+  congr 1
+  funext n it
+  by_cases h : it.tags.any (· == tag) <;> simp [h]
 
 /-- `firstAbove`'s `while` loop ends, and its index stays exact, on arrays shorter than 2^53: the
 measure is the number of elements left. -/

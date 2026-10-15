@@ -1137,6 +1137,17 @@ structure Block where
   falls : Bool
   breaks : Bool
   continues : Bool
+  /-- The variables of the scope the statements may assign (`TStmts.writes`). -/
+  writes : List String := []
+  /-- No `return`, no `break` of its own, no `continue` of its own (`TStmts.noRet`, `noBrk`, `noCont`). -/
+  noRet : Bool := true
+  noBrk : Bool := true
+  noCont : Bool := true
+
+/-- Always completes normally (`TStmts.closed`). -/
+def Block.closed (b : Block) : Bool := b.noRet && b.noBrk && b.noCont
+
+def _root_.List.unite (a b : List String) : List String := a ++ b.filter (!a.contains ·)
 
 def blockNil : Block where
   typed := ".nil"
@@ -1195,6 +1206,24 @@ def statePattern (s : Scope) (text : String) : String :=
     | some .multi => s!"((), {ident x})"
     | none => ident x) ++ ["()"]) ++ ")"
 
+/-- The variables of the scope a statement assigns, in the scope's order (`Ctx.sub`). -/
+def Scope.stateVars (s : Scope) (ws : List String) : List String := (s.locals.filter (ws.contains ·.1)).map (·.1)
+
+/-- A state: the assigned variables as a flat tuple (`Ctx.tup`), as a term or a pattern. -/
+def Scope.stateText (s : Scope) (ws : List String) : String :=
+  match s.stateVars ws with
+  | [] => "()"
+  | [x] => s.valueText x
+  | xs => "(" ++ ", ".intercalate (xs.map s.valueText) ++ ")"
+
+/-- The value of an `if`, null test or `switch` whose branches are closed: `let state := branches; rest`. -/
+def branchValueText (s : Scope) (ws : List String) (branches : String → KText → String) (rest : String) (i : String) :
+    String :=
+  let st := s.stateText ws
+  let kv : KText := ⟨fun _ => st, fun _ => st, fun _ => st⟩
+  let j := i ++ "  "
+  s!"let {st} :=\n{j}{branches j kv}\n{i}{rest}"
+
 /-- Readable `switch`: a match on the union's constructors (or nested matches on its sum), one leaf per
 variant; a narrowed variable is bound to its variant's payload. -/
 def switchLeaves (render : Block → String → KText → String) (x : String) (ctors : Option (List String))
@@ -1233,9 +1262,14 @@ def switchLeaves (render : Block → String → KText → String) (x : String) (
 /-- `if (c) yes else no; rest`, rendered for the denotation or the safety condition.
 When both branches may complete, the rest is bound once as a join point instead of
 being repeated in each branch. -/
-def iteText (render : Block → String → KText → String) (s : Scope) (c : String)
+def iteText (render : Block → String → KText → String) (idiom : Bool) (s : Scope) (c : String)
     (yes no rest : Block) (i : String) (k : KText) : String :=
   let j := i ++ "  "
+  if idiom && yes.closed && no.closed then
+    branchValueText s (yes.writes.unite no.writes) (fun j kv =>
+      let j' := j ++ "  "
+      s!"if {c} then\n{j'}{render yes j' kv}\n{j}else\n{j'}{render no j' kv}") (render rest i k) i
+  else
   if yes.falls && no.falls && rest.typed != ".nil" then
     let after := s!"after{i.length}'"
     let k' := { k with normal := fun _ => s!"{after} {tupleText s}" }
@@ -1246,43 +1280,32 @@ def iteText (render : Block → String → KText → String) (s : Scope) (c : St
     let k' := { k with normal := fun j' => render rest j' k }
     s!"if {c} then\n{j}{render yes j k'}\n{i}else\n{j}{render no j k'}"
 
-/-- No `return` in the statements, at any depth: the typed syntax's `ret` and `retVoid` come from these only
-(`TStmts.noRet`). -/
-partial def stmtNoReturn : Parse.Stmt → Bool
-  | .block ss _ => ss.all stmtNoReturn
-  | .return_ .. => false
-  | .if_ _ yes no _ => stmtNoReturn yes && stmtNoReturn no
-  | .while_ _ body _ | .forOf _ _ _ body _ | .forOfPair _ _ _ _ body _ | .measured _ body _ => stmtNoReturn body
-  | .for_ _ _ _ body _ => stmtNoReturn body
-  | .switch_ _ cases _ => cases.all (·.2.all stmtNoReturn)
-  | _ => true
-
-/-- No `break` of the enclosing loop: none outside nested loops and `switch`es (`TStmts.noBrk`). -/
-partial def stmtNoBreak : Parse.Stmt → Bool
-  | .block ss _ => ss.all stmtNoBreak
-  | .break_ _ => false
-  | .if_ _ yes no _ => stmtNoBreak yes && stmtNoBreak no
-  | _ => true
-
-/-- A loop body the readable definition writes in direct style, as a fold (`TStmts.direct`). -/
-def directBody (body : List Parse.Stmt) : Bool := body.all stmtNoReturn && body.all stmtNoBreak
-
-/-- A loop: `Ariadne.forIn items (fun binder next exit state => body) (fun state => rest) tuple`, or, when its
-body is direct (`fold`), `let state := Ariadne.fold tuple items (fun state binder => body); rest`. -/
+/-- A loop: `Ariadne.forIn items (fun binder next exit state => body) (fun state => rest) state`, or, when its
+body is direct, `let state := Ariadne.fold state items (fun state binder => body); rest`. The readable
+definition's state is the variables the body assigns (`idiom`, `TStmts.denoteR`); the safety condition's is
+the whole environment. -/
 def loopText (render : Block → String → KText → String) (s : Scope) (items binder : String)
     (pre : String → String)
-    (body rest : Block) (fold : Bool) (i : String) (k : KText) : String :=
+    (body rest : Block) (idiom : Bool) (i : String) (k : KText) : String :=
   let d := i.length
   let (nx, ex) := (s!"next{d}'", s!"exit{d}'")
   let tup := tupleText s
   let j := i ++ "  "
+  -- The state: the variables the body assigns (`TStmts.denoteR`).
+  let st := s.stateText body.writes
   -- A body with no `return` and no `break` of its own (`TStmts.direct`): a fold, the body ending with the
-  -- variables' new values.
-  if fold then
-    let kd : KText := ⟨fun _ => tup, fun _ => tup, fun _ => tup⟩
+  -- state.
+  if idiom && body.noRet && body.noBrk then
+    let kd : KText := ⟨fun _ => st, fun _ => st, fun _ => st⟩
     let bodyText := s!"{pre j}{render body j kd}"
     let restText := render rest i k
-    s!"let {statePattern s restText} := Ariadne.fold {tup} {items} (fun {statePattern s bodyText} {binder} =>\n{j}{bodyText})\n{i}{restText}"
+    s!"let {st} := Ariadne.fold {st} {items} (fun {st} {binder} =>\n{j}{bodyText})\n{i}{restText}"
+  else if idiom then
+    let kb : KText := ⟨fun _ => s!"{nx} {st}", fun _ => s!"{ex} {st}", fun _ => s!"{nx} {st}"⟩
+    let bodyText := s!"{pre j}{render body j kb}"
+    let restText := render rest j k
+    s!"Ariadne.forIn {items} (fun {binder} {nx} {ex} {st} =>\n{j}{bodyText})\n{i}  " ++
+      s!"(fun {st} =>\n{j}{restText})\n{i}  {st}"
   else
   let kb : KText := ⟨fun _ => s!"{nx} {tup}", fun _ => s!"{ex} {tup}", fun _ => s!"{nx} {tup}"⟩
   let bodyText := s!"{pre j}{render body j kb}"
@@ -1293,11 +1316,19 @@ def loopText (render : Block → String → KText → String) (s : Scope) (items
 /-- A `while` loop: `Ariadne.whileDo (fun state => c) (fun next exit state => body) (fun state => rest) tuple`,
 and `Ariadne.whileSafe` for the safety condition. -/
 def whileText (render : Block → String → KText → String) (s : Scope) (fn c : String) (body rest : Block)
-    (i : String) (k : KText) : String :=
+    (idiom : Bool) (i : String) (k : KText) : String :=
   let d := i.length
   let (nx, ex) := (s!"next{d}'", s!"exit{d}'")
-  let tup := tupleText s
   let j := i ++ "  "
+  if idiom then
+    let st := s.stateText body.writes
+    let kb : KText := ⟨fun _ => s!"{nx} {st}", fun _ => s!"{ex} {st}", fun _ => s!"{nx} {st}"⟩
+    let bodyText := render body j kb
+    let restText := render rest j k
+    s!"{fn} (fun {st} => {c})\n{i}  (fun {nx} {ex} {st} =>\n{j}{bodyText})\n{i}  " ++
+      s!"(fun {st} =>\n{j}{restText})\n{i}  {st}"
+  else
+  let tup := tupleText s
   let kb : KText := ⟨fun _ => s!"{nx} {tup}", fun _ => s!"{ex} {tup}", fun _ => s!"{nx} {tup}"⟩
   let bodyText := render body j kb
   let restText := render rest j k
@@ -1320,7 +1351,8 @@ mutual
              readable := fun i k => s!"let {ident x} : {T.lean v.ty} := {v.readable}\n{i}{rest.readable i k}",
              safe := fun i k => andText v.ok s!"let {ident x} : {T.lean v.ty} := {v.readable}\n{i}{rest.safe i k}",
              trivial := v.trivial && rest.trivial,
-             falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
+             falls := rest.falls, breaks := rest.breaks, continues := rest.continues,
+             writes := rest.writes.erase x, noRet := rest.noRet, noBrk := rest.noBrk, noCont := rest.noCont }
     | .let_ true x annotation e span :: rest => do
       let expected ← annotation.mapM (T.resolve span 64)
       let v ← checkExpr T s e expected
@@ -1330,7 +1362,8 @@ mutual
              readable := fun i k => s!"let {ident x} : {T.lean v.ty} := {v.readable}\n{i}{rest.readable i k}",
              safe := fun i k => andText v.ok s!"let {ident x} : {T.lean v.ty} := {v.readable}\n{i}{rest.safe i k}",
              trivial := v.trivial && rest.trivial,
-             falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
+             falls := rest.falls, breaks := rest.breaks, continues := rest.continues,
+             writes := rest.writes.erase x, noRet := rest.noRet, noBrk := rest.noBrk, noCont := rest.noCont }
     | .assign (.var x _) e span :: rest => do
       let some (j, τ) := s.lookup x | throw { code := "A2001", message := s!"unknown variable '{x}'", span }
       if !s.mutables.contains x then mismatch span s!"'{x}' is not assignable (a const declaration)"
@@ -1350,11 +1383,13 @@ mutual
              readable := fun i k => bindIn i (rest.readable i k),
              safe := fun i k => andText v.ok (bindIn i (rest.safe i k)),
              trivial := v.trivial && rest.trivial,
-             falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
+             falls := rest.falls, breaks := rest.breaks, continues := rest.continues,
+             writes := [x].unite rest.writes, noRet := rest.noRet, noBrk := rest.noBrk, noCont := rest.noCont }
     | .continue_ _ :: rest => do
       let rest ← checkStmts T s result rest
       pure { typed := s!"(.cont {rest.typed})", readable := (fun i k => k.cont i), safe := (fun i k => k.cont i),
-             trivial := rest.trivial, falls := false, breaks := false, continues := true }
+             trivial := rest.trivial, falls := false, breaks := false, continues := true,
+             noRet := rest.noRet, noBrk := rest.noBrk, noCont := false }
     | .while_ c body span :: rest => do
       let c ← checkExpr T s c (some .bool)
       -- The condition is evaluated at every iteration; its safety would join the loop's.
@@ -1362,12 +1397,13 @@ mutual
       let body ← checkStmts T s result (branchStmts body)
       let rest ← checkStmts T s result rest
       pure { typed := s!"(.whileLoop {c.typed}\n  {body.typed}\n  {rest.typed})",
-             readable := whileText (·.readable) s "Ariadne.whileDo" c.readable body rest,
-             safe := whileText (·.safe) s "Ariadne.whileSafe" c.readable body rest,
-             trivial := false, falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
+             readable := whileText (·.readable) s "Ariadne.whileDo" c.readable body rest true,
+             safe := whileText (·.safe) s "Ariadne.whileSafe" c.readable body rest false,
+             trivial := false, falls := rest.falls, breaks := rest.breaks, continues := rest.continues,
+             writes := body.writes.unite rest.writes, noRet := body.noRet && rest.noRet, noBrk := rest.noBrk,
+             noCont := rest.noCont }
     | .forOf false x e body span :: rest => do
       let body := branchStmts body
-      let bodyStmts := body
       let a ← inferExpr T s e none
       let .array σ := a.ty | mismatch span s!"for-of over {a.ty.ts}"
       let body ← checkStmts T (← declare s span x σ) result body
@@ -1375,9 +1411,11 @@ mutual
       let text (render : Block → String → KText → String) :=
         loopText render s a.term (ident x) (fun _ => "") body rest
       pure { typed := s!"(.forOf {leanString x} {a.typed}\n  {body.typed}\n  {rest.typed})",
-             readable := text (·.readable) (directBody bodyStmts), safe := fun i k => andText a.ok (text (·.safe) false i k),
+             readable := text (·.readable) true, safe := fun i k => andText a.ok (text (·.safe) false i k),
              trivial := a.trivial && body.trivial && rest.trivial,
-             falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
+             falls := rest.falls, breaks := rest.breaks, continues := rest.continues,
+             writes := (body.writes.erase x).unite rest.writes, noRet := body.noRet && rest.noRet, noBrk := rest.noBrk,
+             noCont := rest.noCont }
     | .for_ (.let_ true i _ (.literal (.number 0 0) _) _) (.binary "<" (.var i₁ _) (.var n _) _)
         update body span :: rest => do
       if !(i₁ == i && incrementOf update == some i) then unsupportedTy span "this for loop"
@@ -1391,13 +1429,14 @@ mutual
       let text (render : Block → String → KText → String) :=
         loopText render s s!"(Ariadne.range {ident n})" (ident i) (fun _ => "") body rest
       pure { typed := s!"(.forRange {leanString i} {s.varPath j}\n  {body.typed}\n  {rest.typed})",
-             readable := text (·.readable) (directBody bodyStmts), safe := text (·.safe) false, trivial := body.trivial && rest.trivial,
-             falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
+             readable := text (·.readable) true, safe := text (·.safe) false, trivial := body.trivial && rest.trivial,
+             falls := rest.falls, breaks := rest.breaks, continues := rest.continues,
+             writes := (body.writes.erase i).unite rest.writes, noRet := body.noRet && rest.noRet, noBrk := rest.noBrk,
+             noCont := rest.noCont }
     | .forOfPair false ix x (.call (.member e "entries" _) [] _) (.block body _) span :: rest => do
       let a ← inferExpr T s e none
       let .array σ := a.ty | mismatch span s!"entries of {a.ty.ts}"
       if ix == x then mismatch span "an index and an element of the same name"
-      let bodyStmts := body
       let body ← checkStmts T (← declare (← declare s span ix .number) span x σ) result body
       let rest ← checkStmts T s result rest
       let p := s!"n{s.locals.length}'"
@@ -1405,20 +1444,24 @@ mutual
         loopText render s (if (listCall a.term "zipIdx").startsWith "List." then s!"({listCall a.term "zipIdx"})" else listCall a.term "zipIdx") s!"({ident x}, {p})"
           (fun j => s!"let {ident ix} := ({p} : Int)\n{j}") body rest
       pure { typed := s!"(.forEntries {leanString ix} {leanString x} {a.typed}\n  {body.typed}\n  {rest.typed})",
-             readable := text (·.readable) (directBody bodyStmts), safe := fun i k => andText a.ok (text (·.safe) false i k),
+             readable := text (·.readable) true, safe := fun i k => andText a.ok (text (·.safe) false i k),
              trivial := a.trivial && body.trivial && rest.trivial,
-             falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
+             falls := rest.falls, breaks := rest.breaks, continues := rest.continues,
+             writes := ((body.writes.erase x).erase ix).unite rest.writes, noRet := body.noRet && rest.noRet,
+             noBrk := rest.noBrk, noCont := rest.noCont }
     | .return_ e span :: rest => do
       if s.void then
         let .literal .undefined _ := e | mismatch span "a value returned from a method returning void"
         let some (ti, _) := s.lookup "this" | mismatch span "'this' outside a method"
         let rest ← checkStmts T s result rest
         return { typed := s!"(.retVoid {s.varPath ti} {rest.typed})", readable := fun _ _ => ident "this",
-                 safe := fun _ _ => "true", trivial := rest.trivial, falls := false, breaks := false, continues := false }
+                 safe := fun _ _ => "true", trivial := rest.trivial, falls := false, breaks := false, continues := false,
+                 noRet := false, noBrk := rest.noBrk, noCont := rest.noCont }
       let v ← checkExpr T s e (some result)
       let rest ← checkStmts T s result rest
       pure { typed := s!"(.ret {v.typed} {rest.typed})", readable := fun _ _ => v.readable, safe := fun _ _ => v.ok,
-             trivial := v.trivial && rest.trivial, falls := false, breaks := false, continues := false }
+             trivial := v.trivial && rest.trivial, falls := false, breaks := false, continues := false,
+             noRet := false, noBrk := rest.noBrk, noCont := rest.noCont }
     | .expr (.call (.member (.member (.var "this" _) f _) op _) args _) span :: rest => do
       if !s.void then mismatch span "only a method returning void may change the state"
       let (path, fs, j, τ) ← s.stateField span f
@@ -1445,7 +1488,8 @@ mutual
              readable := fun i k => s!"{upd}\n{i}{rest.readable i k}",
              safe := fun i k => andText operands s!"{upd}\n{i}{rest.safe i k}",
              trivial := key.trivial && others.all (·.trivial) && rest.trivial,
-             falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
+             falls := rest.falls, breaks := rest.breaks, continues := rest.continues,
+             writes := ["this"].unite rest.writes, noRet := rest.noRet, noBrk := rest.noBrk, noCont := rest.noCont }
     | .expr (.call (.member (.var "this" _) m _) args _) span :: rest => do
       if !s.void then mismatch span "only a method returning void may change the state"
       let (fpath, sig) ← s.methodRef span m
@@ -1464,11 +1508,13 @@ mutual
              readable := fun i k => s!"{upd}\n{i}{rest.readable i k}",
              safe := fun i k => andText callSafe s!"{upd}\n{i}{rest.safe i k}",
              trivial := argsT && sig.trivial && rest.trivial,
-             falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
+             falls := rest.falls, breaks := rest.breaks, continues := rest.continues,
+             writes := ["this"].unite rest.writes, noRet := rest.noRet, noBrk := rest.noBrk, noCont := rest.noCont }
     | .break_ _ :: rest => do
       let rest ← checkStmts T s result rest
       pure { typed := s!"(.brk {rest.typed})", readable := (fun i k => k.brk i), safe := (fun i k => k.brk i),
-             trivial := rest.trivial, falls := false, breaks := true, continues := false }
+             trivial := rest.trivial, falls := false, breaks := true, continues := false,
+             noRet := rest.noRet, noBrk := false, noCont := rest.noCont }
     | .block body _ :: rest => do
       let body ← checkStmts T s result body
       let rest ← checkStmts T s result rest
@@ -1477,7 +1523,9 @@ mutual
              safe := fun i k => body.safe i { k with normal := fun j => rest.safe j k },
              trivial := body.trivial && rest.trivial,
              falls := body.falls && rest.falls, breaks := body.breaks || (body.falls && rest.breaks),
-             continues := body.continues || (body.falls && rest.continues) }
+             continues := body.continues || (body.falls && rest.continues),
+             writes := body.writes.unite rest.writes, noRet := body.noRet && rest.noRet,
+             noBrk := body.noBrk && rest.noBrk, noCont := body.noCont && rest.noCont }
     | .if_ c yes no span :: rest =>
       match nullTestVar c with
       | some (x, isNull) => checkNullIf T s result x isNull (branchStmts yes) (branchStmts no) span rest
@@ -1488,9 +1536,11 @@ mutual
         let rest ← checkStmts T s result rest
         let (falls, breaks, continues) := flagsIte yes no rest
         pure { typed := s!"(.ite {c.typed}\n  {yes.typed}\n  {no.typed}\n  {rest.typed})",
-               readable := iteText (·.readable) s c.readable yes no rest,
-               safe := fun i k => andText c.ok (iteText (·.safe) s c.readable yes no rest i k),
-               trivial := c.trivial && yes.trivial && no.trivial && rest.trivial, falls, breaks, continues }
+               readable := iteText (·.readable) true s c.readable yes no rest,
+               safe := fun i k => andText c.ok (iteText (·.safe) false s c.readable yes no rest i k),
+               trivial := c.trivial && yes.trivial && no.trivial && rest.trivial, falls, breaks, continues,
+               writes := yes.writes.unite (no.writes.unite rest.writes), noRet := yes.noRet && no.noRet && rest.noRet,
+               noBrk := yes.noBrk && no.noBrk && rest.noBrk, noCont := yes.noCont && no.noCont && rest.noCont }
     | .switch_ e cases span :: rest => checkSwitch T s result e cases span rest
     | st :: _ => unsupportedTy st.span "this statement"
 
@@ -1509,29 +1559,41 @@ mutual
         return { typed := s!"(.ifNullExit {path} (by decide +kernel)\n  {yes.typed}\n  {rest.typed})",
                  readable := text (·.readable), safe := text (·.safe), trivial := yes.trivial && rest.trivial,
                  falls := rest.falls, breaks := yes.breaks || rest.breaks,
-                 continues := yes.continues || rest.continues }
+                 continues := yes.continues || rest.continues,
+                 writes := yes.writes.unite rest.writes, noRet := yes.noRet && rest.noRet,
+                 noBrk := yes.noBrk && rest.noBrk, noCont := yes.noCont && rest.noCont }
       let no ← checkStmts T narrowed result noSs
       let rest ← checkStmts T s result rest
-      let text (render : Block → String → KText → String) (i : String) (k : KText) :=
-        let j := i ++ "  "
-        let k' := { k with normal := fun j' => render rest j' k }
-        s!"match {ident x} with\n{i}| none =>\n{j}{render yes j k'}\n{i}| some {ident x} =>\n{j}{render no j (k'.wrap n)}"
+      let text (render : Block → String → KText → String) (idiom : Bool) (i : String) (k : KText) :=
+        let arms (j : String) (k' : KText) :=
+          let j' := j ++ "  "
+          s!"match {ident x} with\n{j}| none =>\n{j'}{render yes j' k'}\n{j}| some {ident x} =>\n{j'}{render no j' (k'.wrap n)}"
+        if idiom && yes.closed && no.closed then
+          branchValueText s (yes.writes.unite no.writes) arms (render rest i k) i
+        else arms i { k with normal := fun j' => render rest j' k }
       let (falls, breaks, continues) := flagsIte yes no rest
       return { typed := s!"(.ifNull {path} (by decide +kernel)\n  {yes.typed}\n  {no.typed}\n  {rest.typed})",
-               readable := text (·.readable), safe := text (·.safe),
-               trivial := yes.trivial && no.trivial && rest.trivial, falls, breaks, continues }
+               readable := text (·.readable) true, safe := text (·.safe) false,
+               trivial := yes.trivial && no.trivial && rest.trivial, falls, breaks, continues,
+               writes := yes.writes.unite (no.writes.unite rest.writes), noRet := yes.noRet && no.noRet && rest.noRet,
+               noBrk := yes.noBrk && no.noBrk && rest.noBrk, noCont := yes.noCont && no.noCont && rest.noCont }
     else
       let yes ← checkStmts T narrowed result yesSs
       let no ← checkStmts T s result noSs
       let rest ← checkStmts T s result rest
-      let text (render : Block → String → KText → String) (i : String) (k : KText) :=
-        let j := i ++ "  "
-        let k' := { k with normal := fun j' => render rest j' k }
-        s!"match {ident x} with\n{i}| some {ident x} =>\n{j}{render yes j (k'.wrap n)}\n{i}| none =>\n{j}{render no j k'}"
+      let text (render : Block → String → KText → String) (idiom : Bool) (i : String) (k : KText) :=
+        let arms (j : String) (k' : KText) :=
+          let j' := j ++ "  "
+          s!"match {ident x} with\n{j}| some {ident x} =>\n{j'}{render yes j' (k'.wrap n)}\n{j}| none =>\n{j'}{render no j' k'}"
+        if idiom && yes.closed && no.closed then
+          branchValueText s (yes.writes.unite no.writes) arms (render rest i k) i
+        else arms i { k with normal := fun j' => render rest j' k }
       let (falls, breaks, continues) := flagsIte yes no rest
       return { typed := s!"(.ifNotNull {path} (by decide +kernel)\n  {yes.typed}\n  {no.typed}\n  {rest.typed})",
-               readable := text (·.readable), safe := text (·.safe),
-               trivial := yes.trivial && no.trivial && rest.trivial, falls, breaks, continues }
+               readable := text (·.readable) true, safe := text (·.safe) false,
+               trivial := yes.trivial && no.trivial && rest.trivial, falls, breaks, continues,
+               writes := yes.writes.unite (no.writes.unite rest.writes), noRet := yes.noRet && no.noRet && rest.noRet,
+               noBrk := yes.noBrk && no.noBrk && rest.noBrk, noCont := yes.noCont && no.noCont && rest.noCont }
 
   /-- `switch (x.key)` over a union-typed local: cases in any order, grouped labels and
   `default`. A case with one label (not reached by falling through) narrows `x`. -/
@@ -1604,14 +1666,23 @@ mutual
     let covers := labels.contains none || variants.all fun (t, _) => labels.contains (some t)
     let f := armsFalls || bodies.any (·.breaks) || !covers
     let arities := variants.map fun (_, fs) => (Fields.toList fs).length
-    let text (render : Block → String → KText → String) (ind : String) (k : KText) :=
+    -- Cases that always go on after the `switch` (`TArms.closed`).
+    let closed := bodies.all fun b => b.noRet && b.noCont
+    let armsWrites := bodies.foldr (fun b acc => b.writes.unite acc) []
+    let text (render : Block → String → KText → String) (idiom : Bool) (ind : String) (k : KText) :=
+      if idiom && closed then
+        branchValueText s armsWrites (fun j kv => switchLeaves render x (T.ctorNames? τ) arities leaves kv (ident x) j)
+          (render rest ind k) ind
+      else
       let kr := fun j => render rest j k
       switchLeaves render x (T.ctorNames? τ) arities leaves { k with normal := kr, brk := kr } (ident x) ind
     pure { typed := s!"(.switchG {s.varPath i} (by decide +kernel)\n  {armsTyped}\n  {rest.typed})",
-           readable := text (·.readable), safe := text (·.safe),
+           readable := text (·.readable) true, safe := text (·.safe) false,
            trivial := bodies.all (·.trivial) && rest.trivial,
            falls := f && rest.falls, breaks := f && rest.breaks,
-           continues := bodies.any (·.continues) || (f && rest.continues) }
+           continues := bodies.any (·.continues) || (f && rest.continues),
+           writes := armsWrites.unite rest.writes, noRet := bodies.all (·.noRet) && rest.noRet,
+           noBrk := rest.noBrk, noCont := bodies.all (·.noCont) && rest.noCont }
 end
 
 /-! ## Functions and files -/
@@ -1874,7 +1945,7 @@ definitions, and per-function source theorems. -/
 def printFile (source namespace_ : String) (ast : Program) (T : Types) (fns : List CheckedFn) : String := Id.run do
   -- A line comment: a path may contain `/-`, which would open a block comment.
   let name := ((source.splitOn "/").getLast?.getD source).map fun c => if c == '\n' || c == '\r' then ' ' else c
-  let mut out := s!"import Ariadne.Proof.Adequacy\nimport Ariadne.Proof.Frame\nimport Ariadne.Proof.Direct\nimport Ariadne.Lib.Readable\n\n-- Generated by ariadne from {name}. Do not edit.\n\n"
+  let mut out := s!"import Ariadne.Proof.Adequacy\nimport Ariadne.Proof.Frame\nimport Ariadne.Proof.Idiom\nimport Ariadne.Lib.Readable\n\n-- Generated by ariadne from {name}. Do not edit.\n\n"
   out := out ++ s!"namespace {namespace_}\nopen Ariadne\n\nset_option maxRecDepth 8192\nset_option linter.unusedVariables false\n\n"
   out := out ++ "/-- The source file in the model's syntax. -/\nnoncomputable def ast : Program := [\n  " ++
     ",\n  ".intercalate (ast.map printFunction) ++ "]\n\n"
@@ -1935,8 +2006,8 @@ readable definitions as its environment, so no check unfolds a callee. -/\n\n"
     else
       let safeApplied := " ".intercalate (s!"{ident s.name}.safe" :: projections)
       out := out ++ s!"noncomputable def {ident s.name}.safety : {sigName s.name}.params.denote → Bool := fun xs => {safeApplied}\n\n"
-    out := out ++ s!"theorem {ident s.name}.body_eqD :\n    body.{ident s.name}.denoteDFn {tupleOf prior "uncurried"} = {ident s.name}.uncurried := by\n  kernel_rfl\n\n"
-    out := out ++ s!"theorem {ident s.name}.body_eq :\n    body.{ident s.name}.denoteFn {tupleOf prior "uncurried"} = {ident s.name}.uncurried :=\n  (TStmts.denoteFn_eq _).trans {ident s.name}.body_eqD\n\n"
+    out := out ++ s!"theorem {ident s.name}.body_eqR :\n    body.{ident s.name}.denoteRFn {tupleOf prior "uncurried"} = {ident s.name}.uncurried := by\n  kernel_rfl\n\n"
+    out := out ++ s!"theorem {ident s.name}.body_eq :\n    body.{ident s.name}.denoteFn {tupleOf prior "uncurried"} = {ident s.name}.uncurried :=\n  (TStmts.denoteFn_eq_R _).trans {ident s.name}.body_eqR\n\n"
     out := out ++ s!"theorem {ident s.name}.safe_eq :\n    body.{ident s.name}.safeFn {tupleOf prior "uncurried"} {tupleOf prior "safety"} = {ident s.name}.safety := by\n  kernel_rfl\n\n"
     prior := s.name :: prior
   let proof := fns.foldl (fun acc fn => s!"(TProgram.denote_cons {acc} {ident fn.sig.name}.body_eq)") "rfl"

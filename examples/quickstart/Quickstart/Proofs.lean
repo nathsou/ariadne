@@ -12,10 +12,9 @@ theorem balance_nonneg : Spec.balance_nonneg := by
   intro entries h
   unfold balance
   dsimp only
-  refine fold_inv (fun (s : Int × List Entry × Unit) => 0 ≤ s.1) entries ?_ _ (Int.le_refl 0)
-  rintro ⟨t, es, ⟨⟩⟩ e he ht
+  refine fold_inv (fun (t : Int) => 0 ≤ t) entries ?_ _ (Int.le_refl 0)
+  intro t e he ht
   have ha : 0 ≤ amount e := h e he
-  dsimp only at ht ⊢
   rcases e with ⟨a, ⟨⟩⟩ | ⟨a, ⟨⟩⟩ <;> dsimp only
   · simp only [amount] at ha; omega
   · by_cases hd : a ≤ t <;> simp [hd] <;> omega
