@@ -38,8 +38,8 @@ theorem ranking_sorted (players : List Player) :
 
 /-- `byScore` tells distinct players apart. -/
 theorem eq_of_byScore_zero (a b : Player) (h : byScore a b = 0) : a = b := by
-  obtain ⟨n, s, ⟨⟩⟩ := a
-  obtain ⟨m, t, ⟨⟩⟩ := b
+  obtain ⟨n, s⟩ := a
+  obtain ⟨m, t⟩ := b
   unfold byScore at h
   split at h
   · split at h <;> simp at h
@@ -91,9 +91,9 @@ theorem mem_qualified (players : List Player) (threshold : Int) (n : JSString) :
 /-- **The claim about the JavaScript.** Every run of `ranking` on an array of players converges to
 an array representing the sorted list: no hypothesis on the players is needed. -/
 theorem ranking_run (players : List Player) (vs : List JSValue)
-    (args : ArgsRep sig.ranking.params vs (players, ())) :
+    (args : ArgsRepS names isos sig.ranking.params vs (players, ())) :
     ∃ w, Converges (fun fuel => run ast fuel "ranking" vs) (.ok w) ∧
-      Ty.Rep (.array ty.Player) w (ranking players) :=
+      Ty.RepS names isos (.array ty.Player) w (ranking players) :=
   ranking.source players vs args (ranking_safe players)
 
 end Examples.Leaderboard.Proofs

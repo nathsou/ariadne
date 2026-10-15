@@ -27,11 +27,11 @@ namespace Tests.TreeSpec
 
 open Ariadne Tests.Generated.Tree
 
-abbrev State := ty.Tree.denote
+abbrev State := Tree
 
 /-- The two replicated registers of a state. -/
-def spots (r : State) : List (JSString × ty.Spot.denote) := r.1
-def purged (r : State) : List (JSString × JSString) := r.2.2.2.2.2.1
+def spots (r : State) : List (JSString × Spot) := r.spots
+def purged (r : State) : List (JSString × JSString) := r.purged
 
 /-- `r'` has the registers of `r`. -/
 def Frame (r r' : State) : Prop := spots r' = spots r ∧ purged r' = purged r
@@ -46,11 +46,11 @@ theorem Frame.trans {r₁ r₂ r₃ : State} (h₁ : Frame r₁ r₂) (h₂ : Fr
 
 /-! ## Re-deriving where nodes sit keeps the registers -/
 
-/-- A method keeps both registers: its result has the input's `spots` (`.1`) and
-`purged` (`.2.2.2.2.2.1`). Stated on projections, so `simp` composes them. -/
+/-- A method keeps both registers: its result has the input's `spots` and
+`purged`. Stated on projections, so `simp` composes them. -/
 structure Keeps (r r' : State) : Prop where
-  spots : r'.1 = r.1
-  purged : r'.2.2.2.2.2.1 = r.2.2.2.2.2.1
+  spots : r'.spots = r.spots
+  purged : r'.purged = r.purged
 
 macro "keeps" : tactic => `(tactic| (constructor <;> simp_all))
 
@@ -60,20 +60,20 @@ theorem setNext_keeps (r : State) (id : JSString) (n : Option JSString) : Keeps 
 theorem setPrev_keeps (r : State) (id : JSString) (n : Option JSString) : Keeps r (setPrev r id n) := by
   unfold setPrev; dsimp only; split <;> keeps
 
-@[simp] theorem setNext_1 (r : State) (id : JSString) (n : Option JSString) : (setNext r id n).1 = r.1 :=
+@[simp] theorem setNext_1 (r : State) (id : JSString) (n : Option JSString) : (setNext r id n).spots = r.spots :=
   (setNext_keeps r id n).spots
 @[simp] theorem setNext_p (r : State) (id : JSString) (n : Option JSString) :
-    (setNext r id n).2.2.2.2.2.1 = r.2.2.2.2.2.1 := (setNext_keeps r id n).purged
-@[simp] theorem setPrev_1 (r : State) (id : JSString) (n : Option JSString) : (setPrev r id n).1 = r.1 :=
+    (setNext r id n).purged = r.purged := (setNext_keeps r id n).purged
+@[simp] theorem setPrev_1 (r : State) (id : JSString) (n : Option JSString) : (setPrev r id n).spots = r.spots :=
   (setPrev_keeps r id n).spots
 @[simp] theorem setPrev_p (r : State) (id : JSString) (n : Option JSString) :
-    (setPrev r id n).2.2.2.2.2.1 = r.2.2.2.2.2.1 := (setPrev_keeps r id n).purged
+    (setPrev r id n).purged = r.purged := (setPrev_keeps r id n).purged
 
 theorem bury_keeps (r : State) (id b : JSString) : Keeps r (bury r id b) := by
   unfold bury; dsimp only; split <;> keeps
 
-@[simp] theorem bury_1 (r : State) (id b : JSString) : (bury r id b).1 = r.1 := (bury_keeps r id b).spots
-@[simp] theorem bury_p (r : State) (id b : JSString) : (bury r id b).2.2.2.2.2.1 = r.2.2.2.2.2.1 :=
+@[simp] theorem bury_1 (r : State) (id b : JSString) : (bury r id b).spots = r.spots := (bury_keeps r id b).spots
+@[simp] theorem bury_p (r : State) (id b : JSString) : (bury r id b).purged = r.purged :=
   (bury_keeps r id b).purged
 
 theorem unlink_keeps (r : State) (id : JSString) : Keeps r (unlink r id) := by
@@ -86,16 +86,16 @@ theorem unlink_keeps (r : State) (id : JSString) : Keeps r (unlink r id) := by
       · keeps
       · split <;> split <;> keeps
 
-@[simp] theorem unlink_1 (r : State) (id : JSString) : (unlink r id).1 = r.1 := (unlink_keeps r id).spots
-@[simp] theorem unlink_p (r : State) (id : JSString) : (unlink r id).2.2.2.2.2.1 = r.2.2.2.2.2.1 :=
+@[simp] theorem unlink_1 (r : State) (id : JSString) : (unlink r id).spots = r.spots := (unlink_keeps r id).spots
+@[simp] theorem unlink_p (r : State) (id : JSString) : (unlink r id).purged = r.purged :=
   (unlink_keeps r id).purged
 
 theorem link_keeps (r : State) (id parent : JSString) : Keeps r (link r id parent) := by
   unfold link; dsimp only
   split <;> split <;> keeps
 
-@[simp] theorem link_1 (r : State) (id p : JSString) : (link r id p).1 = r.1 := (link_keeps r id p).spots
-@[simp] theorem link_p (r : State) (id p : JSString) : (link r id p).2.2.2.2.2.1 = r.2.2.2.2.2.1 :=
+@[simp] theorem link_1 (r : State) (id p : JSString) : (link r id p).spots = r.spots := (link_keeps r id p).spots
+@[simp] theorem link_p (r : State) (id p : JSString) : (link r id p).purged = r.purged :=
   (link_keeps r id p).purged
 
 /-- A leaf of a loop body: continue or leave with a state that keeps the registers,
@@ -114,18 +114,18 @@ theorem settle_keeps (r : State) (start : JSString) (all : Bool) : Keeps r (sett
     all_goals loop_leaf hn hx h1 h2
   · intro s ⟨h1, h2⟩; exact ⟨h1, h2⟩
 
-@[simp] theorem settle_1 (r : State) (st : JSString) (a : Bool) : (settle r st a).1 = r.1 :=
+@[simp] theorem settle_1 (r : State) (st : JSString) (a : Bool) : (settle r st a).spots = r.spots :=
   (settle_keeps r st a).spots
 @[simp] theorem settle_p (r : State) (st : JSString) (a : Bool) :
-    (settle r st a).2.2.2.2.2.1 = r.2.2.2.2.2.1 := (settle_keeps r st a).purged
+    (settle r st a).purged = r.purged := (settle_keeps r st a).purged
 
 theorem attach_keeps (r : State) (id : JSString) : Keeps r (attach r id) := by
   unfold attach; dsimp only
   repeat' split
   all_goals (constructor <;> simp)
 
-@[simp] theorem attach_1 (r : State) (id : JSString) : (attach r id).1 = r.1 := (attach_keeps r id).spots
-@[simp] theorem attach_p (r : State) (id : JSString) : (attach r id).2.2.2.2.2.1 = r.2.2.2.2.2.1 :=
+@[simp] theorem attach_1 (r : State) (id : JSString) : (attach r id).spots = r.spots := (attach_keeps r id).spots
+@[simp] theorem attach_p (r : State) (id : JSString) : (attach r id).purged = r.purged :=
   (attach_keeps r id).purged
 
 /-- Re-deriving where nodes sit after a node wants another place keeps both registers: the generated frame
@@ -133,38 +133,38 @@ lemmas say so. -/
 theorem rearrange_keeps (r : State) (id : JSString) : Keeps r (rearrange r id) :=
   ⟨rearrange.keeps.spots r id, rearrange.keeps.purged r id⟩
 
-@[simp] theorem rearrange_1 (r : State) (id : JSString) : (rearrange r id).1 = r.1 := (rearrange_keeps r id).spots
+@[simp] theorem rearrange_1 (r : State) (id : JSString) : (rearrange r id).spots = r.spots := (rearrange_keeps r id).spots
 @[simp] theorem rearrange_p (r : State) (id : JSString) :
-    (rearrange r id).2.2.2.2.2.1 = r.2.2.2.2.2.1 := (rearrange_keeps r id).purged
+    (rearrange r id).purged = r.purged := (rearrange_keeps r id).purged
 
 /-! ## The registers -/
 
 /-- Where a node wants to be (its position register). -/
-def spotOf (r : State) (id : JSString) : Option ty.Spot.denote := mapGet r.1 id
+def spotOf (r : State) (id : JSString) : Option Spot := mapGet r.spots id
 
 /-- The earliest purge of a node (its purge register). -/
-def purgeOf (r : State) (id : JSString) : Option JSString := mapGet r.2.2.2.2.2.1 id
+def purgeOf (r : State) (id : JSString) : Option JSString := mapGet r.purged id
 
 /-- A move (`position … true`) updates the position register: the latest stamp wins;
 the creation stamp is kept. -/
 theorem position_move_spots (r : State) (id p n st : JSString) :
-    (position r id p n st true).1 =
-      match mapGet r.1 id with
-      | none => r.1
-      | some s => if newer s.2.2.1 st then mapPut r.1 id (p, n, some st, s.2.2.2.1, ()) else r.1 := by
+    (position r id p n st true).spots =
+      match mapGet r.spots id with
+      | none => r.spots
+      | some s => if newer s.pos st then mapPut r.spots id ⟨p, n, some st, s.made⟩ else r.spots := by
   unfold position; dsimp only
   split <;> rename_i heq
   · simp only [heq]
   · simp only [heq]
     rename_i _ s
     simp only [ite_true]
-    cases hn : newer s.2.2.1 st <;> simp
+    cases hn : newer s.pos st <;> simp
 
 /-- A purge updates the purge register: the earliest stamp wins. -/
 theorem purge_purged (r : State) (id st : JSString) :
-    (purge r id st).2.2.2.2.2.1 =
-      if id = root then r.2.2.2.2.2.1
-      else if earlier (mapGet r.2.2.2.2.2.1 id) st then mapPut r.2.2.2.2.2.1 id st else r.2.2.2.2.2.1 := by
+    (purge r id st).purged =
+      if id = root then r.purged
+      else if earlier (mapGet r.purged id) st then mapPut r.purged id st else r.purged := by
   unfold purge; dsimp only
   by_cases h : id = root
   · simp [h]
@@ -172,13 +172,13 @@ theorem purge_purged (r : State) (id st : JSString) :
     split <;> simp_all
 
 /-- Purges never change where nodes want to be, and moves never change purges. -/
-theorem purge_spots (r : State) (id st : JSString) : (purge r id st).1 = r.1 := by
+theorem purge_spots (r : State) (id st : JSString) : (purge r id st).spots = r.spots := by
   unfold purge; dsimp only; split
   · rfl
   · split <;> simp
 
 theorem position_purged (r : State) (id p n st : JSString) (mv : Bool) :
-    (position r id p n st mv).2.2.2.2.2.1 = r.2.2.2.2.2.1 := by
+    (position r id p n st mv).purged = r.purged := by
   unfold position; dsimp only
   split
   · rfl
@@ -194,11 +194,11 @@ theorem spotOf_move (r : State) (id p n st : JSString) :
     spotOf (position r id p n st true) id =
       match spotOf r id with
       | none => none
-      | some s => if newer s.2.2.1 st then some (p, n, some st, s.2.2.2.1, ()) else some s := by
+      | some s => if newer s.pos st then some ⟨p, n, some st, s.made⟩ else some s := by
   unfold spotOf; rw [position_move_spots]
   split <;> rename_i h
   · simp [h]
-  · simp only [h]; split <;> simp [mapGet_mapPut, h]
+  · split <;> simp [mapGet_mapPut, h]
 
 /-- **Moves converge.** Two moves of the same node with distinct, non-empty stamps
 leave the same position register whichever arrives first: the later move's. -/
@@ -212,7 +212,7 @@ theorem moves_converge (r : State) (id p₁ n₁ s₁ p₂ n₂ s₂ : JSString)
   cases hc : spotOf r id with
   | none => rfl
   | some c =>
-    obtain ⟨cw, cn, cp, cm, u⟩ := c
+    obtain ⟨cw, cn, cp, cm⟩ := c
     rcases strLt_total s₁ s₂ hne with hl | hl
     · have hg := strLt_asymm _ _ hl
       cases cp with
@@ -273,13 +273,13 @@ theorem move_purge_commute (r : State) (id p n sm j sp : JSString) :
 /-! ## Cycles of wanted parents -/
 
 /-- Each node of the list wants the next one as its parent. -/
-def Chain (sp : List (JSString × ty.Spot.denote)) : List JSString → Prop
-  | x :: y :: rest => (∃ s, mapGet sp x = some s ∧ s.1 = y) ∧ Chain sp (y :: rest)
+def Chain (sp : List (JSString × Spot)) : List JSString → Prop
+  | x :: y :: rest => (∃ s, mapGet sp x = some s ∧ s.want = y) ∧ Chain sp (y :: rest)
   | _ => True
 
-theorem chain_snoc (sp : List (JSString × ty.Spot.denote)) {c : JSString} {s : ty.Spot.denote}
+theorem chain_snoc (sp : List (JSString × Spot)) {c : JSString} {s : Spot}
     (hs : mapGet sp c = some s) : ∀ {path : List JSString}, Chain sp path → path.getLast? = some c →
-      Chain sp (path ++ [s.1])
+      Chain sp (path ++ [s.want])
   | [], _, hl => by simp at hl
   | [x], _, hl => by simp at hl; subst hl; exact ⟨⟨s, hs, rfl⟩, trivial⟩
   | x :: y :: rest, ⟨h1, h2⟩, hl => ⟨h1, chain_snoc sp hs (path := y :: rest) h2 (by simpa using hl)⟩
@@ -297,11 +297,11 @@ theorem forIn_inv_len {α σ R : Type} (P : Nat → σ → Prop) (B : σ → Pro
 
 /-- Where `k` steps up the wanted parents from `x` lead (none if a node on the way
 has no spot). -/
-def up (sp : List (JSString × ty.Spot.denote)) : Nat → JSString → Option JSString
+def up (sp : List (JSString × Spot)) : Nat → JSString → Option JSString
   | 0, x => some x
-  | k + 1, x => (up sp k x).bind fun c => (mapGet sp c).map (·.1)
+  | k + 1, x => (up sp k x).bind fun c => (mapGet sp c).map (·.want)
 
-theorem up_none (sp : List (JSString × ty.Spot.denote)) (x : JSString) {j : Nat} (h : up sp j x = none) :
+theorem up_none (sp : List (JSString × Spot)) (x : JSString) {j : Nat} (h : up sp j x = none) :
     ∀ m, j ≤ m → up sp m x = none := by
   intro m hm
   induction m with
@@ -313,46 +313,46 @@ theorem up_none (sp : List (JSString × ty.Spot.denote)) (x : JSString) {j : Nat
 
 /-- What `cycleOf` returns, when not empty: a cycle of wanted parents through `id`. -/
 def Cycle (r : State) (id : JSString) (path : List JSString) : Prop :=
-  path = [] ∨ (path.head? = some id ∧ Chain r.1 path ∧
-    ∃ c s, path.getLast? = some c ∧ mapGet r.1 c = some s ∧ s.1 = id)
+  path = [] ∨ (path.head? = some id ∧ Chain r.spots path ∧
+    ∃ c s, path.getLast? = some c ∧ mapGet r.spots c = some s ∧ s.want = id)
 
 /-- **`cycleOf` returns a cycle**: its result is empty, or starts at `id`, each node
 on it wants the next as its parent, and the last wants `id`. -/
 theorem cycleOf_cycle (r : State) (id : JSString) : Cycle r id (cycleOf r id) := by
   unfold cycleOf; dsimp only
-  have hlen : (Ariadne.range (List.length r.1 : Int)).length = r.1.length := by simp [Ariadne.range]
+  have hlen : (Ariadne.range (List.length r.spots : Int)).length = r.spots.length := by simp [Ariadne.range]
   refine forIn_inv_len
-    (fun n s => s.1 = false ∧ up r.1 (r.1.length - n) id = some s.2 ∧ n ≤ r.1.length)
-    (fun s => s.1 = true ∧ ∃ k, 1 ≤ k ∧ k ≤ r.1.length ∧ up r.1 k id = some id)
+    (fun n s => s.1 = false ∧ up r.spots (r.spots.length - n) id = some s.2 ∧ n ≤ r.spots.length)
+    (fun s => s.1 = true ∧ ∃ k, 1 ≤ k ∧ k ≤ r.spots.length ∧ up r.spots k id = some id)
     (Cycle r id) ?_ ?_ ?_ _ _ ?_
   · intro y n next ex s ⟨h3, h4, h5⟩ hn hx
     dsimp only [cycleOf.loop1]
     split
     · exact Or.inl rfl
     · rename_i sp hsp
-      have hup : up r.1 (r.1.length - n) id = some sp.1 := by
-        have : r.1.length - n = (r.1.length - (n + 1)) + 1 := by omega
+      have hup : up r.spots (r.spots.length - n) id = some sp.want := by
+        have : r.spots.length - n = (r.spots.length - (n + 1)) + 1 := by omega
         rw [this]; simp [up, h4, hsp]
       split
       · rename_i heq
-        refine hx _ ⟨rfl, r.1.length - n, by omega, by omega, ?_⟩
+        refine hx _ ⟨rfl, r.spots.length - n, by omega, by omega, ?_⟩
         rw [hup]; simpa using heq
       · exact hn _ ⟨h3, hup, by omega⟩
   · intro s ⟨h3, _, _⟩; simp [h3]; exact Or.inl rfl
   · intro s ⟨h3, k, hk1, hk2, hk⟩
     simp only [h3, Bool.not_true, Bool.false_eq_true, ite_false]
     refine forIn_inv_len
-      (fun n t => t.1.head? = some id ∧ Chain r.1 t.1 ∧
-        t.1.getLast? = some t.2 ∧ ∃ j, j + n = r.1.length ∧ j < k ∧ up r.1 j id = some t.2)
+      (fun n t => t.1.head? = some id ∧ Chain r.spots t.1 ∧
+        t.1.getLast? = some t.2 ∧ ∃ j, j + n = r.spots.length ∧ j < k ∧ up r.spots j id = some t.2)
       (fun _ => False) (Cycle r id) ?_ ?_ (fun _ h => h.elim) _ _ ?_
     · intro y n next ex t ⟨g3, g4, g5, j, hj1, hj2, hj3⟩ hn _
       dsimp only [cycleOf.loop2]
       split
       · rename_i hsp
-        have : up r.1 (j + 1) id = none := by simp [up, hj3, hsp]
-        rw [up_none r.1 id this k (by omega)] at hk; simp at hk
+        have : up r.spots (j + 1) id = none := by simp [up, hj3, hsp]
+        rw [up_none r.spots id this k (by omega)] at hk; simp at hk
       · rename_i sp hsp
-        have hup : up r.1 (j + 1) id = some sp.1 := by simp [up, hj3, hsp]
+        have hup : up r.spots (j + 1) id = some sp.want := by simp [up, hj3, hsp]
         split
         · rename_i heq
           exact Or.inr ⟨g3, g4, _, sp, g5, hsp, by simpa using heq⟩
@@ -373,32 +373,32 @@ theorem cycleOf_cycle (r : State) (id : JSString) : Cycle r id (cycleOf r id) :=
 
 /-- **`cycleOf` finds every cycle** through `id` no longer than the number of nodes
 with a spot. -/
-theorem cycleOf_finds (r : State) (id : JSString) {k : Nat} (hk1 : 1 ≤ k) (hk2 : k ≤ r.1.length)
-    (hk : up r.1 k id = some id) : cycleOf r id ≠ [] := by
+theorem cycleOf_finds (r : State) (id : JSString) {k : Nat} (hk1 : 1 ≤ k) (hk2 : k ≤ r.spots.length)
+    (hk : up r.spots k id = some id) : cycleOf r id ≠ [] := by
   unfold cycleOf; dsimp only
-  have hlen : (Ariadne.range (List.length r.1 : Int)).length = r.1.length := by simp [Ariadne.range]
+  have hlen : (Ariadne.range (List.length r.spots : Int)).length = r.spots.length := by simp [Ariadne.range]
   refine forIn_inv_len
-    (fun n s => up r.1 (r.1.length - n) id = some s.2 ∧ n ≤ r.1.length ∧ r.1.length - n < k)
+    (fun n s => up r.spots (r.spots.length - n) id = some s.2 ∧ n ≤ r.spots.length ∧ r.spots.length - n < k)
     (fun s => s.1 = true) (· ≠ []) ?_ ?_ ?_ _ _ ?_
   · intro y n next ex s ⟨h4, h5, h6⟩ hn hx
     dsimp only [cycleOf.loop1]
     split
     · rename_i hsp
-      have : up r.1 (r.1.length - n) id = none := by
-        have : r.1.length - n = (r.1.length - (n + 1)) + 1 := by omega
+      have : up r.spots (r.spots.length - n) id = none := by
+        have : r.spots.length - n = (r.spots.length - (n + 1)) + 1 := by omega
         rw [this]; simp [up, h4, hsp]
-      rw [up_none r.1 id this k (by omega)] at hk; simp at hk
+      rw [up_none r.spots id this k (by omega)] at hk; simp at hk
     · rename_i sp hsp
-      have hup : up r.1 (r.1.length - n) id = some sp.1 := by
-        have : r.1.length - n = (r.1.length - (n + 1)) + 1 := by omega
+      have hup : up r.spots (r.spots.length - n) id = some sp.want := by
+        have : r.spots.length - n = (r.spots.length - (n + 1)) + 1 := by omega
         rw [this]; simp [up, h4, hsp]
       split
       · exact hx _ rfl
       · rename_i hne
         refine hn _ ⟨hup, by omega, ?_⟩
-        rcases Nat.lt_or_ge (r.1.length - n) k with h | h
+        rcases Nat.lt_or_ge (r.spots.length - n) k with h | h
         · exact h
-        · have : r.1.length - n = k := by omega
+        · have : r.spots.length - n = k := by omega
           rw [this] at hup; rw [hup] at hk; simp at hk; simp [hk] at hne
   · intro s ⟨_, _, h6⟩; omega
   · intro s h3
@@ -420,7 +420,7 @@ A walk up the wanted parents that returns to `id` after more steps than there ar
 nodes visits some node twice, so a shorter walk returns too: `cycleOf` finds every
 cycle through `id`. -/
 
-theorem up_add (sp : List (JSString × ty.Spot.denote)) (x : JSString) (a : Nat) :
+theorem up_add (sp : List (JSString × Spot)) (x : JSString) (a : Nat) :
     ∀ m, up sp (a + m) x = (up sp a x).bind (fun y => up sp m y)
   | 0 => by cases up sp a x <;> simp [up]
   | m + 1 => by
@@ -453,13 +453,13 @@ theorem nodup_map_range {β : Type} (f : Nat → β) :
     omega
 
 /-- A walk that returns to `id` after more steps than there are nodes has a shorter one. -/
-theorem up_shorter (r : State) (id : JSString) {k : Nat} (hk : up r.1 k id = some id)
-    (hlong : r.1.length < k) : ∃ k', 1 ≤ k' ∧ k' < k ∧ up r.1 k' id = some id := by
+theorem up_shorter (r : State) (id : JSString) {k : Nat} (hk : up r.spots k id = some id)
+    (hlong : r.spots.length < k) : ∃ k', 1 ≤ k' ∧ k' < k ∧ up r.spots k' id = some id := by
   refine Classical.byContradiction fun hno => ?_
-  have hinj : ∀ i j, i < k → j < k → up r.1 i id = up r.1 j id → i = j := by
-    have key : ∀ i j, i < j → j < k → up r.1 i id = up r.1 j id → False := by
+  have hinj : ∀ i j, i < k → j < k → up r.spots i id = up r.spots j id → i = j := by
+    have key : ∀ i j, i < j → j < k → up r.spots i id = up r.spots j id → False := by
       intro i j hij hj he
-      have h1 : up r.1 (i + (k - j)) id = some id := by
+      have h1 : up r.spots (i + (k - j)) id = some id := by
         rw [up_add, he, ← up_add, show j + (k - j) = k by omega, hk]
       exact hno ⟨i + (k - j), by omega, by omega, h1⟩
     intro i j hi hj he
@@ -467,20 +467,20 @@ theorem up_shorter (r : State) (id : JSString) {k : Nat} (hk : up r.1 k id = som
     · exact (key i j h hj he).elim
     · exact h
     · exact (key j i h hi he.symm).elim
-  have hnd := nodup_map_range (fun i => up r.1 i id) k hinj
-  have hsub : (List.range k).map (fun i => up r.1 i id) ⊆ r.1.map (fun p => some p.1) := by
+  have hnd := nodup_map_range (fun i => up r.spots i id) k hinj
+  have hsub : (List.range k).map (fun i => up r.spots i id) ⊆ r.spots.map (fun p => some p.1) := by
     intro o ho
     simp only [List.mem_map, List.mem_range] at ho
     obtain ⟨i, hi, rfl⟩ := ho
-    cases hc : up r.1 i id with
-    | none => rw [up_none r.1 id hc k (by omega)] at hk; simp at hk
+    cases hc : up r.spots i id with
+    | none => rw [up_none r.spots id hc k (by omega)] at hk; simp at hk
     | some c =>
-      cases hs : mapGet r.1 c with
+      cases hs : mapGet r.spots c with
       | none =>
-        have : up r.1 (i + 1) id = none := by simp [up, hc, hs]
-        rw [up_none r.1 id this k (by omega)] at hk; simp at hk
+        have : up r.spots (i + 1) id = none := by simp [up, hc, hs]
+        rw [up_none r.spots id this k (by omega)] at hk; simp at hk
       | some v =>
-        have := mem_keys_of_lookup (sp := r.1) hs
+        have := mem_keys_of_lookup (sp := r.spots) hs
         simp only [List.mem_map] at this ⊢
         obtain ⟨p, hp, rfl⟩ := this
         exact ⟨p, hp, rfl⟩
@@ -490,12 +490,12 @@ theorem up_shorter (r : State) (id : JSString) {k : Nat} (hk : up r.1 k id = som
 
 /-- **`cycleOf` finds every cycle** of wanted parents through `id`. -/
 theorem cycleOf_finds_all (r : State) (id : JSString) :
-    ∀ k, 1 ≤ k → up r.1 k id = some id → cycleOf r id ≠ [] := by
+    ∀ k, 1 ≤ k → up r.spots k id = some id → cycleOf r id ≠ [] := by
   intro k
   induction k using Nat.strongRecOn with
   | ind k ih =>
     intro hk1 hk
-    by_cases hle : k ≤ r.1.length
+    by_cases hle : k ≤ r.spots.length
     · exact cycleOf_finds r id hk1 hle hk
     · obtain ⟨k', h1, h2, h3⟩ := up_shorter r id hk (by omega)
       exact ih k' h2 h1 h3

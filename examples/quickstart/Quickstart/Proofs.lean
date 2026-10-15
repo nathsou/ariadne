@@ -16,7 +16,7 @@ theorem balance_nonneg : Spec.balance_nonneg := by
   intro t e he ht
   have ha : 0 ≤ amount e := h e he
   dsimp only [balance.loop]
-  rcases e with ⟨a, ⟨⟩⟩ | ⟨a, ⟨⟩⟩ <;> dsimp only
+  rcases e with a | a <;> dsimp only
   · simp only [amount] at ha; omega
   · by_cases hd : a ≤ t <;> simp [hd] <;> omega
 

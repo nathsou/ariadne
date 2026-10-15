@@ -26,7 +26,7 @@ theorem orDefault_choose (n : Int) (h : 0 < n) : orDefault (choose n none) = n :
 representing `choose n none`. -/
 theorem choose_run (n : Int) :
     ∃ w, Converges (fun fuel => run ast fuel "choose" [.bigint n]) (.ok w) ∧
-      Ty.Rep ty.Choice w (choose n none) :=
+      Ty.RepS names isos ty.Choice w (choose n none) :=
   choose.source n none [.bigint n] ⟨_, _, rfl, rfl, _, _, rfl, Or.inl rfl, rfl⟩
 
 section

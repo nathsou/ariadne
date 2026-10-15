@@ -2937,396 +2937,396 @@ theorem loadAlbum.keeps.items («this» : Registers) (a : AlbumRec) :
 /-- Every run of `key` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem key.source (a : JSString) (b : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.key.params vs' (Ctx.conv names isos sig.key.params (a, b, ()))) :
+    (args' : ArgsRepS names isos sig.key.params vs' (a, b, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "key" vs') (.ok w') ∧
-      Ty.Rep .string w' (Ty.conv names isos .string (key a b)) :=
+      Ty.RepS names isos .string w' (key a b) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))))))))))))))) : FVar sigs "key" sig.key) rfl (a, b, ()) vs' args' rfl
 
 /-- Every run of `byString` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem byString.source (a : JSString) (b : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.byString.params vs' (Ctx.conv names isos sig.byString.params (a, b, ()))) :
+    (args' : ArgsRepS names isos sig.byString.params vs' (a, b, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "byString" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (byString a b)) :=
+      Ty.RepS names isos .number w' (byString a b) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))))))))))))) : FVar sigs "byString" sig.byString) rfl (a, b, ()) vs' args' rfl
 
 /-- Every run of `newer` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem newer.source (s : Option JSString) (stamp : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.newer.params vs' (Ctx.conv names isos sig.newer.params (s, stamp, ()))) :
+    (args' : ArgsRepS names isos sig.newer.params vs' (s, stamp, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "newer" vs') (.ok w') ∧
-      Ty.Rep .bool w' (Ty.conv names isos .bool (newer s stamp)) :=
+      Ty.RepS names isos .bool w' (newer s stamp) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))))))))))))) : FVar sigs "newer" sig.newer) rfl (s, stamp, ()) vs' args' rfl
 
 /-- Every run of `earlier` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem earlier.source (s : Option JSString) (stamp : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.earlier.params vs' (Ctx.conv names isos sig.earlier.params (s, stamp, ()))) :
+    (args' : ArgsRepS names isos sig.earlier.params vs' (s, stamp, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "earlier" vs') (.ok w') ∧
-      Ty.Rep .bool w' (Ty.conv names isos .bool (earlier s stamp)) :=
+      Ty.RepS names isos .bool w' (earlier s stamp) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))))))))))) : FVar sigs "earlier" sig.earlier) rfl (s, stamp, ()) vs' args' rfl
 
 /-- Every run of `newest` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem newest.source (s : Option JSString) (stamp : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.newest.params vs' (Ctx.conv names isos sig.newest.params (s, stamp, ()))) :
+    (args' : ArgsRepS names isos sig.newest.params vs' (s, stamp, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "newest" vs') (.ok w') ∧
-      Ty.Rep .string w' (Ty.conv names isos .string (newest s stamp)) :=
+      Ty.RepS names isos .string w' (newest s stamp) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))))))))))) : FVar sigs "newest" sig.newest) rfl (s, stamp, ()) vs' args' rfl
 
 /-- Every run of `before` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem before.source (stamp : JSString) (s : Option JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.before.params vs' (Ctx.conv names isos sig.before.params (stamp, s, ()))) :
+    (args' : ArgsRepS names isos sig.before.params vs' (stamp, s, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "before" vs') (.ok w') ∧
-      Ty.Rep .bool w' (Ty.conv names isos .bool (before stamp s)) :=
+      Ty.RepS names isos .bool w' (before stamp s) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))))))))) : FVar sigs "before" sig.before) rfl (stamp, s, ()) vs' args' rfl
 
 /-- Every run of `given` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem given.source (s : Option JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.given.params vs' (Ctx.conv names isos sig.given.params (s, ()))) :
+    (args' : ArgsRepS names isos sig.given.params vs' (s, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "given" vs') (.ok w') ∧
-      Ty.Rep .bool w' (Ty.conv names isos .bool (given s)) :=
+      Ty.RepS names isos .bool w' (given s) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))))))))) : FVar sigs "given" sig.given) rfl (s, ()) vs' args' rfl
 
 /-- Every run of `otherwise` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem otherwise.source (s : Option JSString) (fallback : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.otherwise.params vs' (Ctx.conv names isos sig.otherwise.params (s, fallback, ()))) :
+    (args' : ArgsRepS names isos sig.otherwise.params vs' (s, fallback, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "otherwise" vs') (.ok w') ∧
-      Ty.Rep .string w' (Ty.conv names isos .string (otherwise s fallback)) :=
+      Ty.RepS names isos .string w' (otherwise s fallback) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))))))) : FVar sigs "otherwise" sig.otherwise) rfl (s, fallback, ()) vs' args' rfl
 
 /-- Every run of `described` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem described.source (cur : Option Pack) (stamp : JSString) («at» : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.described.params vs' (Ctx.conv names isos sig.described.params (cur, stamp, «at», ()))) :
+    (args' : ArgsRepS names isos sig.described.params vs' (cur, stamp, «at», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "described" vs') (.ok w') ∧
-      Ty.Rep .bool w' (Ty.conv names isos .bool (described cur stamp «at»)) :=
+      Ty.RepS names isos .bool w' (described cur stamp «at») :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))))))) : FVar sigs "described" sig.described) rfl (cur, stamp, «at», ()) vs' args' rfl
 
 /-- Every run of `larger` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem larger.source (a : Int) (b : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.larger.params vs' (Ctx.conv names isos sig.larger.params (a, b, ()))) :
+    (args' : ArgsRepS names isos sig.larger.params vs' (a, b, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "larger" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (larger a b)) :=
+      Ty.RepS names isos .number w' (larger a b) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))))) : FVar sigs "larger" sig.larger) rfl (a, b, ()) vs' args' rfl
 
 /-- Every run of `zero` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem zero.source  (vs' : List JSValue)
-    (args' : ArgsRep sig.zero.params vs' (Ctx.conv names isos sig.zero.params (()))) :
+    (args' : ArgsRepS names isos sig.zero.params vs' (())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "zero" vs') (.ok w') ∧
-      Ty.Rep ty.Counters w' (Ty.conv names isos ty.Counters (zero)) :=
+      Ty.RepS names isos ty.Counters w' (zero) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))))) : FVar sigs "zero" sig.zero) rfl (()) vs' args' rfl
 
 /-- Every run of `highest` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem highest.source (a : Counters) (b : Counters) (vs' : List JSValue)
-    (args' : ArgsRep sig.highest.params vs' (Ctx.conv names isos sig.highest.params (a, b, ()))) :
+    (args' : ArgsRepS names isos sig.highest.params vs' (a, b, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "highest" vs') (.ok w') ∧
-      Ty.Rep ty.Counters w' (Ty.conv names isos ty.Counters (highest a b)) :=
+      Ty.RepS names isos ty.Counters w' (highest a b) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))) : FVar sigs "highest" sig.highest) rfl (a, b, ()) vs' args' rfl
 
 /-- Every run of `sum` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem sum.source (a : Counters) (b : Counters) (vs' : List JSValue)
-    (args' : ArgsRep sig.sum.params vs' (Ctx.conv names isos sig.sum.params (a, b, ())))
+    (args' : ArgsRepS names isos sig.sum.params vs' (a, b, ()))
     (safe' : sum.safe a b = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "sum" vs') (.ok w') ∧
-      Ty.Rep ty.Counters w' (Ty.conv names isos ty.Counters (sum a b)) :=
+      Ty.RepS names isos ty.Counters w' (sum a b) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))) : FVar sigs "sum" sig.sum) rfl (a, b, ()) vs' args' safe'
 
 /-- Every run of `new Registers` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem «new Registers».source  (vs' : List JSValue)
-    (args' : ArgsRep sig.«new Registers».params vs' (Ctx.conv names isos sig.«new Registers».params (()))) :
+    (args' : ArgsRepS names isos sig.«new Registers».params vs' (())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "new Registers" vs') (.ok w') ∧
-      Ty.Rep ty.Registers w' (Ty.conv names isos ty.Registers («new Registers»)) :=
+      Ty.RepS names isos ty.Registers w' («new Registers») :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))) : FVar sigs "new Registers" sig.«new Registers») rfl (()) vs' args' rfl
 
 /-- Every run of `noteUnplace` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem noteUnplace.source («this» : Registers) (ref : JSString) (p : JSString) (u : JSString) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.noteUnplace.params (this' :: vs') (Ctx.conv names isos sig.noteUnplace.params («this», ref, p, u, ()))) :
+    (args' : ArgsRepS names isos sig.noteUnplace.params (this' :: vs') («this», ref, p, u, ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "noteUnplace" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Registers t' (Ty.conv names isos ty.Registers (noteUnplace «this» ref p u)) :=
+      Ty.RepS names isos ty.Registers t' (noteUnplace «this» ref p u) :=
   source_state_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))) : FVar sigs "noteUnplace" sig.noteUnplace) rfl («this», ref, p, u, ()) this' vs' args' rfl
 
 /-- Every run of `providersOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem providersOf.source («this» : Registers) (ref : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.providersOf.params vs' (Ctx.conv names isos sig.providersOf.params («this», ref, ()))) :
+    (args' : ArgsRepS names isos sig.providersOf.params vs' («this», ref, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "providersOf" vs') (.ok w') ∧
-      Ty.Rep (.array .string) w' (Ty.conv names isos (.array .string) (providersOf «this» ref)) :=
+      Ty.RepS names isos (.array .string) w' (providersOf «this» ref) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))) : FVar sigs "providersOf" sig.providersOf) rfl («this», ref, ()) vs' args' rfl
 
 /-- Every run of `put` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem put.source («this» : Registers) (ref : JSString) (p : JSString) (e : Placed) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.put.params (this' :: vs') (Ctx.conv names isos sig.put.params («this», ref, p, e, ())))
+    (args' : ArgsRepS names isos sig.put.params (this' :: vs') («this», ref, p, e, ()))
     (safe' : put.safe «this» ref p e = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "put" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Registers t' (Ty.conv names isos ty.Registers (put «this» ref p e)) :=
+      Ty.RepS names isos ty.Registers t' (put «this» ref p e) :=
   source_state_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))) : FVar sigs "put" sig.put) rfl («this», ref, p, e, ()) this' vs' args' safe'
 
 /-- Every run of `dropMarkBefore` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem dropMarkBefore.source («this» : Registers) (ref : JSString) (p : JSString) (u : Option JSString) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.dropMarkBefore.params (this' :: vs') (Ctx.conv names isos sig.dropMarkBefore.params («this», ref, p, u, ()))) :
+    (args' : ArgsRepS names isos sig.dropMarkBefore.params (this' :: vs') («this», ref, p, u, ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "dropMarkBefore" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Registers t' (Ty.conv names isos ty.Registers (dropMarkBefore «this» ref p u)) :=
+      Ty.RepS names isos ty.Registers t' (dropMarkBefore «this» ref p u) :=
   source_state_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))) : FVar sigs "dropMarkBefore" sig.dropMarkBefore) rfl («this», ref, p, u, ()) this' vs' args' rfl
 
 /-- Every run of `place` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem place.source («this» : Registers) (ref : JSString) (p : JSString) (placed : Bool) (cls : JSString) (stamp : JSString) («at» : Int) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.place.params (this' :: vs') (Ctx.conv names isos sig.place.params («this», ref, p, placed, cls, stamp, «at», ())))
+    (args' : ArgsRepS names isos sig.place.params (this' :: vs') («this», ref, p, placed, cls, stamp, «at», ()))
     (safe' : place.safe «this» ref p placed cls stamp «at» = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "place" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Registers t' (Ty.conv names isos ty.Registers (place «this» ref p placed cls stamp «at»)) :=
+      Ty.RepS names isos ty.Registers t' (place «this» ref p placed cls stamp «at») :=
   source_state_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))) : FVar sigs "place" sig.place) rfl («this», ref, p, placed, cls, stamp, «at», ()) this' vs' args' safe'
 
 /-- Every run of `mark` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem mark.source («this» : Registers) (ref : JSString) (p : JSString) (on : Bool) (reason : Option JSString) (stamp : JSString) («at» : Int) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.mark.params (this' :: vs') (Ctx.conv names isos sig.mark.params («this», ref, p, on, reason, stamp, «at», ()))) :
+    (args' : ArgsRepS names isos sig.mark.params (this' :: vs') («this», ref, p, on, reason, stamp, «at», ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "mark" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Registers t' (Ty.conv names isos ty.Registers (mark «this» ref p on reason stamp «at»)) :=
+      Ty.RepS names isos ty.Registers t' (mark «this» ref p on reason stamp «at») :=
   source_state_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) : FVar sigs "mark" sig.mark) rfl («this», ref, p, on, reason, stamp, «at», ()) this' vs' args' rfl
 
 /-- Every run of `placements` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem placements.source («this» : Registers) (ref : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.placements.params vs' (Ctx.conv names isos sig.placements.params («this», ref, ()))) :
+    (args' : ArgsRepS names isos sig.placements.params vs' («this», ref, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "placements" vs') (.ok w') ∧
-      Ty.Rep (.array ty.Placed) w' (Ty.conv names isos (.array ty.Placed) (placements «this» ref)) :=
+      Ty.RepS names isos (.array ty.Placed) w' (placements «this» ref) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))) : FVar sigs "placements" sig.placements) rfl («this», ref, ()) vs' args' rfl
 
 /-- Every run of `isPlaced` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem isPlaced.source («this» : Registers) (ref : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.isPlaced.params vs' (Ctx.conv names isos sig.isPlaced.params («this», ref, ()))) :
+    (args' : ArgsRepS names isos sig.isPlaced.params vs' («this», ref, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "isPlaced" vs') (.ok w') ∧
-      Ty.Rep .bool w' (Ty.conv names isos .bool (isPlaced «this» ref)) :=
+      Ty.RepS names isos .bool w' (isPlaced «this» ref) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))) : FVar sigs "isPlaced" sig.isPlaced) rfl («this», ref, ()) vs' args' rfl
 
 /-- Every run of `placedRefs` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem placedRefs.source («this» : Registers) (vs' : List JSValue)
-    (args' : ArgsRep sig.placedRefs.params vs' (Ctx.conv names isos sig.placedRefs.params («this», ()))) :
+    (args' : ArgsRepS names isos sig.placedRefs.params vs' («this», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "placedRefs" vs') (.ok w') ∧
-      Ty.Rep (.array .string) w' (Ty.conv names isos (.array .string) (placedRefs «this»)) :=
+      Ty.RepS names isos (.array .string) w' (placedRefs «this») :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))) : FVar sigs "placedRefs" sig.placedRefs) rfl («this», ()) vs' args' rfl
 
 /-- Every run of `markOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem markOf.source («this» : Registers) (ref : JSString) (p : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.markOf.params vs' (Ctx.conv names isos sig.markOf.params («this», ref, p, ()))) :
+    (args' : ArgsRepS names isos sig.markOf.params vs' («this», ref, p, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "markOf" vs') (.ok w') ∧
-      Ty.Rep (.option .undef ty.Mark) w' (Ty.conv names isos (.option .undef ty.Mark) (markOf «this» ref p)) :=
+      Ty.RepS names isos (.option .undef ty.Mark) w' (markOf «this» ref p) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))) : FVar sigs "markOf" sig.markOf) rfl («this», ref, p, ()) vs' args' rfl
 
 /-- Every run of `markList` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem markList.source («this» : Registers) (vs' : List JSValue)
-    (args' : ArgsRep sig.markList.params vs' (Ctx.conv names isos sig.markList.params («this», ()))) :
+    (args' : ArgsRepS names isos sig.markList.params vs' («this», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "markList" vs') (.ok w') ∧
-      Ty.Rep (.array ty.Mark) w' (Ty.conv names isos (.array ty.Mark) (markList «this»)) :=
+      Ty.RepS names isos (.array ty.Mark) w' (markList «this») :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))) : FVar sigs "markList" sig.markList) rfl («this», ()) vs' args' rfl
 
 /-- Every run of `pack` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem pack.source («this» : Registers) (id : JSString) (size : Int) (csize : Int) (stamp : JSString) («at» : Int) (hn : Option JSString) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.pack.params (this' :: vs') (Ctx.conv names isos sig.pack.params («this», id, size, csize, stamp, «at», hn, ()))) :
+    (args' : ArgsRepS names isos sig.pack.params (this' :: vs') («this», id, size, csize, stamp, «at», hn, ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "pack" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Registers t' (Ty.conv names isos ty.Registers (pack «this» id size csize stamp «at» hn)) :=
+      Ty.RepS names isos ty.Registers t' (pack «this» id size csize stamp «at» hn) :=
   source_state_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) : FVar sigs "pack" sig.pack) rfl («this», id, size, csize, stamp, «at», hn, ()) this' vs' args' rfl
 
 /-- Every run of `packOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem packOf.source («this» : Registers) (id : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.packOf.params vs' (Ctx.conv names isos sig.packOf.params («this», id, ()))) :
+    (args' : ArgsRepS names isos sig.packOf.params vs' («this», id, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "packOf" vs') (.ok w') ∧
-      Ty.Rep (.option .undef ty.Pack) w' (Ty.conv names isos (.option .undef ty.Pack) (packOf «this» id)) :=
+      Ty.RepS names isos (.option .undef ty.Pack) w' (packOf «this» id) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))) : FVar sigs "packOf" sig.packOf) rfl («this», id, ()) vs' args' rfl
 
 /-- Every run of `packList` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem packList.source («this» : Registers) (vs' : List JSValue)
-    (args' : ArgsRep sig.packList.params vs' (Ctx.conv names isos sig.packList.params («this», ()))) :
+    (args' : ArgsRepS names isos sig.packList.params vs' («this», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "packList" vs') (.ok w') ∧
-      Ty.Rep (.array ty.Pack) w' (Ty.conv names isos (.array ty.Pack) (packList «this»)) :=
+      Ty.RepS names isos (.array ty.Pack) w' (packList «this») :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))) : FVar sigs "packList" sig.packList) rfl («this», ()) vs' args' rfl
 
 /-- Every run of `track` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem track.source («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (total : Bool) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.track.params (this' :: vs') (Ctx.conv names isos sig.track.params («this», p, month, device, total, ())))
+    (args' : ArgsRepS names isos sig.track.params (this' :: vs') («this», p, month, device, total, ()))
     (safe' : track.safe «this» p month device total = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "track" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Registers t' (Ty.conv names isos ty.Registers (track «this» p month device total)) :=
+      Ty.RepS names isos ty.Registers t' (track «this» p month device total) :=
   source_state_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) : FVar sigs "track" sig.track) rfl («this», p, month, device, total, ()) this' vs' args' safe'
 
 /-- Every run of `total` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem total.source («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (c : Counters) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.total.params (this' :: vs') (Ctx.conv names isos sig.total.params («this», p, month, device, c, ())))
+    (args' : ArgsRepS names isos sig.total.params (this' :: vs') («this», p, month, device, c, ()))
     (safe' : total.safe «this» p month device c = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "total" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Registers t' (Ty.conv names isos ty.Registers (total «this» p month device c)) :=
+      Ty.RepS names isos ty.Registers t' (total «this» p month device c) :=
   source_state_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) : FVar sigs "total" sig.total) rfl («this», p, month, device, c, ()) this' vs' args' safe'
 
 /-- Every run of `add` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem add.source («this» : Registers) (p : JSString) (month : JSString) (c : Counters) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.add.params (this' :: vs') (Ctx.conv names isos sig.add.params («this», p, month, c, ())))
+    (args' : ArgsRepS names isos sig.add.params (this' :: vs') («this», p, month, c, ()))
     (safe' : add.safe «this» p month c = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "add" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Registers t' (Ty.conv names isos ty.Registers (add «this» p month c)) :=
+      Ty.RepS names isos ty.Registers t' (add «this» p month c) :=
   source_state_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) : FVar sigs "add" sig.add) rfl («this», p, month, c, ()) this' vs' args' safe'
 
 /-- Every run of `totalOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem totalOf.source («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.totalOf.params vs' (Ctx.conv names isos sig.totalOf.params («this», p, month, device, ()))) :
+    (args' : ArgsRepS names isos sig.totalOf.params vs' («this», p, month, device, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "totalOf" vs') (.ok w') ∧
-      Ty.Rep ty.Counters w' (Ty.conv names isos ty.Counters (totalOf «this» p month device)) :=
+      Ty.RepS names isos ty.Counters w' (totalOf «this» p month device) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))) : FVar sigs "totalOf" sig.totalOf) rfl («this», p, month, device, ()) vs' args' rfl
 
 /-- Every run of `usageOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem usageOf.source («this» : Registers) (p : JSString) (month : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.usageOf.params vs' (Ctx.conv names isos sig.usageOf.params («this», p, month, ())))
+    (args' : ArgsRepS names isos sig.usageOf.params vs' («this», p, month, ()))
     (safe' : usageOf.safe «this» p month = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "usageOf" vs') (.ok w') ∧
-      Ty.Rep ty.Counters w' (Ty.conv names isos ty.Counters (usageOf «this» p month)) :=
+      Ty.RepS names isos ty.Counters w' (usageOf «this» p month) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))) : FVar sigs "usageOf" sig.usageOf) rfl («this», p, month, ()) vs' args' safe'
 
 /-- Every run of `usageList` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem usageList.source («this» : Registers) (vs' : List JSValue)
-    (args' : ArgsRep sig.usageList.params vs' (Ctx.conv names isos sig.usageList.params («this», ())))
+    (args' : ArgsRepS names isos sig.usageList.params vs' («this», ()))
     (safe' : usageList.safe «this» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "usageList" vs') (.ok w') ∧
-      Ty.Rep (.array ty.Increments) w' (Ty.conv names isos (.array ty.Increments) (usageList «this»)) :=
+      Ty.RepS names isos (.array ty.Increments) w' (usageList «this») :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))) : FVar sigs "usageList" sig.usageList) rfl («this», ()) vs' args' safe'
 
 /-- Every run of `totalList` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem totalList.source («this» : Registers) (vs' : List JSValue)
-    (args' : ArgsRep sig.totalList.params vs' (Ctx.conv names isos sig.totalList.params («this», ()))) :
+    (args' : ArgsRepS names isos sig.totalList.params vs' («this», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "totalList" vs') (.ok w') ∧
-      Ty.Rep (.array ty.Total) w' (Ty.conv names isos (.array ty.Total) (totalList «this»)) :=
+      Ty.RepS names isos (.array ty.Total) w' (totalList «this») :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))) : FVar sigs "totalList" sig.totalList) rfl («this», ()) vs' args' rfl
 
 /-- Every run of `touchAlbum` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem touchAlbum.source («this» : Registers) (aid : JSString) («at» : Int) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.touchAlbum.params (this' :: vs') (Ctx.conv names isos sig.touchAlbum.params («this», aid, «at», ()))) :
+    (args' : ArgsRepS names isos sig.touchAlbum.params (this' :: vs') («this», aid, «at», ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "touchAlbum" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Registers t' (Ty.conv names isos ty.Registers (touchAlbum «this» aid «at»)) :=
+      Ty.RepS names isos ty.Registers t' (touchAlbum «this» aid «at») :=
   source_state_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "touchAlbum" sig.touchAlbum) rfl («this», aid, «at», ()) this' vs' args' rfl
 
 /-- Every run of `album` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem album.source («this» : Registers) (aid : JSString) (stamp : JSString) («at» : Int) (name : Option JSString) (cover : Option JSString) (deleted : Bool) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.album.params (this' :: vs') (Ctx.conv names isos sig.album.params («this», aid, stamp, «at», name, cover, deleted, ()))) :
+    (args' : ArgsRepS names isos sig.album.params (this' :: vs') («this», aid, stamp, «at», name, cover, deleted, ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "album" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Registers t' (Ty.conv names isos ty.Registers (album «this» aid stamp «at» name cover deleted)) :=
+      Ty.RepS names isos ty.Registers t' (album «this» aid stamp «at» name cover deleted) :=
   source_state_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "album" sig.album) rfl («this», aid, stamp, «at», name, cover, deleted, ()) this' vs' args' rfl
 
 /-- Every run of `item` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem item.source («this» : Registers) (aid : JSString) (id : JSString) (stamp : JSString) (present : Bool) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.item.params (this' :: vs') (Ctx.conv names isos sig.item.params («this», aid, id, stamp, present, ()))) :
+    (args' : ArgsRepS names isos sig.item.params (this' :: vs') («this», aid, id, stamp, present, ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "item" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Registers t' (Ty.conv names isos ty.Registers (item «this» aid id stamp present)) :=
+      Ty.RepS names isos ty.Registers t' (item «this» aid id stamp present) :=
   source_state_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "item" sig.item) rfl («this», aid, id, stamp, present, ()) this' vs' args' rfl
 
 /-- Every run of `albumItems` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem albumItems.source («this» : Registers) (aid : JSString) (stamp : JSString) («at» : Int) (add : List JSString) (remove : List JSString) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.albumItems.params (this' :: vs') (Ctx.conv names isos sig.albumItems.params («this», aid, stamp, «at», add, remove, ()))) :
+    (args' : ArgsRepS names isos sig.albumItems.params (this' :: vs') («this», aid, stamp, «at», add, remove, ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "albumItems" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Registers t' (Ty.conv names isos ty.Registers (albumItems «this» aid stamp «at» add remove)) :=
+      Ty.RepS names isos ty.Registers t' (albumItems «this» aid stamp «at» add remove) :=
   source_state_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "albumItems" sig.albumItems) rfl («this», aid, stamp, «at», add, remove, ()) this' vs' args' rfl
 
 /-- Every run of `albumList` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem albumList.source («this» : Registers) (vs' : List JSValue)
-    (args' : ArgsRep sig.albumList.params vs' (Ctx.conv names isos sig.albumList.params («this», ()))) :
+    (args' : ArgsRepS names isos sig.albumList.params vs' («this», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "albumList" vs') (.ok w') ∧
-      Ty.Rep (.array ty.AlbumRec) w' (Ty.conv names isos (.array ty.AlbumRec) (albumList «this»)) :=
+      Ty.RepS names isos (.array ty.AlbumRec) w' (albumList «this») :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) : FVar sigs "albumList" sig.albumList) rfl («this», ()) vs' args' rfl
 
 /-- Every run of `itemList` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem itemList.source («this» : Registers) (vs' : List JSValue)
-    (args' : ArgsRep sig.itemList.params vs' (Ctx.conv names isos sig.itemList.params («this», ()))) :
+    (args' : ArgsRepS names isos sig.itemList.params vs' («this», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "itemList" vs') (.ok w') ∧
-      Ty.Rep (.array ty.AlbumItem) w' (Ty.conv names isos (.array ty.AlbumItem) (itemList «this»)) :=
+      Ty.RepS names isos (.array ty.AlbumItem) w' (itemList «this») :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there .here))))))) : FVar sigs "itemList" sig.itemList) rfl («this», ()) vs' args' rfl
 
 /-- Every run of `loadPlacement` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem loadPlacement.source («this» : Registers) (ref : JSString) (e : Placed) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.loadPlacement.params (this' :: vs') (Ctx.conv names isos sig.loadPlacement.params («this», ref, e, ())))
+    (args' : ArgsRepS names isos sig.loadPlacement.params (this' :: vs') («this», ref, e, ()))
     (safe' : loadPlacement.safe «this» ref e = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "loadPlacement" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Registers t' (Ty.conv names isos ty.Registers (loadPlacement «this» ref e)) :=
+      Ty.RepS names isos ty.Registers t' (loadPlacement «this» ref e) :=
   source_state_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "loadPlacement" sig.loadPlacement) rfl («this», ref, e, ()) this' vs' args' safe'
 
 /-- Every run of `loadMark` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem loadMark.source («this» : Registers) (m : Mark) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.loadMark.params (this' :: vs') (Ctx.conv names isos sig.loadMark.params («this», m, ()))) :
+    (args' : ArgsRepS names isos sig.loadMark.params (this' :: vs') («this», m, ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "loadMark" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Registers t' (Ty.conv names isos ty.Registers (loadMark «this» m)) :=
+      Ty.RepS names isos ty.Registers t' (loadMark «this» m) :=
   source_state_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "loadMark" sig.loadMark) rfl («this», m, ()) this' vs' args' rfl
 
 /-- Every run of `loadPack` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem loadPack.source («this» : Registers) (pk : Pack) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.loadPack.params (this' :: vs') (Ctx.conv names isos sig.loadPack.params («this», pk, ()))) :
+    (args' : ArgsRepS names isos sig.loadPack.params (this' :: vs') («this», pk, ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "loadPack" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Registers t' (Ty.conv names isos ty.Registers (loadPack «this» pk)) :=
+      Ty.RepS names isos ty.Registers t' (loadPack «this» pk) :=
   source_state_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "loadPack" sig.loadPack) rfl («this», pk, ()) this' vs' args' rfl
 
 /-- Every run of `loadTotal` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem loadTotal.source («this» : Registers) (t : Total) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.loadTotal.params (this' :: vs') (Ctx.conv names isos sig.loadTotal.params («this», t, ())))
+    (args' : ArgsRepS names isos sig.loadTotal.params (this' :: vs') («this», t, ()))
     (safe' : loadTotal.safe «this» t = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "loadTotal" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Registers t' (Ty.conv names isos ty.Registers (loadTotal «this» t)) :=
+      Ty.RepS names isos ty.Registers t' (loadTotal «this» t) :=
   source_state_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "loadTotal" sig.loadTotal) rfl («this», t, ()) this' vs' args' safe'
 
 /-- Every run of `loadIncrements` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem loadIncrements.source («this» : Registers) (i : Increments) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.loadIncrements.params (this' :: vs') (Ctx.conv names isos sig.loadIncrements.params («this», i, ())))
+    (args' : ArgsRepS names isos sig.loadIncrements.params (this' :: vs') («this», i, ()))
     (safe' : loadIncrements.safe «this» i = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "loadIncrements" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Registers t' (Ty.conv names isos ty.Registers (loadIncrements «this» i)) :=
+      Ty.RepS names isos ty.Registers t' (loadIncrements «this» i) :=
   source_state_ofS isos erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "loadIncrements" sig.loadIncrements) rfl («this», i, ()) this' vs' args' safe'
 
 /-- Every run of `loadAlbum` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem loadAlbum.source («this» : Registers) (a : AlbumRec) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.loadAlbum.params (this' :: vs') (Ctx.conv names isos sig.loadAlbum.params («this», a, ()))) :
+    (args' : ArgsRepS names isos sig.loadAlbum.params (this' :: vs') («this», a, ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "loadAlbum" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Registers t' (Ty.conv names isos ty.Registers (loadAlbum «this» a)) :=
+      Ty.RepS names isos ty.Registers t' (loadAlbum «this» a) :=
   source_state_ofS isos erased wf denote_eq safety_eq ((.there .here) : FVar sigs "loadAlbum" sig.loadAlbum) rfl («this», a, ()) this' vs' args' rfl
 
 /-- Every run of `loadItem` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem loadItem.source («this» : Registers) (i : AlbumItem) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.loadItem.params (this' :: vs') (Ctx.conv names isos sig.loadItem.params («this», i, ()))) :
+    (args' : ArgsRepS names isos sig.loadItem.params (this' :: vs') («this», i, ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "loadItem" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Registers t' (Ty.conv names isos ty.Registers (loadItem «this» i)) :=
+      Ty.RepS names isos ty.Registers t' (loadItem «this» i) :=
   source_state_ofS isos erased wf denote_eq safety_eq (.here : FVar sigs "loadItem" sig.loadItem) rfl («this», i, ()) this' vs' args' rfl
 
 end Tests.Generated.Registers

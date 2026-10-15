@@ -1378,6 +1378,99 @@ end
 
 end
 
+/-! ## Representation of the program's values -/
+
+section
+variable (N : Names) (I : Isos N)
+
+mutual
+  /-- `Ty.Rep` over the program's types: the JavaScript value `v` represents `x`. On a type with no
+  named record or union inside it, it unfolds to `Ty.Rep`'s cases. -/
+  def Ty.RepS : (τ : Ty) → JSValue → τ.den N → Prop
+    | .bool, v, b => v = .bool b
+    | .int, v, n => v = .bigint n
+    | .number, v, n => v = .number n
+    | .string, v, s => v = .string s
+    | .tag t, v, _ => v = t.value
+    | .lits a as, v, i => v = .string ((a :: as)[i])
+    | .option n _, v, none => n.admits v
+    | .option _ τ, v, some x => Ty.RepS τ v x
+    | .record fs, v, x => ∃ kvs, v = .record kvs ∧ (kvs.map Prod.fst).Nodup ∧ Fields.RepS fs kvs (recView N I fs x)
+    | .union key vs, v, x =>
+      ∃ kvs, v = .record kvs ∧ (kvs.map Prod.fst).Nodup ∧ Variants.RepS key vs kvs (unionView N I vs x)
+    | .array τ, v, xs => ∃ vs, v = .array vs ∧ Forall2 (fun w x => Ty.RepS τ w x) vs xs
+    | .map τ, v, m => ∃ kvs, v = .map kvs ∧ Forall2 (fun p q => p.1 = q.1 ∧ Ty.RepS τ p.2 q.2) kvs m
+
+  def Fields.RepS : (fs : Fields) → List (String × JSValue) → fs.den N → Prop
+    | .nil, _, _ => True
+    | .cons f τ rest, kvs, (x, xs) => Ty.RepS τ (fieldOf kvs f) x ∧ Fields.RepS rest kvs xs
+
+  def Variants.RepS (key : String) : (vs : Variants) → List (String × JSValue) → vs.den N → Prop
+    | .one t fs, kvs, x => fieldOf kvs key = t.value ∧ Fields.RepS fs kvs x
+    | .cons t fs _, kvs, .inl x => fieldOf kvs key = t.value ∧ Fields.RepS fs kvs x
+    | .cons _ _ rest, kvs, .inr y => Variants.RepS key rest kvs y
+end
+
+/-- `EnvRel` over the program's types. -/
+def EnvRelS : (Γ : Ctx) → Env → Γ.denS N → Prop
+  | [], env, _ => env = []
+  | (x, τ) :: Γ, env, (a, ρ) => ∃ w env', env = (x, w) :: env' ∧ Ty.RepS N I τ w a ∧ EnvRelS Γ env' ρ
+
+/-- `ArgsRep` over the program's types: the arguments `vs` represent the inputs `xs`. -/
+def ArgsRepS (ps : Ctx) (vs : List JSValue) (xs : ps.denS N) : Prop :=
+  EnvRelS N I ps (bindParams (ps.map Prod.fst) vs) xs
+
+theorem forall2_map {α β γ : Type} (R : α → γ → Prop) (f : β → γ) :
+    ∀ (as : List α) (bs : List β), Forall2 R as (bs.map f) = Forall2 (fun a b => R a (f b)) as bs
+  | [], [] => propext ⟨fun _ => .nil, fun _ => .nil⟩
+  | [], _ :: _ => propext ⟨fun h => (nomatch h), fun h => (nomatch h)⟩
+  | _ :: _, [] => propext ⟨fun h => (nomatch h), fun h => (nomatch h)⟩
+  | a :: as, b :: bs => by
+    rw [List.map_cons]
+    apply propext
+    constructor
+    · intro h; cases h with | cons h1 h2 => exact .cons h1 (forall2_map R f as bs ▸ h2)
+    · intro h; cases h with | cons h1 h2 => exact .cons h1 ((forall2_map R f as bs).symm ▸ h2)
+
+mutual
+  theorem Ty.repS_eq : ∀ (τ : Ty) (v : JSValue) (x : τ.den N), Ty.RepS N I τ v x = τ.Rep v (Ty.conv N I τ x)
+    | .bool, _, _ | .int, _, _ | .number, _, _ | .string, _, _ | .tag _, _, _ | .lits _ _, _, _ => rfl
+    | .option _ _, _, none => rfl
+    | .option _ τ, v, some x => Ty.repS_eq τ v x
+    | .record fs, v, x => by
+      simp only [Ty.RepS, Ty.Rep, Ty.conv_record, Fields.repS_eq fs]
+    | .union key vs, v, x => by
+      simp only [Ty.RepS, Ty.Rep, Ty.conv_union, Variants.repS_eq key vs]
+    | .array τ, v, xs => by
+      simp only [Ty.RepS, Ty.Rep, Ty.conv, forall2_map, Ty.repS_eq τ]
+    | .map τ, v, m => by
+      simp only [Ty.RepS, Ty.Rep, Ty.conv, forall2_map, Ty.repS_eq τ]
+
+  theorem Fields.repS_eq : ∀ (fs : Fields) (kvs : List (String × JSValue)) (x : fs.den N),
+      Fields.RepS N I fs kvs x = fs.Rep kvs (Fields.conv N I fs x)
+    | .nil, _, _ => rfl
+    | .cons _ τ rest, kvs, (x, xs) => by
+      simp only [Fields.RepS, Fields.Rep, Fields.conv, Ty.repS_eq τ, Fields.repS_eq rest]
+
+  theorem Variants.repS_eq (key : String) : ∀ (vs : Variants) (kvs : List (String × JSValue)) (x : vs.den N),
+      Variants.RepS N I key vs kvs x = vs.Rep key kvs (Variants.conv N I vs x)
+    | .one _ fs, kvs, x => by simp only [Variants.RepS, Variants.Rep, Variants.conv, Fields.repS_eq fs]
+    | .cons _ fs _, kvs, .inl x => by simp only [Variants.RepS, Variants.Rep, Variants.conv, Fields.repS_eq fs]
+    | .cons _ _ rest, kvs, .inr y => by
+      simp only [Variants.RepS, Variants.Rep, Variants.conv, Variants.repS_eq key rest]
+end
+
+theorem EnvRelS_eq : ∀ (Γ : Ctx) (env : Env) (ρ : Γ.denS N), EnvRelS N I Γ env ρ = EnvRel Γ env (Ctx.conv N I Γ ρ)
+  | [], _, _ => rfl
+  | (_, τ) :: Γ, env, (a, ρ) => by
+    simp only [EnvRelS, EnvRel, Ctx.conv, Ty.repS_eq, EnvRelS_eq Γ]
+
+theorem ArgsRepS_eq (ps : Ctx) (vs : List JSValue) (xs : ps.denS N) :
+    ArgsRepS N I ps vs xs = ArgsRep ps vs (Ctx.conv N I ps xs) :=
+  EnvRelS_eq N I ps _ xs
+
+end
+
 /-! ## Functions, programs, and what a generated file concludes -/
 
 section
@@ -1415,25 +1508,28 @@ theorem TProgram.safety_consS {Φ : Sigs} {s : Sig} {body : TStmts Φ s.params s
   rw [TProgram.safety, hP, hS, TStmts.safeFn_eq_S I body fs ss, hg]; rfl
 
 /-- Adequacy for a file whose readable definitions use named types: every run on arguments representing
-the inputs (converted) converges to a value representing the readable definition's result (converted). -/
+the inputs converges to a value representing the readable definition's result. -/
 theorem source_ofS {Φ : Sigs} {P : TProgram Φ} {ast : Program} {fs : Φ.denS N} {ss : Φ.safetyS N}
     (erased : P.erase = ast) (wf : P.WF) (denote_eq : P.denote = Sigs.canon N I Φ fs)
     (safety_eq : P.safety = Sigs.canonSafety N I Φ ss) {f : String} {s : Sig} (v : FVar Φ f s) (hv : s.void = false)
-    (xs : s.params.denS N) (vs : List JSValue) (args : ArgsRep s.params vs (Ctx.conv N I s.params xs))
+    (xs : s.params.denS N) (vs : List JSValue) (args : ArgsRepS N I s.params vs xs)
     (safe : FVar.safeS N v ss xs = true) :
-    ∃ w, Converges (fun n => run ast n f vs) (.ok w) ∧ s.result.Rep w (Ty.conv N I s.result (FVar.getS N v fs xs)) := by
-  have h := source_of erased wf denote_eq safety_eq v hv _ vs args (by rw [← FVar.safeS_eq I]; exact safe)
-  rwa [← FVar.conv_getS] at h
+    ∃ w, Converges (fun n => run ast n f vs) (.ok w) ∧ Ty.RepS N I s.result w (FVar.getS N v fs xs) := by
+  rw [ArgsRepS_eq] at args
+  obtain ⟨w, hc, hr⟩ := source_of erased wf denote_eq safety_eq v hv _ vs args (by rw [← FVar.safeS_eq I]; exact safe)
+  exact ⟨w, hc, by rw [Ty.repS_eq, FVar.conv_getS]; exact hr⟩
 
 theorem source_state_ofS {Φ : Sigs} {P : TProgram Φ} {ast : Program} {fs : Φ.denS N} {ss : Φ.safetyS N}
     (erased : P.erase = ast) (wf : P.WF) (denote_eq : P.denote = Sigs.canon N I Φ fs)
     (safety_eq : P.safety = Sigs.canonSafety N I Φ ss) {f : String} {s : Sig} (v : FVar Φ f s) (hv : s.void = true)
     (xs : s.params.denS N) (this : JSValue) (vs : List JSValue)
-    (args : ArgsRep s.params (this :: vs) (Ctx.conv N I s.params xs)) (safe : FVar.safeS N v ss xs = true) :
+    (args : ArgsRepS N I s.params (this :: vs) xs) (safe : FVar.safeS N v ss xs = true) :
     ∃ w t, Converges (fun n => runMethod ast n f this vs) (.ok (w, t)) ∧
-      s.result.Rep t (Ty.conv N I s.result (FVar.getS N v fs xs)) := by
+      Ty.RepS N I s.result t (FVar.getS N v fs xs) := by
+  rw [ArgsRepS_eq] at args
   have h := source_state_of erased wf denote_eq safety_eq v hv _ this vs args (by rw [← FVar.safeS_eq I]; exact safe)
-  rwa [← FVar.conv_getS] at h
+  obtain ⟨w, t, hc, hr⟩ := h
+  exact ⟨w, t, hc, by rw [Ty.repS_eq, FVar.conv_getS]; exact hr⟩
 
 /-- `frame_of_fn` for a file whose readable definitions use named types. -/
 theorem frame_of_fnS {fs0 : Fields} {g : String} {φ : Ty} (j : FIdx fs0 g φ) {Φ : Sigs} {P : TProgram Φ}

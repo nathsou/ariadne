@@ -5,8 +5,8 @@ import Ariadne.Lib.Cmp
 # drive's trust kernel: specification statements on its translation
 
 The statements of drive's `verify/Drive/Spec/Trust.lean`, restated over the readable
-definitions Ariadne generates from `core/kernel/trust.ts` (unions are sums of their
-variants' field tuples, strings are UTF-16 code units), proved there, and carried
+definitions Ariadne generates from `core/kernel/trust.ts` (interfaces are structures,
+unions are inductives, strings are UTF-16 code units), proved there, and carried
 over to every JavaScript run by the source theorems.
 -/
 
@@ -32,17 +32,17 @@ or read-only; a missing copy only when every provider answered; a copy of the
 session's generation only when older; an older or damaged copy always; an unknown or
 foreign one never. -/
 def MayOverwrite (copies : List StoredCopy) (own : Int) (stale readOnly : Bool) : StoredCopy → Prop
-  | .inl _ => stale = false ∧ readOnly = false ∧ ∀ c ∈ copies, c ≠ StoredCopy.unknown
-  | .inr (.inl _) => False
-  | .inr (.inr (.inl (w, _))) => stale = false ∧ readOnly = false ∧ w < own
-  | .inr (.inr (.inr (.inl _))) | .inr (.inr (.inr (.inr (.inl _)))) => stale = false ∧ readOnly = false
-  | .inr (.inr (.inr (.inr (.inr _)))) => False
+  | .missing => stale = false ∧ readOnly = false ∧ ∀ c ∈ copies, c ≠ StoredCopy.unknown
+  | .unknown => False
+  | .own w => stale = false ∧ readOnly = false ∧ w < own
+  | .older | .damaged => stale = false ∧ readOnly = false
+  | .foreign => False
 
 /-- **Repairs never destroy.** A repair overwrites exactly the copies `MayOverwrite` allows. -/
 theorem repairs_exact (copies : List StoredCopy) (own : Int) (stale readOnly : Bool) :
-    (repairs copies own (stale, readOnly, ())).length = copies.length ∧
+    (repairs copies own ⟨stale, readOnly⟩).length = copies.length ∧
       ∀ (i : Nat) c, copies[i]? = some c →
-        ((repairs copies own (stale, readOnly, ()))[i]? = some true ↔ MayOverwrite copies own stale readOnly c) := by
+        ((repairs copies own ⟨stale, readOnly⟩)[i]? = some true ↔ MayOverwrite copies own stale readOnly c) := by
   have hall : copies.all answered = true ↔ ∀ c ∈ copies, c ≠ StoredCopy.unknown := by
     simp [List.all_eq_true, answered_iff]
   refine ⟨by simp only [repairs]; split <;> simp, fun i c hc => ?_⟩
@@ -65,7 +65,7 @@ theorem byRank_laws : CmpLaws byRank := by
 
 /-- `chooseVaultCopy` is safe on every input: its only condition is that the ranking is
 consistent on the copies it sorts. -/
-theorem chooseVaultCopy_safe (facts : List ty.CopyFact.denote) (floor : Option ty.Floor.denote) :
+theorem chooseVaultCopy_safe (facts : List CopyFact) (floor : Option Floor) :
     chooseVaultCopy.safe facts floor = true := by
   unfold chooseVaultCopy.safe
   refine forIn_true (fun p next exit st hn _ => ?_) (fun st => ?_) _ _
@@ -82,10 +82,10 @@ theorem chooseVaultCopy_safe (facts : List ty.CopyFact.denote) (floor : Option t
 
 /-- So every run of the compiled `chooseVaultCopy`, on any arguments representing its
 inputs, converges to the readable definition's result: no precondition is left. -/
-theorem chooseVaultCopy_run (facts : List ty.CopyFact.denote) (floor : Option ty.Floor.denote)
-    (vs : List JSValue) (args : ArgsRep sig.chooseVaultCopy.params vs (facts, floor, ())) :
+theorem chooseVaultCopy_run (facts : List CopyFact) (floor : Option Floor)
+    (vs : List JSValue) (args : ArgsRepS names isos sig.chooseVaultCopy.params vs (facts, floor, ())) :
     ∃ w, Converges (fun fuel => run ast fuel "chooseVaultCopy" vs) (.ok w) ∧
-      Ty.Rep ty.Choice w (chooseVaultCopy facts floor) :=
+      Ty.RepS names isos ty.Choice w (chooseVaultCopy facts floor) :=
   chooseVaultCopy.source facts floor vs args (chooseVaultCopy_safe facts floor)
 
 end Tests.TrustSpec

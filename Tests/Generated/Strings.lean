@@ -470,121 +470,121 @@ theorem safety_eq : typed.safety = Sigs.canonSafety names isos sigs (digits.safe
 /-- Every run of `hasPrefix` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem hasPrefix.source (s : JSString) (p : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.hasPrefix.params vs' (Ctx.conv names isos sig.hasPrefix.params (s, p, ()))) :
+    (args' : ArgsRepS names isos sig.hasPrefix.params vs' (s, p, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "hasPrefix" vs') (.ok w') ∧
-      Ty.Rep .bool w' (Ty.conv names isos .bool (hasPrefix s p)) :=
+      Ty.RepS names isos .bool w' (hasPrefix s p) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))) : FVar sigs "hasPrefix" sig.hasPrefix) rfl (s, p, ()) vs' args' rfl
 
 /-- Every run of `hasSuffix` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem hasSuffix.source (s : JSString) (p : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.hasSuffix.params vs' (Ctx.conv names isos sig.hasSuffix.params (s, p, ()))) :
+    (args' : ArgsRepS names isos sig.hasSuffix.params vs' (s, p, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "hasSuffix" vs') (.ok w') ∧
-      Ty.Rep .bool w' (Ty.conv names isos .bool (hasSuffix s p)) :=
+      Ty.RepS names isos .bool w' (hasSuffix s p) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "hasSuffix" sig.hasSuffix) rfl (s, p, ()) vs' args' rfl
 
 /-- Every run of `contains` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem contains.source (s : JSString) (t : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.contains.params vs' (Ctx.conv names isos sig.contains.params (s, t, ()))) :
+    (args' : ArgsRepS names isos sig.contains.params vs' (s, t, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "contains" vs') (.ok w') ∧
-      Ty.Rep .bool w' (Ty.conv names isos .bool (contains s t)) :=
+      Ty.RepS names isos .bool w' (contains s t) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "contains" sig.contains) rfl (s, t, ()) vs' args' rfl
 
 /-- Every run of `position` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem position.source (s : JSString) (t : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.position.params vs' (Ctx.conv names isos sig.position.params (s, t, ()))) :
+    (args' : ArgsRepS names isos sig.position.params vs' (s, t, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "position" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (position s t)) :=
+      Ty.RepS names isos .number w' (position s t) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "position" sig.position) rfl (s, t, ()) vs' args' rfl
 
 /-- Every run of `tail` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem tail.source (s : JSString) («from» : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.tail.params vs' (Ctx.conv names isos sig.tail.params (s, «from», ()))) :
+    (args' : ArgsRepS names isos sig.tail.params vs' (s, «from», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "tail" vs') (.ok w') ∧
-      Ty.Rep .string w' (Ty.conv names isos .string (tail s «from»)) :=
+      Ty.RepS names isos .string w' (tail s «from») :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "tail" sig.tail) rfl (s, «from», ()) vs' args' rfl
 
 /-- Every run of `middle` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem middle.source (s : JSString) («from» : Int) (to : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.middle.params vs' (Ctx.conv names isos sig.middle.params (s, «from», to, ()))) :
+    (args' : ArgsRepS names isos sig.middle.params vs' (s, «from», to, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "middle" vs') (.ok w') ∧
-      Ty.Rep .string w' (Ty.conv names isos .string (middle s «from» to)) :=
+      Ty.RepS names isos .string w' (middle s «from» to) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) : FVar sigs "middle" sig.middle) rfl (s, «from», to, ()) vs' args' rfl
 
 /-- Every run of `after` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem after.source (s : JSString) (sep : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.after.params vs' (Ctx.conv names isos sig.after.params (s, sep, ())))
+    (args' : ArgsRepS names isos sig.after.params vs' (s, sep, ()))
     (safe' : after.safe s sep = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "after" vs') (.ok w') ∧
-      Ty.Rep .string w' (Ty.conv names isos .string (after s sep)) :=
+      Ty.RepS names isos .string w' (after s sep) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there .here))))))) : FVar sigs "after" sig.after) rfl (s, sep, ()) vs' args' safe'
 
 /-- Every run of `half` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem half.source (n : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.half.params vs' (Ctx.conv names isos sig.half.params (n, ())))
+    (args' : ArgsRepS names isos sig.half.params vs' (n, ()))
     (safe' : half.safe n = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "half" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (half n)) :=
+      Ty.RepS names isos .number w' (half n) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "half" sig.half) rfl (n, ()) vs' args' safe'
 
 /-- Every run of `quotient` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem quotient.source (a : Int) (b : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.quotient.params vs' (Ctx.conv names isos sig.quotient.params (a, b, ())))
+    (args' : ArgsRepS names isos sig.quotient.params vs' (a, b, ()))
     (safe' : quotient.safe a b = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "quotient" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (quotient a b)) :=
+      Ty.RepS names isos .number w' (quotient a b) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "quotient" sig.quotient) rfl (a, b, ()) vs' args' safe'
 
 /-- Every run of `remainder` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem remainder.source (a : Int) (b : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.remainder.params vs' (Ctx.conv names isos sig.remainder.params (a, b, ())))
+    (args' : ArgsRepS names isos sig.remainder.params vs' (a, b, ()))
     (safe' : remainder.safe a b = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "remainder" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (remainder a b)) :=
+      Ty.RepS names isos .number w' (remainder a b) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "remainder" sig.remainder) rfl (a, b, ()) vs' args' safe'
 
 /-- Every run of `bigQuotient` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem bigQuotient.source (a : Int) (b : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.bigQuotient.params vs' (Ctx.conv names isos sig.bigQuotient.params (a, b, ())))
+    (args' : ArgsRepS names isos sig.bigQuotient.params vs' (a, b, ()))
     (safe' : bigQuotient.safe a b = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "bigQuotient" vs') (.ok w') ∧
-      Ty.Rep .int w' (Ty.conv names isos .int (bigQuotient a b)) :=
+      Ty.RepS names isos .int w' (bigQuotient a b) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "bigQuotient" sig.bigQuotient) rfl (a, b, ()) vs' args' safe'
 
 /-- Every run of `bigRemainder` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem bigRemainder.source (a : Int) (b : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.bigRemainder.params vs' (Ctx.conv names isos sig.bigRemainder.params (a, b, ())))
+    (args' : ArgsRepS names isos sig.bigRemainder.params vs' (a, b, ()))
     (safe' : bigRemainder.safe a b = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "bigRemainder" vs') (.ok w') ∧
-      Ty.Rep .int w' (Ty.conv names isos .int (bigRemainder a b)) :=
+      Ty.RepS names isos .int w' (bigRemainder a b) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "bigRemainder" sig.bigRemainder) rfl (a, b, ()) vs' args' safe'
 
 /-- Every run of `even` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem even.source (n : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.even.params vs' (Ctx.conv names isos sig.even.params (n, ())))
+    (args' : ArgsRepS names isos sig.even.params vs' (n, ()))
     (safe' : even.safe n = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "even" vs') (.ok w') ∧
-      Ty.Rep .bool w' (Ty.conv names isos .bool (even n)) :=
+      Ty.RepS names isos .bool w' (even n) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there .here) : FVar sigs "even" sig.even) rfl (n, ()) vs' args' safe'
 
 /-- Every run of `digits` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem digits.source (n : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.digits.params vs' (Ctx.conv names isos sig.digits.params (n, ())))
+    (args' : ArgsRepS names isos sig.digits.params vs' (n, ()))
     (safe' : digits.safe n = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "digits" vs') (.ok w') ∧
-      Ty.Rep (.array .number) w' (Ty.conv names isos (.array .number) (digits n)) :=
+      Ty.RepS names isos (.array .number) w' (digits n) :=
   source_ofS isos erased wf denote_eq safety_eq (.here : FVar sigs "digits" sig.digits) rfl (n, ()) vs' args' safe'
 
 end Tests.Generated.Strings

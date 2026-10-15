@@ -36,11 +36,11 @@ theorem clamp_idempotent (x lo hi : Int) (h : lo ≤ hi) : clamp (clamp x lo hi)
 
 /-- **The claim about the JavaScript.** Every run of `clamp(x, lo, hi)`, on arguments representing
 `x`, `lo` and `hi`, with `lo ≤ hi`, returns a number between `lo` and `hi`. -/
-theorem clamp_run (x lo hi : Int) (vs : List JSValue) (args : ArgsRep sig.clamp.params vs (x, lo, hi, ()))
+theorem clamp_run (x lo hi : Int) (vs : List JSValue) (args : ArgsRepS names isos sig.clamp.params vs (x, lo, hi, ()))
     (h : lo ≤ hi) :
     ∃ n : Int, Converges (fun fuel => run ast fuel "clamp" vs) (.ok (.number n)) ∧ lo ≤ n ∧ n ≤ hi := by
   obtain ⟨w, runs, rep⟩ := clamp.source x lo hi vs args
-  simp only [Ty.Rep] at rep
+  simp only [Ty.RepS] at rep
   subst rep
   exact ⟨_, runs, clamp_between x lo hi h⟩
 

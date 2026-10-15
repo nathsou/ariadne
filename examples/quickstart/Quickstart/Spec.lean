@@ -13,7 +13,7 @@ open Ariadne Quickstart.Ledger
 
 /-- An entry's amount. -/
 def amount : Entry → Int
-  | .inl (a, ()) | .inr (a, ()) => a
+  | .credit a | .debit a => a
 
 /-- With non-negative amounts, the balance is never negative: a debit larger than the balance is refused. -/
 def balance_nonneg : Prop :=
@@ -31,8 +31,8 @@ def credit_frozen : Prop :=
 definition gives (so the two statements above hold of the TypeScript). -/
 def freeze_runs : Prop :=
   ∀ (a : Accounts) (id : JSString) (this' : JSValue) (vs : List JSValue),
-    ArgsRep sig.freeze.params (this' :: vs) (a, id, ()) →
+    ArgsRepS names isos sig.freeze.params (this' :: vs) (a, id, ()) →
     ∃ w t, Converges (fun fuel => runMethod ast fuel "freeze" this' vs) (.ok (w, t)) ∧
-      Ty.Rep ty.Accounts t (freeze a id)
+      Ty.RepS names isos ty.Accounts t (freeze a id)
 
 end Quickstart.Spec

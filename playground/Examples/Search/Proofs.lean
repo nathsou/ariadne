@@ -193,12 +193,12 @@ theorem indexOf_complete (xs : List Int) (target : Int) (sorted : xs.Pairwise (�
 numbers returns an index: one holding the target, or -1, and in a sorted array -1 only when the
 target is absent. -/
 theorem indexOf_run (xs : List Int) (target : Int) (vs : List JSValue)
-    (args : ArgsRep sig.indexOf.params vs (xs, target, ())) (h : xs.length < 2 ^ 53) :
+    (args : ArgsRepS names isos sig.indexOf.params vs (xs, target, ())) (h : xs.length < 2 ^ 53) :
     ∃ i : Int, Converges (fun fuel => run ast fuel "indexOf" vs) (.ok (.number i)) ∧
       (i = -1 ∨ (0 ≤ i ∧ xs[i.toNat]? = some target)) ∧
       (xs.Pairwise (· ≤ ·) → target ∈ xs → i ≠ -1) := by
   obtain ⟨w, runs, rep⟩ := indexOf.source xs target vs args (indexOf_safe xs target h)
-  simp only [Ty.Rep] at rep
+  simp only [Ty.RepS] at rep
   subst rep
   refine ⟨_, runs, ?_, fun sorted mem => indexOf_complete xs target sorted mem h⟩
   by_cases hi : indexOf xs target = -1

@@ -189,36 +189,36 @@ theorem safety_eq : typed.safety = Sigs.canonSafety names isos sigs (qualified.s
 /-- Every run of `byScore` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem byScore.source (a : Player) (b : Player) (vs' : List JSValue)
-    (args' : ArgsRep sig.byScore.params vs' (Ctx.conv names isos sig.byScore.params (a, b, ()))) :
+    (args' : ArgsRepS names isos sig.byScore.params vs' (a, b, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "byScore" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (byScore a b)) :=
+      Ty.RepS names isos .number w' (byScore a b) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "byScore" sig.byScore) rfl (a, b, ()) vs' args' rfl
 
 /-- Every run of `ranking` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem ranking.source (players : List Player) (vs' : List JSValue)
-    (args' : ArgsRep sig.ranking.params vs' (Ctx.conv names isos sig.ranking.params (players, ())))
+    (args' : ArgsRepS names isos sig.ranking.params vs' (players, ()))
     (safe' : ranking.safe players = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "ranking" vs') (.ok w') ∧
-      Ty.Rep (.array ty.Player) w' (Ty.conv names isos (.array ty.Player) (ranking players)) :=
+      Ty.RepS names isos (.array ty.Player) w' (ranking players) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "ranking" sig.ranking) rfl (players, ()) vs' args' safe'
 
 /-- Every run of `best` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem best.source (players : List Player) (vs' : List JSValue)
-    (args' : ArgsRep sig.best.params vs' (Ctx.conv names isos sig.best.params (players, ())))
+    (args' : ArgsRepS names isos sig.best.params vs' (players, ()))
     (safe' : best.safe players = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "best" vs') (.ok w') ∧
-      Ty.Rep (.option .undef .number) w' (Ty.conv names isos (.option .undef .number) (best players)) :=
+      Ty.RepS names isos (.option .undef .number) w' (best players) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there .here) : FVar sigs "best" sig.best) rfl (players, ()) vs' args' safe'
 
 /-- Every run of `qualified` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem qualified.source (players : List Player) (threshold : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.qualified.params vs' (Ctx.conv names isos sig.qualified.params (players, threshold, ())))
+    (args' : ArgsRepS names isos sig.qualified.params vs' (players, threshold, ()))
     (safe' : qualified.safe players threshold = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "qualified" vs') (.ok w') ∧
-      Ty.Rep (.array .string) w' (Ty.conv names isos (.array .string) (qualified players threshold)) :=
+      Ty.RepS names isos (.array .string) w' (qualified players threshold) :=
   source_ofS isos erased wf denote_eq safety_eq (.here : FVar sigs "qualified" sig.qualified) rfl (players, threshold, ()) vs' args' safe'
 
 end Examples.Leaderboard

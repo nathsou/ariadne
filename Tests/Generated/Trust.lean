@@ -958,82 +958,82 @@ theorem safety_eq : typed.safety = Sigs.canonSafety names isos sigs (rotatedPast
 /-- Every run of `listed` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem listed.source (kid : Option JSString) (list : Option (List JSString)) (vs' : List JSValue)
-    (args' : ArgsRep sig.listed.params vs' (Ctx.conv names isos sig.listed.params (kid, list, ()))) :
+    (args' : ArgsRepS names isos sig.listed.params vs' (kid, list, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "listed" vs') (.ok w') ∧
-      Ty.Rep .bool w' (Ty.conv names isos .bool (listed kid list)) :=
+      Ty.RepS names isos .bool w' (listed kid list) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "listed" sig.listed) rfl (kid, list, ()) vs' args' rfl
 
 /-- Every run of `byRank` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem byRank.source (a : Candidate) (b : Candidate) (vs' : List JSValue)
-    (args' : ArgsRep sig.byRank.params vs' (Ctx.conv names isos sig.byRank.params (a, b, ()))) :
+    (args' : ArgsRepS names isos sig.byRank.params vs' (a, b, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "byRank" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (byRank a b)) :=
+      Ty.RepS names isos .number w' (byRank a b) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) : FVar sigs "byRank" sig.byRank) rfl (a, b, ()) vs' args' rfl
 
 /-- Every run of `chooseVaultCopy` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem chooseVaultCopy.source (facts : List CopyFact) (floor : Option Floor) (vs' : List JSValue)
-    (args' : ArgsRep sig.chooseVaultCopy.params vs' (Ctx.conv names isos sig.chooseVaultCopy.params (facts, floor, ())))
+    (args' : ArgsRepS names isos sig.chooseVaultCopy.params vs' (facts, floor, ()))
     (safe' : chooseVaultCopy.safe facts floor = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "chooseVaultCopy" vs') (.ok w') ∧
-      Ty.Rep ty.Choice w' (Ty.conv names isos ty.Choice (chooseVaultCopy facts floor)) :=
+      Ty.RepS names isos ty.Choice w' (chooseVaultCopy facts floor) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there .here))))))) : FVar sigs "chooseVaultCopy" sig.chooseVaultCopy) rfl (facts, floor, ()) vs' args' safe'
 
 /-- Every run of `chooseKeysCopy` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem chooseKeysCopy.source (facts : List CopyFact) (vs' : List JSValue)
-    (args' : ArgsRep sig.chooseKeysCopy.params vs' (Ctx.conv names isos sig.chooseKeysCopy.params (facts, ()))) :
+    (args' : ArgsRepS names isos sig.chooseKeysCopy.params vs' (facts, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "chooseKeysCopy" vs') (.ok w') ∧
-      Ty.Rep (.option .null ty.KeysChoice) w' (Ty.conv names isos (.option .null ty.KeysChoice) (chooseKeysCopy facts)) :=
+      Ty.RepS names isos (.option .null ty.KeysChoice) w' (chooseKeysCopy facts) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "chooseKeysCopy" sig.chooseKeysCopy) rfl (facts, ()) vs' args' rfl
 
 /-- Every run of `newestOwnCopy` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem newestOwnCopy.source (own : Int) (stamps : List (Option Int)) (vs' : List JSValue)
-    (args' : ArgsRep sig.newestOwnCopy.params vs' (Ctx.conv names isos sig.newestOwnCopy.params (own, stamps, ()))) :
+    (args' : ArgsRepS names isos sig.newestOwnCopy.params vs' (own, stamps, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "newestOwnCopy" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (newestOwnCopy own stamps)) :=
+      Ty.RepS names isos .number w' (newestOwnCopy own stamps) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "newestOwnCopy" sig.newestOwnCopy) rfl (own, stamps, ()) vs' args' rfl
 
 /-- Every run of `mayChangeFrom` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem mayChangeFrom.source (written : Int) (floorWritten : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.mayChangeFrom.params vs' (Ctx.conv names isos sig.mayChangeFrom.params (written, floorWritten, ()))) :
+    (args' : ArgsRepS names isos sig.mayChangeFrom.params vs' (written, floorWritten, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "mayChangeFrom" vs') (.ok w') ∧
-      Ty.Rep .bool w' (Ty.conv names isos .bool (mayChangeFrom written floorWritten)) :=
+      Ty.RepS names isos .bool w' (mayChangeFrom written floorWritten) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "mayChangeFrom" sig.mayChangeFrom) rfl (written, floorWritten, ()) vs' args' rfl
 
 /-- Every run of `answered` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem answered.source (c : StoredCopy) (vs' : List JSValue)
-    (args' : ArgsRep sig.answered.params vs' (Ctx.conv names isos sig.answered.params (c, ()))) :
+    (args' : ArgsRepS names isos sig.answered.params vs' (c, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "answered" vs') (.ok w') ∧
-      Ty.Rep .bool w' (Ty.conv names isos .bool (answered c)) :=
+      Ty.RepS names isos .bool w' (answered c) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "answered" sig.answered) rfl (c, ()) vs' args' rfl
 
 /-- Every run of `repairOne` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem repairOne.source (c : StoredCopy) (own : Int) (allAnswered : Bool) (vs' : List JSValue)
-    (args' : ArgsRep sig.repairOne.params vs' (Ctx.conv names isos sig.repairOne.params (c, own, allAnswered, ()))) :
+    (args' : ArgsRepS names isos sig.repairOne.params vs' (c, own, allAnswered, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "repairOne" vs') (.ok w') ∧
-      Ty.Rep .bool w' (Ty.conv names isos .bool (repairOne c own allAnswered)) :=
+      Ty.RepS names isos .bool w' (repairOne c own allAnswered) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "repairOne" sig.repairOne) rfl (c, own, allAnswered, ()) vs' args' rfl
 
 /-- Every run of `repairs` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem repairs.source (copies : List StoredCopy) (own : Int) (ctx : RepairContext) (vs' : List JSValue)
-    (args' : ArgsRep sig.repairs.params vs' (Ctx.conv names isos sig.repairs.params (copies, own, ctx, ()))) :
+    (args' : ArgsRepS names isos sig.repairs.params vs' (copies, own, ctx, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "repairs" vs') (.ok w') ∧
-      Ty.Rep (.array .bool) w' (Ty.conv names isos (.array .bool) (repairs copies own ctx)) :=
+      Ty.RepS names isos (.array .bool) w' (repairs copies own ctx) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there .here) : FVar sigs "repairs" sig.repairs) rfl (copies, own, ctx, ()) vs' args' rfl
 
 /-- Every run of `rotatedPast` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem rotatedPast.source (copySeeds : List JSString) (ownSeeds : List JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.rotatedPast.params vs' (Ctx.conv names isos sig.rotatedPast.params (copySeeds, ownSeeds, ()))) :
+    (args' : ArgsRepS names isos sig.rotatedPast.params vs' (copySeeds, ownSeeds, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "rotatedPast" vs') (.ok w') ∧
-      Ty.Rep .bool w' (Ty.conv names isos .bool (rotatedPast copySeeds ownSeeds)) :=
+      Ty.RepS names isos .bool w' (rotatedPast copySeeds ownSeeds) :=
   source_ofS isos erased wf denote_eq safety_eq (.here : FVar sigs "rotatedPast" sig.rotatedPast) rfl (copySeeds, ownSeeds, ()) vs' args' rfl
 
 end Tests.Generated.Trust

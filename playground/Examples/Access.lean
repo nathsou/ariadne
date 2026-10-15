@@ -396,65 +396,65 @@ theorem claim.keeps.suspended («this» : Access) (user : JSString) :
 /-- Every run of `new Access` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem «new Access».source  (vs' : List JSValue)
-    (args' : ArgsRep sig.«new Access».params vs' (Ctx.conv names isos sig.«new Access».params (()))) :
+    (args' : ArgsRepS names isos sig.«new Access».params vs' (())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "new Access" vs') (.ok w') ∧
-      Ty.Rep ty.Access w' (Ty.conv names isos ty.Access («new Access»)) :=
+      Ty.RepS names isos ty.Access w' («new Access») :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there .here))))))) : FVar sigs "new Access" sig.«new Access») rfl (()) vs' args' rfl
 
 /-- Every run of `isOwner` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem isOwner.source («this» : Access) (user : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.isOwner.params vs' (Ctx.conv names isos sig.isOwner.params («this», user, ()))) :
+    (args' : ArgsRepS names isos sig.isOwner.params vs' («this», user, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "isOwner" vs') (.ok w') ∧
-      Ty.Rep .bool w' (Ty.conv names isos .bool (isOwner «this» user)) :=
+      Ty.RepS names isos .bool w' (isOwner «this» user) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "isOwner" sig.isOwner) rfl («this», user, ()) vs' args' rfl
 
 /-- Every run of `canRead` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem canRead.source («this» : Access) (user : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.canRead.params vs' (Ctx.conv names isos sig.canRead.params («this», user, ()))) :
+    (args' : ArgsRepS names isos sig.canRead.params vs' («this», user, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "canRead" vs') (.ok w') ∧
-      Ty.Rep .bool w' (Ty.conv names isos .bool (canRead «this» user)) :=
+      Ty.RepS names isos .bool w' (canRead «this» user) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "canRead" sig.canRead) rfl («this», user, ()) vs' args' rfl
 
 /-- Every run of `canWrite` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem canWrite.source («this» : Access) (user : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.canWrite.params vs' (Ctx.conv names isos sig.canWrite.params («this», user, ()))) :
+    (args' : ArgsRepS names isos sig.canWrite.params vs' («this», user, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "canWrite" vs') (.ok w') ∧
-      Ty.Rep .bool w' (Ty.conv names isos .bool (canWrite «this» user)) :=
+      Ty.RepS names isos .bool w' (canWrite «this» user) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "canWrite" sig.canWrite) rfl («this», user, ()) vs' args' rfl
 
 /-- Every run of `grant` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem grant.source («this» : Access) («by» : JSString) (user : JSString) (role : Role) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.grant.params (this' :: vs') (Ctx.conv names isos sig.grant.params («this», «by», user, role, ()))) :
+    (args' : ArgsRepS names isos sig.grant.params (this' :: vs') («this», «by», user, role, ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "grant" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Access t' (Ty.conv names isos ty.Access (grant «this» «by» user role)) :=
+      Ty.RepS names isos ty.Access t' (grant «this» «by» user role) :=
   source_state_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "grant" sig.grant) rfl («this», «by», user, role, ()) this' vs' args' rfl
 
 /-- Every run of `revoke` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem revoke.source («this» : Access) («by» : JSString) (user : JSString) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.revoke.params (this' :: vs') (Ctx.conv names isos sig.revoke.params («this», «by», user, ()))) :
+    (args' : ArgsRepS names isos sig.revoke.params (this' :: vs') («this», «by», user, ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "revoke" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Access t' (Ty.conv names isos ty.Access (revoke «this» «by» user)) :=
+      Ty.RepS names isos ty.Access t' (revoke «this» «by» user) :=
   source_state_ofS isos erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "revoke" sig.revoke) rfl («this», «by», user, ()) this' vs' args' rfl
 
 /-- Every run of `suspend` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem suspend.source («this» : Access) («by» : JSString) (user : JSString) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.suspend.params (this' :: vs') (Ctx.conv names isos sig.suspend.params («this», «by», user, ()))) :
+    (args' : ArgsRepS names isos sig.suspend.params (this' :: vs') («this», «by», user, ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "suspend" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Access t' (Ty.conv names isos ty.Access (suspend «this» «by» user)) :=
+      Ty.RepS names isos ty.Access t' (suspend «this» «by» user) :=
   source_state_ofS isos erased wf denote_eq safety_eq ((.there .here) : FVar sigs "suspend" sig.suspend) rfl («this», «by», user, ()) this' vs' args' rfl
 
 /-- Every run of `claim` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem claim.source («this» : Access) (user : JSString) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.claim.params (this' :: vs') (Ctx.conv names isos sig.claim.params («this», user, ()))) :
+    (args' : ArgsRepS names isos sig.claim.params (this' :: vs') («this», user, ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "claim" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Access t' (Ty.conv names isos ty.Access (claim «this» user)) :=
+      Ty.RepS names isos ty.Access t' (claim «this» user) :=
   source_state_ofS isos erased wf denote_eq safety_eq (.here : FVar sigs "claim" sig.claim) rfl («this», user, ()) this' vs' args' rfl
 
 end Examples.Access

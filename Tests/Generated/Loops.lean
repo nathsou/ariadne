@@ -1167,141 +1167,141 @@ theorem safety_eq : typed.safety = Sigs.canonSafety names isos sigs (countdown.s
 /-- Every run of `sum` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem sum.source (xs : List Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.sum.params vs' (Ctx.conv names isos sig.sum.params (xs, ())))
+    (args' : ArgsRepS names isos sig.sum.params vs' (xs, ()))
     (safe' : sum.safe xs = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "sum" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (sum xs)) :=
+      Ty.RepS names isos .number w' (sum xs) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))) : FVar sigs "sum" sig.sum) rfl (xs, ()) vs' args' safe'
 
 /-- Every run of `firstLarge` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem firstLarge.source (items : List Item) (limit : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.firstLarge.params vs' (Ctx.conv names isos sig.firstLarge.params (items, limit, ()))) :
+    (args' : ArgsRepS names isos sig.firstLarge.params vs' (items, limit, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "firstLarge" vs') (.ok w') ∧
-      Ty.Rep (.option .undef ty.Item) w' (Ty.conv names isos (.option .undef ty.Item) (firstLarge items limit)) :=
+      Ty.RepS names isos (.option .undef ty.Item) w' (firstLarge items limit) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))) : FVar sigs "firstLarge" sig.firstLarge) rfl (items, limit, ()) vs' args' rfl
 
 /-- Every run of `indexOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem indexOf.source (xs : List JSString) (target : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.indexOf.params vs' (Ctx.conv names isos sig.indexOf.params (xs, target, ()))) :
+    (args' : ArgsRepS names isos sig.indexOf.params vs' (xs, target, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "indexOf" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (indexOf xs target)) :=
+      Ty.RepS names isos .number w' (indexOf xs target) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))) : FVar sigs "indexOf" sig.indexOf) rfl (xs, target, ()) vs' args' rfl
 
 /-- Every run of `countTagged` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem countTagged.source (items : List Item) (tag : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.countTagged.params vs' (Ctx.conv names isos sig.countTagged.params (items, tag, ())))
+    (args' : ArgsRepS names isos sig.countTagged.params vs' (items, tag, ()))
     (safe' : countTagged.safe items tag = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "countTagged" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (countTagged items tag)) :=
+      Ty.RepS names isos .number w' (countTagged items tag) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "countTagged" sig.countTagged) rfl (items, tag, ()) vs' args' safe'
 
 /-- Every run of `prefixUntil` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem prefixUntil.source (xs : List Int) (stop : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.prefixUntil.params vs' (Ctx.conv names isos sig.prefixUntil.params (xs, stop, ()))) :
+    (args' : ArgsRepS names isos sig.prefixUntil.params vs' (xs, stop, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "prefixUntil" vs') (.ok w') ∧
-      Ty.Rep (.array .number) w' (Ty.conv names isos (.array .number) (prefixUntil xs stop)) :=
+      Ty.RepS names isos (.array .number) w' (prefixUntil xs stop) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "prefixUntil" sig.prefixUntil) rfl (xs, stop, ()) vs' args' rfl
 
 /-- Every run of `largest` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem largest.source (items : List Item) (vs' : List JSValue)
-    (args' : ArgsRep sig.largest.params vs' (Ctx.conv names isos sig.largest.params (items, ()))) :
+    (args' : ArgsRepS names isos sig.largest.params vs' (items, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "largest" vs') (.ok w') ∧
-      Ty.Rep (.option .undef ty.Item) w' (Ty.conv names isos (.option .undef ty.Item) (largest items)) :=
+      Ty.RepS names isos (.option .undef ty.Item) w' (largest items) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "largest" sig.largest) rfl (items, ()) vs' args' rfl
 
 /-- Every run of `classify` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem classify.source (xs : List Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.classify.params vs' (Ctx.conv names isos sig.classify.params (xs, ())))
+    (args' : ArgsRepS names isos sig.classify.params vs' (xs, ()))
     (safe' : classify.safe xs = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "classify" vs') (.ok w') ∧
-      Ty.Rep .string w' (Ty.conv names isos .string (classify xs)) :=
+      Ty.RepS names isos .string w' (classify xs) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "classify" sig.classify) rfl (xs, ()) vs' args' safe'
 
 /-- Every run of `bump` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem bump.source (n : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.bump.params vs' (Ctx.conv names isos sig.bump.params (n, ())))
+    (args' : ArgsRepS names isos sig.bump.params vs' (n, ()))
     (safe' : bump.safe n = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "bump" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (bump n)) :=
+      Ty.RepS names isos .number w' (bump n) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) : FVar sigs "bump" sig.bump) rfl (n, ()) vs' args' safe'
 
 /-- Every run of `grid` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem grid.source (rows : List (List Int)) (vs' : List JSValue)
-    (args' : ArgsRep sig.grid.params vs' (Ctx.conv names isos sig.grid.params (rows, ())))
+    (args' : ArgsRepS names isos sig.grid.params vs' (rows, ()))
     (safe' : grid.safe rows = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "grid" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (grid rows)) :=
+      Ty.RepS names isos .number w' (grid rows) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there .here))))))) : FVar sigs "grid" sig.grid) rfl (rows, ()) vs' args' safe'
 
 /-- Every run of `perimeters` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem perimeters.source (shapes : List Shape) (vs' : List JSValue)
-    (args' : ArgsRep sig.perimeters.params vs' (Ctx.conv names isos sig.perimeters.params (shapes, ())))
+    (args' : ArgsRepS names isos sig.perimeters.params vs' (shapes, ()))
     (safe' : perimeters.safe shapes = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "perimeters" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (perimeters shapes)) :=
+      Ty.RepS names isos .number w' (perimeters shapes) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "perimeters" sig.perimeters) rfl (shapes, ()) vs' args' safe'
 
 /-- Every run of `steps` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem steps.source (n : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.steps.params vs' (Ctx.conv names isos sig.steps.params (n, ())))
+    (args' : ArgsRepS names isos sig.steps.params vs' (n, ()))
     (safe' : steps.safe n = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "steps" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (steps n)) :=
+      Ty.RepS names isos .number w' (steps n) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "steps" sig.steps) rfl (n, ()) vs' args' safe'
 
 /-- Every run of `score` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem score.source (a : Int) (b : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.score.params vs' (Ctx.conv names isos sig.score.params (a, b, ())))
+    (args' : ArgsRepS names isos sig.score.params vs' (a, b, ()))
     (safe' : score.safe a b = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "score" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (score a b)) :=
+      Ty.RepS names isos .number w' (score a b) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "score" sig.score) rfl (a, b, ()) vs' args' safe'
 
 /-- Every run of `triangle` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem triangle.source (n : Int) (cap : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.triangle.params vs' (Ctx.conv names isos sig.triangle.params (n, cap, ())))
+    (args' : ArgsRepS names isos sig.triangle.params vs' (n, cap, ()))
     (safe' : triangle.safe n cap = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "triangle" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (triangle n cap)) :=
+      Ty.RepS names isos .number w' (triangle n cap) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "triangle" sig.triangle) rfl (n, cap, ()) vs' args' safe'
 
 /-- Every run of `gcd` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem gcd.source (a : Int) (b : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.gcd.params vs' (Ctx.conv names isos sig.gcd.params (a, b, ())))
+    (args' : ArgsRepS names isos sig.gcd.params vs' (a, b, ()))
     (safe' : gcd.safe a b = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "gcd" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (gcd a b)) :=
+      Ty.RepS names isos .number w' (gcd a b) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "gcd" sig.gcd) rfl (a, b, ()) vs' args' safe'
 
 /-- Every run of `firstAbove` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem firstAbove.source (xs : List Int) (limit : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.firstAbove.params vs' (Ctx.conv names isos sig.firstAbove.params (xs, limit, ())))
+    (args' : ArgsRepS names isos sig.firstAbove.params vs' (xs, limit, ()))
     (safe' : firstAbove.safe xs limit = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "firstAbove" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (firstAbove xs limit)) :=
+      Ty.RepS names isos .number w' (firstAbove xs limit) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there .here) : FVar sigs "firstAbove" sig.firstAbove) rfl (xs, limit, ()) vs' args' safe'
 
 /-- Every run of `countdown` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem countdown.source (n : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.countdown.params vs' (Ctx.conv names isos sig.countdown.params (n, ())))
+    (args' : ArgsRepS names isos sig.countdown.params vs' (n, ()))
     (safe' : countdown.safe n = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "countdown" vs') (.ok w') ∧
-      Ty.Rep (.array .number) w' (Ty.conv names isos (.array .number) (countdown n)) :=
+      Ty.RepS names isos (.array .number) w' (countdown n) :=
   source_ofS isos erased wf denote_eq safety_eq (.here : FVar sigs "countdown" sig.countdown) rfl (n, ()) vs' args' safe'
 
 end Tests.Generated.Loops

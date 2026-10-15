@@ -2267,13 +2267,13 @@ readable definitions as its environment, so no check unfolds a callee. -/\n\n"
     -- Binders are primed: JavaScript names cannot clash with them.
     if s.void then
       out := out ++ s!"/-- Every run of `{s.name}` on a state and arguments representing its inputs converges to a\nstate representing the readable definition's result. -/\n"
-      out := out ++ s!"theorem {ident s.name}.source {binders} (this' : JSValue) (vs' : List JSValue)\n    (args' : ArgsRep {sigName s.name}.params (this' :: vs') (Ctx.conv names isos {sigName s.name}.params {tuple})){safeHyp} :\n"
-      out := out ++ s!"    ∃ w' t', Converges (fun fuel' => runMethod ast fuel' {leanString s.name} this' vs') (.ok (w', t')) ∧\n      Ty.Rep {T.print s.result} t' (Ty.conv names isos {T.print s.result} ({call})) :=\n"
+      out := out ++ s!"theorem {ident s.name}.source {binders} (this' : JSValue) (vs' : List JSValue)\n    (args' : ArgsRepS names isos {sigName s.name}.params (this' :: vs') {tuple}){safeHyp} :\n"
+      out := out ++ s!"    ∃ w' t', Converges (fun fuel' => runMethod ast fuel' {leanString s.name} this' vs') (.ok (w', t')) ∧\n      Ty.RepS names isos {T.print s.result} t' ({call}) :=\n"
       out := out ++ s!"  source_state_ofS isos erased wf denote_eq safety_eq {fvar} rfl {tuple} this' vs' args' {safeArg}\n\n"
     else
       out := out ++ s!"/-- Every run of `{s.name}` on arguments representing its inputs converges to a value\nrepresenting the readable definition's result. -/\n"
-      out := out ++ s!"theorem {ident s.name}.source {binders} (vs' : List JSValue)\n    (args' : ArgsRep {sigName s.name}.params vs' (Ctx.conv names isos {sigName s.name}.params {tuple})){safeHyp} :\n"
-      out := out ++ s!"    ∃ w', Converges (fun fuel' => run ast fuel' {leanString s.name} vs') (.ok w') ∧\n      Ty.Rep {T.print s.result} w' (Ty.conv names isos {T.print s.result} ({call})) :=\n"
+      out := out ++ s!"theorem {ident s.name}.source {binders} (vs' : List JSValue)\n    (args' : ArgsRepS names isos {sigName s.name}.params vs' {tuple}){safeHyp} :\n"
+      out := out ++ s!"    ∃ w', Converges (fun fuel' => run ast fuel' {leanString s.name} vs') (.ok w') ∧\n      Ty.RepS names isos {T.print s.result} w' ({call}) :=\n"
       out := out ++ s!"  source_ofS isos erased wf denote_eq safety_eq {fvar} rfl {tuple} vs' args' {safeArg}\n\n"
   out := out ++ s!"end {namespace_}\n"
   return out

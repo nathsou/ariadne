@@ -125,17 +125,17 @@ theorem safety_eq : typed.safety = Sigs.canonSafety names isos sigs (inRange.saf
 /-- Every run of `clamp` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem clamp.source (x : Int) (lo : Int) (hi : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.clamp.params vs' (Ctx.conv names isos sig.clamp.params (x, lo, hi, ()))) :
+    (args' : ArgsRepS names isos sig.clamp.params vs' (x, lo, hi, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "clamp" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (clamp x lo hi)) :=
+      Ty.RepS names isos .number w' (clamp x lo hi) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there .here) : FVar sigs "clamp" sig.clamp) rfl (x, lo, hi, ()) vs' args' rfl
 
 /-- Every run of `inRange` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem inRange.source (x : Int) (lo : Int) (hi : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.inRange.params vs' (Ctx.conv names isos sig.inRange.params (x, lo, hi, ()))) :
+    (args' : ArgsRepS names isos sig.inRange.params vs' (x, lo, hi, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "inRange" vs') (.ok w') ∧
-      Ty.Rep .bool w' (Ty.conv names isos .bool (inRange x lo hi)) :=
+      Ty.RepS names isos .bool w' (inRange x lo hi) :=
   source_ofS isos erased wf denote_eq safety_eq (.here : FVar sigs "inRange" sig.inRange) rfl (x, lo, hi, ()) vs' args' rfl
 
 end Examples.Clamp

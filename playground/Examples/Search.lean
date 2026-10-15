@@ -230,28 +230,28 @@ theorem safety_eq : typed.safety = Sigs.canonSafety names isos sigs (indexOf.saf
 /-- Every run of `midpointNaive` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem midpointNaive.source (lo : Int) (hi : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.midpointNaive.params vs' (Ctx.conv names isos sig.midpointNaive.params (lo, hi, ())))
+    (args' : ArgsRepS names isos sig.midpointNaive.params vs' (lo, hi, ()))
     (safe' : midpointNaive.safe lo hi = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "midpointNaive" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (midpointNaive lo hi)) :=
+      Ty.RepS names isos .number w' (midpointNaive lo hi) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "midpointNaive" sig.midpointNaive) rfl (lo, hi, ()) vs' args' safe'
 
 /-- Every run of `midpoint` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem midpoint.source (lo : Int) (hi : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.midpoint.params vs' (Ctx.conv names isos sig.midpoint.params (lo, hi, ())))
+    (args' : ArgsRepS names isos sig.midpoint.params vs' (lo, hi, ()))
     (safe' : midpoint.safe lo hi = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "midpoint" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (midpoint lo hi)) :=
+      Ty.RepS names isos .number w' (midpoint lo hi) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there .here) : FVar sigs "midpoint" sig.midpoint) rfl (lo, hi, ()) vs' args' safe'
 
 /-- Every run of `indexOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem indexOf.source (xs : List Int) (target : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.indexOf.params vs' (Ctx.conv names isos sig.indexOf.params (xs, target, ())))
+    (args' : ArgsRepS names isos sig.indexOf.params vs' (xs, target, ()))
     (safe' : indexOf.safe xs target = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "indexOf" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (indexOf xs target)) :=
+      Ty.RepS names isos .number w' (indexOf xs target) :=
   source_ofS isos erased wf denote_eq safety_eq (.here : FVar sigs "indexOf" sig.indexOf) rfl (xs, target, ()) vs' args' safe'
 
 end Examples.Search

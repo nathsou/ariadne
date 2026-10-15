@@ -312,43 +312,43 @@ theorem credit.keeps.frozen («this» : Accounts) (id : JSString) (amount : Int)
 /-- Every run of `balance` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem balance.source (entries : List Entry) (vs' : List JSValue)
-    (args' : ArgsRep sig.balance.params vs' (Ctx.conv names isos sig.balance.params (entries, ())))
+    (args' : ArgsRepS names isos sig.balance.params vs' (entries, ()))
     (safe' : balance.safe entries = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "balance" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (balance entries)) :=
+      Ty.RepS names isos .number w' (balance entries) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "balance" sig.balance) rfl (entries, ()) vs' args' safe'
 
 /-- Every run of `new Accounts` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem «new Accounts».source  (vs' : List JSValue)
-    (args' : ArgsRep sig.«new Accounts».params vs' (Ctx.conv names isos sig.«new Accounts».params (()))) :
+    (args' : ArgsRepS names isos sig.«new Accounts».params vs' (())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "new Accounts" vs') (.ok w') ∧
-      Ty.Rep ty.Accounts w' (Ty.conv names isos ty.Accounts («new Accounts»)) :=
+      Ty.RepS names isos ty.Accounts w' («new Accounts») :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "new Accounts" sig.«new Accounts») rfl (()) vs' args' rfl
 
 /-- Every run of `credit` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem credit.source («this» : Accounts) (id : JSString) (amount : Int) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.credit.params (this' :: vs') (Ctx.conv names isos sig.credit.params («this», id, amount, ())))
+    (args' : ArgsRepS names isos sig.credit.params (this' :: vs') («this», id, amount, ()))
     (safe' : credit.safe «this» id amount = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "credit" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Accounts t' (Ty.conv names isos ty.Accounts (credit «this» id amount)) :=
+      Ty.RepS names isos ty.Accounts t' (credit «this» id amount) :=
   source_state_ofS isos erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "credit" sig.credit) rfl («this», id, amount, ()) this' vs' args' safe'
 
 /-- Every run of `freeze` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
 theorem freeze.source («this» : Accounts) (id : JSString) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.freeze.params (this' :: vs') (Ctx.conv names isos sig.freeze.params («this», id, ()))) :
+    (args' : ArgsRepS names isos sig.freeze.params (this' :: vs') («this», id, ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "freeze" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.Accounts t' (Ty.conv names isos ty.Accounts (freeze «this» id)) :=
+      Ty.RepS names isos ty.Accounts t' (freeze «this» id) :=
   source_state_ofS isos erased wf denote_eq safety_eq ((.there .here) : FVar sigs "freeze" sig.freeze) rfl («this», id, ()) this' vs' args' rfl
 
 /-- Every run of `balanceOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem balanceOf.source («this» : Accounts) (id : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.balanceOf.params vs' (Ctx.conv names isos sig.balanceOf.params («this», id, ()))) :
+    (args' : ArgsRepS names isos sig.balanceOf.params vs' («this», id, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "balanceOf" vs') (.ok w') ∧
-      Ty.Rep .number w' (Ty.conv names isos .number (balanceOf «this» id)) :=
+      Ty.RepS names isos .number w' (balanceOf «this» id) :=
   source_ofS isos erased wf denote_eq safety_eq (.here : FVar sigs "balanceOf" sig.balanceOf) rfl («this», id, ()) vs' args' rfl
 
 end Quickstart.Ledger

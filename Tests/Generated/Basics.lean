@@ -376,66 +376,66 @@ theorem safety_eq : typed.safety = Sigs.canonSafety names isos sigs (bump.safety
 /-- Every run of `max` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem max.source (a : Int) (b : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.max.params vs' (Ctx.conv names isos sig.max.params (a, b, ()))) :
+    (args' : ArgsRepS names isos sig.max.params vs' (a, b, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "max" vs') (.ok w') ∧
-      Ty.Rep .int w' (Ty.conv names isos .int (max a b)) :=
+      Ty.RepS names isos .int w' (max a b) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there .here))))))) : FVar sigs "max" sig.max) rfl (a, b, ()) vs' args' rfl
 
 /-- Every run of `clamp` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem clamp.source (x : Int) (lo : Int) (hi : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.clamp.params vs' (Ctx.conv names isos sig.clamp.params (x, lo, hi, ()))) :
+    (args' : ArgsRepS names isos sig.clamp.params vs' (x, lo, hi, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "clamp" vs') (.ok w') ∧
-      Ty.Rep .int w' (Ty.conv names isos .int (clamp x lo hi)) :=
+      Ty.RepS names isos .int w' (clamp x lo hi) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "clamp" sig.clamp) rfl (x, lo, hi, ()) vs' args' rfl
 
 /-- Every run of `sign` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem sign.source (n : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.sign.params vs' (Ctx.conv names isos sig.sign.params (n, ()))) :
+    (args' : ArgsRepS names isos sig.sign.params vs' (n, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "sign" vs') (.ok w') ∧
-      Ty.Rep .int w' (Ty.conv names isos .int (sign n)) :=
+      Ty.RepS names isos .int w' (sign n) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "sign" sig.sign) rfl (n, ()) vs' args' rfl
 
 /-- Every run of `describe` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem describe.source (n : Int) (label : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.describe.params vs' (Ctx.conv names isos sig.describe.params (n, label, ()))) :
+    (args' : ArgsRepS names isos sig.describe.params vs' (n, label, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "describe" vs') (.ok w') ∧
-      Ty.Rep .string w' (Ty.conv names isos .string (describe n label)) :=
+      Ty.RepS names isos .string w' (describe n label) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "describe" sig.describe) rfl (n, label, ()) vs' args' rfl
 
 /-- Every run of `between` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem between.source (lo : JSString) (x : JSString) (hi : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.between.params vs' (Ctx.conv names isos sig.between.params (lo, x, hi, ()))) :
+    (args' : ArgsRepS names isos sig.between.params vs' (lo, x, hi, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "between" vs') (.ok w') ∧
-      Ty.Rep .bool w' (Ty.conv names isos .bool (between lo x hi)) :=
+      Ty.RepS names isos .bool w' (between lo x hi) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "between" sig.between) rfl (lo, x, hi, ()) vs' args' rfl
 
 /-- Every run of `polynomial` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem polynomial.source (x : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.polynomial.params vs' (Ctx.conv names isos sig.polynomial.params (x, ()))) :
+    (args' : ArgsRepS names isos sig.polynomial.params vs' (x, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "polynomial" vs') (.ok w') ∧
-      Ty.Rep .int w' (Ty.conv names isos .int (polynomial x)) :=
+      Ty.RepS names isos .int w' (polynomial x) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "polynomial" sig.polynomial) rfl (x, ()) vs' args' rfl
 
 /-- Every run of `implies` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem implies.source (a : Bool) (b : Bool) (vs' : List JSValue)
-    (args' : ArgsRep sig.implies.params vs' (Ctx.conv names isos sig.implies.params (a, b, ()))) :
+    (args' : ArgsRepS names isos sig.implies.params vs' (a, b, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "implies" vs') (.ok w') ∧
-      Ty.Rep .bool w' (Ty.conv names isos .bool (implies a b)) :=
+      Ty.RepS names isos .bool w' (implies a b) :=
   source_ofS isos erased wf denote_eq safety_eq ((.there .here) : FVar sigs "implies" sig.implies) rfl (a, b, ()) vs' args' rfl
 
 /-- Every run of `bump` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem bump.source (n : Int) (times : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.bump.params vs' (Ctx.conv names isos sig.bump.params (n, times, ())))
+    (args' : ArgsRepS names isos sig.bump.params vs' (n, times, ()))
     (safe' : bump.safe n times = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "bump" vs') (.ok w') ∧
-      Ty.Rep .int w' (Ty.conv names isos .int (bump n times)) :=
+      Ty.RepS names isos .int w' (bump n times) :=
   source_ofS isos erased wf denote_eq safety_eq (.here : FVar sigs "bump" sig.bump) rfl (n, times, ()) vs' args' safe'
 
 end Tests.Generated.Basics

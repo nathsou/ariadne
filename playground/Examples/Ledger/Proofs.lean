@@ -6,8 +6,8 @@ import Ariadne.Lib.Map
 # Proofs about the ledger
 
 The example of [the guide](https://github.com/nathsou/ariadne/blob/main/docs/GUIDE.md). A union of
-records becomes a Lean sum with named constructors (`Entry.credit`), a class becomes a record of its
-maps, and each method a function from the old state to the new one.
+records becomes an inductive (`Entry.credit`), a class becomes a structure of its maps, and each
+method a function from the old state to the new one.
 -/
 
 namespace Examples.Ledger.Proofs
@@ -15,7 +15,7 @@ open Ariadne Examples.Ledger
 
 /-- An entry's amount. -/
 def amount : Entry → Int
-  | .inl (a, ()) | .inr (a, ()) => a
+  | .credit a | .debit a => a
 
 /-- With non-negative amounts, the balance is never negative: a debit larger than the balance is
 refused. The loop is a fold; its invariant (`fold_inv`) is that the running total is non-negative. -/
@@ -26,7 +26,7 @@ theorem balance_nonneg (entries : List Entry) (h : ∀ e ∈ entries, 0 ≤ amou
   intro t e he ht
   have ha : 0 ≤ amount e := h e he
   dsimp only [balance.loop]
-  rcases e with ⟨a, ⟨⟩⟩ | ⟨a, ⟨⟩⟩ <;> dsimp only
+  rcases e with a | a <;> dsimp only
   · simp only [amount] at ha; omega
   · by_cases hd : a ≤ t <;> simp [hd] <;> omega
 
@@ -66,9 +66,9 @@ theorem balanceOf_new (id : JSString) : balanceOf «new Accounts» id = 0 := rfl
 inputs converges to the state the definition gives, so the statements above hold of the TypeScript
 method. -/
 theorem freeze_runs (a : Accounts) (id : JSString) (this' : JSValue) (vs : List JSValue)
-    (args : ArgsRep sig.freeze.params (this' :: vs) (a, id, ())) :
+    (args : ArgsRepS names isos sig.freeze.params (this' :: vs) (a, id, ())) :
     ∃ w t, Converges (fun fuel => runMethod ast fuel "freeze" this' vs) (.ok (w, t)) ∧
-      Ty.Rep ty.Accounts t (freeze a id) :=
+      Ty.RepS names isos ty.Accounts t (freeze a id) :=
   freeze.source a id this' vs args
 
 end Examples.Ledger.Proofs

@@ -90,9 +90,9 @@ theorem suspended_forever (a : Access) (u : JSString) (ops : List Op) (h : (mapG
 /-- **The claim about the JavaScript.** Every run of `suspend` on a state and arguments representing
 its inputs converges to the state the definition gives. -/
 theorem suspend_runs (a : Access) (by_ u : JSString) (this' : JSValue) (vs : List JSValue)
-    (args : ArgsRep sig.suspend.params (this' :: vs) (a, by_, u, ())) :
+    (args : ArgsRepS names isos sig.suspend.params (this' :: vs) (a, by_, u, ())) :
     ∃ w t, Converges (fun fuel => runMethod ast fuel "suspend" this' vs) (.ok (w, t)) ∧
-      Ty.Rep ty.Access t (suspend a by_ u) :=
+      Ty.RepS names isos ty.Access t (suspend a by_ u) :=
   suspend.source a by_ u this' vs args
 
 end Examples.Access.Proofs
