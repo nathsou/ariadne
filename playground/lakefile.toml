@@ -1,0 +1,20 @@
+name = "playground"
+defaultTargets = ["Web", "Examples", "extract"]
+
+# The playground at https://nathsou.github.io/ariadne (see README.md): the translator compiled to
+# WebAssembly (`Web`), the examples with their proofs (`Examples`), and the tool that records what
+# Lean says about them for the page (`extract`).
+[[require]]
+name = "ariadne"
+path = ".."
+
+[[lean_lib]]
+name = "Web"
+
+[[lean_lib]]
+name = "Examples"
+
+[[lean_exe]]
+name = "extract"
+root = "Extract"
+supportInterpreter = true

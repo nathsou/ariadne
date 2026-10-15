@@ -1,2 +1,8 @@
 .lake/
 node_modules/
+# The playground's build outputs (playground/build.sh)
+playground/.build/
+playground/site/dist/
+playground/site/public/ariadne.js
+playground/site/public/ariadne.wasm
+playground/site/public/data/

@@ -21,6 +21,14 @@ Ariadne follows semantic versioning: a minor version may change generated files 
 **Trusted base**
 - `trusted.lock`: `UnOp.inc`, `UnOp.dec` and their evaluation.
 
+**Playground**
+- [playground/](playground/README.md): a static page (GitHub Pages) where the translator, compiled to
+  WebAssembly, runs in the browser as one types. It shows the readable definitions and live type hovers,
+  explains refusals with suggested rewrites, runs calls in the model and as JavaScript side by side, and
+  steps through kernel-checked proofs of its examples (with goal states recorded in CI).
+- The checker logs what each checked expression, variable and function denotes (`translateLogged`); the
+  generated files are unchanged. The parser imports `Lean.Data.Json` instead of all of `Lean`.
+
 **Checks**
 - `scripts/differential.mjs` takes a directory of compiled modules: JavaScript then runs the file as a
   production build emits it (bundled, minified) while the model runs the source. CI runs the fixtures both
