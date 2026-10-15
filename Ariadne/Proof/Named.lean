@@ -924,7 +924,7 @@ theorem Variants.elimS_congr {N : Names} {R : Type} : ∀ (vs : Variants) (x : v
     Variants.elimS N vs x k = Variants.elimS N vs x k'
   | .one _ _, _, _, _, h => h _ _
   | .cons _ _ _, .inl _, _, _, h => h _ _
-  | .cons _ _ rest, .inr w, k, k', h => Variants.elimS_congr rest w _ _ fun i y => h (.there i) y
+  | .cons _ _ rest, .inr w, _, _, h => Variants.elimS_congr rest w _ _ fun i y => h (.there i) y
 
 /-! ## Statements -/
 

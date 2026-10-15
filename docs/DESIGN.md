@@ -38,7 +38,8 @@ file.ts ──parse, convert (trusted)──▶ ast : Program              (the 
                        Out.lean: readable defs ══ kernel ══ typed.denote
 
 Proved once:    ∀ typed, well formed, safe → run (erase typed) converges to a value representing denote typed
-Checked per file (kernel):  erase typed = ast,  well formed,  readable defs = denote typed
+Checked per file (kernel):  erase typed = ast,  well formed,  readable defs = denoteRS typed
+                            (proved once: denoteRS, over the file's structures and inductives, is denote)
 Concluded per file:          every readable def is what the TypeScript function computes (in the model)
 ```
 
@@ -51,7 +52,7 @@ Concluded per file:          every readable def is what the TypeScript function 
 | `Ariadne/Model/Store.lean` | Store model of classes (`runMethodStore`) | **Yes** |
 | `Ariadne/Typed/*` | Types, typed syntax, erasure, denotation, safety conditions, well-formedness | No |
 | `Ariadne/Eqns/*` | Equation lemmas of the typed syntax's large definitions (see Build time) | No |
-| `Ariadne/Proof/*` | The adequacy proof, the store model's agreement with the value model, frames (which fields a method leaves), and the direct-style denotation's equality with the denotation | No |
+| `Ariadne/Proof/*` | The adequacy proof, the store model's agreement with the value model, frames (which fields a method leaves), and the idiomatic denotations' equality with the denotation (`Direct`, `Idiom`, `Named`) | No |
 | `Ariadne/Lib/*` | Lemmas for proofs about readable definitions: loops (invariants, folds), maps, string order, `toSorted` (its consistency conditions, what it returns, and `cmp_laws` for comparators), the `readable` simp set | No |
 | `Ariadne/Kernel.lean` | `kernel_rfl`: closed equations checked by the kernel alone | No |
 | `Ariadne/Audit.lean`, `Audit.lean` | The soundness gate, and its configuration for Ariadne (`trusted.lock`) | No |
@@ -176,16 +177,32 @@ inductive TStmts (Φ : Sigs) : Ctx → Ty → Type  -- statement lists; declarat
   the readable `if c then a else b` definitionally equal to the denotation.
 - Loops denote through one combinator, `forIn items step exit` (a `foldr` building the continuation
   chain). Counted loops iterate over `range n`.
-- `TStmts.denoteD` (`Ariadne/Typed/Direct.lean`) is the same denotation with two differences: its result
-  type is any `R` (a `return` gives `r v`), and a loop whose body is `direct` (no `return` anywhere, no
-  `break` of its own) is a fold, `rest (items.foldl (fun ρ y => body (y, ρ)) ρ)`, with the body ending
-  in the environment itself. `TStmts.denoteFn_eq` (`Ariadne/Proof/Direct.lean`) proves
-  `denoteFn = denoteDFn` once, for every body: the continuation-passing denotation is natural in its
-  result type (`denoteD_nat`), a body without `return` ignores `r` and one without `break` ignores the
-  break continuation, and `forIn` with a step that always continues is a fold. The readable definitions
-  are checked against `denoteD`; the adequacy proof stays about `denote`. This is the pattern for making
-  the readable definitions more idiomatic without trusting the printer: a second denotation closer to
-  the printed Lean, proven equal to the first once.
+- The readable definitions are not compared with `denote` directly but with a denotation closer to the
+  printed Lean, proven equal to it once, for every program. This is how the output gets more idiomatic
+  without trusting the printer; there are three such steps, each a definition and one theorem:
+  - **Folds** (`TStmts.denoteD`, `Ariadne/Typed/Direct.lean`; `TStmts.denoteFn_eq`,
+    `Ariadne/Proof/Direct.lean`). The result type is any `R` (a `return` gives `r v`), and a loop whose
+    body has no `return` anywhere and no `break` of its own is a fold,
+    `rest (items.foldl (fun ρ y => body (y, ρ)) ρ)`. The proof: the continuation-passing denotation is
+    natural in its result type (`denoteD_nat`), a body without `return` ignores `r` and one without
+    `break` ignores the break continuation, and `forIn` with a step that always continues is a fold.
+  - **States** (`TStmts.denoteR`, `Ariadne/Typed/Idiom.lean`; `TStmts.denoteFn_eq_R`,
+    `Ariadne/Proof/Idiom.lean`). A loop, or an `if` or `switch` whose branches all go on after it,
+    carries only the variables it assigns (`TStmts.writes`), as a flat tuple, and a branch that cannot
+    `return`, `break` or `continue` gives that tuple as its value (`let (a, b) := if c then … else …`).
+    The proof is a frame theorem (`denoteD_frame`): a statement calls its continuations only on
+    environments that agree with its own outside what it writes.
+  - **Named types** (`TStmts.denoteRS`, `Ariadne/Typed/Named.lean`; `TStmts.denoteFn_eq_S`,
+    `Ariadne/Proof/Named.lean`). Types denote through a file's `names : Names` (`Ty.den`): a record or
+    union listed there is the Lean type given with it, a structure or an inductive, and `isos : Isos names`
+    says how its values correspond to the record's fields or the union's variants (`view`, `make`, case
+    analysis, with the laws that make them inverse). The proof is a logical relation: `Ty.conv` maps a
+    value of the file's types to the denotation's, and every expression, statement and safety condition
+    commutes with it (`TExpr.conv_denS`, `TStmts.denoteRS_conv`, `TStmts.safeS_eq`). The general
+    theorem's conclusions carry over through `Ty.RepS`, representation over the file's types, which is
+    `Ty.Rep` after `Ty.conv` (`Ty.repS_eq`).
+
+  The adequacy proof stays about `denote`.
 - A `while` loop denotes `whileDo cond step exit`: up to `loopBound` (2^64) iterations, leaving after
   that. Its safety condition, `whileSafe`, says that it ends within them, each iteration safe, so
   termination is a proof obligation, met with a measure (`whileSafe_of_measure`). `whileDo` and
@@ -237,39 +254,53 @@ theorem ast_scoped : ast.scoped = true := by decide +kernel
 theorem wf : typed.WF := TProgram.wf_of typed erased bodies_ok ast_scoped
 def f (x : Int) … : Int := …                   -- readable definitions
 def f.safe (x : Int) … : Bool := …             -- safety conditions (when not trivial)
-theorem f.body_eqD : body.f.denoteDFn (earlier readable functions) = f.uncurried := by kernel_rfl
-theorem f.body_eq : body.f.denoteFn … = f.uncurried := (TStmts.denoteFn_eq _).trans f.body_eqD
-theorem denote_eq : typed.denote = (readable functions) := TProgram.denote_cons …
-theorem f.source (x : Int) … (vs : List JSValue) (args : ArgsRep …) (safe : f.safe x … = true) :
-    ∃ w, Converges (fun fuel => run ast fuel "f" vs) (.ok w) ∧ Ty.Rep … w (f x …) := …
+structure Item where …                         -- the source's types, as Lean declarations
+inductive Shape where …
+noncomputable def names : Names := …            -- the records and unions they are
+noncomputable def isos : Isos names := …        -- how their values correspond
+def f.loop … := …                              -- loop bodies
+def f (x : Int) … : Int := …                   -- readable definitions
+def f.safe (x : Int) … : Bool := …             -- safety conditions (when not trivial)
+theorem f.body_eq : body.f.denoteRSFn names isos (earlier readable functions) = f.uncurried := by kernel_rfl
+theorem denote_eq : typed.denote = Sigs.canon names isos sigs (readable functions) := TProgram.denote_consS …
+theorem f.source (x : Int) … (vs : List JSValue) (args : ArgsRepS names isos …) (safe : f.safe x … = true) :
+    ∃ w, Converges (fun fuel => run ast fuel "f" vs) (.ok w) ∧ Ty.RepS names isos … w (f x …) := …
 ```
 
-Each named type of the source also gets readable Lean names, so that the definitions and statements about
-them read like the TypeScript:
-- an alias, written as the Lean type it denotes (`Floor := Int × JSString × … × Unit`, `Commit := Fin 4`);
-- for a record, an accessor per field (`fl.seed`), a constructor (`Candidate.mk index committed …`) and a
-  setter per field (`a.withName n`, for `{ ...a, name: n }`), unless a field takes one of those names;
-- a constant per literal of a literal union (`Commit.bad`);
-- for a union of records, a constructor per variant, usable as a pattern: of nothing (`CopyFact.damaged`),
-  of the variant's one field (`Choice.true order`), or of its payload (`CopyFact.opened f`, where
-  `f : CopyFact.Variant.opened` has accessors).
+The source's named types become Lean declarations, so that the definitions and statements about them
+read like the TypeScript:
+- a record, a structure (`structure Floor where written : Int …`), read by name (`fl.seed`), built with
+  its constructor (`Candidate.mk index committed …`) and updated with `{ a with name := n }`;
+- a union of records, an inductive with a constructor per variant (`CopyFact.damaged`,
+  `Choice.true order`, `CopyFact.opened f`); a variant with more than one field takes a structure,
+  `CopyFact.Variant.opened`, or the source's own name for it when the variant is a named interface;
+- a variant record anywhere is its payload, the fields after the tag: nothing (`Unit`), its one field,
+  or that structure;
+- a literal union, `Fin n`, with a constant per literal (`Commit.bad`), and any other named type an
+  abbreviation of the Lean type it denotes.
 
-They are reducible definitions in the simp set `readable`, so `simp [readable]` unfolds them to the
-projections, numerals and injections of the denotation. A type whose name a function or method uses gets
-none.
+A record whose field takes a name Lean derives for a structure (`mk`, `rec`, …), or a union whose tag
+cannot name a constructor, stays a product or a sum, with accessors (`@[reducible, readable]`, so
+`simp [readable]` unfolds them). Types without a name are products, sums and lists.
 
-The readable definitions use these names: fields are read and set by name, a `switch` is a `match` on the
-union's constructors that binds the narrowed variable to its payload, and a loop's or a join point's state
-is taken apart by a pattern (`fun (older, notOwner, …, ()) => …`). A loop that never returns or breaks is
-`Ariadne.fold init items (fun state item => …)`; others are `forIn` with `next` and `exit`. All of it is
-definitionally the direct-style denotation, which is what the per-file `body_eqD` checks.
+`names` lists which records and unions are which declarations, and `isos` gives, per declaration, the
+view as fields or variants and back, with the laws, proved by `rfl` and case analysis. Both are generated:
+reading a source theorem about a structure means reading `isos` as the field-by-field correspondence it
+prints, as the type abbreviations `ty.T` are read as the source's types.
+
+The readable definitions use these names: fields are read by name, a `switch` is a `match` on the
+inductive's constructors that binds the narrowed variable to its payload, a loop's body is a named
+definition (`f.loop`, or `f.loop1`, `f.loop2`, …) taking the variables it reads, and a loop's or a
+branch's state holds only what it assigns. A loop that never returns or breaks is
+`Ariadne.fold init items f.loop`; others are `forIn` with `next` and `exit`. All of it is definitionally
+`denoteRS`, which is what the per-file `body_eq` checks.
 
 A class's file also says which fields each method leaves alone:
 
 ```lean
 theorem frames.marks : typed.frames "marks" = [false, true, …] := by decide +kernel
 theorem pack.keeps.marks (this : Registers) … : (pack this …).marks = this.marks :=
-  frame_of_fn … denote_eq frames.marks … (f := pack.uncurried) rfl (acc := fun r => r.marks) …
+  frame_of_fnS isos … denote_eq frames.marks … (f := pack.uncurried) rfl (acc := fun r => r.marks) …
 ```
 
 `TProgram.frames g` marks a method that neither sets nor deletes in `this.g` and calls only marked
@@ -281,7 +312,7 @@ fails `frames.g`, never a lemma.
 
 Each `body_eq` compares one function's denotation with its readable definition, with callees taken as
 the earlier readable definitions, so no check unfolds a callee. The source theorems mention only `run`,
-`ast`, `Converges`, `Ty.Rep` and the readable definitions. `Tests/Properties.lean`,
+`ast`, `Converges`, `Ty.RepS` (with `names` and `isos`) and the readable definitions. `Tests/Properties.lean`,
 `Tests/TrustSpec.lean`, `Tests/RegistersSpec.lean` and `Tests/TreeSpec.lean` prove properties of
 readable definitions and transfer them to every run.
 
@@ -328,6 +359,10 @@ readable definitions and transfer them to every run.
 - The proof is about 3,700 lines (`Ariadne/Proof`). Once the framework existed, an expression form cost
   5 to 15 lines, a statement form 5 to 20, and a family needing a new idea one generic lemma plus short
   cases (callbacks, loops, sorting, `switch` arms). The theorem's statement never changed shape.
+- The idiomatic denotations add about 1,400 lines of definitions (`Ariadne/Typed/{Direct,Idiom,Named}`)
+  and 3,100 of proofs (`Ariadne/Proof/{Direct,Idiom,Named}`), the named types most of them: every value
+  operation, expression, statement and safety condition needs its case of the commutation lemmas. A file
+  pays nothing for them: its checks compare the readable definitions with one denotation, as before.
 - A clean `scripts/check.sh` takes about 3 minutes on 4 cores. Generated files check in 5 to 40 s
   (drive's `registers.ts`, 429 lines and 30 methods, is the largest).
 - Lean derives a recursive definition's equation lemmas the first time a proof unfolds it, in that

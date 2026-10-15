@@ -9,20 +9,37 @@ Ariadne follows semantic versioning: a minor version may change generated files 
 **Readable definitions**
 - Names print bare unless Lean needs guillemets (keywords such as `at`, `this`; names that are not
   identifiers). List operations on a name or field path use dot notation (`xs.length`, `xs.map f`).
-- A loop whose body has no `return` and no `break` of its own reads as a fold, with the body in direct
-  style:
+- The source's types are Lean declarations: a record is a `structure` (read by name, built with `mk`,
+  updated with `{ r with f := v }`), a union of records an `inductive` with a constructor per variant
+  (`Entry.credit amount`; a variant with more fields takes a structure), and a variant record is its
+  payload. A record or union whose names Lean cannot use for a structure's fields or an inductive's
+  constructors stays a product or a sum. Proofs use `cases`, `rcases` and field names instead of tuple
+  positions.
+- A loop whose body has no `return` and no `break` of its own reads as a fold, its body a named
+  definition taking the variables it reads, its state the variables it assigns:
   ```lean
-  let (total, _, ()) := Ariadne.fold (total, xs, ()) xs (fun (total, xs, ()) x =>
-    let total : Int := total + x
-    (total, xs, ()))
+  def sum.loop : Int → Int → Int :=
+    fun total x =>
+      let total : Int := total + x
+      total
+
+  def sum (xs : List Int) : Int :=
+    let total : Int := (0 : Int)
+    let total := Ariadne.fold total xs sum.loop
+    total
   ```
-  instead of `forIn` with `next`/`exit` continuations. Other loops are unchanged.
-- How it stays proven: `TStmts.denoteD` (`Ariadne/Typed/Direct.lean`) is the denotation with such loops as
-  folds, and `TStmts.denoteFn_eq` (`Ariadne/Proof/Direct.lean`) proves it equal to `denoteFn` once, for
-  every program. Each file checks its definitions against `denoteDFn` by `rfl` (`f.body_eqD`) and gets
-  `f.body_eq` through the theorem; the general theorem, the source theorems and `trusted.lock` are
-  unchanged. Generated files and proofs about loops change (a minor version).
-- Frame lemmas name the method and the field's accessor (`frame_of_fn`), so checking them never unfolds
+  Other loops are `forIn` with `next`/`exit` continuations, their bodies named too, their state also the
+  assigned variables; an `if` or `switch` whose branches all go on gives those variables as its value
+  (`let (neg, pos) := if … then … else …`).
+- How it stays proven: the readable definitions are checked by `rfl` against `TStmts.denoteRS`
+  (`Ariadne/Typed/Named.lean`), a denotation over the file's structures and inductives (`names`, `isos`,
+  generated with the file), with loops as folds and states of assigned variables. It is proven equal to
+  `denote` once, for every program, in three steps (`TStmts.denoteFn_eq`, `denoteFn_eq_R`,
+  `denoteFn_eq_S` in `Ariadne/Proof/{Direct,Idiom,Named}.lean`). The general theorem and `trusted.lock`
+  are unchanged. Source theorems state representation over the file's types (`ArgsRepS`, `Ty.RepS`, equal
+  to `ArgsRep` and `Ty.Rep` after `Ty.conv`, and unfolding to them on types without structures or
+  inductives). Generated files, and proofs about records, unions and loops, change (a minor version).
+- Frame lemmas name the method and the field's accessor (`frame_of_fnS`), so checking them never unfolds
   a readable body.
 
 **Proof library**

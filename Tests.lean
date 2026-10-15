@@ -7,6 +7,7 @@ import Tests.Generated.Registers
 import Tests.Generated.Tree
 import Tests.Generated.Trust
 import Tests.Generated.Strings
+import Tests.Generated.Shapes
 import Tests.Properties
 import Tests.RegistersSpec
 import Tests.TreeSpec

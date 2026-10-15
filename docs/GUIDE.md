@@ -40,13 +40,17 @@ lake exe ariadne translate src/ledger.ts --out Quickstart/Ledger.lean --namespac
 
 Check the generated file in; CI regenerates it and fails on a difference. It holds:
 
-- readable definitions: `balance`, the class's methods `credit`, `freeze`, …, and the types'
-  names (`Entry.credit amount`, `a.balances`, `a.withBalances m`);
+- the source's types as Lean declarations: `structure Accounts` (`a.balances`,
+  `{ a with balances := m }`) and `inductive Entry` (`Entry.credit amount`), with `names` and `isos`,
+  which say which records and unions they are;
+- readable definitions: `balance` (its loop's body named `balance.loop`), the class's methods
+  `credit`, `freeze`, …;
 - `f.safe`, the condition under which `f` stays within what the model covers, for each function
   that can leave it (number overflow, a zero divisor, an inconsistent comparator, a `while` loop that
   does not end);
 - `f.source`: every run of the TypeScript `f`, on arguments representing the inputs (and with
-  `f.safe` holding), converges to what the readable definition gives;
+  `f.safe` holding), converges to what the readable definition gives (`ArgsRepS`, `Ty.RepS`: `ArgsRep`
+  and `Ty.Rep` over the file's types, the same on types without structures or inductives);
 - for a class, `m.keeps.f`: method `m` leaves the field `f` alone.
 
 ## 3. State what you claim
@@ -66,8 +70,9 @@ that directly, as `freeze_runs` does.
 
 `Quickstart/Proofs.lean`. What helps:
 
-- **Loops**: a loop with no `return` and no `break` reads as `Ariadne.fold init items step`, a
-  `List.foldl`; `fold_inv` gives it an invariant (as in `balance_nonneg`). Other loops read as `forIn`:
+- **Loops**: a loop's body is a definition, `f.loop` (`dsimp only [f.loop]` unfolds it), and its state is
+  the variables it assigns. A loop with no `return` and no `break` reads as `Ariadne.fold init items f.loop`,
+  a `List.foldl`; `fold_inv` gives it an invariant (as in `balance_nonneg`). Other loops read as `forIn`:
   `forIn_inv` (an invariant), `forIn_prefix` (an invariant over the items seen so far), `forIn_continue`
   (a loop that never leaves early is a fold); for `while`, `whileDo_inv` and, for its safety condition,
   `whileSafe_of_measure`.
@@ -75,7 +80,8 @@ that directly, as `freeze_runs` does.
   (`mapGet_mapPut`, …).
 - **Sorting**: `cmp_laws` proves a comparator lawful; then `consistent_of_laws` discharges `toSorted`'s
   safety condition, and `sortedBy_perm`, `sortedBy_sorted` say what it returns.
-- **Names**: `simp [readable]` unfolds the generated names to tuples, when a proof needs to.
+- **Types**: records are structures and unions inductives, so `cases`, `rcases e with a | a`, `obtain ⟨x, y⟩`
+  and `simp` with the structures' projections work as on any Lean type.
 - **Safety conditions**: `ariadne_safe [facts]` (`Ariadne/Lib/Safe.lean`) unfolds `f.safe`, splits its
   cases and closes each by `simp` with the facts given (a comparator's laws, callees' `_safe` lemmas); what
   it leaves bounds numbers, for `inRange` and `omega`.
