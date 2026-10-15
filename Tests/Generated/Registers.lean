@@ -262,230 +262,230 @@ noncomputable def ast : Program := [
       .stateSet "items" (.call "key" [(.field (.var "i") "aid"), (.field (.var "i") "id")]) (.var "i"),
       .ret (.lit .undefined)], method := true }]
 
-noncomputable abbrev ty.«Placed» : Ty := (.record (.cons "p" .string (.cons "cls" .string (.cons "at" .number (.cons "s" .string (.cons "gone" .bool (.cons "u" (.option .undef .string) .nil)))))))
-noncomputable abbrev ty.«Mark» : Ty := (.record (.cons "ref" .string (.cons "p" .string (.cons "since" .number (.cons "s" .string (.cons "on" .bool (.cons "reason" (.option .undef .string) .nil)))))))
-noncomputable abbrev ty.«Pack» : Ty := (.record (.cons "id" .string (.cons "size" .number (.cons "csize" .number (.cons "at" .number (.cons "s" (.option .undef .string) (.cons "hn" (.option .undef .string) .nil)))))))
-noncomputable abbrev ty.«Counters» : Ty := (.record (.cons "put" .number (.cons "get" .number (.cons "list" .number (.cons "head" .number (.cons "delete" .number (.cons "copy" .number (.cons "restore" .number (.cons "ingress" .number (.cons "egress" .number .nil))))))))))
-noncomputable abbrev ty.«Total» : Ty := (.record (.cons "p" .string (.cons "month" .string (.cons "device" .string (.cons "c" (.record (.cons "put" .number (.cons "get" .number (.cons "list" .number (.cons "head" .number (.cons "delete" .number (.cons "copy" .number (.cons "restore" .number (.cons "ingress" .number (.cons "egress" .number .nil)))))))))) .nil)))))
-noncomputable abbrev ty.«Increments» : Ty := (.record (.cons "p" .string (.cons "month" .string (.cons "c" (.record (.cons "put" .number (.cons "get" .number (.cons "list" .number (.cons "head" .number (.cons "delete" .number (.cons "copy" .number (.cons "restore" .number (.cons "ingress" .number (.cons "egress" .number .nil)))))))))) .nil))))
-noncomputable abbrev ty.«Period» : Ty := (.record (.cons "p" .string (.cons "month" .string (.cons "devices" (.array .string) .nil))))
-noncomputable abbrev ty.«Usage» : Ty := (.record (.cons "p" .string (.cons "month" .string (.cons "c" (.record (.cons "put" .number (.cons "get" .number (.cons "list" .number (.cons "head" .number (.cons "delete" .number (.cons "copy" .number (.cons "restore" .number (.cons "ingress" .number (.cons "egress" .number .nil)))))))))) .nil))))
-noncomputable abbrev ty.«AlbumRec» : Ty := (.record (.cons "id" .string (.cons "name" .string (.cons "created" .number (.cons "cover" (.option .undef .string) (.cons "deleted" (.option .undef .string) (.cons "nameS" (.option .undef .string) (.cons "coverS" (.option .undef .string) .nil))))))))
-noncomputable abbrev ty.«AlbumItem» : Ty := (.record (.cons "aid" .string (.cons "id" .string (.cons "s" .string (.cons "present" .bool .nil)))))
-noncomputable abbrev ty.«Registers» : Ty := (.record (.cons "placed" (.map (.record (.cons "p" .string (.cons "cls" .string (.cons "at" .number (.cons "s" .string (.cons "gone" .bool (.cons "u" (.option .undef .string) .nil)))))))) (.cons "providers" (.map (.array .string)) (.cons "marks" (.map (.record (.cons "ref" .string (.cons "p" .string (.cons "since" .number (.cons "s" .string (.cons "on" .bool (.cons "reason" (.option .undef .string) .nil)))))))) (.cons "packs" (.map (.record (.cons "id" .string (.cons "size" .number (.cons "csize" .number (.cons "at" .number (.cons "s" (.option .undef .string) (.cons "hn" (.option .undef .string) .nil)))))))) (.cons "totals" (.map (.record (.cons "p" .string (.cons "month" .string (.cons "device" .string (.cons "c" (.record (.cons "put" .number (.cons "get" .number (.cons "list" .number (.cons "head" .number (.cons "delete" .number (.cons "copy" .number (.cons "restore" .number (.cons "ingress" .number (.cons "egress" .number .nil)))))))))) .nil)))))) (.cons "increments" (.map (.record (.cons "p" .string (.cons "month" .string (.cons "c" (.record (.cons "put" .number (.cons "get" .number (.cons "list" .number (.cons "head" .number (.cons "delete" .number (.cons "copy" .number (.cons "restore" .number (.cons "ingress" .number (.cons "egress" .number .nil)))))))))) .nil))))) (.cons "periods" (.map (.record (.cons "p" .string (.cons "month" .string (.cons "devices" (.array .string) .nil))))) (.cons "albums" (.map (.record (.cons "id" .string (.cons "name" .string (.cons "created" .number (.cons "cover" (.option .undef .string) (.cons "deleted" (.option .undef .string) (.cons "nameS" (.option .undef .string) (.cons "coverS" (.option .undef .string) .nil))))))))) (.cons "items" (.map (.record (.cons "aid" .string (.cons "id" .string (.cons "s" .string (.cons "present" .bool .nil)))))) .nil))))))))))
+noncomputable abbrev ty.Placed : Ty := (.record (.cons "p" .string (.cons "cls" .string (.cons "at" .number (.cons "s" .string (.cons "gone" .bool (.cons "u" (.option .undef .string) .nil)))))))
+noncomputable abbrev ty.Mark : Ty := (.record (.cons "ref" .string (.cons "p" .string (.cons "since" .number (.cons "s" .string (.cons "on" .bool (.cons "reason" (.option .undef .string) .nil)))))))
+noncomputable abbrev ty.Pack : Ty := (.record (.cons "id" .string (.cons "size" .number (.cons "csize" .number (.cons "at" .number (.cons "s" (.option .undef .string) (.cons "hn" (.option .undef .string) .nil)))))))
+noncomputable abbrev ty.Counters : Ty := (.record (.cons "put" .number (.cons "get" .number (.cons "list" .number (.cons "head" .number (.cons "delete" .number (.cons "copy" .number (.cons "restore" .number (.cons "ingress" .number (.cons "egress" .number .nil))))))))))
+noncomputable abbrev ty.Total : Ty := (.record (.cons "p" .string (.cons "month" .string (.cons "device" .string (.cons "c" (.record (.cons "put" .number (.cons "get" .number (.cons "list" .number (.cons "head" .number (.cons "delete" .number (.cons "copy" .number (.cons "restore" .number (.cons "ingress" .number (.cons "egress" .number .nil)))))))))) .nil)))))
+noncomputable abbrev ty.Increments : Ty := (.record (.cons "p" .string (.cons "month" .string (.cons "c" (.record (.cons "put" .number (.cons "get" .number (.cons "list" .number (.cons "head" .number (.cons "delete" .number (.cons "copy" .number (.cons "restore" .number (.cons "ingress" .number (.cons "egress" .number .nil)))))))))) .nil))))
+noncomputable abbrev ty.Period : Ty := (.record (.cons "p" .string (.cons "month" .string (.cons "devices" (.array .string) .nil))))
+noncomputable abbrev ty.Usage : Ty := (.record (.cons "p" .string (.cons "month" .string (.cons "c" (.record (.cons "put" .number (.cons "get" .number (.cons "list" .number (.cons "head" .number (.cons "delete" .number (.cons "copy" .number (.cons "restore" .number (.cons "ingress" .number (.cons "egress" .number .nil)))))))))) .nil))))
+noncomputable abbrev ty.AlbumRec : Ty := (.record (.cons "id" .string (.cons "name" .string (.cons "created" .number (.cons "cover" (.option .undef .string) (.cons "deleted" (.option .undef .string) (.cons "nameS" (.option .undef .string) (.cons "coverS" (.option .undef .string) .nil))))))))
+noncomputable abbrev ty.AlbumItem : Ty := (.record (.cons "aid" .string (.cons "id" .string (.cons "s" .string (.cons "present" .bool .nil)))))
+noncomputable abbrev ty.Registers : Ty := (.record (.cons "placed" (.map (.record (.cons "p" .string (.cons "cls" .string (.cons "at" .number (.cons "s" .string (.cons "gone" .bool (.cons "u" (.option .undef .string) .nil)))))))) (.cons "providers" (.map (.array .string)) (.cons "marks" (.map (.record (.cons "ref" .string (.cons "p" .string (.cons "since" .number (.cons "s" .string (.cons "on" .bool (.cons "reason" (.option .undef .string) .nil)))))))) (.cons "packs" (.map (.record (.cons "id" .string (.cons "size" .number (.cons "csize" .number (.cons "at" .number (.cons "s" (.option .undef .string) (.cons "hn" (.option .undef .string) .nil)))))))) (.cons "totals" (.map (.record (.cons "p" .string (.cons "month" .string (.cons "device" .string (.cons "c" (.record (.cons "put" .number (.cons "get" .number (.cons "list" .number (.cons "head" .number (.cons "delete" .number (.cons "copy" .number (.cons "restore" .number (.cons "ingress" .number (.cons "egress" .number .nil)))))))))) .nil)))))) (.cons "increments" (.map (.record (.cons "p" .string (.cons "month" .string (.cons "c" (.record (.cons "put" .number (.cons "get" .number (.cons "list" .number (.cons "head" .number (.cons "delete" .number (.cons "copy" .number (.cons "restore" .number (.cons "ingress" .number (.cons "egress" .number .nil)))))))))) .nil))))) (.cons "periods" (.map (.record (.cons "p" .string (.cons "month" .string (.cons "devices" (.array .string) .nil))))) (.cons "albums" (.map (.record (.cons "id" .string (.cons "name" .string (.cons "created" .number (.cons "cover" (.option .undef .string) (.cons "deleted" (.option .undef .string) (.cons "nameS" (.option .undef .string) (.cons "coverS" (.option .undef .string) .nil))))))))) (.cons "items" (.map (.record (.cons "aid" .string (.cons "id" .string (.cons "s" .string (.cons "present" .bool .nil)))))) .nil))))))))))
 
 /-- The source's `Placed`. -/
-abbrev «Placed» : Type := JSString × JSString × Int × JSString × Bool × (Option JSString) × Unit
-@[reducible, readable] def «Placed».«p» (r : «Placed») : JSString := r.1
-@[reducible, readable] def «Placed».«cls» (r : «Placed») : JSString := r.2.1
-@[reducible, readable] def «Placed».«at» (r : «Placed») : Int := r.2.2.1
-@[reducible, readable] def «Placed».«s» (r : «Placed») : JSString := r.2.2.2.1
-@[reducible, readable] def «Placed».«gone» (r : «Placed») : Bool := r.2.2.2.2.1
-@[reducible, readable] def «Placed».«u» (r : «Placed») : Option JSString := r.2.2.2.2.2.1
-@[reducible, readable] def «Placed».mk («p» : JSString) («cls» : JSString) («at» : Int) («s» : JSString) («gone» : Bool) («u» : Option JSString) : «Placed» := («p», «cls», «at», «s», «gone», «u», ())
-@[reducible, readable] def «Placed».«withP» (r : «Placed») (v : JSString) : «Placed» := (v, r.2)
-@[reducible, readable] def «Placed».«withCls» (r : «Placed») (v : JSString) : «Placed» := (r.1, v, r.2.2)
-@[reducible, readable] def «Placed».«withAt» (r : «Placed») (v : Int) : «Placed» := (r.1, r.2.1, v, r.2.2.2)
-@[reducible, readable] def «Placed».«withS» (r : «Placed») (v : JSString) : «Placed» := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
-@[reducible, readable] def «Placed».«withGone» (r : «Placed») (v : Bool) : «Placed» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, v, r.2.2.2.2.2)
-@[reducible, readable] def «Placed».«withU» (r : «Placed») (v : Option JSString) : «Placed» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, v, r.2.2.2.2.2.2)
+abbrev Placed : Type := JSString × JSString × Int × JSString × Bool × (Option JSString) × Unit
+@[reducible, readable] def Placed.p (r : Placed) : JSString := r.1
+@[reducible, readable] def Placed.cls (r : Placed) : JSString := r.2.1
+@[reducible, readable] def Placed.«at» (r : Placed) : Int := r.2.2.1
+@[reducible, readable] def Placed.s (r : Placed) : JSString := r.2.2.2.1
+@[reducible, readable] def Placed.gone (r : Placed) : Bool := r.2.2.2.2.1
+@[reducible, readable] def Placed.u (r : Placed) : Option JSString := r.2.2.2.2.2.1
+@[reducible, readable] def Placed.mk (p : JSString) (cls : JSString) («at» : Int) (s : JSString) (gone : Bool) (u : Option JSString) : Placed := (p, cls, «at», s, gone, u, ())
+@[reducible, readable] def Placed.withP (r : Placed) (v : JSString) : Placed := (v, r.2)
+@[reducible, readable] def Placed.withCls (r : Placed) (v : JSString) : Placed := (r.1, v, r.2.2)
+@[reducible, readable] def Placed.withAt (r : Placed) (v : Int) : Placed := (r.1, r.2.1, v, r.2.2.2)
+@[reducible, readable] def Placed.withS (r : Placed) (v : JSString) : Placed := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
+@[reducible, readable] def Placed.withGone (r : Placed) (v : Bool) : Placed := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, v, r.2.2.2.2.2)
+@[reducible, readable] def Placed.withU (r : Placed) (v : Option JSString) : Placed := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, v, r.2.2.2.2.2.2)
 
 /-- The source's `Mark`. -/
-abbrev «Mark» : Type := JSString × JSString × Int × JSString × Bool × (Option JSString) × Unit
-@[reducible, readable] def «Mark».«ref» (r : «Mark») : JSString := r.1
-@[reducible, readable] def «Mark».«p» (r : «Mark») : JSString := r.2.1
-@[reducible, readable] def «Mark».«since» (r : «Mark») : Int := r.2.2.1
-@[reducible, readable] def «Mark».«s» (r : «Mark») : JSString := r.2.2.2.1
-@[reducible, readable] def «Mark».«on» (r : «Mark») : Bool := r.2.2.2.2.1
-@[reducible, readable] def «Mark».«reason» (r : «Mark») : Option JSString := r.2.2.2.2.2.1
-@[reducible, readable] def «Mark».mk («ref» : JSString) («p» : JSString) («since» : Int) («s» : JSString) («on» : Bool) («reason» : Option JSString) : «Mark» := («ref», «p», «since», «s», «on», «reason», ())
-@[reducible, readable] def «Mark».«withRef» (r : «Mark») (v : JSString) : «Mark» := (v, r.2)
-@[reducible, readable] def «Mark».«withP» (r : «Mark») (v : JSString) : «Mark» := (r.1, v, r.2.2)
-@[reducible, readable] def «Mark».«withSince» (r : «Mark») (v : Int) : «Mark» := (r.1, r.2.1, v, r.2.2.2)
-@[reducible, readable] def «Mark».«withS» (r : «Mark») (v : JSString) : «Mark» := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
-@[reducible, readable] def «Mark».«withOn» (r : «Mark») (v : Bool) : «Mark» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, v, r.2.2.2.2.2)
-@[reducible, readable] def «Mark».«withReason» (r : «Mark») (v : Option JSString) : «Mark» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, v, r.2.2.2.2.2.2)
+abbrev Mark : Type := JSString × JSString × Int × JSString × Bool × (Option JSString) × Unit
+@[reducible, readable] def Mark.ref (r : Mark) : JSString := r.1
+@[reducible, readable] def Mark.p (r : Mark) : JSString := r.2.1
+@[reducible, readable] def Mark.since (r : Mark) : Int := r.2.2.1
+@[reducible, readable] def Mark.s (r : Mark) : JSString := r.2.2.2.1
+@[reducible, readable] def Mark.on (r : Mark) : Bool := r.2.2.2.2.1
+@[reducible, readable] def Mark.reason (r : Mark) : Option JSString := r.2.2.2.2.2.1
+@[reducible, readable] def Mark.mk (ref : JSString) (p : JSString) (since : Int) (s : JSString) (on : Bool) (reason : Option JSString) : Mark := (ref, p, since, s, on, reason, ())
+@[reducible, readable] def Mark.withRef (r : Mark) (v : JSString) : Mark := (v, r.2)
+@[reducible, readable] def Mark.withP (r : Mark) (v : JSString) : Mark := (r.1, v, r.2.2)
+@[reducible, readable] def Mark.withSince (r : Mark) (v : Int) : Mark := (r.1, r.2.1, v, r.2.2.2)
+@[reducible, readable] def Mark.withS (r : Mark) (v : JSString) : Mark := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
+@[reducible, readable] def Mark.withOn (r : Mark) (v : Bool) : Mark := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, v, r.2.2.2.2.2)
+@[reducible, readable] def Mark.withReason (r : Mark) (v : Option JSString) : Mark := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, v, r.2.2.2.2.2.2)
 
 /-- The source's `Pack`. -/
-abbrev «Pack» : Type := JSString × Int × Int × Int × (Option JSString) × (Option JSString) × Unit
-@[reducible, readable] def «Pack».«id» (r : «Pack») : JSString := r.1
-@[reducible, readable] def «Pack».«size» (r : «Pack») : Int := r.2.1
-@[reducible, readable] def «Pack».«csize» (r : «Pack») : Int := r.2.2.1
-@[reducible, readable] def «Pack».«at» (r : «Pack») : Int := r.2.2.2.1
-@[reducible, readable] def «Pack».«s» (r : «Pack») : Option JSString := r.2.2.2.2.1
-@[reducible, readable] def «Pack».«hn» (r : «Pack») : Option JSString := r.2.2.2.2.2.1
-@[reducible, readable] def «Pack».mk («id» : JSString) («size» : Int) («csize» : Int) («at» : Int) («s» : Option JSString) («hn» : Option JSString) : «Pack» := («id», «size», «csize», «at», «s», «hn», ())
-@[reducible, readable] def «Pack».«withId» (r : «Pack») (v : JSString) : «Pack» := (v, r.2)
-@[reducible, readable] def «Pack».«withSize» (r : «Pack») (v : Int) : «Pack» := (r.1, v, r.2.2)
-@[reducible, readable] def «Pack».«withCsize» (r : «Pack») (v : Int) : «Pack» := (r.1, r.2.1, v, r.2.2.2)
-@[reducible, readable] def «Pack».«withAt» (r : «Pack») (v : Int) : «Pack» := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
-@[reducible, readable] def «Pack».«withS» (r : «Pack») (v : Option JSString) : «Pack» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, v, r.2.2.2.2.2)
-@[reducible, readable] def «Pack».«withHn» (r : «Pack») (v : Option JSString) : «Pack» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, v, r.2.2.2.2.2.2)
+abbrev Pack : Type := JSString × Int × Int × Int × (Option JSString) × (Option JSString) × Unit
+@[reducible, readable] def Pack.id (r : Pack) : JSString := r.1
+@[reducible, readable] def Pack.size (r : Pack) : Int := r.2.1
+@[reducible, readable] def Pack.csize (r : Pack) : Int := r.2.2.1
+@[reducible, readable] def Pack.«at» (r : Pack) : Int := r.2.2.2.1
+@[reducible, readable] def Pack.s (r : Pack) : Option JSString := r.2.2.2.2.1
+@[reducible, readable] def Pack.hn (r : Pack) : Option JSString := r.2.2.2.2.2.1
+@[reducible, readable] def Pack.mk (id : JSString) (size : Int) (csize : Int) («at» : Int) (s : Option JSString) (hn : Option JSString) : Pack := (id, size, csize, «at», s, hn, ())
+@[reducible, readable] def Pack.withId (r : Pack) (v : JSString) : Pack := (v, r.2)
+@[reducible, readable] def Pack.withSize (r : Pack) (v : Int) : Pack := (r.1, v, r.2.2)
+@[reducible, readable] def Pack.withCsize (r : Pack) (v : Int) : Pack := (r.1, r.2.1, v, r.2.2.2)
+@[reducible, readable] def Pack.withAt (r : Pack) (v : Int) : Pack := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
+@[reducible, readable] def Pack.withS (r : Pack) (v : Option JSString) : Pack := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, v, r.2.2.2.2.2)
+@[reducible, readable] def Pack.withHn (r : Pack) (v : Option JSString) : Pack := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, v, r.2.2.2.2.2.2)
 
 /-- The source's `Counters`. -/
-abbrev «Counters» : Type := Int × Int × Int × Int × Int × Int × Int × Int × Int × Unit
-@[reducible, readable] def «Counters».«put» (r : «Counters») : Int := r.1
-@[reducible, readable] def «Counters».«get» (r : «Counters») : Int := r.2.1
-@[reducible, readable] def «Counters».«list» (r : «Counters») : Int := r.2.2.1
-@[reducible, readable] def «Counters».«head» (r : «Counters») : Int := r.2.2.2.1
-@[reducible, readable] def «Counters».«delete» (r : «Counters») : Int := r.2.2.2.2.1
-@[reducible, readable] def «Counters».«copy» (r : «Counters») : Int := r.2.2.2.2.2.1
-@[reducible, readable] def «Counters».«restore» (r : «Counters») : Int := r.2.2.2.2.2.2.1
-@[reducible, readable] def «Counters».«ingress» (r : «Counters») : Int := r.2.2.2.2.2.2.2.1
-@[reducible, readable] def «Counters».«egress» (r : «Counters») : Int := r.2.2.2.2.2.2.2.2.1
-@[reducible, readable] def «Counters».mk («put» : Int) («get» : Int) («list» : Int) («head» : Int) («delete» : Int) («copy» : Int) («restore» : Int) («ingress» : Int) («egress» : Int) : «Counters» := («put», «get», «list», «head», «delete», «copy», «restore», «ingress», «egress», ())
-@[reducible, readable] def «Counters».«withPut» (r : «Counters») (v : Int) : «Counters» := (v, r.2)
-@[reducible, readable] def «Counters».«withGet» (r : «Counters») (v : Int) : «Counters» := (r.1, v, r.2.2)
-@[reducible, readable] def «Counters».«withList» (r : «Counters») (v : Int) : «Counters» := (r.1, r.2.1, v, r.2.2.2)
-@[reducible, readable] def «Counters».«withHead» (r : «Counters») (v : Int) : «Counters» := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
-@[reducible, readable] def «Counters».«withDelete» (r : «Counters») (v : Int) : «Counters» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, v, r.2.2.2.2.2)
-@[reducible, readable] def «Counters».«withCopy» (r : «Counters») (v : Int) : «Counters» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, v, r.2.2.2.2.2.2)
-@[reducible, readable] def «Counters».«withRestore» (r : «Counters») (v : Int) : «Counters» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, r.2.2.2.2.2.1, v, r.2.2.2.2.2.2.2)
-@[reducible, readable] def «Counters».«withIngress» (r : «Counters») (v : Int) : «Counters» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, r.2.2.2.2.2.1, r.2.2.2.2.2.2.1, v, r.2.2.2.2.2.2.2.2)
-@[reducible, readable] def «Counters».«withEgress» (r : «Counters») (v : Int) : «Counters» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, r.2.2.2.2.2.1, r.2.2.2.2.2.2.1, r.2.2.2.2.2.2.2.1, v, r.2.2.2.2.2.2.2.2.2)
+abbrev Counters : Type := Int × Int × Int × Int × Int × Int × Int × Int × Int × Unit
+@[reducible, readable] def Counters.put (r : Counters) : Int := r.1
+@[reducible, readable] def Counters.get (r : Counters) : Int := r.2.1
+@[reducible, readable] def Counters.list (r : Counters) : Int := r.2.2.1
+@[reducible, readable] def Counters.head (r : Counters) : Int := r.2.2.2.1
+@[reducible, readable] def Counters.delete (r : Counters) : Int := r.2.2.2.2.1
+@[reducible, readable] def Counters.copy (r : Counters) : Int := r.2.2.2.2.2.1
+@[reducible, readable] def Counters.restore (r : Counters) : Int := r.2.2.2.2.2.2.1
+@[reducible, readable] def Counters.ingress (r : Counters) : Int := r.2.2.2.2.2.2.2.1
+@[reducible, readable] def Counters.egress (r : Counters) : Int := r.2.2.2.2.2.2.2.2.1
+@[reducible, readable] def Counters.mk (put : Int) (get : Int) (list : Int) (head : Int) (delete : Int) (copy : Int) (restore : Int) (ingress : Int) (egress : Int) : Counters := (put, get, list, head, delete, copy, restore, ingress, egress, ())
+@[reducible, readable] def Counters.withPut (r : Counters) (v : Int) : Counters := (v, r.2)
+@[reducible, readable] def Counters.withGet (r : Counters) (v : Int) : Counters := (r.1, v, r.2.2)
+@[reducible, readable] def Counters.withList (r : Counters) (v : Int) : Counters := (r.1, r.2.1, v, r.2.2.2)
+@[reducible, readable] def Counters.withHead (r : Counters) (v : Int) : Counters := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
+@[reducible, readable] def Counters.withDelete (r : Counters) (v : Int) : Counters := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, v, r.2.2.2.2.2)
+@[reducible, readable] def Counters.withCopy (r : Counters) (v : Int) : Counters := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, v, r.2.2.2.2.2.2)
+@[reducible, readable] def Counters.withRestore (r : Counters) (v : Int) : Counters := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, r.2.2.2.2.2.1, v, r.2.2.2.2.2.2.2)
+@[reducible, readable] def Counters.withIngress (r : Counters) (v : Int) : Counters := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, r.2.2.2.2.2.1, r.2.2.2.2.2.2.1, v, r.2.2.2.2.2.2.2.2)
+@[reducible, readable] def Counters.withEgress (r : Counters) (v : Int) : Counters := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, r.2.2.2.2.2.1, r.2.2.2.2.2.2.1, r.2.2.2.2.2.2.2.1, v, r.2.2.2.2.2.2.2.2.2)
 
 /-- The source's `Period`. -/
-abbrev «Period» : Type := JSString × JSString × (List JSString) × Unit
-@[reducible, readable] def «Period».«p» (r : «Period») : JSString := r.1
-@[reducible, readable] def «Period».«month» (r : «Period») : JSString := r.2.1
-@[reducible, readable] def «Period».«devices» (r : «Period») : List JSString := r.2.2.1
-@[reducible, readable] def «Period».mk («p» : JSString) («month» : JSString) («devices» : List JSString) : «Period» := («p», «month», «devices», ())
-@[reducible, readable] def «Period».«withP» (r : «Period») (v : JSString) : «Period» := (v, r.2)
-@[reducible, readable] def «Period».«withMonth» (r : «Period») (v : JSString) : «Period» := (r.1, v, r.2.2)
-@[reducible, readable] def «Period».«withDevices» (r : «Period») (v : List JSString) : «Period» := (r.1, r.2.1, v, r.2.2.2)
+abbrev Period : Type := JSString × JSString × (List JSString) × Unit
+@[reducible, readable] def Period.p (r : Period) : JSString := r.1
+@[reducible, readable] def Period.month (r : Period) : JSString := r.2.1
+@[reducible, readable] def Period.devices (r : Period) : List JSString := r.2.2.1
+@[reducible, readable] def Period.mk (p : JSString) (month : JSString) (devices : List JSString) : Period := (p, month, devices, ())
+@[reducible, readable] def Period.withP (r : Period) (v : JSString) : Period := (v, r.2)
+@[reducible, readable] def Period.withMonth (r : Period) (v : JSString) : Period := (r.1, v, r.2.2)
+@[reducible, readable] def Period.withDevices (r : Period) (v : List JSString) : Period := (r.1, r.2.1, v, r.2.2.2)
 
 /-- The source's `AlbumRec`. -/
-abbrev «AlbumRec» : Type := JSString × JSString × Int × (Option JSString) × (Option JSString) × (Option JSString) × (Option JSString) × Unit
-@[reducible, readable] def «AlbumRec».«id» (r : «AlbumRec») : JSString := r.1
-@[reducible, readable] def «AlbumRec».«name» (r : «AlbumRec») : JSString := r.2.1
-@[reducible, readable] def «AlbumRec».«created» (r : «AlbumRec») : Int := r.2.2.1
-@[reducible, readable] def «AlbumRec».«cover» (r : «AlbumRec») : Option JSString := r.2.2.2.1
-@[reducible, readable] def «AlbumRec».«deleted» (r : «AlbumRec») : Option JSString := r.2.2.2.2.1
-@[reducible, readable] def «AlbumRec».«nameS» (r : «AlbumRec») : Option JSString := r.2.2.2.2.2.1
-@[reducible, readable] def «AlbumRec».«coverS» (r : «AlbumRec») : Option JSString := r.2.2.2.2.2.2.1
-@[reducible, readable] def «AlbumRec».mk («id» : JSString) («name» : JSString) («created» : Int) («cover» : Option JSString) («deleted» : Option JSString) («nameS» : Option JSString) («coverS» : Option JSString) : «AlbumRec» := («id», «name», «created», «cover», «deleted», «nameS», «coverS», ())
-@[reducible, readable] def «AlbumRec».«withId» (r : «AlbumRec») (v : JSString) : «AlbumRec» := (v, r.2)
-@[reducible, readable] def «AlbumRec».«withName» (r : «AlbumRec») (v : JSString) : «AlbumRec» := (r.1, v, r.2.2)
-@[reducible, readable] def «AlbumRec».«withCreated» (r : «AlbumRec») (v : Int) : «AlbumRec» := (r.1, r.2.1, v, r.2.2.2)
-@[reducible, readable] def «AlbumRec».«withCover» (r : «AlbumRec») (v : Option JSString) : «AlbumRec» := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
-@[reducible, readable] def «AlbumRec».«withDeleted» (r : «AlbumRec») (v : Option JSString) : «AlbumRec» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, v, r.2.2.2.2.2)
-@[reducible, readable] def «AlbumRec».«withNameS» (r : «AlbumRec») (v : Option JSString) : «AlbumRec» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, v, r.2.2.2.2.2.2)
-@[reducible, readable] def «AlbumRec».«withCoverS» (r : «AlbumRec») (v : Option JSString) : «AlbumRec» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, r.2.2.2.2.2.1, v, r.2.2.2.2.2.2.2)
+abbrev AlbumRec : Type := JSString × JSString × Int × (Option JSString) × (Option JSString) × (Option JSString) × (Option JSString) × Unit
+@[reducible, readable] def AlbumRec.id (r : AlbumRec) : JSString := r.1
+@[reducible, readable] def AlbumRec.name (r : AlbumRec) : JSString := r.2.1
+@[reducible, readable] def AlbumRec.created (r : AlbumRec) : Int := r.2.2.1
+@[reducible, readable] def AlbumRec.cover (r : AlbumRec) : Option JSString := r.2.2.2.1
+@[reducible, readable] def AlbumRec.deleted (r : AlbumRec) : Option JSString := r.2.2.2.2.1
+@[reducible, readable] def AlbumRec.nameS (r : AlbumRec) : Option JSString := r.2.2.2.2.2.1
+@[reducible, readable] def AlbumRec.coverS (r : AlbumRec) : Option JSString := r.2.2.2.2.2.2.1
+@[reducible, readable] def AlbumRec.mk (id : JSString) (name : JSString) (created : Int) (cover : Option JSString) (deleted : Option JSString) (nameS : Option JSString) (coverS : Option JSString) : AlbumRec := (id, name, created, cover, deleted, nameS, coverS, ())
+@[reducible, readable] def AlbumRec.withId (r : AlbumRec) (v : JSString) : AlbumRec := (v, r.2)
+@[reducible, readable] def AlbumRec.withName (r : AlbumRec) (v : JSString) : AlbumRec := (r.1, v, r.2.2)
+@[reducible, readable] def AlbumRec.withCreated (r : AlbumRec) (v : Int) : AlbumRec := (r.1, r.2.1, v, r.2.2.2)
+@[reducible, readable] def AlbumRec.withCover (r : AlbumRec) (v : Option JSString) : AlbumRec := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
+@[reducible, readable] def AlbumRec.withDeleted (r : AlbumRec) (v : Option JSString) : AlbumRec := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, v, r.2.2.2.2.2)
+@[reducible, readable] def AlbumRec.withNameS (r : AlbumRec) (v : Option JSString) : AlbumRec := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, v, r.2.2.2.2.2.2)
+@[reducible, readable] def AlbumRec.withCoverS (r : AlbumRec) (v : Option JSString) : AlbumRec := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, r.2.2.2.2.2.1, v, r.2.2.2.2.2.2.2)
 
 /-- The source's `AlbumItem`. -/
-abbrev «AlbumItem» : Type := JSString × JSString × JSString × Bool × Unit
-@[reducible, readable] def «AlbumItem».«aid» (r : «AlbumItem») : JSString := r.1
-@[reducible, readable] def «AlbumItem».«id» (r : «AlbumItem») : JSString := r.2.1
-@[reducible, readable] def «AlbumItem».«s» (r : «AlbumItem») : JSString := r.2.2.1
-@[reducible, readable] def «AlbumItem».«present» (r : «AlbumItem») : Bool := r.2.2.2.1
-@[reducible, readable] def «AlbumItem».mk («aid» : JSString) («id» : JSString) («s» : JSString) («present» : Bool) : «AlbumItem» := («aid», «id», «s», «present», ())
-@[reducible, readable] def «AlbumItem».«withAid» (r : «AlbumItem») (v : JSString) : «AlbumItem» := (v, r.2)
-@[reducible, readable] def «AlbumItem».«withId» (r : «AlbumItem») (v : JSString) : «AlbumItem» := (r.1, v, r.2.2)
-@[reducible, readable] def «AlbumItem».«withS» (r : «AlbumItem») (v : JSString) : «AlbumItem» := (r.1, r.2.1, v, r.2.2.2)
-@[reducible, readable] def «AlbumItem».«withPresent» (r : «AlbumItem») (v : Bool) : «AlbumItem» := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
+abbrev AlbumItem : Type := JSString × JSString × JSString × Bool × Unit
+@[reducible, readable] def AlbumItem.aid (r : AlbumItem) : JSString := r.1
+@[reducible, readable] def AlbumItem.id (r : AlbumItem) : JSString := r.2.1
+@[reducible, readable] def AlbumItem.s (r : AlbumItem) : JSString := r.2.2.1
+@[reducible, readable] def AlbumItem.present (r : AlbumItem) : Bool := r.2.2.2.1
+@[reducible, readable] def AlbumItem.mk (aid : JSString) (id : JSString) (s : JSString) (present : Bool) : AlbumItem := (aid, id, s, present, ())
+@[reducible, readable] def AlbumItem.withAid (r : AlbumItem) (v : JSString) : AlbumItem := (v, r.2)
+@[reducible, readable] def AlbumItem.withId (r : AlbumItem) (v : JSString) : AlbumItem := (r.1, v, r.2.2)
+@[reducible, readable] def AlbumItem.withS (r : AlbumItem) (v : JSString) : AlbumItem := (r.1, r.2.1, v, r.2.2.2)
+@[reducible, readable] def AlbumItem.withPresent (r : AlbumItem) (v : Bool) : AlbumItem := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
 
 /-- The source's `Total`. -/
-abbrev «Total» : Type := JSString × JSString × JSString × «Counters» × Unit
-@[reducible, readable] def «Total».«p» (r : «Total») : JSString := r.1
-@[reducible, readable] def «Total».«month» (r : «Total») : JSString := r.2.1
-@[reducible, readable] def «Total».«device» (r : «Total») : JSString := r.2.2.1
-@[reducible, readable] def «Total».«c» (r : «Total») : «Counters» := r.2.2.2.1
-@[reducible, readable] def «Total».mk («p» : JSString) («month» : JSString) («device» : JSString) («c» : «Counters») : «Total» := («p», «month», «device», «c», ())
-@[reducible, readable] def «Total».«withP» (r : «Total») (v : JSString) : «Total» := (v, r.2)
-@[reducible, readable] def «Total».«withMonth» (r : «Total») (v : JSString) : «Total» := (r.1, v, r.2.2)
-@[reducible, readable] def «Total».«withDevice» (r : «Total») (v : JSString) : «Total» := (r.1, r.2.1, v, r.2.2.2)
-@[reducible, readable] def «Total».«withC» (r : «Total») (v : «Counters») : «Total» := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
+abbrev Total : Type := JSString × JSString × JSString × Counters × Unit
+@[reducible, readable] def Total.p (r : Total) : JSString := r.1
+@[reducible, readable] def Total.month (r : Total) : JSString := r.2.1
+@[reducible, readable] def Total.device (r : Total) : JSString := r.2.2.1
+@[reducible, readable] def Total.c (r : Total) : Counters := r.2.2.2.1
+@[reducible, readable] def Total.mk (p : JSString) (month : JSString) (device : JSString) (c : Counters) : Total := (p, month, device, c, ())
+@[reducible, readable] def Total.withP (r : Total) (v : JSString) : Total := (v, r.2)
+@[reducible, readable] def Total.withMonth (r : Total) (v : JSString) : Total := (r.1, v, r.2.2)
+@[reducible, readable] def Total.withDevice (r : Total) (v : JSString) : Total := (r.1, r.2.1, v, r.2.2.2)
+@[reducible, readable] def Total.withC (r : Total) (v : Counters) : Total := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
 
 /-- The source's `Increments`. -/
-abbrev «Increments» : Type := JSString × JSString × «Counters» × Unit
-@[reducible, readable] def «Increments».«p» (r : «Increments») : JSString := r.1
-@[reducible, readable] def «Increments».«month» (r : «Increments») : JSString := r.2.1
-@[reducible, readable] def «Increments».«c» (r : «Increments») : «Counters» := r.2.2.1
-@[reducible, readable] def «Increments».mk («p» : JSString) («month» : JSString) («c» : «Counters») : «Increments» := («p», «month», «c», ())
-@[reducible, readable] def «Increments».«withP» (r : «Increments») (v : JSString) : «Increments» := (v, r.2)
-@[reducible, readable] def «Increments».«withMonth» (r : «Increments») (v : JSString) : «Increments» := (r.1, v, r.2.2)
-@[reducible, readable] def «Increments».«withC» (r : «Increments») (v : «Counters») : «Increments» := (r.1, r.2.1, v, r.2.2.2)
+abbrev Increments : Type := JSString × JSString × Counters × Unit
+@[reducible, readable] def Increments.p (r : Increments) : JSString := r.1
+@[reducible, readable] def Increments.month (r : Increments) : JSString := r.2.1
+@[reducible, readable] def Increments.c (r : Increments) : Counters := r.2.2.1
+@[reducible, readable] def Increments.mk (p : JSString) (month : JSString) (c : Counters) : Increments := (p, month, c, ())
+@[reducible, readable] def Increments.withP (r : Increments) (v : JSString) : Increments := (v, r.2)
+@[reducible, readable] def Increments.withMonth (r : Increments) (v : JSString) : Increments := (r.1, v, r.2.2)
+@[reducible, readable] def Increments.withC (r : Increments) (v : Counters) : Increments := (r.1, r.2.1, v, r.2.2.2)
 
 /-- The source's `Usage`. -/
-abbrev «Usage» : Type := JSString × JSString × «Counters» × Unit
-@[reducible, readable] def «Usage».«p» (r : «Usage») : JSString := r.1
-@[reducible, readable] def «Usage».«month» (r : «Usage») : JSString := r.2.1
-@[reducible, readable] def «Usage».«c» (r : «Usage») : «Counters» := r.2.2.1
-@[reducible, readable] def «Usage».mk («p» : JSString) («month» : JSString) («c» : «Counters») : «Usage» := («p», «month», «c», ())
-@[reducible, readable] def «Usage».«withP» (r : «Usage») (v : JSString) : «Usage» := (v, r.2)
-@[reducible, readable] def «Usage».«withMonth» (r : «Usage») (v : JSString) : «Usage» := (r.1, v, r.2.2)
-@[reducible, readable] def «Usage».«withC» (r : «Usage») (v : «Counters») : «Usage» := (r.1, r.2.1, v, r.2.2.2)
+abbrev Usage : Type := JSString × JSString × Counters × Unit
+@[reducible, readable] def Usage.p (r : Usage) : JSString := r.1
+@[reducible, readable] def Usage.month (r : Usage) : JSString := r.2.1
+@[reducible, readable] def Usage.c (r : Usage) : Counters := r.2.2.1
+@[reducible, readable] def Usage.mk (p : JSString) (month : JSString) (c : Counters) : Usage := (p, month, c, ())
+@[reducible, readable] def Usage.withP (r : Usage) (v : JSString) : Usage := (v, r.2)
+@[reducible, readable] def Usage.withMonth (r : Usage) (v : JSString) : Usage := (r.1, v, r.2.2)
+@[reducible, readable] def Usage.withC (r : Usage) (v : Counters) : Usage := (r.1, r.2.1, v, r.2.2.2)
 
 /-- The source's `Registers`. -/
-abbrev «Registers» : Type := (List (JSString × «Placed»)) × (List (JSString × List JSString)) × (List (JSString × «Mark»)) × (List (JSString × «Pack»)) × (List (JSString × «Total»)) × (List (JSString × «Increments»)) × (List (JSString × «Period»)) × (List (JSString × «AlbumRec»)) × (List (JSString × «AlbumItem»)) × Unit
-@[reducible, readable] def «Registers».«placed» (r : «Registers») : List (JSString × «Placed») := r.1
-@[reducible, readable] def «Registers».«providers» (r : «Registers») : List (JSString × List JSString) := r.2.1
-@[reducible, readable] def «Registers».«marks» (r : «Registers») : List (JSString × «Mark») := r.2.2.1
-@[reducible, readable] def «Registers».«packs» (r : «Registers») : List (JSString × «Pack») := r.2.2.2.1
-@[reducible, readable] def «Registers».«totals» (r : «Registers») : List (JSString × «Total») := r.2.2.2.2.1
-@[reducible, readable] def «Registers».«increments» (r : «Registers») : List (JSString × «Increments») := r.2.2.2.2.2.1
-@[reducible, readable] def «Registers».«periods» (r : «Registers») : List (JSString × «Period») := r.2.2.2.2.2.2.1
-@[reducible, readable] def «Registers».«albums» (r : «Registers») : List (JSString × «AlbumRec») := r.2.2.2.2.2.2.2.1
-@[reducible, readable] def «Registers».«items» (r : «Registers») : List (JSString × «AlbumItem») := r.2.2.2.2.2.2.2.2.1
-@[reducible, readable] def «Registers».mk («placed» : List (JSString × «Placed»)) («providers» : List (JSString × List JSString)) («marks» : List (JSString × «Mark»)) («packs» : List (JSString × «Pack»)) («totals» : List (JSString × «Total»)) («increments» : List (JSString × «Increments»)) («periods» : List (JSString × «Period»)) («albums» : List (JSString × «AlbumRec»)) («items» : List (JSString × «AlbumItem»)) : «Registers» := («placed», «providers», «marks», «packs», «totals», «increments», «periods», «albums», «items», ())
-@[reducible, readable] def «Registers».«withPlaced» (r : «Registers») (v : List (JSString × «Placed»)) : «Registers» := (v, r.2)
-@[reducible, readable] def «Registers».«withProviders» (r : «Registers») (v : List (JSString × List JSString)) : «Registers» := (r.1, v, r.2.2)
-@[reducible, readable] def «Registers».«withMarks» (r : «Registers») (v : List (JSString × «Mark»)) : «Registers» := (r.1, r.2.1, v, r.2.2.2)
-@[reducible, readable] def «Registers».«withPacks» (r : «Registers») (v : List (JSString × «Pack»)) : «Registers» := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
-@[reducible, readable] def «Registers».«withTotals» (r : «Registers») (v : List (JSString × «Total»)) : «Registers» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, v, r.2.2.2.2.2)
-@[reducible, readable] def «Registers».«withIncrements» (r : «Registers») (v : List (JSString × «Increments»)) : «Registers» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, v, r.2.2.2.2.2.2)
-@[reducible, readable] def «Registers».«withPeriods» (r : «Registers») (v : List (JSString × «Period»)) : «Registers» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, r.2.2.2.2.2.1, v, r.2.2.2.2.2.2.2)
-@[reducible, readable] def «Registers».«withAlbums» (r : «Registers») (v : List (JSString × «AlbumRec»)) : «Registers» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, r.2.2.2.2.2.1, r.2.2.2.2.2.2.1, v, r.2.2.2.2.2.2.2.2)
-@[reducible, readable] def «Registers».«withItems» (r : «Registers») (v : List (JSString × «AlbumItem»)) : «Registers» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, r.2.2.2.2.2.1, r.2.2.2.2.2.2.1, r.2.2.2.2.2.2.2.1, v, r.2.2.2.2.2.2.2.2.2)
+abbrev Registers : Type := (List (JSString × Placed)) × (List (JSString × List JSString)) × (List (JSString × Mark)) × (List (JSString × Pack)) × (List (JSString × Total)) × (List (JSString × Increments)) × (List (JSString × Period)) × (List (JSString × AlbumRec)) × (List (JSString × AlbumItem)) × Unit
+@[reducible, readable] def Registers.placed (r : Registers) : List (JSString × Placed) := r.1
+@[reducible, readable] def Registers.providers (r : Registers) : List (JSString × List JSString) := r.2.1
+@[reducible, readable] def Registers.marks (r : Registers) : List (JSString × Mark) := r.2.2.1
+@[reducible, readable] def Registers.packs (r : Registers) : List (JSString × Pack) := r.2.2.2.1
+@[reducible, readable] def Registers.totals (r : Registers) : List (JSString × Total) := r.2.2.2.2.1
+@[reducible, readable] def Registers.increments (r : Registers) : List (JSString × Increments) := r.2.2.2.2.2.1
+@[reducible, readable] def Registers.periods (r : Registers) : List (JSString × Period) := r.2.2.2.2.2.2.1
+@[reducible, readable] def Registers.albums (r : Registers) : List (JSString × AlbumRec) := r.2.2.2.2.2.2.2.1
+@[reducible, readable] def Registers.items (r : Registers) : List (JSString × AlbumItem) := r.2.2.2.2.2.2.2.2.1
+@[reducible, readable] def Registers.mk (placed : List (JSString × Placed)) (providers : List (JSString × List JSString)) (marks : List (JSString × Mark)) (packs : List (JSString × Pack)) (totals : List (JSString × Total)) (increments : List (JSString × Increments)) (periods : List (JSString × Period)) (albums : List (JSString × AlbumRec)) (items : List (JSString × AlbumItem)) : Registers := (placed, providers, marks, packs, totals, increments, periods, albums, items, ())
+@[reducible, readable] def Registers.withPlaced (r : Registers) (v : List (JSString × Placed)) : Registers := (v, r.2)
+@[reducible, readable] def Registers.withProviders (r : Registers) (v : List (JSString × List JSString)) : Registers := (r.1, v, r.2.2)
+@[reducible, readable] def Registers.withMarks (r : Registers) (v : List (JSString × Mark)) : Registers := (r.1, r.2.1, v, r.2.2.2)
+@[reducible, readable] def Registers.withPacks (r : Registers) (v : List (JSString × Pack)) : Registers := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
+@[reducible, readable] def Registers.withTotals (r : Registers) (v : List (JSString × Total)) : Registers := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, v, r.2.2.2.2.2)
+@[reducible, readable] def Registers.withIncrements (r : Registers) (v : List (JSString × Increments)) : Registers := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, v, r.2.2.2.2.2.2)
+@[reducible, readable] def Registers.withPeriods (r : Registers) (v : List (JSString × Period)) : Registers := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, r.2.2.2.2.2.1, v, r.2.2.2.2.2.2.2)
+@[reducible, readable] def Registers.withAlbums (r : Registers) (v : List (JSString × AlbumRec)) : Registers := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, r.2.2.2.2.2.1, r.2.2.2.2.2.2.1, v, r.2.2.2.2.2.2.2.2)
+@[reducible, readable] def Registers.withItems (r : Registers) (v : List (JSString × AlbumItem)) : Registers := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, r.2.2.2.2.1, r.2.2.2.2.2.1, r.2.2.2.2.2.2.1, r.2.2.2.2.2.2.2.1, v, r.2.2.2.2.2.2.2.2.2)
 
-noncomputable def sig.«key» : Sig := { name := "key", params := [("a", .string), ("b", .string)], result := .string, trivial := true }
-noncomputable def sig.«byString» : Sig := { name := "byString", params := [("a", .string), ("b", .string)], result := .number, trivial := true }
-noncomputable def sig.«newer» : Sig := { name := "newer", params := [("s", (.option .undef .string)), ("stamp", .string)], result := .bool, trivial := true }
-noncomputable def sig.«earlier» : Sig := { name := "earlier", params := [("s", (.option .undef .string)), ("stamp", .string)], result := .bool, trivial := true }
-noncomputable def sig.«newest» : Sig := { name := "newest", params := [("s", (.option .undef .string)), ("stamp", .string)], result := .string, trivial := true }
-noncomputable def sig.«before» : Sig := { name := "before", params := [("stamp", .string), ("s", (.option .undef .string))], result := .bool, trivial := true }
-noncomputable def sig.«given» : Sig := { name := "given", params := [("s", (.option .undef .string))], result := .bool, trivial := true }
-noncomputable def sig.«otherwise» : Sig := { name := "otherwise", params := [("s", (.option .undef .string)), ("fallback", .string)], result := .string, trivial := true }
-noncomputable def sig.«described» : Sig := { name := "described", params := [("cur", (.option .undef ty.«Pack»)), ("stamp", .string), ("at", .number)], result := .bool, trivial := true }
-noncomputable def sig.«larger» : Sig := { name := "larger", params := [("a", .number), ("b", .number)], result := .number, trivial := true }
-noncomputable def sig.«zero» : Sig := { name := "zero", params := [], result := ty.«Counters», trivial := true }
-noncomputable def sig.«highest» : Sig := { name := "highest", params := [("a", ty.«Counters»), ("b", ty.«Counters»)], result := ty.«Counters», trivial := true }
-noncomputable def sig.«sum» : Sig := { name := "sum", params := [("a", ty.«Counters»), ("b", ty.«Counters»)], result := ty.«Counters», trivial := false }
-noncomputable def sig.«new Registers» : Sig := { name := "new Registers", params := [], result := ty.«Registers», trivial := true }
-noncomputable def sig.«noteUnplace» : Sig := { name := "noteUnplace", params := [("this", ty.«Registers»), ("ref", .string), ("p", .string), ("u", .string)], result := ty.«Registers», trivial := true, method := true, void := true }
-noncomputable def sig.«providersOf» : Sig := { name := "providersOf", params := [("this", ty.«Registers»), ("ref", .string)], result := (.array .string), trivial := true, method := true, void := false }
-noncomputable def sig.«put» : Sig := { name := "put", params := [("this", ty.«Registers»), ("ref", .string), ("p", .string), ("e", ty.«Placed»)], result := ty.«Registers», trivial := false, method := true, void := true }
-noncomputable def sig.«dropMarkBefore» : Sig := { name := "dropMarkBefore", params := [("this", ty.«Registers»), ("ref", .string), ("p", .string), ("u", (.option .undef .string))], result := ty.«Registers», trivial := true, method := true, void := true }
-noncomputable def sig.«place» : Sig := { name := "place", params := [("this", ty.«Registers»), ("ref", .string), ("p", .string), ("placed", .bool), ("cls", .string), ("stamp", .string), ("at", .number)], result := ty.«Registers», trivial := false, method := true, void := true }
-noncomputable def sig.«mark» : Sig := { name := "mark", params := [("this", ty.«Registers»), ("ref", .string), ("p", .string), ("on", .bool), ("reason", (.option .undef .string)), ("stamp", .string), ("at", .number)], result := ty.«Registers», trivial := true, method := true, void := true }
-noncomputable def sig.«placements» : Sig := { name := "placements", params := [("this", ty.«Registers»), ("ref", .string)], result := (.array ty.«Placed»), trivial := true, method := true, void := false }
-noncomputable def sig.«isPlaced» : Sig := { name := "isPlaced", params := [("this", ty.«Registers»), ("ref", .string)], result := .bool, trivial := true, method := true, void := false }
-noncomputable def sig.«placedRefs» : Sig := { name := "placedRefs", params := [("this", ty.«Registers»)], result := (.array .string), trivial := true, method := true, void := false }
-noncomputable def sig.«markOf» : Sig := { name := "markOf", params := [("this", ty.«Registers»), ("ref", .string), ("p", .string)], result := (.option .undef ty.«Mark»), trivial := true, method := true, void := false }
-noncomputable def sig.«markList» : Sig := { name := "markList", params := [("this", ty.«Registers»)], result := (.array ty.«Mark»), trivial := true, method := true, void := false }
-noncomputable def sig.«pack» : Sig := { name := "pack", params := [("this", ty.«Registers»), ("id", .string), ("size", .number), ("csize", .number), ("stamp", .string), ("at", .number), ("hn", (.option .undef .string))], result := ty.«Registers», trivial := true, method := true, void := true }
-noncomputable def sig.«packOf» : Sig := { name := "packOf", params := [("this", ty.«Registers»), ("id", .string)], result := (.option .undef ty.«Pack»), trivial := true, method := true, void := false }
-noncomputable def sig.«packList» : Sig := { name := "packList", params := [("this", ty.«Registers»)], result := (.array ty.«Pack»), trivial := true, method := true, void := false }
-noncomputable def sig.«track» : Sig := { name := "track", params := [("this", ty.«Registers»), ("p", .string), ("month", .string), ("device", .string), ("total", .bool)], result := ty.«Registers», trivial := false, method := true, void := true }
-noncomputable def sig.«total» : Sig := { name := "total", params := [("this", ty.«Registers»), ("p", .string), ("month", .string), ("device", .string), ("c", ty.«Counters»)], result := ty.«Registers», trivial := false, method := true, void := true }
-noncomputable def sig.«add» : Sig := { name := "add", params := [("this", ty.«Registers»), ("p", .string), ("month", .string), ("c", ty.«Counters»)], result := ty.«Registers», trivial := false, method := true, void := true }
-noncomputable def sig.«totalOf» : Sig := { name := "totalOf", params := [("this", ty.«Registers»), ("p", .string), ("month", .string), ("device", .string)], result := ty.«Counters», trivial := true, method := true, void := false }
-noncomputable def sig.«usageOf» : Sig := { name := "usageOf", params := [("this", ty.«Registers»), ("p", .string), ("month", .string)], result := ty.«Counters», trivial := false, method := true, void := false }
-noncomputable def sig.«usageList» : Sig := { name := "usageList", params := [("this", ty.«Registers»)], result := (.array ty.«Increments»), trivial := false, method := true, void := false }
-noncomputable def sig.«totalList» : Sig := { name := "totalList", params := [("this", ty.«Registers»)], result := (.array ty.«Total»), trivial := true, method := true, void := false }
-noncomputable def sig.«touchAlbum» : Sig := { name := "touchAlbum", params := [("this", ty.«Registers»), ("aid", .string), ("at", .number)], result := ty.«Registers», trivial := true, method := true, void := true }
-noncomputable def sig.«album» : Sig := { name := "album", params := [("this", ty.«Registers»), ("aid", .string), ("stamp", .string), ("at", .number), ("name", (.option .undef .string)), ("cover", (.option .undef .string)), ("deleted", .bool)], result := ty.«Registers», trivial := true, method := true, void := true }
-noncomputable def sig.«item» : Sig := { name := "item", params := [("this", ty.«Registers»), ("aid", .string), ("id", .string), ("stamp", .string), ("present", .bool)], result := ty.«Registers», trivial := true, method := true, void := true }
-noncomputable def sig.«albumItems» : Sig := { name := "albumItems", params := [("this", ty.«Registers»), ("aid", .string), ("stamp", .string), ("at", .number), ("add", (.array .string)), ("remove", (.array .string))], result := ty.«Registers», trivial := true, method := true, void := true }
-noncomputable def sig.«albumList» : Sig := { name := "albumList", params := [("this", ty.«Registers»)], result := (.array ty.«AlbumRec»), trivial := true, method := true, void := false }
-noncomputable def sig.«itemList» : Sig := { name := "itemList", params := [("this", ty.«Registers»)], result := (.array ty.«AlbumItem»), trivial := true, method := true, void := false }
-noncomputable def sig.«loadPlacement» : Sig := { name := "loadPlacement", params := [("this", ty.«Registers»), ("ref", .string), ("e", ty.«Placed»)], result := ty.«Registers», trivial := false, method := true, void := true }
-noncomputable def sig.«loadMark» : Sig := { name := "loadMark", params := [("this", ty.«Registers»), ("m", ty.«Mark»)], result := ty.«Registers», trivial := true, method := true, void := true }
-noncomputable def sig.«loadPack» : Sig := { name := "loadPack", params := [("this", ty.«Registers»), ("pk", ty.«Pack»)], result := ty.«Registers», trivial := true, method := true, void := true }
-noncomputable def sig.«loadTotal» : Sig := { name := "loadTotal", params := [("this", ty.«Registers»), ("t", ty.«Total»)], result := ty.«Registers», trivial := false, method := true, void := true }
-noncomputable def sig.«loadIncrements» : Sig := { name := "loadIncrements", params := [("this", ty.«Registers»), ("i", ty.«Increments»)], result := ty.«Registers», trivial := false, method := true, void := true }
-noncomputable def sig.«loadAlbum» : Sig := { name := "loadAlbum", params := [("this", ty.«Registers»), ("a", ty.«AlbumRec»)], result := ty.«Registers», trivial := true, method := true, void := true }
-noncomputable def sig.«loadItem» : Sig := { name := "loadItem", params := [("this", ty.«Registers»), ("i", ty.«AlbumItem»)], result := ty.«Registers», trivial := true, method := true, void := true }
+noncomputable def sig.key : Sig := { name := "key", params := [("a", .string), ("b", .string)], result := .string, trivial := true }
+noncomputable def sig.byString : Sig := { name := "byString", params := [("a", .string), ("b", .string)], result := .number, trivial := true }
+noncomputable def sig.newer : Sig := { name := "newer", params := [("s", (.option .undef .string)), ("stamp", .string)], result := .bool, trivial := true }
+noncomputable def sig.earlier : Sig := { name := "earlier", params := [("s", (.option .undef .string)), ("stamp", .string)], result := .bool, trivial := true }
+noncomputable def sig.newest : Sig := { name := "newest", params := [("s", (.option .undef .string)), ("stamp", .string)], result := .string, trivial := true }
+noncomputable def sig.before : Sig := { name := "before", params := [("stamp", .string), ("s", (.option .undef .string))], result := .bool, trivial := true }
+noncomputable def sig.given : Sig := { name := "given", params := [("s", (.option .undef .string))], result := .bool, trivial := true }
+noncomputable def sig.otherwise : Sig := { name := "otherwise", params := [("s", (.option .undef .string)), ("fallback", .string)], result := .string, trivial := true }
+noncomputable def sig.described : Sig := { name := "described", params := [("cur", (.option .undef ty.Pack)), ("stamp", .string), ("at", .number)], result := .bool, trivial := true }
+noncomputable def sig.larger : Sig := { name := "larger", params := [("a", .number), ("b", .number)], result := .number, trivial := true }
+noncomputable def sig.zero : Sig := { name := "zero", params := [], result := ty.Counters, trivial := true }
+noncomputable def sig.highest : Sig := { name := "highest", params := [("a", ty.Counters), ("b", ty.Counters)], result := ty.Counters, trivial := true }
+noncomputable def sig.sum : Sig := { name := "sum", params := [("a", ty.Counters), ("b", ty.Counters)], result := ty.Counters, trivial := false }
+noncomputable def sig.«new Registers» : Sig := { name := "new Registers", params := [], result := ty.Registers, trivial := true }
+noncomputable def sig.noteUnplace : Sig := { name := "noteUnplace", params := [("this", ty.Registers), ("ref", .string), ("p", .string), ("u", .string)], result := ty.Registers, trivial := true, method := true, void := true }
+noncomputable def sig.providersOf : Sig := { name := "providersOf", params := [("this", ty.Registers), ("ref", .string)], result := (.array .string), trivial := true, method := true, void := false }
+noncomputable def sig.put : Sig := { name := "put", params := [("this", ty.Registers), ("ref", .string), ("p", .string), ("e", ty.Placed)], result := ty.Registers, trivial := false, method := true, void := true }
+noncomputable def sig.dropMarkBefore : Sig := { name := "dropMarkBefore", params := [("this", ty.Registers), ("ref", .string), ("p", .string), ("u", (.option .undef .string))], result := ty.Registers, trivial := true, method := true, void := true }
+noncomputable def sig.place : Sig := { name := "place", params := [("this", ty.Registers), ("ref", .string), ("p", .string), ("placed", .bool), ("cls", .string), ("stamp", .string), ("at", .number)], result := ty.Registers, trivial := false, method := true, void := true }
+noncomputable def sig.mark : Sig := { name := "mark", params := [("this", ty.Registers), ("ref", .string), ("p", .string), ("on", .bool), ("reason", (.option .undef .string)), ("stamp", .string), ("at", .number)], result := ty.Registers, trivial := true, method := true, void := true }
+noncomputable def sig.placements : Sig := { name := "placements", params := [("this", ty.Registers), ("ref", .string)], result := (.array ty.Placed), trivial := true, method := true, void := false }
+noncomputable def sig.isPlaced : Sig := { name := "isPlaced", params := [("this", ty.Registers), ("ref", .string)], result := .bool, trivial := true, method := true, void := false }
+noncomputable def sig.placedRefs : Sig := { name := "placedRefs", params := [("this", ty.Registers)], result := (.array .string), trivial := true, method := true, void := false }
+noncomputable def sig.markOf : Sig := { name := "markOf", params := [("this", ty.Registers), ("ref", .string), ("p", .string)], result := (.option .undef ty.Mark), trivial := true, method := true, void := false }
+noncomputable def sig.markList : Sig := { name := "markList", params := [("this", ty.Registers)], result := (.array ty.Mark), trivial := true, method := true, void := false }
+noncomputable def sig.pack : Sig := { name := "pack", params := [("this", ty.Registers), ("id", .string), ("size", .number), ("csize", .number), ("stamp", .string), ("at", .number), ("hn", (.option .undef .string))], result := ty.Registers, trivial := true, method := true, void := true }
+noncomputable def sig.packOf : Sig := { name := "packOf", params := [("this", ty.Registers), ("id", .string)], result := (.option .undef ty.Pack), trivial := true, method := true, void := false }
+noncomputable def sig.packList : Sig := { name := "packList", params := [("this", ty.Registers)], result := (.array ty.Pack), trivial := true, method := true, void := false }
+noncomputable def sig.track : Sig := { name := "track", params := [("this", ty.Registers), ("p", .string), ("month", .string), ("device", .string), ("total", .bool)], result := ty.Registers, trivial := false, method := true, void := true }
+noncomputable def sig.total : Sig := { name := "total", params := [("this", ty.Registers), ("p", .string), ("month", .string), ("device", .string), ("c", ty.Counters)], result := ty.Registers, trivial := false, method := true, void := true }
+noncomputable def sig.add : Sig := { name := "add", params := [("this", ty.Registers), ("p", .string), ("month", .string), ("c", ty.Counters)], result := ty.Registers, trivial := false, method := true, void := true }
+noncomputable def sig.totalOf : Sig := { name := "totalOf", params := [("this", ty.Registers), ("p", .string), ("month", .string), ("device", .string)], result := ty.Counters, trivial := true, method := true, void := false }
+noncomputable def sig.usageOf : Sig := { name := "usageOf", params := [("this", ty.Registers), ("p", .string), ("month", .string)], result := ty.Counters, trivial := false, method := true, void := false }
+noncomputable def sig.usageList : Sig := { name := "usageList", params := [("this", ty.Registers)], result := (.array ty.Increments), trivial := false, method := true, void := false }
+noncomputable def sig.totalList : Sig := { name := "totalList", params := [("this", ty.Registers)], result := (.array ty.Total), trivial := true, method := true, void := false }
+noncomputable def sig.touchAlbum : Sig := { name := "touchAlbum", params := [("this", ty.Registers), ("aid", .string), ("at", .number)], result := ty.Registers, trivial := true, method := true, void := true }
+noncomputable def sig.album : Sig := { name := "album", params := [("this", ty.Registers), ("aid", .string), ("stamp", .string), ("at", .number), ("name", (.option .undef .string)), ("cover", (.option .undef .string)), ("deleted", .bool)], result := ty.Registers, trivial := true, method := true, void := true }
+noncomputable def sig.item : Sig := { name := "item", params := [("this", ty.Registers), ("aid", .string), ("id", .string), ("stamp", .string), ("present", .bool)], result := ty.Registers, trivial := true, method := true, void := true }
+noncomputable def sig.albumItems : Sig := { name := "albumItems", params := [("this", ty.Registers), ("aid", .string), ("stamp", .string), ("at", .number), ("add", (.array .string)), ("remove", (.array .string))], result := ty.Registers, trivial := true, method := true, void := true }
+noncomputable def sig.albumList : Sig := { name := "albumList", params := [("this", ty.Registers)], result := (.array ty.AlbumRec), trivial := true, method := true, void := false }
+noncomputable def sig.itemList : Sig := { name := "itemList", params := [("this", ty.Registers)], result := (.array ty.AlbumItem), trivial := true, method := true, void := false }
+noncomputable def sig.loadPlacement : Sig := { name := "loadPlacement", params := [("this", ty.Registers), ("ref", .string), ("e", ty.Placed)], result := ty.Registers, trivial := false, method := true, void := true }
+noncomputable def sig.loadMark : Sig := { name := "loadMark", params := [("this", ty.Registers), ("m", ty.Mark)], result := ty.Registers, trivial := true, method := true, void := true }
+noncomputable def sig.loadPack : Sig := { name := "loadPack", params := [("this", ty.Registers), ("pk", ty.Pack)], result := ty.Registers, trivial := true, method := true, void := true }
+noncomputable def sig.loadTotal : Sig := { name := "loadTotal", params := [("this", ty.Registers), ("t", ty.Total)], result := ty.Registers, trivial := false, method := true, void := true }
+noncomputable def sig.loadIncrements : Sig := { name := "loadIncrements", params := [("this", ty.Registers), ("i", ty.Increments)], result := ty.Registers, trivial := false, method := true, void := true }
+noncomputable def sig.loadAlbum : Sig := { name := "loadAlbum", params := [("this", ty.Registers), ("a", ty.AlbumRec)], result := ty.Registers, trivial := true, method := true, void := true }
+noncomputable def sig.loadItem : Sig := { name := "loadItem", params := [("this", ty.Registers), ("i", ty.AlbumItem)], result := ty.Registers, trivial := true, method := true, void := true }
 
 theorem ne.«b».«a» : ("b" : String) ≠ "a" := by decide
 theorem ne.«stamp».«s» : ("stamp" : String) ≠ "s" := by decide
@@ -693,39 +693,39 @@ theorem ne.«t».«this» : ("t" : String) ≠ "this" := by decide
 theorem ne.«i».«this» : ("i" : String) ≠ "this" := by decide
 theorem ne.«a».«this» : ("a" : String) ≠ "this" := by decide
 
-noncomputable def body.«key» : TStmts [] sig.«key».params sig.«key».result :=
+noncomputable def body.key : TStmts [] sig.key.params sig.key.result :=
   (.ret (.bin .concat (.bin .concat (.var .here) (.str ([0] : JSString))) (.var (.there ne.«b».«a» .here))) .nil)
 
-noncomputable def body.«byString» : TStmts [sig.«key»] sig.«byString».params sig.«byString».result :=
+noncomputable def body.byString : TStmts [sig.key] sig.byString.params sig.byString.result :=
   (.ret (.cond (.bin .slt (.var .here) (.var (.there ne.«b».«a» .here))) (.negNum 1 (by decide +kernel)) (.cond (.bin .slt (.var (.there ne.«b».«a» .here)) (.var .here)) (.num 1) (.num 0))) .nil)
 
-noncomputable def body.«newer» : TStmts [sig.«byString», sig.«key»] sig.«newer».params sig.«newer».result :=
+noncomputable def body.newer : TStmts [sig.byString, sig.key] sig.newer.params sig.newer.result :=
   (.ifNullExit .here (by decide +kernel)
   (.ret (.bool true) .nil)
   (.ret (.or (.bin (.eq (by decide +kernel)) (.var .here) (.str (js ""))) (.bin .slt (.var .here) (.var (.there ne.«stamp».«s» .here)))) .nil))
 
-noncomputable def body.«earlier» : TStmts [sig.«newer», sig.«byString», sig.«key»] sig.«earlier».params sig.«earlier».result :=
+noncomputable def body.earlier : TStmts [sig.newer, sig.byString, sig.key] sig.earlier.params sig.earlier.result :=
   (.ifNullExit .here (by decide +kernel)
   (.ret (.bool true) .nil)
   (.ret (.or (.bin (.eq (by decide +kernel)) (.var .here) (.str (js ""))) (.bin .slt (.var (.there ne.«stamp».«s» .here)) (.var .here))) .nil))
 
-noncomputable def body.«newest» : TStmts [sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«newest».params sig.«newest».result :=
+noncomputable def body.newest : TStmts [sig.earlier, sig.newer, sig.byString, sig.key] sig.newest.params sig.newest.result :=
   (.ifNullExit .here (by decide +kernel)
   (.ret (.var (.there ne.«stamp».«s» .here)) .nil)
   (.ret (.cond (.or (.bin (.eq (by decide +kernel)) (.var .here) (.str (js ""))) (.bin .slt (.var .here) (.var (.there ne.«stamp».«s» .here)))) (.var (.there ne.«stamp».«s» .here)) (.var .here)) .nil))
 
-noncomputable def body.«before» : TStmts [sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«before».params sig.«before».result :=
+noncomputable def body.before : TStmts [sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.before.params sig.before.result :=
   (.ifNullExit (.there ne.«s».«stamp» .here) (by decide +kernel)
   (.ret (.bool false) .nil)
   (.ret (.and (.bin (.ne (by decide +kernel)) (.var (.there ne.«s».«stamp» .here)) (.str (js ""))) (.bin .slt (.var .here) (.var (.there ne.«s».«stamp» .here)))) .nil))
 
-noncomputable def body.«given» : TStmts [sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«given».params sig.«given».result :=
+noncomputable def body.given : TStmts [sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.given.params sig.given.result :=
   (.ret (.condNull .here (by decide +kernel) (.bool false) (.bool true)) .nil)
 
-noncomputable def body.«otherwise» : TStmts [sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«otherwise».params sig.«otherwise».result :=
+noncomputable def body.otherwise : TStmts [sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.otherwise.params sig.otherwise.result :=
   (.ret (.condNull .here (by decide +kernel) (.var (.there ne.«fallback».«s» .here)) (.var .here)) .nil)
 
-noncomputable def body.«described» : TStmts [sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«described».params sig.«described».result :=
+noncomputable def body.described : TStmts [sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.described.params sig.described.result :=
   (.ifNullExit .here (by decide +kernel)
   (.ret (.bool false) .nil)
   (.const "s" (.field (.var .here) (.there (.there (.there (.there .here)))) (by decide +kernel))
@@ -733,60 +733,60 @@ noncomputable def body.«described» : TStmts [sig.«otherwise», sig.«given»,
   (.ret (.bin .nle (.field (.var (.there ne.«cur».«s» .here)) (.there (.there (.there .here))) (by decide +kernel)) (.var (.there ne.«at».«s» (.there ne.«at».«cur» (.there ne.«at».«stamp» .here))))) .nil)
   (.ret (.cond (.bin (.eq (by decide +kernel)) (.var .here) (.str (js ""))) (.bin .nle (.field (.var (.there ne.«cur».«s» .here)) (.there (.there (.there .here))) (by decide +kernel)) (.var (.there ne.«at».«s» (.there ne.«at».«cur» (.there ne.«at».«stamp» .here))))) (.not (.bin .slt (.var (.there ne.«stamp».«s» (.there ne.«stamp».«cur» .here))) (.var .here)))) .nil))))
 
-noncomputable def body.«larger» : TStmts [sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«larger».params sig.«larger».result :=
+noncomputable def body.larger : TStmts [sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.larger.params sig.larger.result :=
   (.ret (.cond (.bin .ngt (.var .here) (.var (.there ne.«b».«a» .here))) (.var .here) (.var (.there ne.«b».«a» .here))) .nil)
 
-noncomputable def body.«zero» : TStmts [sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«zero».params sig.«zero».result :=
+noncomputable def body.zero : TStmts [sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.zero.params sig.zero.result :=
   (.ret (.record (.cons "put" (.num 0) (.cons "get" (.num 0) (.cons "list" (.num 0) (.cons "head" (.num 0) (.cons "delete" (.num 0) (.cons "copy" (.num 0) (.cons "restore" (.num 0) (.cons "ingress" (.num 0) (.cons "egress" (.num 0) .nil))))))))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) (.cons (.there (.there (.there (.there .here)))) (.cons (.there (.there (.there (.there (.there .here))))) (.cons (.there (.there (.there (.there (.there (.there .here)))))) (.cons (.there (.there (.there (.there (.there (.there (.there .here))))))) (.cons (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) .nil))))))))) (by decide +kernel)) .nil)
 
-noncomputable def body.«highest» : TStmts [sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«highest».params sig.«highest».result :=
-  (.ret (.record (.cons "put" (.call (s := sig.«larger») (.there .here) (by decide +kernel) (.cons (.field (.var .here) .here (by decide +kernel)) (.cons (.field (.var (.there ne.«b».«a» .here)) .here (by decide +kernel)) .nil))) (.cons "get" (.call (s := sig.«larger») (.there .here) (by decide +kernel) (.cons (.field (.var .here) (.there .here) (by decide +kernel)) (.cons (.field (.var (.there ne.«b».«a» .here)) (.there .here) (by decide +kernel)) .nil))) (.cons "list" (.call (s := sig.«larger») (.there .here) (by decide +kernel) (.cons (.field (.var .here) (.there (.there .here)) (by decide +kernel)) (.cons (.field (.var (.there ne.«b».«a» .here)) (.there (.there .here)) (by decide +kernel)) .nil))) (.cons "head" (.call (s := sig.«larger») (.there .here) (by decide +kernel) (.cons (.field (.var .here) (.there (.there (.there .here))) (by decide +kernel)) (.cons (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there .here))) (by decide +kernel)) .nil))) (.cons "delete" (.call (s := sig.«larger») (.there .here) (by decide +kernel) (.cons (.field (.var .here) (.there (.there (.there (.there .here)))) (by decide +kernel)) (.cons (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there (.there .here)))) (by decide +kernel)) .nil))) (.cons "copy" (.call (s := sig.«larger») (.there .here) (by decide +kernel) (.cons (.field (.var .here) (.there (.there (.there (.there (.there .here))))) (by decide +kernel)) (.cons (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there (.there (.there .here))))) (by decide +kernel)) .nil))) (.cons "restore" (.call (s := sig.«larger») (.there .here) (by decide +kernel) (.cons (.field (.var .here) (.there (.there (.there (.there (.there (.there .here)))))) (by decide +kernel)) (.cons (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there (.there (.there (.there .here)))))) (by decide +kernel)) .nil))) (.cons "ingress" (.call (s := sig.«larger») (.there .here) (by decide +kernel) (.cons (.field (.var .here) (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide +kernel)) (.cons (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide +kernel)) .nil))) (.cons "egress" (.call (s := sig.«larger») (.there .here) (by decide +kernel) (.cons (.field (.var .here) (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) (by decide +kernel)) (.cons (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) (by decide +kernel)) .nil))) .nil))))))))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) (.cons (.there (.there (.there (.there .here)))) (.cons (.there (.there (.there (.there (.there .here))))) (.cons (.there (.there (.there (.there (.there (.there .here)))))) (.cons (.there (.there (.there (.there (.there (.there (.there .here))))))) (.cons (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) .nil))))))))) (by decide +kernel)) .nil)
+noncomputable def body.highest : TStmts [sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.highest.params sig.highest.result :=
+  (.ret (.record (.cons "put" (.call (s := sig.larger) (.there .here) (by decide +kernel) (.cons (.field (.var .here) .here (by decide +kernel)) (.cons (.field (.var (.there ne.«b».«a» .here)) .here (by decide +kernel)) .nil))) (.cons "get" (.call (s := sig.larger) (.there .here) (by decide +kernel) (.cons (.field (.var .here) (.there .here) (by decide +kernel)) (.cons (.field (.var (.there ne.«b».«a» .here)) (.there .here) (by decide +kernel)) .nil))) (.cons "list" (.call (s := sig.larger) (.there .here) (by decide +kernel) (.cons (.field (.var .here) (.there (.there .here)) (by decide +kernel)) (.cons (.field (.var (.there ne.«b».«a» .here)) (.there (.there .here)) (by decide +kernel)) .nil))) (.cons "head" (.call (s := sig.larger) (.there .here) (by decide +kernel) (.cons (.field (.var .here) (.there (.there (.there .here))) (by decide +kernel)) (.cons (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there .here))) (by decide +kernel)) .nil))) (.cons "delete" (.call (s := sig.larger) (.there .here) (by decide +kernel) (.cons (.field (.var .here) (.there (.there (.there (.there .here)))) (by decide +kernel)) (.cons (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there (.there .here)))) (by decide +kernel)) .nil))) (.cons "copy" (.call (s := sig.larger) (.there .here) (by decide +kernel) (.cons (.field (.var .here) (.there (.there (.there (.there (.there .here))))) (by decide +kernel)) (.cons (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there (.there (.there .here))))) (by decide +kernel)) .nil))) (.cons "restore" (.call (s := sig.larger) (.there .here) (by decide +kernel) (.cons (.field (.var .here) (.there (.there (.there (.there (.there (.there .here)))))) (by decide +kernel)) (.cons (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there (.there (.there (.there .here)))))) (by decide +kernel)) .nil))) (.cons "ingress" (.call (s := sig.larger) (.there .here) (by decide +kernel) (.cons (.field (.var .here) (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide +kernel)) (.cons (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide +kernel)) .nil))) (.cons "egress" (.call (s := sig.larger) (.there .here) (by decide +kernel) (.cons (.field (.var .here) (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) (by decide +kernel)) (.cons (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) (by decide +kernel)) .nil))) .nil))))))))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) (.cons (.there (.there (.there (.there .here)))) (.cons (.there (.there (.there (.there (.there .here))))) (.cons (.there (.there (.there (.there (.there (.there .here)))))) (.cons (.there (.there (.there (.there (.there (.there (.there .here))))))) (.cons (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) .nil))))))))) (by decide +kernel)) .nil)
 
-noncomputable def body.«sum» : TStmts [sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«sum».params sig.«sum».result :=
+noncomputable def body.sum : TStmts [sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.sum.params sig.sum.result :=
   (.ret (.record (.cons "put" (.bin .nadd (.field (.var .here) .here (by decide +kernel)) (.field (.var (.there ne.«b».«a» .here)) .here (by decide +kernel))) (.cons "get" (.bin .nadd (.field (.var .here) (.there .here) (by decide +kernel)) (.field (.var (.there ne.«b».«a» .here)) (.there .here) (by decide +kernel))) (.cons "list" (.bin .nadd (.field (.var .here) (.there (.there .here)) (by decide +kernel)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there .here)) (by decide +kernel))) (.cons "head" (.bin .nadd (.field (.var .here) (.there (.there (.there .here))) (by decide +kernel)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there .here))) (by decide +kernel))) (.cons "delete" (.bin .nadd (.field (.var .here) (.there (.there (.there (.there .here)))) (by decide +kernel)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there (.there .here)))) (by decide +kernel))) (.cons "copy" (.bin .nadd (.field (.var .here) (.there (.there (.there (.there (.there .here))))) (by decide +kernel)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there (.there (.there .here))))) (by decide +kernel))) (.cons "restore" (.bin .nadd (.field (.var .here) (.there (.there (.there (.there (.there (.there .here)))))) (by decide +kernel)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there (.there (.there (.there .here)))))) (by decide +kernel))) (.cons "ingress" (.bin .nadd (.field (.var .here) (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide +kernel)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide +kernel))) (.cons "egress" (.bin .nadd (.field (.var .here) (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) (by decide +kernel)) (.field (.var (.there ne.«b».«a» .here)) (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) (by decide +kernel))) .nil))))))))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) (.cons (.there (.there (.there (.there .here)))) (.cons (.there (.there (.there (.there (.there .here))))) (.cons (.there (.there (.there (.there (.there (.there .here)))))) (.cons (.there (.there (.there (.there (.there (.there (.there .here))))))) (.cons (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) .nil))))))))) (by decide +kernel)) .nil)
 
-noncomputable def body.«new Registers» : TStmts [sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«new Registers».params sig.«new Registers».result :=
-  (.ret (.record (.cons "placed" (.newMap ty.«Placed») (.cons "providers" (.newMap (.array .string)) (.cons "marks" (.newMap ty.«Mark») (.cons "packs" (.newMap ty.«Pack») (.cons "totals" (.newMap ty.«Total») (.cons "increments" (.newMap ty.«Increments») (.cons "periods" (.newMap ty.«Period») (.cons "albums" (.newMap ty.«AlbumRec») (.cons "items" (.newMap ty.«AlbumItem») .nil))))))))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) (.cons (.there (.there (.there (.there .here)))) (.cons (.there (.there (.there (.there (.there .here))))) (.cons (.there (.there (.there (.there (.there (.there .here)))))) (.cons (.there (.there (.there (.there (.there (.there (.there .here))))))) (.cons (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) .nil))))))))) (by decide +kernel)) .nil)
+noncomputable def body.«new Registers» : TStmts [sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.«new Registers».params sig.«new Registers».result :=
+  (.ret (.record (.cons "placed" (.newMap ty.Placed) (.cons "providers" (.newMap (.array .string)) (.cons "marks" (.newMap ty.Mark) (.cons "packs" (.newMap ty.Pack) (.cons "totals" (.newMap ty.Total) (.cons "increments" (.newMap ty.Increments) (.cons "periods" (.newMap ty.Period) (.cons "albums" (.newMap ty.AlbumRec) (.cons "items" (.newMap ty.AlbumItem) .nil))))))))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) (.cons (.there (.there (.there (.there .here)))) (.cons (.there (.there (.there (.there (.there .here))))) (.cons (.there (.there (.there (.there (.there (.there .here)))))) (.cons (.there (.there (.there (.there (.there (.there (.there .here))))))) (.cons (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) .nil))))))))) (by decide +kernel)) .nil)
 
-noncomputable def body.«noteUnplace» : TStmts [sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«noteUnplace».params sig.«noteUnplace».result :=
-  (.const "cur" (.stateGet .here .here (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«ref».«this» .here)) (.cons (.var (.there ne.«p».«this» (.there ne.«p».«ref» .here))) .nil))))
+noncomputable def body.noteUnplace : TStmts [sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.noteUnplace.params sig.noteUnplace.result :=
+  (.const "cur" (.stateGet .here .here (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«ref».«this» .here)) (.cons (.var (.there ne.«p».«this» (.there ne.«p».«ref» .here))) .nil))))
   (.ifNullExit .here (by decide +kernel)
   (.retVoid (.there ne.«this».«cur» .here) .nil)
-  (.stateSet (.there ne.«this».«cur» .here) .here (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«ref».«cur» (.there ne.«ref».«this» .here))) (.cons (.var (.there ne.«p».«cur» (.there ne.«p».«this» (.there ne.«p».«ref» .here)))) .nil))) (.update (.var .here) (.cons "u" (.widen (.some .undef .string) (.var (.there ne.«u».«cur» (.there ne.«u».«this» (.there ne.«u».«ref» (.there ne.«u».«p» .here)))))) .nil) (.keep (by decide +kernel) (.keep (by decide +kernel) (.keep (by decide +kernel) (.keep (by decide +kernel) (.keep (by decide +kernel) (.set .here .nil)))))) (by decide +kernel))
+  (.stateSet (.there ne.«this».«cur» .here) .here (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«ref».«cur» (.there ne.«ref».«this» .here))) (.cons (.var (.there ne.«p».«cur» (.there ne.«p».«this» (.there ne.«p».«ref» .here)))) .nil))) (.update (.var .here) (.cons "u" (.widen (.some .undef .string) (.var (.there ne.«u».«cur» (.there ne.«u».«this» (.there ne.«u».«ref» (.there ne.«u».«p» .here)))))) .nil) (.keep (by decide +kernel) (.keep (by decide +kernel) (.keep (by decide +kernel) (.keep (by decide +kernel) (.keep (by decide +kernel) (.set .here .nil)))))) (by decide +kernel))
   (.retVoid (.there ne.«this».«cur» .here) .nil))))
 
-noncomputable def body.«providersOf» : TStmts [sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«providersOf».params sig.«providersOf».result :=
+noncomputable def body.providersOf : TStmts [sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.providersOf.params sig.providersOf.result :=
   (.const "ps" (.stateGet .here (.there .here) (by decide +kernel) (.var (.there ne.«ref».«this» .here)))
   (.ret (.condNull .here (by decide +kernel) (.array (τ := .string) .nil) (.var .here)) .nil))
 
-noncomputable def body.«put» : TStmts [sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«put».params sig.«put».result :=
-  (.ite (.not (.stateHas .here .here (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«ref».«this» .here)) (.cons (.var (.there ne.«p».«this» (.there ne.«p».«ref» .here))) .nil)))))
+noncomputable def body.put : TStmts [sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.put.params sig.put.result :=
+  (.ite (.not (.stateHas .here .here (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«ref».«this» .here)) (.cons (.var (.there ne.«p».«this» (.there ne.«p».«ref» .here))) .nil)))))
   (.stateSet .here (.there .here) (by decide +kernel) (.var (.there ne.«ref».«this» .here)) (.sorted (.array (τ := .string) (.spread (.callThis .here .here (.cons (.var (.there ne.«ref».«this» .here)) .nil)) (.cons (.var (.there ne.«p».«this» (.there ne.«p».«ref» .here))) .nil))) (.ref (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))) (by decide +kernel)))
   .nil)
   .nil
-  (.stateSet .here .here (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«ref».«this» .here)) (.cons (.var (.there ne.«p».«this» (.there ne.«p».«ref» .here))) .nil))) (.var (.there ne.«e».«this» (.there ne.«e».«ref» (.there ne.«e».«p» .here))))
+  (.stateSet .here .here (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«ref».«this» .here)) (.cons (.var (.there ne.«p».«this» (.there ne.«p».«ref» .here))) .nil))) (.var (.there ne.«e».«this» (.there ne.«e».«ref» (.there ne.«e».«p» .here))))
   (.retVoid .here .nil)))
 
-noncomputable def body.«dropMarkBefore» : TStmts [sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«dropMarkBefore».params sig.«dropMarkBefore».result :=
+noncomputable def body.dropMarkBefore : TStmts [sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.dropMarkBefore.params sig.dropMarkBefore.result :=
   (.ifNullExit (.there ne.«u».«this» (.there ne.«u».«ref» (.there ne.«u».«p» .here))) (by decide +kernel)
   (.retVoid .here .nil)
-  (.const "mark" (.stateGet .here (.there (.there .here)) (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«ref».«this» .here)) (.cons (.var (.there ne.«p».«this» (.there ne.«p».«ref» .here))) .nil))))
+  (.const "mark" (.stateGet .here (.there (.there .here)) (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«ref».«this» .here)) (.cons (.var (.there ne.«p».«this» (.there ne.«p».«ref» .here))) .nil))))
   (.ifNullExit .here (by decide +kernel)
   (.retVoid (.there ne.«this».«mark» .here) .nil)
   (.ite (.or (.bin (.eq (by decide +kernel)) (.var (.there ne.«u».«mark» (.there ne.«u».«this» (.there ne.«u».«ref» (.there ne.«u».«p» .here))))) (.str (js ""))) (.bin .slt (.var (.there ne.«u».«mark» (.there ne.«u».«this» (.there ne.«u».«ref» (.there ne.«u».«p» .here))))) (.field (.var .here) (.there (.there (.there .here))) (by decide +kernel))))
   (.retVoid (.there ne.«this».«mark» .here) .nil)
   .nil
-  (.stateDelete (.there ne.«this».«mark» .here) (.there (.there .here)) (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«ref».«mark» (.there ne.«ref».«this» .here))) (.cons (.var (.there ne.«p».«mark» (.there ne.«p».«this» (.there ne.«p».«ref» .here)))) .nil)))
+  (.stateDelete (.there ne.«this».«mark» .here) (.there (.there .here)) (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«ref».«mark» (.there ne.«ref».«this» .here))) (.cons (.var (.there ne.«p».«mark» (.there ne.«p».«this» (.there ne.«p».«ref» .here)))) .nil)))
   (.retVoid (.there ne.«this».«mark» .here) .nil))))))
 
-noncomputable def body.«place» : TStmts [sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«place».params sig.«place».result :=
-  (.const "cur" (.stateGet .here .here (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«ref».«this» .here)) (.cons (.var (.there ne.«p».«this» (.there ne.«p».«ref» .here))) .nil))))
+noncomputable def body.place : TStmts [sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.place.params sig.place.result :=
+  (.const "cur" (.stateGet .here .here (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«ref».«this» .here)) (.cons (.var (.there ne.«p».«this» (.there ne.«p».«ref» .here))) .nil))))
   (.const "seen" (.condNull .here (by decide +kernel) (.undef .undef .string (by decide +kernel)) (.field (.var .here) (.there (.there (.there (.there (.there .here))))) (by decide +kernel)))
-  (.const "u" (.cond (.var (.there ne.«placed».«seen» (.there ne.«placed».«cur» (.there ne.«placed».«this» (.there ne.«placed».«ref» (.there ne.«placed».«p» .here)))))) (.var .here) (.widen (.some .undef .string) (.call (s := sig.«newest») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))) (by decide +kernel) (.cons (.var .here) (.cons (.var (.there ne.«stamp».«seen» (.there ne.«stamp».«cur» (.there ne.«stamp».«this» (.there ne.«stamp».«ref» (.there ne.«stamp».«p» (.there ne.«stamp».«placed» (.there ne.«stamp».«cls» .here)))))))) .nil)))))
+  (.const "u" (.cond (.var (.there ne.«placed».«seen» (.there ne.«placed».«cur» (.there ne.«placed».«this» (.there ne.«placed».«ref» (.there ne.«placed».«p» .here)))))) (.var .here) (.widen (.some .undef .string) (.call (s := sig.newest) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))) (by decide +kernel) (.cons (.var .here) (.cons (.var (.there ne.«stamp».«seen» (.there ne.«stamp».«cur» (.there ne.«stamp».«this» (.there ne.«stamp».«ref» (.there ne.«stamp».«p» (.there ne.«stamp».«placed» (.there ne.«stamp».«cls» .here)))))))) .nil)))))
   (.callVoid .here (.there ne.«this».«u» (.there ne.«this».«seen» (.there ne.«this».«cur» .here))) (.cons (.var (.there ne.«ref».«u» (.there ne.«ref».«seen» (.there ne.«ref».«cur» (.there ne.«ref».«this» .here))))) (.cons (.var (.there ne.«p».«u» (.there ne.«p».«seen» (.there ne.«p».«cur» (.there ne.«p».«this» (.there ne.«p».«ref» .here)))))) (.cons (.var .here) .nil)))
-  (.ite (.not (.call (s := sig.«newer») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))) (by decide +kernel) (.cons (.condNull (.there ne.«cur».«u» (.there ne.«cur».«seen» .here)) (by decide +kernel) (.undef .undef .string (by decide +kernel)) (.widen (.some .undef .string) (.field (.var (.there ne.«cur».«u» (.there ne.«cur».«seen» .here))) (.there (.there (.there .here))) (by decide +kernel)))) (.cons (.var (.there ne.«stamp».«u» (.there ne.«stamp».«seen» (.there ne.«stamp».«cur» (.there ne.«stamp».«this» (.there ne.«stamp».«ref» (.there ne.«stamp».«p» (.there ne.«stamp».«placed» (.there ne.«stamp».«cls» .here))))))))) .nil))))
+  (.ite (.not (.call (s := sig.newer) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))) (by decide +kernel) (.cons (.condNull (.there ne.«cur».«u» (.there ne.«cur».«seen» .here)) (by decide +kernel) (.undef .undef .string (by decide +kernel)) (.widen (.some .undef .string) (.field (.var (.there ne.«cur».«u» (.there ne.«cur».«seen» .here))) (.there (.there (.there .here))) (by decide +kernel)))) (.cons (.var (.there ne.«stamp».«u» (.there ne.«stamp».«seen» (.there ne.«stamp».«cur» (.there ne.«stamp».«this» (.there ne.«stamp».«ref» (.there ne.«stamp».«p» (.there ne.«stamp».«placed» (.there ne.«stamp».«cls» .here))))))))) .nil))))
   (.ite (.not (.var (.there ne.«placed».«u» (.there ne.«placed».«seen» (.there ne.«placed».«cur» (.there ne.«placed».«this» (.there ne.«placed».«ref» (.there ne.«placed».«p» .here))))))))
-  (.callVoid (.there (.there (.there .here))) (.there ne.«this».«u» (.there ne.«this».«seen» (.there ne.«this».«cur» .here))) (.cons (.var (.there ne.«ref».«u» (.there ne.«ref».«seen» (.there ne.«ref».«cur» (.there ne.«ref».«this» .here))))) (.cons (.var (.there ne.«p».«u» (.there ne.«p».«seen» (.there ne.«p».«cur» (.there ne.«p».«this» (.there ne.«p».«ref» .here)))))) (.cons (.call (s := sig.«newest») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«seen».«u» .here)) (.cons (.var (.there ne.«stamp».«u» (.there ne.«stamp».«seen» (.there ne.«stamp».«cur» (.there ne.«stamp».«this» (.there ne.«stamp».«ref» (.there ne.«stamp».«p» (.there ne.«stamp».«placed» (.there ne.«stamp».«cls» .here))))))))) .nil))) .nil)))
+  (.callVoid (.there (.there (.there .here))) (.there ne.«this».«u» (.there ne.«this».«seen» (.there ne.«this».«cur» .here))) (.cons (.var (.there ne.«ref».«u» (.there ne.«ref».«seen» (.there ne.«ref».«cur» (.there ne.«ref».«this» .here))))) (.cons (.var (.there ne.«p».«u» (.there ne.«p».«seen» (.there ne.«p».«cur» (.there ne.«p».«this» (.there ne.«p».«ref» .here)))))) (.cons (.call (s := sig.newest) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«seen».«u» .here)) (.cons (.var (.there ne.«stamp».«u» (.there ne.«stamp».«seen» (.there ne.«stamp».«cur» (.there ne.«stamp».«this» (.there ne.«stamp».«ref» (.there ne.«stamp».«p» (.there ne.«stamp».«placed» (.there ne.«stamp».«cls» .here))))))))) .nil))) .nil)))
   .nil)
   .nil
   (.retVoid (.there ne.«this».«u» (.there ne.«this».«seen» (.there ne.«this».«cur» .here))) .nil))
@@ -798,126 +798,126 @@ noncomputable def body.«place» : TStmts [sig.«dropMarkBefore», sig.«put», 
   .nil)
   (.retVoid (.there ne.«this».«u» (.there ne.«this».«seen» (.there ne.«this».«cur» .here))) .nil)))))))
 
-noncomputable def body.«mark» : TStmts [sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«mark».params sig.«mark».result :=
-  (.const "placed" (.stateGet .here .here (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«ref».«this» .here)) (.cons (.var (.there ne.«p».«this» (.there ne.«p».«ref» .here))) .nil))))
-  (.ite (.call (s := sig.«before») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«stamp».«placed» (.there ne.«stamp».«this» (.there ne.«stamp».«ref» (.there ne.«stamp».«p» (.there ne.«stamp».«on» (.there ne.«stamp».«reason» .here))))))) (.cons (.condNull .here (by decide +kernel) (.undef .undef .string (by decide +kernel)) (.field (.var .here) (.there (.there (.there (.there (.there .here))))) (by decide +kernel))) .nil)))
+noncomputable def body.mark : TStmts [sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.mark.params sig.mark.result :=
+  (.const "placed" (.stateGet .here .here (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«ref».«this» .here)) (.cons (.var (.there ne.«p».«this» (.there ne.«p».«ref» .here))) .nil))))
+  (.ite (.call (s := sig.before) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«stamp».«placed» (.there ne.«stamp».«this» (.there ne.«stamp».«ref» (.there ne.«stamp».«p» (.there ne.«stamp».«on» (.there ne.«stamp».«reason» .here))))))) (.cons (.condNull .here (by decide +kernel) (.undef .undef .string (by decide +kernel)) (.field (.var .here) (.there (.there (.there (.there (.there .here))))) (by decide +kernel))) .nil)))
   (.retVoid (.there ne.«this».«placed» .here) .nil)
   .nil
-  (.const "cur" (.stateGet (.there ne.«this».«placed» .here) (.there (.there .here)) (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«ref».«placed» (.there ne.«ref».«this» .here))) (.cons (.var (.there ne.«p».«placed» (.there ne.«p».«this» (.there ne.«p».«ref» .here)))) .nil))))
-  (.ite (.not (.call (s := sig.«newer») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))) (by decide +kernel) (.cons (.condNull .here (by decide +kernel) (.undef .undef .string (by decide +kernel)) (.widen (.some .undef .string) (.field (.var .here) (.there (.there (.there .here))) (by decide +kernel)))) (.cons (.var (.there ne.«stamp».«cur» (.there ne.«stamp».«placed» (.there ne.«stamp».«this» (.there ne.«stamp».«ref» (.there ne.«stamp».«p» (.there ne.«stamp».«on» (.there ne.«stamp».«reason» .here)))))))) .nil))))
+  (.const "cur" (.stateGet (.there ne.«this».«placed» .here) (.there (.there .here)) (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«ref».«placed» (.there ne.«ref».«this» .here))) (.cons (.var (.there ne.«p».«placed» (.there ne.«p».«this» (.there ne.«p».«ref» .here)))) .nil))))
+  (.ite (.not (.call (s := sig.newer) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))) (by decide +kernel) (.cons (.condNull .here (by decide +kernel) (.undef .undef .string (by decide +kernel)) (.widen (.some .undef .string) (.field (.var .here) (.there (.there (.there .here))) (by decide +kernel)))) (.cons (.var (.there ne.«stamp».«cur» (.there ne.«stamp».«placed» (.there ne.«stamp».«this» (.there ne.«stamp».«ref» (.there ne.«stamp».«p» (.there ne.«stamp».«on» (.there ne.«stamp».«reason» .here)))))))) .nil))))
   (.retVoid (.there ne.«this».«cur» (.there ne.«this».«placed» .here)) .nil)
   .nil
-  (.stateSet (.there ne.«this».«cur» (.there ne.«this».«placed» .here)) (.there (.there .here)) (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«ref».«cur» (.there ne.«ref».«placed» (.there ne.«ref».«this» .here)))) (.cons (.var (.there ne.«p».«cur» (.there ne.«p».«placed» (.there ne.«p».«this» (.there ne.«p».«ref» .here))))) .nil))) (.record (.cons "ref" (.var (.there ne.«ref».«cur» (.there ne.«ref».«placed» (.there ne.«ref».«this» .here)))) (.cons "p" (.var (.there ne.«p».«cur» (.there ne.«p».«placed» (.there ne.«p».«this» (.there ne.«p».«ref» .here))))) (.cons "since" (.var (.there ne.«at».«cur» (.there ne.«at».«placed» (.there ne.«at».«this» (.there ne.«at».«ref» (.there ne.«at».«p» (.there ne.«at».«on» (.there ne.«at».«reason» (.there ne.«at».«stamp» .here))))))))) (.cons "s" (.var (.there ne.«stamp».«cur» (.there ne.«stamp».«placed» (.there ne.«stamp».«this» (.there ne.«stamp».«ref» (.there ne.«stamp».«p» (.there ne.«stamp».«on» (.there ne.«stamp».«reason» .here)))))))) (.cons "on" (.var (.there ne.«on».«cur» (.there ne.«on».«placed» (.there ne.«on».«this» (.there ne.«on».«ref» (.there ne.«on».«p» .here)))))) (.cons "reason" (.var (.there ne.«reason».«cur» (.there ne.«reason».«placed» (.there ne.«reason».«this» (.there ne.«reason».«ref» (.there ne.«reason».«p» (.there ne.«reason».«on» .here))))))) .nil)))))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) (.cons (.there (.there (.there (.there .here)))) (.cons (.there (.there (.there (.there (.there .here))))) .nil)))))) (by decide +kernel))
+  (.stateSet (.there ne.«this».«cur» (.there ne.«this».«placed» .here)) (.there (.there .here)) (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«ref».«cur» (.there ne.«ref».«placed» (.there ne.«ref».«this» .here)))) (.cons (.var (.there ne.«p».«cur» (.there ne.«p».«placed» (.there ne.«p».«this» (.there ne.«p».«ref» .here))))) .nil))) (.record (.cons "ref" (.var (.there ne.«ref».«cur» (.there ne.«ref».«placed» (.there ne.«ref».«this» .here)))) (.cons "p" (.var (.there ne.«p».«cur» (.there ne.«p».«placed» (.there ne.«p».«this» (.there ne.«p».«ref» .here))))) (.cons "since" (.var (.there ne.«at».«cur» (.there ne.«at».«placed» (.there ne.«at».«this» (.there ne.«at».«ref» (.there ne.«at».«p» (.there ne.«at».«on» (.there ne.«at».«reason» (.there ne.«at».«stamp» .here))))))))) (.cons "s" (.var (.there ne.«stamp».«cur» (.there ne.«stamp».«placed» (.there ne.«stamp».«this» (.there ne.«stamp».«ref» (.there ne.«stamp».«p» (.there ne.«stamp».«on» (.there ne.«stamp».«reason» .here)))))))) (.cons "on" (.var (.there ne.«on».«cur» (.there ne.«on».«placed» (.there ne.«on».«this» (.there ne.«on».«ref» (.there ne.«on».«p» .here)))))) (.cons "reason" (.var (.there ne.«reason».«cur» (.there ne.«reason».«placed» (.there ne.«reason».«this» (.there ne.«reason».«ref» (.there ne.«reason».«p» (.there ne.«reason».«on» .here))))))) .nil)))))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) (.cons (.there (.there (.there (.there .here)))) (.cons (.there (.there (.there (.there (.there .here))))) .nil)))))) (by decide +kernel))
   (.retVoid (.there ne.«this».«cur» (.there ne.«this».«placed» .here)) .nil))))))
 
-noncomputable def body.«placements» : TStmts [sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«placements».params sig.«placements».result :=
-  (.let_ "out" (.array (τ := ty.«Placed») .nil)
+noncomputable def body.placements : TStmts [sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.placements.params sig.placements.result :=
+  (.let_ "out" (.array (τ := ty.Placed) .nil)
   (.forOf "p" (.callThis (.there (.there (.there (.there .here)))) (.there ne.«this».«out» .here) (.cons (.var (.there ne.«ref».«out» (.there ne.«ref».«this» .here))) .nil))
-  (.const "e" (.stateGet (.there ne.«this».«p» (.there ne.«this».«out» .here)) .here (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«ref».«p» (.there ne.«ref».«out» (.there ne.«ref».«this» .here)))) (.cons (.var .here) .nil))))
+  (.const "e" (.stateGet (.there ne.«this».«p» (.there ne.«this».«out» .here)) .here (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«ref».«p» (.there ne.«ref».«out» (.there ne.«ref».«this» .here)))) (.cons (.var .here) .nil))))
   (.ifNullExit .here (by decide +kernel)
   (.cont .nil)
-  (.assign (.there ne.«out».«e» (.there ne.«out».«p» .here)) (.array (τ := ty.«Placed») (.spread (.var (.there ne.«out».«e» (.there ne.«out».«p» .here))) (.cons (.var .here) .nil)))
+  (.assign (.there ne.«out».«e» (.there ne.«out».«p» .here)) (.array (τ := ty.Placed) (.spread (.var (.there ne.«out».«e» (.there ne.«out».«p» .here))) (.cons (.var .here) .nil)))
   .nil)))
   (.ret (.var .here) .nil)))
 
-noncomputable def body.«isPlaced» : TStmts [sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«isPlaced».params sig.«isPlaced».result :=
+noncomputable def body.isPlaced : TStmts [sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.isPlaced.params sig.isPlaced.result :=
   (.ret (.stateHas .here (.there .here) (.var (.there ne.«ref».«this» .here))) .nil)
 
-noncomputable def body.«placedRefs» : TStmts [sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«placedRefs».params sig.«placedRefs».result :=
+noncomputable def body.placedRefs : TStmts [sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.placedRefs.params sig.placedRefs.result :=
   (.ret (.array (τ := .string) (.spreadKeys .here (.there .here) .nil)) .nil)
 
-noncomputable def body.«markOf» : TStmts [sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«markOf».params sig.«markOf».result :=
-  (.ret (.stateGet .here (.there (.there .here)) (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«ref».«this» .here)) (.cons (.var (.there ne.«p».«this» (.there ne.«p».«ref» .here))) .nil)))) .nil)
+noncomputable def body.markOf : TStmts [sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.markOf.params sig.markOf.result :=
+  (.ret (.stateGet .here (.there (.there .here)) (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«ref».«this» .here)) (.cons (.var (.there ne.«p».«this» (.there ne.«p».«ref» .here))) .nil)))) .nil)
 
-noncomputable def body.«markList» : TStmts [sig.«markOf», sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«markList».params sig.«markList».result :=
-  (.ret (.array (τ := ty.«Mark») (.spreadValues .here (.there (.there .here)) .nil)) .nil)
+noncomputable def body.markList : TStmts [sig.markOf, sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.markList.params sig.markList.result :=
+  (.ret (.array (τ := ty.Mark) (.spreadValues .here (.there (.there .here)) .nil)) .nil)
 
-noncomputable def body.«pack» : TStmts [sig.«markList», sig.«markOf», sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«pack».params sig.«pack».result :=
-  (.ite (.call (s := sig.«described») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))) (by decide +kernel) (.cons (.stateGet .here (.there (.there (.there .here))) (by decide +kernel) (.var (.there ne.«id».«this» .here))) (.cons (.var (.there ne.«stamp».«this» (.there ne.«stamp».«id» (.there ne.«stamp».«size» (.there ne.«stamp».«csize» .here))))) (.cons (.var (.there ne.«at».«this» (.there ne.«at».«id» (.there ne.«at».«size» (.there ne.«at».«csize» (.there ne.«at».«stamp» .here)))))) .nil))))
+noncomputable def body.pack : TStmts [sig.markList, sig.markOf, sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.pack.params sig.pack.result :=
+  (.ite (.call (s := sig.described) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))) (by decide +kernel) (.cons (.stateGet .here (.there (.there (.there .here))) (by decide +kernel) (.var (.there ne.«id».«this» .here))) (.cons (.var (.there ne.«stamp».«this» (.there ne.«stamp».«id» (.there ne.«stamp».«size» (.there ne.«stamp».«csize» .here))))) (.cons (.var (.there ne.«at».«this» (.there ne.«at».«id» (.there ne.«at».«size» (.there ne.«at».«csize» (.there ne.«at».«stamp» .here)))))) .nil))))
   (.retVoid .here .nil)
   .nil
   (.stateSet .here (.there (.there (.there .here))) (by decide +kernel) (.var (.there ne.«id».«this» .here)) (.record (.cons "id" (.var (.there ne.«id».«this» .here)) (.cons "size" (.var (.there ne.«size».«this» (.there ne.«size».«id» .here))) (.cons "csize" (.var (.there ne.«csize».«this» (.there ne.«csize».«id» (.there ne.«csize».«size» .here)))) (.cons "at" (.var (.there ne.«at».«this» (.there ne.«at».«id» (.there ne.«at».«size» (.there ne.«at».«csize» (.there ne.«at».«stamp» .here)))))) (.cons "s" (.widen (.some .undef .string) (.var (.there ne.«stamp».«this» (.there ne.«stamp».«id» (.there ne.«stamp».«size» (.there ne.«stamp».«csize» .here)))))) (.cons "hn" (.var (.there ne.«hn».«this» (.there ne.«hn».«id» (.there ne.«hn».«size» (.there ne.«hn».«csize» (.there ne.«hn».«stamp» (.there ne.«hn».«at» .here))))))) .nil)))))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) (.cons (.there (.there (.there (.there .here)))) (.cons (.there (.there (.there (.there (.there .here))))) .nil)))))) (by decide +kernel))
   (.retVoid .here .nil)))
 
-noncomputable def body.«packOf» : TStmts [sig.«pack», sig.«markList», sig.«markOf», sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«packOf».params sig.«packOf».result :=
+noncomputable def body.packOf : TStmts [sig.pack, sig.markList, sig.markOf, sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.packOf.params sig.packOf.result :=
   (.ret (.stateGet .here (.there (.there (.there .here))) (by decide +kernel) (.var (.there ne.«id».«this» .here))) .nil)
 
-noncomputable def body.«packList» : TStmts [sig.«packOf», sig.«pack», sig.«markList», sig.«markOf», sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«packList».params sig.«packList».result :=
-  (.ret (.array (τ := ty.«Pack») (.spreadValues .here (.there (.there (.there .here))) .nil)) .nil)
+noncomputable def body.packList : TStmts [sig.packOf, sig.pack, sig.markList, sig.markOf, sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.packList.params sig.packList.result :=
+  (.ret (.array (τ := ty.Pack) (.spreadValues .here (.there (.there (.there .here))) .nil)) .nil)
 
-noncomputable def body.«track» : TStmts [sig.«packList», sig.«packOf», sig.«pack», sig.«markList», sig.«markOf», sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«track».params sig.«track».result :=
-  (.const "cur" (.stateGet .here (.there (.there (.there (.there (.there (.there .here)))))) (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«p».«this» .here)) (.cons (.var (.there ne.«month».«this» (.there ne.«month».«p» .here))) .nil))))
+noncomputable def body.track : TStmts [sig.packList, sig.packOf, sig.pack, sig.markList, sig.markOf, sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.track.params sig.track.result :=
+  (.const "cur" (.stateGet .here (.there (.there (.there (.there (.there (.there .here)))))) (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«p».«this» .here)) (.cons (.var (.there ne.«month».«this» (.there ne.«month».«p» .here))) .nil))))
   (.const "devices" (.condNull .here (by decide +kernel) (.array (τ := .string) .nil) (.field (.var .here) (.there (.there .here)) (by decide +kernel)))
   (.ite (.and (.var (.there ne.«total».«devices» (.there ne.«total».«cur» (.there ne.«total».«this» (.there ne.«total».«p» (.there ne.«total».«month» (.there ne.«total».«device» .here))))))) (.not (.includes (by decide +kernel) (.var .here) (.var (.there ne.«device».«devices» (.there ne.«device».«cur» (.there ne.«device».«this» (.there ne.«device».«p» (.there ne.«device».«month» .here)))))))))
-  (.stateSet (.there ne.«this».«devices» (.there ne.«this».«cur» .here)) (.there (.there (.there (.there (.there (.there .here)))))) (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«p».«devices» (.there ne.«p».«cur» (.there ne.«p».«this» .here)))) (.cons (.var (.there ne.«month».«devices» (.there ne.«month».«cur» (.there ne.«month».«this» (.there ne.«month».«p» .here))))) .nil))) (.record (.cons "p" (.var (.there ne.«p».«devices» (.there ne.«p».«cur» (.there ne.«p».«this» .here)))) (.cons "month" (.var (.there ne.«month».«devices» (.there ne.«month».«cur» (.there ne.«month».«this» (.there ne.«month».«p» .here))))) (.cons "devices" (.sorted (.array (τ := .string) (.spread (.var .here) (.cons (.var (.there ne.«device».«devices» (.there ne.«device».«cur» (.there ne.«device».«this» (.there ne.«device».«p» (.there ne.«device».«month» .here)))))) .nil))) (.ref (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))) (by decide +kernel))) .nil))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) .nil))) (by decide +kernel))
+  (.stateSet (.there ne.«this».«devices» (.there ne.«this».«cur» .here)) (.there (.there (.there (.there (.there (.there .here)))))) (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«p».«devices» (.there ne.«p».«cur» (.there ne.«p».«this» .here)))) (.cons (.var (.there ne.«month».«devices» (.there ne.«month».«cur» (.there ne.«month».«this» (.there ne.«month».«p» .here))))) .nil))) (.record (.cons "p" (.var (.there ne.«p».«devices» (.there ne.«p».«cur» (.there ne.«p».«this» .here)))) (.cons "month" (.var (.there ne.«month».«devices» (.there ne.«month».«cur» (.there ne.«month».«this» (.there ne.«month».«p» .here))))) (.cons "devices" (.sorted (.array (τ := .string) (.spread (.var .here) (.cons (.var (.there ne.«device».«devices» (.there ne.«device».«cur» (.there ne.«device».«this» (.there ne.«device».«p» (.there ne.«device».«month» .here)))))) .nil))) (.ref (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))) (by decide +kernel))) .nil))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) .nil))) (by decide +kernel))
   .nil)
-  (.ite (.not (.stateHas (.there ne.«this».«devices» (.there ne.«this».«cur» .here)) (.there (.there (.there (.there (.there (.there .here)))))) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«p».«devices» (.there ne.«p».«cur» (.there ne.«p».«this» .here)))) (.cons (.var (.there ne.«month».«devices» (.there ne.«month».«cur» (.there ne.«month».«this» (.there ne.«month».«p» .here))))) .nil)))))
-  (.stateSet (.there ne.«this».«devices» (.there ne.«this».«cur» .here)) (.there (.there (.there (.there (.there (.there .here)))))) (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«p».«devices» (.there ne.«p».«cur» (.there ne.«p».«this» .here)))) (.cons (.var (.there ne.«month».«devices» (.there ne.«month».«cur» (.there ne.«month».«this» (.there ne.«month».«p» .here))))) .nil))) (.record (.cons "p" (.var (.there ne.«p».«devices» (.there ne.«p».«cur» (.there ne.«p».«this» .here)))) (.cons "month" (.var (.there ne.«month».«devices» (.there ne.«month».«cur» (.there ne.«month».«this» (.there ne.«month».«p» .here))))) (.cons "devices" (.var .here) .nil))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) .nil))) (by decide +kernel))
+  (.ite (.not (.stateHas (.there ne.«this».«devices» (.there ne.«this».«cur» .here)) (.there (.there (.there (.there (.there (.there .here)))))) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«p».«devices» (.there ne.«p».«cur» (.there ne.«p».«this» .here)))) (.cons (.var (.there ne.«month».«devices» (.there ne.«month».«cur» (.there ne.«month».«this» (.there ne.«month».«p» .here))))) .nil)))))
+  (.stateSet (.there ne.«this».«devices» (.there ne.«this».«cur» .here)) (.there (.there (.there (.there (.there (.there .here)))))) (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«p».«devices» (.there ne.«p».«cur» (.there ne.«p».«this» .here)))) (.cons (.var (.there ne.«month».«devices» (.there ne.«month».«cur» (.there ne.«month».«this» (.there ne.«month».«p» .here))))) .nil))) (.record (.cons "p" (.var (.there ne.«p».«devices» (.there ne.«p».«cur» (.there ne.«p».«this» .here)))) (.cons "month" (.var (.there ne.«month».«devices» (.there ne.«month».«cur» (.there ne.«month».«this» (.there ne.«month».«p» .here))))) (.cons "devices" (.var .here) .nil))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) .nil))) (by decide +kernel))
   .nil)
   .nil
   .nil)
   (.retVoid (.there ne.«this».«devices» (.there ne.«this».«cur» .here)) .nil))))
 
-noncomputable def body.«total» : TStmts [sig.«track», sig.«packList», sig.«packOf», sig.«pack», sig.«markList», sig.«markOf», sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«total».params sig.«total».result :=
-  (.const "cur" (.stateGet .here (.there (.there (.there (.there .here)))) (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) (by decide +kernel) (.cons (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«p».«this» .here)) (.cons (.var (.there ne.«month».«this» (.there ne.«month».«p» .here))) .nil))) (.cons (.var (.there ne.«device».«this» (.there ne.«device».«p» (.there ne.«device».«month» .here)))) .nil))))
-  (.stateSet (.there ne.«this».«cur» .here) (.there (.there (.there (.there .here)))) (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) (by decide +kernel) (.cons (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«p».«cur» (.there ne.«p».«this» .here))) (.cons (.var (.there ne.«month».«cur» (.there ne.«month».«this» (.there ne.«month».«p» .here)))) .nil))) (.cons (.var (.there ne.«device».«cur» (.there ne.«device».«this» (.there ne.«device».«p» (.there ne.«device».«month» .here))))) .nil))) (.record (.cons "p" (.var (.there ne.«p».«cur» (.there ne.«p».«this» .here))) (.cons "month" (.var (.there ne.«month».«cur» (.there ne.«month».«this» (.there ne.«month».«p» .here)))) (.cons "device" (.var (.there ne.«device».«cur» (.there ne.«device».«this» (.there ne.«device».«p» (.there ne.«device».«month» .here))))) (.cons "c" (.call (s := sig.«highest») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) (by decide +kernel) (.cons (.condNull .here (by decide +kernel) (.call (s := sig.«zero») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) (by decide +kernel) .nil) (.field (.var .here) (.there (.there (.there .here))) (by decide +kernel))) (.cons (.var (.there ne.«c».«cur» (.there ne.«c».«this» (.there ne.«c».«p» (.there ne.«c».«month» (.there ne.«c».«device» .here)))))) .nil))) .nil)))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) .nil)))) (by decide +kernel))
+noncomputable def body.total : TStmts [sig.track, sig.packList, sig.packOf, sig.pack, sig.markList, sig.markOf, sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.total.params sig.total.result :=
+  (.const "cur" (.stateGet .here (.there (.there (.there (.there .here)))) (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) (by decide +kernel) (.cons (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«p».«this» .here)) (.cons (.var (.there ne.«month».«this» (.there ne.«month».«p» .here))) .nil))) (.cons (.var (.there ne.«device».«this» (.there ne.«device».«p» (.there ne.«device».«month» .here)))) .nil))))
+  (.stateSet (.there ne.«this».«cur» .here) (.there (.there (.there (.there .here)))) (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) (by decide +kernel) (.cons (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«p».«cur» (.there ne.«p».«this» .here))) (.cons (.var (.there ne.«month».«cur» (.there ne.«month».«this» (.there ne.«month».«p» .here)))) .nil))) (.cons (.var (.there ne.«device».«cur» (.there ne.«device».«this» (.there ne.«device».«p» (.there ne.«device».«month» .here))))) .nil))) (.record (.cons "p" (.var (.there ne.«p».«cur» (.there ne.«p».«this» .here))) (.cons "month" (.var (.there ne.«month».«cur» (.there ne.«month».«this» (.there ne.«month».«p» .here)))) (.cons "device" (.var (.there ne.«device».«cur» (.there ne.«device».«this» (.there ne.«device».«p» (.there ne.«device».«month» .here))))) (.cons "c" (.call (s := sig.highest) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) (by decide +kernel) (.cons (.condNull .here (by decide +kernel) (.call (s := sig.zero) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) (by decide +kernel) .nil) (.field (.var .here) (.there (.there (.there .here))) (by decide +kernel))) (.cons (.var (.there ne.«c».«cur» (.there ne.«c».«this» (.there ne.«c».«p» (.there ne.«c».«month» (.there ne.«c».«device» .here)))))) .nil))) .nil)))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) .nil)))) (by decide +kernel))
   (.callVoid .here (.there ne.«this».«cur» .here) (.cons (.var (.there ne.«p».«cur» (.there ne.«p».«this» .here))) (.cons (.var (.there ne.«month».«cur» (.there ne.«month».«this» (.there ne.«month».«p» .here)))) (.cons (.var (.there ne.«device».«cur» (.there ne.«device».«this» (.there ne.«device».«p» (.there ne.«device».«month» .here))))) (.cons (.bool true) .nil))))
   (.retVoid (.there ne.«this».«cur» .here) .nil))))
 
-noncomputable def body.«add» : TStmts [sig.«total», sig.«track», sig.«packList», sig.«packOf», sig.«pack», sig.«markList», sig.«markOf», sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«add».params sig.«add».result :=
-  (.const "cur" (.stateGet .here (.there (.there (.there (.there (.there .here))))) (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«p».«this» .here)) (.cons (.var (.there ne.«month».«this» (.there ne.«month».«p» .here))) .nil))))
-  (.stateSet (.there ne.«this».«cur» .here) (.there (.there (.there (.there (.there .here))))) (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«p».«cur» (.there ne.«p».«this» .here))) (.cons (.var (.there ne.«month».«cur» (.there ne.«month».«this» (.there ne.«month».«p» .here)))) .nil))) (.record (.cons "p" (.var (.there ne.«p».«cur» (.there ne.«p».«this» .here))) (.cons "month" (.var (.there ne.«month».«cur» (.there ne.«month».«this» (.there ne.«month».«p» .here)))) (.cons "c" (.call (s := sig.«sum») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) (by decide +kernel) (.cons (.condNull .here (by decide +kernel) (.call (s := sig.«zero») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) (by decide +kernel) .nil) (.field (.var .here) (.there (.there .here)) (by decide +kernel))) (.cons (.var (.there ne.«c».«cur» (.there ne.«c».«this» (.there ne.«c».«p» (.there ne.«c».«month» .here))))) .nil))) .nil))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) .nil))) (by decide +kernel))
+noncomputable def body.add : TStmts [sig.total, sig.track, sig.packList, sig.packOf, sig.pack, sig.markList, sig.markOf, sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.add.params sig.add.result :=
+  (.const "cur" (.stateGet .here (.there (.there (.there (.there (.there .here))))) (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«p».«this» .here)) (.cons (.var (.there ne.«month».«this» (.there ne.«month».«p» .here))) .nil))))
+  (.stateSet (.there ne.«this».«cur» .here) (.there (.there (.there (.there (.there .here))))) (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«p».«cur» (.there ne.«p».«this» .here))) (.cons (.var (.there ne.«month».«cur» (.there ne.«month».«this» (.there ne.«month».«p» .here)))) .nil))) (.record (.cons "p" (.var (.there ne.«p».«cur» (.there ne.«p».«this» .here))) (.cons "month" (.var (.there ne.«month».«cur» (.there ne.«month».«this» (.there ne.«month».«p» .here)))) (.cons "c" (.call (s := sig.sum) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) (by decide +kernel) (.cons (.condNull .here (by decide +kernel) (.call (s := sig.zero) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) (by decide +kernel) .nil) (.field (.var .here) (.there (.there .here)) (by decide +kernel))) (.cons (.var (.there ne.«c».«cur» (.there ne.«c».«this» (.there ne.«c».«p» (.there ne.«c».«month» .here))))) .nil))) .nil))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) .nil))) (by decide +kernel))
   (.callVoid (.there .here) (.there ne.«this».«cur» .here) (.cons (.var (.there ne.«p».«cur» (.there ne.«p».«this» .here))) (.cons (.var (.there ne.«month».«cur» (.there ne.«month».«this» (.there ne.«month».«p» .here)))) (.cons (.str (js "")) (.cons (.bool false) .nil))))
   (.retVoid (.there ne.«this».«cur» .here) .nil))))
 
-noncomputable def body.«totalOf» : TStmts [sig.«add», sig.«total», sig.«track», sig.«packList», sig.«packOf», sig.«pack», sig.«markList», sig.«markOf», sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«totalOf».params sig.«totalOf».result :=
-  (.const "t" (.stateGet .here (.there (.there (.there (.there .here)))) (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«p».«this» .here)) (.cons (.var (.there ne.«month».«this» (.there ne.«month».«p» .here))) .nil))) (.cons (.var (.there ne.«device».«this» (.there ne.«device».«p» (.there ne.«device».«month» .here)))) .nil))))
-  (.ret (.condNull .here (by decide +kernel) (.call (s := sig.«zero») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))) (by decide +kernel) .nil) (.field (.var .here) (.there (.there (.there .here))) (by decide +kernel))) .nil))
+noncomputable def body.totalOf : TStmts [sig.add, sig.total, sig.track, sig.packList, sig.packOf, sig.pack, sig.markList, sig.markOf, sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.totalOf.params sig.totalOf.result :=
+  (.const "t" (.stateGet .here (.there (.there (.there (.there .here)))) (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«p».«this» .here)) (.cons (.var (.there ne.«month».«this» (.there ne.«month».«p» .here))) .nil))) (.cons (.var (.there ne.«device».«this» (.there ne.«device».«p» (.there ne.«device».«month» .here)))) .nil))))
+  (.ret (.condNull .here (by decide +kernel) (.call (s := sig.zero) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))) (by decide +kernel) .nil) (.field (.var .here) (.there (.there (.there .here))) (by decide +kernel))) .nil))
 
-noncomputable def body.«usageOf» : TStmts [sig.«totalOf», sig.«add», sig.«total», sig.«track», sig.«packList», sig.«packOf», sig.«pack», sig.«markList», sig.«markOf», sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«usageOf».params sig.«usageOf».result :=
-  (.const "inc" (.stateGet .here (.there (.there (.there (.there (.there .here))))) (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«p».«this» .here)) (.cons (.var (.there ne.«month».«this» (.there ne.«month».«p» .here))) .nil))))
-  (.let_ "out" (.condNull .here (by decide +kernel) (.call (s := sig.«zero») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))) (by decide +kernel) .nil) (.field (.var .here) (.there (.there .here)) (by decide +kernel)))
-  (.const "period" (.stateGet (.there ne.«this».«out» (.there ne.«this».«inc» .here)) (.there (.there (.there (.there (.there (.there .here)))))) (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«p».«out» (.there ne.«p».«inc» (.there ne.«p».«this» .here)))) (.cons (.var (.there ne.«month».«out» (.there ne.«month».«inc» (.there ne.«month».«this» (.there ne.«month».«p» .here))))) .nil))))
+noncomputable def body.usageOf : TStmts [sig.totalOf, sig.add, sig.total, sig.track, sig.packList, sig.packOf, sig.pack, sig.markList, sig.markOf, sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.usageOf.params sig.usageOf.result :=
+  (.const "inc" (.stateGet .here (.there (.there (.there (.there (.there .here))))) (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«p».«this» .here)) (.cons (.var (.there ne.«month».«this» (.there ne.«month».«p» .here))) .nil))))
+  (.let_ "out" (.condNull .here (by decide +kernel) (.call (s := sig.zero) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))) (by decide +kernel) .nil) (.field (.var .here) (.there (.there .here)) (by decide +kernel)))
+  (.const "period" (.stateGet (.there ne.«this».«out» (.there ne.«this».«inc» .here)) (.there (.there (.there (.there (.there (.there .here)))))) (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«p».«out» (.there ne.«p».«inc» (.there ne.«p».«this» .here)))) (.cons (.var (.there ne.«month».«out» (.there ne.«month».«inc» (.there ne.«month».«this» (.there ne.«month».«p» .here))))) .nil))))
   (.ifNullExit .here (by decide +kernel)
   (.ret (.var (.there ne.«out».«period» .here)) .nil)
   (.forOf "d" (.field (.var .here) (.there (.there .here)) (by decide +kernel))
-  (.const "t" (.stateGet (.there ne.«this».«d» (.there ne.«this».«period» (.there ne.«this».«out» (.there ne.«this».«inc» .here)))) (.there (.there (.there (.there .here)))) (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«p».«d» (.there ne.«p».«period» (.there ne.«p».«out» (.there ne.«p».«inc» (.there ne.«p».«this» .here)))))) (.cons (.var (.there ne.«month».«d» (.there ne.«month».«period» (.there ne.«month».«out» (.there ne.«month».«inc» (.there ne.«month».«this» (.there ne.«month».«p» .here))))))) .nil))) (.cons (.var .here) .nil))))
+  (.const "t" (.stateGet (.there ne.«this».«d» (.there ne.«this».«period» (.there ne.«this».«out» (.there ne.«this».«inc» .here)))) (.there (.there (.there (.there .here)))) (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«p».«d» (.there ne.«p».«period» (.there ne.«p».«out» (.there ne.«p».«inc» (.there ne.«p».«this» .here)))))) (.cons (.var (.there ne.«month».«d» (.there ne.«month».«period» (.there ne.«month».«out» (.there ne.«month».«inc» (.there ne.«month».«this» (.there ne.«month».«p» .here))))))) .nil))) (.cons (.var .here) .nil))))
   (.ifNullExit .here (by decide +kernel)
   (.cont .nil)
-  (.assign (.there ne.«out».«t» (.there ne.«out».«d» (.there ne.«out».«period» .here))) (.call (s := sig.«sum») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«out».«t» (.there ne.«out».«d» (.there ne.«out».«period» .here)))) (.cons (.field (.var .here) (.there (.there (.there .here))) (by decide +kernel)) .nil)))
+  (.assign (.there ne.«out».«t» (.there ne.«out».«d» (.there ne.«out».«period» .here))) (.call (s := sig.sum) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«out».«t» (.there ne.«out».«d» (.there ne.«out».«period» .here)))) (.cons (.field (.var .here) (.there (.there (.there .here))) (by decide +kernel)) .nil)))
   .nil)))
   (.ret (.var (.there ne.«out».«period» .here)) .nil))))))
 
-noncomputable def body.«usageList» : TStmts [sig.«usageOf», sig.«totalOf», sig.«add», sig.«total», sig.«track», sig.«packList», sig.«packOf», sig.«pack», sig.«markList», sig.«markOf», sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«usageList».params sig.«usageList».result :=
-  (.ret (.map (.array (τ := ty.«Period») (.spreadValues .here (.there (.there (.there (.there (.there (.there .here)))))) .nil)) (.arrow "x" (.record (.cons "p" (.field (.var .here) .here (by decide +kernel)) (.cons "month" (.field (.var .here) (.there .here) (by decide +kernel)) (.cons "c" (.callThis .here (.there ne.«this».«x» .here) (.cons (.field (.var .here) .here (by decide +kernel)) (.cons (.field (.var .here) (.there .here) (by decide +kernel)) .nil))) .nil))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) .nil))) (by decide +kernel)))) .nil)
+noncomputable def body.usageList : TStmts [sig.usageOf, sig.totalOf, sig.add, sig.total, sig.track, sig.packList, sig.packOf, sig.pack, sig.markList, sig.markOf, sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.usageList.params sig.usageList.result :=
+  (.ret (.map (.array (τ := ty.Period) (.spreadValues .here (.there (.there (.there (.there (.there (.there .here)))))) .nil)) (.arrow "x" (.record (.cons "p" (.field (.var .here) .here (by decide +kernel)) (.cons "month" (.field (.var .here) (.there .here) (by decide +kernel)) (.cons "c" (.callThis .here (.there ne.«this».«x» .here) (.cons (.field (.var .here) .here (by decide +kernel)) (.cons (.field (.var .here) (.there .here) (by decide +kernel)) .nil))) .nil))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) .nil))) (by decide +kernel)))) .nil)
 
-noncomputable def body.«totalList» : TStmts [sig.«usageList», sig.«usageOf», sig.«totalOf», sig.«add», sig.«total», sig.«track», sig.«packList», sig.«packOf», sig.«pack», sig.«markList», sig.«markOf», sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«totalList».params sig.«totalList».result :=
-  (.ret (.array (τ := ty.«Total») (.spreadValues .here (.there (.there (.there (.there .here)))) .nil)) .nil)
+noncomputable def body.totalList : TStmts [sig.usageList, sig.usageOf, sig.totalOf, sig.add, sig.total, sig.track, sig.packList, sig.packOf, sig.pack, sig.markList, sig.markOf, sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.totalList.params sig.totalList.result :=
+  (.ret (.array (τ := ty.Total) (.spreadValues .here (.there (.there (.there (.there .here)))) .nil)) .nil)
 
-noncomputable def body.«touchAlbum» : TStmts [sig.«totalList», sig.«usageList», sig.«usageOf», sig.«totalOf», sig.«add», sig.«total», sig.«track», sig.«packList», sig.«packOf», sig.«pack», sig.«markList», sig.«markOf», sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«touchAlbum».params sig.«touchAlbum».result :=
+noncomputable def body.touchAlbum : TStmts [sig.totalList, sig.usageList, sig.usageOf, sig.totalOf, sig.add, sig.total, sig.track, sig.packList, sig.packOf, sig.pack, sig.markList, sig.markOf, sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.touchAlbum.params sig.touchAlbum.result :=
   (.const "a" (.stateGet .here (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide +kernel) (.var (.there ne.«aid».«this» .here)))
   (.stateSet (.there ne.«this».«a» .here) (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide +kernel) (.var (.there ne.«aid».«a» (.there ne.«aid».«this» .here))) (.condNull .here (by decide +kernel) (.record (.cons "id" (.var (.there ne.«aid».«a» (.there ne.«aid».«this» .here))) (.cons "name" (.str (js "Untitled album")) (.cons "created" (.var (.there ne.«at».«a» (.there ne.«at».«this» (.there ne.«at».«aid» .here)))) .nil))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.absent (by decide +kernel) (.absent (by decide +kernel) (.absent (by decide +kernel) (.absent (by decide +kernel) .nil))))))) (by decide +kernel)) (.cond (.bin .nlt (.var (.there ne.«at».«a» (.there ne.«at».«this» (.there ne.«at».«aid» .here)))) (.field (.var .here) (.there (.there .here)) (by decide +kernel))) (.update (.var .here) (.cons "created" (.var (.there ne.«at».«a» (.there ne.«at».«this» (.there ne.«at».«aid» .here)))) .nil) (.keep (by decide +kernel) (.keep (by decide +kernel) (.set .here (.keep (by decide +kernel) (.keep (by decide +kernel) (.keep (by decide +kernel) (.keep (by decide +kernel) .nil))))))) (by decide +kernel)) (.var .here)))
   (.retVoid (.there ne.«this».«a» .here) .nil)))
 
-noncomputable def body.«album» : TStmts [sig.«touchAlbum», sig.«totalList», sig.«usageList», sig.«usageOf», sig.«totalOf», sig.«add», sig.«total», sig.«track», sig.«packList», sig.«packOf», sig.«pack», sig.«markList», sig.«markOf», sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«album».params sig.«album».result :=
+noncomputable def body.album : TStmts [sig.touchAlbum, sig.totalList, sig.usageList, sig.usageOf, sig.totalOf, sig.add, sig.total, sig.track, sig.packList, sig.packOf, sig.pack, sig.markList, sig.markOf, sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.album.params sig.album.result :=
   (.callVoid .here .here (.cons (.var (.there ne.«aid».«this» .here)) (.cons (.var (.there ne.«at».«this» (.there ne.«at».«aid» (.there ne.«at».«stamp» .here)))) .nil))
   (.const "a" (.stateGet .here (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide +kernel) (.var (.there ne.«aid».«this» .here)))
   (.ifNullExit .here (by decide +kernel)
   (.retVoid (.there ne.«this».«a» .here) .nil)
-  (.const "renamed" (.and (.call (s := sig.«given») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«name».«a» (.there ne.«name».«this» (.there ne.«name».«aid» (.there ne.«name».«stamp» (.there ne.«name».«at» .here)))))) .nil)) (.call (s := sig.«newer») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.field (.var .here) (.there (.there (.there (.there (.there .here))))) (by decide +kernel)) (.cons (.var (.there ne.«stamp».«a» (.there ne.«stamp».«this» (.there ne.«stamp».«aid» .here)))) .nil))))
-  (.const "covered" (.and (.call (s := sig.«given») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«cover».«renamed» (.there ne.«cover».«a» (.there ne.«cover».«this» (.there ne.«cover».«aid» (.there ne.«cover».«stamp» (.there ne.«cover».«at» (.there ne.«cover».«name» .here)))))))) .nil)) (.call (s := sig.«newer») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.field (.var (.there ne.«a».«renamed» .here)) (.there (.there (.there (.there (.there (.there .here)))))) (by decide +kernel)) (.cons (.var (.there ne.«stamp».«renamed» (.there ne.«stamp».«a» (.there ne.«stamp».«this» (.there ne.«stamp».«aid» .here))))) .nil))))
-  (.stateSet (.there ne.«this».«covered» (.there ne.«this».«renamed» (.there ne.«this».«a» .here))) (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide +kernel) (.var (.there ne.«aid».«covered» (.there ne.«aid».«renamed» (.there ne.«aid».«a» (.there ne.«aid».«this» .here))))) (.update (.var (.there ne.«a».«covered» (.there ne.«a».«renamed» .here))) (.cons "name" (.cond (.var (.there ne.«renamed».«covered» .here)) (.call (s := sig.«otherwise») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«name».«covered» (.there ne.«name».«renamed» (.there ne.«name».«a» (.there ne.«name».«this» (.there ne.«name».«aid» (.there ne.«name».«stamp» (.there ne.«name».«at» .here)))))))) (.cons (.field (.var (.there ne.«a».«covered» (.there ne.«a».«renamed» .here))) (.there .here) (by decide +kernel)) .nil))) (.field (.var (.there ne.«a».«covered» (.there ne.«a».«renamed» .here))) (.there .here) (by decide +kernel))) (.cons "nameS" (.cond (.var (.there ne.«renamed».«covered» .here)) (.widen (.some .undef .string) (.var (.there ne.«stamp».«covered» (.there ne.«stamp».«renamed» (.there ne.«stamp».«a» (.there ne.«stamp».«this» (.there ne.«stamp».«aid» .here))))))) (.field (.var (.there ne.«a».«covered» (.there ne.«a».«renamed» .here))) (.there (.there (.there (.there (.there .here))))) (by decide +kernel))) (.cons "cover" (.cond (.var .here) (.var (.there ne.«cover».«covered» (.there ne.«cover».«renamed» (.there ne.«cover».«a» (.there ne.«cover».«this» (.there ne.«cover».«aid» (.there ne.«cover».«stamp» (.there ne.«cover».«at» (.there ne.«cover».«name» .here))))))))) (.field (.var (.there ne.«a».«covered» (.there ne.«a».«renamed» .here))) (.there (.there (.there .here))) (by decide +kernel))) (.cons "coverS" (.cond (.var .here) (.widen (.some .undef .string) (.var (.there ne.«stamp».«covered» (.there ne.«stamp».«renamed» (.there ne.«stamp».«a» (.there ne.«stamp».«this» (.there ne.«stamp».«aid» .here))))))) (.field (.var (.there ne.«a».«covered» (.there ne.«a».«renamed» .here))) (.there (.there (.there (.there (.there (.there .here)))))) (by decide +kernel))) (.cons "deleted" (.cond (.and (.var (.there ne.«deleted».«covered» (.there ne.«deleted».«renamed» (.there ne.«deleted».«a» (.there ne.«deleted».«this» (.there ne.«deleted».«aid» (.there ne.«deleted».«stamp» (.there ne.«deleted».«at» (.there ne.«deleted».«name» (.there ne.«deleted».«cover» .here)))))))))) (.call (s := sig.«earlier») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.field (.var (.there ne.«a».«covered» (.there ne.«a».«renamed» .here))) (.there (.there (.there (.there .here)))) (by decide +kernel)) (.cons (.var (.there ne.«stamp».«covered» (.there ne.«stamp».«renamed» (.there ne.«stamp».«a» (.there ne.«stamp».«this» (.there ne.«stamp».«aid» .here)))))) .nil)))) (.widen (.some .undef .string) (.var (.there ne.«stamp».«covered» (.there ne.«stamp».«renamed» (.there ne.«stamp».«a» (.there ne.«stamp».«this» (.there ne.«stamp».«aid» .here))))))) (.field (.var (.there ne.«a».«covered» (.there ne.«a».«renamed» .here))) (.there (.there (.there (.there .here)))) (by decide +kernel))) .nil))))) (.keep (by decide +kernel) (.set .here (.keep (by decide +kernel) (.set (.there (.there .here)) (.set (.there (.there (.there (.there .here)))) (.set (.there .here) (.set (.there (.there (.there .here))) .nil))))))) (by decide +kernel))
+  (.const "renamed" (.and (.call (s := sig.given) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«name».«a» (.there ne.«name».«this» (.there ne.«name».«aid» (.there ne.«name».«stamp» (.there ne.«name».«at» .here)))))) .nil)) (.call (s := sig.newer) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.field (.var .here) (.there (.there (.there (.there (.there .here))))) (by decide +kernel)) (.cons (.var (.there ne.«stamp».«a» (.there ne.«stamp».«this» (.there ne.«stamp».«aid» .here)))) .nil))))
+  (.const "covered" (.and (.call (s := sig.given) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«cover».«renamed» (.there ne.«cover».«a» (.there ne.«cover».«this» (.there ne.«cover».«aid» (.there ne.«cover».«stamp» (.there ne.«cover».«at» (.there ne.«cover».«name» .here)))))))) .nil)) (.call (s := sig.newer) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.field (.var (.there ne.«a».«renamed» .here)) (.there (.there (.there (.there (.there (.there .here)))))) (by decide +kernel)) (.cons (.var (.there ne.«stamp».«renamed» (.there ne.«stamp».«a» (.there ne.«stamp».«this» (.there ne.«stamp».«aid» .here))))) .nil))))
+  (.stateSet (.there ne.«this».«covered» (.there ne.«this».«renamed» (.there ne.«this».«a» .here))) (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide +kernel) (.var (.there ne.«aid».«covered» (.there ne.«aid».«renamed» (.there ne.«aid».«a» (.there ne.«aid».«this» .here))))) (.update (.var (.there ne.«a».«covered» (.there ne.«a».«renamed» .here))) (.cons "name" (.cond (.var (.there ne.«renamed».«covered» .here)) (.call (s := sig.otherwise) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«name».«covered» (.there ne.«name».«renamed» (.there ne.«name».«a» (.there ne.«name».«this» (.there ne.«name».«aid» (.there ne.«name».«stamp» (.there ne.«name».«at» .here)))))))) (.cons (.field (.var (.there ne.«a».«covered» (.there ne.«a».«renamed» .here))) (.there .here) (by decide +kernel)) .nil))) (.field (.var (.there ne.«a».«covered» (.there ne.«a».«renamed» .here))) (.there .here) (by decide +kernel))) (.cons "nameS" (.cond (.var (.there ne.«renamed».«covered» .here)) (.widen (.some .undef .string) (.var (.there ne.«stamp».«covered» (.there ne.«stamp».«renamed» (.there ne.«stamp».«a» (.there ne.«stamp».«this» (.there ne.«stamp».«aid» .here))))))) (.field (.var (.there ne.«a».«covered» (.there ne.«a».«renamed» .here))) (.there (.there (.there (.there (.there .here))))) (by decide +kernel))) (.cons "cover" (.cond (.var .here) (.var (.there ne.«cover».«covered» (.there ne.«cover».«renamed» (.there ne.«cover».«a» (.there ne.«cover».«this» (.there ne.«cover».«aid» (.there ne.«cover».«stamp» (.there ne.«cover».«at» (.there ne.«cover».«name» .here))))))))) (.field (.var (.there ne.«a».«covered» (.there ne.«a».«renamed» .here))) (.there (.there (.there .here))) (by decide +kernel))) (.cons "coverS" (.cond (.var .here) (.widen (.some .undef .string) (.var (.there ne.«stamp».«covered» (.there ne.«stamp».«renamed» (.there ne.«stamp».«a» (.there ne.«stamp».«this» (.there ne.«stamp».«aid» .here))))))) (.field (.var (.there ne.«a».«covered» (.there ne.«a».«renamed» .here))) (.there (.there (.there (.there (.there (.there .here)))))) (by decide +kernel))) (.cons "deleted" (.cond (.and (.var (.there ne.«deleted».«covered» (.there ne.«deleted».«renamed» (.there ne.«deleted».«a» (.there ne.«deleted».«this» (.there ne.«deleted».«aid» (.there ne.«deleted».«stamp» (.there ne.«deleted».«at» (.there ne.«deleted».«name» (.there ne.«deleted».«cover» .here)))))))))) (.call (s := sig.earlier) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.field (.var (.there ne.«a».«covered» (.there ne.«a».«renamed» .here))) (.there (.there (.there (.there .here)))) (by decide +kernel)) (.cons (.var (.there ne.«stamp».«covered» (.there ne.«stamp».«renamed» (.there ne.«stamp».«a» (.there ne.«stamp».«this» (.there ne.«stamp».«aid» .here)))))) .nil)))) (.widen (.some .undef .string) (.var (.there ne.«stamp».«covered» (.there ne.«stamp».«renamed» (.there ne.«stamp».«a» (.there ne.«stamp».«this» (.there ne.«stamp».«aid» .here))))))) (.field (.var (.there ne.«a».«covered» (.there ne.«a».«renamed» .here))) (.there (.there (.there (.there .here)))) (by decide +kernel))) .nil))))) (.keep (by decide +kernel) (.set .here (.keep (by decide +kernel) (.set (.there (.there .here)) (.set (.there (.there (.there (.there .here)))) (.set (.there .here) (.set (.there (.there (.there .here))) .nil))))))) (by decide +kernel))
   (.retVoid (.there ne.«this».«covered» (.there ne.«this».«renamed» (.there ne.«this».«a» .here))) .nil)))))))
 
-noncomputable def body.«item» : TStmts [sig.«album», sig.«touchAlbum», sig.«totalList», sig.«usageList», sig.«usageOf», sig.«totalOf», sig.«add», sig.«total», sig.«track», sig.«packList», sig.«packOf», sig.«pack», sig.«markList», sig.«markOf», sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«item».params sig.«item».result :=
-  (.const "cur" (.stateGet .here (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«aid».«this» .here)) (.cons (.var (.there ne.«id».«this» (.there ne.«id».«aid» .here))) .nil))))
-  (.ite (.call (s := sig.«newer») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.condNull .here (by decide +kernel) (.undef .undef .string (by decide +kernel)) (.widen (.some .undef .string) (.field (.var .here) (.there (.there .here)) (by decide +kernel)))) (.cons (.var (.there ne.«stamp».«cur» (.there ne.«stamp».«this» (.there ne.«stamp».«aid» (.there ne.«stamp».«id» .here))))) .nil)))
-  (.stateSet (.there ne.«this».«cur» .here) (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«aid».«cur» (.there ne.«aid».«this» .here))) (.cons (.var (.there ne.«id».«cur» (.there ne.«id».«this» (.there ne.«id».«aid» .here)))) .nil))) (.record (.cons "aid" (.var (.there ne.«aid».«cur» (.there ne.«aid».«this» .here))) (.cons "id" (.var (.there ne.«id».«cur» (.there ne.«id».«this» (.there ne.«id».«aid» .here)))) (.cons "s" (.var (.there ne.«stamp».«cur» (.there ne.«stamp».«this» (.there ne.«stamp».«aid» (.there ne.«stamp».«id» .here))))) (.cons "present" (.var (.there ne.«present».«cur» (.there ne.«present».«this» (.there ne.«present».«aid» (.there ne.«present».«id» (.there ne.«present».«stamp» .here)))))) .nil)))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) .nil)))) (by decide +kernel))
+noncomputable def body.item : TStmts [sig.album, sig.touchAlbum, sig.totalList, sig.usageList, sig.usageOf, sig.totalOf, sig.add, sig.total, sig.track, sig.packList, sig.packOf, sig.pack, sig.markList, sig.markOf, sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.item.params sig.item.result :=
+  (.const "cur" (.stateGet .here (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«aid».«this» .here)) (.cons (.var (.there ne.«id».«this» (.there ne.«id».«aid» .here))) .nil))))
+  (.ite (.call (s := sig.newer) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.condNull .here (by decide +kernel) (.undef .undef .string (by decide +kernel)) (.widen (.some .undef .string) (.field (.var .here) (.there (.there .here)) (by decide +kernel)))) (.cons (.var (.there ne.«stamp».«cur» (.there ne.«stamp».«this» (.there ne.«stamp».«aid» (.there ne.«stamp».«id» .here))))) .nil)))
+  (.stateSet (.there ne.«this».«cur» .here) (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.var (.there ne.«aid».«cur» (.there ne.«aid».«this» .here))) (.cons (.var (.there ne.«id».«cur» (.there ne.«id».«this» (.there ne.«id».«aid» .here)))) .nil))) (.record (.cons "aid" (.var (.there ne.«aid».«cur» (.there ne.«aid».«this» .here))) (.cons "id" (.var (.there ne.«id».«cur» (.there ne.«id».«this» (.there ne.«id».«aid» .here)))) (.cons "s" (.var (.there ne.«stamp».«cur» (.there ne.«stamp».«this» (.there ne.«stamp».«aid» (.there ne.«stamp».«id» .here))))) (.cons "present" (.var (.there ne.«present».«cur» (.there ne.«present».«this» (.there ne.«present».«aid» (.there ne.«present».«id» (.there ne.«present».«stamp» .here)))))) .nil)))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) .nil)))) (by decide +kernel))
   .nil)
   .nil
   (.retVoid (.there ne.«this».«cur» .here) .nil)))
 
-noncomputable def body.«albumItems» : TStmts [sig.«item», sig.«album», sig.«touchAlbum», sig.«totalList», sig.«usageList», sig.«usageOf», sig.«totalOf», sig.«add», sig.«total», sig.«track», sig.«packList», sig.«packOf», sig.«pack», sig.«markList», sig.«markOf», sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«albumItems».params sig.«albumItems».result :=
+noncomputable def body.albumItems : TStmts [sig.item, sig.album, sig.touchAlbum, sig.totalList, sig.usageList, sig.usageOf, sig.totalOf, sig.add, sig.total, sig.track, sig.packList, sig.packOf, sig.pack, sig.markList, sig.markOf, sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.albumItems.params sig.albumItems.result :=
   (.callVoid (.there (.there .here)) .here (.cons (.var (.there ne.«aid».«this» .here)) (.cons (.var (.there ne.«at».«this» (.there ne.«at».«aid» (.there ne.«at».«stamp» .here)))) .nil))
   (.forOf "id" (.var (.there ne.«add».«this» (.there ne.«add».«aid» (.there ne.«add».«stamp» (.there ne.«add».«at» .here)))))
   (.callVoid .here (.there ne.«this».«id» .here) (.cons (.var (.there ne.«aid».«id» (.there ne.«aid».«this» .here))) (.cons (.var .here) (.cons (.var (.there ne.«stamp».«id» (.there ne.«stamp».«this» (.there ne.«stamp».«aid» .here)))) (.cons (.bool true) .nil))))
@@ -927,46 +927,46 @@ noncomputable def body.«albumItems» : TStmts [sig.«item», sig.«album», sig
   .nil)
   (.retVoid .here .nil))))
 
-noncomputable def body.«albumList» : TStmts [sig.«albumItems», sig.«item», sig.«album», sig.«touchAlbum», sig.«totalList», sig.«usageList», sig.«usageOf», sig.«totalOf», sig.«add», sig.«total», sig.«track», sig.«packList», sig.«packOf», sig.«pack», sig.«markList», sig.«markOf», sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«albumList».params sig.«albumList».result :=
-  (.ret (.array (τ := ty.«AlbumRec») (.spreadValues .here (.there (.there (.there (.there (.there (.there (.there .here))))))) .nil)) .nil)
+noncomputable def body.albumList : TStmts [sig.albumItems, sig.item, sig.album, sig.touchAlbum, sig.totalList, sig.usageList, sig.usageOf, sig.totalOf, sig.add, sig.total, sig.track, sig.packList, sig.packOf, sig.pack, sig.markList, sig.markOf, sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.albumList.params sig.albumList.result :=
+  (.ret (.array (τ := ty.AlbumRec) (.spreadValues .here (.there (.there (.there (.there (.there (.there (.there .here))))))) .nil)) .nil)
 
-noncomputable def body.«itemList» : TStmts [sig.«albumList», sig.«albumItems», sig.«item», sig.«album», sig.«touchAlbum», sig.«totalList», sig.«usageList», sig.«usageOf», sig.«totalOf», sig.«add», sig.«total», sig.«track», sig.«packList», sig.«packOf», sig.«pack», sig.«markList», sig.«markOf», sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«itemList».params sig.«itemList».result :=
-  (.ret (.array (τ := ty.«AlbumItem») (.spreadValues .here (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) .nil)) .nil)
+noncomputable def body.itemList : TStmts [sig.albumList, sig.albumItems, sig.item, sig.album, sig.touchAlbum, sig.totalList, sig.usageList, sig.usageOf, sig.totalOf, sig.add, sig.total, sig.track, sig.packList, sig.packOf, sig.pack, sig.markList, sig.markOf, sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.itemList.params sig.itemList.result :=
+  (.ret (.array (τ := ty.AlbumItem) (.spreadValues .here (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) .nil)) .nil)
 
-noncomputable def body.«loadPlacement» : TStmts [sig.«itemList», sig.«albumList», sig.«albumItems», sig.«item», sig.«album», sig.«touchAlbum», sig.«totalList», sig.«usageList», sig.«usageOf», sig.«totalOf», sig.«add», sig.«total», sig.«track», sig.«packList», sig.«packOf», sig.«pack», sig.«markList», sig.«markOf», sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«loadPlacement».params sig.«loadPlacement».result :=
+noncomputable def body.loadPlacement : TStmts [sig.itemList, sig.albumList, sig.albumItems, sig.item, sig.album, sig.touchAlbum, sig.totalList, sig.usageList, sig.usageOf, sig.totalOf, sig.add, sig.total, sig.track, sig.packList, sig.packOf, sig.pack, sig.markList, sig.markOf, sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.loadPlacement.params sig.loadPlacement.result :=
   (.callVoid (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))) .here (.cons (.var (.there ne.«ref».«this» .here)) (.cons (.field (.var (.there ne.«e».«this» (.there ne.«e».«ref» .here))) .here (by decide +kernel)) (.cons (.var (.there ne.«e».«this» (.there ne.«e».«ref» .here))) .nil)))
   (.retVoid .here .nil))
 
-noncomputable def body.«loadMark» : TStmts [sig.«loadPlacement», sig.«itemList», sig.«albumList», sig.«albumItems», sig.«item», sig.«album», sig.«touchAlbum», sig.«totalList», sig.«usageList», sig.«usageOf», sig.«totalOf», sig.«add», sig.«total», sig.«track», sig.«packList», sig.«packOf», sig.«pack», sig.«markList», sig.«markOf», sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«loadMark».params sig.«loadMark».result :=
-  (.stateSet .here (.there (.there .here)) (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.field (.var (.there ne.«m».«this» .here)) .here (by decide +kernel)) (.cons (.field (.var (.there ne.«m».«this» .here)) (.there .here) (by decide +kernel)) .nil))) (.var (.there ne.«m».«this» .here))
+noncomputable def body.loadMark : TStmts [sig.loadPlacement, sig.itemList, sig.albumList, sig.albumItems, sig.item, sig.album, sig.touchAlbum, sig.totalList, sig.usageList, sig.usageOf, sig.totalOf, sig.add, sig.total, sig.track, sig.packList, sig.packOf, sig.pack, sig.markList, sig.markOf, sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.loadMark.params sig.loadMark.result :=
+  (.stateSet .here (.there (.there .here)) (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.field (.var (.there ne.«m».«this» .here)) .here (by decide +kernel)) (.cons (.field (.var (.there ne.«m».«this» .here)) (.there .here) (by decide +kernel)) .nil))) (.var (.there ne.«m».«this» .here))
   (.retVoid .here .nil))
 
-noncomputable def body.«loadPack» : TStmts [sig.«loadMark», sig.«loadPlacement», sig.«itemList», sig.«albumList», sig.«albumItems», sig.«item», sig.«album», sig.«touchAlbum», sig.«totalList», sig.«usageList», sig.«usageOf», sig.«totalOf», sig.«add», sig.«total», sig.«track», sig.«packList», sig.«packOf», sig.«pack», sig.«markList», sig.«markOf», sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«loadPack».params sig.«loadPack».result :=
+noncomputable def body.loadPack : TStmts [sig.loadMark, sig.loadPlacement, sig.itemList, sig.albumList, sig.albumItems, sig.item, sig.album, sig.touchAlbum, sig.totalList, sig.usageList, sig.usageOf, sig.totalOf, sig.add, sig.total, sig.track, sig.packList, sig.packOf, sig.pack, sig.markList, sig.markOf, sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.loadPack.params sig.loadPack.result :=
   (.stateSet .here (.there (.there (.there .here))) (by decide +kernel) (.field (.var (.there ne.«pk».«this» .here)) .here (by decide +kernel)) (.var (.there ne.«pk».«this» .here))
   (.retVoid .here .nil))
 
-noncomputable def body.«loadTotal» : TStmts [sig.«loadPack», sig.«loadMark», sig.«loadPlacement», sig.«itemList», sig.«albumList», sig.«albumItems», sig.«item», sig.«album», sig.«touchAlbum», sig.«totalList», sig.«usageList», sig.«usageOf», sig.«totalOf», sig.«add», sig.«total», sig.«track», sig.«packList», sig.«packOf», sig.«pack», sig.«markList», sig.«markOf», sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«loadTotal».params sig.«loadTotal».result :=
-  (.stateSet .here (.there (.there (.there (.there .here)))) (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.field (.var (.there ne.«t».«this» .here)) .here (by decide +kernel)) (.cons (.field (.var (.there ne.«t».«this» .here)) (.there .here) (by decide +kernel)) .nil))) (.cons (.field (.var (.there ne.«t».«this» .here)) (.there (.there .here)) (by decide +kernel)) .nil))) (.var (.there ne.«t».«this» .here))
+noncomputable def body.loadTotal : TStmts [sig.loadPack, sig.loadMark, sig.loadPlacement, sig.itemList, sig.albumList, sig.albumItems, sig.item, sig.album, sig.touchAlbum, sig.totalList, sig.usageList, sig.usageOf, sig.totalOf, sig.add, sig.total, sig.track, sig.packList, sig.packOf, sig.pack, sig.markList, sig.markOf, sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.loadTotal.params sig.loadTotal.result :=
+  (.stateSet .here (.there (.there (.there (.there .here)))) (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.field (.var (.there ne.«t».«this» .here)) .here (by decide +kernel)) (.cons (.field (.var (.there ne.«t».«this» .here)) (.there .here) (by decide +kernel)) .nil))) (.cons (.field (.var (.there ne.«t».«this» .here)) (.there (.there .here)) (by decide +kernel)) .nil))) (.var (.there ne.«t».«this» .here))
   (.callVoid (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))) .here (.cons (.field (.var (.there ne.«t».«this» .here)) .here (by decide +kernel)) (.cons (.field (.var (.there ne.«t».«this» .here)) (.there .here) (by decide +kernel)) (.cons (.field (.var (.there ne.«t».«this» .here)) (.there (.there .here)) (by decide +kernel)) (.cons (.bool true) .nil))))
   (.retVoid .here .nil)))
 
-noncomputable def body.«loadIncrements» : TStmts [sig.«loadTotal», sig.«loadPack», sig.«loadMark», sig.«loadPlacement», sig.«itemList», sig.«albumList», sig.«albumItems», sig.«item», sig.«album», sig.«touchAlbum», sig.«totalList», sig.«usageList», sig.«usageOf», sig.«totalOf», sig.«add», sig.«total», sig.«track», sig.«packList», sig.«packOf», sig.«pack», sig.«markList», sig.«markOf», sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«loadIncrements».params sig.«loadIncrements».result :=
-  (.stateSet .here (.there (.there (.there (.there (.there .here))))) (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.field (.var (.there ne.«i».«this» .here)) .here (by decide +kernel)) (.cons (.field (.var (.there ne.«i».«this» .here)) (.there .here) (by decide +kernel)) .nil))) (.var (.there ne.«i».«this» .here))
+noncomputable def body.loadIncrements : TStmts [sig.loadTotal, sig.loadPack, sig.loadMark, sig.loadPlacement, sig.itemList, sig.albumList, sig.albumItems, sig.item, sig.album, sig.touchAlbum, sig.totalList, sig.usageList, sig.usageOf, sig.totalOf, sig.add, sig.total, sig.track, sig.packList, sig.packOf, sig.pack, sig.markList, sig.markOf, sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.loadIncrements.params sig.loadIncrements.result :=
+  (.stateSet .here (.there (.there (.there (.there (.there .here))))) (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.field (.var (.there ne.«i».«this» .here)) .here (by decide +kernel)) (.cons (.field (.var (.there ne.«i».«this» .here)) (.there .here) (by decide +kernel)) .nil))) (.var (.there ne.«i».«this» .here))
   (.callVoid (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))) .here (.cons (.field (.var (.there ne.«i».«this» .here)) .here (by decide +kernel)) (.cons (.field (.var (.there ne.«i».«this» .here)) (.there .here) (by decide +kernel)) (.cons (.str (js "")) (.cons (.bool false) .nil))))
   (.retVoid .here .nil)))
 
-noncomputable def body.«loadAlbum» : TStmts [sig.«loadIncrements», sig.«loadTotal», sig.«loadPack», sig.«loadMark», sig.«loadPlacement», sig.«itemList», sig.«albumList», sig.«albumItems», sig.«item», sig.«album», sig.«touchAlbum», sig.«totalList», sig.«usageList», sig.«usageOf», sig.«totalOf», sig.«add», sig.«total», sig.«track», sig.«packList», sig.«packOf», sig.«pack», sig.«markList», sig.«markOf», sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«loadAlbum».params sig.«loadAlbum».result :=
+noncomputable def body.loadAlbum : TStmts [sig.loadIncrements, sig.loadTotal, sig.loadPack, sig.loadMark, sig.loadPlacement, sig.itemList, sig.albumList, sig.albumItems, sig.item, sig.album, sig.touchAlbum, sig.totalList, sig.usageList, sig.usageOf, sig.totalOf, sig.add, sig.total, sig.track, sig.packList, sig.packOf, sig.pack, sig.markList, sig.markOf, sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.loadAlbum.params sig.loadAlbum.result :=
   (.stateSet .here (.there (.there (.there (.there (.there (.there (.there .here))))))) (by decide +kernel) (.field (.var (.there ne.«a».«this» .here)) .here (by decide +kernel)) (.var (.there ne.«a».«this» .here))
   (.retVoid .here .nil))
 
-noncomputable def body.«loadItem» : TStmts [sig.«loadAlbum», sig.«loadIncrements», sig.«loadTotal», sig.«loadPack», sig.«loadMark», sig.«loadPlacement», sig.«itemList», sig.«albumList», sig.«albumItems», sig.«item», sig.«album», sig.«touchAlbum», sig.«totalList», sig.«usageList», sig.«usageOf», sig.«totalOf», sig.«add», sig.«total», sig.«track», sig.«packList», sig.«packOf», sig.«pack», sig.«markList», sig.«markOf», sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»] sig.«loadItem».params sig.«loadItem».result :=
-  (.stateSet .here (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) (by decide +kernel) (.call (s := sig.«key») (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.field (.var (.there ne.«i».«this» .here)) .here (by decide +kernel)) (.cons (.field (.var (.there ne.«i».«this» .here)) (.there .here) (by decide +kernel)) .nil))) (.var (.there ne.«i».«this» .here))
+noncomputable def body.loadItem : TStmts [sig.loadAlbum, sig.loadIncrements, sig.loadTotal, sig.loadPack, sig.loadMark, sig.loadPlacement, sig.itemList, sig.albumList, sig.albumItems, sig.item, sig.album, sig.touchAlbum, sig.totalList, sig.usageList, sig.usageOf, sig.totalOf, sig.add, sig.total, sig.track, sig.packList, sig.packOf, sig.pack, sig.markList, sig.markOf, sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key] sig.loadItem.params sig.loadItem.result :=
+  (.stateSet .here (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) (by decide +kernel) (.call (s := sig.key) (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))))))))))))) (by decide +kernel) (.cons (.field (.var (.there ne.«i».«this» .here)) .here (by decide +kernel)) (.cons (.field (.var (.there ne.«i».«this» .here)) (.there .here) (by decide +kernel)) .nil))) (.var (.there ne.«i».«this» .here))
   (.retVoid .here .nil))
 
-noncomputable abbrev sigs : Sigs := [sig.«loadItem», sig.«loadAlbum», sig.«loadIncrements», sig.«loadTotal», sig.«loadPack», sig.«loadMark», sig.«loadPlacement», sig.«itemList», sig.«albumList», sig.«albumItems», sig.«item», sig.«album», sig.«touchAlbum», sig.«totalList», sig.«usageList», sig.«usageOf», sig.«totalOf», sig.«add», sig.«total», sig.«track», sig.«packList», sig.«packOf», sig.«pack», sig.«markList», sig.«markOf», sig.«placedRefs», sig.«isPlaced», sig.«placements», sig.«mark», sig.«place», sig.«dropMarkBefore», sig.«put», sig.«providersOf», sig.«noteUnplace», sig.«new Registers», sig.«sum», sig.«highest», sig.«zero», sig.«larger», sig.«described», sig.«otherwise», sig.«given», sig.«before», sig.«newest», sig.«earlier», sig.«newer», sig.«byString», sig.«key»]
+noncomputable abbrev sigs : Sigs := [sig.loadItem, sig.loadAlbum, sig.loadIncrements, sig.loadTotal, sig.loadPack, sig.loadMark, sig.loadPlacement, sig.itemList, sig.albumList, sig.albumItems, sig.item, sig.album, sig.touchAlbum, sig.totalList, sig.usageList, sig.usageOf, sig.totalOf, sig.add, sig.total, sig.track, sig.packList, sig.packOf, sig.pack, sig.markList, sig.markOf, sig.placedRefs, sig.isPlaced, sig.placements, sig.mark, sig.place, sig.dropMarkBefore, sig.put, sig.providersOf, sig.noteUnplace, sig.«new Registers», sig.sum, sig.highest, sig.zero, sig.larger, sig.described, sig.otherwise, sig.given, sig.before, sig.newest, sig.earlier, sig.newer, sig.byString, sig.key]
 
 noncomputable def typed : TProgram sigs :=
-  (.cons sig.«loadItem» body.«loadItem» (.cons sig.«loadAlbum» body.«loadAlbum» (.cons sig.«loadIncrements» body.«loadIncrements» (.cons sig.«loadTotal» body.«loadTotal» (.cons sig.«loadPack» body.«loadPack» (.cons sig.«loadMark» body.«loadMark» (.cons sig.«loadPlacement» body.«loadPlacement» (.cons sig.«itemList» body.«itemList» (.cons sig.«albumList» body.«albumList» (.cons sig.«albumItems» body.«albumItems» (.cons sig.«item» body.«item» (.cons sig.«album» body.«album» (.cons sig.«touchAlbum» body.«touchAlbum» (.cons sig.«totalList» body.«totalList» (.cons sig.«usageList» body.«usageList» (.cons sig.«usageOf» body.«usageOf» (.cons sig.«totalOf» body.«totalOf» (.cons sig.«add» body.«add» (.cons sig.«total» body.«total» (.cons sig.«track» body.«track» (.cons sig.«packList» body.«packList» (.cons sig.«packOf» body.«packOf» (.cons sig.«pack» body.«pack» (.cons sig.«markList» body.«markList» (.cons sig.«markOf» body.«markOf» (.cons sig.«placedRefs» body.«placedRefs» (.cons sig.«isPlaced» body.«isPlaced» (.cons sig.«placements» body.«placements» (.cons sig.«mark» body.«mark» (.cons sig.«place» body.«place» (.cons sig.«dropMarkBefore» body.«dropMarkBefore» (.cons sig.«put» body.«put» (.cons sig.«providersOf» body.«providersOf» (.cons sig.«noteUnplace» body.«noteUnplace» (.cons sig.«new Registers» body.«new Registers» (.cons sig.«sum» body.«sum» (.cons sig.«highest» body.«highest» (.cons sig.«zero» body.«zero» (.cons sig.«larger» body.«larger» (.cons sig.«described» body.«described» (.cons sig.«otherwise» body.«otherwise» (.cons sig.«given» body.«given» (.cons sig.«before» body.«before» (.cons sig.«newest» body.«newest» (.cons sig.«earlier» body.«earlier» (.cons sig.«newer» body.«newer» (.cons sig.«byString» body.«byString» (.cons sig.«key» body.«key» .nil))))))))))))))))))))))))))))))))))))))))))))))))
+  (.cons sig.loadItem body.loadItem (.cons sig.loadAlbum body.loadAlbum (.cons sig.loadIncrements body.loadIncrements (.cons sig.loadTotal body.loadTotal (.cons sig.loadPack body.loadPack (.cons sig.loadMark body.loadMark (.cons sig.loadPlacement body.loadPlacement (.cons sig.itemList body.itemList (.cons sig.albumList body.albumList (.cons sig.albumItems body.albumItems (.cons sig.item body.item (.cons sig.album body.album (.cons sig.touchAlbum body.touchAlbum (.cons sig.totalList body.totalList (.cons sig.usageList body.usageList (.cons sig.usageOf body.usageOf (.cons sig.totalOf body.totalOf (.cons sig.add body.add (.cons sig.total body.total (.cons sig.track body.track (.cons sig.packList body.packList (.cons sig.packOf body.packOf (.cons sig.pack body.pack (.cons sig.markList body.markList (.cons sig.markOf body.markOf (.cons sig.placedRefs body.placedRefs (.cons sig.isPlaced body.isPlaced (.cons sig.placements body.placements (.cons sig.mark body.mark (.cons sig.place body.place (.cons sig.dropMarkBefore body.dropMarkBefore (.cons sig.put body.put (.cons sig.providersOf body.providersOf (.cons sig.noteUnplace body.noteUnplace (.cons sig.«new Registers» body.«new Registers» (.cons sig.sum body.sum (.cons sig.highest body.highest (.cons sig.zero body.zero (.cons sig.larger body.larger (.cons sig.described body.described (.cons sig.otherwise body.otherwise (.cons sig.given body.given (.cons sig.before body.before (.cons sig.newest body.newest (.cons sig.earlier body.earlier (.cons sig.newer body.newer (.cons sig.byString body.byString (.cons sig.key body.key .nil))))))))))))))))))))))))))))))))))))))))))))))))
 
 theorem erased : typed.erase = ast := by kernel_rfl
 
@@ -978,429 +978,432 @@ theorem wf : typed.WF := TProgram.wf_of typed erased bodies_ok ast_scoped
 
 /-! ## Readable definitions -/
 
-def «key» («a» : JSString) («b» : JSString) : JSString :=
-  («a» ++ ([0] : JSString)) ++ «b»
+def key (a : JSString) (b : JSString) : JSString :=
+  (a ++ ([0] : JSString)) ++ b
 
-def «byString» («a» : JSString) («b» : JSString) : Int :=
-  if Ariadne.strLt «a» «b» then (-(1 : Int)) else if Ariadne.strLt «b» «a» then (1 : Int) else (0 : Int)
+def byString (a : JSString) (b : JSString) : Int :=
+  if Ariadne.strLt a b then (-(1 : Int)) else if Ariadne.strLt b a then (1 : Int) else (0 : Int)
 
-def «newer» («s» : Option JSString) («stamp» : JSString) : Bool :=
-  match «s» with
+def newer (s : Option JSString) (stamp : JSString) : Bool :=
+  match s with
   | none =>
     true
-  | some «s» =>
-    («s» == (js "")) || (Ariadne.strLt «s» «stamp»)
+  | some s =>
+    (s == (js "")) || (Ariadne.strLt s stamp)
 
-def «earlier» («s» : Option JSString) («stamp» : JSString) : Bool :=
-  match «s» with
+def earlier (s : Option JSString) (stamp : JSString) : Bool :=
+  match s with
   | none =>
     true
-  | some «s» =>
-    («s» == (js "")) || (Ariadne.strLt «stamp» «s»)
+  | some s =>
+    (s == (js "")) || (Ariadne.strLt stamp s)
 
-def «newest» («s» : Option JSString) («stamp» : JSString) : JSString :=
-  match «s» with
+def newest (s : Option JSString) (stamp : JSString) : JSString :=
+  match s with
   | none =>
-    «stamp»
-  | some «s» =>
-    if («s» == (js "")) || (Ariadne.strLt «s» «stamp») then «stamp» else «s»
+    stamp
+  | some s =>
+    if (s == (js "")) || (Ariadne.strLt s stamp) then stamp else s
 
-def «before» («stamp» : JSString) («s» : Option JSString) : Bool :=
-  match «s» with
-  | none =>
-    false
-  | some «s» =>
-    («s» != (js "")) && (Ariadne.strLt «stamp» «s»)
-
-def «given» («s» : Option JSString) : Bool :=
-  match «s» with | none => false | some «s» => true
-
-def «otherwise» («s» : Option JSString) («fallback» : JSString) : JSString :=
-  match «s» with | none => «fallback» | some «s» => «s»
-
-def «described» («cur» : Option «Pack») («stamp» : JSString) («at» : Int) : Bool :=
-  match «cur» with
+def before (stamp : JSString) (s : Option JSString) : Bool :=
+  match s with
   | none =>
     false
-  | some «cur» =>
-    let «s» : Option JSString := «cur».«s»
-    match «s» with
+  | some s =>
+    (s != (js "")) && (Ariadne.strLt stamp s)
+
+def given (s : Option JSString) : Bool :=
+  match s with | none => false | some s => true
+
+def otherwise (s : Option JSString) (fallback : JSString) : JSString :=
+  match s with | none => fallback | some s => s
+
+def described (cur : Option Pack) (stamp : JSString) («at» : Int) : Bool :=
+  match cur with
+  | none =>
+    false
+  | some cur =>
+    let s : Option JSString := cur.s
+    match s with
     | none =>
-      decide («cur».«at» ≤ «at»)
-    | some «s» =>
-      if «s» == (js "") then decide («cur».«at» ≤ «at») else !(Ariadne.strLt «stamp» «s»)
+      decide (cur.«at» ≤ «at»)
+    | some s =>
+      if s == (js "") then decide (cur.«at» ≤ «at») else !(Ariadne.strLt stamp s)
 
-def «larger» («a» : Int) («b» : Int) : Int :=
-  if decide («a» > «b») then «a» else «b»
+def larger (a : Int) (b : Int) : Int :=
+  if decide (a > b) then a else b
 
-def «zero»  : «Counters» :=
-  («Counters».mk (0 : Int) (0 : Int) (0 : Int) (0 : Int) (0 : Int) (0 : Int) (0 : Int) (0 : Int) (0 : Int))
+def zero  : Counters :=
+  (Counters.mk (0 : Int) (0 : Int) (0 : Int) (0 : Int) (0 : Int) (0 : Int) (0 : Int) (0 : Int) (0 : Int))
 
-def «highest» («a» : «Counters») («b» : «Counters») : «Counters» :=
-  («Counters».mk («larger» «a».«put» «b».«put») («larger» «a».«get» «b».«get») («larger» «a».«list» «b».«list») («larger» «a».«head» «b».«head») («larger» «a».«delete» «b».«delete») («larger» «a».«copy» «b».«copy») («larger» «a».«restore» «b».«restore») («larger» «a».«ingress» «b».«ingress») («larger» «a».«egress» «b».«egress»))
+def highest (a : Counters) (b : Counters) : Counters :=
+  (Counters.mk (larger a.put b.put) (larger a.get b.get) (larger a.list b.list) (larger a.head b.head) (larger a.delete b.delete) (larger a.copy b.copy) (larger a.restore b.restore) (larger a.ingress b.ingress) (larger a.egress b.egress))
 
-def «sum» («a» : «Counters») («b» : «Counters») : «Counters» :=
-  («Counters».mk («a».«put» + «b».«put») («a».«get» + «b».«get») («a».«list» + «b».«list») («a».«head» + «b».«head») («a».«delete» + «b».«delete») («a».«copy» + «b».«copy») («a».«restore» + «b».«restore») («a».«ingress» + «b».«ingress») («a».«egress» + «b».«egress»))
+def sum (a : Counters) (b : Counters) : Counters :=
+  (Counters.mk (a.put + b.put) (a.get + b.get) (a.list + b.list) (a.head + b.head) (a.delete + b.delete) (a.copy + b.copy) (a.restore + b.restore) (a.ingress + b.ingress) (a.egress + b.egress))
 
 /-- The inputs on which `sum` stays within what the model covers. -/
-def «sum».safe («a» : «Counters») («b» : «Counters») : Bool :=
-  Ariadne.inRange («a».«put» + «b».«put») && (Ariadne.inRange («a».«get» + «b».«get») && (Ariadne.inRange («a».«list» + «b».«list») && (Ariadne.inRange («a».«head» + «b».«head») && (Ariadne.inRange («a».«delete» + «b».«delete») && (Ariadne.inRange («a».«copy» + «b».«copy») && (Ariadne.inRange («a».«restore» + «b».«restore») && (Ariadne.inRange («a».«ingress» + «b».«ingress») && Ariadne.inRange («a».«egress» + «b».«egress»))))))))
+def sum.safe (a : Counters) (b : Counters) : Bool :=
+  Ariadne.inRange (a.put + b.put) && (Ariadne.inRange (a.get + b.get) && (Ariadne.inRange (a.list + b.list) && (Ariadne.inRange (a.head + b.head) && (Ariadne.inRange (a.delete + b.delete) && (Ariadne.inRange (a.copy + b.copy) && (Ariadne.inRange (a.restore + b.restore) && (Ariadne.inRange (a.ingress + b.ingress) && Ariadne.inRange (a.egress + b.egress))))))))
 
-def «new Registers»  : «Registers» :=
-  («Registers».mk ([] : List (JSString × «Placed»)) ([] : List (JSString × List JSString)) ([] : List (JSString × «Mark»)) ([] : List (JSString × «Pack»)) ([] : List (JSString × «Total»)) ([] : List (JSString × «Increments»)) ([] : List (JSString × «Period»)) ([] : List (JSString × «AlbumRec»)) ([] : List (JSString × «AlbumItem»)))
+def «new Registers»  : Registers :=
+  (Registers.mk ([] : List (JSString × Placed)) ([] : List (JSString × List JSString)) ([] : List (JSString × Mark)) ([] : List (JSString × Pack)) ([] : List (JSString × Total)) ([] : List (JSString × Increments)) ([] : List (JSString × Period)) ([] : List (JSString × AlbumRec)) ([] : List (JSString × AlbumItem)))
 
-def «noteUnplace» («this» : «Registers») («ref» : JSString) («p» : JSString) («u» : JSString) : «Registers» :=
-  let «cur» : Option «Placed» := Ariadne.mapGet «this».«placed» («key» «ref» «p»)
-  match «cur» with
+def noteUnplace («this» : Registers) (ref : JSString) (p : JSString) (u : JSString) : Registers :=
+  let cur : Option Placed := Ariadne.mapGet «this».placed (key ref p)
+  match cur with
   | none =>
     «this»
-  | some «cur» =>
-    let «this» : «Registers» := «this».«withPlaced» (Ariadne.mapPut «this».«placed» («key» «ref» «p») ((«cur».«withU» (some «u»))))
+  | some cur =>
+    let «this» : Registers := «this».withPlaced (Ariadne.mapPut «this».placed (key ref p) ((cur.withU (some u))))
     «this»
 
-def «providersOf» («this» : «Registers») («ref» : JSString) : List JSString :=
-  let «ps» : Option (List JSString) := Ariadne.mapGet «this».«providers» «ref»
-  match «ps» with | none => [] | some «ps» => «ps»
+def providersOf («this» : Registers) (ref : JSString) : List JSString :=
+  let ps : Option (List JSString) := Ariadne.mapGet «this».providers ref
+  match ps with | none => [] | some ps => ps
 
-def «put» («this» : «Registers») («ref» : JSString) («p» : JSString) («e» : «Placed») : «Registers» :=
-  let after2' := fun («this», «ref», «p», «e», ()) =>
-    let «this» : «Registers» := «this».«withPlaced» (Ariadne.mapPut «this».«placed» («key» «ref» «p») «e»)
+def put («this» : Registers) (ref : JSString) (p : JSString) (e : Placed) : Registers :=
+  let after2' := fun («this», ref, p, e, ()) =>
+    let «this» : Registers := «this».withPlaced (Ariadne.mapPut «this».placed (key ref p) e)
     «this»
-  if !((Ariadne.mapGet «this».«placed» («key» «ref» «p»)).isSome) then
-    let «this» : «Registers» := «this».«withProviders» (Ariadne.mapPut «this».«providers» «ref» (Ariadne.sortedBy «byString» ((«providersOf» «this» «ref») ++ ([«p»]))))
-    after2' («this», «ref», «p», «e», ())
+  if !((Ariadne.mapGet «this».placed (key ref p)).isSome) then
+    let «this» : Registers := «this».withProviders (Ariadne.mapPut «this».providers ref (Ariadne.sortedBy byString ((providersOf «this» ref) ++ ([p]))))
+    after2' («this», ref, p, e, ())
   else
-    after2' («this», «ref», «p», «e», ())
+    after2' («this», ref, p, e, ())
 
 /-- The inputs on which `put` stays within what the model covers. -/
-def «put».safe («this» : «Registers») («ref» : JSString) («p» : JSString) («e» : «Placed») : Bool :=
-  let after2' := fun («this», «ref», «p», «e», ()) =>
-    let «this» : «Registers» := «this».«withPlaced» (Ariadne.mapPut «this».«placed» («key» «ref» «p») «e»)
+def put.safe («this» : Registers) (ref : JSString) (p : JSString) (e : Placed) : Bool :=
+  let after2' := fun («this», ref, p, e, ()) =>
+    let «this» : Registers := «this».withPlaced (Ariadne.mapPut «this».placed (key ref p) e)
     true
-  if !((Ariadne.mapGet «this».«placed» («key» «ref» «p»)).isSome) then
-    Ariadne.consistent (Ariadne.signs «byString» ((«providersOf» «this» «ref») ++ ([«p»]))) && (let «this» : «Registers» := «this».«withProviders» (Ariadne.mapPut «this».«providers» «ref» (Ariadne.sortedBy «byString» ((«providersOf» «this» «ref») ++ ([«p»]))))
-    after2' («this», «ref», «p», «e», ()))
+  if !((Ariadne.mapGet «this».placed (key ref p)).isSome) then
+    Ariadne.consistent (Ariadne.signs byString ((providersOf «this» ref) ++ ([p]))) && (let «this» : Registers := «this».withProviders (Ariadne.mapPut «this».providers ref (Ariadne.sortedBy byString ((providersOf «this» ref) ++ ([p]))))
+    after2' («this», ref, p, e, ()))
   else
-    after2' («this», «ref», «p», «e», ())
+    after2' («this», ref, p, e, ())
 
-def «dropMarkBefore» («this» : «Registers») («ref» : JSString) («p» : JSString) («u» : Option JSString) : «Registers» :=
-  match «u» with
+def dropMarkBefore («this» : Registers) (ref : JSString) (p : JSString) (u : Option JSString) : Registers :=
+  match u with
   | none =>
     «this»
-  | some «u» =>
-    let «mark» : Option «Mark» := Ariadne.mapGet «this».«marks» («key» «ref» «p»)
-    match «mark» with
+  | some u =>
+    let mark : Option Mark := Ariadne.mapGet «this».marks (key ref p)
+    match mark with
     | none =>
       «this»
-    | some «mark» =>
-      if («u» == (js "")) || (Ariadne.strLt «u» «mark».«s») then
+    | some mark =>
+      if (u == (js "")) || (Ariadne.strLt u mark.s) then
         «this»
       else
-        let «this» : «Registers» := «this».«withMarks» (Ariadne.mapDel «this».«marks» («key» «ref» «p»))
+        let «this» : Registers := «this».withMarks (Ariadne.mapDel «this».marks (key ref p))
         «this»
 
-def «place» («this» : «Registers») («ref» : JSString) («p» : JSString) («placed» : Bool) («cls» : JSString) («stamp» : JSString) («at» : Int) : «Registers» :=
-  let «cur» : Option «Placed» := Ariadne.mapGet «this».«placed» («key» «ref» «p»)
-  let «seen» : Option JSString := match «cur» with | none => none | some «cur» => «cur».«u»
-  let «u» : Option JSString := if «placed» then «seen» else some («newest» «seen» «stamp»)
-  let «this» : «Registers» := «dropMarkBefore» «this» «ref» «p» «u»
-  if !(«newer» (match «cur» with | none => none | some «cur» => some «cur».«s») «stamp») then
+def place («this» : Registers) (ref : JSString) (p : JSString) (placed : Bool) (cls : JSString) (stamp : JSString) («at» : Int) : Registers :=
+  let cur : Option Placed := Ariadne.mapGet «this».placed (key ref p)
+  let seen : Option JSString := match cur with | none => none | some cur => cur.u
+  let u : Option JSString := if placed then seen else some (newest seen stamp)
+  let «this» : Registers := dropMarkBefore «this» ref p u
+  if !(newer (match cur with | none => none | some cur => some cur.s) stamp) then
     let after4' := fun (_, _, _, «this», _, _, _, _, _, _, ()) =>
       «this»
-    if !«placed» then
-      let «this» : «Registers» := «noteUnplace» «this» «ref» «p» («newest» «seen» «stamp»)
-      after4' («u», «seen», «cur», «this», «ref», «p», «placed», «cls», «stamp», «at», ())
+    if !placed then
+      let «this» : Registers := noteUnplace «this» ref p (newest seen stamp)
+      after4' (u, seen, cur, «this», ref, p, placed, cls, stamp, «at», ())
     else
-      after4' («u», «seen», «cur», «this», «ref», «p», «placed», «cls», «stamp», «at», ())
+      after4' (u, seen, cur, «this», ref, p, placed, cls, stamp, «at», ())
   else
     let after4' := fun (_, _, _, «this», _, _, _, _, _, _, ()) =>
       «this»
-    if «placed» then
-      let «this» : «Registers» := «put» «this» «ref» «p» («Placed».mk «p» «cls» «at» «stamp» false «u»)
-      after4' («u», «seen», «cur», «this», «ref», «p», «placed», «cls», «stamp», «at», ())
+    if placed then
+      let «this» : Registers := put «this» ref p (Placed.mk p cls «at» stamp false u)
+      after4' (u, seen, cur, «this», ref, p, placed, cls, stamp, «at», ())
     else
-      let «this» : «Registers» := «put» «this» «ref» «p» («Placed».mk «p» (js "") «at» «stamp» true «u»)
-      after4' («u», «seen», «cur», «this», «ref», «p», «placed», «cls», «stamp», «at», ())
+      let «this» : Registers := put «this» ref p (Placed.mk p (js "") «at» stamp true u)
+      after4' (u, seen, cur, «this», ref, p, placed, cls, stamp, «at», ())
 
 /-- The inputs on which `place` stays within what the model covers. -/
-def «place».safe («this» : «Registers») («ref» : JSString) («p» : JSString) («placed» : Bool) («cls» : JSString) («stamp» : JSString) («at» : Int) : Bool :=
-  let «cur» : Option «Placed» := Ariadne.mapGet «this».«placed» («key» «ref» «p»)
-  let «seen» : Option JSString := match «cur» with | none => none | some «cur» => «cur».«u»
-  let «u» : Option JSString := if «placed» then «seen» else some («newest» «seen» «stamp»)
-  let «this» : «Registers» := «dropMarkBefore» «this» «ref» «p» «u»
-  if !(«newer» (match «cur» with | none => none | some «cur» => some «cur».«s») «stamp») then
-    let after4' := fun _ =>
+def place.safe («this» : Registers) (ref : JSString) (p : JSString) (placed : Bool) (cls : JSString) (stamp : JSString) («at» : Int) : Bool :=
+  let cur : Option Placed := Ariadne.mapGet «this».placed (key ref p)
+  let seen : Option JSString := match cur with | none => none | some cur => cur.u
+  let u : Option JSString := if placed then seen else some (newest seen stamp)
+  let «this» : Registers := dropMarkBefore «this» ref p u
+  if !(newer (match cur with | none => none | some cur => some cur.s) stamp) then
+    let after4' := fun (u, _, _, _, _, _, _, _, _, _, ()) =>
       true
-    if !«placed» then
-      let «this» : «Registers» := «noteUnplace» «this» «ref» «p» («newest» «seen» «stamp»)
-      after4' («u», «seen», «cur», «this», «ref», «p», «placed», «cls», «stamp», «at», ())
+    if !placed then
+      let «this» : Registers := noteUnplace «this» ref p (newest seen stamp)
+      after4' (u, seen, cur, «this», ref, p, placed, cls, stamp, «at», ())
     else
-      after4' («u», «seen», «cur», «this», «ref», «p», «placed», «cls», «stamp», «at», ())
+      after4' (u, seen, cur, «this», ref, p, placed, cls, stamp, «at», ())
   else
-    let after4' := fun _ =>
+    let after4' := fun (u, _, _, _, _, _, _, _, _, _, ()) =>
       true
-    if «placed» then
-      «put».safe «this» «ref» «p» («Placed».mk «p» «cls» «at» «stamp» false «u») && (let «this» : «Registers» := «put» «this» «ref» «p» («Placed».mk «p» «cls» «at» «stamp» false «u»)
-      after4' («u», «seen», «cur», «this», «ref», «p», «placed», «cls», «stamp», «at», ()))
+    if placed then
+      put.safe «this» ref p (Placed.mk p cls «at» stamp false u) && (let «this» : Registers := put «this» ref p (Placed.mk p cls «at» stamp false u)
+      after4' (u, seen, cur, «this», ref, p, placed, cls, stamp, «at», ()))
     else
-      «put».safe «this» «ref» «p» («Placed».mk «p» (js "") «at» «stamp» true «u») && (let «this» : «Registers» := «put» «this» «ref» «p» («Placed».mk «p» (js "") «at» «stamp» true «u»)
-      after4' («u», «seen», «cur», «this», «ref», «p», «placed», «cls», «stamp», «at», ()))
+      put.safe «this» ref p (Placed.mk p (js "") «at» stamp true u) && (let «this» : Registers := put «this» ref p (Placed.mk p (js "") «at» stamp true u)
+      after4' (u, seen, cur, «this», ref, p, placed, cls, stamp, «at», ()))
 
-def «mark» («this» : «Registers») («ref» : JSString) («p» : JSString) («on» : Bool) («reason» : Option JSString) («stamp» : JSString) («at» : Int) : «Registers» :=
-  let «placed» : Option «Placed» := Ariadne.mapGet «this».«placed» («key» «ref» «p»)
-  if «before» «stamp» (match «placed» with | none => none | some «placed» => «placed».«u») then
+def mark («this» : Registers) (ref : JSString) (p : JSString) (on : Bool) (reason : Option JSString) (stamp : JSString) («at» : Int) : Registers :=
+  let placed : Option Placed := Ariadne.mapGet «this».placed (key ref p)
+  if before stamp (match placed with | none => none | some placed => placed.u) then
     «this»
   else
-    let «cur» : Option «Mark» := Ariadne.mapGet «this».«marks» («key» «ref» «p»)
-    if !(«newer» (match «cur» with | none => none | some «cur» => some «cur».«s») «stamp») then
+    let cur : Option Mark := Ariadne.mapGet «this».marks (key ref p)
+    if !(newer (match cur with | none => none | some cur => some cur.s) stamp) then
       «this»
     else
-      let «this» : «Registers» := «this».«withMarks» (Ariadne.mapPut «this».«marks» («key» «ref» «p») («Mark».mk «ref» «p» «at» «stamp» «on» «reason»))
+      let «this» : Registers := «this».withMarks (Ariadne.mapPut «this».marks (key ref p) (Mark.mk ref p «at» stamp on reason))
       «this»
 
-def «placements» («this» : «Registers») («ref» : JSString) : List «Placed» :=
-  let «out» : List «Placed» := []
-  Ariadne.forIn («providersOf» «this» «ref») (fun «p» next2' exit2' («out», «this», «ref», ()) =>
-    let «e» : Option «Placed» := Ariadne.mapGet «this».«placed» («key» «ref» «p»)
-    match «e» with
+def placements («this» : Registers) (ref : JSString) : List Placed :=
+  let out : List Placed := []
+  Ariadne.forIn (providersOf «this» ref) (fun p next2' exit2' (out, «this», ref, ()) =>
+    let e : Option Placed := Ariadne.mapGet «this».placed (key ref p)
+    match e with
     | none =>
-      next2' («out», «this», «ref», ())
-    | some «e» =>
-      let «out» : List «Placed» := «out» ++ ([«e»])
-      next2' («out», «this», «ref», ()))
-    (fun («out», _, _, ()) =>
-    «out»)
-    («out», «this», «ref», ())
+      next2' (out, «this», ref, ())
+    | some e =>
+      let out : List Placed := out ++ ([e])
+      let e := some e
+      next2' (out, «this», ref, ()))
+    (fun (out, _, _, ()) =>
+    out)
+    (out, «this», ref, ())
 
-def «isPlaced» («this» : «Registers») («ref» : JSString) : Bool :=
-  (Ariadne.mapGet «this».«providers» «ref»).isSome
+def isPlaced («this» : Registers) (ref : JSString) : Bool :=
+  (Ariadne.mapGet «this».providers ref).isSome
 
-def «placedRefs» («this» : «Registers») : List JSString :=
-  (List.map Prod.fst «this».«providers») ++ ([])
+def placedRefs («this» : Registers) : List JSString :=
+  («this».providers.map Prod.fst) ++ ([])
 
-def «markOf» («this» : «Registers») («ref» : JSString) («p» : JSString) : Option «Mark» :=
-  Ariadne.mapGet «this».«marks» («key» «ref» «p»)
+def markOf («this» : Registers) (ref : JSString) (p : JSString) : Option Mark :=
+  Ariadne.mapGet «this».marks (key ref p)
 
-def «markList» («this» : «Registers») : List «Mark» :=
-  (List.map Prod.snd «this».«marks») ++ ([])
+def markList («this» : Registers) : List Mark :=
+  («this».marks.map Prod.snd) ++ ([])
 
-def «pack» («this» : «Registers») («id» : JSString) («size» : Int) («csize» : Int) («stamp» : JSString) («at» : Int) («hn» : Option JSString) : «Registers» :=
-  if «described» (Ariadne.mapGet «this».«packs» «id») «stamp» «at» then
+def pack («this» : Registers) (id : JSString) (size : Int) (csize : Int) (stamp : JSString) («at» : Int) (hn : Option JSString) : Registers :=
+  if described (Ariadne.mapGet «this».packs id) stamp «at» then
     «this»
   else
-    let «this» : «Registers» := «this».«withPacks» (Ariadne.mapPut «this».«packs» «id» («Pack».mk «id» «size» «csize» «at» (some «stamp») «hn»))
+    let «this» : Registers := «this».withPacks (Ariadne.mapPut «this».packs id (Pack.mk id size csize «at» (some stamp) hn))
     «this»
 
-def «packOf» («this» : «Registers») («id» : JSString) : Option «Pack» :=
-  Ariadne.mapGet «this».«packs» «id»
+def packOf («this» : Registers) (id : JSString) : Option Pack :=
+  Ariadne.mapGet «this».packs id
 
-def «packList» («this» : «Registers») : List «Pack» :=
-  (List.map Prod.snd «this».«packs») ++ ([])
+def packList («this» : Registers) : List Pack :=
+  («this».packs.map Prod.snd) ++ ([])
 
-def «track» («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («total» : Bool) : «Registers» :=
-  let «cur» : Option «Period» := Ariadne.mapGet «this».«periods» («key» «p» «month»)
-  let «devices» : List JSString := match «cur» with | none => [] | some «cur» => «cur».«devices»
+def track («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (total : Bool) : Registers :=
+  let cur : Option Period := Ariadne.mapGet «this».periods (key p month)
+  let devices : List JSString := match cur with | none => [] | some cur => cur.devices
   let after2' := fun (_, _, «this», _, _, _, _, ()) =>
     «this»
-  if «total» && (!(List.any «devices» (fun y' => y' == «device»))) then
-    let «this» : «Registers» := «this».«withPeriods» (Ariadne.mapPut «this».«periods» («key» «p» «month») («Period».mk «p» «month» (Ariadne.sortedBy «byString» («devices» ++ ([«device»])))))
-    after2' («devices», «cur», «this», «p», «month», «device», «total», ())
+  if total && (!(devices.any (· == device))) then
+    let «this» : Registers := «this».withPeriods (Ariadne.mapPut «this».periods (key p month) (Period.mk p month (Ariadne.sortedBy byString (devices ++ ([device])))))
+    after2' (devices, cur, «this», p, month, device, total, ())
   else
-    if !((Ariadne.mapGet «this».«periods» («key» «p» «month»)).isSome) then
-      let «this» : «Registers» := «this».«withPeriods» (Ariadne.mapPut «this».«periods» («key» «p» «month») («Period».mk «p» «month» «devices»))
-      after2' («devices», «cur», «this», «p», «month», «device», «total», ())
+    if !((Ariadne.mapGet «this».periods (key p month)).isSome) then
+      let «this» : Registers := «this».withPeriods (Ariadne.mapPut «this».periods (key p month) (Period.mk p month devices))
+      after2' (devices, cur, «this», p, month, device, total, ())
     else
-      after2' («devices», «cur», «this», «p», «month», «device», «total», ())
+      after2' (devices, cur, «this», p, month, device, total, ())
 
 /-- The inputs on which `track` stays within what the model covers. -/
-def «track».safe («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («total» : Bool) : Bool :=
-  let «cur» : Option «Period» := Ariadne.mapGet «this».«periods» («key» «p» «month»)
-  let «devices» : List JSString := match «cur» with | none => [] | some «cur» => «cur».«devices»
+def track.safe («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (total : Bool) : Bool :=
+  let cur : Option Period := Ariadne.mapGet «this».periods (key p month)
+  let devices : List JSString := match cur with | none => [] | some cur => cur.devices
   let after2' := fun _ =>
     true
-  if «total» && (!(List.any «devices» (fun y' => y' == «device»))) then
-    Ariadne.consistent (Ariadne.signs «byString» («devices» ++ ([«device»]))) && (let «this» : «Registers» := «this».«withPeriods» (Ariadne.mapPut «this».«periods» («key» «p» «month») («Period».mk «p» «month» (Ariadne.sortedBy «byString» («devices» ++ ([«device»])))))
-    after2' («devices», «cur», «this», «p», «month», «device», «total», ()))
+  if total && (!(devices.any (· == device))) then
+    Ariadne.consistent (Ariadne.signs byString (devices ++ ([device]))) && (let «this» : Registers := «this».withPeriods (Ariadne.mapPut «this».periods (key p month) (Period.mk p month (Ariadne.sortedBy byString (devices ++ ([device])))))
+    after2' (devices, cur, «this», p, month, device, total, ()))
   else
-    if !((Ariadne.mapGet «this».«periods» («key» «p» «month»)).isSome) then
-      let «this» : «Registers» := «this».«withPeriods» (Ariadne.mapPut «this».«periods» («key» «p» «month») («Period».mk «p» «month» «devices»))
-      after2' («devices», «cur», «this», «p», «month», «device», «total», ())
+    if !((Ariadne.mapGet «this».periods (key p month)).isSome) then
+      let «this» : Registers := «this».withPeriods (Ariadne.mapPut «this».periods (key p month) (Period.mk p month devices))
+      after2' (devices, cur, «this», p, month, device, total, ())
     else
-      after2' («devices», «cur», «this», «p», «month», «device», «total», ())
+      after2' (devices, cur, «this», p, month, device, total, ())
 
-def «total» («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («c» : «Counters») : «Registers» :=
-  let «cur» : Option «Total» := Ariadne.mapGet «this».«totals» («key» («key» «p» «month») «device»)
-  let «this» : «Registers» := «this».«withTotals» (Ariadne.mapPut «this».«totals» («key» («key» «p» «month») «device») («Total».mk «p» «month» «device» («highest» (match «cur» with | none => «zero» | some «cur» => «cur».«c») «c»)))
-  let «this» : «Registers» := «track» «this» «p» «month» «device» true
+def total («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (c : Counters) : Registers :=
+  let cur : Option Total := Ariadne.mapGet «this».totals (key (key p month) device)
+  let «this» : Registers := «this».withTotals (Ariadne.mapPut «this».totals (key (key p month) device) (Total.mk p month device (highest (match cur with | none => zero | some cur => cur.c) c)))
+  let «this» : Registers := track «this» p month device true
   «this»
 
 /-- The inputs on which `total` stays within what the model covers. -/
-def «total».safe («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («c» : «Counters») : Bool :=
-  let «cur» : Option «Total» := Ariadne.mapGet «this».«totals» («key» («key» «p» «month») «device»)
-  let «this» : «Registers» := «this».«withTotals» (Ariadne.mapPut «this».«totals» («key» («key» «p» «month») «device») («Total».mk «p» «month» «device» («highest» (match «cur» with | none => «zero» | some «cur» => «cur».«c») «c»)))
-  «track».safe «this» «p» «month» «device» true && (let «this» : «Registers» := «track» «this» «p» «month» «device» true
+def total.safe («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (c : Counters) : Bool :=
+  let cur : Option Total := Ariadne.mapGet «this».totals (key (key p month) device)
+  let «this» : Registers := «this».withTotals (Ariadne.mapPut «this».totals (key (key p month) device) (Total.mk p month device (highest (match cur with | none => zero | some cur => cur.c) c)))
+  track.safe «this» p month device true && (let «this» : Registers := track «this» p month device true
   true)
 
-def «add» («this» : «Registers») («p» : JSString) («month» : JSString) («c» : «Counters») : «Registers» :=
-  let «cur» : Option «Increments» := Ariadne.mapGet «this».«increments» («key» «p» «month»)
-  let «this» : «Registers» := «this».«withIncrements» (Ariadne.mapPut «this».«increments» («key» «p» «month») («Increments».mk «p» «month» («sum» (match «cur» with | none => «zero» | some «cur» => «cur».«c») «c»)))
-  let «this» : «Registers» := «track» «this» «p» «month» (js "") false
+def add («this» : Registers) (p : JSString) (month : JSString) (c : Counters) : Registers :=
+  let cur : Option Increments := Ariadne.mapGet «this».increments (key p month)
+  let «this» : Registers := «this».withIncrements (Ariadne.mapPut «this».increments (key p month) (Increments.mk p month (sum (match cur with | none => zero | some cur => cur.c) c)))
+  let «this» : Registers := track «this» p month (js "") false
   «this»
 
 /-- The inputs on which `add` stays within what the model covers. -/
-def «add».safe («this» : «Registers») («p» : JSString) («month» : JSString) («c» : «Counters») : Bool :=
-  let «cur» : Option «Increments» := Ariadne.mapGet «this».«increments» («key» «p» «month»)
-  («sum».safe (match «cur» with | none => «zero» | some «cur» => «cur».«c») «c») && (let «this» : «Registers» := «this».«withIncrements» (Ariadne.mapPut «this».«increments» («key» «p» «month») («Increments».mk «p» «month» («sum» (match «cur» with | none => «zero» | some «cur» => «cur».«c») «c»)))
-  «track».safe «this» «p» «month» (js "") false && (let «this» : «Registers» := «track» «this» «p» «month» (js "") false
+def add.safe («this» : Registers) (p : JSString) (month : JSString) (c : Counters) : Bool :=
+  let cur : Option Increments := Ariadne.mapGet «this».increments (key p month)
+  (sum.safe (match cur with | none => zero | some cur => cur.c) c) && (let «this» : Registers := «this».withIncrements (Ariadne.mapPut «this».increments (key p month) (Increments.mk p month (sum (match cur with | none => zero | some cur => cur.c) c)))
+  track.safe «this» p month (js "") false && (let «this» : Registers := track «this» p month (js "") false
   true))
 
-def «totalOf» («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) : «Counters» :=
-  let «t» : Option «Total» := Ariadne.mapGet «this».«totals» («key» («key» «p» «month») «device»)
-  match «t» with | none => «zero» | some «t» => «t».«c»
+def totalOf («this» : Registers) (p : JSString) (month : JSString) (device : JSString) : Counters :=
+  let t : Option Total := Ariadne.mapGet «this».totals (key (key p month) device)
+  match t with | none => zero | some t => t.c
 
-def «usageOf» («this» : «Registers») («p» : JSString) («month» : JSString) : «Counters» :=
-  let «inc» : Option «Increments» := Ariadne.mapGet «this».«increments» («key» «p» «month»)
-  let «out» : «Counters» := match «inc» with | none => «zero» | some «inc» => «inc».«c»
-  let «period» : Option «Period» := Ariadne.mapGet «this».«periods» («key» «p» «month»)
-  match «period» with
+def usageOf («this» : Registers) (p : JSString) (month : JSString) : Counters :=
+  let inc : Option Increments := Ariadne.mapGet «this».increments (key p month)
+  let out : Counters := match inc with | none => zero | some inc => inc.c
+  let period : Option Period := Ariadne.mapGet «this».periods (key p month)
+  match period with
   | none =>
-    «out»
-  | some «period» =>
-    Ariadne.forIn «period».«devices» (fun «d» next4' exit4' («period», «out», «inc», «this», «p», «month», ()) =>
-      let «t» : Option «Total» := Ariadne.mapGet «this».«totals» («key» («key» «p» «month») «d»)
-      match «t» with
+    out
+  | some period =>
+    Ariadne.forIn period.devices (fun d next4' exit4' (period, out, inc, «this», p, month, ()) =>
+      let t : Option Total := Ariadne.mapGet «this».totals (key (key p month) d)
+      match t with
       | none =>
-        next4' («period», «out», «inc», «this», «p», «month», ())
-      | some «t» =>
-        let «out» : «Counters» := «sum» «out» «t».«c»
-        next4' («period», «out», «inc», «this», «p», «month», ()))
-      (fun (_, «out», _, _, _, _, ()) =>
-      «out»)
-      («period», «out», «inc», «this», «p», «month», ())
+        next4' (period, out, inc, «this», p, month, ())
+      | some t =>
+        let out : Counters := sum out t.c
+        let t := some t
+        next4' (period, out, inc, «this», p, month, ()))
+      (fun (_, out, _, _, _, _, ()) =>
+      out)
+      (period, out, inc, «this», p, month, ())
 
 /-- The inputs on which `usageOf` stays within what the model covers. -/
-def «usageOf».safe («this» : «Registers») («p» : JSString) («month» : JSString) : Bool :=
-  let «inc» : Option «Increments» := Ariadne.mapGet «this».«increments» («key» «p» «month»)
-  let «out» : «Counters» := match «inc» with | none => «zero» | some «inc» => «inc».«c»
-  let «period» : Option «Period» := Ariadne.mapGet «this».«periods» («key» «p» «month»)
-  match «period» with
+def usageOf.safe («this» : Registers) (p : JSString) (month : JSString) : Bool :=
+  let inc : Option Increments := Ariadne.mapGet «this».increments (key p month)
+  let out : Counters := match inc with | none => zero | some inc => inc.c
+  let period : Option Period := Ariadne.mapGet «this».periods (key p month)
+  match period with
   | none =>
     true
-  | some «period» =>
-    Ariadne.forIn «period».«devices» (fun «d» next4' exit4' («period», «out», «inc», «this», «p», «month», ()) =>
-      let «t» : Option «Total» := Ariadne.mapGet «this».«totals» («key» («key» «p» «month») «d»)
-      match «t» with
+  | some period =>
+    Ariadne.forIn period.devices (fun d next4' exit4' (period, out, inc, «this», p, month, ()) =>
+      let t : Option Total := Ariadne.mapGet «this».totals (key (key p month) d)
+      match t with
       | none =>
-        next4' («period», «out», «inc», «this», «p», «month», ())
-      | some «t» =>
-        «sum».safe «out» «t».«c» && (let «out» : «Counters» := «sum» «out» «t».«c»
-        next4' («period», «out», «inc», «this», «p», «month», ())))
+        next4' (period, out, inc, «this», p, month, ())
+      | some t =>
+        sum.safe out t.c && (let out : Counters := sum out t.c
+        let t := some t
+        next4' (period, out, inc, «this», p, month, ())))
       (fun _ =>
       true)
-      («period», «out», «inc», «this», «p», «month», ())
+      (period, out, inc, «this», p, month, ())
 
-def «usageList» («this» : «Registers») : List «Increments» :=
-  List.map (fun «x» => («Increments».mk «x».«p» «x».«month» («usageOf» «this» «x».«p» «x».«month»))) ((List.map Prod.snd «this».«periods») ++ ([]))
+def usageList («this» : Registers) : List Increments :=
+  List.map (fun x => (Increments.mk x.p x.month (usageOf «this» x.p x.month))) ((«this».periods.map Prod.snd) ++ ([]))
 
 /-- The inputs on which `usageList` stays within what the model covers. -/
-def «usageList».safe («this» : «Registers») : Bool :=
-  List.all ((List.map Prod.snd «this».«periods») ++ ([])) (fun «x» => «usageOf».safe «this» «x».«p» «x».«month»)
+def usageList.safe («this» : Registers) : Bool :=
+  List.all ((«this».periods.map Prod.snd) ++ ([])) (fun x => usageOf.safe «this» x.p x.month)
 
-def «totalList» («this» : «Registers») : List «Total» :=
-  (List.map Prod.snd «this».«totals») ++ ([])
+def totalList («this» : Registers) : List Total :=
+  («this».totals.map Prod.snd) ++ ([])
 
-def «touchAlbum» («this» : «Registers») («aid» : JSString) («at» : Int) : «Registers» :=
-  let «a» : Option «AlbumRec» := Ariadne.mapGet «this».«albums» «aid»
-  let «this» : «Registers» := «this».«withAlbums» (Ariadne.mapPut «this».«albums» «aid» (match «a» with | none => («AlbumRec».mk «aid» (js "Untitled album") «at» none none none none) | some «a» => if decide («at» < «a».«created») then («a».«withCreated» «at») else «a»))
+def touchAlbum («this» : Registers) (aid : JSString) («at» : Int) : Registers :=
+  let a : Option AlbumRec := Ariadne.mapGet «this».albums aid
+  let «this» : Registers := «this».withAlbums (Ariadne.mapPut «this».albums aid (match a with | none => (AlbumRec.mk aid (js "Untitled album") «at» none none none none) | some a => if decide («at» < a.created) then (a.withCreated «at») else a))
   «this»
 
-def «album» («this» : «Registers») («aid» : JSString) («stamp» : JSString) («at» : Int) («name» : Option JSString) («cover» : Option JSString) («deleted» : Bool) : «Registers» :=
-  let «this» : «Registers» := «touchAlbum» «this» «aid» «at»
-  let «a» : Option «AlbumRec» := Ariadne.mapGet «this».«albums» «aid»
-  match «a» with
+def album («this» : Registers) (aid : JSString) (stamp : JSString) («at» : Int) (name : Option JSString) (cover : Option JSString) (deleted : Bool) : Registers :=
+  let «this» : Registers := touchAlbum «this» aid «at»
+  let a : Option AlbumRec := Ariadne.mapGet «this».albums aid
+  match a with
   | none =>
     «this»
-  | some «a» =>
-    let «renamed» : Bool := («given» «name») && («newer» «a».«nameS» «stamp»)
-    let «covered» : Bool := («given» «cover») && («newer» «a».«coverS» «stamp»)
-    let «this» : «Registers» := «this».«withAlbums» (Ariadne.mapPut «this».«albums» «aid» ((((((«a».«withName» (if «renamed» then «otherwise» «name» «a».«name» else «a».«name»)).«withNameS» (if «renamed» then some «stamp» else «a».«nameS»)).«withCover» (if «covered» then «cover» else «a».«cover»)).«withCoverS» (if «covered» then some «stamp» else «a».«coverS»)).«withDeleted» (if «deleted» && («earlier» «a».«deleted» «stamp») then some «stamp» else «a».«deleted»))))
+  | some a =>
+    let renamed : Bool := (given name) && (newer a.nameS stamp)
+    let covered : Bool := (given cover) && (newer a.coverS stamp)
+    let «this» : Registers := «this».withAlbums (Ariadne.mapPut «this».albums aid ((((((a.withName (if renamed then otherwise name a.name else a.name)).withNameS (if renamed then some stamp else a.nameS)).withCover (if covered then cover else a.cover)).withCoverS (if covered then some stamp else a.coverS)).withDeleted (if deleted && (earlier a.deleted stamp) then some stamp else a.deleted))))
     «this»
 
-def «item» («this» : «Registers») («aid» : JSString) («id» : JSString) («stamp» : JSString) («present» : Bool) : «Registers» :=
-  let «cur» : Option «AlbumItem» := Ariadne.mapGet «this».«items» («key» «aid» «id»)
+def item («this» : Registers) (aid : JSString) (id : JSString) (stamp : JSString) (present : Bool) : Registers :=
+  let cur : Option AlbumItem := Ariadne.mapGet «this».items (key aid id)
   let after2' := fun (_, «this», _, _, _, _, ()) =>
     «this»
-  if «newer» (match «cur» with | none => none | some «cur» => some «cur».«s») «stamp» then
-    let «this» : «Registers» := «this».«withItems» (Ariadne.mapPut «this».«items» («key» «aid» «id») («AlbumItem».mk «aid» «id» «stamp» «present»))
-    after2' («cur», «this», «aid», «id», «stamp», «present», ())
+  if newer (match cur with | none => none | some cur => some cur.s) stamp then
+    let «this» : Registers := «this».withItems (Ariadne.mapPut «this».items (key aid id) (AlbumItem.mk aid id stamp present))
+    after2' (cur, «this», aid, id, stamp, present, ())
   else
-    after2' («cur», «this», «aid», «id», «stamp», «present», ())
+    after2' (cur, «this», aid, id, stamp, present, ())
 
-def «albumItems» («this» : «Registers») («aid» : JSString) («stamp» : JSString) («at» : Int) («add» : List JSString) («remove» : List JSString) : «Registers» :=
-  let «this» : «Registers» := «touchAlbum» «this» «aid» «at»
-  Ariadne.forIn «add» (fun «id» next2' exit2' («this», «aid», «stamp», «at», «add», «remove», ()) =>
-    let «this» : «Registers» := «item» «this» «aid» «id» «stamp» true
-    next2' («this», «aid», «stamp», «at», «add», «remove», ()))
-    (fun («this», «aid», «stamp», «at», «add», «remove», ()) =>
-    Ariadne.forIn «remove» (fun «id» next4' exit4' («this», «aid», «stamp», «at», «add», «remove», ()) =>
-      let «this» : «Registers» := «item» «this» «aid» «id» «stamp» false
-      next4' («this», «aid», «stamp», «at», «add», «remove», ()))
+def albumItems («this» : Registers) (aid : JSString) (stamp : JSString) («at» : Int) (add : List JSString) (remove : List JSString) : Registers :=
+  let «this» : Registers := touchAlbum «this» aid «at»
+  Ariadne.forIn add (fun id next2' exit2' («this», aid, stamp, «at», add, remove, ()) =>
+    let «this» : Registers := item «this» aid id stamp true
+    next2' («this», aid, stamp, «at», add, remove, ()))
+    (fun («this», aid, stamp, «at», add, remove, ()) =>
+    Ariadne.forIn remove (fun id next4' exit4' («this», aid, stamp, «at», add, remove, ()) =>
+      let «this» : Registers := item «this» aid id stamp false
+      next4' («this», aid, stamp, «at», add, remove, ()))
       (fun («this», _, _, _, _, _, ()) =>
       «this»)
-      («this», «aid», «stamp», «at», «add», «remove», ()))
-    («this», «aid», «stamp», «at», «add», «remove», ())
+      («this», aid, stamp, «at», add, remove, ()))
+    («this», aid, stamp, «at», add, remove, ())
 
-def «albumList» («this» : «Registers») : List «AlbumRec» :=
-  (List.map Prod.snd «this».«albums») ++ ([])
+def albumList («this» : Registers) : List AlbumRec :=
+  («this».albums.map Prod.snd) ++ ([])
 
-def «itemList» («this» : «Registers») : List «AlbumItem» :=
-  (List.map Prod.snd «this».«items») ++ ([])
+def itemList («this» : Registers) : List AlbumItem :=
+  («this».items.map Prod.snd) ++ ([])
 
-def «loadPlacement» («this» : «Registers») («ref» : JSString) («e» : «Placed») : «Registers» :=
-  let «this» : «Registers» := «put» «this» «ref» «e».«p» «e»
+def loadPlacement («this» : Registers) (ref : JSString) (e : Placed) : Registers :=
+  let «this» : Registers := put «this» ref e.p e
   «this»
 
 /-- The inputs on which `loadPlacement` stays within what the model covers. -/
-def «loadPlacement».safe («this» : «Registers») («ref» : JSString) («e» : «Placed») : Bool :=
-  «put».safe «this» «ref» «e».«p» «e» && (let «this» : «Registers» := «put» «this» «ref» «e».«p» «e»
+def loadPlacement.safe («this» : Registers) (ref : JSString) (e : Placed) : Bool :=
+  put.safe «this» ref e.p e && (let «this» : Registers := put «this» ref e.p e
   true)
 
-def «loadMark» («this» : «Registers») («m» : «Mark») : «Registers» :=
-  let «this» : «Registers» := «this».«withMarks» (Ariadne.mapPut «this».«marks» («key» «m».«ref» «m».«p») «m»)
+def loadMark («this» : Registers) (m : Mark) : Registers :=
+  let «this» : Registers := «this».withMarks (Ariadne.mapPut «this».marks (key m.ref m.p) m)
   «this»
 
-def «loadPack» («this» : «Registers») («pk» : «Pack») : «Registers» :=
-  let «this» : «Registers» := «this».«withPacks» (Ariadne.mapPut «this».«packs» «pk».«id» «pk»)
+def loadPack («this» : Registers) (pk : Pack) : Registers :=
+  let «this» : Registers := «this».withPacks (Ariadne.mapPut «this».packs pk.id pk)
   «this»
 
-def «loadTotal» («this» : «Registers») («t» : «Total») : «Registers» :=
-  let «this» : «Registers» := «this».«withTotals» (Ariadne.mapPut «this».«totals» («key» («key» «t».«p» «t».«month») «t».«device») «t»)
-  let «this» : «Registers» := «track» «this» «t».«p» «t».«month» «t».«device» true
+def loadTotal («this» : Registers) (t : Total) : Registers :=
+  let «this» : Registers := «this».withTotals (Ariadne.mapPut «this».totals (key (key t.p t.month) t.device) t)
+  let «this» : Registers := track «this» t.p t.month t.device true
   «this»
 
 /-- The inputs on which `loadTotal` stays within what the model covers. -/
-def «loadTotal».safe («this» : «Registers») («t» : «Total») : Bool :=
-  let «this» : «Registers» := «this».«withTotals» (Ariadne.mapPut «this».«totals» («key» («key» «t».«p» «t».«month») «t».«device») «t»)
-  «track».safe «this» «t».«p» «t».«month» «t».«device» true && (let «this» : «Registers» := «track» «this» «t».«p» «t».«month» «t».«device» true
+def loadTotal.safe («this» : Registers) (t : Total) : Bool :=
+  let «this» : Registers := «this».withTotals (Ariadne.mapPut «this».totals (key (key t.p t.month) t.device) t)
+  track.safe «this» t.p t.month t.device true && (let «this» : Registers := track «this» t.p t.month t.device true
   true)
 
-def «loadIncrements» («this» : «Registers») («i» : «Increments») : «Registers» :=
-  let «this» : «Registers» := «this».«withIncrements» (Ariadne.mapPut «this».«increments» («key» «i».«p» «i».«month») «i»)
-  let «this» : «Registers» := «track» «this» «i».«p» «i».«month» (js "") false
+def loadIncrements («this» : Registers) (i : Increments) : Registers :=
+  let «this» : Registers := «this».withIncrements (Ariadne.mapPut «this».increments (key i.p i.month) i)
+  let «this» : Registers := track «this» i.p i.month (js "") false
   «this»
 
 /-- The inputs on which `loadIncrements` stays within what the model covers. -/
-def «loadIncrements».safe («this» : «Registers») («i» : «Increments») : Bool :=
-  let «this» : «Registers» := «this».«withIncrements» (Ariadne.mapPut «this».«increments» («key» «i».«p» «i».«month») «i»)
-  «track».safe «this» «i».«p» «i».«month» (js "") false && (let «this» : «Registers» := «track» «this» «i».«p» «i».«month» (js "") false
+def loadIncrements.safe («this» : Registers) (i : Increments) : Bool :=
+  let «this» : Registers := «this».withIncrements (Ariadne.mapPut «this».increments (key i.p i.month) i)
+  track.safe «this» i.p i.month (js "") false && (let «this» : Registers := track «this» i.p i.month (js "") false
   true)
 
-def «loadAlbum» («this» : «Registers») («a» : «AlbumRec») : «Registers» :=
-  let «this» : «Registers» := «this».«withAlbums» (Ariadne.mapPut «this».«albums» «a».«id» «a»)
+def loadAlbum («this» : Registers) (a : AlbumRec) : Registers :=
+  let «this» : Registers := «this».withAlbums (Ariadne.mapPut «this».albums a.id a)
   «this»
 
-def «loadItem» («this» : «Registers») («i» : «AlbumItem») : «Registers» :=
-  let «this» : «Registers» := «this».«withItems» (Ariadne.mapPut «this».«items» («key» «i».«aid» «i».«id») «i»)
+def loadItem («this» : Registers) (i : AlbumItem) : Registers :=
+  let «this» : Registers := «this».withItems (Ariadne.mapPut «this».items (key i.aid i.id) i)
   «this»
 
 /-! ## Denotation
@@ -1408,172 +1411,172 @@ def «loadItem» («this» : «Registers») («i» : «AlbumItem») : «Register
 Each body is checked against its readable definition with the earlier functions'
 readable definitions as its environment, so no check unfolds a callee. -/
 
-noncomputable def «key».uncurried : sig.«key».denote := fun xs => «key» xs.1 xs.2.1
+noncomputable def key.uncurried : sig.key.denote := fun xs => key xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «key».safety : sig.«key».params.denote → Bool := fun _ => true
+noncomputable def key.safety : sig.key.params.denote → Bool := fun _ => true
 
-theorem «key».body_eq :
-    body.«key».denoteFn (()) = «key».uncurried := by
+theorem key.body_eq :
+    body.key.denoteFn (()) = key.uncurried := by
   kernel_rfl
 
-theorem «key».safe_eq :
-    body.«key».safeFn (()) (()) = «key».safety := by
+theorem key.safe_eq :
+    body.key.safeFn (()) (()) = key.safety := by
   kernel_rfl
 
-noncomputable def «byString».uncurried : sig.«byString».denote := fun xs => «byString» xs.1 xs.2.1
+noncomputable def byString.uncurried : sig.byString.denote := fun xs => byString xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «byString».safety : sig.«byString».params.denote → Bool := fun _ => true
+noncomputable def byString.safety : sig.byString.params.denote → Bool := fun _ => true
 
-theorem «byString».body_eq :
-    body.«byString».denoteFn («key».uncurried, ()) = «byString».uncurried := by
+theorem byString.body_eq :
+    body.byString.denoteFn (key.uncurried, ()) = byString.uncurried := by
   kernel_rfl
 
-theorem «byString».safe_eq :
-    body.«byString».safeFn («key».uncurried, ()) («key».safety, ()) = «byString».safety := by
+theorem byString.safe_eq :
+    body.byString.safeFn (key.uncurried, ()) (key.safety, ()) = byString.safety := by
   kernel_rfl
 
-noncomputable def «newer».uncurried : sig.«newer».denote := fun xs => «newer» xs.1 xs.2.1
+noncomputable def newer.uncurried : sig.newer.denote := fun xs => newer xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «newer».safety : sig.«newer».params.denote → Bool := fun _ => true
+noncomputable def newer.safety : sig.newer.params.denote → Bool := fun _ => true
 
-theorem «newer».body_eq :
-    body.«newer».denoteFn («byString».uncurried, «key».uncurried, ()) = «newer».uncurried := by
+theorem newer.body_eq :
+    body.newer.denoteFn (byString.uncurried, key.uncurried, ()) = newer.uncurried := by
   kernel_rfl
 
-theorem «newer».safe_eq :
-    body.«newer».safeFn («byString».uncurried, «key».uncurried, ()) («byString».safety, «key».safety, ()) = «newer».safety := by
+theorem newer.safe_eq :
+    body.newer.safeFn (byString.uncurried, key.uncurried, ()) (byString.safety, key.safety, ()) = newer.safety := by
   kernel_rfl
 
-noncomputable def «earlier».uncurried : sig.«earlier».denote := fun xs => «earlier» xs.1 xs.2.1
+noncomputable def earlier.uncurried : sig.earlier.denote := fun xs => earlier xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «earlier».safety : sig.«earlier».params.denote → Bool := fun _ => true
+noncomputable def earlier.safety : sig.earlier.params.denote → Bool := fun _ => true
 
-theorem «earlier».body_eq :
-    body.«earlier».denoteFn («newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «earlier».uncurried := by
+theorem earlier.body_eq :
+    body.earlier.denoteFn (newer.uncurried, byString.uncurried, key.uncurried, ()) = earlier.uncurried := by
   kernel_rfl
 
-theorem «earlier».safe_eq :
-    body.«earlier».safeFn («newer».uncurried, «byString».uncurried, «key».uncurried, ()) («newer».safety, «byString».safety, «key».safety, ()) = «earlier».safety := by
+theorem earlier.safe_eq :
+    body.earlier.safeFn (newer.uncurried, byString.uncurried, key.uncurried, ()) (newer.safety, byString.safety, key.safety, ()) = earlier.safety := by
   kernel_rfl
 
-noncomputable def «newest».uncurried : sig.«newest».denote := fun xs => «newest» xs.1 xs.2.1
+noncomputable def newest.uncurried : sig.newest.denote := fun xs => newest xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «newest».safety : sig.«newest».params.denote → Bool := fun _ => true
+noncomputable def newest.safety : sig.newest.params.denote → Bool := fun _ => true
 
-theorem «newest».body_eq :
-    body.«newest».denoteFn («earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «newest».uncurried := by
+theorem newest.body_eq :
+    body.newest.denoteFn (earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = newest.uncurried := by
   kernel_rfl
 
-theorem «newest».safe_eq :
-    body.«newest».safeFn («earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «newest».safety := by
+theorem newest.safe_eq :
+    body.newest.safeFn (earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (earlier.safety, newer.safety, byString.safety, key.safety, ()) = newest.safety := by
   kernel_rfl
 
-noncomputable def «before».uncurried : sig.«before».denote := fun xs => «before» xs.1 xs.2.1
+noncomputable def before.uncurried : sig.before.denote := fun xs => before xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «before».safety : sig.«before».params.denote → Bool := fun _ => true
+noncomputable def before.safety : sig.before.params.denote → Bool := fun _ => true
 
-theorem «before».body_eq :
-    body.«before».denoteFn («newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «before».uncurried := by
+theorem before.body_eq :
+    body.before.denoteFn (newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = before.uncurried := by
   kernel_rfl
 
-theorem «before».safe_eq :
-    body.«before».safeFn («newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «before».safety := by
+theorem before.safe_eq :
+    body.before.safeFn (newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = before.safety := by
   kernel_rfl
 
-noncomputable def «given».uncurried : sig.«given».denote := fun xs => «given» xs.1
+noncomputable def given.uncurried : sig.given.denote := fun xs => given xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «given».safety : sig.«given».params.denote → Bool := fun _ => true
+noncomputable def given.safety : sig.given.params.denote → Bool := fun _ => true
 
-theorem «given».body_eq :
-    body.«given».denoteFn («before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «given».uncurried := by
+theorem given.body_eq :
+    body.given.denoteFn (before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = given.uncurried := by
   kernel_rfl
 
-theorem «given».safe_eq :
-    body.«given».safeFn («before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «given».safety := by
+theorem given.safe_eq :
+    body.given.safeFn (before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = given.safety := by
   kernel_rfl
 
-noncomputable def «otherwise».uncurried : sig.«otherwise».denote := fun xs => «otherwise» xs.1 xs.2.1
+noncomputable def otherwise.uncurried : sig.otherwise.denote := fun xs => otherwise xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «otherwise».safety : sig.«otherwise».params.denote → Bool := fun _ => true
+noncomputable def otherwise.safety : sig.otherwise.params.denote → Bool := fun _ => true
 
-theorem «otherwise».body_eq :
-    body.«otherwise».denoteFn («given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «otherwise».uncurried := by
+theorem otherwise.body_eq :
+    body.otherwise.denoteFn (given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = otherwise.uncurried := by
   kernel_rfl
 
-theorem «otherwise».safe_eq :
-    body.«otherwise».safeFn («given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «otherwise».safety := by
+theorem otherwise.safe_eq :
+    body.otherwise.safeFn (given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = otherwise.safety := by
   kernel_rfl
 
-noncomputable def «described».uncurried : sig.«described».denote := fun xs => «described» xs.1 xs.2.1 xs.2.2.1
+noncomputable def described.uncurried : sig.described.denote := fun xs => described xs.1 xs.2.1 xs.2.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «described».safety : sig.«described».params.denote → Bool := fun _ => true
+noncomputable def described.safety : sig.described.params.denote → Bool := fun _ => true
 
-theorem «described».body_eq :
-    body.«described».denoteFn («otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «described».uncurried := by
+theorem described.body_eq :
+    body.described.denoteFn (otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = described.uncurried := by
   kernel_rfl
 
-theorem «described».safe_eq :
-    body.«described».safeFn («otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «described».safety := by
+theorem described.safe_eq :
+    body.described.safeFn (otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = described.safety := by
   kernel_rfl
 
-noncomputable def «larger».uncurried : sig.«larger».denote := fun xs => «larger» xs.1 xs.2.1
+noncomputable def larger.uncurried : sig.larger.denote := fun xs => larger xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «larger».safety : sig.«larger».params.denote → Bool := fun _ => true
+noncomputable def larger.safety : sig.larger.params.denote → Bool := fun _ => true
 
-theorem «larger».body_eq :
-    body.«larger».denoteFn («described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «larger».uncurried := by
+theorem larger.body_eq :
+    body.larger.denoteFn (described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = larger.uncurried := by
   kernel_rfl
 
-theorem «larger».safe_eq :
-    body.«larger».safeFn («described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «larger».safety := by
+theorem larger.safe_eq :
+    body.larger.safeFn (described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = larger.safety := by
   kernel_rfl
 
-noncomputable def «zero».uncurried : sig.«zero».denote := fun xs => «zero»
+noncomputable def zero.uncurried : sig.zero.denote := fun xs => zero
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «zero».safety : sig.«zero».params.denote → Bool := fun _ => true
+noncomputable def zero.safety : sig.zero.params.denote → Bool := fun _ => true
 
-theorem «zero».body_eq :
-    body.«zero».denoteFn («larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «zero».uncurried := by
+theorem zero.body_eq :
+    body.zero.denoteFn (larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = zero.uncurried := by
   kernel_rfl
 
-theorem «zero».safe_eq :
-    body.«zero».safeFn («larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «zero».safety := by
+theorem zero.safe_eq :
+    body.zero.safeFn (larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = zero.safety := by
   kernel_rfl
 
-noncomputable def «highest».uncurried : sig.«highest».denote := fun xs => «highest» xs.1 xs.2.1
+noncomputable def highest.uncurried : sig.highest.denote := fun xs => highest xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «highest».safety : sig.«highest».params.denote → Bool := fun _ => true
+noncomputable def highest.safety : sig.highest.params.denote → Bool := fun _ => true
 
-theorem «highest».body_eq :
-    body.«highest».denoteFn («zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «highest».uncurried := by
+theorem highest.body_eq :
+    body.highest.denoteFn (zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = highest.uncurried := by
   kernel_rfl
 
-theorem «highest».safe_eq :
-    body.«highest».safeFn («zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «highest».safety := by
+theorem highest.safe_eq :
+    body.highest.safeFn (zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = highest.safety := by
   kernel_rfl
 
-noncomputable def «sum».uncurried : sig.«sum».denote := fun xs => «sum» xs.1 xs.2.1
+noncomputable def sum.uncurried : sig.sum.denote := fun xs => sum xs.1 xs.2.1
 
-noncomputable def «sum».safety : sig.«sum».params.denote → Bool := fun xs => «sum».safe xs.1 xs.2.1
+noncomputable def sum.safety : sig.sum.params.denote → Bool := fun xs => sum.safe xs.1 xs.2.1
 
-theorem «sum».body_eq :
-    body.«sum».denoteFn («highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «sum».uncurried := by
+theorem sum.body_eq :
+    body.sum.denoteFn (highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = sum.uncurried := by
   kernel_rfl
 
-theorem «sum».safe_eq :
-    body.«sum».safeFn («highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «sum».safety := by
+theorem sum.safe_eq :
+    body.sum.safeFn (highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = sum.safety := by
   kernel_rfl
 
 noncomputable def «new Registers».uncurried : sig.«new Registers».denote := fun xs => «new Registers»
@@ -1582,1632 +1585,1632 @@ noncomputable def «new Registers».uncurried : sig.«new Registers».denote := 
 noncomputable def «new Registers».safety : sig.«new Registers».params.denote → Bool := fun _ => true
 
 theorem «new Registers».body_eq :
-    body.«new Registers».denoteFn («sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «new Registers».uncurried := by
+    body.«new Registers».denoteFn (sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = «new Registers».uncurried := by
   kernel_rfl
 
 theorem «new Registers».safe_eq :
-    body.«new Registers».safeFn («sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «new Registers».safety := by
+    body.«new Registers».safeFn (sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = «new Registers».safety := by
   kernel_rfl
 
-noncomputable def «noteUnplace».uncurried : sig.«noteUnplace».denote := fun xs => «noteUnplace» xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1
-
-/-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «noteUnplace».safety : sig.«noteUnplace».params.denote → Bool := fun _ => true
-
-theorem «noteUnplace».body_eq :
-    body.«noteUnplace».denoteFn («new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «noteUnplace».uncurried := by
-  kernel_rfl
-
-theorem «noteUnplace».safe_eq :
-    body.«noteUnplace».safeFn («new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «noteUnplace».safety := by
-  kernel_rfl
-
-noncomputable def «providersOf».uncurried : sig.«providersOf».denote := fun xs => «providersOf» xs.1 xs.2.1
+noncomputable def noteUnplace.uncurried : sig.noteUnplace.denote := fun xs => noteUnplace xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «providersOf».safety : sig.«providersOf».params.denote → Bool := fun _ => true
+noncomputable def noteUnplace.safety : sig.noteUnplace.params.denote → Bool := fun _ => true
 
-theorem «providersOf».body_eq :
-    body.«providersOf».denoteFn («noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «providersOf».uncurried := by
+theorem noteUnplace.body_eq :
+    body.noteUnplace.denoteFn («new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = noteUnplace.uncurried := by
   kernel_rfl
 
-theorem «providersOf».safe_eq :
-    body.«providersOf».safeFn («noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «providersOf».safety := by
+theorem noteUnplace.safe_eq :
+    body.noteUnplace.safeFn («new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) («new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = noteUnplace.safety := by
   kernel_rfl
 
-noncomputable def «put».uncurried : sig.«put».denote := fun xs => «put» xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1
-
-noncomputable def «put».safety : sig.«put».params.denote → Bool := fun xs => «put».safe xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1
-
-theorem «put».body_eq :
-    body.«put».denoteFn («providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «put».uncurried := by
-  kernel_rfl
-
-theorem «put».safe_eq :
-    body.«put».safeFn («providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «put».safety := by
-  kernel_rfl
-
-noncomputable def «dropMarkBefore».uncurried : sig.«dropMarkBefore».denote := fun xs => «dropMarkBefore» xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1
+noncomputable def providersOf.uncurried : sig.providersOf.denote := fun xs => providersOf xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «dropMarkBefore».safety : sig.«dropMarkBefore».params.denote → Bool := fun _ => true
+noncomputable def providersOf.safety : sig.providersOf.params.denote → Bool := fun _ => true
 
-theorem «dropMarkBefore».body_eq :
-    body.«dropMarkBefore».denoteFn («put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «dropMarkBefore».uncurried := by
+theorem providersOf.body_eq :
+    body.providersOf.denoteFn (noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = providersOf.uncurried := by
   kernel_rfl
 
-theorem «dropMarkBefore».safe_eq :
-    body.«dropMarkBefore».safeFn («put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «dropMarkBefore».safety := by
+theorem providersOf.safe_eq :
+    body.providersOf.safeFn (noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = providersOf.safety := by
   kernel_rfl
 
-noncomputable def «place».uncurried : sig.«place».denote := fun xs => «place» xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1 xs.2.2.2.2.2.1 xs.2.2.2.2.2.2.1
+noncomputable def put.uncurried : sig.put.denote := fun xs => put xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1
 
-noncomputable def «place».safety : sig.«place».params.denote → Bool := fun xs => «place».safe xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1 xs.2.2.2.2.2.1 xs.2.2.2.2.2.2.1
+noncomputable def put.safety : sig.put.params.denote → Bool := fun xs => put.safe xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1
 
-theorem «place».body_eq :
-    body.«place».denoteFn («dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «place».uncurried := by
+theorem put.body_eq :
+    body.put.denoteFn (providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = put.uncurried := by
   kernel_rfl
 
-theorem «place».safe_eq :
-    body.«place».safeFn («dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «place».safety := by
+theorem put.safe_eq :
+    body.put.safeFn (providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = put.safety := by
   kernel_rfl
 
-noncomputable def «mark».uncurried : sig.«mark».denote := fun xs => «mark» xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1 xs.2.2.2.2.2.1 xs.2.2.2.2.2.2.1
+noncomputable def dropMarkBefore.uncurried : sig.dropMarkBefore.denote := fun xs => dropMarkBefore xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «mark».safety : sig.«mark».params.denote → Bool := fun _ => true
+noncomputable def dropMarkBefore.safety : sig.dropMarkBefore.params.denote → Bool := fun _ => true
 
-theorem «mark».body_eq :
-    body.«mark».denoteFn («place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «mark».uncurried := by
+theorem dropMarkBefore.body_eq :
+    body.dropMarkBefore.denoteFn (put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = dropMarkBefore.uncurried := by
   kernel_rfl
 
-theorem «mark».safe_eq :
-    body.«mark».safeFn («place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «mark».safety := by
+theorem dropMarkBefore.safe_eq :
+    body.dropMarkBefore.safeFn (put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = dropMarkBefore.safety := by
   kernel_rfl
 
-noncomputable def «placements».uncurried : sig.«placements».denote := fun xs => «placements» xs.1 xs.2.1
+noncomputable def place.uncurried : sig.place.denote := fun xs => place xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1 xs.2.2.2.2.2.1 xs.2.2.2.2.2.2.1
+
+noncomputable def place.safety : sig.place.params.denote → Bool := fun xs => place.safe xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1 xs.2.2.2.2.2.1 xs.2.2.2.2.2.2.1
+
+theorem place.body_eq :
+    body.place.denoteFn (dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = place.uncurried := by
+  kernel_rfl
+
+theorem place.safe_eq :
+    body.place.safeFn (dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = place.safety := by
+  kernel_rfl
+
+noncomputable def mark.uncurried : sig.mark.denote := fun xs => mark xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1 xs.2.2.2.2.2.1 xs.2.2.2.2.2.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «placements».safety : sig.«placements».params.denote → Bool := fun _ => true
+noncomputable def mark.safety : sig.mark.params.denote → Bool := fun _ => true
 
-theorem «placements».body_eq :
-    body.«placements».denoteFn («mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «placements».uncurried := by
+theorem mark.body_eq :
+    body.mark.denoteFn (place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = mark.uncurried := by
   kernel_rfl
 
-theorem «placements».safe_eq :
-    body.«placements».safeFn («mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «placements».safety := by
+theorem mark.safe_eq :
+    body.mark.safeFn (place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = mark.safety := by
   kernel_rfl
 
-noncomputable def «isPlaced».uncurried : sig.«isPlaced».denote := fun xs => «isPlaced» xs.1 xs.2.1
+noncomputable def placements.uncurried : sig.placements.denote := fun xs => placements xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «isPlaced».safety : sig.«isPlaced».params.denote → Bool := fun _ => true
+noncomputable def placements.safety : sig.placements.params.denote → Bool := fun _ => true
 
-theorem «isPlaced».body_eq :
-    body.«isPlaced».denoteFn («placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «isPlaced».uncurried := by
+theorem placements.body_eq :
+    body.placements.denoteFn (mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = placements.uncurried := by
   kernel_rfl
 
-theorem «isPlaced».safe_eq :
-    body.«isPlaced».safeFn («placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «isPlaced».safety := by
+theorem placements.safe_eq :
+    body.placements.safeFn (mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = placements.safety := by
   kernel_rfl
 
-noncomputable def «placedRefs».uncurried : sig.«placedRefs».denote := fun xs => «placedRefs» xs.1
+noncomputable def isPlaced.uncurried : sig.isPlaced.denote := fun xs => isPlaced xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «placedRefs».safety : sig.«placedRefs».params.denote → Bool := fun _ => true
+noncomputable def isPlaced.safety : sig.isPlaced.params.denote → Bool := fun _ => true
 
-theorem «placedRefs».body_eq :
-    body.«placedRefs».denoteFn («isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «placedRefs».uncurried := by
+theorem isPlaced.body_eq :
+    body.isPlaced.denoteFn (placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = isPlaced.uncurried := by
   kernel_rfl
 
-theorem «placedRefs».safe_eq :
-    body.«placedRefs».safeFn («isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «placedRefs».safety := by
+theorem isPlaced.safe_eq :
+    body.isPlaced.safeFn (placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = isPlaced.safety := by
   kernel_rfl
 
-noncomputable def «markOf».uncurried : sig.«markOf».denote := fun xs => «markOf» xs.1 xs.2.1 xs.2.2.1
+noncomputable def placedRefs.uncurried : sig.placedRefs.denote := fun xs => placedRefs xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «markOf».safety : sig.«markOf».params.denote → Bool := fun _ => true
+noncomputable def placedRefs.safety : sig.placedRefs.params.denote → Bool := fun _ => true
 
-theorem «markOf».body_eq :
-    body.«markOf».denoteFn («placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «markOf».uncurried := by
+theorem placedRefs.body_eq :
+    body.placedRefs.denoteFn (isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = placedRefs.uncurried := by
   kernel_rfl
 
-theorem «markOf».safe_eq :
-    body.«markOf».safeFn («placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «markOf».safety := by
+theorem placedRefs.safe_eq :
+    body.placedRefs.safeFn (isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = placedRefs.safety := by
   kernel_rfl
 
-noncomputable def «markList».uncurried : sig.«markList».denote := fun xs => «markList» xs.1
+noncomputable def markOf.uncurried : sig.markOf.denote := fun xs => markOf xs.1 xs.2.1 xs.2.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «markList».safety : sig.«markList».params.denote → Bool := fun _ => true
+noncomputable def markOf.safety : sig.markOf.params.denote → Bool := fun _ => true
 
-theorem «markList».body_eq :
-    body.«markList».denoteFn («markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «markList».uncurried := by
+theorem markOf.body_eq :
+    body.markOf.denoteFn (placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = markOf.uncurried := by
   kernel_rfl
 
-theorem «markList».safe_eq :
-    body.«markList».safeFn («markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («markOf».safety, «placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «markList».safety := by
+theorem markOf.safe_eq :
+    body.markOf.safeFn (placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = markOf.safety := by
   kernel_rfl
 
-noncomputable def «pack».uncurried : sig.«pack».denote := fun xs => «pack» xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1 xs.2.2.2.2.2.1 xs.2.2.2.2.2.2.1
+noncomputable def markList.uncurried : sig.markList.denote := fun xs => markList xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «pack».safety : sig.«pack».params.denote → Bool := fun _ => true
+noncomputable def markList.safety : sig.markList.params.denote → Bool := fun _ => true
 
-theorem «pack».body_eq :
-    body.«pack».denoteFn («markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «pack».uncurried := by
+theorem markList.body_eq :
+    body.markList.denoteFn (markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = markList.uncurried := by
   kernel_rfl
 
-theorem «pack».safe_eq :
-    body.«pack».safeFn («markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («markList».safety, «markOf».safety, «placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «pack».safety := by
+theorem markList.safe_eq :
+    body.markList.safeFn (markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (markOf.safety, placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = markList.safety := by
   kernel_rfl
 
-noncomputable def «packOf».uncurried : sig.«packOf».denote := fun xs => «packOf» xs.1 xs.2.1
+noncomputable def pack.uncurried : sig.pack.denote := fun xs => pack xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1 xs.2.2.2.2.2.1 xs.2.2.2.2.2.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «packOf».safety : sig.«packOf».params.denote → Bool := fun _ => true
+noncomputable def pack.safety : sig.pack.params.denote → Bool := fun _ => true
 
-theorem «packOf».body_eq :
-    body.«packOf».denoteFn («pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «packOf».uncurried := by
+theorem pack.body_eq :
+    body.pack.denoteFn (markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = pack.uncurried := by
   kernel_rfl
 
-theorem «packOf».safe_eq :
-    body.«packOf».safeFn («pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («pack».safety, «markList».safety, «markOf».safety, «placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «packOf».safety := by
+theorem pack.safe_eq :
+    body.pack.safeFn (markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (markList.safety, markOf.safety, placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = pack.safety := by
   kernel_rfl
 
-noncomputable def «packList».uncurried : sig.«packList».denote := fun xs => «packList» xs.1
+noncomputable def packOf.uncurried : sig.packOf.denote := fun xs => packOf xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «packList».safety : sig.«packList».params.denote → Bool := fun _ => true
+noncomputable def packOf.safety : sig.packOf.params.denote → Bool := fun _ => true
 
-theorem «packList».body_eq :
-    body.«packList».denoteFn («packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «packList».uncurried := by
+theorem packOf.body_eq :
+    body.packOf.denoteFn (pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = packOf.uncurried := by
   kernel_rfl
 
-theorem «packList».safe_eq :
-    body.«packList».safeFn («packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («packOf».safety, «pack».safety, «markList».safety, «markOf».safety, «placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «packList».safety := by
+theorem packOf.safe_eq :
+    body.packOf.safeFn (pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (pack.safety, markList.safety, markOf.safety, placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = packOf.safety := by
   kernel_rfl
 
-noncomputable def «track».uncurried : sig.«track».denote := fun xs => «track» xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1
-
-noncomputable def «track».safety : sig.«track».params.denote → Bool := fun xs => «track».safe xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1
-
-theorem «track».body_eq :
-    body.«track».denoteFn («packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «track».uncurried := by
-  kernel_rfl
-
-theorem «track».safe_eq :
-    body.«track».safeFn («packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («packList».safety, «packOf».safety, «pack».safety, «markList».safety, «markOf».safety, «placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «track».safety := by
-  kernel_rfl
-
-noncomputable def «total».uncurried : sig.«total».denote := fun xs => «total» xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1
-
-noncomputable def «total».safety : sig.«total».params.denote → Bool := fun xs => «total».safe xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1
-
-theorem «total».body_eq :
-    body.«total».denoteFn («track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «total».uncurried := by
-  kernel_rfl
-
-theorem «total».safe_eq :
-    body.«total».safeFn («track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («track».safety, «packList».safety, «packOf».safety, «pack».safety, «markList».safety, «markOf».safety, «placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «total».safety := by
-  kernel_rfl
-
-noncomputable def «add».uncurried : sig.«add».denote := fun xs => «add» xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1
-
-noncomputable def «add».safety : sig.«add».params.denote → Bool := fun xs => «add».safe xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1
-
-theorem «add».body_eq :
-    body.«add».denoteFn («total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «add».uncurried := by
-  kernel_rfl
-
-theorem «add».safe_eq :
-    body.«add».safeFn («total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («total».safety, «track».safety, «packList».safety, «packOf».safety, «pack».safety, «markList».safety, «markOf».safety, «placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «add».safety := by
-  kernel_rfl
-
-noncomputable def «totalOf».uncurried : sig.«totalOf».denote := fun xs => «totalOf» xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1
+noncomputable def packList.uncurried : sig.packList.denote := fun xs => packList xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «totalOf».safety : sig.«totalOf».params.denote → Bool := fun _ => true
+noncomputable def packList.safety : sig.packList.params.denote → Bool := fun _ => true
 
-theorem «totalOf».body_eq :
-    body.«totalOf».denoteFn («add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «totalOf».uncurried := by
+theorem packList.body_eq :
+    body.packList.denoteFn (packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = packList.uncurried := by
   kernel_rfl
 
-theorem «totalOf».safe_eq :
-    body.«totalOf».safeFn («add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («add».safety, «total».safety, «track».safety, «packList».safety, «packOf».safety, «pack».safety, «markList».safety, «markOf».safety, «placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «totalOf».safety := by
+theorem packList.safe_eq :
+    body.packList.safeFn (packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (packOf.safety, pack.safety, markList.safety, markOf.safety, placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = packList.safety := by
   kernel_rfl
 
-noncomputable def «usageOf».uncurried : sig.«usageOf».denote := fun xs => «usageOf» xs.1 xs.2.1 xs.2.2.1
+noncomputable def track.uncurried : sig.track.denote := fun xs => track xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1
 
-noncomputable def «usageOf».safety : sig.«usageOf».params.denote → Bool := fun xs => «usageOf».safe xs.1 xs.2.1 xs.2.2.1
+noncomputable def track.safety : sig.track.params.denote → Bool := fun xs => track.safe xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1
 
-theorem «usageOf».body_eq :
-    body.«usageOf».denoteFn («totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «usageOf».uncurried := by
+theorem track.body_eq :
+    body.track.denoteFn (packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = track.uncurried := by
   kernel_rfl
 
-theorem «usageOf».safe_eq :
-    body.«usageOf».safeFn («totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («totalOf».safety, «add».safety, «total».safety, «track».safety, «packList».safety, «packOf».safety, «pack».safety, «markList».safety, «markOf».safety, «placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «usageOf».safety := by
+theorem track.safe_eq :
+    body.track.safeFn (packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (packList.safety, packOf.safety, pack.safety, markList.safety, markOf.safety, placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = track.safety := by
   kernel_rfl
 
-noncomputable def «usageList».uncurried : sig.«usageList».denote := fun xs => «usageList» xs.1
+noncomputable def total.uncurried : sig.total.denote := fun xs => total xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1
 
-noncomputable def «usageList».safety : sig.«usageList».params.denote → Bool := fun xs => «usageList».safe xs.1
+noncomputable def total.safety : sig.total.params.denote → Bool := fun xs => total.safe xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1
 
-theorem «usageList».body_eq :
-    body.«usageList».denoteFn («usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «usageList».uncurried := by
+theorem total.body_eq :
+    body.total.denoteFn (track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = total.uncurried := by
   kernel_rfl
 
-theorem «usageList».safe_eq :
-    body.«usageList».safeFn («usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («usageOf».safety, «totalOf».safety, «add».safety, «total».safety, «track».safety, «packList».safety, «packOf».safety, «pack».safety, «markList».safety, «markOf».safety, «placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «usageList».safety := by
+theorem total.safe_eq :
+    body.total.safeFn (track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (track.safety, packList.safety, packOf.safety, pack.safety, markList.safety, markOf.safety, placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = total.safety := by
   kernel_rfl
 
-noncomputable def «totalList».uncurried : sig.«totalList».denote := fun xs => «totalList» xs.1
+noncomputable def add.uncurried : sig.add.denote := fun xs => add xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1
+
+noncomputable def add.safety : sig.add.params.denote → Bool := fun xs => add.safe xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1
+
+theorem add.body_eq :
+    body.add.denoteFn (total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = add.uncurried := by
+  kernel_rfl
+
+theorem add.safe_eq :
+    body.add.safeFn (total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (total.safety, track.safety, packList.safety, packOf.safety, pack.safety, markList.safety, markOf.safety, placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = add.safety := by
+  kernel_rfl
+
+noncomputable def totalOf.uncurried : sig.totalOf.denote := fun xs => totalOf xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «totalList».safety : sig.«totalList».params.denote → Bool := fun _ => true
+noncomputable def totalOf.safety : sig.totalOf.params.denote → Bool := fun _ => true
 
-theorem «totalList».body_eq :
-    body.«totalList».denoteFn («usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «totalList».uncurried := by
+theorem totalOf.body_eq :
+    body.totalOf.denoteFn (add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = totalOf.uncurried := by
   kernel_rfl
 
-theorem «totalList».safe_eq :
-    body.«totalList».safeFn («usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («usageList».safety, «usageOf».safety, «totalOf».safety, «add».safety, «total».safety, «track».safety, «packList».safety, «packOf».safety, «pack».safety, «markList».safety, «markOf».safety, «placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «totalList».safety := by
+theorem totalOf.safe_eq :
+    body.totalOf.safeFn (add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (add.safety, total.safety, track.safety, packList.safety, packOf.safety, pack.safety, markList.safety, markOf.safety, placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = totalOf.safety := by
   kernel_rfl
 
-noncomputable def «touchAlbum».uncurried : sig.«touchAlbum».denote := fun xs => «touchAlbum» xs.1 xs.2.1 xs.2.2.1
+noncomputable def usageOf.uncurried : sig.usageOf.denote := fun xs => usageOf xs.1 xs.2.1 xs.2.2.1
+
+noncomputable def usageOf.safety : sig.usageOf.params.denote → Bool := fun xs => usageOf.safe xs.1 xs.2.1 xs.2.2.1
+
+theorem usageOf.body_eq :
+    body.usageOf.denoteFn (totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = usageOf.uncurried := by
+  kernel_rfl
+
+theorem usageOf.safe_eq :
+    body.usageOf.safeFn (totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (totalOf.safety, add.safety, total.safety, track.safety, packList.safety, packOf.safety, pack.safety, markList.safety, markOf.safety, placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = usageOf.safety := by
+  kernel_rfl
+
+noncomputable def usageList.uncurried : sig.usageList.denote := fun xs => usageList xs.1
+
+noncomputable def usageList.safety : sig.usageList.params.denote → Bool := fun xs => usageList.safe xs.1
+
+theorem usageList.body_eq :
+    body.usageList.denoteFn (usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = usageList.uncurried := by
+  kernel_rfl
+
+theorem usageList.safe_eq :
+    body.usageList.safeFn (usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (usageOf.safety, totalOf.safety, add.safety, total.safety, track.safety, packList.safety, packOf.safety, pack.safety, markList.safety, markOf.safety, placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = usageList.safety := by
+  kernel_rfl
+
+noncomputable def totalList.uncurried : sig.totalList.denote := fun xs => totalList xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «touchAlbum».safety : sig.«touchAlbum».params.denote → Bool := fun _ => true
+noncomputable def totalList.safety : sig.totalList.params.denote → Bool := fun _ => true
 
-theorem «touchAlbum».body_eq :
-    body.«touchAlbum».denoteFn («totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «touchAlbum».uncurried := by
+theorem totalList.body_eq :
+    body.totalList.denoteFn (usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = totalList.uncurried := by
   kernel_rfl
 
-theorem «touchAlbum».safe_eq :
-    body.«touchAlbum».safeFn («totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («totalList».safety, «usageList».safety, «usageOf».safety, «totalOf».safety, «add».safety, «total».safety, «track».safety, «packList».safety, «packOf».safety, «pack».safety, «markList».safety, «markOf».safety, «placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «touchAlbum».safety := by
+theorem totalList.safe_eq :
+    body.totalList.safeFn (usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (usageList.safety, usageOf.safety, totalOf.safety, add.safety, total.safety, track.safety, packList.safety, packOf.safety, pack.safety, markList.safety, markOf.safety, placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = totalList.safety := by
   kernel_rfl
 
-noncomputable def «album».uncurried : sig.«album».denote := fun xs => «album» xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1 xs.2.2.2.2.2.1 xs.2.2.2.2.2.2.1
+noncomputable def touchAlbum.uncurried : sig.touchAlbum.denote := fun xs => touchAlbum xs.1 xs.2.1 xs.2.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «album».safety : sig.«album».params.denote → Bool := fun _ => true
+noncomputable def touchAlbum.safety : sig.touchAlbum.params.denote → Bool := fun _ => true
 
-theorem «album».body_eq :
-    body.«album».denoteFn («touchAlbum».uncurried, «totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «album».uncurried := by
+theorem touchAlbum.body_eq :
+    body.touchAlbum.denoteFn (totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = touchAlbum.uncurried := by
   kernel_rfl
 
-theorem «album».safe_eq :
-    body.«album».safeFn («touchAlbum».uncurried, «totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («touchAlbum».safety, «totalList».safety, «usageList».safety, «usageOf».safety, «totalOf».safety, «add».safety, «total».safety, «track».safety, «packList».safety, «packOf».safety, «pack».safety, «markList».safety, «markOf».safety, «placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «album».safety := by
+theorem touchAlbum.safe_eq :
+    body.touchAlbum.safeFn (totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (totalList.safety, usageList.safety, usageOf.safety, totalOf.safety, add.safety, total.safety, track.safety, packList.safety, packOf.safety, pack.safety, markList.safety, markOf.safety, placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = touchAlbum.safety := by
   kernel_rfl
 
-noncomputable def «item».uncurried : sig.«item».denote := fun xs => «item» xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1
+noncomputable def album.uncurried : sig.album.denote := fun xs => album xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1 xs.2.2.2.2.2.1 xs.2.2.2.2.2.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «item».safety : sig.«item».params.denote → Bool := fun _ => true
+noncomputable def album.safety : sig.album.params.denote → Bool := fun _ => true
 
-theorem «item».body_eq :
-    body.«item».denoteFn («album».uncurried, «touchAlbum».uncurried, «totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «item».uncurried := by
+theorem album.body_eq :
+    body.album.denoteFn (touchAlbum.uncurried, totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = album.uncurried := by
   kernel_rfl
 
-theorem «item».safe_eq :
-    body.«item».safeFn («album».uncurried, «touchAlbum».uncurried, «totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («album».safety, «touchAlbum».safety, «totalList».safety, «usageList».safety, «usageOf».safety, «totalOf».safety, «add».safety, «total».safety, «track».safety, «packList».safety, «packOf».safety, «pack».safety, «markList».safety, «markOf».safety, «placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «item».safety := by
+theorem album.safe_eq :
+    body.album.safeFn (touchAlbum.uncurried, totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (touchAlbum.safety, totalList.safety, usageList.safety, usageOf.safety, totalOf.safety, add.safety, total.safety, track.safety, packList.safety, packOf.safety, pack.safety, markList.safety, markOf.safety, placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = album.safety := by
   kernel_rfl
 
-noncomputable def «albumItems».uncurried : sig.«albumItems».denote := fun xs => «albumItems» xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1 xs.2.2.2.2.2.1
+noncomputable def item.uncurried : sig.item.denote := fun xs => item xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «albumItems».safety : sig.«albumItems».params.denote → Bool := fun _ => true
+noncomputable def item.safety : sig.item.params.denote → Bool := fun _ => true
 
-theorem «albumItems».body_eq :
-    body.«albumItems».denoteFn («item».uncurried, «album».uncurried, «touchAlbum».uncurried, «totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «albumItems».uncurried := by
+theorem item.body_eq :
+    body.item.denoteFn (album.uncurried, touchAlbum.uncurried, totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = item.uncurried := by
   kernel_rfl
 
-theorem «albumItems».safe_eq :
-    body.«albumItems».safeFn («item».uncurried, «album».uncurried, «touchAlbum».uncurried, «totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («item».safety, «album».safety, «touchAlbum».safety, «totalList».safety, «usageList».safety, «usageOf».safety, «totalOf».safety, «add».safety, «total».safety, «track».safety, «packList».safety, «packOf».safety, «pack».safety, «markList».safety, «markOf».safety, «placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «albumItems».safety := by
+theorem item.safe_eq :
+    body.item.safeFn (album.uncurried, touchAlbum.uncurried, totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (album.safety, touchAlbum.safety, totalList.safety, usageList.safety, usageOf.safety, totalOf.safety, add.safety, total.safety, track.safety, packList.safety, packOf.safety, pack.safety, markList.safety, markOf.safety, placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = item.safety := by
   kernel_rfl
 
-noncomputable def «albumList».uncurried : sig.«albumList».denote := fun xs => «albumList» xs.1
+noncomputable def albumItems.uncurried : sig.albumItems.denote := fun xs => albumItems xs.1 xs.2.1 xs.2.2.1 xs.2.2.2.1 xs.2.2.2.2.1 xs.2.2.2.2.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «albumList».safety : sig.«albumList».params.denote → Bool := fun _ => true
+noncomputable def albumItems.safety : sig.albumItems.params.denote → Bool := fun _ => true
 
-theorem «albumList».body_eq :
-    body.«albumList».denoteFn («albumItems».uncurried, «item».uncurried, «album».uncurried, «touchAlbum».uncurried, «totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «albumList».uncurried := by
+theorem albumItems.body_eq :
+    body.albumItems.denoteFn (item.uncurried, album.uncurried, touchAlbum.uncurried, totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = albumItems.uncurried := by
   kernel_rfl
 
-theorem «albumList».safe_eq :
-    body.«albumList».safeFn («albumItems».uncurried, «item».uncurried, «album».uncurried, «touchAlbum».uncurried, «totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («albumItems».safety, «item».safety, «album».safety, «touchAlbum».safety, «totalList».safety, «usageList».safety, «usageOf».safety, «totalOf».safety, «add».safety, «total».safety, «track».safety, «packList».safety, «packOf».safety, «pack».safety, «markList».safety, «markOf».safety, «placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «albumList».safety := by
+theorem albumItems.safe_eq :
+    body.albumItems.safeFn (item.uncurried, album.uncurried, touchAlbum.uncurried, totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (item.safety, album.safety, touchAlbum.safety, totalList.safety, usageList.safety, usageOf.safety, totalOf.safety, add.safety, total.safety, track.safety, packList.safety, packOf.safety, pack.safety, markList.safety, markOf.safety, placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = albumItems.safety := by
   kernel_rfl
 
-noncomputable def «itemList».uncurried : sig.«itemList».denote := fun xs => «itemList» xs.1
+noncomputable def albumList.uncurried : sig.albumList.denote := fun xs => albumList xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «itemList».safety : sig.«itemList».params.denote → Bool := fun _ => true
+noncomputable def albumList.safety : sig.albumList.params.denote → Bool := fun _ => true
 
-theorem «itemList».body_eq :
-    body.«itemList».denoteFn («albumList».uncurried, «albumItems».uncurried, «item».uncurried, «album».uncurried, «touchAlbum».uncurried, «totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «itemList».uncurried := by
+theorem albumList.body_eq :
+    body.albumList.denoteFn (albumItems.uncurried, item.uncurried, album.uncurried, touchAlbum.uncurried, totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = albumList.uncurried := by
   kernel_rfl
 
-theorem «itemList».safe_eq :
-    body.«itemList».safeFn («albumList».uncurried, «albumItems».uncurried, «item».uncurried, «album».uncurried, «touchAlbum».uncurried, «totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («albumList».safety, «albumItems».safety, «item».safety, «album».safety, «touchAlbum».safety, «totalList».safety, «usageList».safety, «usageOf».safety, «totalOf».safety, «add».safety, «total».safety, «track».safety, «packList».safety, «packOf».safety, «pack».safety, «markList».safety, «markOf».safety, «placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «itemList».safety := by
+theorem albumList.safe_eq :
+    body.albumList.safeFn (albumItems.uncurried, item.uncurried, album.uncurried, touchAlbum.uncurried, totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (albumItems.safety, item.safety, album.safety, touchAlbum.safety, totalList.safety, usageList.safety, usageOf.safety, totalOf.safety, add.safety, total.safety, track.safety, packList.safety, packOf.safety, pack.safety, markList.safety, markOf.safety, placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = albumList.safety := by
   kernel_rfl
 
-noncomputable def «loadPlacement».uncurried : sig.«loadPlacement».denote := fun xs => «loadPlacement» xs.1 xs.2.1 xs.2.2.1
-
-noncomputable def «loadPlacement».safety : sig.«loadPlacement».params.denote → Bool := fun xs => «loadPlacement».safe xs.1 xs.2.1 xs.2.2.1
-
-theorem «loadPlacement».body_eq :
-    body.«loadPlacement».denoteFn («itemList».uncurried, «albumList».uncurried, «albumItems».uncurried, «item».uncurried, «album».uncurried, «touchAlbum».uncurried, «totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «loadPlacement».uncurried := by
-  kernel_rfl
-
-theorem «loadPlacement».safe_eq :
-    body.«loadPlacement».safeFn («itemList».uncurried, «albumList».uncurried, «albumItems».uncurried, «item».uncurried, «album».uncurried, «touchAlbum».uncurried, «totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («itemList».safety, «albumList».safety, «albumItems».safety, «item».safety, «album».safety, «touchAlbum».safety, «totalList».safety, «usageList».safety, «usageOf».safety, «totalOf».safety, «add».safety, «total».safety, «track».safety, «packList».safety, «packOf».safety, «pack».safety, «markList».safety, «markOf».safety, «placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «loadPlacement».safety := by
-  kernel_rfl
-
-noncomputable def «loadMark».uncurried : sig.«loadMark».denote := fun xs => «loadMark» xs.1 xs.2.1
+noncomputable def itemList.uncurried : sig.itemList.denote := fun xs => itemList xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «loadMark».safety : sig.«loadMark».params.denote → Bool := fun _ => true
+noncomputable def itemList.safety : sig.itemList.params.denote → Bool := fun _ => true
 
-theorem «loadMark».body_eq :
-    body.«loadMark».denoteFn («loadPlacement».uncurried, «itemList».uncurried, «albumList».uncurried, «albumItems».uncurried, «item».uncurried, «album».uncurried, «touchAlbum».uncurried, «totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «loadMark».uncurried := by
+theorem itemList.body_eq :
+    body.itemList.denoteFn (albumList.uncurried, albumItems.uncurried, item.uncurried, album.uncurried, touchAlbum.uncurried, totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = itemList.uncurried := by
   kernel_rfl
 
-theorem «loadMark».safe_eq :
-    body.«loadMark».safeFn («loadPlacement».uncurried, «itemList».uncurried, «albumList».uncurried, «albumItems».uncurried, «item».uncurried, «album».uncurried, «touchAlbum».uncurried, «totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («loadPlacement».safety, «itemList».safety, «albumList».safety, «albumItems».safety, «item».safety, «album».safety, «touchAlbum».safety, «totalList».safety, «usageList».safety, «usageOf».safety, «totalOf».safety, «add».safety, «total».safety, «track».safety, «packList».safety, «packOf».safety, «pack».safety, «markList».safety, «markOf».safety, «placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «loadMark».safety := by
+theorem itemList.safe_eq :
+    body.itemList.safeFn (albumList.uncurried, albumItems.uncurried, item.uncurried, album.uncurried, touchAlbum.uncurried, totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (albumList.safety, albumItems.safety, item.safety, album.safety, touchAlbum.safety, totalList.safety, usageList.safety, usageOf.safety, totalOf.safety, add.safety, total.safety, track.safety, packList.safety, packOf.safety, pack.safety, markList.safety, markOf.safety, placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = itemList.safety := by
   kernel_rfl
 
-noncomputable def «loadPack».uncurried : sig.«loadPack».denote := fun xs => «loadPack» xs.1 xs.2.1
+noncomputable def loadPlacement.uncurried : sig.loadPlacement.denote := fun xs => loadPlacement xs.1 xs.2.1 xs.2.2.1
+
+noncomputable def loadPlacement.safety : sig.loadPlacement.params.denote → Bool := fun xs => loadPlacement.safe xs.1 xs.2.1 xs.2.2.1
+
+theorem loadPlacement.body_eq :
+    body.loadPlacement.denoteFn (itemList.uncurried, albumList.uncurried, albumItems.uncurried, item.uncurried, album.uncurried, touchAlbum.uncurried, totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = loadPlacement.uncurried := by
+  kernel_rfl
+
+theorem loadPlacement.safe_eq :
+    body.loadPlacement.safeFn (itemList.uncurried, albumList.uncurried, albumItems.uncurried, item.uncurried, album.uncurried, touchAlbum.uncurried, totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (itemList.safety, albumList.safety, albumItems.safety, item.safety, album.safety, touchAlbum.safety, totalList.safety, usageList.safety, usageOf.safety, totalOf.safety, add.safety, total.safety, track.safety, packList.safety, packOf.safety, pack.safety, markList.safety, markOf.safety, placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = loadPlacement.safety := by
+  kernel_rfl
+
+noncomputable def loadMark.uncurried : sig.loadMark.denote := fun xs => loadMark xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «loadPack».safety : sig.«loadPack».params.denote → Bool := fun _ => true
+noncomputable def loadMark.safety : sig.loadMark.params.denote → Bool := fun _ => true
 
-theorem «loadPack».body_eq :
-    body.«loadPack».denoteFn («loadMark».uncurried, «loadPlacement».uncurried, «itemList».uncurried, «albumList».uncurried, «albumItems».uncurried, «item».uncurried, «album».uncurried, «touchAlbum».uncurried, «totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «loadPack».uncurried := by
+theorem loadMark.body_eq :
+    body.loadMark.denoteFn (loadPlacement.uncurried, itemList.uncurried, albumList.uncurried, albumItems.uncurried, item.uncurried, album.uncurried, touchAlbum.uncurried, totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = loadMark.uncurried := by
   kernel_rfl
 
-theorem «loadPack».safe_eq :
-    body.«loadPack».safeFn («loadMark».uncurried, «loadPlacement».uncurried, «itemList».uncurried, «albumList».uncurried, «albumItems».uncurried, «item».uncurried, «album».uncurried, «touchAlbum».uncurried, «totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («loadMark».safety, «loadPlacement».safety, «itemList».safety, «albumList».safety, «albumItems».safety, «item».safety, «album».safety, «touchAlbum».safety, «totalList».safety, «usageList».safety, «usageOf».safety, «totalOf».safety, «add».safety, «total».safety, «track».safety, «packList».safety, «packOf».safety, «pack».safety, «markList».safety, «markOf».safety, «placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «loadPack».safety := by
+theorem loadMark.safe_eq :
+    body.loadMark.safeFn (loadPlacement.uncurried, itemList.uncurried, albumList.uncurried, albumItems.uncurried, item.uncurried, album.uncurried, touchAlbum.uncurried, totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (loadPlacement.safety, itemList.safety, albumList.safety, albumItems.safety, item.safety, album.safety, touchAlbum.safety, totalList.safety, usageList.safety, usageOf.safety, totalOf.safety, add.safety, total.safety, track.safety, packList.safety, packOf.safety, pack.safety, markList.safety, markOf.safety, placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = loadMark.safety := by
   kernel_rfl
 
-noncomputable def «loadTotal».uncurried : sig.«loadTotal».denote := fun xs => «loadTotal» xs.1 xs.2.1
-
-noncomputable def «loadTotal».safety : sig.«loadTotal».params.denote → Bool := fun xs => «loadTotal».safe xs.1 xs.2.1
-
-theorem «loadTotal».body_eq :
-    body.«loadTotal».denoteFn («loadPack».uncurried, «loadMark».uncurried, «loadPlacement».uncurried, «itemList».uncurried, «albumList».uncurried, «albumItems».uncurried, «item».uncurried, «album».uncurried, «touchAlbum».uncurried, «totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «loadTotal».uncurried := by
-  kernel_rfl
-
-theorem «loadTotal».safe_eq :
-    body.«loadTotal».safeFn («loadPack».uncurried, «loadMark».uncurried, «loadPlacement».uncurried, «itemList».uncurried, «albumList».uncurried, «albumItems».uncurried, «item».uncurried, «album».uncurried, «touchAlbum».uncurried, «totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («loadPack».safety, «loadMark».safety, «loadPlacement».safety, «itemList».safety, «albumList».safety, «albumItems».safety, «item».safety, «album».safety, «touchAlbum».safety, «totalList».safety, «usageList».safety, «usageOf».safety, «totalOf».safety, «add».safety, «total».safety, «track».safety, «packList».safety, «packOf».safety, «pack».safety, «markList».safety, «markOf».safety, «placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «loadTotal».safety := by
-  kernel_rfl
-
-noncomputable def «loadIncrements».uncurried : sig.«loadIncrements».denote := fun xs => «loadIncrements» xs.1 xs.2.1
-
-noncomputable def «loadIncrements».safety : sig.«loadIncrements».params.denote → Bool := fun xs => «loadIncrements».safe xs.1 xs.2.1
-
-theorem «loadIncrements».body_eq :
-    body.«loadIncrements».denoteFn («loadTotal».uncurried, «loadPack».uncurried, «loadMark».uncurried, «loadPlacement».uncurried, «itemList».uncurried, «albumList».uncurried, «albumItems».uncurried, «item».uncurried, «album».uncurried, «touchAlbum».uncurried, «totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «loadIncrements».uncurried := by
-  kernel_rfl
-
-theorem «loadIncrements».safe_eq :
-    body.«loadIncrements».safeFn («loadTotal».uncurried, «loadPack».uncurried, «loadMark».uncurried, «loadPlacement».uncurried, «itemList».uncurried, «albumList».uncurried, «albumItems».uncurried, «item».uncurried, «album».uncurried, «touchAlbum».uncurried, «totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («loadTotal».safety, «loadPack».safety, «loadMark».safety, «loadPlacement».safety, «itemList».safety, «albumList».safety, «albumItems».safety, «item».safety, «album».safety, «touchAlbum».safety, «totalList».safety, «usageList».safety, «usageOf».safety, «totalOf».safety, «add».safety, «total».safety, «track».safety, «packList».safety, «packOf».safety, «pack».safety, «markList».safety, «markOf».safety, «placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «loadIncrements».safety := by
-  kernel_rfl
-
-noncomputable def «loadAlbum».uncurried : sig.«loadAlbum».denote := fun xs => «loadAlbum» xs.1 xs.2.1
+noncomputable def loadPack.uncurried : sig.loadPack.denote := fun xs => loadPack xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «loadAlbum».safety : sig.«loadAlbum».params.denote → Bool := fun _ => true
+noncomputable def loadPack.safety : sig.loadPack.params.denote → Bool := fun _ => true
 
-theorem «loadAlbum».body_eq :
-    body.«loadAlbum».denoteFn («loadIncrements».uncurried, «loadTotal».uncurried, «loadPack».uncurried, «loadMark».uncurried, «loadPlacement».uncurried, «itemList».uncurried, «albumList».uncurried, «albumItems».uncurried, «item».uncurried, «album».uncurried, «touchAlbum».uncurried, «totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «loadAlbum».uncurried := by
+theorem loadPack.body_eq :
+    body.loadPack.denoteFn (loadMark.uncurried, loadPlacement.uncurried, itemList.uncurried, albumList.uncurried, albumItems.uncurried, item.uncurried, album.uncurried, touchAlbum.uncurried, totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = loadPack.uncurried := by
   kernel_rfl
 
-theorem «loadAlbum».safe_eq :
-    body.«loadAlbum».safeFn («loadIncrements».uncurried, «loadTotal».uncurried, «loadPack».uncurried, «loadMark».uncurried, «loadPlacement».uncurried, «itemList».uncurried, «albumList».uncurried, «albumItems».uncurried, «item».uncurried, «album».uncurried, «touchAlbum».uncurried, «totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («loadIncrements».safety, «loadTotal».safety, «loadPack».safety, «loadMark».safety, «loadPlacement».safety, «itemList».safety, «albumList».safety, «albumItems».safety, «item».safety, «album».safety, «touchAlbum».safety, «totalList».safety, «usageList».safety, «usageOf».safety, «totalOf».safety, «add».safety, «total».safety, «track».safety, «packList».safety, «packOf».safety, «pack».safety, «markList».safety, «markOf».safety, «placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «loadAlbum».safety := by
+theorem loadPack.safe_eq :
+    body.loadPack.safeFn (loadMark.uncurried, loadPlacement.uncurried, itemList.uncurried, albumList.uncurried, albumItems.uncurried, item.uncurried, album.uncurried, touchAlbum.uncurried, totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (loadMark.safety, loadPlacement.safety, itemList.safety, albumList.safety, albumItems.safety, item.safety, album.safety, touchAlbum.safety, totalList.safety, usageList.safety, usageOf.safety, totalOf.safety, add.safety, total.safety, track.safety, packList.safety, packOf.safety, pack.safety, markList.safety, markOf.safety, placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = loadPack.safety := by
   kernel_rfl
 
-noncomputable def «loadItem».uncurried : sig.«loadItem».denote := fun xs => «loadItem» xs.1 xs.2.1
+noncomputable def loadTotal.uncurried : sig.loadTotal.denote := fun xs => loadTotal xs.1 xs.2.1
+
+noncomputable def loadTotal.safety : sig.loadTotal.params.denote → Bool := fun xs => loadTotal.safe xs.1 xs.2.1
+
+theorem loadTotal.body_eq :
+    body.loadTotal.denoteFn (loadPack.uncurried, loadMark.uncurried, loadPlacement.uncurried, itemList.uncurried, albumList.uncurried, albumItems.uncurried, item.uncurried, album.uncurried, touchAlbum.uncurried, totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = loadTotal.uncurried := by
+  kernel_rfl
+
+theorem loadTotal.safe_eq :
+    body.loadTotal.safeFn (loadPack.uncurried, loadMark.uncurried, loadPlacement.uncurried, itemList.uncurried, albumList.uncurried, albumItems.uncurried, item.uncurried, album.uncurried, touchAlbum.uncurried, totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (loadPack.safety, loadMark.safety, loadPlacement.safety, itemList.safety, albumList.safety, albumItems.safety, item.safety, album.safety, touchAlbum.safety, totalList.safety, usageList.safety, usageOf.safety, totalOf.safety, add.safety, total.safety, track.safety, packList.safety, packOf.safety, pack.safety, markList.safety, markOf.safety, placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = loadTotal.safety := by
+  kernel_rfl
+
+noncomputable def loadIncrements.uncurried : sig.loadIncrements.denote := fun xs => loadIncrements xs.1 xs.2.1
+
+noncomputable def loadIncrements.safety : sig.loadIncrements.params.denote → Bool := fun xs => loadIncrements.safe xs.1 xs.2.1
+
+theorem loadIncrements.body_eq :
+    body.loadIncrements.denoteFn (loadTotal.uncurried, loadPack.uncurried, loadMark.uncurried, loadPlacement.uncurried, itemList.uncurried, albumList.uncurried, albumItems.uncurried, item.uncurried, album.uncurried, touchAlbum.uncurried, totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = loadIncrements.uncurried := by
+  kernel_rfl
+
+theorem loadIncrements.safe_eq :
+    body.loadIncrements.safeFn (loadTotal.uncurried, loadPack.uncurried, loadMark.uncurried, loadPlacement.uncurried, itemList.uncurried, albumList.uncurried, albumItems.uncurried, item.uncurried, album.uncurried, touchAlbum.uncurried, totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (loadTotal.safety, loadPack.safety, loadMark.safety, loadPlacement.safety, itemList.safety, albumList.safety, albumItems.safety, item.safety, album.safety, touchAlbum.safety, totalList.safety, usageList.safety, usageOf.safety, totalOf.safety, add.safety, total.safety, track.safety, packList.safety, packOf.safety, pack.safety, markList.safety, markOf.safety, placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = loadIncrements.safety := by
+  kernel_rfl
+
+noncomputable def loadAlbum.uncurried : sig.loadAlbum.denote := fun xs => loadAlbum xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «loadItem».safety : sig.«loadItem».params.denote → Bool := fun _ => true
+noncomputable def loadAlbum.safety : sig.loadAlbum.params.denote → Bool := fun _ => true
 
-theorem «loadItem».body_eq :
-    body.«loadItem».denoteFn («loadAlbum».uncurried, «loadIncrements».uncurried, «loadTotal».uncurried, «loadPack».uncurried, «loadMark».uncurried, «loadPlacement».uncurried, «itemList».uncurried, «albumList».uncurried, «albumItems».uncurried, «item».uncurried, «album».uncurried, «touchAlbum».uncurried, «totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) = «loadItem».uncurried := by
+theorem loadAlbum.body_eq :
+    body.loadAlbum.denoteFn (loadIncrements.uncurried, loadTotal.uncurried, loadPack.uncurried, loadMark.uncurried, loadPlacement.uncurried, itemList.uncurried, albumList.uncurried, albumItems.uncurried, item.uncurried, album.uncurried, touchAlbum.uncurried, totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = loadAlbum.uncurried := by
   kernel_rfl
 
-theorem «loadItem».safe_eq :
-    body.«loadItem».safeFn («loadAlbum».uncurried, «loadIncrements».uncurried, «loadTotal».uncurried, «loadPack».uncurried, «loadMark».uncurried, «loadPlacement».uncurried, «itemList».uncurried, «albumList».uncurried, «albumItems».uncurried, «item».uncurried, «album».uncurried, «touchAlbum».uncurried, «totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) («loadAlbum».safety, «loadIncrements».safety, «loadTotal».safety, «loadPack».safety, «loadMark».safety, «loadPlacement».safety, «itemList».safety, «albumList».safety, «albumItems».safety, «item».safety, «album».safety, «touchAlbum».safety, «totalList».safety, «usageList».safety, «usageOf».safety, «totalOf».safety, «add».safety, «total».safety, «track».safety, «packList».safety, «packOf».safety, «pack».safety, «markList».safety, «markOf».safety, «placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) = «loadItem».safety := by
+theorem loadAlbum.safe_eq :
+    body.loadAlbum.safeFn (loadIncrements.uncurried, loadTotal.uncurried, loadPack.uncurried, loadMark.uncurried, loadPlacement.uncurried, itemList.uncurried, albumList.uncurried, albumItems.uncurried, item.uncurried, album.uncurried, touchAlbum.uncurried, totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (loadIncrements.safety, loadTotal.safety, loadPack.safety, loadMark.safety, loadPlacement.safety, itemList.safety, albumList.safety, albumItems.safety, item.safety, album.safety, touchAlbum.safety, totalList.safety, usageList.safety, usageOf.safety, totalOf.safety, add.safety, total.safety, track.safety, packList.safety, packOf.safety, pack.safety, markList.safety, markOf.safety, placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = loadAlbum.safety := by
   kernel_rfl
 
-theorem denote_eq : typed.denote = («loadItem».uncurried, «loadAlbum».uncurried, «loadIncrements».uncurried, «loadTotal».uncurried, «loadPack».uncurried, «loadMark».uncurried, «loadPlacement».uncurried, «itemList».uncurried, «albumList».uncurried, «albumItems».uncurried, «item».uncurried, «album».uncurried, «touchAlbum».uncurried, «totalList».uncurried, «usageList».uncurried, «usageOf».uncurried, «totalOf».uncurried, «add».uncurried, «total».uncurried, «track».uncurried, «packList».uncurried, «packOf».uncurried, «pack».uncurried, «markList».uncurried, «markOf».uncurried, «placedRefs».uncurried, «isPlaced».uncurried, «placements».uncurried, «mark».uncurried, «place».uncurried, «dropMarkBefore».uncurried, «put».uncurried, «providersOf».uncurried, «noteUnplace».uncurried, «new Registers».uncurried, «sum».uncurried, «highest».uncurried, «zero».uncurried, «larger».uncurried, «described».uncurried, «otherwise».uncurried, «given».uncurried, «before».uncurried, «newest».uncurried, «earlier».uncurried, «newer».uncurried, «byString».uncurried, «key».uncurried, ()) :=
-  (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) «markOf».body_eq) «markList».body_eq) «pack».body_eq) «packOf».body_eq) «packList».body_eq) «track».body_eq) «total».body_eq) «add».body_eq) «totalOf».body_eq) «usageOf».body_eq) «usageList».body_eq) «totalList».body_eq) «touchAlbum».body_eq) «album».body_eq) «item».body_eq) «albumItems».body_eq) «albumList».body_eq) «itemList».body_eq) «loadPlacement».body_eq) «loadMark».body_eq) «loadPack».body_eq) «loadTotal».body_eq) «loadIncrements».body_eq) «loadAlbum».body_eq) «loadItem».body_eq)
+noncomputable def loadItem.uncurried : sig.loadItem.denote := fun xs => loadItem xs.1 xs.2.1
 
-theorem safety_eq : typed.safety = («loadItem».safety, «loadAlbum».safety, «loadIncrements».safety, «loadTotal».safety, «loadPack».safety, «loadMark».safety, «loadPlacement».safety, «itemList».safety, «albumList».safety, «albumItems».safety, «item».safety, «album».safety, «touchAlbum».safety, «totalList».safety, «usageList».safety, «usageOf».safety, «totalOf».safety, «add».safety, «total».safety, «track».safety, «packList».safety, «packOf».safety, «pack».safety, «markList».safety, «markOf».safety, «placedRefs».safety, «isPlaced».safety, «placements».safety, «mark».safety, «place».safety, «dropMarkBefore».safety, «put».safety, «providersOf».safety, «noteUnplace».safety, «new Registers».safety, «sum».safety, «highest».safety, «zero».safety, «larger».safety, «described».safety, «otherwise».safety, «given».safety, «before».safety, «newest».safety, «earlier».safety, «newer».safety, «byString».safety, «key».safety, ()) :=
-  (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) «markOf».body_eq) «markList».body_eq) «pack».body_eq) «packOf».body_eq) «packList».body_eq) «track».body_eq) «total».body_eq) «add».body_eq) «totalOf».body_eq) «usageOf».body_eq) «usageList».body_eq) «totalList».body_eq) «touchAlbum».body_eq) «album».body_eq) «item».body_eq) «albumItems».body_eq) «albumList».body_eq) «itemList».body_eq) «loadPlacement».body_eq) «loadMark».body_eq) «loadPack».body_eq) «loadTotal».body_eq) «loadIncrements».body_eq) «loadAlbum».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) «markOf».body_eq) «markList».body_eq) «pack».body_eq) «packOf».body_eq) «packList».body_eq) «track».body_eq) «total».body_eq) «add».body_eq) «totalOf».body_eq) «usageOf».body_eq) «usageList».body_eq) «totalList».body_eq) «touchAlbum».body_eq) «album».body_eq) «item».body_eq) «albumItems».body_eq) «albumList».body_eq) «itemList».body_eq) «loadPlacement».body_eq) «loadMark».body_eq) «loadPack».body_eq) «loadTotal».body_eq) «loadIncrements».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) «markOf».body_eq) «markList».body_eq) «pack».body_eq) «packOf».body_eq) «packList».body_eq) «track».body_eq) «total».body_eq) «add».body_eq) «totalOf».body_eq) «usageOf».body_eq) «usageList».body_eq) «totalList».body_eq) «touchAlbum».body_eq) «album».body_eq) «item».body_eq) «albumItems».body_eq) «albumList».body_eq) «itemList».body_eq) «loadPlacement».body_eq) «loadMark».body_eq) «loadPack».body_eq) «loadTotal».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) «markOf».body_eq) «markList».body_eq) «pack».body_eq) «packOf».body_eq) «packList».body_eq) «track».body_eq) «total».body_eq) «add».body_eq) «totalOf».body_eq) «usageOf».body_eq) «usageList».body_eq) «totalList».body_eq) «touchAlbum».body_eq) «album».body_eq) «item».body_eq) «albumItems».body_eq) «albumList».body_eq) «itemList».body_eq) «loadPlacement».body_eq) «loadMark».body_eq) «loadPack».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) «markOf».body_eq) «markList».body_eq) «pack».body_eq) «packOf».body_eq) «packList».body_eq) «track».body_eq) «total».body_eq) «add».body_eq) «totalOf».body_eq) «usageOf».body_eq) «usageList».body_eq) «totalList».body_eq) «touchAlbum».body_eq) «album».body_eq) «item».body_eq) «albumItems».body_eq) «albumList».body_eq) «itemList».body_eq) «loadPlacement».body_eq) «loadMark».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) «markOf».body_eq) «markList».body_eq) «pack».body_eq) «packOf».body_eq) «packList».body_eq) «track».body_eq) «total».body_eq) «add».body_eq) «totalOf».body_eq) «usageOf».body_eq) «usageList».body_eq) «totalList».body_eq) «touchAlbum».body_eq) «album».body_eq) «item».body_eq) «albumItems».body_eq) «albumList».body_eq) «itemList».body_eq) «loadPlacement».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) «markOf».body_eq) «markList».body_eq) «pack».body_eq) «packOf».body_eq) «packList».body_eq) «track».body_eq) «total».body_eq) «add».body_eq) «totalOf».body_eq) «usageOf».body_eq) «usageList».body_eq) «totalList».body_eq) «touchAlbum».body_eq) «album».body_eq) «item».body_eq) «albumItems».body_eq) «albumList».body_eq) «itemList».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) «markOf».body_eq) «markList».body_eq) «pack».body_eq) «packOf».body_eq) «packList».body_eq) «track».body_eq) «total».body_eq) «add».body_eq) «totalOf».body_eq) «usageOf».body_eq) «usageList».body_eq) «totalList».body_eq) «touchAlbum».body_eq) «album».body_eq) «item».body_eq) «albumItems».body_eq) «albumList».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) «markOf».body_eq) «markList».body_eq) «pack».body_eq) «packOf».body_eq) «packList».body_eq) «track».body_eq) «total».body_eq) «add».body_eq) «totalOf».body_eq) «usageOf».body_eq) «usageList».body_eq) «totalList».body_eq) «touchAlbum».body_eq) «album».body_eq) «item».body_eq) «albumItems».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) «markOf».body_eq) «markList».body_eq) «pack».body_eq) «packOf».body_eq) «packList».body_eq) «track».body_eq) «total».body_eq) «add».body_eq) «totalOf».body_eq) «usageOf».body_eq) «usageList».body_eq) «totalList».body_eq) «touchAlbum».body_eq) «album».body_eq) «item».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) «markOf».body_eq) «markList».body_eq) «pack».body_eq) «packOf».body_eq) «packList».body_eq) «track».body_eq) «total».body_eq) «add».body_eq) «totalOf».body_eq) «usageOf».body_eq) «usageList».body_eq) «totalList».body_eq) «touchAlbum».body_eq) «album».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) «markOf».body_eq) «markList».body_eq) «pack».body_eq) «packOf».body_eq) «packList».body_eq) «track».body_eq) «total».body_eq) «add».body_eq) «totalOf».body_eq) «usageOf».body_eq) «usageList».body_eq) «totalList».body_eq) «touchAlbum».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) «markOf».body_eq) «markList».body_eq) «pack».body_eq) «packOf».body_eq) «packList».body_eq) «track».body_eq) «total».body_eq) «add».body_eq) «totalOf».body_eq) «usageOf».body_eq) «usageList».body_eq) «totalList».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) «markOf».body_eq) «markList».body_eq) «pack».body_eq) «packOf».body_eq) «packList».body_eq) «track».body_eq) «total».body_eq) «add».body_eq) «totalOf».body_eq) «usageOf».body_eq) «usageList».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) «markOf».body_eq) «markList».body_eq) «pack».body_eq) «packOf».body_eq) «packList».body_eq) «track».body_eq) «total».body_eq) «add».body_eq) «totalOf».body_eq) «usageOf».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) «markOf».body_eq) «markList».body_eq) «pack».body_eq) «packOf».body_eq) «packList».body_eq) «track».body_eq) «total».body_eq) «add».body_eq) «totalOf».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) «markOf».body_eq) «markList».body_eq) «pack».body_eq) «packOf».body_eq) «packList».body_eq) «track».body_eq) «total».body_eq) «add».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) «markOf».body_eq) «markList».body_eq) «pack».body_eq) «packOf».body_eq) «packList».body_eq) «track».body_eq) «total».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) «markOf».body_eq) «markList».body_eq) «pack».body_eq) «packOf».body_eq) «packList».body_eq) «track».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) «markOf».body_eq) «markList».body_eq) «pack».body_eq) «packOf».body_eq) «packList».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) «markOf».body_eq) «markList».body_eq) «pack».body_eq) «packOf».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) «markOf».body_eq) «markList».body_eq) «pack».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) «markOf».body_eq) «markList».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) «markOf».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) «placedRefs».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) «isPlaced».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) «placements».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) «mark».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) «place».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) «dropMarkBefore».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) «put».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) «providersOf».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) «noteUnplace».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) «new Registers».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) «sum».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) «highest».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) «zero».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) «larger».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) «described».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) «otherwise».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) «given».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) «before».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) «newest».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) «earlier».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) «newer».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons rfl «key».body_eq) «byString».body_eq) (TProgram.safety_cons (TProgram.denote_cons rfl «key».body_eq) (TProgram.safety_cons rfl rfl «key».safe_eq) «byString».safe_eq) «newer».safe_eq) «earlier».safe_eq) «newest».safe_eq) «before».safe_eq) «given».safe_eq) «otherwise».safe_eq) «described».safe_eq) «larger».safe_eq) «zero».safe_eq) «highest».safe_eq) «sum».safe_eq) «new Registers».safe_eq) «noteUnplace».safe_eq) «providersOf».safe_eq) «put».safe_eq) «dropMarkBefore».safe_eq) «place».safe_eq) «mark».safe_eq) «placements».safe_eq) «isPlaced».safe_eq) «placedRefs».safe_eq) «markOf».safe_eq) «markList».safe_eq) «pack».safe_eq) «packOf».safe_eq) «packList».safe_eq) «track».safe_eq) «total».safe_eq) «add».safe_eq) «totalOf».safe_eq) «usageOf».safe_eq) «usageList».safe_eq) «totalList».safe_eq) «touchAlbum».safe_eq) «album».safe_eq) «item».safe_eq) «albumItems».safe_eq) «albumList».safe_eq) «itemList».safe_eq) «loadPlacement».safe_eq) «loadMark».safe_eq) «loadPack».safe_eq) «loadTotal».safe_eq) «loadIncrements».safe_eq) «loadAlbum».safe_eq) «loadItem».safe_eq)
+/-- Trivially safe: every input is in what the model covers. -/
+noncomputable def loadItem.safety : sig.loadItem.params.denote → Bool := fun _ => true
+
+theorem loadItem.body_eq :
+    body.loadItem.denoteFn (loadAlbum.uncurried, loadIncrements.uncurried, loadTotal.uncurried, loadPack.uncurried, loadMark.uncurried, loadPlacement.uncurried, itemList.uncurried, albumList.uncurried, albumItems.uncurried, item.uncurried, album.uncurried, touchAlbum.uncurried, totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) = loadItem.uncurried := by
+  kernel_rfl
+
+theorem loadItem.safe_eq :
+    body.loadItem.safeFn (loadAlbum.uncurried, loadIncrements.uncurried, loadTotal.uncurried, loadPack.uncurried, loadMark.uncurried, loadPlacement.uncurried, itemList.uncurried, albumList.uncurried, albumItems.uncurried, item.uncurried, album.uncurried, touchAlbum.uncurried, totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) (loadAlbum.safety, loadIncrements.safety, loadTotal.safety, loadPack.safety, loadMark.safety, loadPlacement.safety, itemList.safety, albumList.safety, albumItems.safety, item.safety, album.safety, touchAlbum.safety, totalList.safety, usageList.safety, usageOf.safety, totalOf.safety, add.safety, total.safety, track.safety, packList.safety, packOf.safety, pack.safety, markList.safety, markOf.safety, placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) = loadItem.safety := by
+  kernel_rfl
+
+theorem denote_eq : typed.denote = (loadItem.uncurried, loadAlbum.uncurried, loadIncrements.uncurried, loadTotal.uncurried, loadPack.uncurried, loadMark.uncurried, loadPlacement.uncurried, itemList.uncurried, albumList.uncurried, albumItems.uncurried, item.uncurried, album.uncurried, touchAlbum.uncurried, totalList.uncurried, usageList.uncurried, usageOf.uncurried, totalOf.uncurried, add.uncurried, total.uncurried, track.uncurried, packList.uncurried, packOf.uncurried, pack.uncurried, markList.uncurried, markOf.uncurried, placedRefs.uncurried, isPlaced.uncurried, placements.uncurried, mark.uncurried, place.uncurried, dropMarkBefore.uncurried, put.uncurried, providersOf.uncurried, noteUnplace.uncurried, «new Registers».uncurried, sum.uncurried, highest.uncurried, zero.uncurried, larger.uncurried, described.uncurried, otherwise.uncurried, given.uncurried, before.uncurried, newest.uncurried, earlier.uncurried, newer.uncurried, byString.uncurried, key.uncurried, ()) :=
+  (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) markOf.body_eq) markList.body_eq) pack.body_eq) packOf.body_eq) packList.body_eq) track.body_eq) total.body_eq) add.body_eq) totalOf.body_eq) usageOf.body_eq) usageList.body_eq) totalList.body_eq) touchAlbum.body_eq) album.body_eq) item.body_eq) albumItems.body_eq) albumList.body_eq) itemList.body_eq) loadPlacement.body_eq) loadMark.body_eq) loadPack.body_eq) loadTotal.body_eq) loadIncrements.body_eq) loadAlbum.body_eq) loadItem.body_eq)
+
+theorem safety_eq : typed.safety = (loadItem.safety, loadAlbum.safety, loadIncrements.safety, loadTotal.safety, loadPack.safety, loadMark.safety, loadPlacement.safety, itemList.safety, albumList.safety, albumItems.safety, item.safety, album.safety, touchAlbum.safety, totalList.safety, usageList.safety, usageOf.safety, totalOf.safety, add.safety, total.safety, track.safety, packList.safety, packOf.safety, pack.safety, markList.safety, markOf.safety, placedRefs.safety, isPlaced.safety, placements.safety, mark.safety, place.safety, dropMarkBefore.safety, put.safety, providersOf.safety, noteUnplace.safety, «new Registers».safety, sum.safety, highest.safety, zero.safety, larger.safety, described.safety, otherwise.safety, given.safety, before.safety, newest.safety, earlier.safety, newer.safety, byString.safety, key.safety, ()) :=
+  (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) markOf.body_eq) markList.body_eq) pack.body_eq) packOf.body_eq) packList.body_eq) track.body_eq) total.body_eq) add.body_eq) totalOf.body_eq) usageOf.body_eq) usageList.body_eq) totalList.body_eq) touchAlbum.body_eq) album.body_eq) item.body_eq) albumItems.body_eq) albumList.body_eq) itemList.body_eq) loadPlacement.body_eq) loadMark.body_eq) loadPack.body_eq) loadTotal.body_eq) loadIncrements.body_eq) loadAlbum.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) markOf.body_eq) markList.body_eq) pack.body_eq) packOf.body_eq) packList.body_eq) track.body_eq) total.body_eq) add.body_eq) totalOf.body_eq) usageOf.body_eq) usageList.body_eq) totalList.body_eq) touchAlbum.body_eq) album.body_eq) item.body_eq) albumItems.body_eq) albumList.body_eq) itemList.body_eq) loadPlacement.body_eq) loadMark.body_eq) loadPack.body_eq) loadTotal.body_eq) loadIncrements.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) markOf.body_eq) markList.body_eq) pack.body_eq) packOf.body_eq) packList.body_eq) track.body_eq) total.body_eq) add.body_eq) totalOf.body_eq) usageOf.body_eq) usageList.body_eq) totalList.body_eq) touchAlbum.body_eq) album.body_eq) item.body_eq) albumItems.body_eq) albumList.body_eq) itemList.body_eq) loadPlacement.body_eq) loadMark.body_eq) loadPack.body_eq) loadTotal.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) markOf.body_eq) markList.body_eq) pack.body_eq) packOf.body_eq) packList.body_eq) track.body_eq) total.body_eq) add.body_eq) totalOf.body_eq) usageOf.body_eq) usageList.body_eq) totalList.body_eq) touchAlbum.body_eq) album.body_eq) item.body_eq) albumItems.body_eq) albumList.body_eq) itemList.body_eq) loadPlacement.body_eq) loadMark.body_eq) loadPack.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) markOf.body_eq) markList.body_eq) pack.body_eq) packOf.body_eq) packList.body_eq) track.body_eq) total.body_eq) add.body_eq) totalOf.body_eq) usageOf.body_eq) usageList.body_eq) totalList.body_eq) touchAlbum.body_eq) album.body_eq) item.body_eq) albumItems.body_eq) albumList.body_eq) itemList.body_eq) loadPlacement.body_eq) loadMark.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) markOf.body_eq) markList.body_eq) pack.body_eq) packOf.body_eq) packList.body_eq) track.body_eq) total.body_eq) add.body_eq) totalOf.body_eq) usageOf.body_eq) usageList.body_eq) totalList.body_eq) touchAlbum.body_eq) album.body_eq) item.body_eq) albumItems.body_eq) albumList.body_eq) itemList.body_eq) loadPlacement.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) markOf.body_eq) markList.body_eq) pack.body_eq) packOf.body_eq) packList.body_eq) track.body_eq) total.body_eq) add.body_eq) totalOf.body_eq) usageOf.body_eq) usageList.body_eq) totalList.body_eq) touchAlbum.body_eq) album.body_eq) item.body_eq) albumItems.body_eq) albumList.body_eq) itemList.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) markOf.body_eq) markList.body_eq) pack.body_eq) packOf.body_eq) packList.body_eq) track.body_eq) total.body_eq) add.body_eq) totalOf.body_eq) usageOf.body_eq) usageList.body_eq) totalList.body_eq) touchAlbum.body_eq) album.body_eq) item.body_eq) albumItems.body_eq) albumList.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) markOf.body_eq) markList.body_eq) pack.body_eq) packOf.body_eq) packList.body_eq) track.body_eq) total.body_eq) add.body_eq) totalOf.body_eq) usageOf.body_eq) usageList.body_eq) totalList.body_eq) touchAlbum.body_eq) album.body_eq) item.body_eq) albumItems.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) markOf.body_eq) markList.body_eq) pack.body_eq) packOf.body_eq) packList.body_eq) track.body_eq) total.body_eq) add.body_eq) totalOf.body_eq) usageOf.body_eq) usageList.body_eq) totalList.body_eq) touchAlbum.body_eq) album.body_eq) item.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) markOf.body_eq) markList.body_eq) pack.body_eq) packOf.body_eq) packList.body_eq) track.body_eq) total.body_eq) add.body_eq) totalOf.body_eq) usageOf.body_eq) usageList.body_eq) totalList.body_eq) touchAlbum.body_eq) album.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) markOf.body_eq) markList.body_eq) pack.body_eq) packOf.body_eq) packList.body_eq) track.body_eq) total.body_eq) add.body_eq) totalOf.body_eq) usageOf.body_eq) usageList.body_eq) totalList.body_eq) touchAlbum.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) markOf.body_eq) markList.body_eq) pack.body_eq) packOf.body_eq) packList.body_eq) track.body_eq) total.body_eq) add.body_eq) totalOf.body_eq) usageOf.body_eq) usageList.body_eq) totalList.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) markOf.body_eq) markList.body_eq) pack.body_eq) packOf.body_eq) packList.body_eq) track.body_eq) total.body_eq) add.body_eq) totalOf.body_eq) usageOf.body_eq) usageList.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) markOf.body_eq) markList.body_eq) pack.body_eq) packOf.body_eq) packList.body_eq) track.body_eq) total.body_eq) add.body_eq) totalOf.body_eq) usageOf.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) markOf.body_eq) markList.body_eq) pack.body_eq) packOf.body_eq) packList.body_eq) track.body_eq) total.body_eq) add.body_eq) totalOf.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) markOf.body_eq) markList.body_eq) pack.body_eq) packOf.body_eq) packList.body_eq) track.body_eq) total.body_eq) add.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) markOf.body_eq) markList.body_eq) pack.body_eq) packOf.body_eq) packList.body_eq) track.body_eq) total.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) markOf.body_eq) markList.body_eq) pack.body_eq) packOf.body_eq) packList.body_eq) track.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) markOf.body_eq) markList.body_eq) pack.body_eq) packOf.body_eq) packList.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) markOf.body_eq) markList.body_eq) pack.body_eq) packOf.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) markOf.body_eq) markList.body_eq) pack.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) markOf.body_eq) markList.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) markOf.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) placedRefs.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) isPlaced.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) placements.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) mark.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) place.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) dropMarkBefore.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) put.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) providersOf.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) noteUnplace.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) «new Registers».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) sum.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) highest.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) zero.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) larger.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) described.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) otherwise.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) given.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) before.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) newest.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) earlier.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) newer.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons rfl key.body_eq) byString.body_eq) (TProgram.safety_cons (TProgram.denote_cons rfl key.body_eq) (TProgram.safety_cons rfl rfl key.safe_eq) byString.safe_eq) newer.safe_eq) earlier.safe_eq) newest.safe_eq) before.safe_eq) given.safe_eq) otherwise.safe_eq) described.safe_eq) larger.safe_eq) zero.safe_eq) highest.safe_eq) sum.safe_eq) «new Registers».safe_eq) noteUnplace.safe_eq) providersOf.safe_eq) put.safe_eq) dropMarkBefore.safe_eq) place.safe_eq) mark.safe_eq) placements.safe_eq) isPlaced.safe_eq) placedRefs.safe_eq) markOf.safe_eq) markList.safe_eq) pack.safe_eq) packOf.safe_eq) packList.safe_eq) track.safe_eq) total.safe_eq) add.safe_eq) totalOf.safe_eq) usageOf.safe_eq) usageList.safe_eq) totalList.safe_eq) touchAlbum.safe_eq) album.safe_eq) item.safe_eq) albumItems.safe_eq) albumList.safe_eq) itemList.safe_eq) loadPlacement.safe_eq) loadMark.safe_eq) loadPack.safe_eq) loadTotal.safe_eq) loadIncrements.safe_eq) loadAlbum.safe_eq) loadItem.safe_eq)
 
 /-! ## Frames
 
 The fields of the state each method leaves alone. -/
 
-theorem frames.«placed» : typed.frames "placed" = [true, true, true, true, true, true, false, false, false, true, true, true, true, false, false, false, false, true, true, true, false, false, true, false, false, false, false, false, true, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false] := by
+theorem frames.placed : typed.frames "placed" = [true, true, true, true, true, true, false, false, false, true, true, true, true, false, false, false, false, true, true, true, false, false, true, false, false, false, false, false, true, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false] := by
   decide +kernel
 
 /-- `dropMarkBefore` leaves `this.placed` as it is. -/
-theorem «dropMarkBefore».keeps.«placed» («this» : «Registers») («ref» : JSString) («p» : JSString) («u» : Option JSString) :
-    («dropMarkBefore» «this» «ref» «p» «u»).«placed» = «this».«placed» :=
-  frame_of .here denote_eq frames.«placed» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))) : FVar sigs "dropMarkBefore" sig.«dropMarkBefore») rfl «this» («ref», «p», «u», ())
+theorem dropMarkBefore.keeps.placed («this» : Registers) (ref : JSString) (p : JSString) (u : Option JSString) :
+    (dropMarkBefore «this» ref p u).placed = «this».placed :=
+  frame_of .here denote_eq frames.placed ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))) : FVar sigs "dropMarkBefore" sig.dropMarkBefore) rfl «this» (ref, p, u, ())
 
 /-- `mark` leaves `this.placed` as it is. -/
-theorem «mark».keeps.«placed» («this» : «Registers») («ref» : JSString) («p» : JSString) («on» : Bool) («reason» : Option JSString) («stamp» : JSString) («at» : Int) :
-    («mark» «this» «ref» «p» «on» «reason» «stamp» «at»).«placed» = «this».«placed» :=
-  frame_of .here denote_eq frames.«placed» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) : FVar sigs "mark" sig.«mark») rfl «this» («ref», «p», «on», «reason», «stamp», «at», ())
+theorem mark.keeps.placed («this» : Registers) (ref : JSString) (p : JSString) (on : Bool) (reason : Option JSString) (stamp : JSString) («at» : Int) :
+    (mark «this» ref p on reason stamp «at»).placed = «this».placed :=
+  frame_of .here denote_eq frames.placed ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) : FVar sigs "mark" sig.mark) rfl «this» (ref, p, on, reason, stamp, «at», ())
 
 /-- `pack` leaves `this.placed` as it is. -/
-theorem «pack».keeps.«placed» («this» : «Registers») («id» : JSString) («size» : Int) («csize» : Int) («stamp» : JSString) («at» : Int) («hn» : Option JSString) :
-    («pack» «this» «id» «size» «csize» «stamp» «at» «hn»).«placed» = «this».«placed» :=
-  frame_of .here denote_eq frames.«placed» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) : FVar sigs "pack" sig.«pack») rfl «this» («id», «size», «csize», «stamp», «at», «hn», ())
+theorem pack.keeps.placed («this» : Registers) (id : JSString) (size : Int) (csize : Int) (stamp : JSString) («at» : Int) (hn : Option JSString) :
+    (pack «this» id size csize stamp «at» hn).placed = «this».placed :=
+  frame_of .here denote_eq frames.placed ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) : FVar sigs "pack" sig.pack) rfl «this» (id, size, csize, stamp, «at», hn, ())
 
 /-- `track` leaves `this.placed` as it is. -/
-theorem «track».keeps.«placed» («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («total» : Bool) :
-    («track» «this» «p» «month» «device» «total»).«placed» = «this».«placed» :=
-  frame_of .here denote_eq frames.«placed» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) : FVar sigs "track" sig.«track») rfl «this» («p», «month», «device», «total», ())
+theorem track.keeps.placed («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (total : Bool) :
+    (track «this» p month device total).placed = «this».placed :=
+  frame_of .here denote_eq frames.placed ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) : FVar sigs "track" sig.track) rfl «this» (p, month, device, total, ())
 
 /-- `total` leaves `this.placed` as it is. -/
-theorem «total».keeps.«placed» («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («c» : «Counters») :
-    («total» «this» «p» «month» «device» «c»).«placed» = «this».«placed» :=
-  frame_of .here denote_eq frames.«placed» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) : FVar sigs "total" sig.«total») rfl «this» («p», «month», «device», «c», ())
+theorem total.keeps.placed («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (c : Counters) :
+    (total «this» p month device c).placed = «this».placed :=
+  frame_of .here denote_eq frames.placed ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) : FVar sigs "total" sig.total) rfl «this» (p, month, device, c, ())
 
 /-- `add` leaves `this.placed` as it is. -/
-theorem «add».keeps.«placed» («this» : «Registers») («p» : JSString) («month» : JSString) («c» : «Counters») :
-    («add» «this» «p» «month» «c»).«placed» = «this».«placed» :=
-  frame_of .here denote_eq frames.«placed» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) : FVar sigs "add" sig.«add») rfl «this» («p», «month», «c», ())
+theorem add.keeps.placed («this» : Registers) (p : JSString) (month : JSString) (c : Counters) :
+    (add «this» p month c).placed = «this».placed :=
+  frame_of .here denote_eq frames.placed ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) : FVar sigs "add" sig.add) rfl «this» (p, month, c, ())
 
 /-- `touchAlbum` leaves `this.placed` as it is. -/
-theorem «touchAlbum».keeps.«placed» («this» : «Registers») («aid» : JSString) («at» : Int) :
-    («touchAlbum» «this» «aid» «at»).«placed» = «this».«placed» :=
-  frame_of .here denote_eq frames.«placed» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "touchAlbum" sig.«touchAlbum») rfl «this» («aid», «at», ())
+theorem touchAlbum.keeps.placed («this» : Registers) (aid : JSString) («at» : Int) :
+    (touchAlbum «this» aid «at»).placed = «this».placed :=
+  frame_of .here denote_eq frames.placed ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "touchAlbum" sig.touchAlbum) rfl «this» (aid, «at», ())
 
 /-- `album` leaves `this.placed` as it is. -/
-theorem «album».keeps.«placed» («this» : «Registers») («aid» : JSString) («stamp» : JSString) («at» : Int) («name» : Option JSString) («cover» : Option JSString) («deleted» : Bool) :
-    («album» «this» «aid» «stamp» «at» «name» «cover» «deleted»).«placed» = «this».«placed» :=
-  frame_of .here denote_eq frames.«placed» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "album" sig.«album») rfl «this» («aid», «stamp», «at», «name», «cover», «deleted», ())
+theorem album.keeps.placed («this» : Registers) (aid : JSString) (stamp : JSString) («at» : Int) (name : Option JSString) (cover : Option JSString) (deleted : Bool) :
+    (album «this» aid stamp «at» name cover deleted).placed = «this».placed :=
+  frame_of .here denote_eq frames.placed ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "album" sig.album) rfl «this» (aid, stamp, «at», name, cover, deleted, ())
 
 /-- `item` leaves `this.placed` as it is. -/
-theorem «item».keeps.«placed» («this» : «Registers») («aid» : JSString) («id» : JSString) («stamp» : JSString) («present» : Bool) :
-    («item» «this» «aid» «id» «stamp» «present»).«placed» = «this».«placed» :=
-  frame_of .here denote_eq frames.«placed» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "item" sig.«item») rfl «this» («aid», «id», «stamp», «present», ())
+theorem item.keeps.placed («this» : Registers) (aid : JSString) (id : JSString) (stamp : JSString) (present : Bool) :
+    (item «this» aid id stamp present).placed = «this».placed :=
+  frame_of .here denote_eq frames.placed ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "item" sig.item) rfl «this» (aid, id, stamp, present, ())
 
 /-- `albumItems` leaves `this.placed` as it is. -/
-theorem «albumItems».keeps.«placed» («this» : «Registers») («aid» : JSString) («stamp» : JSString) («at» : Int) («add» : List JSString) («remove» : List JSString) :
-    («albumItems» «this» «aid» «stamp» «at» «add» «remove»).«placed» = «this».«placed» :=
-  frame_of .here denote_eq frames.«placed» ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "albumItems" sig.«albumItems») rfl «this» («aid», «stamp», «at», «add», «remove», ())
+theorem albumItems.keeps.placed («this» : Registers) (aid : JSString) (stamp : JSString) («at» : Int) (add : List JSString) (remove : List JSString) :
+    (albumItems «this» aid stamp «at» add remove).placed = «this».placed :=
+  frame_of .here denote_eq frames.placed ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "albumItems" sig.albumItems) rfl «this» (aid, stamp, «at», add, remove, ())
 
 /-- `loadMark` leaves `this.placed` as it is. -/
-theorem «loadMark».keeps.«placed» («this» : «Registers») («m» : «Mark») :
-    («loadMark» «this» «m»).«placed» = «this».«placed» :=
-  frame_of .here denote_eq frames.«placed» ((.there (.there (.there (.there (.there .here))))) : FVar sigs "loadMark" sig.«loadMark») rfl «this» («m», ())
+theorem loadMark.keeps.placed («this» : Registers) (m : Mark) :
+    (loadMark «this» m).placed = «this».placed :=
+  frame_of .here denote_eq frames.placed ((.there (.there (.there (.there (.there .here))))) : FVar sigs "loadMark" sig.loadMark) rfl «this» (m, ())
 
 /-- `loadPack` leaves `this.placed` as it is. -/
-theorem «loadPack».keeps.«placed» («this» : «Registers») («pk» : «Pack») :
-    («loadPack» «this» «pk»).«placed» = «this».«placed» :=
-  frame_of .here denote_eq frames.«placed» ((.there (.there (.there (.there .here)))) : FVar sigs "loadPack" sig.«loadPack») rfl «this» («pk», ())
+theorem loadPack.keeps.placed («this» : Registers) (pk : Pack) :
+    (loadPack «this» pk).placed = «this».placed :=
+  frame_of .here denote_eq frames.placed ((.there (.there (.there (.there .here)))) : FVar sigs "loadPack" sig.loadPack) rfl «this» (pk, ())
 
 /-- `loadTotal` leaves `this.placed` as it is. -/
-theorem «loadTotal».keeps.«placed» («this» : «Registers») («t» : «Total») :
-    («loadTotal» «this» «t»).«placed» = «this».«placed» :=
-  frame_of .here denote_eq frames.«placed» ((.there (.there (.there .here))) : FVar sigs "loadTotal" sig.«loadTotal») rfl «this» («t», ())
+theorem loadTotal.keeps.placed («this» : Registers) (t : Total) :
+    (loadTotal «this» t).placed = «this».placed :=
+  frame_of .here denote_eq frames.placed ((.there (.there (.there .here))) : FVar sigs "loadTotal" sig.loadTotal) rfl «this» (t, ())
 
 /-- `loadIncrements` leaves `this.placed` as it is. -/
-theorem «loadIncrements».keeps.«placed» («this» : «Registers») («i» : «Increments») :
-    («loadIncrements» «this» «i»).«placed» = «this».«placed» :=
-  frame_of .here denote_eq frames.«placed» ((.there (.there .here)) : FVar sigs "loadIncrements" sig.«loadIncrements») rfl «this» («i», ())
+theorem loadIncrements.keeps.placed («this» : Registers) (i : Increments) :
+    (loadIncrements «this» i).placed = «this».placed :=
+  frame_of .here denote_eq frames.placed ((.there (.there .here)) : FVar sigs "loadIncrements" sig.loadIncrements) rfl «this» (i, ())
 
 /-- `loadAlbum` leaves `this.placed` as it is. -/
-theorem «loadAlbum».keeps.«placed» («this» : «Registers») («a» : «AlbumRec») :
-    («loadAlbum» «this» «a»).«placed» = «this».«placed» :=
-  frame_of .here denote_eq frames.«placed» ((.there .here) : FVar sigs "loadAlbum" sig.«loadAlbum») rfl «this» («a», ())
+theorem loadAlbum.keeps.placed («this» : Registers) (a : AlbumRec) :
+    (loadAlbum «this» a).placed = «this».placed :=
+  frame_of .here denote_eq frames.placed ((.there .here) : FVar sigs "loadAlbum" sig.loadAlbum) rfl «this» (a, ())
 
 /-- `loadItem` leaves `this.placed` as it is. -/
-theorem «loadItem».keeps.«placed» («this» : «Registers») («i» : «AlbumItem») :
-    («loadItem» «this» «i»).«placed» = «this».«placed» :=
-  frame_of .here denote_eq frames.«placed» (.here : FVar sigs "loadItem" sig.«loadItem») rfl «this» («i», ())
+theorem loadItem.keeps.placed («this» : Registers) (i : AlbumItem) :
+    (loadItem «this» i).placed = «this».placed :=
+  frame_of .here denote_eq frames.placed (.here : FVar sigs "loadItem" sig.loadItem) rfl «this» (i, ())
 
-theorem frames.«providers» : typed.frames "providers" = [true, true, true, true, true, true, false, false, false, true, true, true, true, false, false, false, false, true, true, true, false, false, true, false, false, false, false, false, true, false, true, false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false] := by
+theorem frames.providers : typed.frames "providers" = [true, true, true, true, true, true, false, false, false, true, true, true, true, false, false, false, false, true, true, true, false, false, true, false, false, false, false, false, true, false, true, false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false] := by
   decide +kernel
 
 /-- `noteUnplace` leaves `this.providers` as it is. -/
-theorem «noteUnplace».keeps.«providers» («this» : «Registers») («ref» : JSString) («p» : JSString) («u» : JSString) :
-    («noteUnplace» «this» «ref» «p» «u»).«providers» = «this».«providers» :=
-  frame_of (.there .here) denote_eq frames.«providers» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))) : FVar sigs "noteUnplace" sig.«noteUnplace») rfl «this» («ref», «p», «u», ())
+theorem noteUnplace.keeps.providers («this» : Registers) (ref : JSString) (p : JSString) (u : JSString) :
+    (noteUnplace «this» ref p u).providers = «this».providers :=
+  frame_of (.there .here) denote_eq frames.providers ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))) : FVar sigs "noteUnplace" sig.noteUnplace) rfl «this» (ref, p, u, ())
 
 /-- `dropMarkBefore` leaves `this.providers` as it is. -/
-theorem «dropMarkBefore».keeps.«providers» («this» : «Registers») («ref» : JSString) («p» : JSString) («u» : Option JSString) :
-    («dropMarkBefore» «this» «ref» «p» «u»).«providers» = «this».«providers» :=
-  frame_of (.there .here) denote_eq frames.«providers» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))) : FVar sigs "dropMarkBefore" sig.«dropMarkBefore») rfl «this» («ref», «p», «u», ())
+theorem dropMarkBefore.keeps.providers («this» : Registers) (ref : JSString) (p : JSString) (u : Option JSString) :
+    (dropMarkBefore «this» ref p u).providers = «this».providers :=
+  frame_of (.there .here) denote_eq frames.providers ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))) : FVar sigs "dropMarkBefore" sig.dropMarkBefore) rfl «this» (ref, p, u, ())
 
 /-- `mark` leaves `this.providers` as it is. -/
-theorem «mark».keeps.«providers» («this» : «Registers») («ref» : JSString) («p» : JSString) («on» : Bool) («reason» : Option JSString) («stamp» : JSString) («at» : Int) :
-    («mark» «this» «ref» «p» «on» «reason» «stamp» «at»).«providers» = «this».«providers» :=
-  frame_of (.there .here) denote_eq frames.«providers» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) : FVar sigs "mark" sig.«mark») rfl «this» («ref», «p», «on», «reason», «stamp», «at», ())
+theorem mark.keeps.providers («this» : Registers) (ref : JSString) (p : JSString) (on : Bool) (reason : Option JSString) (stamp : JSString) («at» : Int) :
+    (mark «this» ref p on reason stamp «at»).providers = «this».providers :=
+  frame_of (.there .here) denote_eq frames.providers ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) : FVar sigs "mark" sig.mark) rfl «this» (ref, p, on, reason, stamp, «at», ())
 
 /-- `pack` leaves `this.providers` as it is. -/
-theorem «pack».keeps.«providers» («this» : «Registers») («id» : JSString) («size» : Int) («csize» : Int) («stamp» : JSString) («at» : Int) («hn» : Option JSString) :
-    («pack» «this» «id» «size» «csize» «stamp» «at» «hn»).«providers» = «this».«providers» :=
-  frame_of (.there .here) denote_eq frames.«providers» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) : FVar sigs "pack" sig.«pack») rfl «this» («id», «size», «csize», «stamp», «at», «hn», ())
+theorem pack.keeps.providers («this» : Registers) (id : JSString) (size : Int) (csize : Int) (stamp : JSString) («at» : Int) (hn : Option JSString) :
+    (pack «this» id size csize stamp «at» hn).providers = «this».providers :=
+  frame_of (.there .here) denote_eq frames.providers ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) : FVar sigs "pack" sig.pack) rfl «this» (id, size, csize, stamp, «at», hn, ())
 
 /-- `track` leaves `this.providers` as it is. -/
-theorem «track».keeps.«providers» («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («total» : Bool) :
-    («track» «this» «p» «month» «device» «total»).«providers» = «this».«providers» :=
-  frame_of (.there .here) denote_eq frames.«providers» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) : FVar sigs "track" sig.«track») rfl «this» («p», «month», «device», «total», ())
+theorem track.keeps.providers («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (total : Bool) :
+    (track «this» p month device total).providers = «this».providers :=
+  frame_of (.there .here) denote_eq frames.providers ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) : FVar sigs "track" sig.track) rfl «this» (p, month, device, total, ())
 
 /-- `total` leaves `this.providers` as it is. -/
-theorem «total».keeps.«providers» («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («c» : «Counters») :
-    («total» «this» «p» «month» «device» «c»).«providers» = «this».«providers» :=
-  frame_of (.there .here) denote_eq frames.«providers» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) : FVar sigs "total" sig.«total») rfl «this» («p», «month», «device», «c», ())
+theorem total.keeps.providers («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (c : Counters) :
+    (total «this» p month device c).providers = «this».providers :=
+  frame_of (.there .here) denote_eq frames.providers ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) : FVar sigs "total" sig.total) rfl «this» (p, month, device, c, ())
 
 /-- `add` leaves `this.providers` as it is. -/
-theorem «add».keeps.«providers» («this» : «Registers») («p» : JSString) («month» : JSString) («c» : «Counters») :
-    («add» «this» «p» «month» «c»).«providers» = «this».«providers» :=
-  frame_of (.there .here) denote_eq frames.«providers» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) : FVar sigs "add" sig.«add») rfl «this» («p», «month», «c», ())
+theorem add.keeps.providers («this» : Registers) (p : JSString) (month : JSString) (c : Counters) :
+    (add «this» p month c).providers = «this».providers :=
+  frame_of (.there .here) denote_eq frames.providers ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) : FVar sigs "add" sig.add) rfl «this» (p, month, c, ())
 
 /-- `touchAlbum` leaves `this.providers` as it is. -/
-theorem «touchAlbum».keeps.«providers» («this» : «Registers») («aid» : JSString) («at» : Int) :
-    («touchAlbum» «this» «aid» «at»).«providers» = «this».«providers» :=
-  frame_of (.there .here) denote_eq frames.«providers» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "touchAlbum" sig.«touchAlbum») rfl «this» («aid», «at», ())
+theorem touchAlbum.keeps.providers («this» : Registers) (aid : JSString) («at» : Int) :
+    (touchAlbum «this» aid «at»).providers = «this».providers :=
+  frame_of (.there .here) denote_eq frames.providers ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "touchAlbum" sig.touchAlbum) rfl «this» (aid, «at», ())
 
 /-- `album` leaves `this.providers` as it is. -/
-theorem «album».keeps.«providers» («this» : «Registers») («aid» : JSString) («stamp» : JSString) («at» : Int) («name» : Option JSString) («cover» : Option JSString) («deleted» : Bool) :
-    («album» «this» «aid» «stamp» «at» «name» «cover» «deleted»).«providers» = «this».«providers» :=
-  frame_of (.there .here) denote_eq frames.«providers» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "album" sig.«album») rfl «this» («aid», «stamp», «at», «name», «cover», «deleted», ())
+theorem album.keeps.providers («this» : Registers) (aid : JSString) (stamp : JSString) («at» : Int) (name : Option JSString) (cover : Option JSString) (deleted : Bool) :
+    (album «this» aid stamp «at» name cover deleted).providers = «this».providers :=
+  frame_of (.there .here) denote_eq frames.providers ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "album" sig.album) rfl «this» (aid, stamp, «at», name, cover, deleted, ())
 
 /-- `item` leaves `this.providers` as it is. -/
-theorem «item».keeps.«providers» («this» : «Registers») («aid» : JSString) («id» : JSString) («stamp» : JSString) («present» : Bool) :
-    («item» «this» «aid» «id» «stamp» «present»).«providers» = «this».«providers» :=
-  frame_of (.there .here) denote_eq frames.«providers» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "item" sig.«item») rfl «this» («aid», «id», «stamp», «present», ())
+theorem item.keeps.providers («this» : Registers) (aid : JSString) (id : JSString) (stamp : JSString) (present : Bool) :
+    (item «this» aid id stamp present).providers = «this».providers :=
+  frame_of (.there .here) denote_eq frames.providers ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "item" sig.item) rfl «this» (aid, id, stamp, present, ())
 
 /-- `albumItems` leaves `this.providers` as it is. -/
-theorem «albumItems».keeps.«providers» («this» : «Registers») («aid» : JSString) («stamp» : JSString) («at» : Int) («add» : List JSString) («remove» : List JSString) :
-    («albumItems» «this» «aid» «stamp» «at» «add» «remove»).«providers» = «this».«providers» :=
-  frame_of (.there .here) denote_eq frames.«providers» ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "albumItems" sig.«albumItems») rfl «this» («aid», «stamp», «at», «add», «remove», ())
+theorem albumItems.keeps.providers («this» : Registers) (aid : JSString) (stamp : JSString) («at» : Int) (add : List JSString) (remove : List JSString) :
+    (albumItems «this» aid stamp «at» add remove).providers = «this».providers :=
+  frame_of (.there .here) denote_eq frames.providers ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "albumItems" sig.albumItems) rfl «this» (aid, stamp, «at», add, remove, ())
 
 /-- `loadMark` leaves `this.providers` as it is. -/
-theorem «loadMark».keeps.«providers» («this» : «Registers») («m» : «Mark») :
-    («loadMark» «this» «m»).«providers» = «this».«providers» :=
-  frame_of (.there .here) denote_eq frames.«providers» ((.there (.there (.there (.there (.there .here))))) : FVar sigs "loadMark" sig.«loadMark») rfl «this» («m», ())
+theorem loadMark.keeps.providers («this» : Registers) (m : Mark) :
+    (loadMark «this» m).providers = «this».providers :=
+  frame_of (.there .here) denote_eq frames.providers ((.there (.there (.there (.there (.there .here))))) : FVar sigs "loadMark" sig.loadMark) rfl «this» (m, ())
 
 /-- `loadPack` leaves `this.providers` as it is. -/
-theorem «loadPack».keeps.«providers» («this» : «Registers») («pk» : «Pack») :
-    («loadPack» «this» «pk»).«providers» = «this».«providers» :=
-  frame_of (.there .here) denote_eq frames.«providers» ((.there (.there (.there (.there .here)))) : FVar sigs "loadPack" sig.«loadPack») rfl «this» («pk», ())
+theorem loadPack.keeps.providers («this» : Registers) (pk : Pack) :
+    (loadPack «this» pk).providers = «this».providers :=
+  frame_of (.there .here) denote_eq frames.providers ((.there (.there (.there (.there .here)))) : FVar sigs "loadPack" sig.loadPack) rfl «this» (pk, ())
 
 /-- `loadTotal` leaves `this.providers` as it is. -/
-theorem «loadTotal».keeps.«providers» («this» : «Registers») («t» : «Total») :
-    («loadTotal» «this» «t»).«providers» = «this».«providers» :=
-  frame_of (.there .here) denote_eq frames.«providers» ((.there (.there (.there .here))) : FVar sigs "loadTotal" sig.«loadTotal») rfl «this» («t», ())
+theorem loadTotal.keeps.providers («this» : Registers) (t : Total) :
+    (loadTotal «this» t).providers = «this».providers :=
+  frame_of (.there .here) denote_eq frames.providers ((.there (.there (.there .here))) : FVar sigs "loadTotal" sig.loadTotal) rfl «this» (t, ())
 
 /-- `loadIncrements` leaves `this.providers` as it is. -/
-theorem «loadIncrements».keeps.«providers» («this» : «Registers») («i» : «Increments») :
-    («loadIncrements» «this» «i»).«providers» = «this».«providers» :=
-  frame_of (.there .here) denote_eq frames.«providers» ((.there (.there .here)) : FVar sigs "loadIncrements" sig.«loadIncrements») rfl «this» («i», ())
+theorem loadIncrements.keeps.providers («this» : Registers) (i : Increments) :
+    (loadIncrements «this» i).providers = «this».providers :=
+  frame_of (.there .here) denote_eq frames.providers ((.there (.there .here)) : FVar sigs "loadIncrements" sig.loadIncrements) rfl «this» (i, ())
 
 /-- `loadAlbum` leaves `this.providers` as it is. -/
-theorem «loadAlbum».keeps.«providers» («this» : «Registers») («a» : «AlbumRec») :
-    («loadAlbum» «this» «a»).«providers» = «this».«providers» :=
-  frame_of (.there .here) denote_eq frames.«providers» ((.there .here) : FVar sigs "loadAlbum" sig.«loadAlbum») rfl «this» («a», ())
+theorem loadAlbum.keeps.providers («this» : Registers) (a : AlbumRec) :
+    (loadAlbum «this» a).providers = «this».providers :=
+  frame_of (.there .here) denote_eq frames.providers ((.there .here) : FVar sigs "loadAlbum" sig.loadAlbum) rfl «this» (a, ())
 
 /-- `loadItem` leaves `this.providers` as it is. -/
-theorem «loadItem».keeps.«providers» («this» : «Registers») («i» : «AlbumItem») :
-    («loadItem» «this» «i»).«providers» = «this».«providers» :=
-  frame_of (.there .here) denote_eq frames.«providers» (.here : FVar sigs "loadItem" sig.«loadItem») rfl «this» («i», ())
+theorem loadItem.keeps.providers («this» : Registers) (i : AlbumItem) :
+    (loadItem «this» i).providers = «this».providers :=
+  frame_of (.there .here) denote_eq frames.providers (.here : FVar sigs "loadItem" sig.loadItem) rfl «this» (i, ())
 
-theorem frames.«marks» : typed.frames "marks" = [true, true, true, true, true, false, true, false, false, true, true, true, true, false, false, false, false, true, true, true, false, false, true, false, false, false, false, false, false, false, false, true, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false] := by
+theorem frames.marks : typed.frames "marks" = [true, true, true, true, true, false, true, false, false, true, true, true, true, false, false, false, false, true, true, true, false, false, true, false, false, false, false, false, false, false, false, true, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false] := by
   decide +kernel
 
 /-- `noteUnplace` leaves `this.marks` as it is. -/
-theorem «noteUnplace».keeps.«marks» («this» : «Registers») («ref» : JSString) («p» : JSString) («u» : JSString) :
-    («noteUnplace» «this» «ref» «p» «u»).«marks» = «this».«marks» :=
-  frame_of (.there (.there .here)) denote_eq frames.«marks» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))) : FVar sigs "noteUnplace" sig.«noteUnplace») rfl «this» («ref», «p», «u», ())
+theorem noteUnplace.keeps.marks («this» : Registers) (ref : JSString) (p : JSString) (u : JSString) :
+    (noteUnplace «this» ref p u).marks = «this».marks :=
+  frame_of (.there (.there .here)) denote_eq frames.marks ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))) : FVar sigs "noteUnplace" sig.noteUnplace) rfl «this» (ref, p, u, ())
 
 /-- `put` leaves `this.marks` as it is. -/
-theorem «put».keeps.«marks» («this» : «Registers») («ref» : JSString) («p» : JSString) («e» : «Placed») :
-    («put» «this» «ref» «p» «e»).«marks» = «this».«marks» :=
-  frame_of (.there (.there .here)) denote_eq frames.«marks» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))) : FVar sigs "put" sig.«put») rfl «this» («ref», «p», «e», ())
+theorem put.keeps.marks («this» : Registers) (ref : JSString) (p : JSString) (e : Placed) :
+    (put «this» ref p e).marks = «this».marks :=
+  frame_of (.there (.there .here)) denote_eq frames.marks ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))) : FVar sigs "put" sig.put) rfl «this» (ref, p, e, ())
 
 /-- `pack` leaves `this.marks` as it is. -/
-theorem «pack».keeps.«marks» («this» : «Registers») («id» : JSString) («size» : Int) («csize» : Int) («stamp» : JSString) («at» : Int) («hn» : Option JSString) :
-    («pack» «this» «id» «size» «csize» «stamp» «at» «hn»).«marks» = «this».«marks» :=
-  frame_of (.there (.there .here)) denote_eq frames.«marks» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) : FVar sigs "pack" sig.«pack») rfl «this» («id», «size», «csize», «stamp», «at», «hn», ())
+theorem pack.keeps.marks («this» : Registers) (id : JSString) (size : Int) (csize : Int) (stamp : JSString) («at» : Int) (hn : Option JSString) :
+    (pack «this» id size csize stamp «at» hn).marks = «this».marks :=
+  frame_of (.there (.there .here)) denote_eq frames.marks ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) : FVar sigs "pack" sig.pack) rfl «this» (id, size, csize, stamp, «at», hn, ())
 
 /-- `track` leaves `this.marks` as it is. -/
-theorem «track».keeps.«marks» («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («total» : Bool) :
-    («track» «this» «p» «month» «device» «total»).«marks» = «this».«marks» :=
-  frame_of (.there (.there .here)) denote_eq frames.«marks» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) : FVar sigs "track" sig.«track») rfl «this» («p», «month», «device», «total», ())
+theorem track.keeps.marks («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (total : Bool) :
+    (track «this» p month device total).marks = «this».marks :=
+  frame_of (.there (.there .here)) denote_eq frames.marks ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) : FVar sigs "track" sig.track) rfl «this» (p, month, device, total, ())
 
 /-- `total` leaves `this.marks` as it is. -/
-theorem «total».keeps.«marks» («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («c» : «Counters») :
-    («total» «this» «p» «month» «device» «c»).«marks» = «this».«marks» :=
-  frame_of (.there (.there .here)) denote_eq frames.«marks» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) : FVar sigs "total" sig.«total») rfl «this» («p», «month», «device», «c», ())
+theorem total.keeps.marks («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (c : Counters) :
+    (total «this» p month device c).marks = «this».marks :=
+  frame_of (.there (.there .here)) denote_eq frames.marks ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) : FVar sigs "total" sig.total) rfl «this» (p, month, device, c, ())
 
 /-- `add` leaves `this.marks` as it is. -/
-theorem «add».keeps.«marks» («this» : «Registers») («p» : JSString) («month» : JSString) («c» : «Counters») :
-    («add» «this» «p» «month» «c»).«marks» = «this».«marks» :=
-  frame_of (.there (.there .here)) denote_eq frames.«marks» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) : FVar sigs "add" sig.«add») rfl «this» («p», «month», «c», ())
+theorem add.keeps.marks («this» : Registers) (p : JSString) (month : JSString) (c : Counters) :
+    (add «this» p month c).marks = «this».marks :=
+  frame_of (.there (.there .here)) denote_eq frames.marks ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) : FVar sigs "add" sig.add) rfl «this» (p, month, c, ())
 
 /-- `touchAlbum` leaves `this.marks` as it is. -/
-theorem «touchAlbum».keeps.«marks» («this» : «Registers») («aid» : JSString) («at» : Int) :
-    («touchAlbum» «this» «aid» «at»).«marks» = «this».«marks» :=
-  frame_of (.there (.there .here)) denote_eq frames.«marks» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "touchAlbum" sig.«touchAlbum») rfl «this» («aid», «at», ())
+theorem touchAlbum.keeps.marks («this» : Registers) (aid : JSString) («at» : Int) :
+    (touchAlbum «this» aid «at»).marks = «this».marks :=
+  frame_of (.there (.there .here)) denote_eq frames.marks ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "touchAlbum" sig.touchAlbum) rfl «this» (aid, «at», ())
 
 /-- `album` leaves `this.marks` as it is. -/
-theorem «album».keeps.«marks» («this» : «Registers») («aid» : JSString) («stamp» : JSString) («at» : Int) («name» : Option JSString) («cover» : Option JSString) («deleted» : Bool) :
-    («album» «this» «aid» «stamp» «at» «name» «cover» «deleted»).«marks» = «this».«marks» :=
-  frame_of (.there (.there .here)) denote_eq frames.«marks» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "album" sig.«album») rfl «this» («aid», «stamp», «at», «name», «cover», «deleted», ())
+theorem album.keeps.marks («this» : Registers) (aid : JSString) (stamp : JSString) («at» : Int) (name : Option JSString) (cover : Option JSString) (deleted : Bool) :
+    (album «this» aid stamp «at» name cover deleted).marks = «this».marks :=
+  frame_of (.there (.there .here)) denote_eq frames.marks ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "album" sig.album) rfl «this» (aid, stamp, «at», name, cover, deleted, ())
 
 /-- `item` leaves `this.marks` as it is. -/
-theorem «item».keeps.«marks» («this» : «Registers») («aid» : JSString) («id» : JSString) («stamp» : JSString) («present» : Bool) :
-    («item» «this» «aid» «id» «stamp» «present»).«marks» = «this».«marks» :=
-  frame_of (.there (.there .here)) denote_eq frames.«marks» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "item" sig.«item») rfl «this» («aid», «id», «stamp», «present», ())
+theorem item.keeps.marks («this» : Registers) (aid : JSString) (id : JSString) (stamp : JSString) (present : Bool) :
+    (item «this» aid id stamp present).marks = «this».marks :=
+  frame_of (.there (.there .here)) denote_eq frames.marks ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "item" sig.item) rfl «this» (aid, id, stamp, present, ())
 
 /-- `albumItems` leaves `this.marks` as it is. -/
-theorem «albumItems».keeps.«marks» («this» : «Registers») («aid» : JSString) («stamp» : JSString) («at» : Int) («add» : List JSString) («remove» : List JSString) :
-    («albumItems» «this» «aid» «stamp» «at» «add» «remove»).«marks» = «this».«marks» :=
-  frame_of (.there (.there .here)) denote_eq frames.«marks» ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "albumItems" sig.«albumItems») rfl «this» («aid», «stamp», «at», «add», «remove», ())
+theorem albumItems.keeps.marks («this» : Registers) (aid : JSString) (stamp : JSString) («at» : Int) (add : List JSString) (remove : List JSString) :
+    (albumItems «this» aid stamp «at» add remove).marks = «this».marks :=
+  frame_of (.there (.there .here)) denote_eq frames.marks ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "albumItems" sig.albumItems) rfl «this» (aid, stamp, «at», add, remove, ())
 
 /-- `loadPlacement` leaves `this.marks` as it is. -/
-theorem «loadPlacement».keeps.«marks» («this» : «Registers») («ref» : JSString) («e» : «Placed») :
-    («loadPlacement» «this» «ref» «e»).«marks» = «this».«marks» :=
-  frame_of (.there (.there .here)) denote_eq frames.«marks» ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "loadPlacement" sig.«loadPlacement») rfl «this» («ref», «e», ())
+theorem loadPlacement.keeps.marks («this» : Registers) (ref : JSString) (e : Placed) :
+    (loadPlacement «this» ref e).marks = «this».marks :=
+  frame_of (.there (.there .here)) denote_eq frames.marks ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "loadPlacement" sig.loadPlacement) rfl «this» (ref, e, ())
 
 /-- `loadPack` leaves `this.marks` as it is. -/
-theorem «loadPack».keeps.«marks» («this» : «Registers») («pk» : «Pack») :
-    («loadPack» «this» «pk»).«marks» = «this».«marks» :=
-  frame_of (.there (.there .here)) denote_eq frames.«marks» ((.there (.there (.there (.there .here)))) : FVar sigs "loadPack" sig.«loadPack») rfl «this» («pk», ())
+theorem loadPack.keeps.marks («this» : Registers) (pk : Pack) :
+    (loadPack «this» pk).marks = «this».marks :=
+  frame_of (.there (.there .here)) denote_eq frames.marks ((.there (.there (.there (.there .here)))) : FVar sigs "loadPack" sig.loadPack) rfl «this» (pk, ())
 
 /-- `loadTotal` leaves `this.marks` as it is. -/
-theorem «loadTotal».keeps.«marks» («this» : «Registers») («t» : «Total») :
-    («loadTotal» «this» «t»).«marks» = «this».«marks» :=
-  frame_of (.there (.there .here)) denote_eq frames.«marks» ((.there (.there (.there .here))) : FVar sigs "loadTotal" sig.«loadTotal») rfl «this» («t», ())
+theorem loadTotal.keeps.marks («this» : Registers) (t : Total) :
+    (loadTotal «this» t).marks = «this».marks :=
+  frame_of (.there (.there .here)) denote_eq frames.marks ((.there (.there (.there .here))) : FVar sigs "loadTotal" sig.loadTotal) rfl «this» (t, ())
 
 /-- `loadIncrements` leaves `this.marks` as it is. -/
-theorem «loadIncrements».keeps.«marks» («this» : «Registers») («i» : «Increments») :
-    («loadIncrements» «this» «i»).«marks» = «this».«marks» :=
-  frame_of (.there (.there .here)) denote_eq frames.«marks» ((.there (.there .here)) : FVar sigs "loadIncrements" sig.«loadIncrements») rfl «this» («i», ())
+theorem loadIncrements.keeps.marks («this» : Registers) (i : Increments) :
+    (loadIncrements «this» i).marks = «this».marks :=
+  frame_of (.there (.there .here)) denote_eq frames.marks ((.there (.there .here)) : FVar sigs "loadIncrements" sig.loadIncrements) rfl «this» (i, ())
 
 /-- `loadAlbum` leaves `this.marks` as it is. -/
-theorem «loadAlbum».keeps.«marks» («this» : «Registers») («a» : «AlbumRec») :
-    («loadAlbum» «this» «a»).«marks» = «this».«marks» :=
-  frame_of (.there (.there .here)) denote_eq frames.«marks» ((.there .here) : FVar sigs "loadAlbum" sig.«loadAlbum») rfl «this» («a», ())
+theorem loadAlbum.keeps.marks («this» : Registers) (a : AlbumRec) :
+    (loadAlbum «this» a).marks = «this».marks :=
+  frame_of (.there (.there .here)) denote_eq frames.marks ((.there .here) : FVar sigs "loadAlbum" sig.loadAlbum) rfl «this» (a, ())
 
 /-- `loadItem` leaves `this.marks` as it is. -/
-theorem «loadItem».keeps.«marks» («this» : «Registers») («i» : «AlbumItem») :
-    («loadItem» «this» «i»).«marks» = «this».«marks» :=
-  frame_of (.there (.there .here)) denote_eq frames.«marks» (.here : FVar sigs "loadItem" sig.«loadItem») rfl «this» («i», ())
+theorem loadItem.keeps.marks («this» : Registers) (i : AlbumItem) :
+    (loadItem «this» i).marks = «this».marks :=
+  frame_of (.there (.there .here)) denote_eq frames.marks (.here : FVar sigs "loadItem" sig.loadItem) rfl «this» (i, ())
 
-theorem frames.«packs» : typed.frames "packs" = [true, true, true, true, false, true, true, false, false, true, true, true, true, false, false, false, false, true, true, true, false, false, false, false, false, false, false, false, true, true, true, true, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false] := by
+theorem frames.packs : typed.frames "packs" = [true, true, true, true, false, true, true, false, false, true, true, true, true, false, false, false, false, true, true, true, false, false, false, false, false, false, false, false, true, true, true, true, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false] := by
   decide +kernel
 
 /-- `noteUnplace` leaves `this.packs` as it is. -/
-theorem «noteUnplace».keeps.«packs» («this» : «Registers») («ref» : JSString) («p» : JSString) («u» : JSString) :
-    («noteUnplace» «this» «ref» «p» «u»).«packs» = «this».«packs» :=
-  frame_of (.there (.there (.there .here))) denote_eq frames.«packs» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))) : FVar sigs "noteUnplace" sig.«noteUnplace») rfl «this» («ref», «p», «u», ())
+theorem noteUnplace.keeps.packs («this» : Registers) (ref : JSString) (p : JSString) (u : JSString) :
+    (noteUnplace «this» ref p u).packs = «this».packs :=
+  frame_of (.there (.there (.there .here))) denote_eq frames.packs ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))) : FVar sigs "noteUnplace" sig.noteUnplace) rfl «this» (ref, p, u, ())
 
 /-- `put` leaves `this.packs` as it is. -/
-theorem «put».keeps.«packs» («this» : «Registers») («ref» : JSString) («p» : JSString) («e» : «Placed») :
-    («put» «this» «ref» «p» «e»).«packs» = «this».«packs» :=
-  frame_of (.there (.there (.there .here))) denote_eq frames.«packs» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))) : FVar sigs "put" sig.«put») rfl «this» («ref», «p», «e», ())
+theorem put.keeps.packs («this» : Registers) (ref : JSString) (p : JSString) (e : Placed) :
+    (put «this» ref p e).packs = «this».packs :=
+  frame_of (.there (.there (.there .here))) denote_eq frames.packs ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))) : FVar sigs "put" sig.put) rfl «this» (ref, p, e, ())
 
 /-- `dropMarkBefore` leaves `this.packs` as it is. -/
-theorem «dropMarkBefore».keeps.«packs» («this» : «Registers») («ref» : JSString) («p» : JSString) («u» : Option JSString) :
-    («dropMarkBefore» «this» «ref» «p» «u»).«packs» = «this».«packs» :=
-  frame_of (.there (.there (.there .here))) denote_eq frames.«packs» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))) : FVar sigs "dropMarkBefore" sig.«dropMarkBefore») rfl «this» («ref», «p», «u», ())
+theorem dropMarkBefore.keeps.packs («this» : Registers) (ref : JSString) (p : JSString) (u : Option JSString) :
+    (dropMarkBefore «this» ref p u).packs = «this».packs :=
+  frame_of (.there (.there (.there .here))) denote_eq frames.packs ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))) : FVar sigs "dropMarkBefore" sig.dropMarkBefore) rfl «this» (ref, p, u, ())
 
 /-- `place` leaves `this.packs` as it is. -/
-theorem «place».keeps.«packs» («this» : «Registers») («ref» : JSString) («p» : JSString) («placed» : Bool) («cls» : JSString) («stamp» : JSString) («at» : Int) :
-    («place» «this» «ref» «p» «placed» «cls» «stamp» «at»).«packs» = «this».«packs» :=
-  frame_of (.there (.there (.there .here))) denote_eq frames.«packs» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))) : FVar sigs "place" sig.«place») rfl «this» («ref», «p», «placed», «cls», «stamp», «at», ())
+theorem place.keeps.packs («this» : Registers) (ref : JSString) (p : JSString) (placed : Bool) (cls : JSString) (stamp : JSString) («at» : Int) :
+    (place «this» ref p placed cls stamp «at»).packs = «this».packs :=
+  frame_of (.there (.there (.there .here))) denote_eq frames.packs ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))) : FVar sigs "place" sig.place) rfl «this» (ref, p, placed, cls, stamp, «at», ())
 
 /-- `mark` leaves `this.packs` as it is. -/
-theorem «mark».keeps.«packs» («this» : «Registers») («ref» : JSString) («p» : JSString) («on» : Bool) («reason» : Option JSString) («stamp» : JSString) («at» : Int) :
-    («mark» «this» «ref» «p» «on» «reason» «stamp» «at»).«packs» = «this».«packs» :=
-  frame_of (.there (.there (.there .here))) denote_eq frames.«packs» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) : FVar sigs "mark" sig.«mark») rfl «this» («ref», «p», «on», «reason», «stamp», «at», ())
+theorem mark.keeps.packs («this» : Registers) (ref : JSString) (p : JSString) (on : Bool) (reason : Option JSString) (stamp : JSString) («at» : Int) :
+    (mark «this» ref p on reason stamp «at»).packs = «this».packs :=
+  frame_of (.there (.there (.there .here))) denote_eq frames.packs ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) : FVar sigs "mark" sig.mark) rfl «this» (ref, p, on, reason, stamp, «at», ())
 
 /-- `track` leaves `this.packs` as it is. -/
-theorem «track».keeps.«packs» («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («total» : Bool) :
-    («track» «this» «p» «month» «device» «total»).«packs» = «this».«packs» :=
-  frame_of (.there (.there (.there .here))) denote_eq frames.«packs» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) : FVar sigs "track" sig.«track») rfl «this» («p», «month», «device», «total», ())
+theorem track.keeps.packs («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (total : Bool) :
+    (track «this» p month device total).packs = «this».packs :=
+  frame_of (.there (.there (.there .here))) denote_eq frames.packs ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) : FVar sigs "track" sig.track) rfl «this» (p, month, device, total, ())
 
 /-- `total` leaves `this.packs` as it is. -/
-theorem «total».keeps.«packs» («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («c» : «Counters») :
-    («total» «this» «p» «month» «device» «c»).«packs» = «this».«packs» :=
-  frame_of (.there (.there (.there .here))) denote_eq frames.«packs» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) : FVar sigs "total" sig.«total») rfl «this» («p», «month», «device», «c», ())
+theorem total.keeps.packs («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (c : Counters) :
+    (total «this» p month device c).packs = «this».packs :=
+  frame_of (.there (.there (.there .here))) denote_eq frames.packs ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) : FVar sigs "total" sig.total) rfl «this» (p, month, device, c, ())
 
 /-- `add` leaves `this.packs` as it is. -/
-theorem «add».keeps.«packs» («this» : «Registers») («p» : JSString) («month» : JSString) («c» : «Counters») :
-    («add» «this» «p» «month» «c»).«packs» = «this».«packs» :=
-  frame_of (.there (.there (.there .here))) denote_eq frames.«packs» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) : FVar sigs "add" sig.«add») rfl «this» («p», «month», «c», ())
+theorem add.keeps.packs («this» : Registers) (p : JSString) (month : JSString) (c : Counters) :
+    (add «this» p month c).packs = «this».packs :=
+  frame_of (.there (.there (.there .here))) denote_eq frames.packs ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) : FVar sigs "add" sig.add) rfl «this» (p, month, c, ())
 
 /-- `touchAlbum` leaves `this.packs` as it is. -/
-theorem «touchAlbum».keeps.«packs» («this» : «Registers») («aid» : JSString) («at» : Int) :
-    («touchAlbum» «this» «aid» «at»).«packs» = «this».«packs» :=
-  frame_of (.there (.there (.there .here))) denote_eq frames.«packs» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "touchAlbum" sig.«touchAlbum») rfl «this» («aid», «at», ())
+theorem touchAlbum.keeps.packs («this» : Registers) (aid : JSString) («at» : Int) :
+    (touchAlbum «this» aid «at»).packs = «this».packs :=
+  frame_of (.there (.there (.there .here))) denote_eq frames.packs ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "touchAlbum" sig.touchAlbum) rfl «this» (aid, «at», ())
 
 /-- `album` leaves `this.packs` as it is. -/
-theorem «album».keeps.«packs» («this» : «Registers») («aid» : JSString) («stamp» : JSString) («at» : Int) («name» : Option JSString) («cover» : Option JSString) («deleted» : Bool) :
-    («album» «this» «aid» «stamp» «at» «name» «cover» «deleted»).«packs» = «this».«packs» :=
-  frame_of (.there (.there (.there .here))) denote_eq frames.«packs» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "album" sig.«album») rfl «this» («aid», «stamp», «at», «name», «cover», «deleted», ())
+theorem album.keeps.packs («this» : Registers) (aid : JSString) (stamp : JSString) («at» : Int) (name : Option JSString) (cover : Option JSString) (deleted : Bool) :
+    (album «this» aid stamp «at» name cover deleted).packs = «this».packs :=
+  frame_of (.there (.there (.there .here))) denote_eq frames.packs ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "album" sig.album) rfl «this» (aid, stamp, «at», name, cover, deleted, ())
 
 /-- `item` leaves `this.packs` as it is. -/
-theorem «item».keeps.«packs» («this» : «Registers») («aid» : JSString) («id» : JSString) («stamp» : JSString) («present» : Bool) :
-    («item» «this» «aid» «id» «stamp» «present»).«packs» = «this».«packs» :=
-  frame_of (.there (.there (.there .here))) denote_eq frames.«packs» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "item" sig.«item») rfl «this» («aid», «id», «stamp», «present», ())
+theorem item.keeps.packs («this» : Registers) (aid : JSString) (id : JSString) (stamp : JSString) (present : Bool) :
+    (item «this» aid id stamp present).packs = «this».packs :=
+  frame_of (.there (.there (.there .here))) denote_eq frames.packs ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "item" sig.item) rfl «this» (aid, id, stamp, present, ())
 
 /-- `albumItems` leaves `this.packs` as it is. -/
-theorem «albumItems».keeps.«packs» («this» : «Registers») («aid» : JSString) («stamp» : JSString) («at» : Int) («add» : List JSString) («remove» : List JSString) :
-    («albumItems» «this» «aid» «stamp» «at» «add» «remove»).«packs» = «this».«packs» :=
-  frame_of (.there (.there (.there .here))) denote_eq frames.«packs» ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "albumItems" sig.«albumItems») rfl «this» («aid», «stamp», «at», «add», «remove», ())
+theorem albumItems.keeps.packs («this» : Registers) (aid : JSString) (stamp : JSString) («at» : Int) (add : List JSString) (remove : List JSString) :
+    (albumItems «this» aid stamp «at» add remove).packs = «this».packs :=
+  frame_of (.there (.there (.there .here))) denote_eq frames.packs ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "albumItems" sig.albumItems) rfl «this» (aid, stamp, «at», add, remove, ())
 
 /-- `loadPlacement` leaves `this.packs` as it is. -/
-theorem «loadPlacement».keeps.«packs» («this» : «Registers») («ref» : JSString) («e» : «Placed») :
-    («loadPlacement» «this» «ref» «e»).«packs» = «this».«packs» :=
-  frame_of (.there (.there (.there .here))) denote_eq frames.«packs» ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "loadPlacement" sig.«loadPlacement») rfl «this» («ref», «e», ())
+theorem loadPlacement.keeps.packs («this» : Registers) (ref : JSString) (e : Placed) :
+    (loadPlacement «this» ref e).packs = «this».packs :=
+  frame_of (.there (.there (.there .here))) denote_eq frames.packs ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "loadPlacement" sig.loadPlacement) rfl «this» (ref, e, ())
 
 /-- `loadMark` leaves `this.packs` as it is. -/
-theorem «loadMark».keeps.«packs» («this» : «Registers») («m» : «Mark») :
-    («loadMark» «this» «m»).«packs» = «this».«packs» :=
-  frame_of (.there (.there (.there .here))) denote_eq frames.«packs» ((.there (.there (.there (.there (.there .here))))) : FVar sigs "loadMark" sig.«loadMark») rfl «this» («m», ())
+theorem loadMark.keeps.packs («this» : Registers) (m : Mark) :
+    (loadMark «this» m).packs = «this».packs :=
+  frame_of (.there (.there (.there .here))) denote_eq frames.packs ((.there (.there (.there (.there (.there .here))))) : FVar sigs "loadMark" sig.loadMark) rfl «this» (m, ())
 
 /-- `loadTotal` leaves `this.packs` as it is. -/
-theorem «loadTotal».keeps.«packs» («this» : «Registers») («t» : «Total») :
-    («loadTotal» «this» «t»).«packs» = «this».«packs» :=
-  frame_of (.there (.there (.there .here))) denote_eq frames.«packs» ((.there (.there (.there .here))) : FVar sigs "loadTotal" sig.«loadTotal») rfl «this» («t», ())
+theorem loadTotal.keeps.packs («this» : Registers) (t : Total) :
+    (loadTotal «this» t).packs = «this».packs :=
+  frame_of (.there (.there (.there .here))) denote_eq frames.packs ((.there (.there (.there .here))) : FVar sigs "loadTotal" sig.loadTotal) rfl «this» (t, ())
 
 /-- `loadIncrements` leaves `this.packs` as it is. -/
-theorem «loadIncrements».keeps.«packs» («this» : «Registers») («i» : «Increments») :
-    («loadIncrements» «this» «i»).«packs» = «this».«packs» :=
-  frame_of (.there (.there (.there .here))) denote_eq frames.«packs» ((.there (.there .here)) : FVar sigs "loadIncrements" sig.«loadIncrements») rfl «this» («i», ())
+theorem loadIncrements.keeps.packs («this» : Registers) (i : Increments) :
+    (loadIncrements «this» i).packs = «this».packs :=
+  frame_of (.there (.there (.there .here))) denote_eq frames.packs ((.there (.there .here)) : FVar sigs "loadIncrements" sig.loadIncrements) rfl «this» (i, ())
 
 /-- `loadAlbum` leaves `this.packs` as it is. -/
-theorem «loadAlbum».keeps.«packs» («this» : «Registers») («a» : «AlbumRec») :
-    («loadAlbum» «this» «a»).«packs» = «this».«packs» :=
-  frame_of (.there (.there (.there .here))) denote_eq frames.«packs» ((.there .here) : FVar sigs "loadAlbum" sig.«loadAlbum») rfl «this» («a», ())
+theorem loadAlbum.keeps.packs («this» : Registers) (a : AlbumRec) :
+    (loadAlbum «this» a).packs = «this».packs :=
+  frame_of (.there (.there (.there .here))) denote_eq frames.packs ((.there .here) : FVar sigs "loadAlbum" sig.loadAlbum) rfl «this» (a, ())
 
 /-- `loadItem` leaves `this.packs` as it is. -/
-theorem «loadItem».keeps.«packs» («this» : «Registers») («i» : «AlbumItem») :
-    («loadItem» «this» «i»).«packs» = «this».«packs» :=
-  frame_of (.there (.there (.there .here))) denote_eq frames.«packs» (.here : FVar sigs "loadItem" sig.«loadItem») rfl «this» («i», ())
+theorem loadItem.keeps.packs («this» : Registers) (i : AlbumItem) :
+    (loadItem «this» i).packs = «this».packs :=
+  frame_of (.there (.there (.there .here))) denote_eq frames.packs (.here : FVar sigs "loadItem" sig.loadItem) rfl «this» (i, ())
 
-theorem frames.«totals» : typed.frames "totals" = [true, true, true, false, true, true, true, false, false, true, true, true, true, false, false, false, false, true, false, true, false, false, true, false, false, false, false, false, true, true, true, true, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false] := by
+theorem frames.totals : typed.frames "totals" = [true, true, true, false, true, true, true, false, false, true, true, true, true, false, false, false, false, true, false, true, false, false, true, false, false, false, false, false, true, true, true, true, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false] := by
   decide +kernel
 
 /-- `noteUnplace` leaves `this.totals` as it is. -/
-theorem «noteUnplace».keeps.«totals» («this» : «Registers») («ref» : JSString) («p» : JSString) («u» : JSString) :
-    («noteUnplace» «this» «ref» «p» «u»).«totals» = «this».«totals» :=
-  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.«totals» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))) : FVar sigs "noteUnplace" sig.«noteUnplace») rfl «this» («ref», «p», «u», ())
+theorem noteUnplace.keeps.totals («this» : Registers) (ref : JSString) (p : JSString) (u : JSString) :
+    (noteUnplace «this» ref p u).totals = «this».totals :=
+  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.totals ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))) : FVar sigs "noteUnplace" sig.noteUnplace) rfl «this» (ref, p, u, ())
 
 /-- `put` leaves `this.totals` as it is. -/
-theorem «put».keeps.«totals» («this» : «Registers») («ref» : JSString) («p» : JSString) («e» : «Placed») :
-    («put» «this» «ref» «p» «e»).«totals» = «this».«totals» :=
-  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.«totals» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))) : FVar sigs "put" sig.«put») rfl «this» («ref», «p», «e», ())
+theorem put.keeps.totals («this» : Registers) (ref : JSString) (p : JSString) (e : Placed) :
+    (put «this» ref p e).totals = «this».totals :=
+  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.totals ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))) : FVar sigs "put" sig.put) rfl «this» (ref, p, e, ())
 
 /-- `dropMarkBefore` leaves `this.totals` as it is. -/
-theorem «dropMarkBefore».keeps.«totals» («this» : «Registers») («ref» : JSString) («p» : JSString) («u» : Option JSString) :
-    («dropMarkBefore» «this» «ref» «p» «u»).«totals» = «this».«totals» :=
-  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.«totals» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))) : FVar sigs "dropMarkBefore" sig.«dropMarkBefore») rfl «this» («ref», «p», «u», ())
+theorem dropMarkBefore.keeps.totals («this» : Registers) (ref : JSString) (p : JSString) (u : Option JSString) :
+    (dropMarkBefore «this» ref p u).totals = «this».totals :=
+  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.totals ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))) : FVar sigs "dropMarkBefore" sig.dropMarkBefore) rfl «this» (ref, p, u, ())
 
 /-- `place` leaves `this.totals` as it is. -/
-theorem «place».keeps.«totals» («this» : «Registers») («ref» : JSString) («p» : JSString) («placed» : Bool) («cls» : JSString) («stamp» : JSString) («at» : Int) :
-    («place» «this» «ref» «p» «placed» «cls» «stamp» «at»).«totals» = «this».«totals» :=
-  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.«totals» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))) : FVar sigs "place" sig.«place») rfl «this» («ref», «p», «placed», «cls», «stamp», «at», ())
+theorem place.keeps.totals («this» : Registers) (ref : JSString) (p : JSString) (placed : Bool) (cls : JSString) (stamp : JSString) («at» : Int) :
+    (place «this» ref p placed cls stamp «at»).totals = «this».totals :=
+  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.totals ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))) : FVar sigs "place" sig.place) rfl «this» (ref, p, placed, cls, stamp, «at», ())
 
 /-- `mark` leaves `this.totals` as it is. -/
-theorem «mark».keeps.«totals» («this» : «Registers») («ref» : JSString) («p» : JSString) («on» : Bool) («reason» : Option JSString) («stamp» : JSString) («at» : Int) :
-    («mark» «this» «ref» «p» «on» «reason» «stamp» «at»).«totals» = «this».«totals» :=
-  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.«totals» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) : FVar sigs "mark" sig.«mark») rfl «this» («ref», «p», «on», «reason», «stamp», «at», ())
+theorem mark.keeps.totals («this» : Registers) (ref : JSString) (p : JSString) (on : Bool) (reason : Option JSString) (stamp : JSString) («at» : Int) :
+    (mark «this» ref p on reason stamp «at»).totals = «this».totals :=
+  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.totals ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) : FVar sigs "mark" sig.mark) rfl «this» (ref, p, on, reason, stamp, «at», ())
 
 /-- `pack` leaves `this.totals` as it is. -/
-theorem «pack».keeps.«totals» («this» : «Registers») («id» : JSString) («size» : Int) («csize» : Int) («stamp» : JSString) («at» : Int) («hn» : Option JSString) :
-    («pack» «this» «id» «size» «csize» «stamp» «at» «hn»).«totals» = «this».«totals» :=
-  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.«totals» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) : FVar sigs "pack" sig.«pack») rfl «this» («id», «size», «csize», «stamp», «at», «hn», ())
+theorem pack.keeps.totals («this» : Registers) (id : JSString) (size : Int) (csize : Int) (stamp : JSString) («at» : Int) (hn : Option JSString) :
+    (pack «this» id size csize stamp «at» hn).totals = «this».totals :=
+  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.totals ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) : FVar sigs "pack" sig.pack) rfl «this» (id, size, csize, stamp, «at», hn, ())
 
 /-- `track` leaves `this.totals` as it is. -/
-theorem «track».keeps.«totals» («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («total» : Bool) :
-    («track» «this» «p» «month» «device» «total»).«totals» = «this».«totals» :=
-  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.«totals» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) : FVar sigs "track" sig.«track») rfl «this» («p», «month», «device», «total», ())
+theorem track.keeps.totals («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (total : Bool) :
+    (track «this» p month device total).totals = «this».totals :=
+  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.totals ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) : FVar sigs "track" sig.track) rfl «this» (p, month, device, total, ())
 
 /-- `add` leaves `this.totals` as it is. -/
-theorem «add».keeps.«totals» («this» : «Registers») («p» : JSString) («month» : JSString) («c» : «Counters») :
-    («add» «this» «p» «month» «c»).«totals» = «this».«totals» :=
-  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.«totals» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) : FVar sigs "add" sig.«add») rfl «this» («p», «month», «c», ())
+theorem add.keeps.totals («this» : Registers) (p : JSString) (month : JSString) (c : Counters) :
+    (add «this» p month c).totals = «this».totals :=
+  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.totals ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) : FVar sigs "add" sig.add) rfl «this» (p, month, c, ())
 
 /-- `touchAlbum` leaves `this.totals` as it is. -/
-theorem «touchAlbum».keeps.«totals» («this» : «Registers») («aid» : JSString) («at» : Int) :
-    («touchAlbum» «this» «aid» «at»).«totals» = «this».«totals» :=
-  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.«totals» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "touchAlbum" sig.«touchAlbum») rfl «this» («aid», «at», ())
+theorem touchAlbum.keeps.totals («this» : Registers) (aid : JSString) («at» : Int) :
+    (touchAlbum «this» aid «at»).totals = «this».totals :=
+  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.totals ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "touchAlbum" sig.touchAlbum) rfl «this» (aid, «at», ())
 
 /-- `album` leaves `this.totals` as it is. -/
-theorem «album».keeps.«totals» («this» : «Registers») («aid» : JSString) («stamp» : JSString) («at» : Int) («name» : Option JSString) («cover» : Option JSString) («deleted» : Bool) :
-    («album» «this» «aid» «stamp» «at» «name» «cover» «deleted»).«totals» = «this».«totals» :=
-  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.«totals» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "album" sig.«album») rfl «this» («aid», «stamp», «at», «name», «cover», «deleted», ())
+theorem album.keeps.totals («this» : Registers) (aid : JSString) (stamp : JSString) («at» : Int) (name : Option JSString) (cover : Option JSString) (deleted : Bool) :
+    (album «this» aid stamp «at» name cover deleted).totals = «this».totals :=
+  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.totals ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "album" sig.album) rfl «this» (aid, stamp, «at», name, cover, deleted, ())
 
 /-- `item` leaves `this.totals` as it is. -/
-theorem «item».keeps.«totals» («this» : «Registers») («aid» : JSString) («id» : JSString) («stamp» : JSString) («present» : Bool) :
-    («item» «this» «aid» «id» «stamp» «present»).«totals» = «this».«totals» :=
-  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.«totals» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "item" sig.«item») rfl «this» («aid», «id», «stamp», «present», ())
+theorem item.keeps.totals («this» : Registers) (aid : JSString) (id : JSString) (stamp : JSString) (present : Bool) :
+    (item «this» aid id stamp present).totals = «this».totals :=
+  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.totals ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "item" sig.item) rfl «this» (aid, id, stamp, present, ())
 
 /-- `albumItems` leaves `this.totals` as it is. -/
-theorem «albumItems».keeps.«totals» («this» : «Registers») («aid» : JSString) («stamp» : JSString) («at» : Int) («add» : List JSString) («remove» : List JSString) :
-    («albumItems» «this» «aid» «stamp» «at» «add» «remove»).«totals» = «this».«totals» :=
-  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.«totals» ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "albumItems" sig.«albumItems») rfl «this» («aid», «stamp», «at», «add», «remove», ())
+theorem albumItems.keeps.totals («this» : Registers) (aid : JSString) (stamp : JSString) («at» : Int) (add : List JSString) (remove : List JSString) :
+    (albumItems «this» aid stamp «at» add remove).totals = «this».totals :=
+  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.totals ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "albumItems" sig.albumItems) rfl «this» (aid, stamp, «at», add, remove, ())
 
 /-- `loadPlacement` leaves `this.totals` as it is. -/
-theorem «loadPlacement».keeps.«totals» («this» : «Registers») («ref» : JSString) («e» : «Placed») :
-    («loadPlacement» «this» «ref» «e»).«totals» = «this».«totals» :=
-  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.«totals» ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "loadPlacement" sig.«loadPlacement») rfl «this» («ref», «e», ())
+theorem loadPlacement.keeps.totals («this» : Registers) (ref : JSString) (e : Placed) :
+    (loadPlacement «this» ref e).totals = «this».totals :=
+  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.totals ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "loadPlacement" sig.loadPlacement) rfl «this» (ref, e, ())
 
 /-- `loadMark` leaves `this.totals` as it is. -/
-theorem «loadMark».keeps.«totals» («this» : «Registers») («m» : «Mark») :
-    («loadMark» «this» «m»).«totals» = «this».«totals» :=
-  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.«totals» ((.there (.there (.there (.there (.there .here))))) : FVar sigs "loadMark" sig.«loadMark») rfl «this» («m», ())
+theorem loadMark.keeps.totals («this» : Registers) (m : Mark) :
+    (loadMark «this» m).totals = «this».totals :=
+  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.totals ((.there (.there (.there (.there (.there .here))))) : FVar sigs "loadMark" sig.loadMark) rfl «this» (m, ())
 
 /-- `loadPack` leaves `this.totals` as it is. -/
-theorem «loadPack».keeps.«totals» («this» : «Registers») («pk» : «Pack») :
-    («loadPack» «this» «pk»).«totals» = «this».«totals» :=
-  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.«totals» ((.there (.there (.there (.there .here)))) : FVar sigs "loadPack" sig.«loadPack») rfl «this» («pk», ())
+theorem loadPack.keeps.totals («this» : Registers) (pk : Pack) :
+    (loadPack «this» pk).totals = «this».totals :=
+  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.totals ((.there (.there (.there (.there .here)))) : FVar sigs "loadPack" sig.loadPack) rfl «this» (pk, ())
 
 /-- `loadIncrements` leaves `this.totals` as it is. -/
-theorem «loadIncrements».keeps.«totals» («this» : «Registers») («i» : «Increments») :
-    («loadIncrements» «this» «i»).«totals» = «this».«totals» :=
-  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.«totals» ((.there (.there .here)) : FVar sigs "loadIncrements" sig.«loadIncrements») rfl «this» («i», ())
+theorem loadIncrements.keeps.totals («this» : Registers) (i : Increments) :
+    (loadIncrements «this» i).totals = «this».totals :=
+  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.totals ((.there (.there .here)) : FVar sigs "loadIncrements" sig.loadIncrements) rfl «this» (i, ())
 
 /-- `loadAlbum` leaves `this.totals` as it is. -/
-theorem «loadAlbum».keeps.«totals» («this» : «Registers») («a» : «AlbumRec») :
-    («loadAlbum» «this» «a»).«totals» = «this».«totals» :=
-  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.«totals» ((.there .here) : FVar sigs "loadAlbum" sig.«loadAlbum») rfl «this» («a», ())
+theorem loadAlbum.keeps.totals («this» : Registers) (a : AlbumRec) :
+    (loadAlbum «this» a).totals = «this».totals :=
+  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.totals ((.there .here) : FVar sigs "loadAlbum" sig.loadAlbum) rfl «this» (a, ())
 
 /-- `loadItem` leaves `this.totals` as it is. -/
-theorem «loadItem».keeps.«totals» («this» : «Registers») («i» : «AlbumItem») :
-    («loadItem» «this» «i»).«totals» = «this».«totals» :=
-  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.«totals» (.here : FVar sigs "loadItem" sig.«loadItem») rfl «this» («i», ())
+theorem loadItem.keeps.totals («this» : Registers) (i : AlbumItem) :
+    (loadItem «this» i).totals = «this».totals :=
+  frame_of (.there (.there (.there (.there .here)))) denote_eq frames.totals (.here : FVar sigs "loadItem" sig.loadItem) rfl «this» (i, ())
 
-theorem frames.«increments» : typed.frames "increments" = [true, true, false, true, true, true, true, false, false, true, true, true, true, false, false, false, false, false, true, true, false, false, true, false, false, false, false, false, true, true, true, true, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false] := by
+theorem frames.increments : typed.frames "increments" = [true, true, false, true, true, true, true, false, false, true, true, true, true, false, false, false, false, false, true, true, false, false, true, false, false, false, false, false, true, true, true, true, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false] := by
   decide +kernel
 
 /-- `noteUnplace` leaves `this.increments` as it is. -/
-theorem «noteUnplace».keeps.«increments» («this» : «Registers») («ref» : JSString) («p» : JSString) («u» : JSString) :
-    («noteUnplace» «this» «ref» «p» «u»).«increments» = «this».«increments» :=
-  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.«increments» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))) : FVar sigs "noteUnplace" sig.«noteUnplace») rfl «this» («ref», «p», «u», ())
+theorem noteUnplace.keeps.increments («this» : Registers) (ref : JSString) (p : JSString) (u : JSString) :
+    (noteUnplace «this» ref p u).increments = «this».increments :=
+  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.increments ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))) : FVar sigs "noteUnplace" sig.noteUnplace) rfl «this» (ref, p, u, ())
 
 /-- `put` leaves `this.increments` as it is. -/
-theorem «put».keeps.«increments» («this» : «Registers») («ref» : JSString) («p» : JSString) («e» : «Placed») :
-    («put» «this» «ref» «p» «e»).«increments» = «this».«increments» :=
-  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.«increments» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))) : FVar sigs "put" sig.«put») rfl «this» («ref», «p», «e», ())
+theorem put.keeps.increments («this» : Registers) (ref : JSString) (p : JSString) (e : Placed) :
+    (put «this» ref p e).increments = «this».increments :=
+  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.increments ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))) : FVar sigs "put" sig.put) rfl «this» (ref, p, e, ())
 
 /-- `dropMarkBefore` leaves `this.increments` as it is. -/
-theorem «dropMarkBefore».keeps.«increments» («this» : «Registers») («ref» : JSString) («p» : JSString) («u» : Option JSString) :
-    («dropMarkBefore» «this» «ref» «p» «u»).«increments» = «this».«increments» :=
-  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.«increments» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))) : FVar sigs "dropMarkBefore" sig.«dropMarkBefore») rfl «this» («ref», «p», «u», ())
+theorem dropMarkBefore.keeps.increments («this» : Registers) (ref : JSString) (p : JSString) (u : Option JSString) :
+    (dropMarkBefore «this» ref p u).increments = «this».increments :=
+  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.increments ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))) : FVar sigs "dropMarkBefore" sig.dropMarkBefore) rfl «this» (ref, p, u, ())
 
 /-- `place` leaves `this.increments` as it is. -/
-theorem «place».keeps.«increments» («this» : «Registers») («ref» : JSString) («p» : JSString) («placed» : Bool) («cls» : JSString) («stamp» : JSString) («at» : Int) :
-    («place» «this» «ref» «p» «placed» «cls» «stamp» «at»).«increments» = «this».«increments» :=
-  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.«increments» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))) : FVar sigs "place" sig.«place») rfl «this» («ref», «p», «placed», «cls», «stamp», «at», ())
+theorem place.keeps.increments («this» : Registers) (ref : JSString) (p : JSString) (placed : Bool) (cls : JSString) (stamp : JSString) («at» : Int) :
+    (place «this» ref p placed cls stamp «at»).increments = «this».increments :=
+  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.increments ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))) : FVar sigs "place" sig.place) rfl «this» (ref, p, placed, cls, stamp, «at», ())
 
 /-- `mark` leaves `this.increments` as it is. -/
-theorem «mark».keeps.«increments» («this» : «Registers») («ref» : JSString) («p» : JSString) («on» : Bool) («reason» : Option JSString) («stamp» : JSString) («at» : Int) :
-    («mark» «this» «ref» «p» «on» «reason» «stamp» «at»).«increments» = «this».«increments» :=
-  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.«increments» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) : FVar sigs "mark" sig.«mark») rfl «this» («ref», «p», «on», «reason», «stamp», «at», ())
+theorem mark.keeps.increments («this» : Registers) (ref : JSString) (p : JSString) (on : Bool) (reason : Option JSString) (stamp : JSString) («at» : Int) :
+    (mark «this» ref p on reason stamp «at»).increments = «this».increments :=
+  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.increments ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) : FVar sigs "mark" sig.mark) rfl «this» (ref, p, on, reason, stamp, «at», ())
 
 /-- `pack` leaves `this.increments` as it is. -/
-theorem «pack».keeps.«increments» («this» : «Registers») («id» : JSString) («size» : Int) («csize» : Int) («stamp» : JSString) («at» : Int) («hn» : Option JSString) :
-    («pack» «this» «id» «size» «csize» «stamp» «at» «hn»).«increments» = «this».«increments» :=
-  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.«increments» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) : FVar sigs "pack" sig.«pack») rfl «this» («id», «size», «csize», «stamp», «at», «hn», ())
+theorem pack.keeps.increments («this» : Registers) (id : JSString) (size : Int) (csize : Int) (stamp : JSString) («at» : Int) (hn : Option JSString) :
+    (pack «this» id size csize stamp «at» hn).increments = «this».increments :=
+  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.increments ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) : FVar sigs "pack" sig.pack) rfl «this» (id, size, csize, stamp, «at», hn, ())
 
 /-- `track` leaves `this.increments` as it is. -/
-theorem «track».keeps.«increments» («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («total» : Bool) :
-    («track» «this» «p» «month» «device» «total»).«increments» = «this».«increments» :=
-  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.«increments» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) : FVar sigs "track" sig.«track») rfl «this» («p», «month», «device», «total», ())
+theorem track.keeps.increments («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (total : Bool) :
+    (track «this» p month device total).increments = «this».increments :=
+  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.increments ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) : FVar sigs "track" sig.track) rfl «this» (p, month, device, total, ())
 
 /-- `total` leaves `this.increments` as it is. -/
-theorem «total».keeps.«increments» («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («c» : «Counters») :
-    («total» «this» «p» «month» «device» «c»).«increments» = «this».«increments» :=
-  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.«increments» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) : FVar sigs "total" sig.«total») rfl «this» («p», «month», «device», «c», ())
+theorem total.keeps.increments («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (c : Counters) :
+    (total «this» p month device c).increments = «this».increments :=
+  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.increments ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) : FVar sigs "total" sig.total) rfl «this» (p, month, device, c, ())
 
 /-- `touchAlbum` leaves `this.increments` as it is. -/
-theorem «touchAlbum».keeps.«increments» («this» : «Registers») («aid» : JSString) («at» : Int) :
-    («touchAlbum» «this» «aid» «at»).«increments» = «this».«increments» :=
-  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.«increments» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "touchAlbum" sig.«touchAlbum») rfl «this» («aid», «at», ())
+theorem touchAlbum.keeps.increments («this» : Registers) (aid : JSString) («at» : Int) :
+    (touchAlbum «this» aid «at»).increments = «this».increments :=
+  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.increments ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "touchAlbum" sig.touchAlbum) rfl «this» (aid, «at», ())
 
 /-- `album` leaves `this.increments` as it is. -/
-theorem «album».keeps.«increments» («this» : «Registers») («aid» : JSString) («stamp» : JSString) («at» : Int) («name» : Option JSString) («cover» : Option JSString) («deleted» : Bool) :
-    («album» «this» «aid» «stamp» «at» «name» «cover» «deleted»).«increments» = «this».«increments» :=
-  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.«increments» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "album" sig.«album») rfl «this» («aid», «stamp», «at», «name», «cover», «deleted», ())
+theorem album.keeps.increments («this» : Registers) (aid : JSString) (stamp : JSString) («at» : Int) (name : Option JSString) (cover : Option JSString) (deleted : Bool) :
+    (album «this» aid stamp «at» name cover deleted).increments = «this».increments :=
+  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.increments ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "album" sig.album) rfl «this» (aid, stamp, «at», name, cover, deleted, ())
 
 /-- `item` leaves `this.increments` as it is. -/
-theorem «item».keeps.«increments» («this» : «Registers») («aid» : JSString) («id» : JSString) («stamp» : JSString) («present» : Bool) :
-    («item» «this» «aid» «id» «stamp» «present»).«increments» = «this».«increments» :=
-  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.«increments» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "item" sig.«item») rfl «this» («aid», «id», «stamp», «present», ())
+theorem item.keeps.increments («this» : Registers) (aid : JSString) (id : JSString) (stamp : JSString) (present : Bool) :
+    (item «this» aid id stamp present).increments = «this».increments :=
+  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.increments ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "item" sig.item) rfl «this» (aid, id, stamp, present, ())
 
 /-- `albumItems` leaves `this.increments` as it is. -/
-theorem «albumItems».keeps.«increments» («this» : «Registers») («aid» : JSString) («stamp» : JSString) («at» : Int) («add» : List JSString) («remove» : List JSString) :
-    («albumItems» «this» «aid» «stamp» «at» «add» «remove»).«increments» = «this».«increments» :=
-  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.«increments» ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "albumItems" sig.«albumItems») rfl «this» («aid», «stamp», «at», «add», «remove», ())
+theorem albumItems.keeps.increments («this» : Registers) (aid : JSString) (stamp : JSString) («at» : Int) (add : List JSString) (remove : List JSString) :
+    (albumItems «this» aid stamp «at» add remove).increments = «this».increments :=
+  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.increments ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "albumItems" sig.albumItems) rfl «this» (aid, stamp, «at», add, remove, ())
 
 /-- `loadPlacement` leaves `this.increments` as it is. -/
-theorem «loadPlacement».keeps.«increments» («this» : «Registers») («ref» : JSString) («e» : «Placed») :
-    («loadPlacement» «this» «ref» «e»).«increments» = «this».«increments» :=
-  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.«increments» ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "loadPlacement" sig.«loadPlacement») rfl «this» («ref», «e», ())
+theorem loadPlacement.keeps.increments («this» : Registers) (ref : JSString) (e : Placed) :
+    (loadPlacement «this» ref e).increments = «this».increments :=
+  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.increments ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "loadPlacement" sig.loadPlacement) rfl «this» (ref, e, ())
 
 /-- `loadMark` leaves `this.increments` as it is. -/
-theorem «loadMark».keeps.«increments» («this» : «Registers») («m» : «Mark») :
-    («loadMark» «this» «m»).«increments» = «this».«increments» :=
-  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.«increments» ((.there (.there (.there (.there (.there .here))))) : FVar sigs "loadMark" sig.«loadMark») rfl «this» («m», ())
+theorem loadMark.keeps.increments («this» : Registers) (m : Mark) :
+    (loadMark «this» m).increments = «this».increments :=
+  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.increments ((.there (.there (.there (.there (.there .here))))) : FVar sigs "loadMark" sig.loadMark) rfl «this» (m, ())
 
 /-- `loadPack` leaves `this.increments` as it is. -/
-theorem «loadPack».keeps.«increments» («this» : «Registers») («pk» : «Pack») :
-    («loadPack» «this» «pk»).«increments» = «this».«increments» :=
-  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.«increments» ((.there (.there (.there (.there .here)))) : FVar sigs "loadPack" sig.«loadPack») rfl «this» («pk», ())
+theorem loadPack.keeps.increments («this» : Registers) (pk : Pack) :
+    (loadPack «this» pk).increments = «this».increments :=
+  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.increments ((.there (.there (.there (.there .here)))) : FVar sigs "loadPack" sig.loadPack) rfl «this» (pk, ())
 
 /-- `loadTotal` leaves `this.increments` as it is. -/
-theorem «loadTotal».keeps.«increments» («this» : «Registers») («t» : «Total») :
-    («loadTotal» «this» «t»).«increments» = «this».«increments» :=
-  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.«increments» ((.there (.there (.there .here))) : FVar sigs "loadTotal" sig.«loadTotal») rfl «this» («t», ())
+theorem loadTotal.keeps.increments («this» : Registers) (t : Total) :
+    (loadTotal «this» t).increments = «this».increments :=
+  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.increments ((.there (.there (.there .here))) : FVar sigs "loadTotal" sig.loadTotal) rfl «this» (t, ())
 
 /-- `loadAlbum` leaves `this.increments` as it is. -/
-theorem «loadAlbum».keeps.«increments» («this» : «Registers») («a» : «AlbumRec») :
-    («loadAlbum» «this» «a»).«increments» = «this».«increments» :=
-  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.«increments» ((.there .here) : FVar sigs "loadAlbum" sig.«loadAlbum») rfl «this» («a», ())
+theorem loadAlbum.keeps.increments («this» : Registers) (a : AlbumRec) :
+    (loadAlbum «this» a).increments = «this».increments :=
+  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.increments ((.there .here) : FVar sigs "loadAlbum" sig.loadAlbum) rfl «this» (a, ())
 
 /-- `loadItem` leaves `this.increments` as it is. -/
-theorem «loadItem».keeps.«increments» («this» : «Registers») («i» : «AlbumItem») :
-    («loadItem» «this» «i»).«increments» = «this».«increments» :=
-  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.«increments» (.here : FVar sigs "loadItem" sig.«loadItem») rfl «this» («i», ())
+theorem loadItem.keeps.increments («this» : Registers) (i : AlbumItem) :
+    (loadItem «this» i).increments = «this».increments :=
+  frame_of (.there (.there (.there (.there (.there .here))))) denote_eq frames.increments (.here : FVar sigs "loadItem" sig.loadItem) rfl «this» (i, ())
 
-theorem frames.«periods» : typed.frames "periods" = [true, true, false, false, true, true, true, false, false, true, true, true, true, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false, true, true, true, true, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false] := by
+theorem frames.periods : typed.frames "periods" = [true, true, false, false, true, true, true, false, false, true, true, true, true, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false, true, true, true, true, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false] := by
   decide +kernel
 
 /-- `noteUnplace` leaves `this.periods` as it is. -/
-theorem «noteUnplace».keeps.«periods» («this» : «Registers») («ref» : JSString) («p» : JSString) («u» : JSString) :
-    («noteUnplace» «this» «ref» «p» «u»).«periods» = «this».«periods» :=
-  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.«periods» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))) : FVar sigs "noteUnplace" sig.«noteUnplace») rfl «this» («ref», «p», «u», ())
+theorem noteUnplace.keeps.periods («this» : Registers) (ref : JSString) (p : JSString) (u : JSString) :
+    (noteUnplace «this» ref p u).periods = «this».periods :=
+  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.periods ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))) : FVar sigs "noteUnplace" sig.noteUnplace) rfl «this» (ref, p, u, ())
 
 /-- `put` leaves `this.periods` as it is. -/
-theorem «put».keeps.«periods» («this» : «Registers») («ref» : JSString) («p» : JSString) («e» : «Placed») :
-    («put» «this» «ref» «p» «e»).«periods» = «this».«periods» :=
-  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.«periods» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))) : FVar sigs "put" sig.«put») rfl «this» («ref», «p», «e», ())
+theorem put.keeps.periods («this» : Registers) (ref : JSString) (p : JSString) (e : Placed) :
+    (put «this» ref p e).periods = «this».periods :=
+  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.periods ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))) : FVar sigs "put" sig.put) rfl «this» (ref, p, e, ())
 
 /-- `dropMarkBefore` leaves `this.periods` as it is. -/
-theorem «dropMarkBefore».keeps.«periods» («this» : «Registers») («ref» : JSString) («p» : JSString) («u» : Option JSString) :
-    («dropMarkBefore» «this» «ref» «p» «u»).«periods» = «this».«periods» :=
-  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.«periods» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))) : FVar sigs "dropMarkBefore" sig.«dropMarkBefore») rfl «this» («ref», «p», «u», ())
+theorem dropMarkBefore.keeps.periods («this» : Registers) (ref : JSString) (p : JSString) (u : Option JSString) :
+    (dropMarkBefore «this» ref p u).periods = «this».periods :=
+  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.periods ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))) : FVar sigs "dropMarkBefore" sig.dropMarkBefore) rfl «this» (ref, p, u, ())
 
 /-- `place` leaves `this.periods` as it is. -/
-theorem «place».keeps.«periods» («this» : «Registers») («ref» : JSString) («p» : JSString) («placed» : Bool) («cls» : JSString) («stamp» : JSString) («at» : Int) :
-    («place» «this» «ref» «p» «placed» «cls» «stamp» «at»).«periods» = «this».«periods» :=
-  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.«periods» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))) : FVar sigs "place" sig.«place») rfl «this» («ref», «p», «placed», «cls», «stamp», «at», ())
+theorem place.keeps.periods («this» : Registers) (ref : JSString) (p : JSString) (placed : Bool) (cls : JSString) (stamp : JSString) («at» : Int) :
+    (place «this» ref p placed cls stamp «at»).periods = «this».periods :=
+  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.periods ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))) : FVar sigs "place" sig.place) rfl «this» (ref, p, placed, cls, stamp, «at», ())
 
 /-- `mark` leaves `this.periods` as it is. -/
-theorem «mark».keeps.«periods» («this» : «Registers») («ref» : JSString) («p» : JSString) («on» : Bool) («reason» : Option JSString) («stamp» : JSString) («at» : Int) :
-    («mark» «this» «ref» «p» «on» «reason» «stamp» «at»).«periods» = «this».«periods» :=
-  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.«periods» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) : FVar sigs "mark" sig.«mark») rfl «this» («ref», «p», «on», «reason», «stamp», «at», ())
+theorem mark.keeps.periods («this» : Registers) (ref : JSString) (p : JSString) (on : Bool) (reason : Option JSString) (stamp : JSString) («at» : Int) :
+    (mark «this» ref p on reason stamp «at»).periods = «this».periods :=
+  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.periods ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) : FVar sigs "mark" sig.mark) rfl «this» (ref, p, on, reason, stamp, «at», ())
 
 /-- `pack` leaves `this.periods` as it is. -/
-theorem «pack».keeps.«periods» («this» : «Registers») («id» : JSString) («size» : Int) («csize» : Int) («stamp» : JSString) («at» : Int) («hn» : Option JSString) :
-    («pack» «this» «id» «size» «csize» «stamp» «at» «hn»).«periods» = «this».«periods» :=
-  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.«periods» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) : FVar sigs "pack" sig.«pack») rfl «this» («id», «size», «csize», «stamp», «at», «hn», ())
+theorem pack.keeps.periods («this» : Registers) (id : JSString) (size : Int) (csize : Int) (stamp : JSString) («at» : Int) (hn : Option JSString) :
+    (pack «this» id size csize stamp «at» hn).periods = «this».periods :=
+  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.periods ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) : FVar sigs "pack" sig.pack) rfl «this» (id, size, csize, stamp, «at», hn, ())
 
 /-- `touchAlbum` leaves `this.periods` as it is. -/
-theorem «touchAlbum».keeps.«periods» («this» : «Registers») («aid» : JSString) («at» : Int) :
-    («touchAlbum» «this» «aid» «at»).«periods» = «this».«periods» :=
-  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.«periods» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "touchAlbum" sig.«touchAlbum») rfl «this» («aid», «at», ())
+theorem touchAlbum.keeps.periods («this» : Registers) (aid : JSString) («at» : Int) :
+    (touchAlbum «this» aid «at»).periods = «this».periods :=
+  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.periods ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "touchAlbum" sig.touchAlbum) rfl «this» (aid, «at», ())
 
 /-- `album` leaves `this.periods` as it is. -/
-theorem «album».keeps.«periods» («this» : «Registers») («aid» : JSString) («stamp» : JSString) («at» : Int) («name» : Option JSString) («cover» : Option JSString) («deleted» : Bool) :
-    («album» «this» «aid» «stamp» «at» «name» «cover» «deleted»).«periods» = «this».«periods» :=
-  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.«periods» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "album" sig.«album») rfl «this» («aid», «stamp», «at», «name», «cover», «deleted», ())
+theorem album.keeps.periods («this» : Registers) (aid : JSString) (stamp : JSString) («at» : Int) (name : Option JSString) (cover : Option JSString) (deleted : Bool) :
+    (album «this» aid stamp «at» name cover deleted).periods = «this».periods :=
+  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.periods ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "album" sig.album) rfl «this» (aid, stamp, «at», name, cover, deleted, ())
 
 /-- `item` leaves `this.periods` as it is. -/
-theorem «item».keeps.«periods» («this» : «Registers») («aid» : JSString) («id» : JSString) («stamp» : JSString) («present» : Bool) :
-    («item» «this» «aid» «id» «stamp» «present»).«periods» = «this».«periods» :=
-  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.«periods» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "item" sig.«item») rfl «this» («aid», «id», «stamp», «present», ())
+theorem item.keeps.periods («this» : Registers) (aid : JSString) (id : JSString) (stamp : JSString) (present : Bool) :
+    (item «this» aid id stamp present).periods = «this».periods :=
+  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.periods ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "item" sig.item) rfl «this» (aid, id, stamp, present, ())
 
 /-- `albumItems` leaves `this.periods` as it is. -/
-theorem «albumItems».keeps.«periods» («this» : «Registers») («aid» : JSString) («stamp» : JSString) («at» : Int) («add» : List JSString) («remove» : List JSString) :
-    («albumItems» «this» «aid» «stamp» «at» «add» «remove»).«periods» = «this».«periods» :=
-  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.«periods» ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "albumItems" sig.«albumItems») rfl «this» («aid», «stamp», «at», «add», «remove», ())
+theorem albumItems.keeps.periods («this» : Registers) (aid : JSString) (stamp : JSString) («at» : Int) (add : List JSString) (remove : List JSString) :
+    (albumItems «this» aid stamp «at» add remove).periods = «this».periods :=
+  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.periods ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "albumItems" sig.albumItems) rfl «this» (aid, stamp, «at», add, remove, ())
 
 /-- `loadPlacement` leaves `this.periods` as it is. -/
-theorem «loadPlacement».keeps.«periods» («this» : «Registers») («ref» : JSString) («e» : «Placed») :
-    («loadPlacement» «this» «ref» «e»).«periods» = «this».«periods» :=
-  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.«periods» ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "loadPlacement" sig.«loadPlacement») rfl «this» («ref», «e», ())
+theorem loadPlacement.keeps.periods («this» : Registers) (ref : JSString) (e : Placed) :
+    (loadPlacement «this» ref e).periods = «this».periods :=
+  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.periods ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "loadPlacement" sig.loadPlacement) rfl «this» (ref, e, ())
 
 /-- `loadMark` leaves `this.periods` as it is. -/
-theorem «loadMark».keeps.«periods» («this» : «Registers») («m» : «Mark») :
-    («loadMark» «this» «m»).«periods» = «this».«periods» :=
-  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.«periods» ((.there (.there (.there (.there (.there .here))))) : FVar sigs "loadMark" sig.«loadMark») rfl «this» («m», ())
+theorem loadMark.keeps.periods («this» : Registers) (m : Mark) :
+    (loadMark «this» m).periods = «this».periods :=
+  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.periods ((.there (.there (.there (.there (.there .here))))) : FVar sigs "loadMark" sig.loadMark) rfl «this» (m, ())
 
 /-- `loadPack` leaves `this.periods` as it is. -/
-theorem «loadPack».keeps.«periods» («this» : «Registers») («pk» : «Pack») :
-    («loadPack» «this» «pk»).«periods» = «this».«periods» :=
-  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.«periods» ((.there (.there (.there (.there .here)))) : FVar sigs "loadPack" sig.«loadPack») rfl «this» («pk», ())
+theorem loadPack.keeps.periods («this» : Registers) (pk : Pack) :
+    (loadPack «this» pk).periods = «this».periods :=
+  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.periods ((.there (.there (.there (.there .here)))) : FVar sigs "loadPack" sig.loadPack) rfl «this» (pk, ())
 
 /-- `loadAlbum` leaves `this.periods` as it is. -/
-theorem «loadAlbum».keeps.«periods» («this» : «Registers») («a» : «AlbumRec») :
-    («loadAlbum» «this» «a»).«periods» = «this».«periods» :=
-  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.«periods» ((.there .here) : FVar sigs "loadAlbum" sig.«loadAlbum») rfl «this» («a», ())
+theorem loadAlbum.keeps.periods («this» : Registers) (a : AlbumRec) :
+    (loadAlbum «this» a).periods = «this».periods :=
+  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.periods ((.there .here) : FVar sigs "loadAlbum" sig.loadAlbum) rfl «this» (a, ())
 
 /-- `loadItem` leaves `this.periods` as it is. -/
-theorem «loadItem».keeps.«periods» («this» : «Registers») («i» : «AlbumItem») :
-    («loadItem» «this» «i»).«periods» = «this».«periods» :=
-  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.«periods» (.here : FVar sigs "loadItem" sig.«loadItem») rfl «this» («i», ())
+theorem loadItem.keeps.periods («this» : Registers) (i : AlbumItem) :
+    (loadItem «this» i).periods = «this».periods :=
+  frame_of (.there (.there (.there (.there (.there (.there .here)))))) denote_eq frames.periods (.here : FVar sigs "loadItem" sig.loadItem) rfl «this» (i, ())
 
-theorem frames.«albums» : typed.frames "albums" = [true, false, true, true, true, true, true, false, false, false, true, false, false, false, false, false, false, true, true, true, false, false, true, false, false, false, false, false, true, true, true, true, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false] := by
+theorem frames.albums : typed.frames "albums" = [true, false, true, true, true, true, true, false, false, false, true, false, false, false, false, false, false, true, true, true, false, false, true, false, false, false, false, false, true, true, true, true, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false] := by
   decide +kernel
 
 /-- `noteUnplace` leaves `this.albums` as it is. -/
-theorem «noteUnplace».keeps.«albums» («this» : «Registers») («ref» : JSString) («p» : JSString) («u» : JSString) :
-    («noteUnplace» «this» «ref» «p» «u»).«albums» = «this».«albums» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.«albums» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))) : FVar sigs "noteUnplace" sig.«noteUnplace») rfl «this» («ref», «p», «u», ())
+theorem noteUnplace.keeps.albums («this» : Registers) (ref : JSString) (p : JSString) (u : JSString) :
+    (noteUnplace «this» ref p u).albums = «this».albums :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.albums ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))) : FVar sigs "noteUnplace" sig.noteUnplace) rfl «this» (ref, p, u, ())
 
 /-- `put` leaves `this.albums` as it is. -/
-theorem «put».keeps.«albums» («this» : «Registers») («ref» : JSString) («p» : JSString) («e» : «Placed») :
-    («put» «this» «ref» «p» «e»).«albums» = «this».«albums» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.«albums» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))) : FVar sigs "put" sig.«put») rfl «this» («ref», «p», «e», ())
+theorem put.keeps.albums («this» : Registers) (ref : JSString) (p : JSString) (e : Placed) :
+    (put «this» ref p e).albums = «this».albums :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.albums ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))) : FVar sigs "put" sig.put) rfl «this» (ref, p, e, ())
 
 /-- `dropMarkBefore` leaves `this.albums` as it is. -/
-theorem «dropMarkBefore».keeps.«albums» («this» : «Registers») («ref» : JSString) («p» : JSString) («u» : Option JSString) :
-    («dropMarkBefore» «this» «ref» «p» «u»).«albums» = «this».«albums» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.«albums» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))) : FVar sigs "dropMarkBefore" sig.«dropMarkBefore») rfl «this» («ref», «p», «u», ())
+theorem dropMarkBefore.keeps.albums («this» : Registers) (ref : JSString) (p : JSString) (u : Option JSString) :
+    (dropMarkBefore «this» ref p u).albums = «this».albums :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.albums ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))) : FVar sigs "dropMarkBefore" sig.dropMarkBefore) rfl «this» (ref, p, u, ())
 
 /-- `place` leaves `this.albums` as it is. -/
-theorem «place».keeps.«albums» («this» : «Registers») («ref» : JSString) («p» : JSString) («placed» : Bool) («cls» : JSString) («stamp» : JSString) («at» : Int) :
-    («place» «this» «ref» «p» «placed» «cls» «stamp» «at»).«albums» = «this».«albums» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.«albums» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))) : FVar sigs "place" sig.«place») rfl «this» («ref», «p», «placed», «cls», «stamp», «at», ())
+theorem place.keeps.albums («this» : Registers) (ref : JSString) (p : JSString) (placed : Bool) (cls : JSString) (stamp : JSString) («at» : Int) :
+    (place «this» ref p placed cls stamp «at»).albums = «this».albums :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.albums ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))) : FVar sigs "place" sig.place) rfl «this» (ref, p, placed, cls, stamp, «at», ())
 
 /-- `mark` leaves `this.albums` as it is. -/
-theorem «mark».keeps.«albums» («this» : «Registers») («ref» : JSString) («p» : JSString) («on» : Bool) («reason» : Option JSString) («stamp» : JSString) («at» : Int) :
-    («mark» «this» «ref» «p» «on» «reason» «stamp» «at»).«albums» = «this».«albums» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.«albums» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) : FVar sigs "mark" sig.«mark») rfl «this» («ref», «p», «on», «reason», «stamp», «at», ())
+theorem mark.keeps.albums («this» : Registers) (ref : JSString) (p : JSString) (on : Bool) (reason : Option JSString) (stamp : JSString) («at» : Int) :
+    (mark «this» ref p on reason stamp «at»).albums = «this».albums :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.albums ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) : FVar sigs "mark" sig.mark) rfl «this» (ref, p, on, reason, stamp, «at», ())
 
 /-- `pack` leaves `this.albums` as it is. -/
-theorem «pack».keeps.«albums» («this» : «Registers») («id» : JSString) («size» : Int) («csize» : Int) («stamp» : JSString) («at» : Int) («hn» : Option JSString) :
-    («pack» «this» «id» «size» «csize» «stamp» «at» «hn»).«albums» = «this».«albums» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.«albums» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) : FVar sigs "pack" sig.«pack») rfl «this» («id», «size», «csize», «stamp», «at», «hn», ())
+theorem pack.keeps.albums («this» : Registers) (id : JSString) (size : Int) (csize : Int) (stamp : JSString) («at» : Int) (hn : Option JSString) :
+    (pack «this» id size csize stamp «at» hn).albums = «this».albums :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.albums ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) : FVar sigs "pack" sig.pack) rfl «this» (id, size, csize, stamp, «at», hn, ())
 
 /-- `track` leaves `this.albums` as it is. -/
-theorem «track».keeps.«albums» («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («total» : Bool) :
-    («track» «this» «p» «month» «device» «total»).«albums» = «this».«albums» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.«albums» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) : FVar sigs "track" sig.«track») rfl «this» («p», «month», «device», «total», ())
+theorem track.keeps.albums («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (total : Bool) :
+    (track «this» p month device total).albums = «this».albums :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.albums ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) : FVar sigs "track" sig.track) rfl «this» (p, month, device, total, ())
 
 /-- `total` leaves `this.albums` as it is. -/
-theorem «total».keeps.«albums» («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («c» : «Counters») :
-    («total» «this» «p» «month» «device» «c»).«albums» = «this».«albums» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.«albums» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) : FVar sigs "total" sig.«total») rfl «this» («p», «month», «device», «c», ())
+theorem total.keeps.albums («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (c : Counters) :
+    (total «this» p month device c).albums = «this».albums :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.albums ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) : FVar sigs "total" sig.total) rfl «this» (p, month, device, c, ())
 
 /-- `add` leaves `this.albums` as it is. -/
-theorem «add».keeps.«albums» («this» : «Registers») («p» : JSString) («month» : JSString) («c» : «Counters») :
-    («add» «this» «p» «month» «c»).«albums» = «this».«albums» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.«albums» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) : FVar sigs "add" sig.«add») rfl «this» («p», «month», «c», ())
+theorem add.keeps.albums («this» : Registers) (p : JSString) (month : JSString) (c : Counters) :
+    (add «this» p month c).albums = «this».albums :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.albums ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) : FVar sigs "add" sig.add) rfl «this» (p, month, c, ())
 
 /-- `item` leaves `this.albums` as it is. -/
-theorem «item».keeps.«albums» («this» : «Registers») («aid» : JSString) («id» : JSString) («stamp» : JSString) («present» : Bool) :
-    («item» «this» «aid» «id» «stamp» «present»).«albums» = «this».«albums» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.«albums» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "item" sig.«item») rfl «this» («aid», «id», «stamp», «present», ())
+theorem item.keeps.albums («this» : Registers) (aid : JSString) (id : JSString) (stamp : JSString) (present : Bool) :
+    (item «this» aid id stamp present).albums = «this».albums :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.albums ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "item" sig.item) rfl «this» (aid, id, stamp, present, ())
 
 /-- `loadPlacement` leaves `this.albums` as it is. -/
-theorem «loadPlacement».keeps.«albums» («this» : «Registers») («ref» : JSString) («e» : «Placed») :
-    («loadPlacement» «this» «ref» «e»).«albums» = «this».«albums» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.«albums» ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "loadPlacement" sig.«loadPlacement») rfl «this» («ref», «e», ())
+theorem loadPlacement.keeps.albums («this» : Registers) (ref : JSString) (e : Placed) :
+    (loadPlacement «this» ref e).albums = «this».albums :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.albums ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "loadPlacement" sig.loadPlacement) rfl «this» (ref, e, ())
 
 /-- `loadMark` leaves `this.albums` as it is. -/
-theorem «loadMark».keeps.«albums» («this» : «Registers») («m» : «Mark») :
-    («loadMark» «this» «m»).«albums» = «this».«albums» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.«albums» ((.there (.there (.there (.there (.there .here))))) : FVar sigs "loadMark" sig.«loadMark») rfl «this» («m», ())
+theorem loadMark.keeps.albums («this» : Registers) (m : Mark) :
+    (loadMark «this» m).albums = «this».albums :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.albums ((.there (.there (.there (.there (.there .here))))) : FVar sigs "loadMark" sig.loadMark) rfl «this» (m, ())
 
 /-- `loadPack` leaves `this.albums` as it is. -/
-theorem «loadPack».keeps.«albums» («this» : «Registers») («pk» : «Pack») :
-    («loadPack» «this» «pk»).«albums» = «this».«albums» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.«albums» ((.there (.there (.there (.there .here)))) : FVar sigs "loadPack" sig.«loadPack») rfl «this» («pk», ())
+theorem loadPack.keeps.albums («this» : Registers) (pk : Pack) :
+    (loadPack «this» pk).albums = «this».albums :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.albums ((.there (.there (.there (.there .here)))) : FVar sigs "loadPack" sig.loadPack) rfl «this» (pk, ())
 
 /-- `loadTotal` leaves `this.albums` as it is. -/
-theorem «loadTotal».keeps.«albums» («this» : «Registers») («t» : «Total») :
-    («loadTotal» «this» «t»).«albums» = «this».«albums» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.«albums» ((.there (.there (.there .here))) : FVar sigs "loadTotal" sig.«loadTotal») rfl «this» («t», ())
+theorem loadTotal.keeps.albums («this» : Registers) (t : Total) :
+    (loadTotal «this» t).albums = «this».albums :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.albums ((.there (.there (.there .here))) : FVar sigs "loadTotal" sig.loadTotal) rfl «this» (t, ())
 
 /-- `loadIncrements` leaves `this.albums` as it is. -/
-theorem «loadIncrements».keeps.«albums» («this» : «Registers») («i» : «Increments») :
-    («loadIncrements» «this» «i»).«albums» = «this».«albums» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.«albums» ((.there (.there .here)) : FVar sigs "loadIncrements" sig.«loadIncrements») rfl «this» («i», ())
+theorem loadIncrements.keeps.albums («this» : Registers) (i : Increments) :
+    (loadIncrements «this» i).albums = «this».albums :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.albums ((.there (.there .here)) : FVar sigs "loadIncrements" sig.loadIncrements) rfl «this» (i, ())
 
 /-- `loadItem` leaves `this.albums` as it is. -/
-theorem «loadItem».keeps.«albums» («this» : «Registers») («i» : «AlbumItem») :
-    («loadItem» «this» «i»).«albums» = «this».«albums» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.«albums» (.here : FVar sigs "loadItem" sig.«loadItem») rfl «this» («i», ())
+theorem loadItem.keeps.albums («this» : Registers) (i : AlbumItem) :
+    (loadItem «this» i).albums = «this».albums :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there .here))))))) denote_eq frames.albums (.here : FVar sigs "loadItem" sig.loadItem) rfl «this» (i, ())
 
-theorem frames.«items» : typed.frames "items" = [false, true, true, true, true, true, true, false, false, false, false, true, true, false, false, false, false, true, true, true, false, false, true, false, false, false, false, false, true, true, true, true, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false] := by
+theorem frames.items : typed.frames "items" = [false, true, true, true, true, true, true, false, false, false, false, true, true, false, false, false, false, true, true, true, false, false, true, false, false, false, false, false, true, true, true, true, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false] := by
   decide +kernel
 
 /-- `noteUnplace` leaves `this.items` as it is. -/
-theorem «noteUnplace».keeps.«items» («this» : «Registers») («ref» : JSString) («p» : JSString) («u» : JSString) :
-    («noteUnplace» «this» «ref» «p» «u»).«items» = «this».«items» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.«items» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))) : FVar sigs "noteUnplace" sig.«noteUnplace») rfl «this» («ref», «p», «u», ())
+theorem noteUnplace.keeps.items («this» : Registers) (ref : JSString) (p : JSString) (u : JSString) :
+    (noteUnplace «this» ref p u).items = «this».items :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.items ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))) : FVar sigs "noteUnplace" sig.noteUnplace) rfl «this» (ref, p, u, ())
 
 /-- `put` leaves `this.items` as it is. -/
-theorem «put».keeps.«items» («this» : «Registers») («ref» : JSString) («p» : JSString) («e» : «Placed») :
-    («put» «this» «ref» «p» «e»).«items» = «this».«items» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.«items» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))) : FVar sigs "put" sig.«put») rfl «this» («ref», «p», «e», ())
+theorem put.keeps.items («this» : Registers) (ref : JSString) (p : JSString) (e : Placed) :
+    (put «this» ref p e).items = «this».items :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.items ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))) : FVar sigs "put" sig.put) rfl «this» (ref, p, e, ())
 
 /-- `dropMarkBefore` leaves `this.items` as it is. -/
-theorem «dropMarkBefore».keeps.«items» («this» : «Registers») («ref» : JSString) («p» : JSString) («u» : Option JSString) :
-    («dropMarkBefore» «this» «ref» «p» «u»).«items» = «this».«items» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.«items» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))) : FVar sigs "dropMarkBefore" sig.«dropMarkBefore») rfl «this» («ref», «p», «u», ())
+theorem dropMarkBefore.keeps.items («this» : Registers) (ref : JSString) (p : JSString) (u : Option JSString) :
+    (dropMarkBefore «this» ref p u).items = «this».items :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.items ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))) : FVar sigs "dropMarkBefore" sig.dropMarkBefore) rfl «this» (ref, p, u, ())
 
 /-- `place` leaves `this.items` as it is. -/
-theorem «place».keeps.«items» («this» : «Registers») («ref» : JSString) («p» : JSString) («placed» : Bool) («cls» : JSString) («stamp» : JSString) («at» : Int) :
-    («place» «this» «ref» «p» «placed» «cls» «stamp» «at»).«items» = «this».«items» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.«items» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))) : FVar sigs "place" sig.«place») rfl «this» («ref», «p», «placed», «cls», «stamp», «at», ())
+theorem place.keeps.items («this» : Registers) (ref : JSString) (p : JSString) (placed : Bool) (cls : JSString) (stamp : JSString) («at» : Int) :
+    (place «this» ref p placed cls stamp «at»).items = «this».items :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.items ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))) : FVar sigs "place" sig.place) rfl «this» (ref, p, placed, cls, stamp, «at», ())
 
 /-- `mark` leaves `this.items` as it is. -/
-theorem «mark».keeps.«items» («this» : «Registers») («ref» : JSString) («p» : JSString) («on» : Bool) («reason» : Option JSString) («stamp» : JSString) («at» : Int) :
-    («mark» «this» «ref» «p» «on» «reason» «stamp» «at»).«items» = «this».«items» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.«items» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) : FVar sigs "mark" sig.«mark») rfl «this» («ref», «p», «on», «reason», «stamp», «at», ())
+theorem mark.keeps.items («this» : Registers) (ref : JSString) (p : JSString) (on : Bool) (reason : Option JSString) (stamp : JSString) («at» : Int) :
+    (mark «this» ref p on reason stamp «at»).items = «this».items :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.items ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) : FVar sigs "mark" sig.mark) rfl «this» (ref, p, on, reason, stamp, «at», ())
 
 /-- `pack` leaves `this.items` as it is. -/
-theorem «pack».keeps.«items» («this» : «Registers») («id» : JSString) («size» : Int) («csize» : Int) («stamp» : JSString) («at» : Int) («hn» : Option JSString) :
-    («pack» «this» «id» «size» «csize» «stamp» «at» «hn»).«items» = «this».«items» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.«items» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) : FVar sigs "pack" sig.«pack») rfl «this» («id», «size», «csize», «stamp», «at», «hn», ())
+theorem pack.keeps.items («this» : Registers) (id : JSString) (size : Int) (csize : Int) (stamp : JSString) («at» : Int) (hn : Option JSString) :
+    (pack «this» id size csize stamp «at» hn).items = «this».items :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.items ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) : FVar sigs "pack" sig.pack) rfl «this» (id, size, csize, stamp, «at», hn, ())
 
 /-- `track` leaves `this.items` as it is. -/
-theorem «track».keeps.«items» («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («total» : Bool) :
-    («track» «this» «p» «month» «device» «total»).«items» = «this».«items» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.«items» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) : FVar sigs "track" sig.«track») rfl «this» («p», «month», «device», «total», ())
+theorem track.keeps.items («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (total : Bool) :
+    (track «this» p month device total).items = «this».items :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.items ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) : FVar sigs "track" sig.track) rfl «this» (p, month, device, total, ())
 
 /-- `total` leaves `this.items` as it is. -/
-theorem «total».keeps.«items» («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («c» : «Counters») :
-    («total» «this» «p» «month» «device» «c»).«items» = «this».«items» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.«items» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) : FVar sigs "total" sig.«total») rfl «this» («p», «month», «device», «c», ())
+theorem total.keeps.items («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (c : Counters) :
+    (total «this» p month device c).items = «this».items :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.items ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) : FVar sigs "total" sig.total) rfl «this» (p, month, device, c, ())
 
 /-- `add` leaves `this.items` as it is. -/
-theorem «add».keeps.«items» («this» : «Registers») («p» : JSString) («month» : JSString) («c» : «Counters») :
-    («add» «this» «p» «month» «c»).«items» = «this».«items» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.«items» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) : FVar sigs "add" sig.«add») rfl «this» («p», «month», «c», ())
+theorem add.keeps.items («this» : Registers) (p : JSString) (month : JSString) (c : Counters) :
+    (add «this» p month c).items = «this».items :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.items ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) : FVar sigs "add" sig.add) rfl «this» (p, month, c, ())
 
 /-- `touchAlbum` leaves `this.items` as it is. -/
-theorem «touchAlbum».keeps.«items» («this» : «Registers») («aid» : JSString) («at» : Int) :
-    («touchAlbum» «this» «aid» «at»).«items» = «this».«items» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.«items» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "touchAlbum" sig.«touchAlbum») rfl «this» («aid», «at», ())
+theorem touchAlbum.keeps.items («this» : Registers) (aid : JSString) («at» : Int) :
+    (touchAlbum «this» aid «at»).items = «this».items :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.items ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "touchAlbum" sig.touchAlbum) rfl «this» (aid, «at», ())
 
 /-- `album` leaves `this.items` as it is. -/
-theorem «album».keeps.«items» («this» : «Registers») («aid» : JSString) («stamp» : JSString) («at» : Int) («name» : Option JSString) («cover» : Option JSString) («deleted» : Bool) :
-    («album» «this» «aid» «stamp» «at» «name» «cover» «deleted»).«items» = «this».«items» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.«items» ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "album" sig.«album») rfl «this» («aid», «stamp», «at», «name», «cover», «deleted», ())
+theorem album.keeps.items («this» : Registers) (aid : JSString) (stamp : JSString) («at» : Int) (name : Option JSString) (cover : Option JSString) (deleted : Bool) :
+    (album «this» aid stamp «at» name cover deleted).items = «this».items :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.items ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "album" sig.album) rfl «this» (aid, stamp, «at», name, cover, deleted, ())
 
 /-- `loadPlacement` leaves `this.items` as it is. -/
-theorem «loadPlacement».keeps.«items» («this» : «Registers») («ref» : JSString) («e» : «Placed») :
-    («loadPlacement» «this» «ref» «e»).«items» = «this».«items» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.«items» ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "loadPlacement" sig.«loadPlacement») rfl «this» («ref», «e», ())
+theorem loadPlacement.keeps.items («this» : Registers) (ref : JSString) (e : Placed) :
+    (loadPlacement «this» ref e).items = «this».items :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.items ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "loadPlacement" sig.loadPlacement) rfl «this» (ref, e, ())
 
 /-- `loadMark` leaves `this.items` as it is. -/
-theorem «loadMark».keeps.«items» («this» : «Registers») («m» : «Mark») :
-    («loadMark» «this» «m»).«items» = «this».«items» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.«items» ((.there (.there (.there (.there (.there .here))))) : FVar sigs "loadMark" sig.«loadMark») rfl «this» («m», ())
+theorem loadMark.keeps.items («this» : Registers) (m : Mark) :
+    (loadMark «this» m).items = «this».items :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.items ((.there (.there (.there (.there (.there .here))))) : FVar sigs "loadMark" sig.loadMark) rfl «this» (m, ())
 
 /-- `loadPack` leaves `this.items` as it is. -/
-theorem «loadPack».keeps.«items» («this» : «Registers») («pk» : «Pack») :
-    («loadPack» «this» «pk»).«items» = «this».«items» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.«items» ((.there (.there (.there (.there .here)))) : FVar sigs "loadPack" sig.«loadPack») rfl «this» («pk», ())
+theorem loadPack.keeps.items («this» : Registers) (pk : Pack) :
+    (loadPack «this» pk).items = «this».items :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.items ((.there (.there (.there (.there .here)))) : FVar sigs "loadPack" sig.loadPack) rfl «this» (pk, ())
 
 /-- `loadTotal` leaves `this.items` as it is. -/
-theorem «loadTotal».keeps.«items» («this» : «Registers») («t» : «Total») :
-    («loadTotal» «this» «t»).«items» = «this».«items» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.«items» ((.there (.there (.there .here))) : FVar sigs "loadTotal" sig.«loadTotal») rfl «this» («t», ())
+theorem loadTotal.keeps.items («this» : Registers) (t : Total) :
+    (loadTotal «this» t).items = «this».items :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.items ((.there (.there (.there .here))) : FVar sigs "loadTotal" sig.loadTotal) rfl «this» (t, ())
 
 /-- `loadIncrements` leaves `this.items` as it is. -/
-theorem «loadIncrements».keeps.«items» («this» : «Registers») («i» : «Increments») :
-    («loadIncrements» «this» «i»).«items» = «this».«items» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.«items» ((.there (.there .here)) : FVar sigs "loadIncrements" sig.«loadIncrements») rfl «this» («i», ())
+theorem loadIncrements.keeps.items («this» : Registers) (i : Increments) :
+    (loadIncrements «this» i).items = «this».items :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.items ((.there (.there .here)) : FVar sigs "loadIncrements" sig.loadIncrements) rfl «this» (i, ())
 
 /-- `loadAlbum` leaves `this.items` as it is. -/
-theorem «loadAlbum».keeps.«items» («this» : «Registers») («a» : «AlbumRec») :
-    («loadAlbum» «this» «a»).«items» = «this».«items» :=
-  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.«items» ((.there .here) : FVar sigs "loadAlbum" sig.«loadAlbum») rfl «this» («a», ())
+theorem loadAlbum.keeps.items («this» : Registers) (a : AlbumRec) :
+    (loadAlbum «this» a).items = «this».items :=
+  frame_of (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) denote_eq frames.items ((.there .here) : FVar sigs "loadAlbum" sig.loadAlbum) rfl «this» (a, ())
 
 /-! ## Source theorems -/
 
 /-- Every run of `key` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «key».source («a» : JSString) («b» : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.«key».params vs' («a», «b», ())) :
+theorem key.source (a : JSString) (b : JSString) (vs' : List JSValue)
+    (args' : ArgsRep sig.key.params vs' (a, b, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "key" vs') (.ok w') ∧
-      Ty.Rep .string w' («key» «a» «b») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))))))))))))))) : FVar sigs "key" sig.«key») rfl («a», «b», ()) vs' args' rfl
+      Ty.Rep .string w' (key a b) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))))))))))))))) : FVar sigs "key" sig.key) rfl (a, b, ()) vs' args' rfl
 
 /-- Every run of `byString` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «byString».source («a» : JSString) («b» : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.«byString».params vs' («a», «b», ())) :
+theorem byString.source (a : JSString) (b : JSString) (vs' : List JSValue)
+    (args' : ArgsRep sig.byString.params vs' (a, b, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "byString" vs') (.ok w') ∧
-      Ty.Rep .number w' («byString» «a» «b») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))))))))))))) : FVar sigs "byString" sig.«byString») rfl («a», «b», ()) vs' args' rfl
+      Ty.Rep .number w' (byString a b) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))))))))))))) : FVar sigs "byString" sig.byString) rfl (a, b, ()) vs' args' rfl
 
 /-- Every run of `newer` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «newer».source («s» : Option JSString) («stamp» : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.«newer».params vs' («s», «stamp», ())) :
+theorem newer.source (s : Option JSString) (stamp : JSString) (vs' : List JSValue)
+    (args' : ArgsRep sig.newer.params vs' (s, stamp, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "newer" vs') (.ok w') ∧
-      Ty.Rep .bool w' («newer» «s» «stamp») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))))))))))))) : FVar sigs "newer" sig.«newer») rfl («s», «stamp», ()) vs' args' rfl
+      Ty.Rep .bool w' (newer s stamp) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))))))))))))) : FVar sigs "newer" sig.newer) rfl (s, stamp, ()) vs' args' rfl
 
 /-- Every run of `earlier` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «earlier».source («s» : Option JSString) («stamp» : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.«earlier».params vs' («s», «stamp», ())) :
+theorem earlier.source (s : Option JSString) (stamp : JSString) (vs' : List JSValue)
+    (args' : ArgsRep sig.earlier.params vs' (s, stamp, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "earlier" vs') (.ok w') ∧
-      Ty.Rep .bool w' («earlier» «s» «stamp») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))))))))))) : FVar sigs "earlier" sig.«earlier») rfl («s», «stamp», ()) vs' args' rfl
+      Ty.Rep .bool w' (earlier s stamp) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))))))))))) : FVar sigs "earlier" sig.earlier) rfl (s, stamp, ()) vs' args' rfl
 
 /-- Every run of `newest` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «newest».source («s» : Option JSString) («stamp» : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.«newest».params vs' («s», «stamp», ())) :
+theorem newest.source (s : Option JSString) (stamp : JSString) (vs' : List JSValue)
+    (args' : ArgsRep sig.newest.params vs' (s, stamp, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "newest" vs') (.ok w') ∧
-      Ty.Rep .string w' («newest» «s» «stamp») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))))))))))) : FVar sigs "newest" sig.«newest») rfl («s», «stamp», ()) vs' args' rfl
+      Ty.Rep .string w' (newest s stamp) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))))))))))) : FVar sigs "newest" sig.newest) rfl (s, stamp, ()) vs' args' rfl
 
 /-- Every run of `before` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «before».source («stamp» : JSString) («s» : Option JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.«before».params vs' («stamp», «s», ())) :
+theorem before.source (stamp : JSString) (s : Option JSString) (vs' : List JSValue)
+    (args' : ArgsRep sig.before.params vs' (stamp, s, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "before" vs') (.ok w') ∧
-      Ty.Rep .bool w' («before» «stamp» «s») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))))))))) : FVar sigs "before" sig.«before») rfl («stamp», «s», ()) vs' args' rfl
+      Ty.Rep .bool w' (before stamp s) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))))))))) : FVar sigs "before" sig.before) rfl (stamp, s, ()) vs' args' rfl
 
 /-- Every run of `given` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «given».source («s» : Option JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.«given».params vs' («s», ())) :
+theorem given.source (s : Option JSString) (vs' : List JSValue)
+    (args' : ArgsRep sig.given.params vs' (s, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "given" vs') (.ok w') ∧
-      Ty.Rep .bool w' («given» «s») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))))))))) : FVar sigs "given" sig.«given») rfl («s», ()) vs' args' rfl
+      Ty.Rep .bool w' (given s) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))))))))) : FVar sigs "given" sig.given) rfl (s, ()) vs' args' rfl
 
 /-- Every run of `otherwise` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «otherwise».source («s» : Option JSString) («fallback» : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.«otherwise».params vs' («s», «fallback», ())) :
+theorem otherwise.source (s : Option JSString) (fallback : JSString) (vs' : List JSValue)
+    (args' : ArgsRep sig.otherwise.params vs' (s, fallback, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "otherwise" vs') (.ok w') ∧
-      Ty.Rep .string w' («otherwise» «s» «fallback») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))))))) : FVar sigs "otherwise" sig.«otherwise») rfl («s», «fallback», ()) vs' args' rfl
+      Ty.Rep .string w' (otherwise s fallback) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))))))) : FVar sigs "otherwise" sig.otherwise) rfl (s, fallback, ()) vs' args' rfl
 
 /-- Every run of `described` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «described».source («cur» : Option «Pack») («stamp» : JSString) («at» : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.«described».params vs' («cur», «stamp», «at», ())) :
+theorem described.source (cur : Option Pack) (stamp : JSString) («at» : Int) (vs' : List JSValue)
+    (args' : ArgsRep sig.described.params vs' (cur, stamp, «at», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "described" vs') (.ok w') ∧
-      Ty.Rep .bool w' («described» «cur» «stamp» «at») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))))))) : FVar sigs "described" sig.«described») rfl («cur», «stamp», «at», ()) vs' args' rfl
+      Ty.Rep .bool w' (described cur stamp «at») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))))))) : FVar sigs "described" sig.described) rfl (cur, stamp, «at», ()) vs' args' rfl
 
 /-- Every run of `larger` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «larger».source («a» : Int) («b» : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.«larger».params vs' («a», «b», ())) :
+theorem larger.source (a : Int) (b : Int) (vs' : List JSValue)
+    (args' : ArgsRep sig.larger.params vs' (a, b, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "larger" vs') (.ok w') ∧
-      Ty.Rep .number w' («larger» «a» «b») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))))) : FVar sigs "larger" sig.«larger») rfl («a», «b», ()) vs' args' rfl
+      Ty.Rep .number w' (larger a b) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))))) : FVar sigs "larger" sig.larger) rfl (a, b, ()) vs' args' rfl
 
 /-- Every run of `zero` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «zero».source  (vs' : List JSValue)
-    (args' : ArgsRep sig.«zero».params vs' (())) :
+theorem zero.source  (vs' : List JSValue)
+    (args' : ArgsRep sig.zero.params vs' (())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "zero" vs') (.ok w') ∧
-      Ty.Rep ty.«Counters» w' («zero») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))))) : FVar sigs "zero" sig.«zero») rfl (()) vs' args' rfl
+      Ty.Rep ty.Counters w' (zero) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))))) : FVar sigs "zero" sig.zero) rfl (()) vs' args' rfl
 
 /-- Every run of `highest` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «highest».source («a» : «Counters») («b» : «Counters») (vs' : List JSValue)
-    (args' : ArgsRep sig.«highest».params vs' («a», «b», ())) :
+theorem highest.source (a : Counters) (b : Counters) (vs' : List JSValue)
+    (args' : ArgsRep sig.highest.params vs' (a, b, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "highest" vs') (.ok w') ∧
-      Ty.Rep ty.«Counters» w' («highest» «a» «b») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))) : FVar sigs "highest" sig.«highest») rfl («a», «b», ()) vs' args' rfl
+      Ty.Rep ty.Counters w' (highest a b) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))))) : FVar sigs "highest" sig.highest) rfl (a, b, ()) vs' args' rfl
 
 /-- Every run of `sum` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «sum».source («a» : «Counters») («b» : «Counters») (vs' : List JSValue)
-    (args' : ArgsRep sig.«sum».params vs' («a», «b», ()))
-    (safe' : «sum».safe «a» «b» = true) :
+theorem sum.source (a : Counters) (b : Counters) (vs' : List JSValue)
+    (args' : ArgsRep sig.sum.params vs' (a, b, ()))
+    (safe' : sum.safe a b = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "sum" vs') (.ok w') ∧
-      Ty.Rep ty.«Counters» w' («sum» «a» «b») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))) : FVar sigs "sum" sig.«sum») rfl («a», «b», ()) vs' args' safe'
+      Ty.Rep ty.Counters w' (sum a b) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))))) : FVar sigs "sum" sig.sum) rfl (a, b, ()) vs' args' safe'
 
 /-- Every run of `new Registers` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
 theorem «new Registers».source  (vs' : List JSValue)
     (args' : ArgsRep sig.«new Registers».params vs' (())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "new Registers" vs') (.ok w') ∧
-      Ty.Rep ty.«Registers» w' («new Registers») :=
+      Ty.Rep ty.Registers w' («new Registers») :=
   source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))))) : FVar sigs "new Registers" sig.«new Registers») rfl (()) vs' args' rfl
 
 /-- Every run of `noteUnplace` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «noteUnplace».source («this» : «Registers») («ref» : JSString) («p» : JSString) («u» : JSString) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.«noteUnplace».params (this' :: vs') («this», «ref», «p», «u», ())) :
+theorem noteUnplace.source («this» : Registers) (ref : JSString) (p : JSString) (u : JSString) (this' : JSValue) (vs' : List JSValue)
+    (args' : ArgsRep sig.noteUnplace.params (this' :: vs') («this», ref, p, u, ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "noteUnplace" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.«Registers» t' («noteUnplace» «this» «ref» «p» «u») :=
-  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))) : FVar sigs "noteUnplace" sig.«noteUnplace») rfl («this», «ref», «p», «u», ()) this' vs' args' rfl
+      Ty.Rep ty.Registers t' (noteUnplace «this» ref p u) :=
+  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))))) : FVar sigs "noteUnplace" sig.noteUnplace) rfl («this», ref, p, u, ()) this' vs' args' rfl
 
 /-- Every run of `providersOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «providersOf».source («this» : «Registers») («ref» : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.«providersOf».params vs' («this», «ref», ())) :
+theorem providersOf.source («this» : Registers) (ref : JSString) (vs' : List JSValue)
+    (args' : ArgsRep sig.providersOf.params vs' («this», ref, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "providersOf" vs') (.ok w') ∧
-      Ty.Rep (.array .string) w' («providersOf» «this» «ref») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))) : FVar sigs "providersOf" sig.«providersOf») rfl («this», «ref», ()) vs' args' rfl
+      Ty.Rep (.array .string) w' (providersOf «this» ref) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))))) : FVar sigs "providersOf" sig.providersOf) rfl («this», ref, ()) vs' args' rfl
 
 /-- Every run of `put` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «put».source («this» : «Registers») («ref» : JSString) («p» : JSString) («e» : «Placed») (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.«put».params (this' :: vs') («this», «ref», «p», «e», ()))
-    (safe' : «put».safe «this» «ref» «p» «e» = true) :
+theorem put.source («this» : Registers) (ref : JSString) (p : JSString) (e : Placed) (this' : JSValue) (vs' : List JSValue)
+    (args' : ArgsRep sig.put.params (this' :: vs') («this», ref, p, e, ()))
+    (safe' : put.safe «this» ref p e = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "put" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.«Registers» t' («put» «this» «ref» «p» «e») :=
-  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))) : FVar sigs "put" sig.«put») rfl («this», «ref», «p», «e», ()) this' vs' args' safe'
+      Ty.Rep ty.Registers t' (put «this» ref p e) :=
+  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))))) : FVar sigs "put" sig.put) rfl («this», ref, p, e, ()) this' vs' args' safe'
 
 /-- Every run of `dropMarkBefore` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «dropMarkBefore».source («this» : «Registers») («ref» : JSString) («p» : JSString) («u» : Option JSString) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.«dropMarkBefore».params (this' :: vs') («this», «ref», «p», «u», ())) :
+theorem dropMarkBefore.source («this» : Registers) (ref : JSString) (p : JSString) (u : Option JSString) (this' : JSValue) (vs' : List JSValue)
+    (args' : ArgsRep sig.dropMarkBefore.params (this' :: vs') («this», ref, p, u, ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "dropMarkBefore" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.«Registers» t' («dropMarkBefore» «this» «ref» «p» «u») :=
-  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))) : FVar sigs "dropMarkBefore" sig.«dropMarkBefore») rfl («this», «ref», «p», «u», ()) this' vs' args' rfl
+      Ty.Rep ty.Registers t' (dropMarkBefore «this» ref p u) :=
+  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))))) : FVar sigs "dropMarkBefore" sig.dropMarkBefore) rfl («this», ref, p, u, ()) this' vs' args' rfl
 
 /-- Every run of `place` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «place».source («this» : «Registers») («ref» : JSString) («p» : JSString) («placed» : Bool) («cls» : JSString) («stamp» : JSString) («at» : Int) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.«place».params (this' :: vs') («this», «ref», «p», «placed», «cls», «stamp», «at», ()))
-    (safe' : «place».safe «this» «ref» «p» «placed» «cls» «stamp» «at» = true) :
+theorem place.source («this» : Registers) (ref : JSString) (p : JSString) (placed : Bool) (cls : JSString) (stamp : JSString) («at» : Int) (this' : JSValue) (vs' : List JSValue)
+    (args' : ArgsRep sig.place.params (this' :: vs') («this», ref, p, placed, cls, stamp, «at», ()))
+    (safe' : place.safe «this» ref p placed cls stamp «at» = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "place" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.«Registers» t' («place» «this» «ref» «p» «placed» «cls» «stamp» «at») :=
-  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))) : FVar sigs "place" sig.«place») rfl («this», «ref», «p», «placed», «cls», «stamp», «at», ()) this' vs' args' safe'
+      Ty.Rep ty.Registers t' (place «this» ref p placed cls stamp «at») :=
+  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))))) : FVar sigs "place" sig.place) rfl («this», ref, p, placed, cls, stamp, «at», ()) this' vs' args' safe'
 
 /-- Every run of `mark` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «mark».source («this» : «Registers») («ref» : JSString) («p» : JSString) («on» : Bool) («reason» : Option JSString) («stamp» : JSString) («at» : Int) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.«mark».params (this' :: vs') («this», «ref», «p», «on», «reason», «stamp», «at», ())) :
+theorem mark.source («this» : Registers) (ref : JSString) (p : JSString) (on : Bool) (reason : Option JSString) (stamp : JSString) («at» : Int) (this' : JSValue) (vs' : List JSValue)
+    (args' : ArgsRep sig.mark.params (this' :: vs') («this», ref, p, on, reason, stamp, «at», ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "mark" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.«Registers» t' («mark» «this» «ref» «p» «on» «reason» «stamp» «at») :=
-  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) : FVar sigs "mark" sig.«mark») rfl («this», «ref», «p», «on», «reason», «stamp», «at», ()) this' vs' args' rfl
+      Ty.Rep ty.Registers t' (mark «this» ref p on reason stamp «at») :=
+  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))))) : FVar sigs "mark" sig.mark) rfl («this», ref, p, on, reason, stamp, «at», ()) this' vs' args' rfl
 
 /-- Every run of `placements` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «placements».source («this» : «Registers») («ref» : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.«placements».params vs' («this», «ref», ())) :
+theorem placements.source («this» : Registers) (ref : JSString) (vs' : List JSValue)
+    (args' : ArgsRep sig.placements.params vs' («this», ref, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "placements" vs') (.ok w') ∧
-      Ty.Rep (.array ty.«Placed») w' («placements» «this» «ref») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))) : FVar sigs "placements" sig.«placements») rfl («this», «ref», ()) vs' args' rfl
+      Ty.Rep (.array ty.Placed) w' (placements «this» ref) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))))) : FVar sigs "placements" sig.placements) rfl («this», ref, ()) vs' args' rfl
 
 /-- Every run of `isPlaced` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «isPlaced».source («this» : «Registers») («ref» : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.«isPlaced».params vs' («this», «ref», ())) :
+theorem isPlaced.source («this» : Registers) (ref : JSString) (vs' : List JSValue)
+    (args' : ArgsRep sig.isPlaced.params vs' («this», ref, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "isPlaced" vs') (.ok w') ∧
-      Ty.Rep .bool w' («isPlaced» «this» «ref») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))) : FVar sigs "isPlaced" sig.«isPlaced») rfl («this», «ref», ()) vs' args' rfl
+      Ty.Rep .bool w' (isPlaced «this» ref) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))))) : FVar sigs "isPlaced" sig.isPlaced) rfl («this», ref, ()) vs' args' rfl
 
 /-- Every run of `placedRefs` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «placedRefs».source («this» : «Registers») (vs' : List JSValue)
-    (args' : ArgsRep sig.«placedRefs».params vs' («this», ())) :
+theorem placedRefs.source («this» : Registers) (vs' : List JSValue)
+    (args' : ArgsRep sig.placedRefs.params vs' («this», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "placedRefs" vs') (.ok w') ∧
-      Ty.Rep (.array .string) w' («placedRefs» «this») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))) : FVar sigs "placedRefs" sig.«placedRefs») rfl («this», ()) vs' args' rfl
+      Ty.Rep (.array .string) w' (placedRefs «this») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))))) : FVar sigs "placedRefs" sig.placedRefs) rfl («this», ()) vs' args' rfl
 
 /-- Every run of `markOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «markOf».source («this» : «Registers») («ref» : JSString) («p» : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.«markOf».params vs' («this», «ref», «p», ())) :
+theorem markOf.source («this» : Registers) (ref : JSString) (p : JSString) (vs' : List JSValue)
+    (args' : ArgsRep sig.markOf.params vs' («this», ref, p, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "markOf" vs') (.ok w') ∧
-      Ty.Rep (.option .undef ty.«Mark») w' («markOf» «this» «ref» «p») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))) : FVar sigs "markOf" sig.«markOf») rfl («this», «ref», «p», ()) vs' args' rfl
+      Ty.Rep (.option .undef ty.Mark) w' (markOf «this» ref p) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))))) : FVar sigs "markOf" sig.markOf) rfl («this», ref, p, ()) vs' args' rfl
 
 /-- Every run of `markList` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «markList».source («this» : «Registers») (vs' : List JSValue)
-    (args' : ArgsRep sig.«markList».params vs' («this», ())) :
+theorem markList.source («this» : Registers) (vs' : List JSValue)
+    (args' : ArgsRep sig.markList.params vs' («this», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "markList" vs') (.ok w') ∧
-      Ty.Rep (.array ty.«Mark») w' («markList» «this») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))) : FVar sigs "markList" sig.«markList») rfl («this», ()) vs' args' rfl
+      Ty.Rep (.array ty.Mark) w' (markList «this») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))))) : FVar sigs "markList" sig.markList) rfl («this», ()) vs' args' rfl
 
 /-- Every run of `pack` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «pack».source («this» : «Registers») («id» : JSString) («size» : Int) («csize» : Int) («stamp» : JSString) («at» : Int) («hn» : Option JSString) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.«pack».params (this' :: vs') («this», «id», «size», «csize», «stamp», «at», «hn», ())) :
+theorem pack.source («this» : Registers) (id : JSString) (size : Int) (csize : Int) (stamp : JSString) («at» : Int) (hn : Option JSString) (this' : JSValue) (vs' : List JSValue)
+    (args' : ArgsRep sig.pack.params (this' :: vs') («this», id, size, csize, stamp, «at», hn, ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "pack" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.«Registers» t' («pack» «this» «id» «size» «csize» «stamp» «at» «hn») :=
-  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) : FVar sigs "pack" sig.«pack») rfl («this», «id», «size», «csize», «stamp», «at», «hn», ()) this' vs' args' rfl
+      Ty.Rep ty.Registers t' (pack «this» id size csize stamp «at» hn) :=
+  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))))) : FVar sigs "pack" sig.pack) rfl («this», id, size, csize, stamp, «at», hn, ()) this' vs' args' rfl
 
 /-- Every run of `packOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «packOf».source («this» : «Registers») («id» : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.«packOf».params vs' («this», «id», ())) :
+theorem packOf.source («this» : Registers) (id : JSString) (vs' : List JSValue)
+    (args' : ArgsRep sig.packOf.params vs' («this», id, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "packOf" vs') (.ok w') ∧
-      Ty.Rep (.option .undef ty.«Pack») w' («packOf» «this» «id») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))) : FVar sigs "packOf" sig.«packOf») rfl («this», «id», ()) vs' args' rfl
+      Ty.Rep (.option .undef ty.Pack) w' (packOf «this» id) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))))) : FVar sigs "packOf" sig.packOf) rfl («this», id, ()) vs' args' rfl
 
 /-- Every run of `packList` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «packList».source («this» : «Registers») (vs' : List JSValue)
-    (args' : ArgsRep sig.«packList».params vs' («this», ())) :
+theorem packList.source («this» : Registers) (vs' : List JSValue)
+    (args' : ArgsRep sig.packList.params vs' («this», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "packList" vs') (.ok w') ∧
-      Ty.Rep (.array ty.«Pack») w' («packList» «this») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))) : FVar sigs "packList" sig.«packList») rfl («this», ()) vs' args' rfl
+      Ty.Rep (.array ty.Pack) w' (packList «this») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))))) : FVar sigs "packList" sig.packList) rfl («this», ()) vs' args' rfl
 
 /-- Every run of `track` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «track».source («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («total» : Bool) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.«track».params (this' :: vs') («this», «p», «month», «device», «total», ()))
-    (safe' : «track».safe «this» «p» «month» «device» «total» = true) :
+theorem track.source («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (total : Bool) (this' : JSValue) (vs' : List JSValue)
+    (args' : ArgsRep sig.track.params (this' :: vs') («this», p, month, device, total, ()))
+    (safe' : track.safe «this» p month device total = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "track" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.«Registers» t' («track» «this» «p» «month» «device» «total») :=
-  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) : FVar sigs "track" sig.«track») rfl («this», «p», «month», «device», «total», ()) this' vs' args' safe'
+      Ty.Rep ty.Registers t' (track «this» p month device total) :=
+  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))))) : FVar sigs "track" sig.track) rfl («this», p, month, device, total, ()) this' vs' args' safe'
 
 /-- Every run of `total` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «total».source («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) («c» : «Counters») (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.«total».params (this' :: vs') («this», «p», «month», «device», «c», ()))
-    (safe' : «total».safe «this» «p» «month» «device» «c» = true) :
+theorem total.source («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (c : Counters) (this' : JSValue) (vs' : List JSValue)
+    (args' : ArgsRep sig.total.params (this' :: vs') («this», p, month, device, c, ()))
+    (safe' : total.safe «this» p month device c = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "total" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.«Registers» t' («total» «this» «p» «month» «device» «c») :=
-  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) : FVar sigs "total" sig.«total») rfl («this», «p», «month», «device», «c», ()) this' vs' args' safe'
+      Ty.Rep ty.Registers t' (total «this» p month device c) :=
+  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))))) : FVar sigs "total" sig.total) rfl («this», p, month, device, c, ()) this' vs' args' safe'
 
 /-- Every run of `add` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «add».source («this» : «Registers») («p» : JSString) («month» : JSString) («c» : «Counters») (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.«add».params (this' :: vs') («this», «p», «month», «c», ()))
-    (safe' : «add».safe «this» «p» «month» «c» = true) :
+theorem add.source («this» : Registers) (p : JSString) (month : JSString) (c : Counters) (this' : JSValue) (vs' : List JSValue)
+    (args' : ArgsRep sig.add.params (this' :: vs') («this», p, month, c, ()))
+    (safe' : add.safe «this» p month c = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "add" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.«Registers» t' («add» «this» «p» «month» «c») :=
-  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) : FVar sigs "add" sig.«add») rfl («this», «p», «month», «c», ()) this' vs' args' safe'
+      Ty.Rep ty.Registers t' (add «this» p month c) :=
+  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))))) : FVar sigs "add" sig.add) rfl («this», p, month, c, ()) this' vs' args' safe'
 
 /-- Every run of `totalOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «totalOf».source («this» : «Registers») («p» : JSString) («month» : JSString) («device» : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.«totalOf».params vs' («this», «p», «month», «device», ())) :
+theorem totalOf.source («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (vs' : List JSValue)
+    (args' : ArgsRep sig.totalOf.params vs' («this», p, month, device, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "totalOf" vs') (.ok w') ∧
-      Ty.Rep ty.«Counters» w' («totalOf» «this» «p» «month» «device») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))) : FVar sigs "totalOf" sig.«totalOf») rfl («this», «p», «month», «device», ()) vs' args' rfl
+      Ty.Rep ty.Counters w' (totalOf «this» p month device) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))))) : FVar sigs "totalOf" sig.totalOf) rfl («this», p, month, device, ()) vs' args' rfl
 
 /-- Every run of `usageOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «usageOf».source («this» : «Registers») («p» : JSString) («month» : JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.«usageOf».params vs' («this», «p», «month», ()))
-    (safe' : «usageOf».safe «this» «p» «month» = true) :
+theorem usageOf.source («this» : Registers) (p : JSString) (month : JSString) (vs' : List JSValue)
+    (args' : ArgsRep sig.usageOf.params vs' («this», p, month, ()))
+    (safe' : usageOf.safe «this» p month = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "usageOf" vs') (.ok w') ∧
-      Ty.Rep ty.«Counters» w' («usageOf» «this» «p» «month») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))) : FVar sigs "usageOf" sig.«usageOf») rfl («this», «p», «month», ()) vs' args' safe'
+      Ty.Rep ty.Counters w' (usageOf «this» p month) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))))) : FVar sigs "usageOf" sig.usageOf) rfl («this», p, month, ()) vs' args' safe'
 
 /-- Every run of `usageList` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «usageList».source («this» : «Registers») (vs' : List JSValue)
-    (args' : ArgsRep sig.«usageList».params vs' («this», ()))
-    (safe' : «usageList».safe «this» = true) :
+theorem usageList.source («this» : Registers) (vs' : List JSValue)
+    (args' : ArgsRep sig.usageList.params vs' («this», ()))
+    (safe' : usageList.safe «this» = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "usageList" vs') (.ok w') ∧
-      Ty.Rep (.array ty.«Increments») w' («usageList» «this») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))) : FVar sigs "usageList" sig.«usageList») rfl («this», ()) vs' args' safe'
+      Ty.Rep (.array ty.Increments) w' (usageList «this») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))))) : FVar sigs "usageList" sig.usageList) rfl («this», ()) vs' args' safe'
 
 /-- Every run of `totalList` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «totalList».source («this» : «Registers») (vs' : List JSValue)
-    (args' : ArgsRep sig.«totalList».params vs' («this», ())) :
+theorem totalList.source («this» : Registers) (vs' : List JSValue)
+    (args' : ArgsRep sig.totalList.params vs' («this», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "totalList" vs') (.ok w') ∧
-      Ty.Rep (.array ty.«Total») w' («totalList» «this») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))) : FVar sigs "totalList" sig.«totalList») rfl («this», ()) vs' args' rfl
+      Ty.Rep (.array ty.Total) w' (totalList «this») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))))) : FVar sigs "totalList" sig.totalList) rfl («this», ()) vs' args' rfl
 
 /-- Every run of `touchAlbum` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «touchAlbum».source («this» : «Registers») («aid» : JSString) («at» : Int) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.«touchAlbum».params (this' :: vs') («this», «aid», «at», ())) :
+theorem touchAlbum.source («this» : Registers) (aid : JSString) («at» : Int) (this' : JSValue) (vs' : List JSValue)
+    (args' : ArgsRep sig.touchAlbum.params (this' :: vs') («this», aid, «at», ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "touchAlbum" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.«Registers» t' («touchAlbum» «this» «aid» «at») :=
-  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "touchAlbum" sig.«touchAlbum») rfl («this», «aid», «at», ()) this' vs' args' rfl
+      Ty.Rep ty.Registers t' (touchAlbum «this» aid «at») :=
+  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))))) : FVar sigs "touchAlbum" sig.touchAlbum) rfl («this», aid, «at», ()) this' vs' args' rfl
 
 /-- Every run of `album` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «album».source («this» : «Registers») («aid» : JSString) («stamp» : JSString) («at» : Int) («name» : Option JSString) («cover» : Option JSString) («deleted» : Bool) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.«album».params (this' :: vs') («this», «aid», «stamp», «at», «name», «cover», «deleted», ())) :
+theorem album.source («this» : Registers) (aid : JSString) (stamp : JSString) («at» : Int) (name : Option JSString) (cover : Option JSString) (deleted : Bool) (this' : JSValue) (vs' : List JSValue)
+    (args' : ArgsRep sig.album.params (this' :: vs') («this», aid, stamp, «at», name, cover, deleted, ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "album" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.«Registers» t' («album» «this» «aid» «stamp» «at» «name» «cover» «deleted») :=
-  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "album" sig.«album») rfl («this», «aid», «stamp», «at», «name», «cover», «deleted», ()) this' vs' args' rfl
+      Ty.Rep ty.Registers t' (album «this» aid stamp «at» name cover deleted) :=
+  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))))) : FVar sigs "album" sig.album) rfl («this», aid, stamp, «at», name, cover, deleted, ()) this' vs' args' rfl
 
 /-- Every run of `item` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «item».source («this» : «Registers») («aid» : JSString) («id» : JSString) («stamp» : JSString) («present» : Bool) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.«item».params (this' :: vs') («this», «aid», «id», «stamp», «present», ())) :
+theorem item.source («this» : Registers) (aid : JSString) (id : JSString) (stamp : JSString) (present : Bool) (this' : JSValue) (vs' : List JSValue)
+    (args' : ArgsRep sig.item.params (this' :: vs') («this», aid, id, stamp, present, ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "item" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.«Registers» t' («item» «this» «aid» «id» «stamp» «present») :=
-  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "item" sig.«item») rfl («this», «aid», «id», «stamp», «present», ()) this' vs' args' rfl
+      Ty.Rep ty.Registers t' (item «this» aid id stamp present) :=
+  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) : FVar sigs "item" sig.item) rfl («this», aid, id, stamp, present, ()) this' vs' args' rfl
 
 /-- Every run of `albumItems` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «albumItems».source («this» : «Registers») («aid» : JSString) («stamp» : JSString) («at» : Int) («add» : List JSString) («remove» : List JSString) (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.«albumItems».params (this' :: vs') («this», «aid», «stamp», «at», «add», «remove», ())) :
+theorem albumItems.source («this» : Registers) (aid : JSString) (stamp : JSString) («at» : Int) (add : List JSString) (remove : List JSString) (this' : JSValue) (vs' : List JSValue)
+    (args' : ArgsRep sig.albumItems.params (this' :: vs') («this», aid, stamp, «at», add, remove, ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "albumItems" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.«Registers» t' («albumItems» «this» «aid» «stamp» «at» «add» «remove») :=
-  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "albumItems" sig.«albumItems») rfl («this», «aid», «stamp», «at», «add», «remove», ()) this' vs' args' rfl
+      Ty.Rep ty.Registers t' (albumItems «this» aid stamp «at» add remove) :=
+  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "albumItems" sig.albumItems) rfl («this», aid, stamp, «at», add, remove, ()) this' vs' args' rfl
 
 /-- Every run of `albumList` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «albumList».source («this» : «Registers») (vs' : List JSValue)
-    (args' : ArgsRep sig.«albumList».params vs' («this», ())) :
+theorem albumList.source («this» : Registers) (vs' : List JSValue)
+    (args' : ArgsRep sig.albumList.params vs' («this», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "albumList" vs') (.ok w') ∧
-      Ty.Rep (.array ty.«AlbumRec») w' («albumList» «this») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) : FVar sigs "albumList" sig.«albumList») rfl («this», ()) vs' args' rfl
+      Ty.Rep (.array ty.AlbumRec) w' (albumList «this») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) : FVar sigs "albumList" sig.albumList) rfl («this», ()) vs' args' rfl
 
 /-- Every run of `itemList` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «itemList».source («this» : «Registers») (vs' : List JSValue)
-    (args' : ArgsRep sig.«itemList».params vs' («this», ())) :
+theorem itemList.source («this» : Registers) (vs' : List JSValue)
+    (args' : ArgsRep sig.itemList.params vs' («this», ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "itemList" vs') (.ok w') ∧
-      Ty.Rep (.array ty.«AlbumItem») w' («itemList» «this») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there .here))))))) : FVar sigs "itemList" sig.«itemList») rfl («this», ()) vs' args' rfl
+      Ty.Rep (.array ty.AlbumItem) w' (itemList «this») :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there .here))))))) : FVar sigs "itemList" sig.itemList) rfl («this», ()) vs' args' rfl
 
 /-- Every run of `loadPlacement` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «loadPlacement».source («this» : «Registers») («ref» : JSString) («e» : «Placed») (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.«loadPlacement».params (this' :: vs') («this», «ref», «e», ()))
-    (safe' : «loadPlacement».safe «this» «ref» «e» = true) :
+theorem loadPlacement.source («this» : Registers) (ref : JSString) (e : Placed) (this' : JSValue) (vs' : List JSValue)
+    (args' : ArgsRep sig.loadPlacement.params (this' :: vs') («this», ref, e, ()))
+    (safe' : loadPlacement.safe «this» ref e = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "loadPlacement" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.«Registers» t' («loadPlacement» «this» «ref» «e») :=
-  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "loadPlacement" sig.«loadPlacement») rfl («this», «ref», «e», ()) this' vs' args' safe'
+      Ty.Rep ty.Registers t' (loadPlacement «this» ref e) :=
+  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "loadPlacement" sig.loadPlacement) rfl («this», ref, e, ()) this' vs' args' safe'
 
 /-- Every run of `loadMark` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «loadMark».source («this» : «Registers») («m» : «Mark») (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.«loadMark».params (this' :: vs') («this», «m», ())) :
+theorem loadMark.source («this» : Registers) (m : Mark) (this' : JSValue) (vs' : List JSValue)
+    (args' : ArgsRep sig.loadMark.params (this' :: vs') («this», m, ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "loadMark" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.«Registers» t' («loadMark» «this» «m») :=
-  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "loadMark" sig.«loadMark») rfl («this», «m», ()) this' vs' args' rfl
+      Ty.Rep ty.Registers t' (loadMark «this» m) :=
+  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "loadMark" sig.loadMark) rfl («this», m, ()) this' vs' args' rfl
 
 /-- Every run of `loadPack` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «loadPack».source («this» : «Registers») («pk» : «Pack») (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.«loadPack».params (this' :: vs') («this», «pk», ())) :
+theorem loadPack.source («this» : Registers) (pk : Pack) (this' : JSValue) (vs' : List JSValue)
+    (args' : ArgsRep sig.loadPack.params (this' :: vs') («this», pk, ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "loadPack" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.«Registers» t' («loadPack» «this» «pk») :=
-  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "loadPack" sig.«loadPack») rfl («this», «pk», ()) this' vs' args' rfl
+      Ty.Rep ty.Registers t' (loadPack «this» pk) :=
+  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "loadPack" sig.loadPack) rfl («this», pk, ()) this' vs' args' rfl
 
 /-- Every run of `loadTotal` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «loadTotal».source («this» : «Registers») («t» : «Total») (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.«loadTotal».params (this' :: vs') («this», «t», ()))
-    (safe' : «loadTotal».safe «this» «t» = true) :
+theorem loadTotal.source («this» : Registers) (t : Total) (this' : JSValue) (vs' : List JSValue)
+    (args' : ArgsRep sig.loadTotal.params (this' :: vs') («this», t, ()))
+    (safe' : loadTotal.safe «this» t = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "loadTotal" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.«Registers» t' («loadTotal» «this» «t») :=
-  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "loadTotal" sig.«loadTotal») rfl («this», «t», ()) this' vs' args' safe'
+      Ty.Rep ty.Registers t' (loadTotal «this» t) :=
+  source_state_of erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "loadTotal" sig.loadTotal) rfl («this», t, ()) this' vs' args' safe'
 
 /-- Every run of `loadIncrements` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «loadIncrements».source («this» : «Registers») («i» : «Increments») (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.«loadIncrements».params (this' :: vs') («this», «i», ()))
-    (safe' : «loadIncrements».safe «this» «i» = true) :
+theorem loadIncrements.source («this» : Registers) (i : Increments) (this' : JSValue) (vs' : List JSValue)
+    (args' : ArgsRep sig.loadIncrements.params (this' :: vs') («this», i, ()))
+    (safe' : loadIncrements.safe «this» i = true) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "loadIncrements" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.«Registers» t' («loadIncrements» «this» «i») :=
-  source_state_of erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "loadIncrements" sig.«loadIncrements») rfl («this», «i», ()) this' vs' args' safe'
+      Ty.Rep ty.Registers t' (loadIncrements «this» i) :=
+  source_state_of erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "loadIncrements" sig.loadIncrements) rfl («this», i, ()) this' vs' args' safe'
 
 /-- Every run of `loadAlbum` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «loadAlbum».source («this» : «Registers») («a» : «AlbumRec») (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.«loadAlbum».params (this' :: vs') («this», «a», ())) :
+theorem loadAlbum.source («this» : Registers) (a : AlbumRec) (this' : JSValue) (vs' : List JSValue)
+    (args' : ArgsRep sig.loadAlbum.params (this' :: vs') («this», a, ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "loadAlbum" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.«Registers» t' («loadAlbum» «this» «a») :=
-  source_state_of erased wf denote_eq safety_eq ((.there .here) : FVar sigs "loadAlbum" sig.«loadAlbum») rfl («this», «a», ()) this' vs' args' rfl
+      Ty.Rep ty.Registers t' (loadAlbum «this» a) :=
+  source_state_of erased wf denote_eq safety_eq ((.there .here) : FVar sigs "loadAlbum" sig.loadAlbum) rfl («this», a, ()) this' vs' args' rfl
 
 /-- Every run of `loadItem` on a state and arguments representing its inputs converges to a
 state representing the readable definition's result. -/
-theorem «loadItem».source («this» : «Registers») («i» : «AlbumItem») (this' : JSValue) (vs' : List JSValue)
-    (args' : ArgsRep sig.«loadItem».params (this' :: vs') («this», «i», ())) :
+theorem loadItem.source («this» : Registers) (i : AlbumItem) (this' : JSValue) (vs' : List JSValue)
+    (args' : ArgsRep sig.loadItem.params (this' :: vs') («this», i, ())) :
     ∃ w' t', Converges (fun fuel' => runMethod ast fuel' "loadItem" this' vs') (.ok (w', t')) ∧
-      Ty.Rep ty.«Registers» t' («loadItem» «this» «i») :=
-  source_state_of erased wf denote_eq safety_eq (.here : FVar sigs "loadItem" sig.«loadItem») rfl («this», «i», ()) this' vs' args' rfl
+      Ty.Rep ty.Registers t' (loadItem «this» i) :=
+  source_state_of erased wf denote_eq safety_eq (.here : FVar sigs "loadItem" sig.loadItem) rfl («this», i, ()) this' vs' args' rfl
 
 end Tests.Generated.Registers

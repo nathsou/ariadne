@@ -14,7 +14,33 @@ wrong theorem.
 namespace Ariadne.Front
 open Ariadne.Parse (Diagnostic Checked Span)
 
-def ident (x : String) : String := s!"«{x}»"
+/-- `xs.f args` when the receiver is a name or a field path (its type is then known when it elaborates), else
+`List.f args xs`. -/
+def listCall (recv f : String) (args : List String := []) (last : Bool := true) : String :=
+  let path := !recv.isEmpty && recv.all fun c => c.isAlphanum || c == '_' || c == '.' || c == '«' || c == '»' || c == '\''
+  if path then " ".intercalate (s!"{recv}.{f}" :: args)
+  else if last then " ".intercalate (s!"List.{f}" :: args ++ [recv]) else " ".intercalate (s!"List.{f}" :: recv :: args)
+
+/-- Always quoted: names the generated text parses back (`ne.«x».«y»`). -/
+def quoted (x : String) : String := s!"«{x}»"
+
+/-- Lean's keywords, and the names that read as syntax: an identifier spelled as one stays quoted. -/
+def leanKeywords : List String :=
+  ["at", "by", "do", "else", "end", "fun", "have", "if", "import", "in", "let", "match", "mut", "namespace", "open",
+   "section", "show", "then", "where", "with", "from", "for", "unless", "return", "break", "continue", "try", "catch",
+   "finally", "this", "Type", "Sort", "Prop", "deriving", "instance", "structure", "inductive", "class", "theorem",
+   "def", "abbrev", "example", "axiom", "universe", "variable", "macro", "syntax", "notation", "infix", "infixl",
+   "infixr", "prefix", "postfix", "partial", "private", "protected", "noncomputable", "mutual", "calc", "suffices",
+   "nomatch", "nofun", "local", "scoped", "attribute", "export", "set_option", "termination_by", "decreasing_by",
+   "opaque", "extends", "using", "sorry", "admit", "forall", "exists", "matches", "fun", "omit", "include", "elab",
+   "macro_rules", "unif_hint", "nonrec", "public", "meta", "module", "deprecated", "obtain", "rfl"]
+
+/-- A name as Lean reads it: bare when it is a plain identifier, else quoted (`«wrong-key»`, `«at»`). -/
+def ident (x : String) : String :=
+  let plain := match x.toList with
+    | [] => false
+    | c :: cs => (c.isAlpha || (c == '_' && !cs.isEmpty)) && cs.all fun d => d.isAlphanum || d == '_'
+  if plain && !leanKeywords.contains x then x else quoted x
 
 def leanString (s : String) : String := Id.run do
   let mut out := "\""
@@ -334,7 +360,7 @@ cites a named lemma `ne.«x».«y»` (emitted by `printFile`): a postponed `by d
 there would block reducing narrowed contexts during elaboration. -/
 def varPathN (x : String) : List String → String
   | [] => ".here"
-  | y :: ys => s!"(.there ne.{ident x}.{ident y} {varPathN x ys})"
+  | y :: ys => s!"(.there ne.{quoted x}.{quoted y} {varPathN x ys})"
 
 /-- The `ne.«x».«y»` lemmas a generated text cites. -/
 def collectNe (text : String) : List (String × String) :=
@@ -693,7 +719,7 @@ mutual
     | .member (.member (.var "this" _) f _) "size" span => do
       let (path, fsT, j, _) ← s.stateField span f
       return { ty := .number, typed := s!"(.stateSize {path} {fidxPath j})",
-               readable := s!"(List.length {T.fieldText (.record fsT) (ident "this") j} : Int)", atomic := true }
+               readable := s!"({listCall (T.fieldText (.record fsT) (ident "this") j) "length"} : Int)", atomic := true }
     | .call (.member (.var "this" _) m _) args span => do
       let (fpath, sig) ← s.methodRef span m
       if sig.void then mismatch span s!"'{m}' changes the state: call it as a statement"
@@ -743,7 +769,7 @@ mutual
       match a.ty, f with
       | .array _, "length" | .string, "length" =>
         return { ty := .number, typed := s!"(.{if a.ty == .string then "slength" else "length"} {a.typed})",
-                 readable := s!"(List.length {a.term} : Int)", atomic := true, trivial := a.trivial, safe := a.safe }
+                 readable := s!"({listCall a.term "length"} : Int)", atomic := true, trivial := a.trivial, safe := a.safe }
       | .record fs, _ =>
         let fields := Fields.toList fs
         match fields.findIdx? (·.1 == f) with
@@ -781,12 +807,12 @@ mutual
         | .spread (.call (.member (.member (.var "this" _) f _) "keys" _) [] _) sp => do
           let (path, fsT, j, _) ← s.stateField sp f
           if τ != .string then mismatch sp "map keys (strings) where another element type is expected"
-          return (true, ({ ty := .array τ, typed := "", readable := s!"List.map Prod.fst {T.fieldText (.record fsT) (ident "this") j}" } : Out),
+          return (true, ({ ty := .array τ, typed := "", readable := listCall (T.fieldText (.record fsT) (ident "this") j) "map" ["Prod.fst"] } : Out),
             s!"spreadKeys {path} {fidxPath j}")
         | .spread (.call (.member (.member (.var "this" _) f _) "values" _) [] _) sp => do
           let (path, fsT, j, σ) ← s.stateField sp f
           if τ != σ then mismatch sp s!"map values ({σ.ts}) where {τ.ts} is expected"
-          return (true, ({ ty := .array τ, typed := "", readable := s!"List.map Prod.snd {T.fieldText (.record fsT) (ident "this") j}" } : Out),
+          return (true, ({ ty := .array τ, typed := "", readable := listCall (T.fieldText (.record fsT) (ident "this") j) "map" ["Prod.snd"] } : Out),
             s!"spreadValues {path} {fidxPath j}")
         | .spread x _ => do
           let o ← checkExpr T s x (some (.array τ))
@@ -851,7 +877,7 @@ mutual
       | "slice", [i] =>
         let i ← checkExpr T s i (some .number)
         return { ty := .string, typed := s!"(.slice1 {a.typed} {i.typed})",
-                 readable := s!"Ariadne.strSlice {a.term} {i.term} (List.length {a.term} : Int)",
+                 readable := s!"Ariadne.strSlice {a.term} {i.term} ({listCall a.term "length"} : Int)",
                  trivial := a.trivial && i.trivial, safe := both a i }
       | "slice", [i, j] =>
         let i ← checkExpr T s i (some .number)
@@ -868,18 +894,18 @@ mutual
       if !τ.prim then mismatch span s!"'includes' on an array of {τ.ts} (objects compare by identity)"
       let x ← checkExpr T s arg (some τ)
       return { ty := .bool, typed := s!"(.includes (by decide +kernel) {a.typed} {x.typed})",
-               readable := s!"List.any {a.term} (fun y' => y' == {x.term})", trivial := a.trivial && x.trivial,
+               readable := listCall a.term "any" [s!"(· == {x.term})"] false, trivial := a.trivial && x.trivial,
                safe := both a x }
     | "some" | "every" | "find" | "filter" | "map" => do
       let result := if m == "map" then (match expected with | some (.array σ) => some σ | _ => none) else some .bool
       let f ← checkFn T s span arg τ result
       let (ctor, ty, readable, cond) := match m with
-        | "some" => ("any", Ty.bool, s!"List.any {a.term} {f.lam}", s!"Ariadne.anySafe {f.lam} {f.lamSafe} {a.term}")
-        | "every" => ("all", .bool, s!"List.all {a.term} {f.lam}", s!"Ariadne.allSafe {f.lam} {f.lamSafe} {a.term}")
-        | "find" => ("find", .option .undef τ, s!"List.find? {f.lam} {a.term}",
+        | "some" => ("any", Ty.bool, listCall a.term "any" [f.lam] false, s!"Ariadne.anySafe {f.lam} {f.lamSafe} {a.term}")
+        | "every" => ("all", .bool, listCall a.term "all" [f.lam] false, s!"Ariadne.allSafe {f.lam} {f.lamSafe} {a.term}")
+        | "find" => ("find", .option .undef τ, listCall a.term "find?" [f.lam],
           s!"Ariadne.anySafe {f.lam} {f.lamSafe} {a.term}")
-        | "filter" => ("filter", .array τ, s!"List.filter {f.lam} {a.term}", s!"List.all {a.term} {f.lamSafe}")
-        | _ => ("map", .array f.ty, s!"List.map {f.lam} {a.term}", s!"List.all {a.term} {f.lamSafe}")
+        | "filter" => ("filter", .array τ, listCall a.term "filter" [f.lam], listCall a.term "all" [f.lamSafe] false)
+        | _ => ("map", .array f.ty, listCall a.term "map" [f.lam], listCall a.term "all" [f.lamSafe] false)
       if m == "find" && τ matches .option .. then mismatch span "'find' on an array of optionals (a nested optional)"
       return { ty, typed := s!"(.{ctor} {a.typed} {f.typed})", readable,
                trivial := a.trivial && f.trivial, safe := andTText a.trivial a.safe f.trivial cond }
@@ -1343,7 +1369,7 @@ mutual
       let rest ← checkStmts T s result rest
       let p := s!"n{s.locals.length}'"
       let text (render : Block → String → KText → String) :=
-        loopText render s s!"(List.zipIdx {a.term})" s!"({ident x}, {p})"
+        loopText render s (if (listCall a.term "zipIdx").startsWith "List." then s!"({listCall a.term "zipIdx"})" else listCall a.term "zipIdx") s!"({ident x}, {p})"
           (fun j => s!"let {ident ix} := ({p} : Int)\n{j}") body rest
       pure { typed := s!"(.forEntries {leanString ix} {leanString x} {a.typed}\n  {body.typed}\n  {rest.typed})",
              readable := text (·.readable), safe := fun i k => andText a.ok (text (·.safe) i k),
@@ -1832,7 +1858,7 @@ def printFile (source namespace_ : String) (ast : Program) (T : Types) (fns : Li
   out := out ++ "\n"
   let nes := (fns.foldl (fun acc fn => acc ++ collectNe fn.body.typed) []).eraseDups
   for (a, b) in nes do
-    out := out ++ s!"theorem ne.{ident a}.{ident b} : ({leanString a} : String) ≠ {leanString b} := by decide\n"
+    out := out ++ s!"theorem ne.{quoted a}.{quoted b} : ({leanString a} : String) ≠ {leanString b} := by decide\n"
   if !nes.isEmpty then out := out ++ "\n"
   let mut earlier : List String := []
   for fn in fns do

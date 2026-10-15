@@ -150,157 +150,157 @@ noncomputable def ast : Program := [
   { name := "rotatedPast", params := ["copySeeds", "ownSeeds"], body := [
       .ret (.method (.var "copySeeds") "some" [(.arrow ["id"] (.unary .not (.method (.var "ownSeeds") "includes" [(.var "id")])))])] }]
 
-noncomputable abbrev ty.«Recovery» : Ty := (.lits (js "none") [(js "ok"), (js "legacy"), (js "bad")])
-noncomputable abbrev ty.«Commit» : Ty := (.lits (js "ok") [(js "legacy"), (js "bad"), (js "none")])
-noncomputable abbrev ty.«CopyFact» : Ty := (.union "kind" (.cons (.str (js "unopened")) .nil (.cons (.str (js "damaged")) .nil (.one (.str (js "opened")) (.cons "written" .number (.cons "seeds" (.array .string) (.cons "recovery" (.lits (js "none") [(js "ok"), (js "legacy"), (js "bad")]) (.cons "commit" (.lits (js "ok") [(js "legacy"), (js "bad"), (js "none")]) (.cons "kid" (.option .undef .string) .nil)))))))))
-noncomputable abbrev ty.«Floor» : Ty := (.record (.cons "written" .number (.cons "seed" .string (.cons "tagged" (.option .undef (.array .string)) (.cons "committed" (.option .undef (.array .string)) .nil)))))
-noncomputable abbrev ty.«Refusal» : Ty := (.lits (js "none") [(js "wrong-key"), (js "damaged"), (js "not-owner"), (js "older")])
-noncomputable abbrev ty.«Ranked» : Ty := (.record (.cons "index" .number (.cons "trusted" .bool (.cons "committed" .bool .nil))))
-noncomputable abbrev ty.«Choice» : Ty := (.union "ok" (.cons (.bool true) (.cons "order" (.array (.record (.cons "index" .number (.cons "trusted" .bool (.cons "committed" .bool .nil))))) .nil) (.one (.bool false) (.cons "refused" (.lits (js "none") [(js "wrong-key"), (js "damaged"), (js "not-owner"), (js "older")]) .nil))))
-noncomputable abbrev ty.«Candidate» : Ty := (.record (.cons "index" .number (.cons "committed" .bool (.cons "tagged" .bool (.cons "seeds" .number (.cons "written" .number .nil))))))
-noncomputable abbrev ty.«KeysChoice» : Ty := (.record (.cons "index" .number (.cons "trusted" .bool .nil)))
-noncomputable abbrev ty.«BestKeys» : Ty := (.record (.cons "index" .number (.cons "trusted" .bool (.cons "written" .number .nil))))
-noncomputable abbrev ty.«StoredCopy» : Ty := (.union "state" (.cons (.str (js "missing")) .nil (.cons (.str (js "unknown")) .nil (.cons (.str (js "own")) (.cons "written" .number .nil) (.cons (.str (js "older")) .nil (.cons (.str (js "damaged")) .nil (.one (.str (js "foreign")) .nil)))))))
-noncomputable abbrev ty.«RepairContext» : Ty := (.record (.cons "stale" .bool (.cons "readOnly" .bool .nil)))
+noncomputable abbrev ty.Recovery : Ty := (.lits (js "none") [(js "ok"), (js "legacy"), (js "bad")])
+noncomputable abbrev ty.Commit : Ty := (.lits (js "ok") [(js "legacy"), (js "bad"), (js "none")])
+noncomputable abbrev ty.CopyFact : Ty := (.union "kind" (.cons (.str (js "unopened")) .nil (.cons (.str (js "damaged")) .nil (.one (.str (js "opened")) (.cons "written" .number (.cons "seeds" (.array .string) (.cons "recovery" (.lits (js "none") [(js "ok"), (js "legacy"), (js "bad")]) (.cons "commit" (.lits (js "ok") [(js "legacy"), (js "bad"), (js "none")]) (.cons "kid" (.option .undef .string) .nil)))))))))
+noncomputable abbrev ty.Floor : Ty := (.record (.cons "written" .number (.cons "seed" .string (.cons "tagged" (.option .undef (.array .string)) (.cons "committed" (.option .undef (.array .string)) .nil)))))
+noncomputable abbrev ty.Refusal : Ty := (.lits (js "none") [(js "wrong-key"), (js "damaged"), (js "not-owner"), (js "older")])
+noncomputable abbrev ty.Ranked : Ty := (.record (.cons "index" .number (.cons "trusted" .bool (.cons "committed" .bool .nil))))
+noncomputable abbrev ty.Choice : Ty := (.union "ok" (.cons (.bool true) (.cons "order" (.array (.record (.cons "index" .number (.cons "trusted" .bool (.cons "committed" .bool .nil))))) .nil) (.one (.bool false) (.cons "refused" (.lits (js "none") [(js "wrong-key"), (js "damaged"), (js "not-owner"), (js "older")]) .nil))))
+noncomputable abbrev ty.Candidate : Ty := (.record (.cons "index" .number (.cons "committed" .bool (.cons "tagged" .bool (.cons "seeds" .number (.cons "written" .number .nil))))))
+noncomputable abbrev ty.KeysChoice : Ty := (.record (.cons "index" .number (.cons "trusted" .bool .nil)))
+noncomputable abbrev ty.BestKeys : Ty := (.record (.cons "index" .number (.cons "trusted" .bool (.cons "written" .number .nil))))
+noncomputable abbrev ty.StoredCopy : Ty := (.union "state" (.cons (.str (js "missing")) .nil (.cons (.str (js "unknown")) .nil (.cons (.str (js "own")) (.cons "written" .number .nil) (.cons (.str (js "older")) .nil (.cons (.str (js "damaged")) .nil (.one (.str (js "foreign")) .nil)))))))
+noncomputable abbrev ty.RepairContext : Ty := (.record (.cons "stale" .bool (.cons "readOnly" .bool .nil)))
 
 /-- The source's `Recovery`. -/
-abbrev «Recovery» : Type := Fin 4
-@[reducible, readable] def «Recovery».«none» : «Recovery» := (0 : Fin 4)
-@[reducible, readable] def «Recovery».«ok» : «Recovery» := (1 : Fin 4)
-@[reducible, readable] def «Recovery».«legacy» : «Recovery» := (2 : Fin 4)
-@[reducible, readable] def «Recovery».«bad» : «Recovery» := (3 : Fin 4)
+abbrev Recovery : Type := Fin 4
+@[reducible, readable] def Recovery.none : Recovery := (0 : Fin 4)
+@[reducible, readable] def Recovery.ok : Recovery := (1 : Fin 4)
+@[reducible, readable] def Recovery.legacy : Recovery := (2 : Fin 4)
+@[reducible, readable] def Recovery.bad : Recovery := (3 : Fin 4)
 
 /-- The source's `Commit`. -/
-abbrev «Commit» : Type := Fin 4
-@[reducible, readable] def «Commit».«ok» : «Commit» := (0 : Fin 4)
-@[reducible, readable] def «Commit».«legacy» : «Commit» := (1 : Fin 4)
-@[reducible, readable] def «Commit».«bad» : «Commit» := (2 : Fin 4)
-@[reducible, readable] def «Commit».«none» : «Commit» := (3 : Fin 4)
+abbrev Commit : Type := Fin 4
+@[reducible, readable] def Commit.ok : Commit := (0 : Fin 4)
+@[reducible, readable] def Commit.legacy : Commit := (1 : Fin 4)
+@[reducible, readable] def Commit.bad : Commit := (2 : Fin 4)
+@[reducible, readable] def Commit.none : Commit := (3 : Fin 4)
 
 /-- The source's `Floor`. -/
-abbrev «Floor» : Type := Int × JSString × (Option (List JSString)) × (Option (List JSString)) × Unit
-@[reducible, readable] def «Floor».«written» (r : «Floor») : Int := r.1
-@[reducible, readable] def «Floor».«seed» (r : «Floor») : JSString := r.2.1
-@[reducible, readable] def «Floor».«tagged» (r : «Floor») : Option (List JSString) := r.2.2.1
-@[reducible, readable] def «Floor».«committed» (r : «Floor») : Option (List JSString) := r.2.2.2.1
-@[reducible, readable] def «Floor».mk («written» : Int) («seed» : JSString) («tagged» : Option (List JSString)) («committed» : Option (List JSString)) : «Floor» := («written», «seed», «tagged», «committed», ())
-@[reducible, readable] def «Floor».«withWritten» (r : «Floor») (v : Int) : «Floor» := (v, r.2)
-@[reducible, readable] def «Floor».«withSeed» (r : «Floor») (v : JSString) : «Floor» := (r.1, v, r.2.2)
-@[reducible, readable] def «Floor».«withTagged» (r : «Floor») (v : Option (List JSString)) : «Floor» := (r.1, r.2.1, v, r.2.2.2)
-@[reducible, readable] def «Floor».«withCommitted» (r : «Floor») (v : Option (List JSString)) : «Floor» := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
+abbrev Floor : Type := Int × JSString × (Option (List JSString)) × (Option (List JSString)) × Unit
+@[reducible, readable] def Floor.written (r : Floor) : Int := r.1
+@[reducible, readable] def Floor.seed (r : Floor) : JSString := r.2.1
+@[reducible, readable] def Floor.tagged (r : Floor) : Option (List JSString) := r.2.2.1
+@[reducible, readable] def Floor.committed (r : Floor) : Option (List JSString) := r.2.2.2.1
+@[reducible, readable] def Floor.mk (written : Int) (seed : JSString) (tagged : Option (List JSString)) (committed : Option (List JSString)) : Floor := (written, seed, tagged, committed, ())
+@[reducible, readable] def Floor.withWritten (r : Floor) (v : Int) : Floor := (v, r.2)
+@[reducible, readable] def Floor.withSeed (r : Floor) (v : JSString) : Floor := (r.1, v, r.2.2)
+@[reducible, readable] def Floor.withTagged (r : Floor) (v : Option (List JSString)) : Floor := (r.1, r.2.1, v, r.2.2.2)
+@[reducible, readable] def Floor.withCommitted (r : Floor) (v : Option (List JSString)) : Floor := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
 
 /-- The source's `Refusal`. -/
-abbrev «Refusal» : Type := Fin 5
-@[reducible, readable] def «Refusal».«none» : «Refusal» := (0 : Fin 5)
-@[reducible, readable] def «Refusal».«wrong-key» : «Refusal» := (1 : Fin 5)
-@[reducible, readable] def «Refusal».«damaged» : «Refusal» := (2 : Fin 5)
-@[reducible, readable] def «Refusal».«not-owner» : «Refusal» := (3 : Fin 5)
-@[reducible, readable] def «Refusal».«older» : «Refusal» := (4 : Fin 5)
+abbrev Refusal : Type := Fin 5
+@[reducible, readable] def Refusal.none : Refusal := (0 : Fin 5)
+@[reducible, readable] def Refusal.«wrong-key» : Refusal := (1 : Fin 5)
+@[reducible, readable] def Refusal.damaged : Refusal := (2 : Fin 5)
+@[reducible, readable] def Refusal.«not-owner» : Refusal := (3 : Fin 5)
+@[reducible, readable] def Refusal.older : Refusal := (4 : Fin 5)
 
 /-- The source's `Ranked`. -/
-abbrev «Ranked» : Type := Int × Bool × Bool × Unit
-@[reducible, readable] def «Ranked».«index» (r : «Ranked») : Int := r.1
-@[reducible, readable] def «Ranked».«trusted» (r : «Ranked») : Bool := r.2.1
-@[reducible, readable] def «Ranked».«committed» (r : «Ranked») : Bool := r.2.2.1
-@[reducible, readable] def «Ranked».mk («index» : Int) («trusted» : Bool) («committed» : Bool) : «Ranked» := («index», «trusted», «committed», ())
-@[reducible, readable] def «Ranked».«withIndex» (r : «Ranked») (v : Int) : «Ranked» := (v, r.2)
-@[reducible, readable] def «Ranked».«withTrusted» (r : «Ranked») (v : Bool) : «Ranked» := (r.1, v, r.2.2)
-@[reducible, readable] def «Ranked».«withCommitted» (r : «Ranked») (v : Bool) : «Ranked» := (r.1, r.2.1, v, r.2.2.2)
+abbrev Ranked : Type := Int × Bool × Bool × Unit
+@[reducible, readable] def Ranked.index (r : Ranked) : Int := r.1
+@[reducible, readable] def Ranked.trusted (r : Ranked) : Bool := r.2.1
+@[reducible, readable] def Ranked.committed (r : Ranked) : Bool := r.2.2.1
+@[reducible, readable] def Ranked.mk (index : Int) (trusted : Bool) (committed : Bool) : Ranked := (index, trusted, committed, ())
+@[reducible, readable] def Ranked.withIndex (r : Ranked) (v : Int) : Ranked := (v, r.2)
+@[reducible, readable] def Ranked.withTrusted (r : Ranked) (v : Bool) : Ranked := (r.1, v, r.2.2)
+@[reducible, readable] def Ranked.withCommitted (r : Ranked) (v : Bool) : Ranked := (r.1, r.2.1, v, r.2.2.2)
 
 /-- The source's `Candidate`. -/
-abbrev «Candidate» : Type := Int × Bool × Bool × Int × Int × Unit
-@[reducible, readable] def «Candidate».«index» (r : «Candidate») : Int := r.1
-@[reducible, readable] def «Candidate».«committed» (r : «Candidate») : Bool := r.2.1
-@[reducible, readable] def «Candidate».«tagged» (r : «Candidate») : Bool := r.2.2.1
-@[reducible, readable] def «Candidate».«seeds» (r : «Candidate») : Int := r.2.2.2.1
-@[reducible, readable] def «Candidate».«written» (r : «Candidate») : Int := r.2.2.2.2.1
-@[reducible, readable] def «Candidate».mk («index» : Int) («committed» : Bool) («tagged» : Bool) («seeds» : Int) («written» : Int) : «Candidate» := («index», «committed», «tagged», «seeds», «written», ())
-@[reducible, readable] def «Candidate».«withIndex» (r : «Candidate») (v : Int) : «Candidate» := (v, r.2)
-@[reducible, readable] def «Candidate».«withCommitted» (r : «Candidate») (v : Bool) : «Candidate» := (r.1, v, r.2.2)
-@[reducible, readable] def «Candidate».«withTagged» (r : «Candidate») (v : Bool) : «Candidate» := (r.1, r.2.1, v, r.2.2.2)
-@[reducible, readable] def «Candidate».«withSeeds» (r : «Candidate») (v : Int) : «Candidate» := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
-@[reducible, readable] def «Candidate».«withWritten» (r : «Candidate») (v : Int) : «Candidate» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, v, r.2.2.2.2.2)
+abbrev Candidate : Type := Int × Bool × Bool × Int × Int × Unit
+@[reducible, readable] def Candidate.index (r : Candidate) : Int := r.1
+@[reducible, readable] def Candidate.committed (r : Candidate) : Bool := r.2.1
+@[reducible, readable] def Candidate.tagged (r : Candidate) : Bool := r.2.2.1
+@[reducible, readable] def Candidate.seeds (r : Candidate) : Int := r.2.2.2.1
+@[reducible, readable] def Candidate.written (r : Candidate) : Int := r.2.2.2.2.1
+@[reducible, readable] def Candidate.mk (index : Int) (committed : Bool) (tagged : Bool) (seeds : Int) (written : Int) : Candidate := (index, committed, tagged, seeds, written, ())
+@[reducible, readable] def Candidate.withIndex (r : Candidate) (v : Int) : Candidate := (v, r.2)
+@[reducible, readable] def Candidate.withCommitted (r : Candidate) (v : Bool) : Candidate := (r.1, v, r.2.2)
+@[reducible, readable] def Candidate.withTagged (r : Candidate) (v : Bool) : Candidate := (r.1, r.2.1, v, r.2.2.2)
+@[reducible, readable] def Candidate.withSeeds (r : Candidate) (v : Int) : Candidate := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
+@[reducible, readable] def Candidate.withWritten (r : Candidate) (v : Int) : Candidate := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, v, r.2.2.2.2.2)
 
 /-- The source's `KeysChoice`. -/
-abbrev «KeysChoice» : Type := Int × Bool × Unit
-@[reducible, readable] def «KeysChoice».«index» (r : «KeysChoice») : Int := r.1
-@[reducible, readable] def «KeysChoice».«trusted» (r : «KeysChoice») : Bool := r.2.1
-@[reducible, readable] def «KeysChoice».mk («index» : Int) («trusted» : Bool) : «KeysChoice» := («index», «trusted», ())
-@[reducible, readable] def «KeysChoice».«withIndex» (r : «KeysChoice») (v : Int) : «KeysChoice» := (v, r.2)
-@[reducible, readable] def «KeysChoice».«withTrusted» (r : «KeysChoice») (v : Bool) : «KeysChoice» := (r.1, v, r.2.2)
+abbrev KeysChoice : Type := Int × Bool × Unit
+@[reducible, readable] def KeysChoice.index (r : KeysChoice) : Int := r.1
+@[reducible, readable] def KeysChoice.trusted (r : KeysChoice) : Bool := r.2.1
+@[reducible, readable] def KeysChoice.mk (index : Int) (trusted : Bool) : KeysChoice := (index, trusted, ())
+@[reducible, readable] def KeysChoice.withIndex (r : KeysChoice) (v : Int) : KeysChoice := (v, r.2)
+@[reducible, readable] def KeysChoice.withTrusted (r : KeysChoice) (v : Bool) : KeysChoice := (r.1, v, r.2.2)
 
 /-- The source's `BestKeys`. -/
-abbrev «BestKeys» : Type := Int × Bool × Int × Unit
-@[reducible, readable] def «BestKeys».«index» (r : «BestKeys») : Int := r.1
-@[reducible, readable] def «BestKeys».«trusted» (r : «BestKeys») : Bool := r.2.1
-@[reducible, readable] def «BestKeys».«written» (r : «BestKeys») : Int := r.2.2.1
-@[reducible, readable] def «BestKeys».mk («index» : Int) («trusted» : Bool) («written» : Int) : «BestKeys» := («index», «trusted», «written», ())
-@[reducible, readable] def «BestKeys».«withIndex» (r : «BestKeys») (v : Int) : «BestKeys» := (v, r.2)
-@[reducible, readable] def «BestKeys».«withTrusted» (r : «BestKeys») (v : Bool) : «BestKeys» := (r.1, v, r.2.2)
-@[reducible, readable] def «BestKeys».«withWritten» (r : «BestKeys») (v : Int) : «BestKeys» := (r.1, r.2.1, v, r.2.2.2)
-abbrev «StoredCopy».Variant.«own» : Type := Int × Unit
-@[reducible, readable] def «StoredCopy».Variant.«own».«written» (r : «StoredCopy».Variant.«own») : Int := r.1
-@[reducible, readable] def «StoredCopy».Variant.«own».mk («written» : Int) : «StoredCopy».Variant.«own» := («written», ())
-@[reducible, readable] def «StoredCopy».Variant.«own».«withWritten» (r : «StoredCopy».Variant.«own») (v : Int) : «StoredCopy».Variant.«own» := (v, r.2)
+abbrev BestKeys : Type := Int × Bool × Int × Unit
+@[reducible, readable] def BestKeys.index (r : BestKeys) : Int := r.1
+@[reducible, readable] def BestKeys.trusted (r : BestKeys) : Bool := r.2.1
+@[reducible, readable] def BestKeys.written (r : BestKeys) : Int := r.2.2.1
+@[reducible, readable] def BestKeys.mk (index : Int) (trusted : Bool) (written : Int) : BestKeys := (index, trusted, written, ())
+@[reducible, readable] def BestKeys.withIndex (r : BestKeys) (v : Int) : BestKeys := (v, r.2)
+@[reducible, readable] def BestKeys.withTrusted (r : BestKeys) (v : Bool) : BestKeys := (r.1, v, r.2.2)
+@[reducible, readable] def BestKeys.withWritten (r : BestKeys) (v : Int) : BestKeys := (r.1, r.2.1, v, r.2.2.2)
+abbrev StoredCopy.Variant.own : Type := Int × Unit
+@[reducible, readable] def StoredCopy.Variant.own.written (r : StoredCopy.Variant.own) : Int := r.1
+@[reducible, readable] def StoredCopy.Variant.own.mk (written : Int) : StoredCopy.Variant.own := (written, ())
+@[reducible, readable] def StoredCopy.Variant.own.withWritten (r : StoredCopy.Variant.own) (v : Int) : StoredCopy.Variant.own := (v, r.2)
 
 /-- The source's `StoredCopy`. -/
-abbrev «StoredCopy» : Type := Unit ⊕ Unit ⊕ «StoredCopy».Variant.«own» ⊕ Unit ⊕ Unit ⊕ Unit
-@[reducible, readable, match_pattern] def «StoredCopy».«missing» : «StoredCopy» := (Sum.inl ())
-@[reducible, readable, match_pattern] def «StoredCopy».«unknown» : «StoredCopy» := (Sum.inr (Sum.inl ()))
-@[reducible, readable, match_pattern] def «StoredCopy».«own» («written» : Int) : «StoredCopy» := (Sum.inr (Sum.inr (Sum.inl («written», ()))))
-@[reducible, readable, match_pattern] def «StoredCopy».«older» : «StoredCopy» := (Sum.inr (Sum.inr (Sum.inr (Sum.inl ()))))
-@[reducible, readable, match_pattern] def «StoredCopy».«damaged» : «StoredCopy» := (Sum.inr (Sum.inr (Sum.inr (Sum.inr (Sum.inl ())))))
-@[reducible, readable, match_pattern] def «StoredCopy».«foreign» : «StoredCopy» := (Sum.inr (Sum.inr (Sum.inr (Sum.inr (Sum.inr ())))))
+abbrev StoredCopy : Type := Unit ⊕ Unit ⊕ StoredCopy.Variant.own ⊕ Unit ⊕ Unit ⊕ Unit
+@[reducible, readable, match_pattern] def StoredCopy.missing : StoredCopy := (Sum.inl ())
+@[reducible, readable, match_pattern] def StoredCopy.unknown : StoredCopy := (Sum.inr (Sum.inl ()))
+@[reducible, readable, match_pattern] def StoredCopy.own (written : Int) : StoredCopy := (Sum.inr (Sum.inr (Sum.inl (written, ()))))
+@[reducible, readable, match_pattern] def StoredCopy.older : StoredCopy := (Sum.inr (Sum.inr (Sum.inr (Sum.inl ()))))
+@[reducible, readable, match_pattern] def StoredCopy.damaged : StoredCopy := (Sum.inr (Sum.inr (Sum.inr (Sum.inr (Sum.inl ())))))
+@[reducible, readable, match_pattern] def StoredCopy.foreign : StoredCopy := (Sum.inr (Sum.inr (Sum.inr (Sum.inr (Sum.inr ())))))
 
 /-- The source's `RepairContext`. -/
-abbrev «RepairContext» : Type := Bool × Bool × Unit
-@[reducible, readable] def «RepairContext».«stale» (r : «RepairContext») : Bool := r.1
-@[reducible, readable] def «RepairContext».«readOnly» (r : «RepairContext») : Bool := r.2.1
-@[reducible, readable] def «RepairContext».mk («stale» : Bool) («readOnly» : Bool) : «RepairContext» := («stale», «readOnly», ())
-@[reducible, readable] def «RepairContext».«withStale» (r : «RepairContext») (v : Bool) : «RepairContext» := (v, r.2)
-@[reducible, readable] def «RepairContext».«withReadOnly» (r : «RepairContext») (v : Bool) : «RepairContext» := (r.1, v, r.2.2)
-abbrev «CopyFact».Variant.«opened» : Type := Int × (List JSString) × «Recovery» × «Commit» × (Option JSString) × Unit
-@[reducible, readable] def «CopyFact».Variant.«opened».«written» (r : «CopyFact».Variant.«opened») : Int := r.1
-@[reducible, readable] def «CopyFact».Variant.«opened».«seeds» (r : «CopyFact».Variant.«opened») : List JSString := r.2.1
-@[reducible, readable] def «CopyFact».Variant.«opened».«recovery» (r : «CopyFact».Variant.«opened») : «Recovery» := r.2.2.1
-@[reducible, readable] def «CopyFact».Variant.«opened».«commit» (r : «CopyFact».Variant.«opened») : «Commit» := r.2.2.2.1
-@[reducible, readable] def «CopyFact».Variant.«opened».«kid» (r : «CopyFact».Variant.«opened») : Option JSString := r.2.2.2.2.1
-@[reducible, readable] def «CopyFact».Variant.«opened».mk («written» : Int) («seeds» : List JSString) («recovery» : «Recovery») («commit» : «Commit») («kid» : Option JSString) : «CopyFact».Variant.«opened» := («written», «seeds», «recovery», «commit», «kid», ())
-@[reducible, readable] def «CopyFact».Variant.«opened».«withWritten» (r : «CopyFact».Variant.«opened») (v : Int) : «CopyFact».Variant.«opened» := (v, r.2)
-@[reducible, readable] def «CopyFact».Variant.«opened».«withSeeds» (r : «CopyFact».Variant.«opened») (v : List JSString) : «CopyFact».Variant.«opened» := (r.1, v, r.2.2)
-@[reducible, readable] def «CopyFact».Variant.«opened».«withRecovery» (r : «CopyFact».Variant.«opened») (v : «Recovery») : «CopyFact».Variant.«opened» := (r.1, r.2.1, v, r.2.2.2)
-@[reducible, readable] def «CopyFact».Variant.«opened».«withCommit» (r : «CopyFact».Variant.«opened») (v : «Commit») : «CopyFact».Variant.«opened» := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
-@[reducible, readable] def «CopyFact».Variant.«opened».«withKid» (r : «CopyFact».Variant.«opened») (v : Option JSString) : «CopyFact».Variant.«opened» := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, v, r.2.2.2.2.2)
+abbrev RepairContext : Type := Bool × Bool × Unit
+@[reducible, readable] def RepairContext.stale (r : RepairContext) : Bool := r.1
+@[reducible, readable] def RepairContext.readOnly (r : RepairContext) : Bool := r.2.1
+@[reducible, readable] def RepairContext.mk (stale : Bool) (readOnly : Bool) : RepairContext := (stale, readOnly, ())
+@[reducible, readable] def RepairContext.withStale (r : RepairContext) (v : Bool) : RepairContext := (v, r.2)
+@[reducible, readable] def RepairContext.withReadOnly (r : RepairContext) (v : Bool) : RepairContext := (r.1, v, r.2.2)
+abbrev CopyFact.Variant.opened : Type := Int × (List JSString) × Recovery × Commit × (Option JSString) × Unit
+@[reducible, readable] def CopyFact.Variant.opened.written (r : CopyFact.Variant.opened) : Int := r.1
+@[reducible, readable] def CopyFact.Variant.opened.seeds (r : CopyFact.Variant.opened) : List JSString := r.2.1
+@[reducible, readable] def CopyFact.Variant.opened.recovery (r : CopyFact.Variant.opened) : Recovery := r.2.2.1
+@[reducible, readable] def CopyFact.Variant.opened.commit (r : CopyFact.Variant.opened) : Commit := r.2.2.2.1
+@[reducible, readable] def CopyFact.Variant.opened.kid (r : CopyFact.Variant.opened) : Option JSString := r.2.2.2.2.1
+@[reducible, readable] def CopyFact.Variant.opened.mk (written : Int) (seeds : List JSString) (recovery : Recovery) (commit : Commit) (kid : Option JSString) : CopyFact.Variant.opened := (written, seeds, recovery, commit, kid, ())
+@[reducible, readable] def CopyFact.Variant.opened.withWritten (r : CopyFact.Variant.opened) (v : Int) : CopyFact.Variant.opened := (v, r.2)
+@[reducible, readable] def CopyFact.Variant.opened.withSeeds (r : CopyFact.Variant.opened) (v : List JSString) : CopyFact.Variant.opened := (r.1, v, r.2.2)
+@[reducible, readable] def CopyFact.Variant.opened.withRecovery (r : CopyFact.Variant.opened) (v : Recovery) : CopyFact.Variant.opened := (r.1, r.2.1, v, r.2.2.2)
+@[reducible, readable] def CopyFact.Variant.opened.withCommit (r : CopyFact.Variant.opened) (v : Commit) : CopyFact.Variant.opened := (r.1, r.2.1, r.2.2.1, v, r.2.2.2.2)
+@[reducible, readable] def CopyFact.Variant.opened.withKid (r : CopyFact.Variant.opened) (v : Option JSString) : CopyFact.Variant.opened := (r.1, r.2.1, r.2.2.1, r.2.2.2.1, v, r.2.2.2.2.2)
 
 /-- The source's `CopyFact`. -/
-abbrev «CopyFact» : Type := Unit ⊕ Unit ⊕ «CopyFact».Variant.«opened»
-@[reducible, readable, match_pattern] def «CopyFact».«unopened» : «CopyFact» := (Sum.inl ())
-@[reducible, readable, match_pattern] def «CopyFact».«damaged» : «CopyFact» := (Sum.inr (Sum.inl ()))
-@[reducible, readable, match_pattern] def «CopyFact».«opened» (x : «CopyFact».Variant.«opened») : «CopyFact» := (Sum.inr (Sum.inr x))
-abbrev «Choice».Variant.«true» : Type := (List «Ranked») × Unit
-@[reducible, readable] def «Choice».Variant.«true».«order» (r : «Choice».Variant.«true») : List «Ranked» := r.1
-@[reducible, readable] def «Choice».Variant.«true».mk («order» : List «Ranked») : «Choice».Variant.«true» := («order», ())
-@[reducible, readable] def «Choice».Variant.«true».«withOrder» (r : «Choice».Variant.«true») (v : List «Ranked») : «Choice».Variant.«true» := (v, r.2)
-abbrev «Choice».Variant.«false» : Type := «Refusal» × Unit
-@[reducible, readable] def «Choice».Variant.«false».«refused» (r : «Choice».Variant.«false») : «Refusal» := r.1
-@[reducible, readable] def «Choice».Variant.«false».mk («refused» : «Refusal») : «Choice».Variant.«false» := («refused», ())
-@[reducible, readable] def «Choice».Variant.«false».«withRefused» (r : «Choice».Variant.«false») (v : «Refusal») : «Choice».Variant.«false» := (v, r.2)
+abbrev CopyFact : Type := Unit ⊕ Unit ⊕ CopyFact.Variant.opened
+@[reducible, readable, match_pattern] def CopyFact.unopened : CopyFact := (Sum.inl ())
+@[reducible, readable, match_pattern] def CopyFact.damaged : CopyFact := (Sum.inr (Sum.inl ()))
+@[reducible, readable, match_pattern] def CopyFact.opened (x : CopyFact.Variant.opened) : CopyFact := (Sum.inr (Sum.inr x))
+abbrev Choice.Variant.true : Type := (List Ranked) × Unit
+@[reducible, readable] def Choice.Variant.true.order (r : Choice.Variant.true) : List Ranked := r.1
+@[reducible, readable] def Choice.Variant.true.mk (order : List Ranked) : Choice.Variant.true := (order, ())
+@[reducible, readable] def Choice.Variant.true.withOrder (r : Choice.Variant.true) (v : List Ranked) : Choice.Variant.true := (v, r.2)
+abbrev Choice.Variant.false : Type := Refusal × Unit
+@[reducible, readable] def Choice.Variant.false.refused (r : Choice.Variant.false) : Refusal := r.1
+@[reducible, readable] def Choice.Variant.false.mk (refused : Refusal) : Choice.Variant.false := (refused, ())
+@[reducible, readable] def Choice.Variant.false.withRefused (r : Choice.Variant.false) (v : Refusal) : Choice.Variant.false := (v, r.2)
 
 /-- The source's `Choice`. -/
-abbrev «Choice» : Type := «Choice».Variant.«true» ⊕ «Choice».Variant.«false»
-@[reducible, readable, match_pattern] def «Choice».«true» («order» : List «Ranked») : «Choice» := (Sum.inl («order», ()))
-@[reducible, readable, match_pattern] def «Choice».«false» («refused» : «Refusal») : «Choice» := (Sum.inr («refused», ()))
+abbrev Choice : Type := Choice.Variant.true ⊕ Choice.Variant.false
+@[reducible, readable, match_pattern] def Choice.true (order : List Ranked) : Choice := (Sum.inl (order, ()))
+@[reducible, readable, match_pattern] def Choice.false (refused : Refusal) : Choice := (Sum.inr (refused, ()))
 
-noncomputable def sig.«listed» : Sig := { name := "listed", params := [("kid", (.option .undef .string)), ("list", (.option .undef (.array .string)))], result := .bool, trivial := true }
-noncomputable def sig.«byRank» : Sig := { name := "byRank", params := [("a", ty.«Candidate»), ("b", ty.«Candidate»)], result := .number, trivial := true }
-noncomputable def sig.«chooseVaultCopy» : Sig := { name := "chooseVaultCopy", params := [("facts", (.array ty.«CopyFact»)), ("floor", (.option .both ty.«Floor»))], result := ty.«Choice», trivial := false }
-noncomputable def sig.«chooseKeysCopy» : Sig := { name := "chooseKeysCopy", params := [("facts", (.array ty.«CopyFact»))], result := (.option .null ty.«KeysChoice»), trivial := true }
-noncomputable def sig.«newestOwnCopy» : Sig := { name := "newestOwnCopy", params := [("own", .number), ("stamps", (.array (.option .null .number)))], result := .number, trivial := true }
-noncomputable def sig.«mayChangeFrom» : Sig := { name := "mayChangeFrom", params := [("written", .number), ("floorWritten", .number)], result := .bool, trivial := true }
-noncomputable def sig.«answered» : Sig := { name := "answered", params := [("c", ty.«StoredCopy»)], result := .bool, trivial := true }
-noncomputable def sig.«repairOne» : Sig := { name := "repairOne", params := [("c", ty.«StoredCopy»), ("own", .number), ("allAnswered", .bool)], result := .bool, trivial := true }
-noncomputable def sig.«repairs» : Sig := { name := "repairs", params := [("copies", (.array ty.«StoredCopy»)), ("own", .number), ("ctx", ty.«RepairContext»)], result := (.array .bool), trivial := true }
-noncomputable def sig.«rotatedPast» : Sig := { name := "rotatedPast", params := [("copySeeds", (.array .string)), ("ownSeeds", (.array .string))], result := .bool, trivial := true }
+noncomputable def sig.listed : Sig := { name := "listed", params := [("kid", (.option .undef .string)), ("list", (.option .undef (.array .string)))], result := .bool, trivial := true }
+noncomputable def sig.byRank : Sig := { name := "byRank", params := [("a", ty.Candidate), ("b", ty.Candidate)], result := .number, trivial := true }
+noncomputable def sig.chooseVaultCopy : Sig := { name := "chooseVaultCopy", params := [("facts", (.array ty.CopyFact)), ("floor", (.option .both ty.Floor))], result := ty.Choice, trivial := false }
+noncomputable def sig.chooseKeysCopy : Sig := { name := "chooseKeysCopy", params := [("facts", (.array ty.CopyFact))], result := (.option .null ty.KeysChoice), trivial := true }
+noncomputable def sig.newestOwnCopy : Sig := { name := "newestOwnCopy", params := [("own", .number), ("stamps", (.array (.option .null .number)))], result := .number, trivial := true }
+noncomputable def sig.mayChangeFrom : Sig := { name := "mayChangeFrom", params := [("written", .number), ("floorWritten", .number)], result := .bool, trivial := true }
+noncomputable def sig.answered : Sig := { name := "answered", params := [("c", ty.StoredCopy)], result := .bool, trivial := true }
+noncomputable def sig.repairOne : Sig := { name := "repairOne", params := [("c", ty.StoredCopy), ("own", .number), ("allAnswered", .bool)], result := .bool, trivial := true }
+noncomputable def sig.repairs : Sig := { name := "repairs", params := [("copies", (.array ty.StoredCopy)), ("own", .number), ("ctx", ty.RepairContext)], result := (.array .bool), trivial := true }
+noncomputable def sig.rotatedPast : Sig := { name := "rotatedPast", params := [("copySeeds", (.array .string)), ("ownSeeds", (.array .string))], result := .bool, trivial := true }
 
 theorem ne.«list».«kid» : ("list" : String) ≠ "kid" := by decide
 theorem ne.«b».«a» : ("b" : String) ≠ "a" := by decide
@@ -394,14 +394,14 @@ theorem ne.«own».«copies» : ("own" : String) ≠ "copies" := by decide
 theorem ne.«ownSeeds».«id» : ("ownSeeds" : String) ≠ "id" := by decide
 theorem ne.«ownSeeds».«copySeeds» : ("ownSeeds" : String) ≠ "copySeeds" := by decide
 
-noncomputable def body.«listed» : TStmts [] sig.«listed».params sig.«listed».result :=
+noncomputable def body.listed : TStmts [] sig.listed.params sig.listed.result :=
   (.ifNullExit .here (by decide +kernel)
   (.ret (.bool false) .nil)
   (.ifNullExit (.there ne.«list».«kid» .here) (by decide +kernel)
   (.ret (.bool false) .nil)
   (.ret (.and (.bin (.ne (by decide +kernel)) (.var .here) (.str (js ""))) (.includes (by decide +kernel) (.var (.there ne.«list».«kid» .here)) (.var .here))) .nil)))
 
-noncomputable def body.«byRank» : TStmts [sig.«listed»] sig.«byRank».params sig.«byRank».result :=
+noncomputable def body.byRank : TStmts [sig.listed] sig.byRank.params sig.byRank.result :=
   (.ite (.bin (.ne (by decide +kernel)) (.field (.var .here) (.there .here) (by decide +kernel)) (.field (.var (.there ne.«b».«a» .here)) (.there .here) (by decide +kernel)))
   (.ret (.cond (.field (.var .here) (.there .here) (by decide +kernel)) (.negNum 1 (by decide +kernel)) (.num 1)) .nil)
   .nil
@@ -419,11 +419,11 @@ noncomputable def body.«byRank» : TStmts [sig.«listed»] sig.«byRank».param
   .nil
   (.ret (.num 0) .nil))))))
 
-noncomputable def body.«chooseVaultCopy» : TStmts [sig.«byRank», sig.«listed»] sig.«chooseVaultCopy».params sig.«chooseVaultCopy».result :=
+noncomputable def body.chooseVaultCopy : TStmts [sig.byRank, sig.listed] sig.chooseVaultCopy.params sig.chooseVaultCopy.result :=
   (.const "committedFactors" (.condNull (.there ne.«floor».«facts» .here) (by decide +kernel) (.undef .undef (.array .string) (by decide +kernel)) (.field (.var (.there ne.«floor».«facts» .here)) (.there (.there (.there .here))) (by decide +kernel)))
   (.const "taggedFactors" (.condNull (.there ne.«floor».«committedFactors» (.there ne.«floor».«facts» .here)) (by decide +kernel) (.undef .undef (.array .string) (by decide +kernel)) (.field (.var (.there ne.«floor».«committedFactors» (.there ne.«floor».«facts» .here))) (.there (.there .here)) (by decide +kernel)))
   (.const "floorSeed" (.condNull (.there ne.«floor».«taggedFactors» (.there ne.«floor».«committedFactors» (.there ne.«floor».«facts» .here))) (by decide +kernel) (.str (js "")) (.field (.var (.there ne.«floor».«taggedFactors» (.there ne.«floor».«committedFactors» (.there ne.«floor».«facts» .here)))) (.there .here) (by decide +kernel)))
-  (.let_ "ok" (.array (τ := ty.«Candidate») .nil)
+  (.let_ "ok" (.array (τ := ty.Candidate) .nil)
   (.let_ "opened" (.bool false)
   (.let_ "damaged" (.bool false)
   (.let_ "notOwner" (.bool false)
@@ -438,7 +438,7 @@ noncomputable def body.«chooseVaultCopy» : TStmts [sig.«byRank», sig.«liste
   (.assign (.there ne.«notOwner».«f» (.there ne.«notOwner».«index» (.there ne.«notOwner».«older» .here))) (.bool true)
   (.cont .nil))
   .nil
-  (.ite (.or (.and (.bin (.eq (by decide +kernel)) (.field (.var .here) (.there (.there (.there (.there .here)))) (by decide +kernel)) (.litIn (js "ok") [(js "legacy"), (js "bad"), (js "none")] 1)) (.call (s := sig.«listed») (.there .here) (by decide +kernel) (.cons (.field (.var .here) (.there (.there (.there (.there (.there .here))))) (by decide +kernel)) (.cons (.var (.there ne.«committedFactors».«f» (.there ne.«committedFactors».«index» (.there ne.«committedFactors».«older» (.there ne.«committedFactors».«notOwner» (.there ne.«committedFactors».«damaged» (.there ne.«committedFactors».«opened» (.there ne.«committedFactors».«ok» (.there ne.«committedFactors».«floorSeed» (.there ne.«committedFactors».«taggedFactors» .here)))))))))) .nil)))) (.and (.bin (.eq (by decide +kernel)) (.field (.var .here) (.there (.there (.there .here))) (by decide +kernel)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 2)) (.call (s := sig.«listed») (.there .here) (by decide +kernel) (.cons (.field (.var .here) (.there (.there (.there (.there (.there .here))))) (by decide +kernel)) (.cons (.var (.there ne.«taggedFactors».«f» (.there ne.«taggedFactors».«index» (.there ne.«taggedFactors».«older» (.there ne.«taggedFactors».«notOwner» (.there ne.«taggedFactors».«damaged» (.there ne.«taggedFactors».«opened» (.there ne.«taggedFactors».«ok» (.there ne.«taggedFactors».«floorSeed» .here))))))))) .nil)))))
+  (.ite (.or (.and (.bin (.eq (by decide +kernel)) (.field (.var .here) (.there (.there (.there (.there .here)))) (by decide +kernel)) (.litIn (js "ok") [(js "legacy"), (js "bad"), (js "none")] 1)) (.call (s := sig.listed) (.there .here) (by decide +kernel) (.cons (.field (.var .here) (.there (.there (.there (.there (.there .here))))) (by decide +kernel)) (.cons (.var (.there ne.«committedFactors».«f» (.there ne.«committedFactors».«index» (.there ne.«committedFactors».«older» (.there ne.«committedFactors».«notOwner» (.there ne.«committedFactors».«damaged» (.there ne.«committedFactors».«opened» (.there ne.«committedFactors».«ok» (.there ne.«committedFactors».«floorSeed» (.there ne.«committedFactors».«taggedFactors» .here)))))))))) .nil)))) (.and (.bin (.eq (by decide +kernel)) (.field (.var .here) (.there (.there (.there .here))) (by decide +kernel)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 2)) (.call (s := sig.listed) (.there .here) (by decide +kernel) (.cons (.field (.var .here) (.there (.there (.there (.there (.there .here))))) (by decide +kernel)) (.cons (.var (.there ne.«taggedFactors».«f» (.there ne.«taggedFactors».«index» (.there ne.«taggedFactors».«older» (.there ne.«taggedFactors».«notOwner» (.there ne.«taggedFactors».«damaged» (.there ne.«taggedFactors».«opened» (.there ne.«taggedFactors».«ok» (.there ne.«taggedFactors».«floorSeed» .here))))))))) .nil)))))
   (.assign (.there ne.«notOwner».«f» (.there ne.«notOwner».«index» (.there ne.«notOwner».«older» .here))) (.bool true)
   (.cont .nil))
   .nil
@@ -446,7 +446,7 @@ noncomputable def body.«chooseVaultCopy» : TStmts [sig.«byRank», sig.«liste
   (.assign (.there ne.«older».«f» (.there ne.«older».«index» .here)) (.bool true)
   (.cont .nil))
   .nil
-  (.assign (.there ne.«ok».«f» (.there ne.«ok».«index» (.there ne.«ok».«older» (.there ne.«ok».«notOwner» (.there ne.«ok».«damaged» (.there ne.«ok».«opened» .here)))))) (.array (τ := ty.«Candidate») (.spread (.var (.there ne.«ok».«f» (.there ne.«ok».«index» (.there ne.«ok».«older» (.there ne.«ok».«notOwner» (.there ne.«ok».«damaged» (.there ne.«ok».«opened» .here))))))) (.cons (.record (.cons "index" (.var (.there ne.«index».«f» .here)) (.cons "committed" (.bin (.eq (by decide +kernel)) (.field (.var .here) (.there (.there (.there (.there .here)))) (by decide +kernel)) (.litIn (js "ok") [(js "legacy"), (js "bad"), (js "none")] 0)) (.cons "tagged" (.bin (.ne (by decide +kernel)) (.field (.var .here) (.there (.there (.there .here))) (by decide +kernel)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 2)) (.cons "seeds" (.length (.field (.var .here) (.there (.there .here)) (by decide +kernel))) (.cons "written" (.field (.var .here) (.there .here) (by decide +kernel)) .nil))))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) (.cons (.there (.there (.there (.there .here)))) .nil))))) (by decide +kernel)) .nil)))
+  (.assign (.there ne.«ok».«f» (.there ne.«ok».«index» (.there ne.«ok».«older» (.there ne.«ok».«notOwner» (.there ne.«ok».«damaged» (.there ne.«ok».«opened» .here)))))) (.array (τ := ty.Candidate) (.spread (.var (.there ne.«ok».«f» (.there ne.«ok».«index» (.there ne.«ok».«older» (.there ne.«ok».«notOwner» (.there ne.«ok».«damaged» (.there ne.«ok».«opened» .here))))))) (.cons (.record (.cons "index" (.var (.there ne.«index».«f» .here)) (.cons "committed" (.bin (.eq (by decide +kernel)) (.field (.var .here) (.there (.there (.there (.there .here)))) (by decide +kernel)) (.litIn (js "ok") [(js "legacy"), (js "bad"), (js "none")] 0)) (.cons "tagged" (.bin (.ne (by decide +kernel)) (.field (.var .here) (.there (.there (.there .here))) (by decide +kernel)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 2)) (.cons "seeds" (.length (.field (.var .here) (.there (.there .here)) (by decide +kernel))) (.cons "written" (.field (.var .here) (.there .here) (by decide +kernel)) .nil))))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) (.cons (.there (.there (.there .here))) (.cons (.there (.there (.there (.there .here)))) .nil))))) (by decide +kernel)) .nil)))
   .nil)))))
   .nil)
   .nil)))
@@ -458,8 +458,8 @@ noncomputable def body.«chooseVaultCopy» : TStmts [sig.«byRank», sig.«liste
   .nil
   (.ret (.widen (.variant (.there .one)) (.record (.cons "ok" (.tagLit (.bool false)) (.cons "refused" (.cond (.var .here) (.litIn (js "none") [(js "wrong-key"), (js "damaged"), (js "not-owner"), (js "older")] 4) (.cond (.var (.there ne.«notOwner».«older» .here)) (.litIn (js "none") [(js "wrong-key"), (js "damaged"), (js "not-owner"), (js "older")] 3) (.cond (.var (.there ne.«damaged».«older» (.there ne.«damaged».«notOwner» .here))) (.litIn (js "none") [(js "wrong-key"), (js "damaged"), (js "not-owner"), (js "older")] 2) (.cond (.or (.var (.there ne.«opened».«older» (.there ne.«opened».«notOwner» (.there ne.«opened».«damaged» .here)))) (.bin .ngt (.length (.var (.there ne.«facts».«older» (.there ne.«facts».«notOwner» (.there ne.«facts».«damaged» (.there ne.«facts».«opened» (.there ne.«facts».«ok» (.there ne.«facts».«floorSeed» (.there ne.«facts».«taggedFactors» (.there ne.«facts».«committedFactors» .here)))))))))) (.num 0))) (.litIn (js "none") [(js "wrong-key"), (js "damaged"), (js "not-owner"), (js "older")] 1) (.litIn (js "none") [(js "wrong-key"), (js "damaged"), (js "not-owner"), (js "older")] 0))))) .nil)) (.cons .here (.cons (.there .here) .nil)) (by decide +kernel))) .nil)))))))))))
 
-noncomputable def body.«chooseKeysCopy» : TStmts [sig.«chooseVaultCopy», sig.«byRank», sig.«listed»] sig.«chooseKeysCopy».params sig.«chooseKeysCopy».result :=
-  (.let_ "best" (.null .null ty.«BestKeys» (by decide +kernel))
+noncomputable def body.chooseKeysCopy : TStmts [sig.chooseVaultCopy, sig.byRank, sig.listed] sig.chooseKeysCopy.params sig.chooseKeysCopy.result :=
+  (.let_ "best" (.null .null ty.BestKeys (by decide +kernel))
   (.forEntries "index" "f" (.var (.there ne.«facts».«best» .here))
   (.switchG .here (by decide +kernel)
   (.empty (some (.str (js "unopened"))) (.wide (some (.str (js "damaged"))) (.cont .nil)
@@ -469,16 +469,16 @@ noncomputable def body.«chooseKeysCopy» : TStmts [sig.«chooseVaultCopy», sig
   (.const "trusted" (.bin (.ne (by decide +kernel)) (.field (.var .here) (.there (.there (.there .here))) (by decide +kernel)) (.litIn (js "none") [(js "ok"), (js "legacy"), (js "bad")] 2))
   (.const "better" (.condNull (.there ne.«best».«trusted» (.there ne.«best».«f» (.there ne.«best».«index» .here))) (by decide +kernel) (.bool true) (.or (.and (.var .here) (.not (.field (.var (.there ne.«best».«trusted» (.there ne.«best».«f» (.there ne.«best».«index» .here)))) (.there .here) (by decide +kernel)))) (.and (.bin (.eq (by decide +kernel)) (.var .here) (.field (.var (.there ne.«best».«trusted» (.there ne.«best».«f» (.there ne.«best».«index» .here)))) (.there .here) (by decide +kernel))) (.bin .ngt (.field (.var (.there ne.«f».«trusted» .here)) (.there .here) (by decide +kernel)) (.field (.var (.there ne.«best».«trusted» (.there ne.«best».«f» (.there ne.«best».«index» .here)))) (.there (.there .here)) (by decide +kernel))))))
   (.ite (.var .here)
-  (.assign (.there ne.«best».«better» (.there ne.«best».«trusted» (.there ne.«best».«f» (.there ne.«best».«index» .here)))) (.widen (.some .null ty.«BestKeys») (.record (.cons "index" (.var (.there ne.«index».«better» (.there ne.«index».«trusted» (.there ne.«index».«f» .here)))) (.cons "trusted" (.var (.there ne.«trusted».«better» .here)) (.cons "written" (.field (.var (.there ne.«f».«better» (.there ne.«f».«trusted» .here))) (.there .here) (by decide +kernel)) .nil))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) .nil))) (by decide +kernel)))
+  (.assign (.there ne.«best».«better» (.there ne.«best».«trusted» (.there ne.«best».«f» (.there ne.«best».«index» .here)))) (.widen (.some .null ty.BestKeys) (.record (.cons "index" (.var (.there ne.«index».«better» (.there ne.«index».«trusted» (.there ne.«index».«f» .here)))) (.cons "trusted" (.var (.there ne.«trusted».«better» .here)) (.cons "written" (.field (.var (.there ne.«f».«better» (.there ne.«f».«trusted» .here))) (.there .here) (by decide +kernel)) .nil))) (.cons .here (.cons (.there .here) (.cons (.there (.there .here)) .nil))) (by decide +kernel)))
   .nil)
   .nil
   .nil))))
   .nil)
   .nil)))
   .nil)
-  (.ret (.condNull .here (by decide +kernel) (.null .null ty.«KeysChoice» (by decide +kernel)) (.widen (.some .null ty.«KeysChoice») (.record (.cons "index" (.field (.var .here) .here (by decide +kernel)) (.cons "trusted" (.field (.var .here) (.there .here) (by decide +kernel)) .nil)) (.cons .here (.cons (.there .here) .nil)) (by decide +kernel)))) .nil)))
+  (.ret (.condNull .here (by decide +kernel) (.null .null ty.KeysChoice (by decide +kernel)) (.widen (.some .null ty.KeysChoice) (.record (.cons "index" (.field (.var .here) .here (by decide +kernel)) (.cons "trusted" (.field (.var .here) (.there .here) (by decide +kernel)) .nil)) (.cons .here (.cons (.there .here) .nil)) (by decide +kernel)))) .nil)))
 
-noncomputable def body.«newestOwnCopy» : TStmts [sig.«chooseKeysCopy», sig.«chooseVaultCopy», sig.«byRank», sig.«listed»] sig.«newestOwnCopy».params sig.«newestOwnCopy».result :=
+noncomputable def body.newestOwnCopy : TStmts [sig.chooseKeysCopy, sig.chooseVaultCopy, sig.byRank, sig.listed] sig.newestOwnCopy.params sig.newestOwnCopy.result :=
   (.let_ "best" (.negNum 1 (by decide +kernel))
   (.let_ "newest" (.var (.there ne.«own».«best» .here))
   (.forEntries "i" "stamp" (.var (.there ne.«stamps».«newest» (.there ne.«stamps».«best» (.there ne.«stamps».«own» .here))))
@@ -492,17 +492,17 @@ noncomputable def body.«newestOwnCopy» : TStmts [sig.«chooseKeysCopy», sig.�
   .nil))
   (.ret (.var (.there ne.«best».«newest» .here)) .nil))))
 
-noncomputable def body.«mayChangeFrom» : TStmts [sig.«newestOwnCopy», sig.«chooseKeysCopy», sig.«chooseVaultCopy», sig.«byRank», sig.«listed»] sig.«mayChangeFrom».params sig.«mayChangeFrom».result :=
+noncomputable def body.mayChangeFrom : TStmts [sig.newestOwnCopy, sig.chooseKeysCopy, sig.chooseVaultCopy, sig.byRank, sig.listed] sig.mayChangeFrom.params sig.mayChangeFrom.result :=
   (.ret (.bin .nge (.var .here) (.var (.there ne.«floorWritten».«written» .here))) .nil)
 
-noncomputable def body.«answered» : TStmts [sig.«mayChangeFrom», sig.«newestOwnCopy», sig.«chooseKeysCopy», sig.«chooseVaultCopy», sig.«byRank», sig.«listed»] sig.«answered».params sig.«answered».result :=
+noncomputable def body.answered : TStmts [sig.mayChangeFrom, sig.newestOwnCopy, sig.chooseKeysCopy, sig.chooseVaultCopy, sig.byRank, sig.listed] sig.answered.params sig.answered.result :=
   (.switchG .here (by decide +kernel)
   (.narrow (.there .head) (.ret (.bool false) .nil)
   (.wide none (.ret (.bool true) .nil)
   .nil))
   .nil)
 
-noncomputable def body.«repairOne» : TStmts [sig.«answered», sig.«mayChangeFrom», sig.«newestOwnCopy», sig.«chooseKeysCopy», sig.«chooseVaultCopy», sig.«byRank», sig.«listed»] sig.«repairOne».params sig.«repairOne».result :=
+noncomputable def body.repairOne : TStmts [sig.answered, sig.mayChangeFrom, sig.newestOwnCopy, sig.chooseKeysCopy, sig.chooseVaultCopy, sig.byRank, sig.listed] sig.repairOne.params sig.repairOne.result :=
   (.switchG .here (by decide +kernel)
   (.narrow .head (.ret (.var (.there ne.«allAnswered».«c» (.there ne.«allAnswered».«own» .here))) .nil)
   (.narrow (.there (.there .head)) (.ret (.bin .nlt (.field (.var .here) (.there .here) (by decide +kernel)) (.var (.there ne.«own».«c» .here))) .nil)
@@ -511,20 +511,20 @@ noncomputable def body.«repairOne» : TStmts [sig.«answered», sig.«mayChange
   .nil))))))
   .nil)
 
-noncomputable def body.«repairs» : TStmts [sig.«repairOne», sig.«answered», sig.«mayChangeFrom», sig.«newestOwnCopy», sig.«chooseKeysCopy», sig.«chooseVaultCopy», sig.«byRank», sig.«listed»] sig.«repairs».params sig.«repairs».result :=
+noncomputable def body.repairs : TStmts [sig.repairOne, sig.answered, sig.mayChangeFrom, sig.newestOwnCopy, sig.chooseKeysCopy, sig.chooseVaultCopy, sig.byRank, sig.listed] sig.repairs.params sig.repairs.result :=
   (.ite (.or (.field (.var (.there ne.«ctx».«copies» (.there ne.«ctx».«own» .here))) .here (by decide +kernel)) (.field (.var (.there ne.«ctx».«copies» (.there ne.«ctx».«own» .here))) (.there .here) (by decide +kernel)))
   (.ret (.map (.var .here) (.const (.bool false))) .nil)
   .nil
   (.const "allAnswered" (.all (.var .here) (.ref (.there .here) (by decide +kernel)))
-  (.ret (.map (.var (.there ne.«copies».«allAnswered» .here)) (.arrow "c" (.call (s := sig.«repairOne») .here (by decide +kernel) (.cons (.var .here) (.cons (.var (.there ne.«own».«c» (.there ne.«own».«allAnswered» (.there ne.«own».«copies» .here)))) (.cons (.var (.there ne.«allAnswered».«c» .here)) .nil)))))) .nil)))
+  (.ret (.map (.var (.there ne.«copies».«allAnswered» .here)) (.arrow "c" (.call (s := sig.repairOne) .here (by decide +kernel) (.cons (.var .here) (.cons (.var (.there ne.«own».«c» (.there ne.«own».«allAnswered» (.there ne.«own».«copies» .here)))) (.cons (.var (.there ne.«allAnswered».«c» .here)) .nil)))))) .nil)))
 
-noncomputable def body.«rotatedPast» : TStmts [sig.«repairs», sig.«repairOne», sig.«answered», sig.«mayChangeFrom», sig.«newestOwnCopy», sig.«chooseKeysCopy», sig.«chooseVaultCopy», sig.«byRank», sig.«listed»] sig.«rotatedPast».params sig.«rotatedPast».result :=
+noncomputable def body.rotatedPast : TStmts [sig.repairs, sig.repairOne, sig.answered, sig.mayChangeFrom, sig.newestOwnCopy, sig.chooseKeysCopy, sig.chooseVaultCopy, sig.byRank, sig.listed] sig.rotatedPast.params sig.rotatedPast.result :=
   (.ret (.any (.var .here) (.arrow "id" (.not (.includes (by decide +kernel) (.var (.there ne.«ownSeeds».«id» (.there ne.«ownSeeds».«copySeeds» .here))) (.var .here))))) .nil)
 
-noncomputable abbrev sigs : Sigs := [sig.«rotatedPast», sig.«repairs», sig.«repairOne», sig.«answered», sig.«mayChangeFrom», sig.«newestOwnCopy», sig.«chooseKeysCopy», sig.«chooseVaultCopy», sig.«byRank», sig.«listed»]
+noncomputable abbrev sigs : Sigs := [sig.rotatedPast, sig.repairs, sig.repairOne, sig.answered, sig.mayChangeFrom, sig.newestOwnCopy, sig.chooseKeysCopy, sig.chooseVaultCopy, sig.byRank, sig.listed]
 
 noncomputable def typed : TProgram sigs :=
-  (.cons sig.«rotatedPast» body.«rotatedPast» (.cons sig.«repairs» body.«repairs» (.cons sig.«repairOne» body.«repairOne» (.cons sig.«answered» body.«answered» (.cons sig.«mayChangeFrom» body.«mayChangeFrom» (.cons sig.«newestOwnCopy» body.«newestOwnCopy» (.cons sig.«chooseKeysCopy» body.«chooseKeysCopy» (.cons sig.«chooseVaultCopy» body.«chooseVaultCopy» (.cons sig.«byRank» body.«byRank» (.cons sig.«listed» body.«listed» .nil))))))))))
+  (.cons sig.rotatedPast body.rotatedPast (.cons sig.repairs body.repairs (.cons sig.repairOne body.repairOne (.cons sig.answered body.answered (.cons sig.mayChangeFrom body.mayChangeFrom (.cons sig.newestOwnCopy body.newestOwnCopy (.cons sig.chooseKeysCopy body.chooseKeysCopy (.cons sig.chooseVaultCopy body.chooseVaultCopy (.cons sig.byRank body.byRank (.cons sig.listed body.listed .nil))))))))))
 
 theorem erased : typed.erase = ast := by kernel_rfl
 
@@ -536,427 +536,444 @@ theorem wf : typed.WF := TProgram.wf_of typed erased bodies_ok ast_scoped
 
 /-! ## Readable definitions -/
 
-def «listed» («kid» : Option JSString) («list» : Option (List JSString)) : Bool :=
-  match «kid» with
+def listed (kid : Option JSString) (list : Option (List JSString)) : Bool :=
+  match kid with
   | none =>
     false
-  | some «kid» =>
-    match «list» with
+  | some kid =>
+    match list with
     | none =>
       false
-    | some «list» =>
-      («kid» != (js "")) && (List.any «list» (fun y' => y' == «kid»))
+    | some list =>
+      (kid != (js "")) && (list.any (· == kid))
 
-def «byRank» («a» : «Candidate») («b» : «Candidate») : Int :=
-  if «a».«committed» != «b».«committed» then
-    if «a».«committed» then (-(1 : Int)) else (1 : Int)
+def byRank (a : Candidate) (b : Candidate) : Int :=
+  if a.committed != b.committed then
+    if a.committed then (-(1 : Int)) else (1 : Int)
   else
-    if «a».«tagged» != «b».«tagged» then
-      if «a».«tagged» then (-(1 : Int)) else (1 : Int)
+    if a.tagged != b.tagged then
+      if a.tagged then (-(1 : Int)) else (1 : Int)
     else
-      if «a».«seeds» != «b».«seeds» then
-        if decide («a».«seeds» > «b».«seeds») then (-(1 : Int)) else (1 : Int)
+      if a.seeds != b.seeds then
+        if decide (a.seeds > b.seeds) then (-(1 : Int)) else (1 : Int)
       else
-        if «a».«written» != «b».«written» then
-          if decide («a».«written» > «b».«written») then (-(1 : Int)) else (1 : Int)
+        if a.written != b.written then
+          if decide (a.written > b.written) then (-(1 : Int)) else (1 : Int)
         else
-          if «a».«index» != «b».«index» then
-            if decide («a».«index» < «b».«index») then (-(1 : Int)) else (1 : Int)
+          if a.index != b.index then
+            if decide (a.index < b.index) then (-(1 : Int)) else (1 : Int)
           else
             (0 : Int)
 
-def «chooseVaultCopy» («facts» : List «CopyFact») («floor» : Option «Floor») : «Choice» :=
-  let «committedFactors» : Option (List JSString) := match «floor» with | none => none | some «floor» => «floor».«committed»
-  let «taggedFactors» : Option (List JSString) := match «floor» with | none => none | some «floor» => «floor».«tagged»
-  let «floorSeed» : JSString := match «floor» with | none => (js "") | some «floor» => «floor».«seed»
-  let «ok» : List «Candidate» := []
-  let «opened» : Bool := false
-  let «damaged» : Bool := false
-  let «notOwner» : Bool := false
-  let «older» : Bool := false
-  Ariadne.forIn (List.zipIdx «facts») (fun («f», n10') next2' exit2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ()) =>
-    let «index» := (n10' : Int)
-    match «f» with
-    | «CopyFact».«unopened» =>
-      next2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ())
-    | «CopyFact».«damaged» =>
-      let «damaged» : Bool := true
-      next2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ())
-    | «CopyFact».«opened» «f» =>
-      let «opened» : Bool := true
-      if («f».«commit» == «Commit».«bad») || («f».«recovery» == «Recovery».«bad») then
-        let «notOwner» : Bool := true
-        next2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ())
+def chooseVaultCopy (facts : List CopyFact) (floor : Option Floor) : Choice :=
+  let committedFactors : Option (List JSString) := match floor with | none => none | some floor => floor.committed
+  let taggedFactors : Option (List JSString) := match floor with | none => none | some floor => floor.tagged
+  let floorSeed : JSString := match floor with | none => (js "") | some floor => floor.seed
+  let ok : List Candidate := []
+  let opened : Bool := false
+  let damaged : Bool := false
+  let notOwner : Bool := false
+  let older : Bool := false
+  Ariadne.forIn facts.zipIdx (fun (f, n10') next2' exit2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ()) =>
+    let index := (n10' : Int)
+    match f with
+    | CopyFact.unopened =>
+      let f := (CopyFact.unopened : CopyFact)
+      next2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ())
+    | CopyFact.damaged =>
+      let damaged : Bool := true
+      let f := (CopyFact.damaged : CopyFact)
+      next2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ())
+    | CopyFact.opened f =>
+      let opened : Bool := true
+      if (f.commit == Commit.bad) || (f.recovery == Recovery.bad) then
+        let notOwner : Bool := true
+        let f := ((CopyFact.opened f) : CopyFact)
+        next2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ())
       else
-        if ((«f».«commit» == «Commit».«legacy») && («listed» «f».«kid» «committedFactors»)) || ((«f».«recovery» == «Recovery».«legacy») && («listed» «f».«kid» «taggedFactors»)) then
-          let «notOwner» : Bool := true
-          next2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ())
+        if ((f.commit == Commit.legacy) && (listed f.kid committedFactors)) || ((f.recovery == Recovery.legacy) && (listed f.kid taggedFactors)) then
+          let notOwner : Bool := true
+          let f := ((CopyFact.opened f) : CopyFact)
+          next2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ())
         else
-          if («floorSeed» != (js "")) && (!(List.any «f».«seeds» (fun y' => y' == «floorSeed»))) then
-            let «older» : Bool := true
-            next2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ())
+          if (floorSeed != (js "")) && (!(f.seeds.any (· == floorSeed))) then
+            let older : Bool := true
+            let f := ((CopyFact.opened f) : CopyFact)
+            next2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ())
           else
-            let «ok» : List «Candidate» := «ok» ++ ([(«Candidate».mk «index» («f».«commit» == «Commit».«ok») («f».«recovery» != «Recovery».«legacy») (List.length «f».«seeds» : Int) «f».«written»)])
-            next2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ()))
-    (fun («older», «notOwner», «damaged», «opened», «ok», _, _, _, «facts», _, ()) =>
-    if decide ((List.length «ok» : Int) > (0 : Int)) then
-      let «ranked» : List «Candidate» := Ariadne.sortedBy «byRank» «ok»
-      let «anyCommitted» : Bool := List.any «ranked» (fun «x» => «x».«committed»)
-      («Choice».«true» (List.map (fun «x» => («Ranked».mk «x».«index» («x».«tagged» && («x».«committed» || (!«anyCommitted»))) «x».«committed»)) «ranked»))
+            let ok : List Candidate := ok ++ ([(Candidate.mk index (f.commit == Commit.ok) (f.recovery != Recovery.legacy) (f.seeds.length : Int) f.written)])
+            let f := ((CopyFact.opened f) : CopyFact)
+            next2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ()))
+    (fun (older, notOwner, damaged, opened, ok, _, _, _, facts, _, ()) =>
+    if decide ((ok.length : Int) > (0 : Int)) then
+      let ranked : List Candidate := Ariadne.sortedBy byRank ok
+      let anyCommitted : Bool := ranked.any (fun x => x.committed)
+      (Choice.true (ranked.map (fun x => (Ranked.mk x.index (x.tagged && (x.committed || (!anyCommitted))) x.committed))))
     else
-      («Choice».«false» (if «older» then «Refusal».«older» else if «notOwner» then «Refusal».«not-owner» else if «damaged» then «Refusal».«damaged» else if «opened» || (decide ((List.length «facts» : Int) > (0 : Int))) then «Refusal».«wrong-key» else «Refusal».«none»)))
-    («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ())
+      (Choice.false (if older then Refusal.older else if notOwner then Refusal.«not-owner» else if damaged then Refusal.damaged else if opened || (decide ((facts.length : Int) > (0 : Int))) then Refusal.«wrong-key» else Refusal.none)))
+    (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ())
 
 /-- The inputs on which `chooseVaultCopy` stays within what the model covers. -/
-def «chooseVaultCopy».safe («facts» : List «CopyFact») («floor» : Option «Floor») : Bool :=
-  let «committedFactors» : Option (List JSString) := match «floor» with | none => none | some «floor» => «floor».«committed»
-  let «taggedFactors» : Option (List JSString) := match «floor» with | none => none | some «floor» => «floor».«tagged»
-  let «floorSeed» : JSString := match «floor» with | none => (js "") | some «floor» => «floor».«seed»
-  let «ok» : List «Candidate» := []
-  let «opened» : Bool := false
-  let «damaged» : Bool := false
-  let «notOwner» : Bool := false
-  let «older» : Bool := false
-  Ariadne.forIn (List.zipIdx «facts») (fun («f», n10') next2' exit2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ()) =>
-    let «index» := (n10' : Int)
-    match «f» with
-    | «CopyFact».«unopened» =>
-      next2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ())
-    | «CopyFact».«damaged» =>
-      let «damaged» : Bool := true
-      next2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ())
-    | «CopyFact».«opened» «f» =>
-      let «opened» : Bool := true
-      if («f».«commit» == «Commit».«bad») || («f».«recovery» == «Recovery».«bad») then
-        let «notOwner» : Bool := true
-        next2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ())
+def chooseVaultCopy.safe (facts : List CopyFact) (floor : Option Floor) : Bool :=
+  let committedFactors : Option (List JSString) := match floor with | none => none | some floor => floor.committed
+  let taggedFactors : Option (List JSString) := match floor with | none => none | some floor => floor.tagged
+  let floorSeed : JSString := match floor with | none => (js "") | some floor => floor.seed
+  let ok : List Candidate := []
+  let opened : Bool := false
+  let damaged : Bool := false
+  let notOwner : Bool := false
+  let older : Bool := false
+  Ariadne.forIn facts.zipIdx (fun (f, n10') next2' exit2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ()) =>
+    let index := (n10' : Int)
+    match f with
+    | CopyFact.unopened =>
+      let f := (CopyFact.unopened : CopyFact)
+      next2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ())
+    | CopyFact.damaged =>
+      let damaged : Bool := true
+      let f := (CopyFact.damaged : CopyFact)
+      next2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ())
+    | CopyFact.opened f =>
+      let opened : Bool := true
+      if (f.commit == Commit.bad) || (f.recovery == Recovery.bad) then
+        let notOwner : Bool := true
+        let f := ((CopyFact.opened f) : CopyFact)
+        next2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ())
       else
-        if ((«f».«commit» == «Commit».«legacy») && («listed» «f».«kid» «committedFactors»)) || ((«f».«recovery» == «Recovery».«legacy») && («listed» «f».«kid» «taggedFactors»)) then
-          let «notOwner» : Bool := true
-          next2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ())
+        if ((f.commit == Commit.legacy) && (listed f.kid committedFactors)) || ((f.recovery == Recovery.legacy) && (listed f.kid taggedFactors)) then
+          let notOwner : Bool := true
+          let f := ((CopyFact.opened f) : CopyFact)
+          next2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ())
         else
-          if («floorSeed» != (js "")) && (!(List.any «f».«seeds» (fun y' => y' == «floorSeed»))) then
-            let «older» : Bool := true
-            next2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ())
+          if (floorSeed != (js "")) && (!(f.seeds.any (· == floorSeed))) then
+            let older : Bool := true
+            let f := ((CopyFact.opened f) : CopyFact)
+            next2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ())
           else
-            let «ok» : List «Candidate» := «ok» ++ ([(«Candidate».mk «index» («f».«commit» == «Commit».«ok») («f».«recovery» != «Recovery».«legacy») (List.length «f».«seeds» : Int) «f».«written»)])
-            next2' («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ()))
-    (fun (_, _, _, _, «ok», _, _, _, _, _, ()) =>
-    if decide ((List.length «ok» : Int) > (0 : Int)) then
-      Ariadne.consistent (Ariadne.signs «byRank» «ok») && (let «ranked» : List «Candidate» := Ariadne.sortedBy «byRank» «ok»
-      let «anyCommitted» : Bool := List.any «ranked» (fun «x» => «x».«committed»)
+            let ok : List Candidate := ok ++ ([(Candidate.mk index (f.commit == Commit.ok) (f.recovery != Recovery.legacy) (f.seeds.length : Int) f.written)])
+            let f := ((CopyFact.opened f) : CopyFact)
+            next2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ()))
+    (fun (_, _, _, _, ok, _, _, _, _, _, ()) =>
+    if decide ((ok.length : Int) > (0 : Int)) then
+      Ariadne.consistent (Ariadne.signs byRank ok) && (let ranked : List Candidate := Ariadne.sortedBy byRank ok
+      let anyCommitted : Bool := ranked.any (fun x => x.committed)
       true)
     else
       true)
-    («older», «notOwner», «damaged», «opened», «ok», «floorSeed», «taggedFactors», «committedFactors», «facts», «floor», ())
+    (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ())
 
-def «chooseKeysCopy» («facts» : List «CopyFact») : Option «KeysChoice» :=
-  let «best» : Option «BestKeys» := none
-  Ariadne.forIn (List.zipIdx «facts») (fun («f», n2') next2' exit2' («best», «facts», ()) =>
-    let «index» := (n2' : Int)
-    match «f» with
-    | «CopyFact».«unopened» =>
-      next2' («best», «facts», ())
-    | «CopyFact».«damaged» =>
-      next2' («best», «facts», ())
-    | «CopyFact».«opened» «f» =>
-      if «f».«recovery» == «Recovery».«bad» then
-        next2' («best», «facts», ())
+def chooseKeysCopy (facts : List CopyFact) : Option KeysChoice :=
+  let best : Option BestKeys := none
+  Ariadne.forIn facts.zipIdx (fun (f, n2') next2' exit2' (best, facts, ()) =>
+    let index := (n2' : Int)
+    match f with
+    | CopyFact.unopened =>
+      next2' (best, facts, ())
+    | CopyFact.damaged =>
+      next2' (best, facts, ())
+    | CopyFact.opened f =>
+      if f.recovery == Recovery.bad then
+        let f := ((CopyFact.opened f) : CopyFact)
+        next2' (best, facts, ())
       else
-        let «trusted» : Bool := «f».«recovery» != «Recovery».«legacy»
-        let «better» : Bool := match «best» with | none => true | some «best» => («trusted» && (!«best».«trusted»)) || ((«trusted» == «best».«trusted») && (decide («f».«written» > «best».«written»)))
-        if «better» then
-          let «best» : Option «BestKeys» := some («BestKeys».mk «index» «trusted» «f».«written»)
-          next2' («best», «facts», ())
+        let trusted : Bool := f.recovery != Recovery.legacy
+        let better : Bool := match best with | none => true | some best => (trusted && (!best.trusted)) || ((trusted == best.trusted) && (decide (f.written > best.written)))
+        if better then
+          let best : Option BestKeys := some (BestKeys.mk index trusted f.written)
+          let f := ((CopyFact.opened f) : CopyFact)
+          next2' (best, facts, ())
         else
-          next2' («best», «facts», ()))
-    (fun («best», _, ()) =>
-    match «best» with | none => none | some «best» => some («KeysChoice».mk «best».«index» «best».«trusted»))
-    («best», «facts», ())
+          let f := ((CopyFact.opened f) : CopyFact)
+          next2' (best, facts, ()))
+    (fun (best, _, ()) =>
+    match best with | none => none | some best => some (KeysChoice.mk best.index best.trusted))
+    (best, facts, ())
 
-def «newestOwnCopy» («own» : Int) («stamps» : List (Option Int)) : Int :=
-  let «best» : Int := (-(1 : Int))
-  let «newest» : Int := «own»
-  Ariadne.forIn (List.zipIdx «stamps») (fun («stamp», n4') next2' exit2' («newest», «best», «own», «stamps», ()) =>
-    let «i» := (n4' : Int)
-    match «stamp» with
+def newestOwnCopy (own : Int) (stamps : List (Option Int)) : Int :=
+  let best : Int := (-(1 : Int))
+  let newest : Int := own
+  Ariadne.forIn stamps.zipIdx (fun (stamp, n4') next2' exit2' (newest, best, own, stamps, ()) =>
+    let i := (n4' : Int)
+    match stamp with
     | none =>
-      next2' («newest», «best», «own», «stamps», ())
-    | some «stamp» =>
-      if decide («stamp» > «newest») then
-        let «best» : Int := «i»
-        let «newest» : Int := «stamp»
-        next2' («newest», «best», «own», «stamps», ())
+      next2' (newest, best, own, stamps, ())
+    | some stamp =>
+      if decide (stamp > newest) then
+        let best : Int := i
+        let newest : Int := stamp
+        let stamp := some stamp
+        next2' (newest, best, own, stamps, ())
       else
-        next2' («newest», «best», «own», «stamps», ()))
-    (fun (_, «best», _, _, ()) =>
-    «best»)
-    («newest», «best», «own», «stamps», ())
+        let stamp := some stamp
+        next2' (newest, best, own, stamps, ()))
+    (fun (_, best, _, _, ()) =>
+    best)
+    (newest, best, own, stamps, ())
 
-def «mayChangeFrom» («written» : Int) («floorWritten» : Int) : Bool :=
-  decide («written» ≥ «floorWritten»)
+def mayChangeFrom (written : Int) (floorWritten : Int) : Bool :=
+  decide (written ≥ floorWritten)
 
-def «answered» («c» : «StoredCopy») : Bool :=
-  match «c» with
-  | «StoredCopy».«missing» =>
+def answered (c : StoredCopy) : Bool :=
+  match c with
+  | StoredCopy.missing =>
     true
-  | «StoredCopy».«unknown» =>
+  | StoredCopy.unknown =>
     false
-  | «StoredCopy».«own» _ =>
+  | StoredCopy.own _ =>
     true
-  | «StoredCopy».«older» =>
+  | StoredCopy.older =>
     true
-  | «StoredCopy».«damaged» =>
+  | StoredCopy.damaged =>
     true
-  | «StoredCopy».«foreign» =>
+  | StoredCopy.foreign =>
     true
 
-def «repairOne» («c» : «StoredCopy») («own» : Int) («allAnswered» : Bool) : Bool :=
-  match «c» with
-  | «StoredCopy».«missing» =>
-    «allAnswered»
-  | «StoredCopy».«unknown» =>
+def repairOne (c : StoredCopy) (own : Int) (allAnswered : Bool) : Bool :=
+  match c with
+  | StoredCopy.missing =>
+    allAnswered
+  | StoredCopy.unknown =>
     false
-  | «StoredCopy».«own» «c» =>
-    decide («c» < «own»)
-  | «StoredCopy».«older» =>
+  | StoredCopy.own c =>
+    decide (c < own)
+  | StoredCopy.older =>
     true
-  | «StoredCopy».«damaged» =>
+  | StoredCopy.damaged =>
     true
-  | «StoredCopy».«foreign» =>
+  | StoredCopy.foreign =>
     false
 
-def «repairs» («copies» : List «StoredCopy») («own» : Int) («ctx» : «RepairContext») : List Bool :=
-  if «ctx».«stale» || «ctx».«readOnly» then
-    List.map (fun _ => false) «copies»
+def repairs (copies : List StoredCopy) (own : Int) (ctx : RepairContext) : List Bool :=
+  if ctx.stale || ctx.readOnly then
+    copies.map (fun _ => false)
   else
-    let «allAnswered» : Bool := List.all «copies» «answered»
-    List.map (fun «c» => «repairOne» «c» «own» «allAnswered») «copies»
+    let allAnswered : Bool := copies.all answered
+    copies.map (fun c => repairOne c own allAnswered)
 
-def «rotatedPast» («copySeeds» : List JSString) («ownSeeds» : List JSString) : Bool :=
-  List.any «copySeeds» (fun «id» => !(List.any «ownSeeds» (fun y' => y' == «id»)))
+def rotatedPast (copySeeds : List JSString) (ownSeeds : List JSString) : Bool :=
+  copySeeds.any (fun id => !(ownSeeds.any (· == id)))
 
 /-! ## Denotation
 
 Each body is checked against its readable definition with the earlier functions'
 readable definitions as its environment, so no check unfolds a callee. -/
 
-noncomputable def «listed».uncurried : sig.«listed».denote := fun xs => «listed» xs.1 xs.2.1
+noncomputable def listed.uncurried : sig.listed.denote := fun xs => listed xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «listed».safety : sig.«listed».params.denote → Bool := fun _ => true
+noncomputable def listed.safety : sig.listed.params.denote → Bool := fun _ => true
 
-theorem «listed».body_eq :
-    body.«listed».denoteFn (()) = «listed».uncurried := by
+theorem listed.body_eq :
+    body.listed.denoteFn (()) = listed.uncurried := by
   kernel_rfl
 
-theorem «listed».safe_eq :
-    body.«listed».safeFn (()) (()) = «listed».safety := by
+theorem listed.safe_eq :
+    body.listed.safeFn (()) (()) = listed.safety := by
   kernel_rfl
 
-noncomputable def «byRank».uncurried : sig.«byRank».denote := fun xs => «byRank» xs.1 xs.2.1
+noncomputable def byRank.uncurried : sig.byRank.denote := fun xs => byRank xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «byRank».safety : sig.«byRank».params.denote → Bool := fun _ => true
+noncomputable def byRank.safety : sig.byRank.params.denote → Bool := fun _ => true
 
-theorem «byRank».body_eq :
-    body.«byRank».denoteFn («listed».uncurried, ()) = «byRank».uncurried := by
+theorem byRank.body_eq :
+    body.byRank.denoteFn (listed.uncurried, ()) = byRank.uncurried := by
   kernel_rfl
 
-theorem «byRank».safe_eq :
-    body.«byRank».safeFn («listed».uncurried, ()) («listed».safety, ()) = «byRank».safety := by
+theorem byRank.safe_eq :
+    body.byRank.safeFn (listed.uncurried, ()) (listed.safety, ()) = byRank.safety := by
   kernel_rfl
 
-noncomputable def «chooseVaultCopy».uncurried : sig.«chooseVaultCopy».denote := fun xs => «chooseVaultCopy» xs.1 xs.2.1
+noncomputable def chooseVaultCopy.uncurried : sig.chooseVaultCopy.denote := fun xs => chooseVaultCopy xs.1 xs.2.1
 
-noncomputable def «chooseVaultCopy».safety : sig.«chooseVaultCopy».params.denote → Bool := fun xs => «chooseVaultCopy».safe xs.1 xs.2.1
+noncomputable def chooseVaultCopy.safety : sig.chooseVaultCopy.params.denote → Bool := fun xs => chooseVaultCopy.safe xs.1 xs.2.1
 
-theorem «chooseVaultCopy».body_eq :
-    body.«chooseVaultCopy».denoteFn («byRank».uncurried, «listed».uncurried, ()) = «chooseVaultCopy».uncurried := by
+theorem chooseVaultCopy.body_eq :
+    body.chooseVaultCopy.denoteFn (byRank.uncurried, listed.uncurried, ()) = chooseVaultCopy.uncurried := by
   kernel_rfl
 
-theorem «chooseVaultCopy».safe_eq :
-    body.«chooseVaultCopy».safeFn («byRank».uncurried, «listed».uncurried, ()) («byRank».safety, «listed».safety, ()) = «chooseVaultCopy».safety := by
+theorem chooseVaultCopy.safe_eq :
+    body.chooseVaultCopy.safeFn (byRank.uncurried, listed.uncurried, ()) (byRank.safety, listed.safety, ()) = chooseVaultCopy.safety := by
   kernel_rfl
 
-noncomputable def «chooseKeysCopy».uncurried : sig.«chooseKeysCopy».denote := fun xs => «chooseKeysCopy» xs.1
+noncomputable def chooseKeysCopy.uncurried : sig.chooseKeysCopy.denote := fun xs => chooseKeysCopy xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «chooseKeysCopy».safety : sig.«chooseKeysCopy».params.denote → Bool := fun _ => true
+noncomputable def chooseKeysCopy.safety : sig.chooseKeysCopy.params.denote → Bool := fun _ => true
 
-theorem «chooseKeysCopy».body_eq :
-    body.«chooseKeysCopy».denoteFn («chooseVaultCopy».uncurried, «byRank».uncurried, «listed».uncurried, ()) = «chooseKeysCopy».uncurried := by
+theorem chooseKeysCopy.body_eq :
+    body.chooseKeysCopy.denoteFn (chooseVaultCopy.uncurried, byRank.uncurried, listed.uncurried, ()) = chooseKeysCopy.uncurried := by
   kernel_rfl
 
-theorem «chooseKeysCopy».safe_eq :
-    body.«chooseKeysCopy».safeFn («chooseVaultCopy».uncurried, «byRank».uncurried, «listed».uncurried, ()) («chooseVaultCopy».safety, «byRank».safety, «listed».safety, ()) = «chooseKeysCopy».safety := by
+theorem chooseKeysCopy.safe_eq :
+    body.chooseKeysCopy.safeFn (chooseVaultCopy.uncurried, byRank.uncurried, listed.uncurried, ()) (chooseVaultCopy.safety, byRank.safety, listed.safety, ()) = chooseKeysCopy.safety := by
   kernel_rfl
 
-noncomputable def «newestOwnCopy».uncurried : sig.«newestOwnCopy».denote := fun xs => «newestOwnCopy» xs.1 xs.2.1
+noncomputable def newestOwnCopy.uncurried : sig.newestOwnCopy.denote := fun xs => newestOwnCopy xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «newestOwnCopy».safety : sig.«newestOwnCopy».params.denote → Bool := fun _ => true
+noncomputable def newestOwnCopy.safety : sig.newestOwnCopy.params.denote → Bool := fun _ => true
 
-theorem «newestOwnCopy».body_eq :
-    body.«newestOwnCopy».denoteFn («chooseKeysCopy».uncurried, «chooseVaultCopy».uncurried, «byRank».uncurried, «listed».uncurried, ()) = «newestOwnCopy».uncurried := by
+theorem newestOwnCopy.body_eq :
+    body.newestOwnCopy.denoteFn (chooseKeysCopy.uncurried, chooseVaultCopy.uncurried, byRank.uncurried, listed.uncurried, ()) = newestOwnCopy.uncurried := by
   kernel_rfl
 
-theorem «newestOwnCopy».safe_eq :
-    body.«newestOwnCopy».safeFn («chooseKeysCopy».uncurried, «chooseVaultCopy».uncurried, «byRank».uncurried, «listed».uncurried, ()) («chooseKeysCopy».safety, «chooseVaultCopy».safety, «byRank».safety, «listed».safety, ()) = «newestOwnCopy».safety := by
+theorem newestOwnCopy.safe_eq :
+    body.newestOwnCopy.safeFn (chooseKeysCopy.uncurried, chooseVaultCopy.uncurried, byRank.uncurried, listed.uncurried, ()) (chooseKeysCopy.safety, chooseVaultCopy.safety, byRank.safety, listed.safety, ()) = newestOwnCopy.safety := by
   kernel_rfl
 
-noncomputable def «mayChangeFrom».uncurried : sig.«mayChangeFrom».denote := fun xs => «mayChangeFrom» xs.1 xs.2.1
+noncomputable def mayChangeFrom.uncurried : sig.mayChangeFrom.denote := fun xs => mayChangeFrom xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «mayChangeFrom».safety : sig.«mayChangeFrom».params.denote → Bool := fun _ => true
+noncomputable def mayChangeFrom.safety : sig.mayChangeFrom.params.denote → Bool := fun _ => true
 
-theorem «mayChangeFrom».body_eq :
-    body.«mayChangeFrom».denoteFn («newestOwnCopy».uncurried, «chooseKeysCopy».uncurried, «chooseVaultCopy».uncurried, «byRank».uncurried, «listed».uncurried, ()) = «mayChangeFrom».uncurried := by
+theorem mayChangeFrom.body_eq :
+    body.mayChangeFrom.denoteFn (newestOwnCopy.uncurried, chooseKeysCopy.uncurried, chooseVaultCopy.uncurried, byRank.uncurried, listed.uncurried, ()) = mayChangeFrom.uncurried := by
   kernel_rfl
 
-theorem «mayChangeFrom».safe_eq :
-    body.«mayChangeFrom».safeFn («newestOwnCopy».uncurried, «chooseKeysCopy».uncurried, «chooseVaultCopy».uncurried, «byRank».uncurried, «listed».uncurried, ()) («newestOwnCopy».safety, «chooseKeysCopy».safety, «chooseVaultCopy».safety, «byRank».safety, «listed».safety, ()) = «mayChangeFrom».safety := by
+theorem mayChangeFrom.safe_eq :
+    body.mayChangeFrom.safeFn (newestOwnCopy.uncurried, chooseKeysCopy.uncurried, chooseVaultCopy.uncurried, byRank.uncurried, listed.uncurried, ()) (newestOwnCopy.safety, chooseKeysCopy.safety, chooseVaultCopy.safety, byRank.safety, listed.safety, ()) = mayChangeFrom.safety := by
   kernel_rfl
 
-noncomputable def «answered».uncurried : sig.«answered».denote := fun xs => «answered» xs.1
+noncomputable def answered.uncurried : sig.answered.denote := fun xs => answered xs.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «answered».safety : sig.«answered».params.denote → Bool := fun _ => true
+noncomputable def answered.safety : sig.answered.params.denote → Bool := fun _ => true
 
-theorem «answered».body_eq :
-    body.«answered».denoteFn («mayChangeFrom».uncurried, «newestOwnCopy».uncurried, «chooseKeysCopy».uncurried, «chooseVaultCopy».uncurried, «byRank».uncurried, «listed».uncurried, ()) = «answered».uncurried := by
+theorem answered.body_eq :
+    body.answered.denoteFn (mayChangeFrom.uncurried, newestOwnCopy.uncurried, chooseKeysCopy.uncurried, chooseVaultCopy.uncurried, byRank.uncurried, listed.uncurried, ()) = answered.uncurried := by
   kernel_rfl
 
-theorem «answered».safe_eq :
-    body.«answered».safeFn («mayChangeFrom».uncurried, «newestOwnCopy».uncurried, «chooseKeysCopy».uncurried, «chooseVaultCopy».uncurried, «byRank».uncurried, «listed».uncurried, ()) («mayChangeFrom».safety, «newestOwnCopy».safety, «chooseKeysCopy».safety, «chooseVaultCopy».safety, «byRank».safety, «listed».safety, ()) = «answered».safety := by
+theorem answered.safe_eq :
+    body.answered.safeFn (mayChangeFrom.uncurried, newestOwnCopy.uncurried, chooseKeysCopy.uncurried, chooseVaultCopy.uncurried, byRank.uncurried, listed.uncurried, ()) (mayChangeFrom.safety, newestOwnCopy.safety, chooseKeysCopy.safety, chooseVaultCopy.safety, byRank.safety, listed.safety, ()) = answered.safety := by
   kernel_rfl
 
-noncomputable def «repairOne».uncurried : sig.«repairOne».denote := fun xs => «repairOne» xs.1 xs.2.1 xs.2.2.1
+noncomputable def repairOne.uncurried : sig.repairOne.denote := fun xs => repairOne xs.1 xs.2.1 xs.2.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «repairOne».safety : sig.«repairOne».params.denote → Bool := fun _ => true
+noncomputable def repairOne.safety : sig.repairOne.params.denote → Bool := fun _ => true
 
-theorem «repairOne».body_eq :
-    body.«repairOne».denoteFn («answered».uncurried, «mayChangeFrom».uncurried, «newestOwnCopy».uncurried, «chooseKeysCopy».uncurried, «chooseVaultCopy».uncurried, «byRank».uncurried, «listed».uncurried, ()) = «repairOne».uncurried := by
+theorem repairOne.body_eq :
+    body.repairOne.denoteFn (answered.uncurried, mayChangeFrom.uncurried, newestOwnCopy.uncurried, chooseKeysCopy.uncurried, chooseVaultCopy.uncurried, byRank.uncurried, listed.uncurried, ()) = repairOne.uncurried := by
   kernel_rfl
 
-theorem «repairOne».safe_eq :
-    body.«repairOne».safeFn («answered».uncurried, «mayChangeFrom».uncurried, «newestOwnCopy».uncurried, «chooseKeysCopy».uncurried, «chooseVaultCopy».uncurried, «byRank».uncurried, «listed».uncurried, ()) («answered».safety, «mayChangeFrom».safety, «newestOwnCopy».safety, «chooseKeysCopy».safety, «chooseVaultCopy».safety, «byRank».safety, «listed».safety, ()) = «repairOne».safety := by
+theorem repairOne.safe_eq :
+    body.repairOne.safeFn (answered.uncurried, mayChangeFrom.uncurried, newestOwnCopy.uncurried, chooseKeysCopy.uncurried, chooseVaultCopy.uncurried, byRank.uncurried, listed.uncurried, ()) (answered.safety, mayChangeFrom.safety, newestOwnCopy.safety, chooseKeysCopy.safety, chooseVaultCopy.safety, byRank.safety, listed.safety, ()) = repairOne.safety := by
   kernel_rfl
 
-noncomputable def «repairs».uncurried : sig.«repairs».denote := fun xs => «repairs» xs.1 xs.2.1 xs.2.2.1
+noncomputable def repairs.uncurried : sig.repairs.denote := fun xs => repairs xs.1 xs.2.1 xs.2.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «repairs».safety : sig.«repairs».params.denote → Bool := fun _ => true
+noncomputable def repairs.safety : sig.repairs.params.denote → Bool := fun _ => true
 
-theorem «repairs».body_eq :
-    body.«repairs».denoteFn («repairOne».uncurried, «answered».uncurried, «mayChangeFrom».uncurried, «newestOwnCopy».uncurried, «chooseKeysCopy».uncurried, «chooseVaultCopy».uncurried, «byRank».uncurried, «listed».uncurried, ()) = «repairs».uncurried := by
+theorem repairs.body_eq :
+    body.repairs.denoteFn (repairOne.uncurried, answered.uncurried, mayChangeFrom.uncurried, newestOwnCopy.uncurried, chooseKeysCopy.uncurried, chooseVaultCopy.uncurried, byRank.uncurried, listed.uncurried, ()) = repairs.uncurried := by
   kernel_rfl
 
-theorem «repairs».safe_eq :
-    body.«repairs».safeFn («repairOne».uncurried, «answered».uncurried, «mayChangeFrom».uncurried, «newestOwnCopy».uncurried, «chooseKeysCopy».uncurried, «chooseVaultCopy».uncurried, «byRank».uncurried, «listed».uncurried, ()) («repairOne».safety, «answered».safety, «mayChangeFrom».safety, «newestOwnCopy».safety, «chooseKeysCopy».safety, «chooseVaultCopy».safety, «byRank».safety, «listed».safety, ()) = «repairs».safety := by
+theorem repairs.safe_eq :
+    body.repairs.safeFn (repairOne.uncurried, answered.uncurried, mayChangeFrom.uncurried, newestOwnCopy.uncurried, chooseKeysCopy.uncurried, chooseVaultCopy.uncurried, byRank.uncurried, listed.uncurried, ()) (repairOne.safety, answered.safety, mayChangeFrom.safety, newestOwnCopy.safety, chooseKeysCopy.safety, chooseVaultCopy.safety, byRank.safety, listed.safety, ()) = repairs.safety := by
   kernel_rfl
 
-noncomputable def «rotatedPast».uncurried : sig.«rotatedPast».denote := fun xs => «rotatedPast» xs.1 xs.2.1
+noncomputable def rotatedPast.uncurried : sig.rotatedPast.denote := fun xs => rotatedPast xs.1 xs.2.1
 
 /-- Trivially safe: every input is in what the model covers. -/
-noncomputable def «rotatedPast».safety : sig.«rotatedPast».params.denote → Bool := fun _ => true
+noncomputable def rotatedPast.safety : sig.rotatedPast.params.denote → Bool := fun _ => true
 
-theorem «rotatedPast».body_eq :
-    body.«rotatedPast».denoteFn («repairs».uncurried, «repairOne».uncurried, «answered».uncurried, «mayChangeFrom».uncurried, «newestOwnCopy».uncurried, «chooseKeysCopy».uncurried, «chooseVaultCopy».uncurried, «byRank».uncurried, «listed».uncurried, ()) = «rotatedPast».uncurried := by
+theorem rotatedPast.body_eq :
+    body.rotatedPast.denoteFn (repairs.uncurried, repairOne.uncurried, answered.uncurried, mayChangeFrom.uncurried, newestOwnCopy.uncurried, chooseKeysCopy.uncurried, chooseVaultCopy.uncurried, byRank.uncurried, listed.uncurried, ()) = rotatedPast.uncurried := by
   kernel_rfl
 
-theorem «rotatedPast».safe_eq :
-    body.«rotatedPast».safeFn («repairs».uncurried, «repairOne».uncurried, «answered».uncurried, «mayChangeFrom».uncurried, «newestOwnCopy».uncurried, «chooseKeysCopy».uncurried, «chooseVaultCopy».uncurried, «byRank».uncurried, «listed».uncurried, ()) («repairs».safety, «repairOne».safety, «answered».safety, «mayChangeFrom».safety, «newestOwnCopy».safety, «chooseKeysCopy».safety, «chooseVaultCopy».safety, «byRank».safety, «listed».safety, ()) = «rotatedPast».safety := by
+theorem rotatedPast.safe_eq :
+    body.rotatedPast.safeFn (repairs.uncurried, repairOne.uncurried, answered.uncurried, mayChangeFrom.uncurried, newestOwnCopy.uncurried, chooseKeysCopy.uncurried, chooseVaultCopy.uncurried, byRank.uncurried, listed.uncurried, ()) (repairs.safety, repairOne.safety, answered.safety, mayChangeFrom.safety, newestOwnCopy.safety, chooseKeysCopy.safety, chooseVaultCopy.safety, byRank.safety, listed.safety, ()) = rotatedPast.safety := by
   kernel_rfl
 
-theorem denote_eq : typed.denote = («rotatedPast».uncurried, «repairs».uncurried, «repairOne».uncurried, «answered».uncurried, «mayChangeFrom».uncurried, «newestOwnCopy».uncurried, «chooseKeysCopy».uncurried, «chooseVaultCopy».uncurried, «byRank».uncurried, «listed».uncurried, ()) :=
-  (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «listed».body_eq) «byRank».body_eq) «chooseVaultCopy».body_eq) «chooseKeysCopy».body_eq) «newestOwnCopy».body_eq) «mayChangeFrom».body_eq) «answered».body_eq) «repairOne».body_eq) «repairs».body_eq) «rotatedPast».body_eq)
+theorem denote_eq : typed.denote = (rotatedPast.uncurried, repairs.uncurried, repairOne.uncurried, answered.uncurried, mayChangeFrom.uncurried, newestOwnCopy.uncurried, chooseKeysCopy.uncurried, chooseVaultCopy.uncurried, byRank.uncurried, listed.uncurried, ()) :=
+  (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl listed.body_eq) byRank.body_eq) chooseVaultCopy.body_eq) chooseKeysCopy.body_eq) newestOwnCopy.body_eq) mayChangeFrom.body_eq) answered.body_eq) repairOne.body_eq) repairs.body_eq) rotatedPast.body_eq)
 
-theorem safety_eq : typed.safety = («rotatedPast».safety, «repairs».safety, «repairOne».safety, «answered».safety, «mayChangeFrom».safety, «newestOwnCopy».safety, «chooseKeysCopy».safety, «chooseVaultCopy».safety, «byRank».safety, «listed».safety, ()) :=
-  (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «listed».body_eq) «byRank».body_eq) «chooseVaultCopy».body_eq) «chooseKeysCopy».body_eq) «newestOwnCopy».body_eq) «mayChangeFrom».body_eq) «answered».body_eq) «repairOne».body_eq) «repairs».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «listed».body_eq) «byRank».body_eq) «chooseVaultCopy».body_eq) «chooseKeysCopy».body_eq) «newestOwnCopy».body_eq) «mayChangeFrom».body_eq) «answered».body_eq) «repairOne».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «listed».body_eq) «byRank».body_eq) «chooseVaultCopy».body_eq) «chooseKeysCopy».body_eq) «newestOwnCopy».body_eq) «mayChangeFrom».body_eq) «answered».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «listed».body_eq) «byRank».body_eq) «chooseVaultCopy».body_eq) «chooseKeysCopy».body_eq) «newestOwnCopy».body_eq) «mayChangeFrom».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «listed».body_eq) «byRank».body_eq) «chooseVaultCopy».body_eq) «chooseKeysCopy».body_eq) «newestOwnCopy».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «listed».body_eq) «byRank».body_eq) «chooseVaultCopy».body_eq) «chooseKeysCopy».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «listed».body_eq) «byRank».body_eq) «chooseVaultCopy».body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons rfl «listed».body_eq) «byRank».body_eq) (TProgram.safety_cons (TProgram.denote_cons rfl «listed».body_eq) (TProgram.safety_cons rfl rfl «listed».safe_eq) «byRank».safe_eq) «chooseVaultCopy».safe_eq) «chooseKeysCopy».safe_eq) «newestOwnCopy».safe_eq) «mayChangeFrom».safe_eq) «answered».safe_eq) «repairOne».safe_eq) «repairs».safe_eq) «rotatedPast».safe_eq)
+theorem safety_eq : typed.safety = (rotatedPast.safety, repairs.safety, repairOne.safety, answered.safety, mayChangeFrom.safety, newestOwnCopy.safety, chooseKeysCopy.safety, chooseVaultCopy.safety, byRank.safety, listed.safety, ()) :=
+  (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl listed.body_eq) byRank.body_eq) chooseVaultCopy.body_eq) chooseKeysCopy.body_eq) newestOwnCopy.body_eq) mayChangeFrom.body_eq) answered.body_eq) repairOne.body_eq) repairs.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl listed.body_eq) byRank.body_eq) chooseVaultCopy.body_eq) chooseKeysCopy.body_eq) newestOwnCopy.body_eq) mayChangeFrom.body_eq) answered.body_eq) repairOne.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl listed.body_eq) byRank.body_eq) chooseVaultCopy.body_eq) chooseKeysCopy.body_eq) newestOwnCopy.body_eq) mayChangeFrom.body_eq) answered.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl listed.body_eq) byRank.body_eq) chooseVaultCopy.body_eq) chooseKeysCopy.body_eq) newestOwnCopy.body_eq) mayChangeFrom.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl listed.body_eq) byRank.body_eq) chooseVaultCopy.body_eq) chooseKeysCopy.body_eq) newestOwnCopy.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl listed.body_eq) byRank.body_eq) chooseVaultCopy.body_eq) chooseKeysCopy.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl listed.body_eq) byRank.body_eq) chooseVaultCopy.body_eq) (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons rfl listed.body_eq) byRank.body_eq) (TProgram.safety_cons (TProgram.denote_cons rfl listed.body_eq) (TProgram.safety_cons rfl rfl listed.safe_eq) byRank.safe_eq) chooseVaultCopy.safe_eq) chooseKeysCopy.safe_eq) newestOwnCopy.safe_eq) mayChangeFrom.safe_eq) answered.safe_eq) repairOne.safe_eq) repairs.safe_eq) rotatedPast.safe_eq)
 
 /-! ## Source theorems -/
 
 /-- Every run of `listed` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «listed».source («kid» : Option JSString) («list» : Option (List JSString)) (vs' : List JSValue)
-    (args' : ArgsRep sig.«listed».params vs' («kid», «list», ())) :
+theorem listed.source (kid : Option JSString) (list : Option (List JSString)) (vs' : List JSValue)
+    (args' : ArgsRep sig.listed.params vs' (kid, list, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "listed" vs') (.ok w') ∧
-      Ty.Rep .bool w' («listed» «kid» «list») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "listed" sig.«listed») rfl («kid», «list», ()) vs' args' rfl
+      Ty.Rep .bool w' (listed kid list) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there (.there .here))))))))) : FVar sigs "listed" sig.listed) rfl (kid, list, ()) vs' args' rfl
 
 /-- Every run of `byRank` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «byRank».source («a» : «Candidate») («b» : «Candidate») (vs' : List JSValue)
-    (args' : ArgsRep sig.«byRank».params vs' («a», «b», ())) :
+theorem byRank.source (a : Candidate) (b : Candidate) (vs' : List JSValue)
+    (args' : ArgsRep sig.byRank.params vs' (a, b, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "byRank" vs') (.ok w') ∧
-      Ty.Rep .number w' («byRank» «a» «b») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) : FVar sigs "byRank" sig.«byRank») rfl («a», «b», ()) vs' args' rfl
+      Ty.Rep .number w' (byRank a b) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there (.there .here)))))))) : FVar sigs "byRank" sig.byRank) rfl (a, b, ()) vs' args' rfl
 
 /-- Every run of `chooseVaultCopy` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «chooseVaultCopy».source («facts» : List «CopyFact») («floor» : Option «Floor») (vs' : List JSValue)
-    (args' : ArgsRep sig.«chooseVaultCopy».params vs' («facts», «floor», ()))
-    (safe' : «chooseVaultCopy».safe «facts» «floor» = true) :
+theorem chooseVaultCopy.source (facts : List CopyFact) (floor : Option Floor) (vs' : List JSValue)
+    (args' : ArgsRep sig.chooseVaultCopy.params vs' (facts, floor, ()))
+    (safe' : chooseVaultCopy.safe facts floor = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "chooseVaultCopy" vs') (.ok w') ∧
-      Ty.Rep ty.«Choice» w' («chooseVaultCopy» «facts» «floor») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there .here))))))) : FVar sigs "chooseVaultCopy" sig.«chooseVaultCopy») rfl («facts», «floor», ()) vs' args' safe'
+      Ty.Rep ty.Choice w' (chooseVaultCopy facts floor) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there (.there .here))))))) : FVar sigs "chooseVaultCopy" sig.chooseVaultCopy) rfl (facts, floor, ()) vs' args' safe'
 
 /-- Every run of `chooseKeysCopy` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «chooseKeysCopy».source («facts» : List «CopyFact») (vs' : List JSValue)
-    (args' : ArgsRep sig.«chooseKeysCopy».params vs' («facts», ())) :
+theorem chooseKeysCopy.source (facts : List CopyFact) (vs' : List JSValue)
+    (args' : ArgsRep sig.chooseKeysCopy.params vs' (facts, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "chooseKeysCopy" vs') (.ok w') ∧
-      Ty.Rep (.option .null ty.«KeysChoice») w' («chooseKeysCopy» «facts») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "chooseKeysCopy" sig.«chooseKeysCopy») rfl («facts», ()) vs' args' rfl
+      Ty.Rep (.option .null ty.KeysChoice) w' (chooseKeysCopy facts) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there (.there .here)))))) : FVar sigs "chooseKeysCopy" sig.chooseKeysCopy) rfl (facts, ()) vs' args' rfl
 
 /-- Every run of `newestOwnCopy` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «newestOwnCopy».source («own» : Int) («stamps» : List (Option Int)) (vs' : List JSValue)
-    (args' : ArgsRep sig.«newestOwnCopy».params vs' («own», «stamps», ())) :
+theorem newestOwnCopy.source (own : Int) (stamps : List (Option Int)) (vs' : List JSValue)
+    (args' : ArgsRep sig.newestOwnCopy.params vs' (own, stamps, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "newestOwnCopy" vs') (.ok w') ∧
-      Ty.Rep .number w' («newestOwnCopy» «own» «stamps») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "newestOwnCopy" sig.«newestOwnCopy») rfl («own», «stamps», ()) vs' args' rfl
+      Ty.Rep .number w' (newestOwnCopy own stamps) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there (.there .here))))) : FVar sigs "newestOwnCopy" sig.newestOwnCopy) rfl (own, stamps, ()) vs' args' rfl
 
 /-- Every run of `mayChangeFrom` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «mayChangeFrom».source («written» : Int) («floorWritten» : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.«mayChangeFrom».params vs' («written», «floorWritten», ())) :
+theorem mayChangeFrom.source (written : Int) (floorWritten : Int) (vs' : List JSValue)
+    (args' : ArgsRep sig.mayChangeFrom.params vs' (written, floorWritten, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "mayChangeFrom" vs') (.ok w') ∧
-      Ty.Rep .bool w' («mayChangeFrom» «written» «floorWritten») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "mayChangeFrom" sig.«mayChangeFrom») rfl («written», «floorWritten», ()) vs' args' rfl
+      Ty.Rep .bool w' (mayChangeFrom written floorWritten) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there (.there .here)))) : FVar sigs "mayChangeFrom" sig.mayChangeFrom) rfl (written, floorWritten, ()) vs' args' rfl
 
 /-- Every run of `answered` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «answered».source («c» : «StoredCopy») (vs' : List JSValue)
-    (args' : ArgsRep sig.«answered».params vs' («c», ())) :
+theorem answered.source (c : StoredCopy) (vs' : List JSValue)
+    (args' : ArgsRep sig.answered.params vs' (c, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "answered" vs') (.ok w') ∧
-      Ty.Rep .bool w' («answered» «c») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "answered" sig.«answered») rfl («c», ()) vs' args' rfl
+      Ty.Rep .bool w' (answered c) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "answered" sig.answered) rfl (c, ()) vs' args' rfl
 
 /-- Every run of `repairOne` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «repairOne».source («c» : «StoredCopy») («own» : Int) («allAnswered» : Bool) (vs' : List JSValue)
-    (args' : ArgsRep sig.«repairOne».params vs' («c», «own», «allAnswered», ())) :
+theorem repairOne.source (c : StoredCopy) (own : Int) (allAnswered : Bool) (vs' : List JSValue)
+    (args' : ArgsRep sig.repairOne.params vs' (c, own, allAnswered, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "repairOne" vs') (.ok w') ∧
-      Ty.Rep .bool w' («repairOne» «c» «own» «allAnswered») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "repairOne" sig.«repairOne») rfl («c», «own», «allAnswered», ()) vs' args' rfl
+      Ty.Rep .bool w' (repairOne c own allAnswered) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "repairOne" sig.repairOne) rfl (c, own, allAnswered, ()) vs' args' rfl
 
 /-- Every run of `repairs` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «repairs».source («copies» : List «StoredCopy») («own» : Int) («ctx» : «RepairContext») (vs' : List JSValue)
-    (args' : ArgsRep sig.«repairs».params vs' («copies», «own», «ctx», ())) :
+theorem repairs.source (copies : List StoredCopy) (own : Int) (ctx : RepairContext) (vs' : List JSValue)
+    (args' : ArgsRep sig.repairs.params vs' (copies, own, ctx, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "repairs" vs') (.ok w') ∧
-      Ty.Rep (.array .bool) w' («repairs» «copies» «own» «ctx») :=
-  source_of erased wf denote_eq safety_eq ((.there .here) : FVar sigs "repairs" sig.«repairs») rfl («copies», «own», «ctx», ()) vs' args' rfl
+      Ty.Rep (.array .bool) w' (repairs copies own ctx) :=
+  source_of erased wf denote_eq safety_eq ((.there .here) : FVar sigs "repairs" sig.repairs) rfl (copies, own, ctx, ()) vs' args' rfl
 
 /-- Every run of `rotatedPast` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «rotatedPast».source («copySeeds» : List JSString) («ownSeeds» : List JSString) (vs' : List JSValue)
-    (args' : ArgsRep sig.«rotatedPast».params vs' («copySeeds», «ownSeeds», ())) :
+theorem rotatedPast.source (copySeeds : List JSString) (ownSeeds : List JSString) (vs' : List JSValue)
+    (args' : ArgsRep sig.rotatedPast.params vs' (copySeeds, ownSeeds, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "rotatedPast" vs') (.ok w') ∧
-      Ty.Rep .bool w' («rotatedPast» «copySeeds» «ownSeeds») :=
-  source_of erased wf denote_eq safety_eq (.here : FVar sigs "rotatedPast" sig.«rotatedPast») rfl («copySeeds», «ownSeeds», ()) vs' args' rfl
+      Ty.Rep .bool w' (rotatedPast copySeeds ownSeeds) :=
+  source_of erased wf denote_eq safety_eq (.here : FVar sigs "rotatedPast" sig.rotatedPast) rfl (copySeeds, ownSeeds, ()) vs' args' rfl
 
 end Tests.Generated.Trust
