@@ -1030,14 +1030,14 @@ def put («this» : Registers) (ref : JSString) (p : JSString) (e : Placed) : Re
 
 /-- The inputs on which `put` stays within what the model covers. -/
 def put.safe («this» : Registers) (ref : JSString) (p : JSString) (e : Placed) : Bool :=
-  let after2' := fun («this», ref, p, e, ()) =>
+  let after2' := fun «this» =>
     let «this» : Registers := { «this» with placed := Ariadne.mapPut «this».placed (key ref p) e }
     true
   if !((Ariadne.mapGet «this».placed (key ref p)).isSome) then
     Ariadne.consistent (Ariadne.signs byString ((providersOf «this» ref) ++ ([p]))) && (let «this» : Registers := { «this» with providers := Ariadne.mapPut «this».providers ref (Ariadne.sortedBy byString ((providersOf «this» ref) ++ ([p]))) }
-    after2' («this», ref, p, e, ()))
+    after2' «this»)
   else
-    after2' («this», ref, p, e, ())
+    after2' «this»
 
 def dropMarkBefore («this» : Registers) (ref : JSString) (p : JSString) (u : Option JSString) : Registers :=
   match u with
@@ -1085,22 +1085,22 @@ def place.safe («this» : Registers) (ref : JSString) (p : JSString) (placed : 
   let u : Option JSString := if placed then seen else some (newest seen stamp)
   let «this» : Registers := dropMarkBefore «this» ref p u
   if !(newer (match cur with | none => none | some cur => some cur.s) stamp) then
-    let after4' := fun _ =>
+    let after4' := fun «this» =>
       true
     if !placed then
       let «this» : Registers := noteUnplace «this» ref p (newest seen stamp)
-      after4' (u, seen, cur, «this», ref, p, placed, cls, stamp, «at», ())
+      after4' «this»
     else
-      after4' (u, seen, cur, «this», ref, p, placed, cls, stamp, «at», ())
+      after4' «this»
   else
-    let after4' := fun _ =>
+    let after4' := fun «this» =>
       true
     if placed then
       put.safe «this» ref p (Placed.mk p cls «at» stamp false u) && (let «this» : Registers := put «this» ref p (Placed.mk p cls «at» stamp false u)
-      after4' (u, seen, cur, «this», ref, p, placed, cls, stamp, «at», ()))
+      after4' «this»)
     else
       put.safe «this» ref p (Placed.mk p (js "") «at» stamp true u) && (let «this» : Registers := put «this» ref p (Placed.mk p (js "") «at» stamp true u)
-      after4' (u, seen, cur, «this», ref, p, placed, cls, stamp, «at», ()))
+      after4' «this»)
 
 def mark («this» : Registers) (ref : JSString) (p : JSString) (on : Bool) (reason : Option JSString) (stamp : JSString) («at» : Int) : Registers :=
   let placed : Option Placed := Ariadne.mapGet «this».placed (key ref p)
@@ -1176,17 +1176,17 @@ def track («this» : Registers) (p : JSString) (month : JSString) (device : JSS
 def track.safe («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (total : Bool) : Bool :=
   let cur : Option Period := Ariadne.mapGet «this».periods (key p month)
   let devices : List JSString := match cur with | none => [] | some cur => cur.devices
-  let after2' := fun _ =>
+  let after2' := fun «this» =>
     true
   if total && (!(devices.any (· == device))) then
     Ariadne.consistent (Ariadne.signs byString (devices ++ ([device]))) && (let «this» : Registers := { «this» with periods := Ariadne.mapPut «this».periods (key p month) (Period.mk p month (Ariadne.sortedBy byString (devices ++ ([device])))) }
-    after2' (devices, cur, «this», p, month, device, total, ()))
+    after2' «this»)
   else
     if !((Ariadne.mapGet «this».periods (key p month)).isSome) then
       let «this» : Registers := { «this» with periods := Ariadne.mapPut «this».periods (key p month) (Period.mk p month devices) }
-      after2' (devices, cur, «this», p, month, device, total, ())
+      after2' «this»
     else
-      after2' (devices, cur, «this», p, month, device, total, ())
+      after2' «this»
 
 def total («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (c : Counters) : Registers :=
   let cur : Option Total := Ariadne.mapGet «this».totals (key (key p month) device)
@@ -1249,17 +1249,17 @@ def usageOf.safe («this» : Registers) (p : JSString) (month : JSString) : Bool
   | none =>
     true
   | some period =>
-    Ariadne.forIn period.devices (fun d next4' exit4' (period, out, inc, «this», p, month, ()) =>
+    Ariadne.forIn period.devices (fun d next4' exit4' out =>
       let t : Option Total := Ariadne.mapGet «this».totals (key (key p month) d)
       match t with
       | none =>
-        next4' (period, out, inc, «this», p, month, ())
+        next4' out
       | some t =>
         sum.safe out t.c && (let out : Counters := sum out t.c
-        next4' (period, out, inc, «this», p, month, ())))
-      (fun _ =>
+        next4' out))
+      (fun out =>
       true)
-      (period, out, inc, «this», p, month, ())
+      out
 
 def usageList («this» : Registers) : List Increments :=
   List.map (fun x => (Increments.mk x.p x.month (usageOf «this» x.p x.month))) ((«this».periods.map Prod.snd) ++ ([]))

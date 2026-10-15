@@ -167,22 +167,22 @@ def balance (entries : List Entry) : Int :=
 /-- The inputs on which `balance` stays within what the model covers. -/
 def balance.safe (entries : List Entry) : Bool :=
   let total : Int := (0 : Int)
-  Ariadne.forIn entries (fun e next2' exit2' (total, entries, ()) =>
+  Ariadne.forIn entries (fun e next2' exit2' total =>
     match e with
     | Entry.credit e =>
       Ariadne.inRange (total + e) && (let total : Int := total + e
-      next2' (total, entries, ()))
+      next2' total)
     | Entry.debit e =>
-      let after6' := fun (_, total, entries, ()) =>
-        next2' (total, entries, ())
+      let after6' := fun total =>
+        next2' total
       if decide (e ≤ total) then
         Ariadne.inRange (total - e) && (let total : Int := total - e
-        after6' (e, total, entries, ()))
+        after6' total)
       else
-        after6' (e, total, entries, ()))
-    (fun _ =>
+        after6' total)
+    (fun total =>
     true)
-    (total, entries, ())
+    total
 
 def «new Accounts»  : Accounts :=
   (Accounts.mk ([] : List (JSString × Int)) ([] : List (JSString × Bool)))

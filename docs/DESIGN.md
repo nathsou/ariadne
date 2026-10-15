@@ -191,14 +191,20 @@ inductive TStmts (Φ : Sigs) : Ctx → Ty → Type  -- statement lists; declarat
     carries only the variables it assigns (`TStmts.writes`), as a flat tuple, and a branch that cannot
     `return`, `break` or `continue` gives that tuple as its value (`let (a, b) := if c then … else …`).
     The proof is a frame theorem (`denoteD_frame`): a statement calls its continuations only on
-    environments that agree with its own outside what it writes.
+    environments that agree with its own outside what it writes. The safety condition has the same step
+    (`TStmts.safeR`, `TStmts.safeFn_eq_R`, by `safe_frame`): its loops carry the assigned variables, and
+    after branches it goes on through a join point, `Ctx.join m ρ after ρ' = after (merge ρ (proj ρ'))`,
+    which reads the variables the branches leave alone from before them (as a narrowed variable was).
+    Its loops stay `forIn`: a safety condition is checked once per input, and a fold would need its own
+    proof.
   - **Named types** (`TStmts.denoteRS`, `Ariadne/Typed/Named.lean`; `TStmts.denoteFn_eq_S`,
     `Ariadne/Proof/Named.lean`). Types denote through a file's `names : Names` (`Ty.den`): a record or
     union listed there is the Lean type given with it, a structure or an inductive, and `isos : Isos names`
     says how its values correspond to the record's fields or the union's variants (`view`, `make`, case
     analysis, with the laws that make them inverse). The proof is a logical relation: `Ty.conv` maps a
     value of the file's types to the denotation's, and every expression, statement and safety condition
-    commutes with it (`TExpr.conv_denS`, `TStmts.denoteRS_conv`, `TStmts.safeS_eq`). The general
+    commutes with it (`TExpr.conv_denS`, `TStmts.denoteRS_conv`, `TStmts.safeS_eq`, the last relating
+    `safeS` to `safeR`). The general
     theorem's conclusions carry over through `Ty.RepS`, representation over the file's types, which is
     `Ty.Rep` after `Ty.conv` (`Ty.repS_eq`).
 

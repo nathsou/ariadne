@@ -34,7 +34,7 @@ theorem midpoint_between (lo hi : Int) (h : lo < hi) : lo ≤ midpoint lo hi ∧
   simp only [midpoint, fdiv_two]
   omega
 
-/-- The search's loop state: the variables it assigns, `(hi, lo)`. -/
+/-- The search's loop state, in its definition and in its safety condition: the variables it assigns, `(hi, lo)`. -/
 abbrev State := Int × Int
 
 /-- What stays true across iterations: the bounds stay inside the array. -/
@@ -44,16 +44,6 @@ def Bounds (xs : List Int) : State → Prop
 /-- The distance between the bounds, which every iteration shrinks. -/
 def distance : State → Nat
   | (hi, lo) => (hi - lo).toNat
-
-/-- The safety condition's loop state: the whole environment, `(hi, lo, xs, target)`. -/
-abbrev Env := Int × Int × List Int × Int × Unit
-
-/-- `Bounds` in the safety condition's loop. -/
-def EnvBounds (xs : List Int) (target : Int) : Env → Prop
-  | (hi, lo, ys, t, ()) => xs = ys ∧ target = t ∧ 0 ≤ lo ∧ lo ≤ hi ∧ hi ≤ xs.length
-
-def envDistance : Env → Nat
-  | (hi, lo, _) => (hi - lo).toNat
 
 /-- An invariant of a `while` loop that ends: like `whileDo_inv`, but the loop is left only where its
 condition fails (for a body without `break`), since a measure that every iteration decreases keeps it
@@ -81,9 +71,9 @@ overflows: the distance `hi - lo` shrinks at every iteration. -/
 theorem indexOf_safe (xs : List Int) (target : Int) (h : xs.length < 2 ^ 53) :
     indexOf.safe xs target = true := by
   unfold indexOf.safe
-  refine whileSafe_of_measure (EnvBounds xs target) envDistance ?_ (fun _ _ => rfl) _
-    ⟨rfl, rfl, Int.le_refl 0, by simp, Int.le_refl _⟩ (by simp [envDistance, loopBound]; omega)
-  rintro next ex ⟨hi, lo, ys, t, ⟨⟩⟩ ⟨rfl, rfl, h0, hl, hh⟩ hc hn -
+  refine whileSafe_of_measure (Bounds xs) distance ?_ (fun _ _ => rfl) _
+    ⟨Int.le_refl 0, by simp, Int.le_refl _⟩ (by simp [distance, loopBound]; omega)
+  rintro next ex ⟨hi, lo⟩ ⟨h0, hl, hh⟩ hc hn -
   simp only [decide_eq_true_eq] at hc
   have hs := midpoint_safe lo hi h0 (Int.le_of_lt hc) (by simp only [inRange, Nat.ble_eq]; omega)
   have hm := midpoint_between lo hi hc
@@ -95,8 +85,8 @@ theorem indexOf_safe (xs : List Int) (target : Int) (h : xs.length < 2 ^ 53) :
     · split
       · have hr : inRange (midpoint lo hi + 1) = true := by simp only [inRange, Nat.ble_eq]; omega
         rw [hr, Bool.true_and]
-        exact hn _ ⟨rfl, rfl, by omega, by omega, hh⟩ (by simp only [envDistance]; omega)
-      · exact hn _ ⟨rfl, rfl, h0, by omega, by omega⟩ (by simp only [envDistance]; omega)
+        exact hn _ ⟨by omega, by omega, hh⟩ (by simp only [distance]; omega)
+      · exact hn _ ⟨h0, by omega, by omega⟩ (by simp only [distance]; omega)
 
 /-- **Soundness.** A returned index other than -1 holds the target. -/
 theorem indexOf_found (xs : List Int) (target : Int) (i : Int) (h : indexOf xs target = i) (hi : i ≠ -1) :

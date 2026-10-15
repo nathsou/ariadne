@@ -963,6 +963,312 @@ hold only the assigned variables) is `denoteFn`, which the general theorem is ab
 theorem TStmts.denoteFn_eq_R {Γ : Ctx} {τ : Ty} (body : TStmts Φ Γ τ) : body.denoteFn fs = body.denoteRFn fs :=
   (TStmts.denoteFn_eq body).trans (funext fun ρ => TStmts.denoteD_eq_R body _ _ ρ)
 
+
+/-! ## The safety condition with states -/
+
+section
+variable {ss : Φ.safety}
+
+theorem whileSafe_frame {Γ : Ctx} {m : Mask} {ρ : Γ.denote} (cond : Γ.denote → Bool)
+    (step : (Γ.denote → Bool) → (Γ.denote → Bool) → Γ.denote → Bool)
+    (hs : ∀ n n' e e' ρ', Agree Γ m ρ ρ' → (∀ ρ'', Agree Γ m ρ ρ'' → n ρ'' = n' ρ'' ∧ e ρ'' = e' ρ'') →
+      step n e ρ' = step n' e' ρ')
+    (E E' : Γ.denote → Bool) (hE : ∀ ρ', Agree Γ m ρ ρ' → E ρ' = E' ρ') (ρ' : Γ.denote) (h : Agree Γ m ρ ρ') :
+    whileSafe cond step E ρ' = whileSafe cond step E' ρ' := by
+  rw [whileSafe_def, whileSafe_def]
+  exact whileIn_frame cond step hs E E' _ _ hE (fun _ _ => rfl) _ ρ' h
+
+mutual
+  /-- **Frame** for safety conditions: a statement list calls its continuations only on environments that
+  agree with the current one outside the variables it assigns. -/
+  theorem TStmts.safe_frame : ∀ {Γ : Ctx} {τ : Ty} (st : TStmts Φ Γ τ) {m : Mask}, Mask.incl st.writes m →
+      ∀ (k k' : K Γ Bool) (ρ : Γ.denote), KAgree m ρ k k' → st.safe fs ss k ρ = st.safe fs ss k' ρ
+    | _, _, .nil, _, _, _, _, ρ, hk => (hk ρ (Agree.refl _ _ ρ)).1
+    | _, _, .brk _, _, _, _, _, ρ, hk => (hk ρ (Agree.refl _ _ ρ)).2.1
+    | _, _, .cont _, _, _, _, _, ρ, hk => (hk ρ (Agree.refl _ _ ρ)).2.2
+    | _, _, .ret _ _, _, _, _, _, _, _ => rfl
+    | _, _, .retVoid _ _, _, _, _, _, _, _ => rfl
+    | _, _, .const _ e rest, m, hm, k, k', ρ, hk => by
+      simp only [TStmts.safe]; congr 1
+      exact TStmts.safe_frame rest (Mask.incl_cons hm) _ _ _ fun σ' h => hk σ'.2 (Agree.of_cons h)
+    | _, _, .let_ _ e rest, m, hm, k, k', ρ, hk => by
+      simp only [TStmts.safe]; congr 1
+      exact TStmts.safe_frame rest (Mask.incl_cons hm) _ _ _ fun σ' h => hk σ'.2 (Agree.of_cons h)
+    | _, _, .assign v e rest, m, hm, k, k', ρ, hk => by
+      simp only [TStmts.safe]; congr 1
+      exact TStmts.safe_frame rest (Mask.or_incl_right hm) k k' _
+        (KAgree.of_agree (Var.agree_set v (Mask.or_incl_left hm) ρ _) hk)
+    | _, _, .stateSet v _ _ _ _ rest, m, hm, k, k', ρ, hk => by
+      simp only [TStmts.safe]; congr 1
+      exact TStmts.safe_frame rest (Mask.or_incl_right hm) k k' _
+        (KAgree.of_agree (Var.agree_set v (Mask.or_incl_left hm) ρ _) hk)
+    | _, _, .stateDelete v _ _ _ rest, m, hm, k, k', ρ, hk => by
+      simp only [TStmts.safe]; congr 1
+      exact TStmts.safe_frame rest (Mask.or_incl_right hm) k k' _
+        (KAgree.of_agree (Var.agree_set v (Mask.or_incl_left hm) ρ _) hk)
+    | _, _, .callVoid _ v _ rest, m, hm, k, k', ρ, hk => by
+      simp only [TStmts.safe]; congr 1
+      exact TStmts.safe_frame rest (Mask.or_incl_right hm) k k' _
+        (KAgree.of_agree (Var.agree_set v (Mask.or_incl_left hm) ρ _) hk)
+    | _, _, .ite c yes no rest, m, hm, k, k', ρ, hk => by
+      have hrest : ∀ ρ', Agree _ m ρ ρ' → rest.safe fs ss k ρ' = rest.safe fs ss k' ρ' := fun ρ' h =>
+        TStmts.safe_frame rest (Mask.or_incl_right (Mask.or_incl_right hm)) k k' ρ' (KAgree.of_agree h hk)
+      have hk' : KAgree m ρ { k with normal := rest.safe fs ss k } { k' with normal := rest.safe fs ss k' } :=
+        fun ρ' h => ⟨hrest ρ' h, (hk ρ' h).2⟩
+      simp only [TStmts.safe]; congr 1
+      split
+      · exact TStmts.safe_frame yes (Mask.or_incl_left hm) _ _ ρ hk'
+      · exact TStmts.safe_frame no (Mask.or_incl_left (Mask.or_incl_right hm)) _ _ ρ hk'
+    | _, _, .block body rest, m, hm, k, k', ρ, hk => by
+      have hrest : ∀ ρ', Agree _ m ρ ρ' → rest.safe fs ss k ρ' = rest.safe fs ss k' ρ' := fun ρ' h =>
+        TStmts.safe_frame rest (Mask.or_incl_right hm) k k' ρ' (KAgree.of_agree h hk)
+      simp only [TStmts.safe]
+      exact TStmts.safe_frame body (Mask.or_incl_left hm) _ _ ρ fun ρ' h => ⟨hrest ρ' h, (hk ρ' h).2⟩
+    | _, _, .ifNull v _ yes no rest, m, hm, k, k', ρ, hk => by
+      have hrest : ∀ ρ', Agree _ m ρ ρ' → rest.safe fs ss k ρ' = rest.safe fs ss k' ρ' := fun ρ' h =>
+        TStmts.safe_frame rest (Mask.or_incl_right (Mask.or_incl_right hm)) k k' ρ' (KAgree.of_agree h hk)
+      rcases hv : v.get ρ with _ | y <;> simp only [TStmts.safe, hv]
+      · exact TStmts.safe_frame yes (Mask.or_incl_left hm) _ _ ρ fun ρ' h => ⟨hrest ρ' h, (hk ρ' h).2⟩
+      · exact TStmts.safe_frame no (Mask.or_incl_left (Mask.or_incl_right hm)) _ _ _ fun ρn h =>
+          have hw := Var.agree_widen v some ρ y ρn h hv.symm
+          ⟨hrest _ hw, (hk _ hw).2⟩
+    | _, _, .ifNotNull v _ yes no rest, m, hm, k, k', ρ, hk => by
+      have hrest : ∀ ρ', Agree _ m ρ ρ' → rest.safe fs ss k ρ' = rest.safe fs ss k' ρ' := fun ρ' h =>
+        TStmts.safe_frame rest (Mask.or_incl_right (Mask.or_incl_right hm)) k k' ρ' (KAgree.of_agree h hk)
+      rcases hv : v.get ρ with _ | y <;> simp only [TStmts.safe, hv]
+      · exact TStmts.safe_frame no (Mask.or_incl_left (Mask.or_incl_right hm)) _ _ ρ
+          fun ρ' h => ⟨hrest ρ' h, (hk ρ' h).2⟩
+      · exact TStmts.safe_frame yes (Mask.or_incl_left hm) _ _ _ fun ρn h =>
+          have hw := Var.agree_widen v some ρ y ρn h hv.symm
+          ⟨hrest _ hw, (hk _ hw).2⟩
+    | _, _, .ifNullExit v _ yes rest, m, hm, k, k', ρ, hk => by
+      rcases hv : v.get ρ with _ | y <;> simp only [TStmts.safe, hv]
+      · exact TStmts.safe_frame yes (Mask.or_incl_left hm) k k' ρ hk
+      · exact TStmts.safe_frame rest (Mask.or_incl_right hm) _ _ _ fun ρn h =>
+          hk _ (Var.agree_widen v some ρ y ρn h hv.symm)
+    | _, _, .switchG v _ arms rest, m, hm, k, k', ρ, hk => by
+      have hrest : ∀ ρ', Agree _ m ρ ρ' → rest.safe fs ss k ρ' = rest.safe fs ss k' ρ' := fun ρ' h =>
+        TStmts.safe_frame rest (Mask.or_incl_right hm) k k' ρ' (KAgree.of_agree h hk)
+      obtain ⟨t, fds, i, y, hu⟩ := VIdx.decomp _ (v.get ρ)
+      simp only [TStmts.safe, hu, Variants.elim_inj]
+      exact TArms.safe_frame arms (Mask.or_incl_left hm) _ _ ρ i y _ _ hu
+        (fun ρ' h => ⟨hrest ρ' h, hrest ρ' h, (hk ρ' h).2.2⟩) (hrest ρ (Agree.refl _ _ ρ))
+    | _, _, .forOf _ a body rest, m, hm, k, k', ρ, hk => by
+      have hb : Mask.incl body.writes (true :: m) := Mask.incl_cons (Mask.or_incl_left hm)
+      have hrest : ∀ ρ', Agree _ m ρ ρ' → rest.safe fs ss k ρ' = rest.safe fs ss k' ρ' := fun ρ' h =>
+        TStmts.safe_frame rest (Mask.or_incl_right hm) k k' ρ' (KAgree.of_agree h hk)
+      simp only [TStmts.safe]; congr 1
+      exact forIn_frame _ (fun y n n' e e' ρ' h hne => TStmts.safe_frame body hb _ _ (y, ρ') fun σ' h' =>
+          have h2 := Agree.trans h (Agree.of_cons h')
+          ⟨(hne _ h2).1, (hne _ h2).2, (hne _ h2).1⟩) _ _ hrest _ ρ (Agree.refl _ _ ρ)
+    | _, _, .forEntries _ _ a body rest, m, hm, k, k', ρ, hk => by
+      have hb : Mask.incl body.writes (true :: true :: m) := Mask.incl_cons₂ (Mask.or_incl_left hm)
+      have hrest : ∀ ρ', Agree _ m ρ ρ' → rest.safe fs ss k ρ' = rest.safe fs ss k' ρ' := fun ρ' h =>
+        TStmts.safe_frame rest (Mask.or_incl_right hm) k k' ρ' (KAgree.of_agree h hk)
+      simp only [TStmts.safe]; congr 1
+      exact forIn_frame _ (fun (p : _ × Nat) n n' e e' ρ' h hne =>
+          TStmts.safe_frame body hb _ _ (p.1, (p.2 : Int), ρ') fun σ' h' =>
+            have h2 := Agree.trans h (Agree.of_cons₂ h')
+            ⟨(hne _ h2).1, (hne _ h2).2, (hne _ h2).1⟩) _ _ hrest _ ρ (Agree.refl _ _ ρ)
+    | _, _, .forRange _ v body rest, m, hm, k, k', ρ, hk => by
+      have hb : Mask.incl body.writes (true :: m) := Mask.incl_cons (Mask.or_incl_left hm)
+      have hrest : ∀ ρ', Agree _ m ρ ρ' → rest.safe fs ss k ρ' = rest.safe fs ss k' ρ' := fun ρ' h =>
+        TStmts.safe_frame rest (Mask.or_incl_right hm) k k' ρ' (KAgree.of_agree h hk)
+      simp only [TStmts.safe]
+      exact forIn_frame _ (fun j n n' e e' ρ' h hne => TStmts.safe_frame body hb _ _ (j, ρ') fun σ' h' =>
+          have h2 := Agree.trans h (Agree.of_cons h')
+          ⟨(hne _ h2).1, (hne _ h2).2, (hne _ h2).1⟩) _ _ hrest _ ρ (Agree.refl _ _ ρ)
+    | _, _, .whileLoop c body rest, m, hm, k, k', ρ, hk => by
+      have hb : Mask.incl body.writes m := Mask.or_incl_left hm
+      have hrest : ∀ ρ', Agree _ m ρ ρ' → rest.safe fs ss k ρ' = rest.safe fs ss k' ρ' := fun ρ' h =>
+        TStmts.safe_frame rest (Mask.or_incl_right hm) k k' ρ' (KAgree.of_agree h hk)
+      simp only [TStmts.safe]
+      exact whileSafe_frame _ _ (fun n n' e e' ρ' h hne => TStmts.safe_frame body hb _ _ ρ' fun σ' h' =>
+          have h2 := Agree.trans h h'
+          ⟨(hne _ h2).1, (hne _ h2).2, (hne _ h2).1⟩) _ _ hrest ρ (Agree.refl _ _ ρ)
+
+  theorem TArms.firstSafe_frame {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} :
+      ∀ (arms : TArms Φ Γ τ v) {m : Mask}, Mask.incl arms.writes m →
+      ∀ (k k' : K Γ Bool) (ρ : Γ.denote), KAgree m ρ k k' → arms.firstSafe fs ss k ρ = arms.firstSafe fs ss k' ρ
+    | .nil, _, _, _, _, ρ, hk => (hk ρ (Agree.refl _ _ ρ)).1
+    | .empty _ rest, _, hm, k, k', ρ, hk => TArms.firstSafe_frame rest hm k k' ρ hk
+    | .wide _ body _, _, hm, k, k', ρ, hk => TStmts.safe_frame body (Mask.or_incl_left hm) k k' ρ hk
+    | .narrow .., _, _, _, _, ρ, hk => (hk ρ (Agree.refl _ _ ρ)).1
+
+  theorem TArms.safe_frame {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} :
+      ∀ (arms : TArms Φ Γ τ v) {m : Mask}, Mask.incl arms.writes m →
+      ∀ (k k' : K Γ Bool) (ρ : Γ.denote) {t : TagLit} {fds : Fields} (i : VIdx vs0 t fds) (y : fds.denote) (d d' : Bool),
+      v.get ρ = i.inj y → KAgree m ρ k k' → d = d' → arms.safe fs ss k ρ i y d = arms.safe fs ss k' ρ i y d'
+    | .nil, _, _, _, _, _, _, _, _, _, _, _, _, _, hd => hd
+    | .empty l rest, _, hm, k, k', ρ, _, _, i, y, d, d', hv, hk, hd => by
+      have hf := TArms.firstSafe_frame rest hm k k' ρ hk
+      simp only [TArms.safe, hf]
+      split
+      · rfl
+      · refine TArms.safe_frame rest hm k k' ρ i y _ _ hv hk ?_
+        split
+        · rfl
+        · exact hd
+    | .wide l body rest, _, hm, k, k', ρ, _, _, i, y, d, d', hv, hk, hd => by
+      have hf := TStmts.safe_frame body (Mask.or_incl_left hm) k k' ρ hk
+      simp only [TArms.safe, hf]
+      split
+      · rfl
+      · refine TArms.safe_frame rest (Mask.or_incl_right hm) k k' ρ i y _ _ hv hk ?_
+        split
+        · rfl
+        · exact hd
+    | .narrow i' body rest, _, hm, k, k', ρ, _, _, i, y, d, d', hv, hk, hd => by
+      rcases hp : i'.proj (i.inj y) with _ | y' <;> simp only [TArms.safe, hp]
+      · exact TArms.safe_frame rest (Mask.or_incl_right hm) k k' ρ i y d d' hv hk hd
+      · exact TStmts.safe_frame body (Mask.or_incl_left hm) _ _ _ fun ρn h =>
+          hk _ (Var.agree_widen v (fun (z : _ × _) => i'.inj z.2) ρ ((), y') ρn h
+            ((VIdx.inj_of_proj i' _ y' hp).trans hv.symm))
+end
+
+/-- Continuations through the join point of branches assigning `m` agree with the continuation itself. -/
+theorem KAgree.join {Γ : Ctx} {m : Mask} {ρ : Γ.denote} (k : K Γ Bool) (after : Γ.denote → Bool) :
+    KAgree m ρ { k with normal := after } { k with normal := Γ.join m ρ after } :=
+  fun ρ' h => ⟨by simp only [Ctx.join, Ctx.merge_proj Γ m ρ ρ' h], rfl, rfl⟩
+
+mutual
+  theorem TStmts.safe_eq_R : ∀ {Γ : Ctx} {τ : Ty} (st : TStmts Φ Γ τ) (k : K Γ Bool) (ρ : Γ.denote),
+      st.safe fs ss k ρ = st.safeR fs ss k ρ
+    | _, _, .nil, _, _ => rfl
+    | _, _, .brk _, _, _ => rfl
+    | _, _, .cont _, _, _ => rfl
+    | _, _, .ret _ _, _, _ => rfl
+    | _, _, .retVoid _ _, _, _ => rfl
+    | _, _, .const _ e rest, k, ρ => by
+      simp only [TStmts.safe, TStmts.safeR, TStmts.safe_eq_R rest]
+    | _, _, .let_ _ e rest, k, ρ => by
+      simp only [TStmts.safe, TStmts.safeR, TStmts.safe_eq_R rest]
+    | _, _, .assign _ e rest, k, ρ => by
+      simp only [TStmts.safe, TStmts.safeR, TStmts.safe_eq_R rest]
+    | _, _, .stateSet _ _ _ _ _ rest, k, ρ => by
+      simp only [TStmts.safe, TStmts.safeR, TStmts.safe_eq_R rest]
+    | _, _, .stateDelete _ _ _ _ rest, k, ρ => by
+      simp only [TStmts.safe, TStmts.safeR, TStmts.safe_eq_R rest]
+    | _, _, .callVoid _ _ _ rest, k, ρ => by
+      simp only [TStmts.safe, TStmts.safeR, TStmts.safe_eq_R rest]
+    | _, _, .block body rest, k, ρ => by
+      have e : rest.safeR fs ss k = rest.safe fs ss k := funext fun ρ' => (TStmts.safe_eq_R rest k ρ').symm
+      simp only [TStmts.safe, TStmts.safeR, e]
+      exact TStmts.safe_eq_R body _ ρ
+    | _, _, .ite c yes no rest, k, ρ => by
+      have e : rest.safeR fs ss k = rest.safe fs ss k := funext fun ρ' => (TStmts.safe_eq_R rest k ρ').symm
+      have ey : ∀ k' ρ', yes.safeR fs ss k' ρ' = yes.safe fs ss k' ρ' := fun k' ρ' => (TStmts.safe_eq_R yes k' ρ').symm
+      have en : ∀ k' ρ', no.safeR fs ss k' ρ' = no.safe fs ss k' ρ' := fun k' ρ' => (TStmts.safe_eq_R no k' ρ').symm
+      simp only [TStmts.safe, TStmts.safeR, e, ey, en]
+      congr 1
+      split
+      · exact TStmts.safe_frame yes (fun i h => by rw [Mask.getD_or, h]; rfl) _ _ ρ (KAgree.join k _)
+      · exact TStmts.safe_frame no (fun i h => by rw [Mask.getD_or, h, Bool.or_true]) _ _ ρ (KAgree.join k _)
+    | _, _, .ifNull v _ yes no rest, k, ρ => by
+      have e : rest.safeR fs ss k = rest.safe fs ss k := funext fun ρ' => (TStmts.safe_eq_R rest k ρ').symm
+      have ey : ∀ k' ρ', yes.safeR fs ss k' ρ' = yes.safe fs ss k' ρ' := fun k' ρ' => (TStmts.safe_eq_R yes k' ρ').symm
+      have en : ∀ k' ρ', no.safeR fs ss k' ρ' = no.safe fs ss k' ρ' := fun k' ρ' => (TStmts.safe_eq_R no k' ρ').symm
+      rcases hv : v.get ρ with _ | y <;> simp only [TStmts.safe, TStmts.safeR, hv, e, ey, en]
+      · exact TStmts.safe_frame yes (fun i h => by rw [Mask.getD_or, h]; rfl) _ _ ρ (KAgree.join k _)
+      · exact TStmts.safe_frame no (m := Mask.or yes.writes no.writes)
+          (fun i h => by rw [Mask.getD_or, h, Bool.or_true]) _ _ _ fun σ' h =>
+          have hw := Var.agree_widen v some ρ y σ' h hv.symm
+          ⟨by simp only [K.map, Function.comp, Ctx.join, Ctx.merge_proj _ _ ρ _ hw], rfl, rfl⟩
+    | _, _, .ifNotNull v _ yes no rest, k, ρ => by
+      have e : rest.safeR fs ss k = rest.safe fs ss k := funext fun ρ' => (TStmts.safe_eq_R rest k ρ').symm
+      have ey : ∀ k' ρ', yes.safeR fs ss k' ρ' = yes.safe fs ss k' ρ' := fun k' ρ' => (TStmts.safe_eq_R yes k' ρ').symm
+      have en : ∀ k' ρ', no.safeR fs ss k' ρ' = no.safe fs ss k' ρ' := fun k' ρ' => (TStmts.safe_eq_R no k' ρ').symm
+      rcases hv : v.get ρ with _ | y <;> simp only [TStmts.safe, TStmts.safeR, hv, e, ey, en]
+      · exact TStmts.safe_frame no (fun i h => by rw [Mask.getD_or, h, Bool.or_true]) _ _ ρ (KAgree.join k _)
+      · exact TStmts.safe_frame yes (m := Mask.or yes.writes no.writes)
+          (fun i h => by rw [Mask.getD_or, h]; rfl) _ _ _ fun σ' h =>
+          have hw := Var.agree_widen v some ρ y σ' h hv.symm
+          ⟨by simp only [K.map, Function.comp, Ctx.join, Ctx.merge_proj _ _ ρ _ hw], rfl, rfl⟩
+    | _, _, .ifNullExit v _ yes rest, k, ρ => by
+      rcases hv : v.get ρ with _ | y <;> simp only [TStmts.safe, TStmts.safeR, hv]
+      · exact TStmts.safe_eq_R yes k ρ
+      · exact TStmts.safe_eq_R rest _ _
+    | _, _, .switchG v _ arms rest, k, ρ => by
+      have e : rest.safeR fs ss k = rest.safe fs ss k := funext fun ρ' => (TStmts.safe_eq_R rest k ρ').symm
+      have ea : ∀ k' ρ' {t fds} (i : VIdx _ t fds) y d, arms.safeR fs ss k' ρ' i y d = arms.safe fs ss k' ρ' i y d :=
+        @fun k' ρ' _ _ i y d => (TArms.safe_eq_R arms k' ρ' i y d).symm
+      obtain ⟨t, fds, i, y, hu⟩ := VIdx.decomp _ (v.get ρ)
+      simp only [TStmts.safe, TStmts.safeR, hu, Variants.elim_inj, e, ea]
+      exact TArms.safe_frame arms (Mask.incl_refl _) _ _ ρ i y _ _ hu
+        (fun ρ' h => ⟨by simp only [Ctx.join, Ctx.merge_proj _ _ ρ ρ' h],
+          by simp only [Ctx.join, Ctx.merge_proj _ _ ρ ρ' h], rfl⟩) rfl
+    | _, _, .forOf _ a body rest, k, ρ => by
+      have e : rest.safeR fs ss k = rest.safe fs ss k := funext fun ρ' => (TStmts.safe_eq_R rest k ρ').symm
+      have eb : ∀ k' ρ', body.safeR fs ss k' ρ' = body.safe fs ss k' ρ' := fun k' ρ' => (TStmts.safe_eq_R body k' ρ').symm
+      have hb : Mask.incl body.writes (true :: body.writes.tail) := Mask.incl_cons (Mask.incl_refl _)
+      simp only [TStmts.safe, TStmts.safeR, e, eb]
+      congr 1
+      exact forIn_proj _ _ ρ _ (fun y n n' e e' ρ' h hne => TStmts.safe_frame body hb _ _ (y, ρ') fun σ' h' =>
+          have h2 := Agree.trans h (Agree.of_cons h')
+          ⟨(hne _ h2).1, (hne _ h2).2, (hne _ h2).1⟩) _ _ ρ (Agree.refl _ _ ρ)
+    | _, _, .forEntries _ _ a body rest, k, ρ => by
+      have e : rest.safeR fs ss k = rest.safe fs ss k := funext fun ρ' => (TStmts.safe_eq_R rest k ρ').symm
+      have eb : ∀ k' ρ', body.safeR fs ss k' ρ' = body.safe fs ss k' ρ' := fun k' ρ' => (TStmts.safe_eq_R body k' ρ').symm
+      have hb : Mask.incl body.writes (true :: true :: body.writes.tail.tail) := Mask.incl_cons₂ (Mask.incl_refl _)
+      simp only [TStmts.safe, TStmts.safeR, e, eb]
+      congr 1
+      exact forIn_proj _ _ ρ _ (fun (p : _ × Nat) n n' e e' ρ' h hne =>
+          TStmts.safe_frame body hb _ _ (p.1, (p.2 : Int), ρ') fun σ' h' =>
+            have h2 := Agree.trans h (Agree.of_cons₂ h')
+            ⟨(hne _ h2).1, (hne _ h2).2, (hne _ h2).1⟩) _ _ ρ (Agree.refl _ _ ρ)
+    | _, _, .forRange _ v body rest, k, ρ => by
+      have e : rest.safeR fs ss k = rest.safe fs ss k := funext fun ρ' => (TStmts.safe_eq_R rest k ρ').symm
+      have eb : ∀ k' ρ', body.safeR fs ss k' ρ' = body.safe fs ss k' ρ' := fun k' ρ' => (TStmts.safe_eq_R body k' ρ').symm
+      have hb : Mask.incl body.writes (true :: body.writes.tail) := Mask.incl_cons (Mask.incl_refl _)
+      simp only [TStmts.safe, TStmts.safeR, e, eb]
+      exact forIn_proj _ _ ρ _ (fun j n n' e e' ρ' h hne => TStmts.safe_frame body hb _ _ (j, ρ') fun σ' h' =>
+          have h2 := Agree.trans h (Agree.of_cons h')
+          ⟨(hne _ h2).1, (hne _ h2).2, (hne _ h2).1⟩) _ _ ρ (Agree.refl _ _ ρ)
+    | _, _, .whileLoop c body rest, k, ρ => by
+      have e : rest.safeR fs ss k = rest.safe fs ss k := funext fun ρ' => (TStmts.safe_eq_R rest k ρ').symm
+      have eb : ∀ k' ρ', body.safeR fs ss k' ρ' = body.safe fs ss k' ρ' := fun k' ρ' => (TStmts.safe_eq_R body k' ρ').symm
+      simp only [TStmts.safe, TStmts.safeR, e, eb]
+      rw [whileSafe_def, whileSafe_def]
+      exact whileIn_proj _ _ ρ _ _ (fun n n' e e' ρ' h hne =>
+          TStmts.safe_frame body (Mask.incl_refl _) _ _ ρ' fun σ' h' =>
+            have h2 := Agree.trans h h'
+            ⟨(hne _ h2).1, (hne _ h2).2, (hne _ h2).1⟩) _ _ _ ρ (Agree.refl _ _ ρ)
+
+  theorem TArms.firstSafe_eq_R {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} :
+      ∀ (arms : TArms Φ Γ τ v) (k : K Γ Bool) (ρ : Γ.denote), arms.firstSafe fs ss k ρ = arms.firstSafeR fs ss k ρ
+    | .nil, _, _ => rfl
+    | .empty _ rest, k, ρ => TArms.firstSafe_eq_R rest k ρ
+    | .wide _ body _, k, ρ => TStmts.safe_eq_R body k ρ
+    | .narrow .., _, _ => rfl
+
+  theorem TArms.safe_eq_R {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)} :
+      ∀ (arms : TArms Φ Γ τ v) (k : K Γ Bool) (ρ : Γ.denote) {t : TagLit} {fds : Fields}
+      (i : VIdx vs0 t fds) (y : fds.denote) (d : Bool), arms.safe fs ss k ρ i y d = arms.safeR fs ss k ρ i y d
+    | .nil, _, _, _, _, _, _, _ => rfl
+    | .empty l rest, k, ρ, t, _, i, y, d => by
+      simp only [TArms.safe, TArms.safeR, TArms.firstSafe_eq_R rest k ρ]
+      split
+      · rfl
+      · exact TArms.safe_eq_R rest k ρ i y _
+    | .wide l body rest, k, ρ, t, _, i, y, d => by
+      simp only [TArms.safe, TArms.safeR, TStmts.safe_eq_R body k ρ]
+      split
+      · rfl
+      · exact TArms.safe_eq_R rest k ρ i y _
+    | .narrow i' body rest, k, ρ, t, _, i, y, d => by
+      rcases hp : i'.proj (i.inj y) with _ | y' <;> simp only [TArms.safe, TArms.safeR, hp]
+      · exact TArms.safe_eq_R rest k ρ i y d
+      · exact TStmts.safe_eq_R body _ _
+end
+
+/-- **The safety condition with states is the safety condition**: for every function body. -/
+theorem TStmts.safeFn_eq_R {Γ : Ctx} {τ : Ty} (body : TStmts Φ Γ τ) : body.safeFn fs ss = body.safeRFn fs ss := by
+  unfold TStmts.safeFn TStmts.safeRFn
+  split
+  · rfl
+  · exact funext fun ρ => TStmts.safe_eq_R body _ ρ
+
+end
 end
 
 end Ariadne

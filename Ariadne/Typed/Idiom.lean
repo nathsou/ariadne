@@ -275,4 +275,102 @@ end
 def TStmts.denoteRFn (fs : Φ.denote) (body : TStmts Φ Γ τ) : Γ.denote → τ.denote :=
   body.denoteR fs id (K.all fun _ => τ.default)
 
+/-! ## The safety condition with states
+
+`TStmts.safeR` is `TStmts.safe` with a loop threading only the variables its body assigns, and with the
+statements after an `if`, a null test or a `switch` a join point taking only the variables its branches
+assign. `TStmts.safe_eq_R` (`Ariadne/Proof/Idiom.lean`) proves them equal. -/
+
+/-- The continuation after branches that assign `m`: `then` from the state the branches leave. -/
+abbrev Ctx.join (Γ : Ctx) (m : Mask) (ρ : Γ.denote) (after : Γ.denote → Bool) (ρ' : Γ.denote) : Bool :=
+  after (Γ.merge m ρ (Γ.proj m ρ'))
+
+mutual
+  def TStmts.safeR (fs : Φ.denote) (ss : Φ.safety) : TStmts Φ Γ τ → K Γ Bool → Γ.denote → Bool
+    | .nil, k, ρ => k.normal ρ
+    | .const _ e rest, k, ρ => (e.trivial || e.safe fs ss ρ) && rest.safeR fs ss (k.map Prod.snd) (e.denote fs ρ, ρ)
+    | .ret e _, _, ρ => e.trivial || e.safe fs ss ρ
+    | .ite c yes no rest, k, ρ => (c.trivial || c.safe fs ss ρ) &&
+      (if c.denote fs ρ then
+        yes.safeR fs ss { k with normal := Γ.join (Mask.or yes.writes no.writes) ρ (rest.safeR fs ss k) } ρ
+       else no.safeR fs ss { k with normal := Γ.join (Mask.or yes.writes no.writes) ρ (rest.safeR fs ss k) } ρ)
+    | .block body rest, k, ρ => body.safeR fs ss { k with normal := rest.safeR fs ss k } ρ
+    | .brk _, k, ρ => k.brk ρ
+    | .let_ _ e rest, k, ρ => (e.trivial || e.safe fs ss ρ) && rest.safeR fs ss (k.map Prod.snd) (e.denote fs ρ, ρ)
+    | .assign v e rest, k, ρ => (e.trivial || e.safe fs ss ρ) && rest.safeR fs ss k (v.set ρ (e.denote fs ρ))
+    | .cont _, k, ρ => k.cont ρ
+    | .forOf _ a body rest, k, ρ => (a.trivial || a.safe fs ss ρ) &&
+      forIn (a.denote fs ρ) (fun y next exit s =>
+          body.safeR fs ss (K.map Prod.snd ⟨next ∘ Γ.proj body.writes.tail, exit ∘ Γ.proj body.writes.tail,
+            next ∘ Γ.proj body.writes.tail⟩) (y, Γ.merge body.writes.tail ρ s))
+        (fun s => rest.safeR fs ss k (Γ.merge body.writes.tail ρ s)) (Γ.proj body.writes.tail ρ)
+    | .forEntries _ _ a body rest, k, ρ => (a.trivial || a.safe fs ss ρ) &&
+      forIn (a.denote fs ρ).zipIdx (fun p next exit s =>
+          body.safeR fs ss (K.map Prod.snd (K.map Prod.snd ⟨next ∘ Γ.proj body.writes.tail.tail,
+            exit ∘ Γ.proj body.writes.tail.tail, next ∘ Γ.proj body.writes.tail.tail⟩))
+            (p.1, (p.2 : Int), Γ.merge body.writes.tail.tail ρ s))
+        (fun s => rest.safeR fs ss k (Γ.merge body.writes.tail.tail ρ s)) (Γ.proj body.writes.tail.tail ρ)
+    | .ifNull v _ yes no rest, k, ρ => match v.get ρ with
+      | none => yes.safeR fs ss { k with normal := Γ.join (Mask.or yes.writes no.writes) ρ (rest.safeR fs ss k) } ρ
+      | some y => no.safeR fs ss
+          (K.map (v.widen some) { k with normal := Γ.join (Mask.or yes.writes no.writes) ρ (rest.safeR fs ss k) })
+          (v.narrowVal ρ y)
+    | .ifNullExit v _ yes rest, k, ρ => match v.get ρ with
+      | none => yes.safeR fs ss k ρ
+      | some y => rest.safeR fs ss (k.map (v.widen some)) (v.narrowVal ρ y)
+    | .ifNotNull v _ yes no rest, k, ρ => match v.get ρ with
+      | some y => yes.safeR fs ss
+          (K.map (v.widen some) { k with normal := Γ.join (Mask.or yes.writes no.writes) ρ (rest.safeR fs ss k) })
+          (v.narrowVal ρ y)
+      | none => no.safeR fs ss { k with normal := Γ.join (Mask.or yes.writes no.writes) ρ (rest.safeR fs ss k) } ρ
+    | .switchG v _ arms rest, k, ρ =>
+      Variants.elim _ (v.get ρ) fun i y =>
+        arms.safeR fs ss { k with
+            normal := Γ.join arms.writes ρ (rest.safeR fs ss k), brk := Γ.join arms.writes ρ (rest.safeR fs ss k) }
+          ρ i y (rest.safeR fs ss k ρ)
+    | .forRange _ v body rest, k, ρ =>
+      forIn (range (v.get ρ)) (fun j next exit s =>
+          body.safeR fs ss (K.map Prod.snd ⟨next ∘ Γ.proj body.writes.tail, exit ∘ Γ.proj body.writes.tail,
+            next ∘ Γ.proj body.writes.tail⟩) (j, Γ.merge body.writes.tail ρ s))
+        (fun s => rest.safeR fs ss k (Γ.merge body.writes.tail ρ s)) (Γ.proj body.writes.tail ρ)
+    | .whileLoop c body rest, k, ρ =>
+      whileSafe (fun s => c.denote fs (Γ.merge body.writes ρ s))
+        (fun next exit s => body.safeR fs ss ⟨next ∘ Γ.proj body.writes, exit ∘ Γ.proj body.writes,
+          next ∘ Γ.proj body.writes⟩ (Γ.merge body.writes ρ s))
+        (fun s => rest.safeR fs ss k (Γ.merge body.writes ρ s)) (Γ.proj body.writes ρ)
+    | .stateSet v i _ key e rest, k, ρ => andT key.trivial (key.safe fs ss ρ) e.trivial (e.safe fs ss ρ) &&
+      rest.safeR fs ss k (v.set ρ (i.set (v.get ρ) (mapPut (i.get (v.get ρ)) (key.denote fs ρ) (e.denote fs ρ))))
+    | .stateDelete v i _ key rest, k, ρ => (key.trivial || key.safe fs ss ρ) &&
+      rest.safeR fs ss k (v.set ρ (i.set (v.get ρ) (mapDel (i.get (v.get ρ)) (key.denote fs ρ))))
+    | .callVoid (t := t) fn v args rest, k, ρ =>
+      andT args.trivial (args.safe fs ss ρ) t (fn.safe ss (v.get ρ, args.denote fs ρ)) &&
+        rest.safeR fs ss k (v.set ρ (fn.get fs (v.get ρ, args.denote fs ρ)))
+    | .retVoid _ _, _, _ => true
+
+  def TArms.firstSafeR {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)}
+      (fs : Φ.denote) (ss : Φ.safety) : TArms Φ Γ τ v → K Γ Bool → Γ.denote → Bool
+    | .nil, k, ρ => k.normal ρ
+    | .empty _ rest, k, ρ => rest.firstSafeR fs ss k ρ
+    | .wide _ body _, k, ρ => body.safeR fs ss k ρ
+    | .narrow _ _ _, k, ρ => k.normal ρ
+
+  def TArms.safeR {Φ : Sigs} {Γ : Ctx} {τ : Ty} {x key : String} {vs0 : Variants} {v : Var Γ x (.union key vs0)}
+      {t : TagLit} {fds : Fields} (fs : Φ.denote) (ss : Φ.safety) :
+      TArms Φ Γ τ v → K Γ Bool → Γ.denote → VIdx vs0 t fds → fds.denote → Bool → Bool
+    | .nil, _, _, _, _, d => d
+    | .empty l rest, k, ρ, i, y, d =>
+      if l = some t then rest.firstSafeR fs ss k ρ
+      else rest.safeR fs ss k ρ i y (if l = none then rest.firstSafeR fs ss k ρ else d)
+    | .wide l body rest, k, ρ, i, y, d =>
+      if l = some t then body.safeR fs ss k ρ
+      else rest.safeR fs ss k ρ i y (if l = none then body.safeR fs ss k ρ else d)
+    | .narrow i' body rest, k, ρ, i, y, d => match i'.proj (i.inj y) with
+      | some y' => body.safeR fs ss (k.map (v.widen fun z => i'.inj z.2)) (v.narrowVal ρ ((), y'))
+      | none => rest.safeR fs ss k ρ i y d
+end
+
+/-- A function body's safety condition with states. -/
+def TStmts.safeRFn (fs : Φ.denote) (ss : Φ.safety) (body : TStmts Φ Γ τ) : Γ.denote → Bool :=
+  if body.trivial then fun _ => true else body.safeR fs ss (K.all fun _ => true)
+
 end Ariadne

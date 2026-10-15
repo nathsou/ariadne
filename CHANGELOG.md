@@ -41,9 +41,18 @@ Ariadne follows semantic versioning: a minor version may change generated files 
   inductives). Generated files, and proofs about records, unions and loops, change (a minor version).
 - Frame lemmas name the method and the field's accessor (`frame_of_fnS`), so checking them never unfolds
   a readable body.
+- Safety conditions (`f.safe`) carry the same states as the definitions: a loop's state is the variables
+  it assigns, not the whole environment, and branches that go on join through `let after := fun state =>
+  …`, used only when what follows reads a variable the branches narrowed. A loop invariant proven for a
+  definition applies to its safety condition as it is. Checked against `TStmts.safeS`, a copy of
+  `TStmts.safeR` (`Ariadne/Typed/Idiom.lean`), proven equal to `safe` once (`TStmts.safeFn_eq_R`).
+  Proofs that destructured the environment in a safety condition's loop take the state instead.
 
 **Proof library**
 - `fold_inv`: an invariant of `Ariadne.fold`, with each item's membership in the list.
+- `fold_prefix`: an invariant of `Ariadne.fold` over the items seen so far (`P pre s`), each step given
+  where its item sits (`items = pre ++ y :: post`); `fold_eq`: a fold equals `g items` when each step
+  extends `g` by one item.
 - `ariadne_safe [facts]`: proves a safety condition that holds on every input given the facts.
 
 **Language**

@@ -157,8 +157,8 @@ def indexOf (xs : List Int) (target : Int) : Int :=
 def indexOf.safe (xs : List Int) (target : Int) : Bool :=
   let lo : Int := (0 : Int)
   let hi : Int := (xs.length : Int)
-  Ariadne.whileSafe (fun (hi, lo, _, _, ()) => decide (lo < hi))
-    (fun next2' exit2' (hi, lo, xs, target, ()) =>
+  Ariadne.whileSafe (fun (hi, lo) => decide (lo < hi))
+    (fun next2' exit2' (hi, lo) =>
     midpoint.safe lo hi && (let mid : Int := midpoint lo hi
     let v : Option Int := Ariadne.listIndex xs mid
     match v with
@@ -170,13 +170,13 @@ def indexOf.safe (xs : List Int) (target : Int) : Bool :=
       else
         if decide (v < target) then
           Ariadne.inRange (mid + (1 : Int)) && (let lo : Int := mid + (1 : Int)
-          next2' (hi, lo, xs, target, ()))
+          next2' (hi, lo))
         else
           let hi : Int := mid
-          next2' (hi, lo, xs, target, ())))
-    (fun _ =>
+          next2' (hi, lo)))
+    (fun (hi, lo) =>
     true)
-    (hi, lo, xs, target, ())
+    (hi, lo)
 
 /-! ## Denotation
 

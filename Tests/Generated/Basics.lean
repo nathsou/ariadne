@@ -249,13 +249,13 @@ def bump (n : Int) (times : Int) : Int :=
 def bump.safe (n : Int) (times : Int) : Bool :=
   ((5 : Int) != 0 && Ariadne.inRange (Int.tmod times (5 : Int))) && (let k : Int := Int.tmod times (5 : Int)
   let x : Int := n
-  Ariadne.forIn (Ariadne.range k) (fun i next2' exit2' (x, k, n, times, ()) =>
+  Ariadne.forIn (Ariadne.range k) (fun i next2' exit2' x =>
     let x : Int := x + 1
-    next2' (x, k, n, times, ()))
-    (fun (x, _, _, _, ()) =>
+    next2' x)
+    (fun x =>
     let x : Int := x - 1
     true)
-    (x, k, n, times, ()))
+    x)
 
 /-! ## Denotation
 

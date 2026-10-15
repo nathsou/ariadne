@@ -788,16 +788,20 @@ mutual
       | none => rest.denoteRS fs r k ρ i y d
 end
 
+/-- The join point after branches assigning `m`: the continuation on the branch's state. -/
+abbrev Ctx.joinS (Γ : Ctx) (m : Mask) (ρ : Γ.denS N) (after : Γ.denS N → Bool) (ρ' : Γ.denS N) : Bool :=
+  after (Ctx.mergeS N Γ m ρ (Ctx.projS N Γ m ρ'))
+
 mutual
-  /-- `TStmts.safe` over the program's named types. -/
+  /-- `TStmts.safeR` over the program's named types. -/
   def TStmts.safeS (fs : Φ.denS N) (ss : Φ.safetyS N) : TStmts Φ Γ τ → KS N Γ Bool → Γ.denS N → Bool
     | .nil, k, ρ => k.normal ρ
     | .const _ e rest, k, ρ => (e.trivial || TExpr.safeS N I fs ss e ρ) &&
       rest.safeS fs ss (k.map Prod.snd) (TExpr.denS N I fs e ρ, ρ)
     | .ret e _, _, ρ => e.trivial || TExpr.safeS N I fs ss e ρ
     | .ite c yes no rest, k, ρ => (c.trivial || TExpr.safeS N I fs ss c ρ) &&
-      (if TExpr.denS N I fs c ρ then yes.safeS fs ss { k with normal := rest.safeS fs ss k } ρ
-       else no.safeS fs ss { k with normal := rest.safeS fs ss k } ρ)
+      (if TExpr.denS N I fs c ρ then yes.safeS fs ss { k with normal := Ctx.joinS N Γ (Mask.or yes.writes no.writes) ρ (rest.safeS fs ss k) } ρ
+       else no.safeS fs ss { k with normal := Ctx.joinS N Γ (Mask.or yes.writes no.writes) ρ (rest.safeS fs ss k) } ρ)
     | .block body rest, k, ρ => body.safeS fs ss { k with normal := rest.safeS fs ss k } ρ
     | .brk _, k, ρ => k.brk ρ
     | .let_ _ e rest, k, ρ => (e.trivial || TExpr.safeS N I fs ss e ρ) &&
@@ -806,32 +810,42 @@ mutual
       rest.safeS fs ss k (Var.setS N v ρ (TExpr.denS N I fs e ρ))
     | .cont _, k, ρ => k.cont ρ
     | .forOf _ a body rest, k, ρ => (a.trivial || TExpr.safeS N I fs ss a ρ) &&
-      forIn (TExpr.denS N I fs a ρ) (fun y next exit ρ' => body.safeS fs ss (KS.map Prod.snd ⟨next, exit, next⟩) (y, ρ'))
-        (rest.safeS fs ss k) ρ
+      forIn (TExpr.denS N I fs a ρ) (fun y next exit s =>
+          body.safeS fs ss (KS.map Prod.snd ⟨next ∘ Ctx.projS N Γ body.writes.tail, exit ∘ Ctx.projS N Γ body.writes.tail,
+            next ∘ Ctx.projS N Γ body.writes.tail⟩) (y, Ctx.mergeS N Γ body.writes.tail ρ s))
+        (fun s => rest.safeS fs ss k (Ctx.mergeS N Γ body.writes.tail ρ s)) (Ctx.projS N Γ body.writes.tail ρ)
     | .forEntries _ _ a body rest, k, ρ => (a.trivial || TExpr.safeS N I fs ss a ρ) &&
-      forIn (TExpr.denS N I fs a ρ).zipIdx (fun p next exit ρ' =>
-          body.safeS fs ss (KS.map Prod.snd (KS.map Prod.snd ⟨next, exit, next⟩)) (p.1, (p.2 : Int), ρ'))
-        (rest.safeS fs ss k) ρ
+      forIn (TExpr.denS N I fs a ρ).zipIdx (fun p next exit s =>
+          body.safeS fs ss (KS.map Prod.snd (KS.map Prod.snd ⟨next ∘ Ctx.projS N Γ body.writes.tail.tail,
+            exit ∘ Ctx.projS N Γ body.writes.tail.tail, next ∘ Ctx.projS N Γ body.writes.tail.tail⟩))
+            (p.1, (p.2 : Int), Ctx.mergeS N Γ body.writes.tail.tail ρ s))
+        (fun s => rest.safeS fs ss k (Ctx.mergeS N Γ body.writes.tail.tail ρ s)) (Ctx.projS N Γ body.writes.tail.tail ρ)
     | .ifNull v _ yes no rest, k, ρ => match Var.getS N v ρ with
-      | none => yes.safeS fs ss { k with normal := rest.safeS fs ss k } ρ
-      | some y => no.safeS fs ss (KS.map (Var.widenS N v some) { k with normal := rest.safeS fs ss k })
+      | none => yes.safeS fs ss { k with normal := Ctx.joinS N Γ (Mask.or yes.writes no.writes) ρ (rest.safeS fs ss k) } ρ
+      | some y => no.safeS fs ss (KS.map (Var.widenS N v some) { k with normal := Ctx.joinS N Γ (Mask.or yes.writes no.writes) ρ (rest.safeS fs ss k) })
           (Var.narrowValS N v ρ y)
     | .ifNullExit v _ yes rest, k, ρ => match Var.getS N v ρ with
       | none => yes.safeS fs ss k ρ
       | some y => rest.safeS fs ss (k.map (Var.widenS N v some)) (Var.narrowValS N v ρ y)
     | .ifNotNull v _ yes no rest, k, ρ => match Var.getS N v ρ with
-      | some y => yes.safeS fs ss (KS.map (Var.widenS N v some) { k with normal := rest.safeS fs ss k })
+      | some y => yes.safeS fs ss (KS.map (Var.widenS N v some) { k with normal := Ctx.joinS N Γ (Mask.or yes.writes no.writes) ρ (rest.safeS fs ss k) })
           (Var.narrowValS N v ρ y)
-      | none => no.safeS fs ss { k with normal := rest.safeS fs ss k } ρ
+      | none => no.safeS fs ss { k with normal := Ctx.joinS N Γ (Mask.or yes.writes no.writes) ρ (rest.safeS fs ss k) } ρ
     | .switchG v _ arms rest, k, ρ =>
       unionElim N I _ (Var.getS N v ρ) fun i y =>
-        arms.safeS fs ss { k with normal := rest.safeS fs ss k, brk := rest.safeS fs ss k } ρ i y (rest.safeS fs ss k ρ)
+        arms.safeS fs ss { k with
+            normal := Ctx.joinS N Γ arms.writes ρ (rest.safeS fs ss k), brk := Ctx.joinS N Γ arms.writes ρ (rest.safeS fs ss k) }
+          ρ i y (rest.safeS fs ss k ρ)
     | .forRange _ v body rest, k, ρ =>
-      forIn (range (Var.getS N v ρ)) (fun j next exit ρ' => body.safeS fs ss (KS.map Prod.snd ⟨next, exit, next⟩) (j, ρ'))
-        (rest.safeS fs ss k) ρ
+      forIn (range (Var.getS N v ρ)) (fun j next exit s =>
+          body.safeS fs ss (KS.map Prod.snd ⟨next ∘ Ctx.projS N Γ body.writes.tail, exit ∘ Ctx.projS N Γ body.writes.tail,
+            next ∘ Ctx.projS N Γ body.writes.tail⟩) (j, Ctx.mergeS N Γ body.writes.tail ρ s))
+        (fun s => rest.safeS fs ss k (Ctx.mergeS N Γ body.writes.tail ρ s)) (Ctx.projS N Γ body.writes.tail ρ)
     | .whileLoop c body rest, k, ρ =>
-      whileSafe (fun ρ' => TExpr.denS N I fs c ρ') (fun next exit ρ' => body.safeS fs ss ⟨next, exit, next⟩ ρ')
-        (rest.safeS fs ss k) ρ
+      whileSafe (fun s => TExpr.denS N I fs c (Ctx.mergeS N Γ body.writes ρ s))
+        (fun next exit s => body.safeS fs ss ⟨next ∘ Ctx.projS N Γ body.writes, exit ∘ Ctx.projS N Γ body.writes,
+          next ∘ Ctx.projS N Γ body.writes⟩ (Ctx.mergeS N Γ body.writes ρ s))
+        (fun s => rest.safeS fs ss k (Ctx.mergeS N Γ body.writes ρ s)) (Ctx.projS N Γ body.writes ρ)
     | .stateSet v i _ key e rest, k, ρ => andT key.trivial (TExpr.safeS N I fs ss key ρ) e.trivial
         (TExpr.safeS N I fs ss e ρ) &&
       rest.safeS fs ss k (Var.setS N v ρ (recSet N I i (Var.getS N v ρ)
