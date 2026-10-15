@@ -6,6 +6,29 @@ Ariadne follows semantic versioning: a minor version may change generated files 
 
 ## Unreleased
 
+**Readable definitions**
+- Names print bare unless Lean needs guillemets (keywords such as `at`, `this`; names that are not
+  identifiers). List operations on a name or field path use dot notation (`xs.length`, `xs.map f`).
+- A loop whose body has no `return` and no `break` of its own reads as a fold, with the body in direct
+  style:
+  ```lean
+  let (total, _, ()) := Ariadne.fold (total, xs, ()) xs (fun (total, xs, ()) x =>
+    let total : Int := total + x
+    (total, xs, ()))
+  ```
+  instead of `forIn` with `next`/`exit` continuations. Other loops are unchanged.
+- How it stays proven: `TStmts.denoteD` (`Ariadne/Typed/Direct.lean`) is the denotation with such loops as
+  folds, and `TStmts.denoteFn_eq` (`Ariadne/Proof/Direct.lean`) proves it equal to `denoteFn` once, for
+  every program. Each file checks its definitions against `denoteDFn` by `rfl` (`f.body_eqD`) and gets
+  `f.body_eq` through the theorem; the general theorem, the source theorems and `trusted.lock` are
+  unchanged. Generated files and proofs about loops change (a minor version).
+- Frame lemmas name the method and the field's accessor (`frame_of_fn`), so checking them never unfolds
+  a readable body.
+
+**Proof library**
+- `fold_inv`: an invariant of `Ariadne.fold`, with each item's membership in the list.
+- `ariadne_safe [facts]`: proves a safety condition that holds on every input given the facts.
+
 **Language**
 - `x++` and `x--` on bigints. Increments are model operators (`inc`, `dec`) rather than `x = x + 1`,
   which a bigint could not be written as.
@@ -14,9 +37,6 @@ Ariadne follows semantic versioning: a minor version may change generated files 
 - `ariadne validators FILE [--out FILE.ts]`: a TypeScript module with a guard per exported function and
   method, `args.f(...)`, true only if the arguments represent `f`'s parameter types, as its source theorem
   assumes. For callers at a boundary (storage, the network). Tested by `scripts/validators.mjs`.
-
-**Proof library**
-- `ariadne_safe [facts]`: proves a safety condition that holds on every input given the facts.
 
 **Trusted base**
 - `trusted.lock`: `UnOp.inc`, `UnOp.dec` and their evaluation.

@@ -66,9 +66,11 @@ that directly, as `freeze_runs` does.
 
 `Quickstart/Proofs.lean`. What helps:
 
-- **Loops**: `forIn_inv` (an invariant), `forIn_prefix` (an invariant over the items seen so far, as in
-  `balance_nonneg`), `forIn_continue` (a loop that never leaves early is a fold); for `while`,
-  `whileDo_inv` and, for its safety condition, `whileSafe_of_measure`.
+- **Loops**: a loop with no `return` and no `break` reads as `Ariadne.fold init items step`, a
+  `List.foldl`; `fold_inv` gives it an invariant (as in `balance_nonneg`). Other loops read as `forIn`:
+  `forIn_inv` (an invariant), `forIn_prefix` (an invariant over the items seen so far), `forIn_continue`
+  (a loop that never leaves early is a fold); for `while`, `whileDo_inv` and, for its safety condition,
+  `whileSafe_of_measure`.
 - **Classes**: the generated `m.keeps.f` lemmas, and `Ariadne/Lib/Map.lean` for the maps
   (`mapGet_mapPut`, …).
 - **Sorting**: `cmp_laws` proves a comparator lawful; then `consistent_of_laws` discharges `toSorted`'s

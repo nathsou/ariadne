@@ -51,7 +51,7 @@ Concluded per file:          every readable def is what the TypeScript function 
 | `Ariadne/Model/Store.lean` | Store model of classes (`runMethodStore`) | **Yes** |
 | `Ariadne/Typed/*` | Types, typed syntax, erasure, denotation, safety conditions, well-formedness | No |
 | `Ariadne/Eqns/*` | Equation lemmas of the typed syntax's large definitions (see Build time) | No |
-| `Ariadne/Proof/*` | The adequacy proof, the store model's agreement with the value model, and frames (which fields a method leaves) | No |
+| `Ariadne/Proof/*` | The adequacy proof, the store model's agreement with the value model, frames (which fields a method leaves), and the direct-style denotation's equality with the denotation | No |
 | `Ariadne/Lib/*` | Lemmas for proofs about readable definitions: loops (invariants, folds), maps, string order, `toSorted` (its consistency conditions, what it returns, and `cmp_laws` for comparators), the `readable` simp set | No |
 | `Ariadne/Kernel.lean` | `kernel_rfl`: closed equations checked by the kernel alone | No |
 | `Ariadne/Audit.lean`, `Audit.lean` | The soundness gate, and its configuration for Ariadne (`trusted.lock`) | No |
@@ -176,6 +176,16 @@ inductive TStmts (Φ : Sigs) : Ctx → Ty → Type  -- statement lists; declarat
   the readable `if c then a else b` definitionally equal to the denotation.
 - Loops denote through one combinator, `forIn items step exit` (a `foldr` building the continuation
   chain). Counted loops iterate over `range n`.
+- `TStmts.denoteD` (`Ariadne/Typed/Direct.lean`) is the same denotation with two differences: its result
+  type is any `R` (a `return` gives `r v`), and a loop whose body is `direct` (no `return` anywhere, no
+  `break` of its own) is a fold, `rest (items.foldl (fun ρ y => body (y, ρ)) ρ)`, with the body ending
+  in the environment itself. `TStmts.denoteFn_eq` (`Ariadne/Proof/Direct.lean`) proves
+  `denoteFn = denoteDFn` once, for every body: the continuation-passing denotation is natural in its
+  result type (`denoteD_nat`), a body without `return` ignores `r` and one without `break` ignores the
+  break continuation, and `forIn` with a step that always continues is a fold. The readable definitions
+  are checked against `denoteD`; the adequacy proof stays about `denote`. This is the pattern for making
+  the readable definitions more idiomatic without trusting the printer: a second denotation closer to
+  the printed Lean, proven equal to the first once.
 - A `while` loop denotes `whileDo cond step exit`: up to `loopBound` (2^64) iterations, leaving after
   that. Its safety condition, `whileSafe`, says that it ends within them, each iteration safe, so
   termination is a proof obligation, met with a measure (`whileSafe_of_measure`). `whileDo` and
@@ -227,7 +237,8 @@ theorem ast_scoped : ast.scoped = true := by decide +kernel
 theorem wf : typed.WF := TProgram.wf_of typed erased bodies_ok ast_scoped
 def f (x : Int) … : Int := …                   -- readable definitions
 def f.safe (x : Int) … : Bool := …             -- safety conditions (when not trivial)
-theorem f.body_eq : body.f.denoteFn (earlier readable functions) = f.uncurried := by kernel_rfl
+theorem f.body_eqD : body.f.denoteDFn (earlier readable functions) = f.uncurried := by kernel_rfl
+theorem f.body_eq : body.f.denoteFn … = f.uncurried := (TStmts.denoteFn_eq _).trans f.body_eqD
 theorem denote_eq : typed.denote = (readable functions) := TProgram.denote_cons …
 theorem f.source (x : Int) … (vs : List JSValue) (args : ArgsRep …) (safe : f.safe x … = true) :
     ∃ w, Converges (fun fuel => run ast fuel "f" vs) (.ok w) ∧ Ty.Rep … w (f x …) := …
@@ -249,15 +260,16 @@ none.
 
 The readable definitions use these names: fields are read and set by name, a `switch` is a `match` on the
 union's constructors that binds the narrowed variable to its payload, and a loop's or a join point's state
-is taken apart by a pattern (`fun (older, notOwner, …, ()) => …`). All of it is definitionally the
-denotation, which is what the per-file `body_eq` checks.
+is taken apart by a pattern (`fun (older, notOwner, …, ()) => …`). A loop that never returns or breaks is
+`Ariadne.fold init items (fun state item => …)`; others are `forIn` with `next` and `exit`. All of it is
+definitionally the direct-style denotation, which is what the per-file `body_eqD` checks.
 
 A class's file also says which fields each method leaves alone:
 
 ```lean
 theorem frames.marks : typed.frames "marks" = [false, true, …] := by decide +kernel
 theorem pack.keeps.marks (this : Registers) … : (pack this …).marks = this.marks :=
-  frame_of … denote_eq frames.marks …
+  frame_of_fn … denote_eq frames.marks … (f := pack.uncurried) rfl (acc := fun r => r.marks) …
 ```
 
 `TProgram.frames g` marks a method that neither sets nor deletes in `this.g` and calls only marked
