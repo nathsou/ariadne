@@ -18,22 +18,17 @@ def amount : Entry → Int
   | .inl (a, ()) | .inr (a, ()) => a
 
 /-- With non-negative amounts, the balance is never negative: a debit larger than the balance is
-refused. The loop's invariant is that the running total is non-negative. -/
+refused. The loop is a fold; its invariant (`fold_inv`) is that the running total is non-negative. -/
 theorem balance_nonneg (entries : List Entry) (h : ∀ e ∈ entries, 0 ≤ amount e) : 0 ≤ balance entries := by
   unfold balance
-  refine forIn_prefix (fun _ (s : Int × List Entry × Unit) => 0 ≤ s.1) (fun r => 0 ≤ r) entries ?_
-    (fun s hs => hs) _ (Int.le_refl 0)
-  rintro pre e post next ex ⟨t, es, ⟨⟩⟩ he ht hn
-  have ha : 0 ≤ amount e := h e (by simp [he])
+  dsimp only
+  refine fold_inv (fun (s : Int × List Entry × Unit) => 0 ≤ s.1) entries ?_ _ (Int.le_refl 0)
+  rintro ⟨t, es, ⟨⟩⟩ e he ht
+  have ha : 0 ≤ amount e := h e he
   dsimp only at ht ⊢
-  rcases e with ⟨a, ⟨⟩⟩ | ⟨a, ⟨⟩⟩
-  · exact hn _ (by simp only [amount] at ha; dsimp only; omega)
-  · dsimp only
-    split
-    · rename_i hd
-      simp only [decide_eq_true_eq] at hd
-      exact hn _ (by dsimp only; omega)
-    · exact hn _ ht
+  rcases e with ⟨a, ⟨⟩⟩ | ⟨a, ⟨⟩⟩ <;> dsimp only
+  · simp only [amount] at ha; omega
+  · by_cases hd : a ≤ t <;> simp [hd] <;> omega
 
 /-- A credit to an account that is not frozen adds the amount to its balance. -/
 theorem credit_adds (a : Accounts) (id : JSString) (n : Int) (hf : mapGet a.frozen id = none) (hn : 0 < n) :

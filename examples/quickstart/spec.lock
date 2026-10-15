@@ -63,29 +63,26 @@ Quickstart.Ledger.ast : Ariadne.Program :=
 Quickstart.Ledger.balance : List Quickstart.Ledger.Entry → Int :=
   fun entries =>
   have total := 0;
-  Ariadne.forIn entries
-    (fun e next2' exit2' x =>
+  match
+    Ariadne.fold (total, entries, ()) entries fun x e =>
       match x with
       | (total, entries, PUnit.unit) =>
         match e with
         | Sum.inl (e, PUnit.unit) =>
           have total := total + e;
           have e := Quickstart.Ledger.Entry.credit e;
-          next2' (total, entries, ())
+          (total, entries, ())
         | Sum.inr (e, PUnit.unit) =>
           have after6' := fun x =>
             match x with
             | ((PUnit.unit, e, PUnit.unit), total, entries, PUnit.unit) =>
               have e := Quickstart.Ledger.Entry.debit e;
-              next2' (total, entries, ());
+              (total, entries, ());
           if Decidable.decide (e ≤ total) = Bool.true then
             have total := total - e;
             after6' (((), e, ()), total, entries, ())
-          else after6' (((), e, ()), total, entries, ()))
-    (fun x =>
-      match x with
-      | (total, fst, PUnit.unit) => total)
-    (total, entries, ())
+          else after6' (((), e, ()), total, entries, ()) with
+  | (total, fst, PUnit.unit) => total
 
 Quickstart.Ledger.credit : Quickstart.Ledger.Accounts → Ariadne.JSString → Int → Quickstart.Ledger.Accounts :=
   fun this id amount =>

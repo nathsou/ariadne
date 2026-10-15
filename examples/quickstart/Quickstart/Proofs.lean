@@ -7,23 +7,18 @@ namespace Quickstart.Proofs
 
 open Ariadne Quickstart.Ledger Quickstart.Spec
 
-/-- The loop's invariant: the running total is non-negative. -/
+/-- The loop is a fold; its invariant (`fold_inv`): the running total is non-negative. -/
 theorem balance_nonneg : Spec.balance_nonneg := by
   intro entries h
   unfold balance
-  refine forIn_prefix (fun _ (s : Int × List Entry × Unit) => 0 ≤ s.1) (fun r => 0 ≤ r) entries ?_
-    (fun s hs => hs) _ (Int.le_refl 0)
-  rintro pre e post next ex ⟨t, es, ⟨⟩⟩ he ht hn
-  have ha : 0 ≤ amount e := h e (by simp [he])
+  dsimp only
+  refine fold_inv (fun (s : Int × List Entry × Unit) => 0 ≤ s.1) entries ?_ _ (Int.le_refl 0)
+  rintro ⟨t, es, ⟨⟩⟩ e he ht
+  have ha : 0 ≤ amount e := h e he
   dsimp only at ht ⊢
-  rcases e with ⟨a, ⟨⟩⟩ | ⟨a, ⟨⟩⟩
-  · exact hn _ (by simp only [amount] at ha; dsimp only; omega)
-  · dsimp only
-    split
-    · rename_i hd
-      simp only [decide_eq_true_eq] at hd
-      exact hn _ (by dsimp only; omega)
-    · exact hn _ ht
+  rcases e with ⟨a, ⟨⟩⟩ | ⟨a, ⟨⟩⟩ <;> dsimp only
+  · simp only [amount] at ha; omega
+  · by_cases hd : a ≤ t <;> simp [hd] <;> omega
 
 /-- The generated frame lemma: `freeze` never writes `balances`. -/
 theorem freeze_keeps_balances : Spec.freeze_keeps_balances :=
