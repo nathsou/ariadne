@@ -37,9 +37,9 @@ noncomputable def ast : Program := [
               .assign "hi" (.var "mid")]],
       .ret (.unary .neg (.lit (.number 1)))] }]
 
-noncomputable def sig.«midpointNaive» : Sig := { name := "midpointNaive", params := [("lo", .number), ("hi", .number)], result := .number, trivial := false }
-noncomputable def sig.«midpoint» : Sig := { name := "midpoint", params := [("lo", .number), ("hi", .number)], result := .number, trivial := false }
-noncomputable def sig.«indexOf» : Sig := { name := "indexOf", params := [("xs", (.array .number)), ("target", .number)], result := .number, trivial := false }
+noncomputable def sig.midpointNaive : Sig := { name := "midpointNaive", params := [("lo", .number), ("hi", .number)], result := .number, trivial := false }
+noncomputable def sig.midpoint : Sig := { name := "midpoint", params := [("lo", .number), ("hi", .number)], result := .number, trivial := false }
+noncomputable def sig.indexOf : Sig := { name := "indexOf", params := [("xs", (.array .number)), ("target", .number)], result := .number, trivial := false }
 
 theorem ne.«hi».«lo» : ("hi" : String) ≠ "lo" := by decide
 theorem ne.«xs».«lo» : ("xs" : String) ≠ "lo" := by decide
@@ -57,17 +57,17 @@ theorem ne.«lo».«mid» : ("lo" : String) ≠ "mid" := by decide
 theorem ne.«hi».«v» : ("hi" : String) ≠ "v" := by decide
 theorem ne.«hi».«mid» : ("hi" : String) ≠ "mid" := by decide
 
-noncomputable def body.«midpointNaive» : TStmts [] sig.«midpointNaive».params sig.«midpointNaive».result :=
+noncomputable def body.midpointNaive : TStmts [] sig.midpointNaive.params sig.midpointNaive.result :=
   (.ret (.bin .ndiv (.bin .nadd (.var .here) (.var (.there ne.«hi».«lo» .here))) (.num 2)) .nil)
 
-noncomputable def body.«midpoint» : TStmts [sig.«midpointNaive»] sig.«midpoint».params sig.«midpoint».result :=
+noncomputable def body.midpoint : TStmts [sig.midpointNaive] sig.midpoint.params sig.midpoint.result :=
   (.ret (.bin .nadd (.var .here) (.bin .ndiv (.bin .nsub (.var (.there ne.«hi».«lo» .here)) (.var .here)) (.num 2))) .nil)
 
-noncomputable def body.«indexOf» : TStmts [sig.«midpoint», sig.«midpointNaive»] sig.«indexOf».params sig.«indexOf».result :=
+noncomputable def body.indexOf : TStmts [sig.midpoint, sig.midpointNaive] sig.indexOf.params sig.indexOf.result :=
   (.let_ "lo" (.num 0)
   (.let_ "hi" (.length (.var (.there ne.«xs».«lo» .here)))
   (.whileLoop (.bin .nlt (.var (.there ne.«lo».«hi» .here)) (.var .here))
-  (.const "mid" (.call (s := sig.«midpoint») .here (by decide +kernel) (.cons (.var (.there ne.«lo».«hi» .here)) (.cons (.var .here) .nil)))
+  (.const "mid" (.call (s := sig.midpoint) .here (by decide +kernel) (.cons (.var (.there ne.«lo».«hi» .here)) (.cons (.var .here) .nil)))
   (.const "v" (.index (.var (.there ne.«xs».«mid» (.there ne.«xs».«hi» (.there ne.«xs».«lo» .here)))) (.var .here))
   (.ifNullExit .here (by decide +kernel)
   (.ret (.negNum 1 (by decide +kernel)) .nil)
@@ -82,10 +82,10 @@ noncomputable def body.«indexOf» : TStmts [sig.«midpoint», sig.«midpointNai
   .nil)))))
   (.ret (.negNum 1 (by decide +kernel)) .nil))))
 
-noncomputable abbrev sigs : Sigs := [sig.«indexOf», sig.«midpoint», sig.«midpointNaive»]
+noncomputable abbrev sigs : Sigs := [sig.indexOf, sig.midpoint, sig.midpointNaive]
 
 noncomputable def typed : TProgram sigs :=
-  (.cons sig.«indexOf» body.«indexOf» (.cons sig.«midpoint» body.«midpoint» (.cons sig.«midpointNaive» body.«midpointNaive» .nil)))
+  (.cons sig.indexOf body.indexOf (.cons sig.midpoint body.midpoint (.cons sig.midpointNaive body.midpointNaive .nil)))
 
 theorem erased : typed.erase = ast := by kernel_rfl
 
@@ -97,143 +97,143 @@ theorem wf : typed.WF := TProgram.wf_of typed erased bodies_ok ast_scoped
 
 /-! ## Readable definitions -/
 
-def «midpointNaive» («lo» : Int) («hi» : Int) : Int :=
-  Int.fdiv («lo» + «hi») (2 : Int)
+def midpointNaive (lo : Int) (hi : Int) : Int :=
+  Int.fdiv (lo + hi) (2 : Int)
 
 /-- The inputs on which `midpointNaive` stays within what the model covers. -/
-def «midpointNaive».safe («lo» : Int) («hi» : Int) : Bool :=
-  Ariadne.inRange («lo» + «hi») && ((2 : Int) != 0 && Ariadne.inRange («lo» + «hi») && Ariadne.inRange (2 : Int))
+def midpointNaive.safe (lo : Int) (hi : Int) : Bool :=
+  Ariadne.inRange (lo + hi) && ((2 : Int) != 0 && Ariadne.inRange (lo + hi) && Ariadne.inRange (2 : Int))
 
-def «midpoint» («lo» : Int) («hi» : Int) : Int :=
-  «lo» + (Int.fdiv («hi» - «lo») (2 : Int))
+def midpoint (lo : Int) (hi : Int) : Int :=
+  lo + (Int.fdiv (hi - lo) (2 : Int))
 
 /-- The inputs on which `midpoint` stays within what the model covers. -/
-def «midpoint».safe («lo» : Int) («hi» : Int) : Bool :=
-  (Ariadne.inRange («hi» - «lo») && ((2 : Int) != 0 && Ariadne.inRange («hi» - «lo») && Ariadne.inRange (2 : Int))) && Ariadne.inRange («lo» + (Int.fdiv («hi» - «lo») (2 : Int)))
+def midpoint.safe (lo : Int) (hi : Int) : Bool :=
+  (Ariadne.inRange (hi - lo) && ((2 : Int) != 0 && Ariadne.inRange (hi - lo) && Ariadne.inRange (2 : Int))) && Ariadne.inRange (lo + (Int.fdiv (hi - lo) (2 : Int)))
 
-def «indexOf» («xs» : List Int) («target» : Int) : Int :=
-  let «lo» : Int := (0 : Int)
-  let «hi» : Int := (List.length «xs» : Int)
-  Ariadne.whileDo (fun («hi», «lo», _, _, ()) => decide («lo» < «hi»))
-    (fun next2' exit2' («hi», «lo», «xs», «target», ()) =>
-    let «mid» : Int := «midpoint» «lo» «hi»
-    let «v» : Option Int := Ariadne.listIndex «xs» «mid»
-    match «v» with
+def indexOf (xs : List Int) (target : Int) : Int :=
+  let lo : Int := (0 : Int)
+  let hi : Int := (xs.length : Int)
+  Ariadne.whileDo (fun (hi, lo, _, _, ()) => decide (lo < hi))
+    (fun next2' exit2' (hi, lo, xs, target, ()) =>
+    let mid : Int := midpoint lo hi
+    let v : Option Int := Ariadne.listIndex xs mid
+    match v with
     | none =>
       (-(1 : Int))
-    | some «v» =>
-      if «v» == «target» then
-        «mid»
+    | some v =>
+      if v == target then
+        mid
       else
-        if decide («v» < «target») then
-          let «lo» : Int := «mid» + (1 : Int)
-          next2' («hi», «lo», «xs», «target», ())
+        if decide (v < target) then
+          let lo : Int := mid + (1 : Int)
+          next2' (hi, lo, xs, target, ())
         else
-          let «hi» : Int := «mid»
-          next2' («hi», «lo», «xs», «target», ()))
+          let hi : Int := mid
+          next2' (hi, lo, xs, target, ()))
     (fun _ =>
     (-(1 : Int)))
-    («hi», «lo», «xs», «target», ())
+    (hi, lo, xs, target, ())
 
 /-- The inputs on which `indexOf` stays within what the model covers. -/
-def «indexOf».safe («xs» : List Int) («target» : Int) : Bool :=
-  let «lo» : Int := (0 : Int)
-  let «hi» : Int := (List.length «xs» : Int)
-  Ariadne.whileSafe (fun («hi», «lo», _, _, ()) => decide («lo» < «hi»))
-    (fun next2' exit2' («hi», «lo», «xs», «target», ()) =>
-    «midpoint».safe «lo» «hi» && (let «mid» : Int := «midpoint» «lo» «hi»
-    let «v» : Option Int := Ariadne.listIndex «xs» «mid»
-    match «v» with
+def indexOf.safe (xs : List Int) (target : Int) : Bool :=
+  let lo : Int := (0 : Int)
+  let hi : Int := (xs.length : Int)
+  Ariadne.whileSafe (fun (hi, lo, _, _, ()) => decide (lo < hi))
+    (fun next2' exit2' (hi, lo, xs, target, ()) =>
+    midpoint.safe lo hi && (let mid : Int := midpoint lo hi
+    let v : Option Int := Ariadne.listIndex xs mid
+    match v with
     | none =>
       true
-    | some «v» =>
-      if «v» == «target» then
+    | some v =>
+      if v == target then
         true
       else
-        if decide («v» < «target») then
-          Ariadne.inRange («mid» + (1 : Int)) && (let «lo» : Int := «mid» + (1 : Int)
-          next2' («hi», «lo», «xs», «target», ()))
+        if decide (v < target) then
+          Ariadne.inRange (mid + (1 : Int)) && (let lo : Int := mid + (1 : Int)
+          next2' (hi, lo, xs, target, ()))
         else
-          let «hi» : Int := «mid»
-          next2' («hi», «lo», «xs», «target», ())))
+          let hi : Int := mid
+          next2' (hi, lo, xs, target, ())))
     (fun _ =>
     true)
-    («hi», «lo», «xs», «target», ())
+    (hi, lo, xs, target, ())
 
 /-! ## Denotation
 
 Each body is checked against its readable definition with the earlier functions'
 readable definitions as its environment, so no check unfolds a callee. -/
 
-noncomputable def «midpointNaive».uncurried : sig.«midpointNaive».denote := fun xs => «midpointNaive» xs.1 xs.2.1
+noncomputable def midpointNaive.uncurried : sig.midpointNaive.denote := fun xs => midpointNaive xs.1 xs.2.1
 
-noncomputable def «midpointNaive».safety : sig.«midpointNaive».params.denote → Bool := fun xs => «midpointNaive».safe xs.1 xs.2.1
+noncomputable def midpointNaive.safety : sig.midpointNaive.params.denote → Bool := fun xs => midpointNaive.safe xs.1 xs.2.1
 
-theorem «midpointNaive».body_eq :
-    body.«midpointNaive».denoteFn (()) = «midpointNaive».uncurried := by
+theorem midpointNaive.body_eq :
+    body.midpointNaive.denoteFn (()) = midpointNaive.uncurried := by
   kernel_rfl
 
-theorem «midpointNaive».safe_eq :
-    body.«midpointNaive».safeFn (()) (()) = «midpointNaive».safety := by
+theorem midpointNaive.safe_eq :
+    body.midpointNaive.safeFn (()) (()) = midpointNaive.safety := by
   kernel_rfl
 
-noncomputable def «midpoint».uncurried : sig.«midpoint».denote := fun xs => «midpoint» xs.1 xs.2.1
+noncomputable def midpoint.uncurried : sig.midpoint.denote := fun xs => midpoint xs.1 xs.2.1
 
-noncomputable def «midpoint».safety : sig.«midpoint».params.denote → Bool := fun xs => «midpoint».safe xs.1 xs.2.1
+noncomputable def midpoint.safety : sig.midpoint.params.denote → Bool := fun xs => midpoint.safe xs.1 xs.2.1
 
-theorem «midpoint».body_eq :
-    body.«midpoint».denoteFn («midpointNaive».uncurried, ()) = «midpoint».uncurried := by
+theorem midpoint.body_eq :
+    body.midpoint.denoteFn (midpointNaive.uncurried, ()) = midpoint.uncurried := by
   kernel_rfl
 
-theorem «midpoint».safe_eq :
-    body.«midpoint».safeFn («midpointNaive».uncurried, ()) («midpointNaive».safety, ()) = «midpoint».safety := by
+theorem midpoint.safe_eq :
+    body.midpoint.safeFn (midpointNaive.uncurried, ()) (midpointNaive.safety, ()) = midpoint.safety := by
   kernel_rfl
 
-noncomputable def «indexOf».uncurried : sig.«indexOf».denote := fun xs => «indexOf» xs.1 xs.2.1
+noncomputable def indexOf.uncurried : sig.indexOf.denote := fun xs => indexOf xs.1 xs.2.1
 
-noncomputable def «indexOf».safety : sig.«indexOf».params.denote → Bool := fun xs => «indexOf».safe xs.1 xs.2.1
+noncomputable def indexOf.safety : sig.indexOf.params.denote → Bool := fun xs => indexOf.safe xs.1 xs.2.1
 
-theorem «indexOf».body_eq :
-    body.«indexOf».denoteFn («midpoint».uncurried, «midpointNaive».uncurried, ()) = «indexOf».uncurried := by
+theorem indexOf.body_eq :
+    body.indexOf.denoteFn (midpoint.uncurried, midpointNaive.uncurried, ()) = indexOf.uncurried := by
   kernel_rfl
 
-theorem «indexOf».safe_eq :
-    body.«indexOf».safeFn («midpoint».uncurried, «midpointNaive».uncurried, ()) («midpoint».safety, «midpointNaive».safety, ()) = «indexOf».safety := by
+theorem indexOf.safe_eq :
+    body.indexOf.safeFn (midpoint.uncurried, midpointNaive.uncurried, ()) (midpoint.safety, midpointNaive.safety, ()) = indexOf.safety := by
   kernel_rfl
 
-theorem denote_eq : typed.denote = («indexOf».uncurried, «midpoint».uncurried, «midpointNaive».uncurried, ()) :=
-  (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl «midpointNaive».body_eq) «midpoint».body_eq) «indexOf».body_eq)
+theorem denote_eq : typed.denote = (indexOf.uncurried, midpoint.uncurried, midpointNaive.uncurried, ()) :=
+  (TProgram.denote_cons (TProgram.denote_cons (TProgram.denote_cons rfl midpointNaive.body_eq) midpoint.body_eq) indexOf.body_eq)
 
-theorem safety_eq : typed.safety = («indexOf».safety, «midpoint».safety, «midpointNaive».safety, ()) :=
-  (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons rfl «midpointNaive».body_eq) «midpoint».body_eq) (TProgram.safety_cons (TProgram.denote_cons rfl «midpointNaive».body_eq) (TProgram.safety_cons rfl rfl «midpointNaive».safe_eq) «midpoint».safe_eq) «indexOf».safe_eq)
+theorem safety_eq : typed.safety = (indexOf.safety, midpoint.safety, midpointNaive.safety, ()) :=
+  (TProgram.safety_cons (TProgram.denote_cons (TProgram.denote_cons rfl midpointNaive.body_eq) midpoint.body_eq) (TProgram.safety_cons (TProgram.denote_cons rfl midpointNaive.body_eq) (TProgram.safety_cons rfl rfl midpointNaive.safe_eq) midpoint.safe_eq) indexOf.safe_eq)
 
 /-! ## Source theorems -/
 
 /-- Every run of `midpointNaive` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «midpointNaive».source («lo» : Int) («hi» : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.«midpointNaive».params vs' («lo», «hi», ()))
-    (safe' : «midpointNaive».safe «lo» «hi» = true) :
+theorem midpointNaive.source (lo : Int) (hi : Int) (vs' : List JSValue)
+    (args' : ArgsRep sig.midpointNaive.params vs' (lo, hi, ()))
+    (safe' : midpointNaive.safe lo hi = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "midpointNaive" vs') (.ok w') ∧
-      Ty.Rep .number w' («midpointNaive» «lo» «hi») :=
-  source_of erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "midpointNaive" sig.«midpointNaive») rfl («lo», «hi», ()) vs' args' safe'
+      Ty.Rep .number w' (midpointNaive lo hi) :=
+  source_of erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "midpointNaive" sig.midpointNaive) rfl (lo, hi, ()) vs' args' safe'
 
 /-- Every run of `midpoint` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «midpoint».source («lo» : Int) («hi» : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.«midpoint».params vs' («lo», «hi», ()))
-    (safe' : «midpoint».safe «lo» «hi» = true) :
+theorem midpoint.source (lo : Int) (hi : Int) (vs' : List JSValue)
+    (args' : ArgsRep sig.midpoint.params vs' (lo, hi, ()))
+    (safe' : midpoint.safe lo hi = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "midpoint" vs') (.ok w') ∧
-      Ty.Rep .number w' («midpoint» «lo» «hi») :=
-  source_of erased wf denote_eq safety_eq ((.there .here) : FVar sigs "midpoint" sig.«midpoint») rfl («lo», «hi», ()) vs' args' safe'
+      Ty.Rep .number w' (midpoint lo hi) :=
+  source_of erased wf denote_eq safety_eq ((.there .here) : FVar sigs "midpoint" sig.midpoint) rfl (lo, hi, ()) vs' args' safe'
 
 /-- Every run of `indexOf` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
-theorem «indexOf».source («xs» : List Int) («target» : Int) (vs' : List JSValue)
-    (args' : ArgsRep sig.«indexOf».params vs' («xs», «target», ()))
-    (safe' : «indexOf».safe «xs» «target» = true) :
+theorem indexOf.source (xs : List Int) (target : Int) (vs' : List JSValue)
+    (args' : ArgsRep sig.indexOf.params vs' (xs, target, ()))
+    (safe' : indexOf.safe xs target = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "indexOf" vs') (.ok w') ∧
-      Ty.Rep .number w' («indexOf» «xs» «target») :=
-  source_of erased wf denote_eq safety_eq (.here : FVar sigs "indexOf" sig.«indexOf») rfl («xs», «target», ()) vs' args' safe'
+      Ty.Rep .number w' (indexOf xs target) :=
+  source_of erased wf denote_eq safety_eq (.here : FVar sigs "indexOf" sig.indexOf) rfl (xs, target, ()) vs' args' safe'
 
 end Examples.Search
