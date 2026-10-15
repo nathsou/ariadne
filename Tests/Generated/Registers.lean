@@ -1085,7 +1085,7 @@ def place.safe («this» : Registers) (ref : JSString) (p : JSString) (placed : 
   let u : Option JSString := if placed then seen else some (newest seen stamp)
   let «this» : Registers := dropMarkBefore «this» ref p u
   if !(newer (match cur with | none => none | some cur => some cur.s) stamp) then
-    let after4' := fun (u, _, _, _, _, _, _, _, _, _, ()) =>
+    let after4' := fun _ =>
       true
     if !placed then
       let «this» : Registers := noteUnplace «this» ref p (newest seen stamp)
@@ -1093,7 +1093,7 @@ def place.safe («this» : Registers) (ref : JSString) (p : JSString) (placed : 
     else
       after4' (u, seen, cur, «this», ref, p, placed, cls, stamp, «at», ())
   else
-    let after4' := fun (u, _, _, _, _, _, _, _, _, _, ()) =>
+    let after4' := fun _ =>
       true
     if placed then
       put.safe «this» ref p (Placed.mk p cls «at» stamp false u) && (let «this» : Registers := put «this» ref p (Placed.mk p cls «at» stamp false u)
@@ -1227,7 +1227,6 @@ def usageOf.loop (month : JSString) (p : JSString) («this» : Registers) : Coun
       out
     | some t =>
       let out : Counters := sum out t.c
-      let t := some t
       out
 
 def usageOf («this» : Registers) (p : JSString) (month : JSString) : Counters :=
@@ -1257,7 +1256,6 @@ def usageOf.safe («this» : Registers) (p : JSString) (month : JSString) : Bool
         next4' (period, out, inc, «this», p, month, ())
       | some t =>
         sum.safe out t.c && (let out : Counters := sum out t.c
-        let t := some t
         next4' (period, out, inc, «this», p, month, ())))
       (fun _ =>
       true)

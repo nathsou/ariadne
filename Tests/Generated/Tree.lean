@@ -978,7 +978,7 @@ def cycleOf.loop1 (id : JSString) («this» : Tree) : Int → (Bool × JSString 
         next' (on, cur)
 
 /-- A loop body of `cycleOf`. -/
-def cycleOf.loop2 (id : JSString) («this» : Tree) (on : Bool) : Int → (List JSString × JSString → List JSString) → (List JSString × JSString → List JSString) → List JSString × JSString → List JSString :=
+def cycleOf.loop2 (id : JSString) («this» : Tree) : Int → (List JSString × JSString → List JSString) → (List JSString × JSString → List JSString) → List JSString × JSString → List JSString :=
   fun _step next' exit' (path, cur) =>
     let s : Option Spot := Ariadne.mapGet «this».spots cur
     match s with
@@ -1003,7 +1003,7 @@ def cycleOf («this» : Tree) (id : JSString) : List JSString :=
     else
       let path : List JSString := [id]
       let cur : JSString := id
-      Ariadne.forIn (Ariadne.range steps) (cycleOf.loop2 id «this» on)
+      Ariadne.forIn (Ariadne.range steps) (cycleOf.loop2 id «this»)
         (fun (path, cur) =>
         path)
         (path, cur))
@@ -1353,7 +1353,7 @@ def position («this» : Tree) (id : JSString) (parent : JSString) (name : JSStr
   | none =>
     «this»
   | some s =>
-    let after4' := fun (s, «this», id, _, _, _, _, ()) =>
+    let after4' := fun (_, «this», id, _, _, _, _, ()) =>
       let «this» : Tree := { «this» with changed := Ariadne.mapPut «this».changed id true }
       let «this» : Tree := rearrange «this» id
       «this»
@@ -1382,7 +1382,7 @@ def position.safe («this» : Tree) (id : JSString) (parent : JSString) (name : 
   | none =>
     true
   | some s =>
-    let after4' := fun (s, «this», id, _, _, _, _, ()) =>
+    let after4' := fun (_, «this», id, _, _, _, _, ()) =>
       let «this» : Tree := { «this» with changed := Ariadne.mapPut «this».changed id true }
       rearrange.safe «this» id && (let «this» : Tree := rearrange «this» id
       true)
@@ -1443,7 +1443,6 @@ def untangle.loop1 : Tree → JSString → Tree :=
           «this»
         else
           «this»
-      let s := some s
       «this»
 
 /-- A loop body of `untangle`. -/
@@ -1473,10 +1472,8 @@ def untangle.safe («this» : Tree) : Bool :=
     | some s =>
       if ((parentOf «this» id) != s.want) || (decide ((List.length (cycleOf «this» id) : Int) > (0 : Int))) then
         attach.safe «this» id && (let «this» : Tree := attach «this» id
-        let s := some s
         next2' («this», ()))
       else
-        let s := some s
         next2' («this», ()))
     (fun («this», ()) =>
     settle.safe «this» root true && (let «this» : Tree := settle «this» root true

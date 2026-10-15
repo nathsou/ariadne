@@ -171,11 +171,9 @@ def balance.safe (entries : List Entry) : Bool :=
     match e with
     | Entry.credit e =>
       Ariadne.inRange (total + e) && (let total : Int := total + e
-      let e := ((Entry.credit e) : Entry)
       next2' (total, entries, ()))
     | Entry.debit e =>
-      let after6' := fun (e, total, entries, ()) =>
-        let e := ((Entry.debit e) : Entry)
+      let after6' := fun (_, total, entries, ()) =>
         next2' (total, entries, ())
       if decide (e ≤ total) then
         Ariadne.inRange (total - e) && (let total : Int := total - e

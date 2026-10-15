@@ -233,7 +233,7 @@ def implies (a : Bool) (b : Bool) : Bool :=
     true
 
 /-- A loop body of `bump`. -/
-def bump.loop (n : Int) : Int → Int → Int :=
+def bump.loop : Int → Int → Int :=
   fun x i =>
     let x : Int := x + 1
     x
@@ -241,7 +241,7 @@ def bump.loop (n : Int) : Int → Int → Int :=
 def bump (n : Int) (times : Int) : Int :=
   let k : Int := Int.tmod times (5 : Int)
   let x : Int := n
-  let x := Ariadne.fold x (Ariadne.range k) (bump.loop n)
+  let x := Ariadne.fold x (Ariadne.range k) bump.loop
   let x : Int := x - 1
   x
 
@@ -252,7 +252,7 @@ def bump.safe (n : Int) (times : Int) : Bool :=
   Ariadne.forIn (Ariadne.range k) (fun i next2' exit2' (x, k, n, times, ()) =>
     let x : Int := x + 1
     next2' (x, k, n, times, ()))
-    (fun (x, _, n, _, ()) =>
+    (fun (x, _, _, _, ()) =>
     let x : Int := x - 1
     true)
     (x, k, n, times, ()))

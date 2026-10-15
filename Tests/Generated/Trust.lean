@@ -627,7 +627,7 @@ def byRank (a : Candidate) (b : Candidate) : Int :=
             (0 : Int)
 
 /-- A loop body of `chooseVaultCopy`. -/
-def chooseVaultCopy.loop (floor : Option Floor) (committedFactors : Option (List JSString)) (taggedFactors : Option (List JSString)) (floorSeed : JSString) : Bool × Bool × Bool × Bool × List Candidate → CopyFact × Nat → Bool × Bool × Bool × Bool × List Candidate :=
+def chooseVaultCopy.loop (committedFactors : Option (List JSString)) (taggedFactors : Option (List JSString)) (floorSeed : JSString) : Bool × Bool × Bool × Bool × List Candidate → CopyFact × Nat → Bool × Bool × Bool × Bool × List Candidate :=
   fun (older, notOwner, damaged, opened, ok) (f, n10') =>
     let index := (n10' : Int)
     match f with
@@ -662,7 +662,7 @@ def chooseVaultCopy (facts : List CopyFact) (floor : Option Floor) : Choice :=
   let damaged : Bool := false
   let notOwner : Bool := false
   let older : Bool := false
-  let (older, notOwner, damaged, opened, ok) := Ariadne.fold (older, notOwner, damaged, opened, ok) facts.zipIdx (chooseVaultCopy.loop floor committedFactors taggedFactors floorSeed)
+  let (older, notOwner, damaged, opened, ok) := Ariadne.fold (older, notOwner, damaged, opened, ok) facts.zipIdx (chooseVaultCopy.loop committedFactors taggedFactors floorSeed)
   if decide ((ok.length : Int) > (0 : Int)) then
     let ranked : List Candidate := Ariadne.sortedBy byRank ok
     let anyCommitted : Bool := ranked.any (fun x => x.committed)
@@ -684,31 +684,25 @@ def chooseVaultCopy.safe (facts : List CopyFact) (floor : Option Floor) : Bool :
     let index := (n10' : Int)
     match f with
     | CopyFact.unopened =>
-      let f := (CopyFact.unopened : CopyFact)
       next2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ())
     | CopyFact.damaged =>
       let damaged : Bool := true
-      let f := (CopyFact.damaged : CopyFact)
       next2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ())
     | CopyFact.opened f =>
       let opened : Bool := true
       if (f.commit == Commit.bad) || (f.recovery == Recovery.bad) then
         let notOwner : Bool := true
-        let f := ((CopyFact.opened f) : CopyFact)
         next2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ())
       else
         if ((f.commit == Commit.legacy) && (listed f.kid committedFactors)) || ((f.recovery == Recovery.legacy) && (listed f.kid taggedFactors)) then
           let notOwner : Bool := true
-          let f := ((CopyFact.opened f) : CopyFact)
           next2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ())
         else
           if (floorSeed != (js "")) && (!(f.seeds.any (· == floorSeed))) then
             let older : Bool := true
-            let f := ((CopyFact.opened f) : CopyFact)
             next2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ())
           else
             let ok : List Candidate := ok ++ ([(Candidate.mk index (f.commit == Commit.ok) (f.recovery != Recovery.legacy) (f.seeds.length : Int) f.written)])
-            let f := ((CopyFact.opened f) : CopyFact)
             next2' (older, notOwner, damaged, opened, ok, floorSeed, taggedFactors, committedFactors, facts, floor, ()))
     (fun (_, _, _, _, ok, _, _, _, _, _, ()) =>
     if decide ((ok.length : Int) > (0 : Int)) then

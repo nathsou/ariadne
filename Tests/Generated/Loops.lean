@@ -701,7 +701,7 @@ def grid.safe (rows : List (List Int)) : Bool :=
       else
         Ariadne.inRange (total + v) && (let total : Int := total + v
         next4' (row, total, rows, ())))
-      (fun (row, total, rows, ()) =>
+      (fun (_, total, rows, ()) =>
       next2' (total, rows, ()))
       (row, total, rows, ()))
     (fun _ =>
@@ -733,18 +733,16 @@ def perimeters.safe (shapes : List Shape) : Bool :=
     match sh with
     | Shape.circle sh =>
       (Ariadne.inRange ((6 : Int) * sh) && Ariadne.inRange (t + ((6 : Int) * sh))) && (let t : Int := t + ((6 : Int) * sh)
-      let sh := ((Shape.circle sh) : Shape)
       next2' (t, shapes, ()))
     | Shape.square sh =>
       (Ariadne.inRange ((4 : Int) * sh) && Ariadne.inRange (t + ((4 : Int) * sh))) && (let t : Int := t + ((4 : Int) * sh)
-      let sh := ((Shape.square sh) : Shape)
       next2' (t, shapes, ())))
-    (fun (t, _, ()) =>
+    (fun _ =>
     true)
     (t, shapes, ())
 
 /-- A loop body of `steps`. -/
-def steps.loop {R : Type} (n : Int) : Int → (Int × Int → R) → (Int × Int → R) → Int × Int → R :=
+def steps.loop {R : Type} : Int → (Int × Int → R) → (Int × Int → R) → Int × Int → R :=
   fun «_» next' exit' (k, count) =>
     if decide (k ≤ (1 : Int)) then
       exit' (k, count)
@@ -756,7 +754,7 @@ def steps.loop {R : Type} (n : Int) : Int → (Int × Int → R) → (Int × Int
 def steps (n : Int) : Int :=
   let count : Int := (0 : Int)
   let k : Int := n
-  Ariadne.forIn ([(1 : Int), (2 : Int), (3 : Int), (4 : Int), (5 : Int), (6 : Int), (7 : Int), (8 : Int)]) (steps.loop n)
+  Ariadne.forIn ([(1 : Int), (2 : Int), (3 : Int), (4 : Int), (5 : Int), (6 : Int), (7 : Int), (8 : Int)]) steps.loop
     (fun (k, count) =>
     count)
     (k, count)
@@ -812,7 +810,7 @@ def score.safe (a : Int) (b : Int) : Bool :=
     after2' (s, a, b, ()))
 
 /-- A loop body of `triangle`. -/
-def triangle.loop {R : Type} (cap : Int) (n : Int) : Int → (Int → R) → (Int → R) → Int → R :=
+def triangle.loop {R : Type} (cap : Int) : Int → (Int → R) → (Int → R) → Int → R :=
   fun i next' exit' t =>
     if decide (i > cap) then
       exit' t
@@ -826,7 +824,7 @@ def triangle.loop {R : Type} (cap : Int) (n : Int) : Int → (Int → R) → (In
 def triangle (n : Int) (cap : Int) : Int :=
   let m : Int := if decide (n < (1000 : Int)) then n else (1000 : Int)
   let t : Int := (0 : Int)
-  Ariadne.forIn (Ariadne.range m) (triangle.loop cap n)
+  Ariadne.forIn (Ariadne.range m) (triangle.loop cap)
     (fun t =>
     t)
     t
@@ -844,7 +842,7 @@ def triangle.safe (n : Int) (cap : Int) : Bool :=
       else
         Ariadne.inRange (t + i) && (let t : Int := t + i
         next2' (t, m, n, cap, ())))
-    (fun (t, _, _, _, ()) =>
+    (fun _ =>
     true)
     (t, m, n, cap, ())
 
@@ -913,7 +911,7 @@ def firstAbove.safe (xs : List Int) (limit : Int) : Bool :=
     (i, xs, limit, ())
 
 /-- A loop body of `countdown`. -/
-def countdown.loop {R : Type} (n : Int) : (Int × List Int → R) → (Int × List Int → R) → Int × List Int → R :=
+def countdown.loop {R : Type} : (Int × List Int → R) → (Int × List Int → R) → Int × List Int → R :=
   fun next' exit' (k, out) =>
     if (Int.tmod k (3 : Int)) == (0 : Int) then
       let k : Int := k - 1
@@ -930,7 +928,7 @@ def countdown (n : Int) : List Int :=
   let out : List Int := []
   let k : Int := n
   Ariadne.whileDo (fun (k, out) => decide (k > (0 : Int)))
-    (countdown.loop n)
+    countdown.loop
     (fun (k, out) =>
     out)
     (k, out)
@@ -939,7 +937,7 @@ def countdown (n : Int) : List Int :=
 def countdown.safe (n : Int) : Bool :=
   let out : List Int := []
   let k : Int := n
-  Ariadne.whileSafe (fun (k, _, n, ()) => decide (k > (0 : Int)))
+  Ariadne.whileSafe (fun (k, _, _, ()) => decide (k > (0 : Int)))
     (fun next2' exit2' (k, out, n, ()) =>
     ((3 : Int) != 0 && Ariadne.inRange (Int.tmod k (3 : Int))) && (if (Int.tmod k (3 : Int)) == (0 : Int) then
       Ariadne.inRange (k - 1) && (let k : Int := k - 1

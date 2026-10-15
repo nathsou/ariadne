@@ -42,6 +42,16 @@ def ident (x : String) : String :=
     | c :: cs => (c.isAlpha || (c == '_' && !cs.isEmpty)) && cs.all fun d => d.isAlphanum || d == '_'
   if plain && !leanKeywords.contains x then x else quoted x
 
+/-- Whether `text` mentions the variable `x`: `ident x` neither inside a longer name nor after a `.` (a field
+of the same name). -/
+def mentions (text x : String) : Bool :=
+  let parts := text.splitOn (ident x)
+  let nameChar (c : Char) := c.isAlphanum || c == '_' || c == '\'' || c == '!' || c == '?' || c == '«' || c == '»'
+  (List.range (parts.length - 1)).any fun i =>
+    let before := (parts[i]!.toList.getLast?).getD ' '
+    let after := (parts[i + 1]!.toList.head?).getD ' '
+    !nameChar before && before != '.' && !nameChar after
+
 def leanString (s : String) : String := Id.run do
   let mut out := "\""
   for c in s.toList do
@@ -537,7 +547,7 @@ structure Narrowed where
 def Narrowed.wrap (n : Narrowed) (k : String → String) : String → String :=
   fun i =>
     let rest := k i
-    if n.embed != ident n.name && (rest.splitOn (ident n.name)).length > 1 then
+    if n.embed != ident n.name && mentions rest n.name then
       s!"let {ident n.name} := {n.embed}\n{i}{rest}"
     else rest
 
@@ -1269,7 +1279,7 @@ def tupleText (s : Scope) : String :=
 /-- The pattern a continuation binds the environment tuple with: the scope's variables `text` uses, by
 name, `_` for the others. -/
 def statePattern (s : Scope) (text : String) : String :=
-  let uses (x : String) := (text.splitOn (ident x)).length > 1 && s.payloads.lookup x != some .unit
+  let uses (x : String) := mentions text x && s.payloads.lookup x != some .unit
   if !s.locals.any (uses ·.1) then "_" else
   "(" ++ ", ".intercalate (s.locals.map (fun (x, _) => if uses x then ident x else "_") ++ ["()"]) ++ ")"
 
@@ -1305,7 +1315,7 @@ def switchLeaves (render : Block → String → KText → String) (x : String) (
         | .struct .. => inSum || whole
         | .single _ => whole
         | _ => false
-      if build && (body.splitOn (ident x)).length > 1 then s!"let {ident x} := {r.ofWhole (ident x)}\n{j}{body}" else body
+      if build && mentions body x then s!"let {ident x} := {r.ofWhole (ident x)}\n{j}{body}" else body
     | .run b => render b j k
     | .normal => k.normal j
   -- What a leaf's pattern binds: the narrowed variable's payload (in a sum, its fields' tuple), else nothing.
@@ -1364,7 +1374,7 @@ def Scope.varTypeText (s : Scope) (T : Types) (x : String) : String :=
 that `hoistLoops` takes out of a readable definition; and the term naming it. Its parameters are the
 variables of the scope the body reads, other than the state. -/
 def namedBody (s : Scope) (T : Types) (id : Nat) (state : List String) (ty lam body : String) : String × String :=
-  let uses (x : String) := (body.splitOn (ident x)).length > 1
+  let uses (x : String) := mentions body x
   let captured := (s.locals.reverse.filter fun (x, _) =>
     !state.contains x && uses x && s.payloads.lookup x != some .unit).map (·.1)
   let params := " ".intercalate (captured.map fun x => s!"({ident x} : {s.varTypeText T x})")
