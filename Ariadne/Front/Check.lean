@@ -14,7 +14,43 @@ wrong theorem.
 namespace Ariadne.Front
 open Ariadne.Parse (Diagnostic Checked Span)
 
-def ident (x : String) : String := s!"«{x}»"
+/-- `xs.f args` when the receiver is a name or a field path (its type is then known when it elaborates), else
+`List.f args xs`. -/
+def listCall (recv f : String) (args : List String := []) (last : Bool := true) : String :=
+  let path := !recv.isEmpty && recv.all fun c => c.isAlphanum || c == '_' || c == '.' || c == '«' || c == '»' || c == '\''
+  if path then " ".intercalate (s!"{recv}.{f}" :: args)
+  else if last then " ".intercalate (s!"List.{f}" :: args ++ [recv]) else " ".intercalate (s!"List.{f}" :: recv :: args)
+
+/-- Always quoted: names the generated text parses back (`ne.«x».«y»`). -/
+def quoted (x : String) : String := s!"«{x}»"
+
+/-- Lean's keywords, and the names that read as syntax: an identifier spelled as one stays quoted. -/
+def leanKeywords : List String :=
+  ["at", "by", "do", "else", "end", "fun", "have", "if", "import", "in", "let", "match", "mut", "namespace", "open",
+   "section", "show", "then", "where", "with", "from", "for", "unless", "return", "break", "continue", "try", "catch",
+   "finally", "this", "Type", "Sort", "Prop", "deriving", "instance", "structure", "inductive", "class", "theorem",
+   "def", "abbrev", "example", "axiom", "universe", "variable", "macro", "syntax", "notation", "infix", "infixl",
+   "infixr", "prefix", "postfix", "partial", "private", "protected", "noncomputable", "mutual", "calc", "suffices",
+   "nomatch", "nofun", "local", "scoped", "attribute", "export", "set_option", "termination_by", "decreasing_by",
+   "opaque", "extends", "using", "sorry", "admit", "forall", "exists", "matches", "fun", "omit", "include", "elab",
+   "macro_rules", "unif_hint", "nonrec", "public", "meta", "module", "deprecated", "obtain", "rfl"]
+
+/-- A name as Lean reads it: bare when it is a plain identifier, else quoted (`«wrong-key»`, `«at»`). -/
+def ident (x : String) : String :=
+  let plain := match x.toList with
+    | [] => false
+    | c :: cs => (c.isAlpha || (c == '_' && !cs.isEmpty)) && cs.all fun d => d.isAlphanum || d == '_'
+  if plain && !leanKeywords.contains x then x else quoted x
+
+/-- Whether `text` mentions the variable `x`: `ident x` neither inside a longer name nor after a `.` (a field
+of the same name). -/
+def mentions (text x : String) : Bool :=
+  let parts := text.splitOn (ident x)
+  let nameChar (c : Char) := c.isAlphanum || c == '_' || c == '\'' || c == '!' || c == '?' || c == '«' || c == '»'
+  (List.range (parts.length - 1)).any fun i =>
+    let before := (parts[i]!.toList.getLast?).getD ' '
+    let after := (parts[i + 1]!.toList.head?).getD ' '
+    !nameChar before && before != '.' && !nameChar after
 
 def leanString (s : String) : String := Id.run do
   let mut out := "\""
@@ -102,16 +138,6 @@ def atomText (x : String) : String :=
     return false
   if wrapped || !x.contains ' ' then x else s!"({x})"
 
-/-- The Lean type of a denoted value. -/
-partial def Types.lean (T : Types) : Ty → String
-  | .bool => "Bool" | .int => "Int" | .number => "Int" | .string => "JSString"
-  | τ => match (T.named.find? (·.2 == τ)).map (·.1), τ with
-    | some n, _ => if T.readable.contains n then ident n else s!"ty.{ident n}.denote"
-    | none, .array σ => s!"List {atomText (T.lean σ)}"
-    | none, .map σ => s!"List (JSString × {T.lean σ})"
-    | none, .option _ σ => s!"Option {atomText (T.lean σ)}"
-    | none, _ => s!"(({T.print τ} : Ty)).denote"
-
 def Fields.toList : Fields → List (String × Ty)
   | .nil => []
   | .cons f τ rest => (f, τ) :: Fields.toList rest
@@ -130,35 +156,61 @@ def tagName : TagLit → Option String
 def Types.nameOf? (T : Types) (τ : Ty) : Option String :=
   (T.named.find? (·.2 == τ)).bind fun (n, _) => if T.readable.contains n then some n else none
 
-/-- The name of the setter of field `f`: `withF`. -/
-def setterName (f : String) : String := "with" ++ f.capitalize
-
-/-- Whether a record's constructor `mk` and setters `withF` clash with none of its fields. -/
-def namesFree (fs : Fields) : Bool :=
-  let names := (Fields.toList fs).map (·.1)
-  !names.contains "mk" && names.all fun f => !names.contains (setterName f)
-
-/-- The readable name of a record type whose fields can be read, built and set by name. -/
-def Types.recordName? (T : Types) : Ty → Option String
-  | τ@(.record fs) => if namesFree fs then T.nameOf? τ else none
-  | _ => none
-
 def Variants.toList : Variants → List (TagLit × Fields)
   | .one t fs => [(t, fs)]
   | .cons t fs rest => (t, fs) :: Variants.toList rest
 
-/-- The constructors' names of a named union, when every variant has one (`«U».«tag»`). -/
-def Types.ctorNames? (T : Types) (τ : Ty) : Option (List String) := do
-  let .union _ vs := τ | none
-  let n ← T.nameOf? τ
-  (Variants.toList vs).mapM fun (t, _) => (tagName t).map fun tn => s!"{ident n}.{ident tn}"
+/-! ### Structures and inductives
 
-/-- The payload type of a named union's variant `i` with fields, `«U».Variant.«tag»`. -/
+Readable definitions use the program's own types (`Ty.den` with the generated `names`): a named record
+whose fields can name a structure's is that structure, a named union whose tags can name an inductive's
+constructors is that inductive, and a record whose first field is a tag (a union's variant) is its payload,
+the fields after the tag. Other types are the products, sums and lists they denote. -/
+
+/-- The names Lean derives for a structure or an inductive, which its fields and constructors cannot take. -/
+def derivedNames : List String :=
+  ["mk", "rec", "casesOn", "recOn", "noConfusion", "noConfusionType", "below", "brecOn", "binductionOn", "ibelow",
+   "ctorIdx", "toCtorIdx", "ctorElim", "ctorElimType", "induct", "inj", "injEq", "sizeOf_spec", "ext", "ext_iff"]
+
+/-- Whether `f` can name a structure's field or an inductive's constructor. -/
+def memberName (f : String) : Bool :=
+  !derivedNames.contains f && match f.toList with
+    | c :: _ => !c.isDigit
+    | [] => false
+
+/-- The fields after the tag of a record whose first field is a tag. -/
+def tagged? : Ty → Option Fields
+  | .record (.cons _ (.tag _) fs) => some fs
+  | _ => none
+
+/-- The structure a named record (other than a variant) is. -/
+def Types.structName? (T : Types) (τ : Ty) : Option String :=
+  match τ with
+  | .record fs => if (tagged? τ).isNone && (Fields.toList fs).all (memberName ·.1) then (T.nameOf? τ).map ident else none
+  | _ => none
+
+/-- The inductive a union is, with its constructors (`«U».«tag»`): the first named union with its variants
+whose tags can all name constructors. -/
+def Types.inductive? (T : Types) : Ty → Option (String × List String)
+  | .union _ vs => T.named.findSome? fun ((n : String), (σ : Ty)) => match σ with
+    | .union _ vs' =>
+      if vs' == vs && T.readable.contains n then
+        let tags : Option (List String) := (Variants.toList vs).mapM fun (p : TagLit × Fields) =>
+          (tagName p.1).filter memberName
+        tags.map fun tags => (ident n, tags.map fun tn => s!"{ident n}.{ident tn}")
+      else none
+    | _ => none
+  | _ => none
+
+/-- The constructors' names of a union declared as an inductive. -/
+def Types.ctorNames? (T : Types) (τ : Ty) : Option (List String) := (T.inductive? τ).map (·.2)
+
+/-- The payload structure of a named union's variant `i` with more than one field, `«U».Variant.«tag»`. -/
 def Types.payloadName? (T : Types) (τ : Ty) (i : Nat) : Option String := do
   let .union _ vs := τ | none
   let n ← T.nameOf? τ
   let (t, fs) ← (Variants.toList vs)[i]?
-  if (Fields.toList fs).isEmpty then none
+  if (Fields.toList fs).length < 2 then none
   let tn ← tagName t
   return s!"{ident n}.Variant.{ident tn}"
 
@@ -169,6 +221,86 @@ def Types.variantOf? (T : Types) (σ : Ty) : Option (Ty × Nat) :=
       (Variants.toList vs).zipIdx.findSome? fun ((t, fs), i) =>
         if Ty.record (.cons key (.tag t) fs) == σ then some (τ, i) else none
     | _ => none
+
+/-- How a value of a record whose first field is a tag is written: by its payload, the fields after the tag. -/
+inductive Rep where
+  /-- No fields: `()`. -/
+  | unit
+  /-- One field: its value. -/
+  | single (τ : Ty)
+  /-- A structure of the fields: the record's own (when it is named) or its union's `«U».Variant.«tag»`. -/
+  | struct (name : String) (fields : List (String × Ty))
+  /-- The fields' product. -/
+  | tuple (fields : List (String × Ty))
+  deriving Inhabited, BEq
+
+/-- How a record whose first field is a tag is written. -/
+def Types.rep (T : Types) (σ : Ty) : Option Rep := do
+  let fs ← tagged? σ
+  let fields := Fields.toList fs
+  let free := fields.all (memberName ·.1)
+  if let some n := (if !fields.isEmpty && free then T.nameOf? σ else none) then return .struct (ident n) fields
+  match fields with
+  | [] => return .unit
+  | [(_, τ)] => return .single τ
+  | _ =>
+    match (T.variantOf? σ).bind fun (u, i) => T.payloadName? u i with
+    | some V => return if free then .struct V fields else .tuple fields
+    | none => return .tuple fields
+
+/-- A value of a record whose first field is a tag, as its payload's text (atomic). -/
+structure Payload where
+  rep : Rep
+  text : String
+  deriving Inhabited
+
+/-- The payload's fields as a tuple (`Fields.den`), as a union other than an inductive holds it. -/
+def Payload.whole (p : Payload) : String :=
+  match p.rep with
+  | .unit => "()"
+  | .single _ => s!"({p.text}, ())"
+  | .struct _ fs => "(" ++ ", ".intercalate (fs.map (fun (f, _) => s!"{p.text}.{ident f}") ++ ["()"]) ++ ")"
+  | .tuple _ => p.text
+
+/-- The payload from its fields' tuple `e` (atomic). -/
+def Rep.ofWhole (r : Rep) (e : String) : String :=
+  match r with
+  | .unit => "()"
+  | .single _ => s!"{e}.1"
+  | .struct n fs => "(" ++ " ".intercalate (s!"{n}.mk" :: (List.range fs.length).map fun k =>
+      e ++ String.join (List.replicate k ".2") ++ ".1") ++ ")"
+  | .tuple _ => e
+
+mutual
+  /-- The Lean type of a value of type `τ` (`Ty.den` with the generated `names`). -/
+  partial def Types.lean (T : Types) (τ : Ty) : String :=
+    match τ, T.rep τ with
+    | _, some .unit => "Unit"
+    | _, some (.single σ) => T.lean σ
+    | _, some (.struct n _) => n
+    | _, some (.tuple fs) => T.product fs
+    | .bool, none => "Bool" | .int, none => "Int" | .number, none => "Int" | .string, none => "JSString"
+    | _, none => match T.inductive? τ with
+      | some (n, _) => n
+      | none => match T.nameOf? τ with
+        | some n => ident n
+        | none => T.leanBody τ
+
+  /-- `Types.lean`, other than by the type's name: the product, sum, list or option it denotes. -/
+  partial def Types.leanBody (T : Types) : Ty → String
+    | .bool => "Bool" | .int => "Int" | .number => "Int" | .string => "JSString"
+    | .tag _ => "Unit"
+    | .lits _ as => s!"Fin {as.length + 1}"
+    | .option _ σ => s!"Option {atomText (T.lean σ)}"
+    | .array σ => s!"List {atomText (T.lean σ)}"
+    | .map σ => s!"List (JSString × {T.lean σ})"
+    | .record fs => T.product (Fields.toList fs)
+    | .union _ vs => " ⊕ ".intercalate ((Variants.toList vs).map fun (_, fs) => atomText (T.product (Fields.toList fs)))
+
+  /-- `A × B × Unit`: the product of the fields' types. -/
+  partial def Types.product (T : Types) (fs : List (String × Ty)) : String :=
+    fs.foldr (fun (_, σ) acc => s!"{atomText (T.lean σ)} × {acc}") "Unit"
+end
 
 def Fields.ofList : List (String × Ty) → Fields
   | [] => .nil
@@ -199,12 +331,17 @@ structure Hover where
 
 structure CheckLog where
   hovers : Array Hover := #[]
+  /-- Loops checked so far, to name their bodies. -/
+  loops : Nat := 0
   /-- The named types, once resolved, to print the logged types with. -/
   types : Option Types := none
 
 abbrev CheckM := ExceptT Diagnostic (StateM CheckLog)
 
 def logHover (h : Hover) : CheckM Unit := modify fun l => { l with hovers := l.hovers.push h }
+
+/-- A new loop's number. -/
+def nextLoop : CheckM Nat := modifyGet fun l => (l.loops, { l with loops := l.loops + 1 })
 
 def mismatch (span : Span) (message : String) : CheckM α :=
   throw { code := "A2002", message, span }
@@ -299,28 +436,9 @@ structure FnSig where
   void : Bool := false
   deriving Inhabited
 
-/-- How a variable a `switch` narrowed to a variant is bound in readable definitions: to nothing (a variant
-without fields), to its one field, or to its payload (the variant's fields after the tag). -/
-inductive PKind where
-  | unit | single | multi
-  deriving BEq, Inhabited
-
-/-- A variant record's value, `((), payload)`, given by its payload: `text` is the payload, or for a
-variant with one field that field's value. -/
-structure Payload where
-  kind : PKind
-  text : String
-  deriving Inhabited
-
-def Payload.whole (p : Payload) : String :=
-  match p.kind with
-  | .unit => "()"
-  | .single => s!"({p.text}, ())"
-  | .multi => p.text
-
 structure Scope where
-  /-- Variables bound to their variant's payload (see `PKind`). -/
-  payloads : List (String × PKind) := []
+  /-- Variables a `switch` narrowed to a variant, with how the variant is written (`Rep`). -/
+  payloads : List (String × Rep) := []
   fns : List FnSig
   /-- Bindings in scope, innermost first, with their current (narrowed) types. -/
   locals : List (String × Ty)
@@ -334,7 +452,7 @@ cites a named lemma `ne.«x».«y»` (emitted by `printFile`): a postponed `by d
 there would block reducing narrowed contexts during elaboration. -/
 def varPathN (x : String) : List String → String
   | [] => ".here"
-  | y :: ys => s!"(.there ne.{ident x}.{ident y} {varPathN x ys})"
+  | y :: ys => s!"(.there ne.{quoted x}.{quoted y} {varPathN x ys})"
 
 /-- The `ne.«x».«y»` lemmas a generated text cites. -/
 def collectNe (text : String) : List (String × String) :=
@@ -390,10 +508,6 @@ structure Out where
   atomic : Bool := false
   trivial : Bool := true
   safe : String := "true"
-  /-- For a variant record's value, its payload. -/
-  payload : Option Payload := none
-  /-- For a record literal, its fields' terms, in order. -/
-  fieldTerms : List String := []
   deriving Inhabited
 
 def Out.term (o : Out) : String := if o.atomic then o.readable else s!"({o.readable})"
@@ -433,7 +547,7 @@ structure Narrowed where
 def Narrowed.wrap (n : Narrowed) (k : String → String) : String → String :=
   fun i =>
     let rest := k i
-    if n.embed != ident n.name && (rest.splitOn (ident n.name)).length > 1 then
+    if n.embed != ident n.name && mentions rest n.name then
       s!"let {ident n.name} := {n.embed}\n{i}{rest}"
     else rest
 
@@ -445,44 +559,42 @@ def tupleSetText (e : String) (j n : Nat) (v : String) : String :=
   let _ := n
   "(" ++ ", ".intercalate (before ++ [v, e ++ String.join (List.replicate (j + 1) ".2")]) ++ ")"
 
-/-- Readable read of field `k` of a value `e` (atomic) of record type `τ`: by name when the record has one. -/
+/-- Readable read of field `k` of a value `e` (atomic) of record type `τ`: by name when the record has one
+(a variant's tag, field 0, is `()`). -/
 def Types.fieldText (T : Types) (τ : Ty) (e : String) (k : Nat) : String :=
-  match T.nameOf? τ, τ with
-  | some _, .record fs => s!"{e}.{ident (Fields.toList fs)[k]!.1}"
-  | _, _ => projText e k
+  match T.rep τ, τ with
+  | some r, _ => if k == 0 then "()" else match r with
+    | .unit => "()"
+    | .single _ => e
+    | .struct _ fs => s!"{e}.{ident fs[k - 1]!.1}"
+    | .tuple _ => projText e (k - 1)
+  | none, .record fs => if (T.nameOf? τ).isSome then s!"{e}.{ident (Fields.toList fs)[k]!.1}" else projText e k
+  | none, _ => projText e k
 
 /-- Readable `e` (atomic) of record type `τ` with field `k` set to `v`. -/
 def Types.setText (T : Types) (τ : Ty) (e : String) (k : Nat) (v : String) : String :=
-  match T.recordName? τ, τ with
-  | some _, .record fs => s!"{e}.{ident (setterName (Fields.toList fs)[k]!.1)} {atomText v}"
-  | _, .record fs => tupleSetText e k (Fields.toList fs).length v
-  | _, _ => tupleSetText e k 0 v
-
-/-- Readable read of field `k` of a variant record `σ` given by its payload (field 0 is the tag). -/
-def Types.payloadField (T : Types) (σ : Ty) (p : Payload) (k : Nat) : String :=
-  if k == 0 then "()" else
-  match p.kind, σ with
-  | .single, _ => p.text
-  | .multi, .record (.cons _ _ fs) =>
-    let named := (T.variantOf? σ).bind fun (u, i) => T.payloadName? u i
-    if named.isSome then s!"{p.text}.{ident (Fields.toList fs)[k - 1]!.1}" else projText p.text (k - 1)
-  | _, _ => "()"
+  match T.rep τ, τ with
+  | some r, _ => if k == 0 then e else match r with
+    | .unit => e
+    | .single _ => v
+    | .struct _ fs => s!"\{ {e} with {ident fs[k - 1]!.1} := {v} }"
+    | .tuple fs => tupleSetText e (k - 1) fs.length v
+  | none, .record fs => match T.structName? τ with
+    | some _ => s!"\{ {e} with {ident (Fields.toList fs)[k]!.1} := {v} }"
+    | none => tupleSetText e k (Fields.toList fs).length v
+  | none, _ => tupleSetText e k 0 v
 
 /-- Readable injection of variant `i` of the union `τ`, given by its payload. -/
 def Types.injectText (T : Types) (τ : Ty) (i : Nat) (p : Payload) : String :=
   match (T.ctorNames? τ).bind (·[i]?), τ with
-  | some c, _ => if p.kind == .unit then c else s!"({c} {atomText p.text})"
+  | some c, _ => if p.rep == .unit then c else s!"({c} {atomText p.text})"
   | none, .union _ vs => injText i (Variants.toList vs).length p.whole
   | none, _ => p.whole
 
-/-- The payload of a variant record's readable value `e` (atomic), for variant `i` of `τ`. -/
-def payloadOf (τ : Ty) (i : Nat) (e : String) : Payload :=
-  match τ with
-  | .union _ vs => match ((Variants.toList vs)[i]?.map (Fields.toList ·.2)).getD [] with
-    | [] => { kind := .unit, text := "()" }
-    | [_] => { kind := .single, text := s!"{e}.2.1" }
-    | _ => { kind := .multi, text := s!"{e}.2" }
-  | _ => { kind := .multi, text := s!"{e}.2" }
+/-- A value `e` (atomic) of a record whose first field is a tag, as a payload. -/
+def Types.payload (T : Types) (σ : Ty) (e : String) : Payload :=
+  let rep := (T.rep σ).getD .unit
+  { rep, text := if rep == .unit then "()" else e }
 
 /-- Use a value of type `out.ty` at type `τ`: equal, or a no-op embedding. -/
 def coerce (T : Types) (span : Span) (out : Out) (τ : Ty) : CheckM Out := do
@@ -497,7 +609,8 @@ def coerce (T : Types) (span : Span) (out : Out) (τ : Ty) : CheckM Out := do
     let variants := Variants.toList vs
     match variants.findIdx? (fun (t, fs) => out.ty == vrec' key t fs) with
     | some i =>
-      let p := out.payload.getD (payloadOf τ i out.term)
+      let (t, fs) := variants[i]!
+      let p := T.payload (vrec' key t fs) out.term
       return { ty := τ, typed := s!"(.widen (.variant {vidxPath i variants.length}) {out.typed})",
                readable := T.injectText τ i p, atomic := true, trivial := out.trivial, safe := out.safe }
     | none => mismatch span s!"{out.ty.ts} where {τ.ts} is expected"
@@ -627,12 +740,10 @@ mutual
     | .var "this" span => mismatch span "'this' used as a value (only this.f.get/has/size/set/delete and this.m())"
     | .var x span =>
       match s.lookup x with
-      | some (i, τ) => match s.payloads.lookup x with
-        | some kind =>
-          let p : Payload := { kind, text := if kind == .unit then "()" else ident x }
-          return { ty := τ, typed := s!"(.var {s.varPath i})", readable := s!"((), {p.whole})", atomic := true,
-                   payload := some p }
-        | none => return { ty := τ, typed := s!"(.var {s.varPath i})", readable := ident x, atomic := true }
+      | some (i, τ) =>
+        -- A variable narrowed to a variant without fields is not bound: its value is `()`.
+        let readable := if s.payloads.lookup x == some .unit then "()" else ident x
+        return { ty := τ, typed := s!"(.var {s.varPath i})", readable, atomic := true }
       | none => throw { code := "A2001", message := s!"unknown variable '{x}'", span }
     | .unary "-" (.literal (.number m ex) _) span => do
       let n ← integerLiteral span m ex
@@ -693,7 +804,7 @@ mutual
     | .member (.member (.var "this" _) f _) "size" span => do
       let (path, fsT, j, _) ← s.stateField span f
       return { ty := .number, typed := s!"(.stateSize {path} {fidxPath j})",
-               readable := s!"(List.length {T.fieldText (.record fsT) (ident "this") j} : Int)", atomic := true }
+               readable := s!"({listCall (T.fieldText (.record fsT) (ident "this") j) "length"} : Int)", atomic := true }
     | .call (.member (.var "this" _) m _) args span => do
       let (fpath, sig) ← s.methodRef span m
       if sig.void then mismatch span s!"'{m}' changes the state: call it as a statement"
@@ -743,15 +854,13 @@ mutual
       match a.ty, f with
       | .array _, "length" | .string, "length" =>
         return { ty := .number, typed := s!"(.{if a.ty == .string then "slength" else "length"} {a.typed})",
-                 readable := s!"(List.length {a.term} : Int)", atomic := true, trivial := a.trivial, safe := a.safe }
+                 readable := s!"({listCall a.term "length"} : Int)", atomic := true, trivial := a.trivial, safe := a.safe }
       | .record fs, _ =>
         let fields := Fields.toList fs
         match fields.findIdx? (·.1 == f) with
         | some k =>
           if protoName f then mismatch span s!"'{f}' is an Object.prototype property"
-          let readable := match a.payload with
-            | some p => T.payloadField a.ty p k
-            | none => T.fieldText a.ty a.term k
+          let readable := T.fieldText a.ty a.term k
           return { ty := fields[k]!.2, typed := s!"(.field {a.typed} {fidxPath k} (by decide +kernel))",
                    readable, atomic := true, trivial := a.trivial, safe := a.safe }
         | none => mismatch span s!"no field '{f}'"
@@ -781,12 +890,12 @@ mutual
         | .spread (.call (.member (.member (.var "this" _) f _) "keys" _) [] _) sp => do
           let (path, fsT, j, _) ← s.stateField sp f
           if τ != .string then mismatch sp "map keys (strings) where another element type is expected"
-          return (true, ({ ty := .array τ, typed := "", readable := s!"List.map Prod.fst {T.fieldText (.record fsT) (ident "this") j}" } : Out),
+          return (true, ({ ty := .array τ, typed := "", readable := listCall (T.fieldText (.record fsT) (ident "this") j) "map" ["Prod.fst"] } : Out),
             s!"spreadKeys {path} {fidxPath j}")
         | .spread (.call (.member (.member (.var "this" _) f _) "values" _) [] _) sp => do
           let (path, fsT, j, σ) ← s.stateField sp f
           if τ != σ then mismatch sp s!"map values ({σ.ts}) where {τ.ts} is expected"
-          return (true, ({ ty := .array τ, typed := "", readable := s!"List.map Prod.snd {T.fieldText (.record fsT) (ident "this") j}" } : Out),
+          return (true, ({ ty := .array τ, typed := "", readable := listCall (T.fieldText (.record fsT) (ident "this") j) "map" ["Prod.snd"] } : Out),
             s!"spreadValues {path} {fidxPath j}")
         | .spread x _ => do
           let o ← checkExpr T s x (some (.array τ))
@@ -851,7 +960,7 @@ mutual
       | "slice", [i] =>
         let i ← checkExpr T s i (some .number)
         return { ty := .string, typed := s!"(.slice1 {a.typed} {i.typed})",
-                 readable := s!"Ariadne.strSlice {a.term} {i.term} (List.length {a.term} : Int)",
+                 readable := s!"Ariadne.strSlice {a.term} {i.term} ({listCall a.term "length"} : Int)",
                  trivial := a.trivial && i.trivial, safe := both a i }
       | "slice", [i, j] =>
         let i ← checkExpr T s i (some .number)
@@ -868,18 +977,18 @@ mutual
       if !τ.prim then mismatch span s!"'includes' on an array of {τ.ts} (objects compare by identity)"
       let x ← checkExpr T s arg (some τ)
       return { ty := .bool, typed := s!"(.includes (by decide +kernel) {a.typed} {x.typed})",
-               readable := s!"List.any {a.term} (fun y' => y' == {x.term})", trivial := a.trivial && x.trivial,
+               readable := listCall a.term "any" [s!"(· == {x.term})"] false, trivial := a.trivial && x.trivial,
                safe := both a x }
     | "some" | "every" | "find" | "filter" | "map" => do
       let result := if m == "map" then (match expected with | some (.array σ) => some σ | _ => none) else some .bool
       let f ← checkFn T s span arg τ result
       let (ctor, ty, readable, cond) := match m with
-        | "some" => ("any", Ty.bool, s!"List.any {a.term} {f.lam}", s!"Ariadne.anySafe {f.lam} {f.lamSafe} {a.term}")
-        | "every" => ("all", .bool, s!"List.all {a.term} {f.lam}", s!"Ariadne.allSafe {f.lam} {f.lamSafe} {a.term}")
-        | "find" => ("find", .option .undef τ, s!"List.find? {f.lam} {a.term}",
+        | "some" => ("any", Ty.bool, listCall a.term "any" [f.lam] false, s!"Ariadne.anySafe {f.lam} {f.lamSafe} {a.term}")
+        | "every" => ("all", .bool, listCall a.term "all" [f.lam] false, s!"Ariadne.allSafe {f.lam} {f.lamSafe} {a.term}")
+        | "find" => ("find", .option .undef τ, listCall a.term "find?" [f.lam],
           s!"Ariadne.anySafe {f.lam} {f.lamSafe} {a.term}")
-        | "filter" => ("filter", .array τ, s!"List.filter {f.lam} {a.term}", s!"List.all {a.term} {f.lamSafe}")
-        | _ => ("map", .array f.ty, s!"List.map {f.lam} {a.term}", s!"List.all {a.term} {f.lamSafe}")
+        | "filter" => ("filter", .array τ, listCall a.term "filter" [f.lam], listCall a.term "all" [f.lamSafe] false)
+        | _ => ("map", .array f.ty, listCall a.term "map" [f.lam], listCall a.term "all" [f.lamSafe] false)
       if m == "find" && τ matches .option .. then mismatch span "'find' on an array of optionals (a nested optional)"
       return { ty, typed := s!"(.{ctor} {a.typed} {f.typed})", readable,
                trivial := a.trivial && f.trivial, safe := andTText a.trivial a.safe f.trivial cond }
@@ -1027,20 +1136,7 @@ mutual
       let some i := variants.findIdx? (·.1 == tag) | mismatch span s!"no variant tagged {tagLitTS tag}"
       let (t, fs) := variants[i]!
       let r ← checkRecord T s entries span (vrec' key t fs)
-      -- The variant's payload: its fields after the tag.
-      let terms := r.fieldTerms.drop 1
-      let payload : Payload := match terms with
-        | [] => { kind := .unit, text := "()" }
-        | [x] => { kind := .single, text := x }
-        | _ =>
-          let ctor := match T.payloadName? (.union key vs) i with
-            | some V => if namesFree fs then some s!"{V}.mk" else none
-            | none => none
-          { kind := .multi, text := match ctor with
-            | some c => s!"({" ".intercalate (c :: terms)})"
-            | none => "(" ++ ", ".intercalate (terms ++ ["()"]) ++ ")" }
-      coerce T span { r with readable := s!"((), {payload.whole})", atomic := true, payload := some payload }
-        (.union key vs)
+      coerce T span r (.union key vs)
     | τ@(.record fs) => do
       let fields := Fields.toList fs
       match entries with
@@ -1056,14 +1152,21 @@ mutual
         let (upd, readable) := fields.zipIdx.foldr (fun ((f, _), k) (accU, accR) =>
             match srcNames.findIdx? (· == f) with
             | some j => (s!"(.set {fidxPath j} {accU})", src[j]!.2.term :: accR)
-            | none => (s!"(.keep (by decide +kernel) {accU})", projText "r'" k :: accR)) (".nil", [])
+            | none => (s!"(.keep (by decide +kernel) {accU})",
+                (if (T.rep τ).isSome then projText "r'" (k - 1) else projText "r'" k) :: accR)) (".nil", [])
         let (esT, esS) := foldSafe (src.map (·.2))
-        -- With setters, `{ ...r, f: v }` is `r.withF v`.
-        let text := match T.recordName? τ with
-          | some _ => src.foldl (fun acc (f, o) => match fields.findIdx? (·.1 == f) with
-              | some k => s!"({T.setText τ acc k o.readable})"
-              | none => acc) r.term
-          | none => s!"let r' := {r.readable}; ({", ".intercalate (readable ++ ["()"])})"
+        -- A structure's `{ ...r, f: v }` is `{ r with f := v }`; a variant's tag stays as it is.
+        let updates := src.filterMap fun (f, o) => match fields.findIdx? (·.1 == f) with
+          | some k => if (T.rep τ).isSome && k == 0 then none else some (f, o.readable)
+          | none => none
+        let withText := if updates.isEmpty then r.readable else
+          s!"\{ {r.term} with {", ".intercalate (updates.map fun (f, v) => s!"{ident f} := {v}")} }"
+        let text := match T.rep τ, T.structName? τ with
+          | some (.struct ..), _ | none, some _ => withText
+          | some .unit, _ => r.readable
+          | some (.single _), _ => (updates.head?.map (·.2)).getD r.readable
+          | some (.tuple _), _ => s!"let r' := {r.readable}; ({", ".intercalate (readable.drop 1 ++ ["()"])})"
+          | none, none => s!"let r' := {r.readable}; ({", ".intercalate (readable ++ ["()"])})"
         return { ty := τ, typed := s!"(.update {r.typed} {typedEntries} {upd} (by decide +kernel))",
                  readable := text, trivial := r.trivial && esT, safe := andTText r.trivial r.safe esT esS }
       | _ => do
@@ -1080,11 +1183,19 @@ mutual
               | .option .undef _ | .option .both _ => pure (s!"(.absent (by decide +kernel) {accS})", "none" :: accR)
               | _ => mismatch span s!"the literal has no '{f}' field") (".nil", [])
         let (esT, esS) := foldSafe (src.map (·.2))
-        let readable := match T.recordName? τ with
-          | some n => if sel.2.isEmpty then s!"{ident n}.mk" else s!"({" ".intercalate (s!"{ident n}.mk" :: sel.2)})"
-          | none => "(" ++ ", ".intercalate (sel.2 ++ ["()"]) ++ ")"
+        let mk (n : String) (terms : List String) : String :=
+          if terms.isEmpty then s!"{n}.mk" else s!"({" ".intercalate (s!"{n}.mk" :: terms)})"
+        let tuple (terms : List String) : String := "(" ++ ", ".intercalate (terms ++ ["()"]) ++ ")"
+        -- A variant is its payload: the fields after the tag.
+        let readable := match T.rep τ, T.structName? τ with
+          | some .unit, _ => "()"
+          | some (.single _), _ => (sel.2[1]?).getD "()"
+          | some (.struct n _), _ => mk n (sel.2.drop 1)
+          | some (.tuple _), _ => tuple (sel.2.drop 1)
+          | none, some n => mk n sel.2
+          | none, none => tuple sel.2
         return { ty := τ, typed := s!"(.record {typedEntries} {sel.1} (by decide +kernel))",
-                 readable, atomic := true, trivial := esT, safe := esS, fieldTerms := sel.2 }
+                 readable, atomic := true, trivial := esT, safe := esS }
     | τ@(.option _ σ) => do
       let r ← checkRecord T s entries span σ
       coerce T span r τ
@@ -1111,6 +1222,17 @@ structure Block where
   falls : Bool
   breaks : Bool
   continues : Bool
+  /-- The variables of the scope the statements may assign (`TStmts.writes`). -/
+  writes : List String := []
+  /-- No `return`, no `break` of its own, no `continue` of its own (`TStmts.noRet`, `noBrk`, `noCont`). -/
+  noRet : Bool := true
+  noBrk : Bool := true
+  noCont : Bool := true
+
+/-- Always completes normally (`TStmts.closed`). -/
+def Block.closed (b : Block) : Bool := b.noRet && b.noBrk && b.noCont
+
+def _root_.List.unite (a b : List String) : List String := a ++ b.filter (!a.contains ·)
 
 def blockNil : Block where
   typed := ".nil"
@@ -1146,70 +1268,94 @@ inductive Leaf where
   | run (b : Block)
   | normal
 
-/-- A variable's value in an environment tuple: a narrowed variable is bound to its payload. -/
+/-- A variable's value in an environment tuple (a variable narrowed to a variant without fields is not bound). -/
 def Scope.valueText (s : Scope) (x : String) : String :=
-  match s.payloads.lookup x with
-  | some .unit => "((), ())"
-  | some .single => s!"((), ({ident x}, ()))"
-  | some .multi => s!"((), {ident x})"
-  | none => ident x
+  if s.payloads.lookup x == some .unit then "()" else ident x
 
 /-- The environment tuple of a scope, as readable text. -/
 def tupleText (s : Scope) : String :=
   "(" ++ ", ".intercalate (s.locals.map (s.valueText ·.1) ++ ["()"]) ++ ")"
 
 /-- The pattern a continuation binds the environment tuple with: the scope's variables `text` uses, by
-name (a narrowed variable to its payload), `_` for the others. -/
+name, `_` for the others. -/
 def statePattern (s : Scope) (text : String) : String :=
-  let uses (x : String) := (text.splitOn (ident x)).length > 1
+  let uses (x : String) := mentions text x && s.payloads.lookup x != some .unit
   if !s.locals.any (uses ·.1) then "_" else
-  "(" ++ ", ".intercalate (s.locals.map (fun (x, _) => if !uses x then "_" else match s.payloads.lookup x with
-    | some .unit => "_"
-    | some .single => s!"((), ({ident x}, ()))"
-    | some .multi => s!"((), {ident x})"
-    | none => ident x) ++ ["()"]) ++ ")"
+  "(" ++ ", ".intercalate (s.locals.map (fun (x, _) => if uses x then ident x else "_") ++ ["()"]) ++ ")"
 
-/-- Readable `switch`: a match on the union's constructors (or nested matches on its sum), one leaf per
-variant; a narrowed variable is bound to its variant's payload. -/
+/-- The variables of the scope a statement assigns, in the scope's order (`Ctx.sub`). -/
+def Scope.stateVars (s : Scope) (ws : List String) : List String := (s.locals.filter (ws.contains ·.1)).map (·.1)
+
+/-- A state: the assigned variables as a flat tuple (`Ctx.tup`), as a term or a pattern. -/
+def Scope.stateText (s : Scope) (ws : List String) : String :=
+  match s.stateVars ws with
+  | [] => "()"
+  | [x] => s.valueText x
+  | xs => "(" ++ ", ".intercalate (xs.map s.valueText) ++ ")"
+
+/-- The value of an `if`, null test or `switch` whose branches are closed: `let state := branches; rest`. -/
+def branchValueText (s : Scope) (ws : List String) (branches : String → KText → String) (rest : String) (i : String) :
+    String :=
+  let st := s.stateText ws
+  let kv : KText := ⟨fun _ => st, fun _ => st, fun _ => st⟩
+  let j := i ++ "  "
+  s!"let {st} :=\n{j}{branches j kv}\n{i}{rest}"
+
+/-- Readable `switch`: a match on the inductive's constructors (or nested matches on the union's sum), one
+leaf per variant; a narrowed variable is bound to its variant's payload. -/
 def switchLeaves (render : Block → String → KText → String) (x : String) (ctors : Option (List String))
-    (arities : List Nat) (leaves : List Leaf) (k : KText) (scrut ind : String) : String :=
-  let leafText (l : Leaf) (j : String) : String := match l with
-    | .narrowed b n => render b j (k.wrap n)
+    (reps : List Rep) (leaves : List Leaf) (k : KText) (scrut ind : String) : String :=
+  -- A narrowed leaf in a sum binds the payload's fields as a tuple: a structure is built from them.
+  -- `inSum`: the leaf's pattern is in a sum (it binds the fields' tuple, or for one field the field);
+  -- `whole`: there is no pattern (`x` is the fields' tuple). A structure is then built from the fields.
+  let leafText (l : Leaf) (r : Rep) (inSum whole : Bool) (j : String) : String := match l with
+    | .narrowed b n =>
+      let body := render b j (k.wrap n)
+      let build := match r with
+        | .struct .. => inSum || whole
+        | .single _ => whole
+        | _ => false
+      if build && mentions body x then s!"let {ident x} := {r.ofWhole (ident x)}\n{j}{body}" else body
     | .run b => render b j k
     | .normal => k.normal j
-  -- What a leaf's pattern binds: the narrowed variable's payload, else nothing.
-  let bind (l : Leaf) (arity : Nat) (inSum : Bool) : String := match l, arity with
-    | .narrowed .., 0 => "_"
-    | .narrowed .., 1 => if inSum then s!"({ident x}, ())" else ident x
+  -- What a leaf's pattern binds: the narrowed variable's payload (in a sum, its fields' tuple), else nothing.
+  let bind (l : Leaf) (r : Rep) (inSum : Bool) : String := match l, r with
+    | .narrowed .., .unit => "_"
+    | .narrowed .., .single _ => if inSum then s!"({ident x}, ())" else ident x
     | .narrowed .., _ => ident x
     | _, _ => "_"
   let j := ind ++ "  "
   match ctors, leaves with
-  | _, [l] => leafText l ind
   | some cs, _ =>
-    let arms := (cs.zip (arities.zip leaves)).map fun (c, (a, l)) =>
-      s!"{ind}| {if a == 0 then c else s!"{c} {bind l a false}"} =>\n{j}{leafText l j}"
+    let arms := (cs.zip (reps.zip leaves)).map fun (c, (r, l)) =>
+      s!"{ind}| {if r == .unit then c else s!"{c} {bind l r false}"} =>\n{j}{leafText l r false false j}"
     s!"match {scrut} with\n" ++ "\n".intercalate arms
+  | none, [l] => leafText l reps[0]! false true ind
   | none, _ =>
-    let rec nested (ls : List (Leaf × Nat)) (scrut ind : String) : String :=
+    let rec nested (ls : List (Leaf × Rep)) (scrut ind : String) : String :=
       let j := ind ++ "  "
       match ls with
       | [] => ""
-      | [(l, _)] => leafText l ind
-      | (l, a) :: [(l', a')] =>
-        s!"match {scrut} with\n{ind}| Sum.inl {bind l a true} =>\n{j}{leafText l j}\n" ++
-          s!"{ind}| Sum.inr {bind l' a' true} =>\n{j}{leafText l' j}"
-      | (l, a) :: more =>
-        s!"match {scrut} with\n{ind}| Sum.inl {bind l a true} =>\n{j}{leafText l j}\n" ++
+      | [(l, r)] => leafText l r true false ind
+      | (l, r) :: [(l', r')] =>
+        s!"match {scrut} with\n{ind}| Sum.inl {bind l r true} =>\n{j}{leafText l r true false j}\n" ++
+          s!"{ind}| Sum.inr {bind l' r' true} =>\n{j}{leafText l' r' true false j}"
+      | (l, r) :: more =>
+        s!"match {scrut} with\n{ind}| Sum.inl {bind l r true} =>\n{j}{leafText l r true false j}\n" ++
           s!"{ind}| Sum.inr p' =>\n{j}{nested more "p'" j}"
-    nested (leaves.zip arities) scrut ind
+    nested (leaves.zip reps) scrut ind
 
 /-- `if (c) yes else no; rest`, rendered for the denotation or the safety condition.
 When both branches may complete, the rest is bound once as a join point instead of
 being repeated in each branch. -/
-def iteText (render : Block → String → KText → String) (s : Scope) (c : String)
+def iteText (render : Block → String → KText → String) (idiom : Bool) (s : Scope) (c : String)
     (yes no rest : Block) (i : String) (k : KText) : String :=
   let j := i ++ "  "
+  if idiom && yes.closed && no.closed then
+    branchValueText s (yes.writes.unite no.writes) (fun j kv =>
+      let j' := j ++ "  "
+      s!"if {c} then\n{j'}{render yes j' kv}\n{j}else\n{j'}{render no j' kv}") (render rest i k) i
+  else
   if yes.falls && no.falls && rest.typed != ".nil" then
     let after := s!"after{i.length}'"
     let k' := { k with normal := fun _ => s!"{after} {tupleText s}" }
@@ -1220,14 +1366,59 @@ def iteText (render : Block → String → KText → String) (s : Scope) (c : St
     let k' := { k with normal := fun j' => render rest j' k }
     s!"if {c} then\n{j}{render yes j k'}\n{i}else\n{j}{render no j k'}"
 
-/-- A loop: `Ariadne.forIn items (fun binder next exit state => body) (fun state => rest) tuple`. -/
+/-- The Lean type of a variable's readable value. -/
+def Scope.varTypeText (s : Scope) (T : Types) (x : String) : String :=
+  T.lean (((s.lookup x).map (·.2)).getD .bool)
+
+/-- A loop's body as a named definition, `‹loopN› captured… : type := fun params => body`, between markers
+that `hoistLoops` takes out of a readable definition; and the term naming it. Its parameters are the
+variables of the scope the body reads, other than the state. -/
+def namedBody (s : Scope) (T : Types) (id : Nat) (state : List String) (ty lam body : String) : String × String :=
+  let uses (x : String) := mentions body x
+  let captured := (s.locals.reverse.filter fun (x, _) =>
+    !state.contains x && uses x && s.payloads.lookup x != some .unit).map (·.1)
+  let params := " ".intercalate (captured.map fun x => s!"({ident x} : {s.varTypeText T x})")
+  let name := s!"‹loop{id}›"
+  let call := if captured.isEmpty then name else s!"({name} {" ".intercalate (captured.map ident)})"
+  let header := if params.isEmpty then s!"def {name}" else s!"def {name} {params}"
+  (call, s!"⟦⟦{id}⟧⟧{header} : {ty} :=\n  {lam} =>\n    {body}⟦⟦/⟧⟧")
+
+/-- A loop: `Ariadne.forIn items (fun binder next exit state => body) (fun state => rest) state`, or, when its
+body is direct, `let state := Ariadne.fold state items (fun state binder => body); rest`. The readable
+definition's state is the variables the body assigns (`idiom`, `TStmts.denoteR`); the safety condition's is
+the whole environment. -/
 def loopText (render : Block → String → KText → String) (s : Scope) (items binder : String)
     (pre : String → String)
-    (body rest : Block) (i : String) (k : KText) : String :=
+    (body rest : Block) (idiom : Bool) (i : String) (k : KText) (T : Types) (id : Nat) (binderTy resultTy : String) :
+    String :=
   let d := i.length
   let (nx, ex) := (s!"next{d}'", s!"exit{d}'")
   let tup := tupleText s
   let j := i ++ "  "
+  -- The state: the variables the body assigns (`TStmts.denoteR`), and its type.
+  let st := s.stateText body.writes
+  let vars := s.stateVars body.writes
+  let stTy := if vars.isEmpty then "Unit" else " × ".intercalate (vars.map fun x => s.varTypeText T x)
+  let jd := "    "
+  -- A body with no `return` and no `break` of its own (`TStmts.direct`): a fold, the body ending with the
+  -- state.
+  if idiom && body.noRet && body.noBrk then
+    let kd : KText := ⟨fun _ => st, fun _ => st, fun _ => st⟩
+    let (call, defn) := namedBody s T id vars s!"{stTy} → {binderTy} → {stTy}" s!"fun {st} {binder}"
+      s!"{pre jd}{render body jd kd}"
+    let restText := render rest i k
+    s!"let {st} := Ariadne.fold {st} {items} {call}{defn}\n{i}{restText}"
+  else if idiom then
+    let kb : KText := ⟨fun _ => s!"next' {st}", fun _ => s!"exit' {st}", fun _ => s!"next' {st}"⟩
+    -- The result type: the function's, or any when the body cannot `return`.
+    let (r, implicit) := if body.noRet then ("R", "{R : Type} ") else (resultTy, "")
+    let (call, defn) := namedBody s T id vars s!"{binderTy} → ({stTy} → {r}) → ({stTy} → {r}) → {stTy} → {r}"
+      s!"fun {binder} next' exit' {st}" s!"{pre jd}{render body jd kb}"
+    let defn := defn.replace s!"def ‹loop{id}› " s!"def ‹loop{id}› {implicit}"
+    let restText := render rest j k
+    s!"Ariadne.forIn {items} {call}{defn}\n{i}  " ++
+      s!"(fun {st} =>\n{j}{restText})\n{i}  {st}"
+  else
   let kb : KText := ⟨fun _ => s!"{nx} {tup}", fun _ => s!"{ex} {tup}", fun _ => s!"{nx} {tup}"⟩
   let bodyText := s!"{pre j}{render body j kb}"
   let restText := render rest j k
@@ -1237,11 +1428,24 @@ def loopText (render : Block → String → KText → String) (s : Scope) (items
 /-- A `while` loop: `Ariadne.whileDo (fun state => c) (fun next exit state => body) (fun state => rest) tuple`,
 and `Ariadne.whileSafe` for the safety condition. -/
 def whileText (render : Block → String → KText → String) (s : Scope) (fn c : String) (body rest : Block)
-    (i : String) (k : KText) : String :=
+    (idiom : Bool) (i : String) (k : KText) (T : Types) (id : Nat) (resultTy : String) : String :=
   let d := i.length
   let (nx, ex) := (s!"next{d}'", s!"exit{d}'")
-  let tup := tupleText s
   let j := i ++ "  "
+  if idiom then
+    let st := s.stateText body.writes
+    let vars := s.stateVars body.writes
+    let stTy := if vars.isEmpty then "Unit" else " × ".intercalate (vars.map fun x => s.varTypeText T x)
+    let kb : KText := ⟨fun _ => s!"next' {st}", fun _ => s!"exit' {st}", fun _ => s!"next' {st}"⟩
+    let (r, implicit) := if body.noRet then ("R", "{R : Type} ") else (resultTy, "")
+    let (call, defn) := namedBody s T id vars s!"({stTy} → {r}) → ({stTy} → {r}) → {stTy} → {r}"
+      s!"fun next' exit' {st}" (render body "    " kb)
+    let defn := defn.replace s!"def ‹loop{id}› " s!"def ‹loop{id}› {implicit}"
+    let restText := render rest j k
+    s!"{fn} (fun {st} => {c})\n{i}  {call}{defn}\n{i}  " ++
+      s!"(fun {st} =>\n{j}{restText})\n{i}  {st}"
+  else
+  let tup := tupleText s
   let kb : KText := ⟨fun _ => s!"{nx} {tup}", fun _ => s!"{ex} {tup}", fun _ => s!"{nx} {tup}"⟩
   let bodyText := render body j kb
   let restText := render rest j k
@@ -1264,7 +1468,8 @@ mutual
              readable := fun i k => s!"let {ident x} : {T.lean v.ty} := {v.readable}\n{i}{rest.readable i k}",
              safe := fun i k => andText v.ok s!"let {ident x} : {T.lean v.ty} := {v.readable}\n{i}{rest.safe i k}",
              trivial := v.trivial && rest.trivial,
-             falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
+             falls := rest.falls, breaks := rest.breaks, continues := rest.continues,
+             writes := rest.writes.erase x, noRet := rest.noRet, noBrk := rest.noBrk, noCont := rest.noCont }
     | .let_ true x annotation e span :: rest => do
       let expected ← annotation.mapM (T.resolve span 64)
       let v ← checkExpr T s e expected
@@ -1274,53 +1479,55 @@ mutual
              readable := fun i k => s!"let {ident x} : {T.lean v.ty} := {v.readable}\n{i}{rest.readable i k}",
              safe := fun i k => andText v.ok s!"let {ident x} : {T.lean v.ty} := {v.readable}\n{i}{rest.safe i k}",
              trivial := v.trivial && rest.trivial,
-             falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
+             falls := rest.falls, breaks := rest.breaks, continues := rest.continues,
+             writes := rest.writes.erase x, noRet := rest.noRet, noBrk := rest.noBrk, noCont := rest.noCont }
     | .assign (.var x _) e span :: rest => do
       let some (j, τ) := s.lookup x | throw { code := "A2001", message := s!"unknown variable '{x}'", span }
       if !s.mutables.contains x then mismatch span s!"'{x}' is not assignable (a const declaration)"
       let v ← checkExpr T s e (some τ)
       let rest ← checkStmts T s result rest
-      -- A narrowed variable stays bound to its payload.
-      let bind := match s.payloads.lookup x with
-        | some .unit => ""
-        | some kind =>
-          let p := v.payload.getD (match kind with
-            | .single => { kind, text := s!"{v.term}.2.1" }
-            | _ => { kind, text := s!"{v.term}.2" })
-          s!"let {ident x} := {p.text}"
-        | none => s!"let {ident x} : {T.lean v.ty} := {v.readable}"
+      -- A variable narrowed to a variant without fields stays unbound.
+      let bind := if s.payloads.lookup x == some .unit then "" else s!"let {ident x} : {T.lean v.ty} := {v.readable}"
       let bindIn (i body : String) := if bind.isEmpty then body else s!"{bind}\n{i}{body}"
       pure { typed := s!"(.assign {s.varPath j} {v.typed}\n  {rest.typed})",
              readable := fun i k => bindIn i (rest.readable i k),
              safe := fun i k => andText v.ok (bindIn i (rest.safe i k)),
              trivial := v.trivial && rest.trivial,
-             falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
+             falls := rest.falls, breaks := rest.breaks, continues := rest.continues,
+             writes := [x].unite rest.writes, noRet := rest.noRet, noBrk := rest.noBrk, noCont := rest.noCont }
     | .continue_ _ :: rest => do
       let rest ← checkStmts T s result rest
       pure { typed := s!"(.cont {rest.typed})", readable := (fun i k => k.cont i), safe := (fun i k => k.cont i),
-             trivial := rest.trivial, falls := false, breaks := false, continues := true }
+             trivial := rest.trivial, falls := false, breaks := false, continues := true,
+             noRet := rest.noRet, noBrk := rest.noBrk, noCont := false }
     | .while_ c body span :: rest => do
       let c ← checkExpr T s c (some .bool)
       -- The condition is evaluated at every iteration; its safety would join the loop's.
       if !c.trivial then unsupportedTy span "a while condition with number arithmetic or calls of unsafe functions"
       let body ← checkStmts T s result (branchStmts body)
       let rest ← checkStmts T s result rest
+      let id ← nextLoop
       pure { typed := s!"(.whileLoop {c.typed}\n  {body.typed}\n  {rest.typed})",
-             readable := whileText (·.readable) s "Ariadne.whileDo" c.readable body rest,
-             safe := whileText (·.safe) s "Ariadne.whileSafe" c.readable body rest,
-             trivial := false, falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
+             readable := fun i k => whileText (·.readable) s "Ariadne.whileDo" c.readable body rest true i k T id (T.lean result),
+             safe := fun i k => whileText (·.safe) s "Ariadne.whileSafe" c.readable body rest false i k T id "",
+             trivial := false, falls := rest.falls, breaks := rest.breaks, continues := rest.continues,
+             writes := body.writes.unite rest.writes, noRet := body.noRet && rest.noRet, noBrk := rest.noBrk,
+             noCont := rest.noCont }
     | .forOf false x e body span :: rest => do
       let body := branchStmts body
       let a ← inferExpr T s e none
       let .array σ := a.ty | mismatch span s!"for-of over {a.ty.ts}"
       let body ← checkStmts T (← declare s span x σ) result body
       let rest ← checkStmts T s result rest
-      let text (render : Block → String → KText → String) :=
-        loopText render s a.term (ident x) (fun _ => "") body rest
+      let id ← nextLoop
+      let text (render : Block → String → KText → String) (idiom : Bool) (i : String) (k : KText) :=
+        loopText render s a.term (ident x) (fun _ => "") body rest idiom i k T id (T.lean σ) (T.lean result)
       pure { typed := s!"(.forOf {leanString x} {a.typed}\n  {body.typed}\n  {rest.typed})",
-             readable := text (·.readable), safe := fun i k => andText a.ok (text (·.safe) i k),
+             readable := text (·.readable) true, safe := fun i k => andText a.ok (text (·.safe) false i k),
              trivial := a.trivial && body.trivial && rest.trivial,
-             falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
+             falls := rest.falls, breaks := rest.breaks, continues := rest.continues,
+             writes := (body.writes.erase x).unite rest.writes, noRet := body.noRet && rest.noRet, noBrk := rest.noBrk,
+             noCont := rest.noCont }
     | .for_ (.let_ true i _ (.literal (.number 0 0) _) _) (.binary "<" (.var i₁ _) (.var n _) _)
         update body span :: rest => do
       if !(i₁ == i && incrementOf update == some i) then unsupportedTy span "this for loop"
@@ -1328,13 +1535,17 @@ mutual
       if τ != .number then mismatch span s!"the bound '{n}' is {τ.ts}, not a number"
       if s.mutables.contains n then mismatch span s!"the bound '{n}' must be a const"
       -- The index is not assignable in the body (it is not added to the mutables).
-      let body ← checkStmts T (← declare s span i .number) result (branchStmts body)
+      let bodyStmts := branchStmts body
+      let body ← checkStmts T (← declare s span i .number) result bodyStmts
       let rest ← checkStmts T s result rest
-      let text (render : Block → String → KText → String) :=
-        loopText render s s!"(Ariadne.range {ident n})" (ident i) (fun _ => "") body rest
+      let id ← nextLoop
+      let text (render : Block → String → KText → String) (idiom : Bool) (i' : String) (k : KText) :=
+        loopText render s s!"(Ariadne.range {ident n})" (ident i) (fun _ => "") body rest idiom i' k T id "Int" (T.lean result)
       pure { typed := s!"(.forRange {leanString i} {s.varPath j}\n  {body.typed}\n  {rest.typed})",
-             readable := text (·.readable), safe := text (·.safe), trivial := body.trivial && rest.trivial,
-             falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
+             readable := text (·.readable) true, safe := text (·.safe) false, trivial := body.trivial && rest.trivial,
+             falls := rest.falls, breaks := rest.breaks, continues := rest.continues,
+             writes := (body.writes.erase i).unite rest.writes, noRet := body.noRet && rest.noRet, noBrk := rest.noBrk,
+             noCont := rest.noCont }
     | .forOfPair false ix x (.call (.member e "entries" _) [] _) (.block body _) span :: rest => do
       let a ← inferExpr T s e none
       let .array σ := a.ty | mismatch span s!"entries of {a.ty.ts}"
@@ -1342,24 +1553,29 @@ mutual
       let body ← checkStmts T (← declare (← declare s span ix .number) span x σ) result body
       let rest ← checkStmts T s result rest
       let p := s!"n{s.locals.length}'"
-      let text (render : Block → String → KText → String) :=
-        loopText render s s!"(List.zipIdx {a.term})" s!"({ident x}, {p})"
-          (fun j => s!"let {ident ix} := ({p} : Int)\n{j}") body rest
+      let id ← nextLoop
+      let text (render : Block → String → KText → String) (idiom : Bool) (i : String) (k : KText) :=
+        loopText render s (if (listCall a.term "zipIdx").startsWith "List." then s!"({listCall a.term "zipIdx"})" else listCall a.term "zipIdx") s!"({ident x}, {p})"
+          (fun j => s!"let {ident ix} := ({p} : Int)\n{j}") body rest idiom i k T id s!"{atomText (T.lean σ)} × Nat" (T.lean result)
       pure { typed := s!"(.forEntries {leanString ix} {leanString x} {a.typed}\n  {body.typed}\n  {rest.typed})",
-             readable := text (·.readable), safe := fun i k => andText a.ok (text (·.safe) i k),
+             readable := text (·.readable) true, safe := fun i k => andText a.ok (text (·.safe) false i k),
              trivial := a.trivial && body.trivial && rest.trivial,
-             falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
+             falls := rest.falls, breaks := rest.breaks, continues := rest.continues,
+             writes := ((body.writes.erase x).erase ix).unite rest.writes, noRet := body.noRet && rest.noRet,
+             noBrk := rest.noBrk, noCont := rest.noCont }
     | .return_ e span :: rest => do
       if s.void then
         let .literal .undefined _ := e | mismatch span "a value returned from a method returning void"
         let some (ti, _) := s.lookup "this" | mismatch span "'this' outside a method"
         let rest ← checkStmts T s result rest
         return { typed := s!"(.retVoid {s.varPath ti} {rest.typed})", readable := fun _ _ => ident "this",
-                 safe := fun _ _ => "true", trivial := rest.trivial, falls := false, breaks := false, continues := false }
+                 safe := fun _ _ => "true", trivial := rest.trivial, falls := false, breaks := false, continues := false,
+                 noRet := false, noBrk := rest.noBrk, noCont := rest.noCont }
       let v ← checkExpr T s e (some result)
       let rest ← checkStmts T s result rest
       pure { typed := s!"(.ret {v.typed} {rest.typed})", readable := fun _ _ => v.readable, safe := fun _ _ => v.ok,
-             trivial := v.trivial && rest.trivial, falls := false, breaks := false, continues := false }
+             trivial := v.trivial && rest.trivial, falls := false, breaks := false, continues := false,
+             noRet := false, noBrk := rest.noBrk, noCont := rest.noCont }
     | .expr (.call (.member (.member (.var "this" _) f _) op _) args _) span :: rest => do
       if !s.void then mismatch span "only a method returning void may change the state"
       let (path, fs, j, τ) ← s.stateField span f
@@ -1386,7 +1602,8 @@ mutual
              readable := fun i k => s!"{upd}\n{i}{rest.readable i k}",
              safe := fun i k => andText operands s!"{upd}\n{i}{rest.safe i k}",
              trivial := key.trivial && others.all (·.trivial) && rest.trivial,
-             falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
+             falls := rest.falls, breaks := rest.breaks, continues := rest.continues,
+             writes := ["this"].unite rest.writes, noRet := rest.noRet, noBrk := rest.noBrk, noCont := rest.noCont }
     | .expr (.call (.member (.var "this" _) m _) args _) span :: rest => do
       if !s.void then mismatch span "only a method returning void may change the state"
       let (fpath, sig) ← s.methodRef span m
@@ -1405,11 +1622,13 @@ mutual
              readable := fun i k => s!"{upd}\n{i}{rest.readable i k}",
              safe := fun i k => andText callSafe s!"{upd}\n{i}{rest.safe i k}",
              trivial := argsT && sig.trivial && rest.trivial,
-             falls := rest.falls, breaks := rest.breaks, continues := rest.continues }
+             falls := rest.falls, breaks := rest.breaks, continues := rest.continues,
+             writes := ["this"].unite rest.writes, noRet := rest.noRet, noBrk := rest.noBrk, noCont := rest.noCont }
     | .break_ _ :: rest => do
       let rest ← checkStmts T s result rest
       pure { typed := s!"(.brk {rest.typed})", readable := (fun i k => k.brk i), safe := (fun i k => k.brk i),
-             trivial := rest.trivial, falls := false, breaks := true, continues := false }
+             trivial := rest.trivial, falls := false, breaks := true, continues := false,
+             noRet := rest.noRet, noBrk := false, noCont := rest.noCont }
     | .block body _ :: rest => do
       let body ← checkStmts T s result body
       let rest ← checkStmts T s result rest
@@ -1418,7 +1637,9 @@ mutual
              safe := fun i k => body.safe i { k with normal := fun j => rest.safe j k },
              trivial := body.trivial && rest.trivial,
              falls := body.falls && rest.falls, breaks := body.breaks || (body.falls && rest.breaks),
-             continues := body.continues || (body.falls && rest.continues) }
+             continues := body.continues || (body.falls && rest.continues),
+             writes := body.writes.unite rest.writes, noRet := body.noRet && rest.noRet,
+             noBrk := body.noBrk && rest.noBrk, noCont := body.noCont && rest.noCont }
     | .if_ c yes no span :: rest =>
       match nullTestVar c with
       | some (x, isNull) => checkNullIf T s result x isNull (branchStmts yes) (branchStmts no) span rest
@@ -1429,9 +1650,11 @@ mutual
         let rest ← checkStmts T s result rest
         let (falls, breaks, continues) := flagsIte yes no rest
         pure { typed := s!"(.ite {c.typed}\n  {yes.typed}\n  {no.typed}\n  {rest.typed})",
-               readable := iteText (·.readable) s c.readable yes no rest,
-               safe := fun i k => andText c.ok (iteText (·.safe) s c.readable yes no rest i k),
-               trivial := c.trivial && yes.trivial && no.trivial && rest.trivial, falls, breaks, continues }
+               readable := iteText (·.readable) true s c.readable yes no rest,
+               safe := fun i k => andText c.ok (iteText (·.safe) false s c.readable yes no rest i k),
+               trivial := c.trivial && yes.trivial && no.trivial && rest.trivial, falls, breaks, continues,
+               writes := yes.writes.unite (no.writes.unite rest.writes), noRet := yes.noRet && no.noRet && rest.noRet,
+               noBrk := yes.noBrk && no.noBrk && rest.noBrk, noCont := yes.noCont && no.noCont && rest.noCont }
     | .switch_ e cases span :: rest => checkSwitch T s result e cases span rest
     | st :: _ => unsupportedTy st.span "this statement"
 
@@ -1450,29 +1673,41 @@ mutual
         return { typed := s!"(.ifNullExit {path} (by decide +kernel)\n  {yes.typed}\n  {rest.typed})",
                  readable := text (·.readable), safe := text (·.safe), trivial := yes.trivial && rest.trivial,
                  falls := rest.falls, breaks := yes.breaks || rest.breaks,
-                 continues := yes.continues || rest.continues }
+                 continues := yes.continues || rest.continues,
+                 writes := yes.writes.unite rest.writes, noRet := yes.noRet && rest.noRet,
+                 noBrk := yes.noBrk && rest.noBrk, noCont := yes.noCont && rest.noCont }
       let no ← checkStmts T narrowed result noSs
       let rest ← checkStmts T s result rest
-      let text (render : Block → String → KText → String) (i : String) (k : KText) :=
-        let j := i ++ "  "
-        let k' := { k with normal := fun j' => render rest j' k }
-        s!"match {ident x} with\n{i}| none =>\n{j}{render yes j k'}\n{i}| some {ident x} =>\n{j}{render no j (k'.wrap n)}"
+      let text (render : Block → String → KText → String) (idiom : Bool) (i : String) (k : KText) :=
+        let arms (j : String) (k' : KText) :=
+          let j' := j ++ "  "
+          s!"match {ident x} with\n{j}| none =>\n{j'}{render yes j' k'}\n{j}| some {ident x} =>\n{j'}{render no j' (k'.wrap n)}"
+        if idiom && yes.closed && no.closed then
+          branchValueText s (yes.writes.unite no.writes) arms (render rest i k) i
+        else arms i { k with normal := fun j' => render rest j' k }
       let (falls, breaks, continues) := flagsIte yes no rest
       return { typed := s!"(.ifNull {path} (by decide +kernel)\n  {yes.typed}\n  {no.typed}\n  {rest.typed})",
-               readable := text (·.readable), safe := text (·.safe),
-               trivial := yes.trivial && no.trivial && rest.trivial, falls, breaks, continues }
+               readable := text (·.readable) true, safe := text (·.safe) false,
+               trivial := yes.trivial && no.trivial && rest.trivial, falls, breaks, continues,
+               writes := yes.writes.unite (no.writes.unite rest.writes), noRet := yes.noRet && no.noRet && rest.noRet,
+               noBrk := yes.noBrk && no.noBrk && rest.noBrk, noCont := yes.noCont && no.noCont && rest.noCont }
     else
       let yes ← checkStmts T narrowed result yesSs
       let no ← checkStmts T s result noSs
       let rest ← checkStmts T s result rest
-      let text (render : Block → String → KText → String) (i : String) (k : KText) :=
-        let j := i ++ "  "
-        let k' := { k with normal := fun j' => render rest j' k }
-        s!"match {ident x} with\n{i}| some {ident x} =>\n{j}{render yes j (k'.wrap n)}\n{i}| none =>\n{j}{render no j k'}"
+      let text (render : Block → String → KText → String) (idiom : Bool) (i : String) (k : KText) :=
+        let arms (j : String) (k' : KText) :=
+          let j' := j ++ "  "
+          s!"match {ident x} with\n{j}| some {ident x} =>\n{j'}{render yes j' (k'.wrap n)}\n{j}| none =>\n{j'}{render no j' k'}"
+        if idiom && yes.closed && no.closed then
+          branchValueText s (yes.writes.unite no.writes) arms (render rest i k) i
+        else arms i { k with normal := fun j' => render rest j' k }
       let (falls, breaks, continues) := flagsIte yes no rest
       return { typed := s!"(.ifNotNull {path} (by decide +kernel)\n  {yes.typed}\n  {no.typed}\n  {rest.typed})",
-               readable := text (·.readable), safe := text (·.safe),
-               trivial := yes.trivial && no.trivial && rest.trivial, falls, breaks, continues }
+               readable := text (·.readable) true, safe := text (·.safe) false,
+               trivial := yes.trivial && no.trivial && rest.trivial, falls, breaks, continues,
+               writes := yes.writes.unite (no.writes.unite rest.writes), noRet := yes.noRet && no.noRet && rest.noRet,
+               noBrk := yes.noBrk && no.noBrk && rest.noBrk, noCont := yes.noCont && no.noCont && rest.noCont }
 
   /-- `switch (x.key)` over a union-typed local: cases in any order, grouped labels and
   `default`. A case with one label (not reached by falling through) narrows `x`. -/
@@ -1504,15 +1739,11 @@ mutual
           let j := (variants.findIdx? (·.1 == t)).get!
           let (t, fs) := variants[j]!
           let σ := vrec' key t fs
-          -- In the case, `x` is bound to the variant's payload (a one-variant union's value is its payload).
-          let kind : PKind := if n == 1 then .multi else match Fields.toList fs with
-            | [] => .unit
-            | [_] => .single
-            | _ => .multi
-          let payload : Payload := { kind, text := if kind == .unit then "()" else ident x }
-          let embed := if n == 1 then ident x else s!"({T.injectText τ j payload} : {T.lean τ})"
+          -- In the case, `x` is bound to the variant's payload.
+          let payload := T.payload σ (ident x)
+          let embed := s!"({T.injectText τ j payload} : {T.lean τ})"
           let nar : Narrowed := { index := i, name := x, wide := τ, narrow := σ, embed }
-          let s' := { s.narrow i σ with payloads := (x, kind) :: s.payloads }
+          let s' := { s.narrow i σ with payloads := (x, payload.rep) :: s.payloads }
           return SwitchArm.narrow j (← checkStmts T s' result body) nar
         return SwitchArm.wide l (← checkStmts T s result body)
       | none => return SwitchArm.wide l (← checkStmts T s result body)
@@ -1544,15 +1775,24 @@ mutual
     let armsFalls := bodies.any (·.falls) || (arms.getLast?.map (· matches .empty _)).getD false
     let covers := labels.contains none || variants.all fun (t, _) => labels.contains (some t)
     let f := armsFalls || bodies.any (·.breaks) || !covers
-    let arities := variants.map fun (_, fs) => (Fields.toList fs).length
-    let text (render : Block → String → KText → String) (ind : String) (k : KText) :=
+    let reps := variants.map fun (t, fs) => (T.rep (vrec' key t fs)).getD .unit
+    -- Cases that always go on after the `switch` (`TArms.closed`).
+    let closed := bodies.all fun b => b.noRet && b.noCont
+    let armsWrites := bodies.foldr (fun b acc => b.writes.unite acc) []
+    let text (render : Block → String → KText → String) (idiom : Bool) (ind : String) (k : KText) :=
+      if idiom && closed then
+        branchValueText s armsWrites (fun j kv => switchLeaves render x (T.ctorNames? τ) reps leaves kv (ident x) j)
+          (render rest ind k) ind
+      else
       let kr := fun j => render rest j k
-      switchLeaves render x (T.ctorNames? τ) arities leaves { k with normal := kr, brk := kr } (ident x) ind
+      switchLeaves render x (T.ctorNames? τ) reps leaves { k with normal := kr, brk := kr } (ident x) ind
     pure { typed := s!"(.switchG {s.varPath i} (by decide +kernel)\n  {armsTyped}\n  {rest.typed})",
-           readable := text (·.readable), safe := text (·.safe),
+           readable := text (·.readable) true, safe := text (·.safe) false,
            trivial := bodies.all (·.trivial) && rest.trivial,
            falls := f && rest.falls, breaks := f && rest.breaks,
-           continues := bodies.any (·.continues) || (f && rest.continues) }
+           continues := bodies.any (·.continues) || (f && rest.continues),
+           writes := armsWrites.unite rest.writes, noRet := bodies.all (·.noRet) && rest.noRet,
+           noBrk := rest.noBrk, noCont := bodies.all (·.noCont) && rest.noCont }
 end
 
 /-! ## Functions and files -/
@@ -1717,14 +1957,13 @@ def printFunction (fn : Function) : String :=
 
 def sigName (f : String) : String := s!"sig.{ident f}"
 
-/-- Readable names for the named types: an alias `«T»` for the denoted type, written as the product,
-sum or `Fin` it is; for a record, an accessor `«T».«f»` per field; for a literal union, a constant
-`«T».«lit»` per literal; for a union of records, a payload type `«T».Variant.«tag»` with its
-accessors, and a constructor `«T».«tag»` per variant.
-All are reducible and in the simp set `readable`, so they unfold to the projections, numerals and
-injections readable definitions use. -/
+/-- The program's named types as Lean declarations: a structure per named record whose fields can name a
+structure's (for a variant, the fields after its tag), an inductive per named union whose tags can name
+constructors (with a structure `«U».Variant.«tag»` per variant with more than one field), and an
+abbreviation for the others, with an accessor `«T».«f»` per field of a record and a constant `«T».«lit»`
+per literal of a literal union, reducible and in the simp set `readable`. -/
 def readableNames (T : Types) : String := Id.run do
-  -- A named type comes after the named types inside it, which its alias mentions.
+  -- A named type comes after the named types inside it.
   let inside (σ τ : Ty) : Bool := σ != τ && ((printTy τ).splitOn (printTy σ)).length > 1
   let mut order : List (String × Ty) := []
   let mut todo := T.named.filter fun (n, _) => T.readable.contains n
@@ -1733,56 +1972,145 @@ def readableNames (T : Types) : String := Id.run do
     let next := if ready.isEmpty then todo else ready
     order := order ++ next
     todo := todo.filter fun (n, _) => !next.any (·.1 == n)
+  let structureText (name : String) (fields : List (String × Ty)) : String :=
+    s!"structure {name} where\n" ++ String.join (fields.map fun (f, σ) => s!"  {ident f} : {T.lean σ}\n")
   let mut out := ""
+  let mut declared : List String := []
   for (n, τ) in order do
     let N := ident n
-    -- Accessors `«T».«f»`, and when no field takes their names, a constructor `«T».mk` and setters `«T».«withF»`.
-    let accessors (owner : String) (fs : Fields) : String := Id.run do
-      let fields := Fields.toList fs
-      let mut acc := ""
-      for (k, (f, σ)) in fields.zipIdx.map (fun ((f, σ), k) => (k, (f, σ))) do
-        acc := acc ++ s!"@[reducible, readable] def {owner}.{ident f} (r : {owner}) : {T.lean σ} := {projText "r" k}\n"
-      if namesFree fs then
-        let binders := " ".intercalate (fields.map fun (f, σ) => s!"({ident f} : {T.lean σ})")
-        let tuple := "(" ++ ", ".intercalate (fields.map (ident ·.1) ++ ["()"]) ++ ")"
-        acc := acc ++ s!"@[reducible, readable] def {owner}.mk {binders} : {owner} := {tuple}\n"
-        for (k, (f, σ)) in fields.zipIdx.map (fun ((f, σ), k) => (k, (f, σ))) do
-          acc := acc ++ s!"@[reducible, readable] def {owner}.{ident (setterName f)} (r : {owner}) (v : {T.lean σ}) : " ++
-            s!"{owner} := {tupleSetText "r" k fields.length "v"}\n"
-      return acc
-    -- The fields' product, with their readable names (so that `x.order.map (·.index)` works).
-    let product (fs : Fields) : String :=
-      (Fields.toList fs).foldr (fun (_, σ) acc => s!"{atomText (T.lean σ)} × {acc}") "Unit"
     let doc := s!"\n/-- The source's `{n}`. -/\n"
-    match τ with
-    | .record fs => out := out ++ doc ++ s!"abbrev {N} : Type := {product fs}\n" ++ accessors N fs
-    | .lits a as =>
+    -- The payload structures of a union's variants.
+    if let .union key vs := τ then
+      for (t, fs) in Variants.toList vs do
+        if let some (.struct V fields) := T.rep (vrec' key t fs) then
+          if !declared.contains V && V != N then
+            out := out ++ s!"\n/-- The fields of the source's `{n}` tagged {tagLitTS t}. -/\n" ++ structureText V fields
+            declared := declared ++ [V]
+    let canon := T.lean τ
+    if canon != N then
+      out := out ++ doc ++ s!"abbrev {N} : Type := {canon}\n"
+      continue
+    match T.rep τ, τ with
+    | some (.struct _ fields), _ =>
+      out := out ++ doc ++ structureText N fields
+      declared := declared ++ [N]
+    | _, .record fs =>
+      if (T.structName? τ).isSome then
+        out := out ++ doc ++ structureText N (Fields.toList fs)
+        declared := declared ++ [N]
+      else
+        out := out ++ doc ++ s!"abbrev {N} : Type := {T.leanBody τ}\n"
+        for ((f, σ), k) in (Fields.toList fs).zipIdx do
+          out := out ++ s!"@[reducible, readable] def {N}.{ident f} (r : {N}) : {T.lean σ} := {projText "r" k}\n"
+    | _, .lits a as =>
       out := out ++ doc ++ s!"abbrev {N} : Type := Fin {as.length + 1}\n"
       for (lit, i) in (a :: as).zipIdx do
         if let some l := litName lit then
           out := out ++ s!"@[reducible, readable] def {N}.{ident l} : {N} := ({i} : Fin {as.length + 1})\n"
-    | .union _ vs =>
-      let variants := Variants.toList vs
-      let mut payloads : List String := []
-      let mut decls := ""
-      for ((t, fs), i) in variants.zipIdx do
-        let some tn := tagName t | payloads := payloads ++ [s!"({product fs})"]; continue
-        -- Constructors, usable as patterns: of nothing, of a variant's one field, or of its payload.
-        let ctor := s!"@[reducible, readable, match_pattern] def {N}.{ident tn}"
-        match Fields.toList fs with
-        | [] =>
-          payloads := payloads ++ ["Unit"]
-          decls := decls ++ s!"{ctor} : {N} := {injText i variants.length "()"}\n"
-        | fields =>
-          let V := s!"{N}.Variant.{ident tn}"
-          payloads := payloads ++ [V]
-          out := out ++ s!"abbrev {V} : Type := {product fs}\n" ++ accessors V fs
-          match fields with
-          | [(f, σ)] =>
-            decls := decls ++ s!"{ctor} ({ident f} : {T.lean σ}) : {N} := {injText i variants.length s!"({ident f}, ())"}\n"
-          | _ => decls := decls ++ s!"{ctor} (x : {V}) : {N} := {injText i variants.length "x"}\n"
-      out := out ++ doc ++ s!"abbrev {N} : Type := {" ⊕ ".intercalate payloads}\n" ++ decls
-    | _ => out := out ++ doc ++ s!"abbrev {N} : Type := ty.{N}.denote\n"
+    | _, .union key vs =>
+      match T.inductive? τ with
+      | some (_, ctors) =>
+        let arms := ((Variants.toList vs).zip ctors).map fun ((t, fs), c) =>
+          let c := (c.splitOn ".").getLastD c
+          match T.rep (vrec' key t fs) with
+          | some (.single σ) => match Fields.toList fs with
+            | [(f, _)] => s!"  | {c} ({ident f} : {T.lean σ})\n"
+            | _ => s!"  | {c} (x : {T.lean σ})\n"
+          | some .unit | none => s!"  | {c}\n"
+          | some _ => s!"  | {c} (x : {T.lean (vrec' key t fs)})\n"
+        out := out ++ doc ++ s!"inductive {N} where\n" ++ String.join arms
+      | none => out := out ++ doc ++ s!"abbrev {N} : Type := {T.leanBody τ}\n"
+    | _, _ => out := out ++ doc ++ s!"abbrev {N} : Type := {T.leanBody τ}\n"
+  return out
+
+/-- The types inside `τ` (with `τ`), and a union's variants. -/
+partial def tyClosure (acc : List Ty) (τ : Ty) : List Ty :=
+  if acc.contains τ then acc else
+  let acc := acc ++ [τ]
+  match τ with
+  | .option _ σ | .array σ | .map σ => tyClosure acc σ
+  | .record fs => (Fields.toList fs).foldl (fun a (_, σ) => tyClosure a σ) acc
+  | .union key vs => (Variants.toList vs).foldl (fun a (t, fs) => tyClosure a (vrec' key t fs)) acc
+  | _ => acc
+
+/-- `(x.f, x.g, ())`: the tuple of a structure's fields. -/
+def fieldsTuple (x : String) (fields : List (String × Ty)) : String :=
+  "(" ++ ", ".intercalate (fields.map (fun (f, _) => s!"{x}.{ident f}") ++ ["()"]) ++ ")"
+
+/-- `(S.mk x.1 x.2.1)`: a structure from the tuple of its fields. -/
+def mkOfTuple (S : String) (x : String) (n : Nat) : String :=
+  if n == 0 then s!"{S}.mk" else "(" ++ " ".intercalate (s!"{S}.mk" :: (List.range n).map (projText x)) ++ ")"
+
+/-- `names`, the program's structures and inductives with the records and unions they are, and `isos`,
+how their values correspond to the records' and unions' (`Isos`). `tys`: the types the program uses. -/
+def namesText (T : Types) (tys : List Ty) : String := Id.run do
+  let closure := (T.named.map (·.2) ++ tys).foldl tyClosure []
+  -- Records: (fields, type, view, make).
+  let mut recs : List (Fields × String × String × String) := []
+  for (n, τ) in T.named do
+    if let .record fs := τ then
+      if let some S := T.structName? τ then
+        if S == ident n && !recs.any (·.1 == fs) then
+          let fields := Fields.toList fs
+          recs := recs ++ [(fs, S, s!"fun (r : {S}) => {fieldsTuple "r" fields}", s!"fun x => {mkOfTuple S "x" fields.length}")]
+  for σ in closure do
+    if let (.record fs, some r) := (σ, T.rep σ) then
+      if !recs.any (·.1 == fs) then
+        let ty := T.lean σ
+        let (view, make) := match r with
+          | .unit => (s!"fun (_ : {ty}) => ((), ())", s!"fun _ => ()")
+          | .single _ => (s!"fun (x : {ty}) => ((), x, ())", "fun x => x.2.1")
+          | .struct S fields => (s!"fun (r : {S}) => ((), {fieldsTuple "r" fields})",
+              s!"fun x => {mkOfTuple S "x.2" fields.length}")
+          | .tuple _ => (s!"fun (x : {ty}) => ((), x)", "fun x => x.2")
+        recs := recs ++ [(fs, ty, view, make)]
+  -- Unions: (variants, type, the variants' constructors and representations).
+  let mut unions : List (Variants × String × List (String × Rep)) := []
+  for (n, τ) in T.named do
+    if let .union key vs := τ then
+      if let some (m, ctors) := T.inductive? τ then
+        if m == ident n && !unions.any (·.1 == vs) then
+          let reps := (Variants.toList vs).map fun (t, fs) => (T.rep (vrec' key t fs)).getD .unit
+          unions := unions ++ [(vs, m, ctors.zip reps)]
+  let mut out := "/-- The program's structures and inductives, with the records and unions they are. -/\n"
+  out := out ++ "noncomputable def names : Names :=\n  ⟨[" ++ ",\n    ".intercalate (recs.map fun (fs, ty, _) =>
+    s!"({printFields T.name fs}, {ty})") ++ "],\n   [" ++ ",\n    ".intercalate (unions.map fun (vs, ty, _) =>
+    s!"({printVariants T.name vs}, {ty})") ++ "]⟩\n\n"
+  out := out ++ "/-- How the structures' and inductives' values correspond to the records' and unions'. -/\n"
+  out := out ++ "noncomputable def isos : Isos names := Isos.ofLists\n"
+  -- A right-nested list of `.cons` entries.
+  let nested (entries : List String) : String :=
+    entries.foldr (fun e acc => s!"(.cons {e}\n   {acc})") ".nil"
+  out := out ++ "  " ++ nested (recs.map fun (_, _, v, m) => s!"({v}) ({m}) (fun _ => rfl) (fun _ => rfl)") ++ "\n"
+  -- A variant's fields' tuple as a pattern (`(a0, a1, ())`), and the constructor's value from it.
+  let fieldsPat (r : Rep) (wild : Bool := false) : String :=
+    let v (k : Nat) := if wild then "_" else s!"a{k}"
+    match r with
+    | .unit => "()"
+    | .single _ => s!"({v 0}, ())"
+    | .struct _ fields => "(" ++ ", ".intercalate ((List.range fields.length).map v ++ ["()"]) ++ ")"
+    | .tuple _ => v 0
+  let ctorOf (c : String) (r : Rep) : String := match r with
+    | .unit => c
+    | .single _ | .tuple _ => s!"{c} a0"
+    | .struct S fields => s!"{c} ({" ".intercalate (s!"{S}.mk" :: (List.range fields.length).map (s!"a{·}"))})"
+  let entry (cs : List (String × Rep)) : String :=
+    let n := cs.length
+    let uelim := "(fun u h => match u with\n" ++ "\n".intercalate (cs.zipIdx.map fun ((c, r), j) =>
+      let (pat, tup) := match r with
+        | .unit => (c, "()")
+        | .single _ => (s!"{c} x", "(x, ())")
+        | .struct _ fields => (s!"{c} x", fieldsTuple "x" fields)
+        | .tuple _ => (s!"{c} x", "x")
+      s!"      | {pat} => h {vidxPath j n} {tup}") ++ ")"
+    let umake := "(fun s => match s with\n" ++ "\n".intercalate (cs.zipIdx.map fun ((c, r), j) =>
+      s!"      | {injText j n (fieldsPat r)} => {ctorOf c r}") ++ ")"
+    let law1 := "(fun {_} x _ => match x with\n" ++ "\n".intercalate (cs.zipIdx.map fun ((_, r), j) =>
+      s!"      | {injText j n (fieldsPat r true)} => rfl") ++ ")"
+    let law2 := "(fun u => match u with\n" ++ "\n".intercalate (cs.map fun (c, r) =>
+      s!"      | {if r == .unit then c else s!"{c} _"} => rfl") ++ ")"
+    s!"{uelim}\n    {umake}\n    {law1}\n    {law2}"
+  out := out ++ "  " ++ nested (unions.map fun (_, _, cs) => entry cs) ++ "\n"
   return out
 
 /-- The state fields a method's statements write, and the methods they call that may change the state. -/
@@ -1810,19 +2138,45 @@ def frameFlags (ast : Program) (fns : List CheckedFn) (g : String) : List Bool :
     keep := keep ++ [(fn.sig.name, b)]
   return keep.map (·.2)
 
+/-- Takes the named loop bodies (`namedBody`) out of a readable definition, innermost first, and names them
+`f.loop`, or `f.loop1`, `f.loop2`, … in order of appearance. -/
+partial def hoistLoops (f : String) (text : String) : String × List String := Id.run do
+  let ids := (((text.splitOn "⟦⟦").drop 1).filterMap fun p => (p.splitOn "⟧⟧").head?.bind (·.toNat?)).eraseDups
+  let name (n : Nat) : String :=
+    if ids.length == 1 then s!"{ident f}.loop" else s!"{ident f}.loop{ids.idxOf n + 1}"
+  let rename (t : String) := ids.foldl (fun t n => t.replace s!"‹loop{n}›" (name n)) t
+  let mut text := text
+  let mut defs : List String := []
+  let mut seen : List Nat := []
+  repeat
+    match text.splitOn "⟦⟦/⟧⟧" with
+    | first :: more@(_ :: _) =>
+      -- The first end closes the innermost body: the last start before it.
+      let ps := first.splitOn "⟦⟦"
+      let (n, defn) := match (ps.getLastD "").splitOn "⟧⟧" with
+        | a :: rest => (a.toNat!, "⟧⟧".intercalate rest)
+        | [] => (0, "")
+      text := "⟦⟦".intercalate ps.dropLast ++ "⟦⟦/⟧⟧".intercalate more
+      if !seen.contains n then
+        seen := seen ++ [n]
+        defs := defs ++ [rename defn]
+    | _ => break
+  return (rename text, defs)
+
 /-- The Lean source for a checked file: the AST, the typed program, readable
 definitions, and per-function source theorems. -/
-def printFile (source namespace_ : String) (ast : Program) (T : Types) (fns : List CheckedFn) : String := Id.run do
+def printFile (source namespace_ : String) (ast : Program) (T : Types) (fns : List CheckedFn) (tys : List Ty := []) :
+    String := Id.run do
   -- A line comment: a path may contain `/-`, which would open a block comment.
   let name := ((source.splitOn "/").getLast?.getD source).map fun c => if c == '\n' || c == '\r' then ' ' else c
-  let mut out := s!"import Ariadne.Proof.Adequacy\nimport Ariadne.Proof.Frame\nimport Ariadne.Lib.Readable\n\n-- Generated by ariadne from {name}. Do not edit.\n\n"
+  let mut out := s!"import Ariadne.Proof.Adequacy\nimport Ariadne.Proof.Frame\nimport Ariadne.Proof.Named\nimport Ariadne.Lib.Readable\n\n-- Generated by ariadne from {name}. Do not edit.\n\n"
   out := out ++ s!"namespace {namespace_}\nopen Ariadne\n\nset_option maxRecDepth 8192\nset_option linter.unusedVariables false\n\n"
   out := out ++ "/-- The source file in the model's syntax. -/\nnoncomputable def ast : Program := [\n  " ++
     ",\n  ".intercalate (ast.map printFunction) ++ "]\n\n"
   for (n, τ) in T.named do
     out := out ++ s!"noncomputable abbrev ty.{ident n} : Ty := {printTy τ}\n"
-  out := out ++ readableNames T
-  if !T.named.isEmpty then out := out ++ "\n"
+  out := out ++ readableNames T ++ "\n"
+  out := out ++ namesText T (tys ++ fns.flatMap fun fn => fn.sig.result :: fn.sig.params.map (·.2)) ++ "\n"
   for fn in fns do
     let s := fn.sig
     let ctx := "[" ++ ", ".intercalate (s.params.map fun (x, τ) => s!"({leanString x}, {T.print τ})") ++ "]"
@@ -1832,7 +2186,7 @@ def printFile (source namespace_ : String) (ast : Program) (T : Types) (fns : Li
   out := out ++ "\n"
   let nes := (fns.foldl (fun acc fn => acc ++ collectNe fn.body.typed) []).eraseDups
   for (a, b) in nes do
-    out := out ++ s!"theorem ne.{ident a}.{ident b} : ({leanString a} : String) ≠ {leanString b} := by decide\n"
+    out := out ++ s!"theorem ne.{quoted a}.{quoted b} : ({leanString a} : String) ≠ {leanString b} := by decide\n"
   if !nes.isEmpty then out := out ++ "\n"
   let mut earlier : List String := []
   for fn in fns do
@@ -1851,9 +2205,11 @@ def printFile (source namespace_ : String) (ast : Program) (T : Types) (fns : Li
   for fn in fns do
     let s := fn.sig
     let params := " ".intercalate (s.params.map fun (x, τ) => s!"({ident x} : {T.lean τ})")
-    let dflt := s!"(Ty.default {T.print s.result})"
-    out := out ++ s!"def {ident s.name} {params} : {T.lean s.result} :=\n  " ++
-      fn.body.readable "  " ⟨fun _ => dflt, fun _ => dflt, fun _ => dflt⟩ ++ "\n\n"
+    let dflt := s!"(Ty.defaultS names isos {T.print s.result})"
+    let (text, loops) := hoistLoops s.name (fn.body.readable "  " ⟨fun _ => dflt, fun _ => dflt, fun _ => dflt⟩)
+    for l in loops do
+      out := out ++ s!"/-- A loop body of `{s.name}`. -/\n{l}\n\n"
+    out := out ++ s!"def {ident s.name} {params} : {T.lean s.result} :=\n  " ++ text ++ "\n\n"
     if !s.trivial then
       out := out ++ s!"/-- The inputs on which `{s.name}` stays within what the model covers. -/\n"
       out := out ++ s!"def {ident s.name}.safe {params} : Bool :=\n  " ++
@@ -1869,22 +2225,22 @@ readable definitions as its environment, so no check unfolds a callee. -/\n\n"
     let s := fn.sig
     let projections := (List.range s.params.length).map fun k => projText "xs" k
     let applied := if s.params.isEmpty then ident s.name else " ".intercalate (ident s.name :: projections)
-    out := out ++ s!"noncomputable def {ident s.name}.uncurried : {sigName s.name}.denote := fun xs => {applied}\n\n"
+    out := out ++ s!"noncomputable def {ident s.name}.uncurried : Sig.denS names {sigName s.name} := fun xs => {applied}\n\n"
     if s.trivial then
       out := out ++ s!"/-- Trivially safe: every input is in what the model covers. -/\n"
-      out := out ++ s!"noncomputable def {ident s.name}.safety : {sigName s.name}.params.denote → Bool := fun _ => true\n\n"
+      out := out ++ s!"noncomputable def {ident s.name}.safety : Ctx.denS names {sigName s.name}.params → Bool := fun _ => true\n\n"
     else
       let safeApplied := " ".intercalate (s!"{ident s.name}.safe" :: projections)
-      out := out ++ s!"noncomputable def {ident s.name}.safety : {sigName s.name}.params.denote → Bool := fun xs => {safeApplied}\n\n"
-    out := out ++ s!"theorem {ident s.name}.body_eq :\n    body.{ident s.name}.denoteFn {tupleOf prior "uncurried"} = {ident s.name}.uncurried := by\n  kernel_rfl\n\n"
-    out := out ++ s!"theorem {ident s.name}.safe_eq :\n    body.{ident s.name}.safeFn {tupleOf prior "uncurried"} {tupleOf prior "safety"} = {ident s.name}.safety := by\n  kernel_rfl\n\n"
+      out := out ++ s!"noncomputable def {ident s.name}.safety : Ctx.denS names {sigName s.name}.params → Bool := fun xs => {safeApplied}\n\n"
+    out := out ++ s!"theorem {ident s.name}.body_eq :\n    body.{ident s.name}.denoteRSFn names isos {tupleOf prior "uncurried"} = {ident s.name}.uncurried := by\n  kernel_rfl\n\n"
+    out := out ++ s!"theorem {ident s.name}.safe_eq :\n    body.{ident s.name}.safeFnS names isos {tupleOf prior "uncurried"} {tupleOf prior "safety"} = {ident s.name}.safety := by\n  kernel_rfl\n\n"
     prior := s.name :: prior
-  let proof := fns.foldl (fun acc fn => s!"(TProgram.denote_cons {acc} {ident fn.sig.name}.body_eq)") "rfl"
+  let proof := fns.foldl (fun acc fn => s!"(TProgram.denote_consS isos {acc} {ident fn.sig.name}.body_eq)") "rfl"
   let safetyProof := (fns.foldl (fun (acc, den) fn =>
-      (s!"(TProgram.safety_cons {den} {acc} {ident fn.sig.name}.safe_eq)",
-       s!"(TProgram.denote_cons {den} {ident fn.sig.name}.body_eq)")) ("rfl", "rfl")).1
-  out := out ++ s!"theorem denote_eq : typed.denote = {tupleOf prior "uncurried"} :=\n  {proof}\n\n"
-  out := out ++ s!"theorem safety_eq : typed.safety = {tupleOf prior "safety"} :=\n  {safetyProof}\n\n"
+      (s!"(TProgram.safety_consS isos {den} {acc} {ident fn.sig.name}.safe_eq)",
+       s!"(TProgram.denote_consS isos {den} {ident fn.sig.name}.body_eq)")) ("rfl", "rfl")).1
+  out := out ++ s!"theorem denote_eq : typed.denote = Sigs.canon names isos sigs {tupleOf prior "uncurried"} :=\n  {proof}\n\n"
+  out := out ++ s!"theorem safety_eq : typed.safety = Sigs.canonSafety names isos sigs {tupleOf prior "safety"} :=\n  {safetyProof}\n\n"
   -- Frames: which fields of the state each method leaves alone.
   if let some σ := (fns.find? (·.sig.void)).map (·.sig.result) then
     if let .record fsσ := σ then
@@ -1903,7 +2259,8 @@ readable definitions as its environment, so no check unfolds a callee. -/\n\n"
           let args := "(" ++ ", ".intercalate (s.params.tail.map (ident ·.1) ++ ["()"]) ++ ")"
           out := out ++ s!"/-- `{s.name}` leaves `this.{g}` as it is. -/\n"
           out := out ++ s!"theorem {ident s.name}.keeps.{ident g} {binders} :\n    {T.fieldText σ call k} = {T.fieldText σ (ident "this") k} :=\n"
-          out := out ++ s!"  frame_of {fidxPath k} denote_eq frames.{ident g} {fvar} rfl {ident "this"} {args}\n\n"
+          out := out ++ s!"  frame_of_fnS isos {fidxPath k} denote_eq frames.{ident g} {fvar} rfl (f := {ident s.name}.uncurried) rfl\n" ++
+            s!"    (acc := fun (r : {T.lean σ}) => {T.fieldText σ "r" k}) (fun _ => rfl) {ident "this"} {args}\n\n"
   out := out ++ "/-! ## Source theorems -/\n\n"
   let n := fns.length
   for (fn, i) in fns.zipIdx do
@@ -1920,14 +2277,14 @@ readable definitions as its environment, so no check unfolds a callee. -/\n\n"
     -- Binders are primed: JavaScript names cannot clash with them.
     if s.void then
       out := out ++ s!"/-- Every run of `{s.name}` on a state and arguments representing its inputs converges to a\nstate representing the readable definition's result. -/\n"
-      out := out ++ s!"theorem {ident s.name}.source {binders} (this' : JSValue) (vs' : List JSValue)\n    (args' : ArgsRep {sigName s.name}.params (this' :: vs') {tuple}){safeHyp} :\n"
-      out := out ++ s!"    ∃ w' t', Converges (fun fuel' => runMethod ast fuel' {leanString s.name} this' vs') (.ok (w', t')) ∧\n      Ty.Rep {T.print s.result} t' ({call}) :=\n"
-      out := out ++ s!"  source_state_of erased wf denote_eq safety_eq {fvar} rfl {tuple} this' vs' args' {safeArg}\n\n"
+      out := out ++ s!"theorem {ident s.name}.source {binders} (this' : JSValue) (vs' : List JSValue)\n    (args' : ArgsRepS names isos {sigName s.name}.params (this' :: vs') {tuple}){safeHyp} :\n"
+      out := out ++ s!"    ∃ w' t', Converges (fun fuel' => runMethod ast fuel' {leanString s.name} this' vs') (.ok (w', t')) ∧\n      Ty.RepS names isos {T.print s.result} t' ({call}) :=\n"
+      out := out ++ s!"  source_state_ofS isos erased wf denote_eq safety_eq {fvar} rfl {tuple} this' vs' args' {safeArg}\n\n"
     else
       out := out ++ s!"/-- Every run of `{s.name}` on arguments representing its inputs converges to a value\nrepresenting the readable definition's result. -/\n"
-      out := out ++ s!"theorem {ident s.name}.source {binders} (vs' : List JSValue)\n    (args' : ArgsRep {sigName s.name}.params vs' {tuple}){safeHyp} :\n"
-      out := out ++ s!"    ∃ w', Converges (fun fuel' => run ast fuel' {leanString s.name} vs') (.ok w') ∧\n      Ty.Rep {T.print s.result} w' ({call}) :=\n"
-      out := out ++ s!"  source_of erased wf denote_eq safety_eq {fvar} rfl {tuple} vs' args' {safeArg}\n\n"
+      out := out ++ s!"theorem {ident s.name}.source {binders} (vs' : List JSValue)\n    (args' : ArgsRepS names isos {sigName s.name}.params vs' {tuple}){safeHyp} :\n"
+      out := out ++ s!"    ∃ w', Converges (fun fuel' => run ast fuel' {leanString s.name} vs') (.ok w') ∧\n      Ty.RepS names isos {T.print s.result} w' ({call}) :=\n"
+      out := out ++ s!"  source_ofS isos erased wf denote_eq safety_eq {fvar} rfl {tuple} vs' args' {safeArg}\n\n"
   out := out ++ s!"end {namespace_}\n"
   return out
 
@@ -1969,7 +2326,8 @@ def translateM (source namespace_ text : String) : CheckM String := do
   let parsed ← Parse.parse text
   let ast ← convertProgram parsed
   let (T, fns) ← checkProgramM parsed
-  pure (printFile source namespace_ ast T fns)
+  let tys := (← get).hovers.toList.map (·.ty)
+  pure (printFile source namespace_ ast T fns tys)
 
 def translate (source namespace_ text : String) : Checked String :=
   (translateM source namespace_ text).run.run' {}

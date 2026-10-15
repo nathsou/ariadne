@@ -100,7 +100,7 @@ Anything else is refused with a diagnostic; `Tests/negative` has one fixture per
 - `number` denotes `Int`. Every result of `+`, `-`, `*` and negation must stay within ±(2^53 − 1),
   where binary64 arithmetic is exact.
   - The model faults outside that range.
-  - The function's safety condition (`«f».safe`, a hypothesis of its source theorem) requires that it
+  - The function's safety condition (`f.safe`, a hypothesis of its source theorem) requires that it
     doesn't happen.
   - So an overflowing computation is outside the theorem's claim; it is never claimed to compute a wrong
     value.

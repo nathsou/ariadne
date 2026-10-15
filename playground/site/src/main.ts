@@ -7,7 +7,7 @@ import { RunView, type Presets } from "./run";
 import { SubsetView } from "./subset";
 import { translator, Timeout } from "./workers";
 import type { BuildInfo, ExampleData, ExampleMeta, Hover, Translation } from "./types";
-import { byteMapper, copyText, debounce, fill, h, icon, storage, toast } from "./util";
+import { byteMapper, copyText, debounce, fill, h, icon, leanIdent, storage, toast } from "./util";
 
 const REPO = "https://github.com/nathsou/ariadne";
 const BLANK = `// Write TypeScript in the subset: Ariadne translates it as you type.
@@ -276,8 +276,8 @@ function nameRange(text: string, from: number, to: number, name: string) {
 }
 
 function leanSignature(x: Hover) {
-  const params = (x.params ?? []).map((p) => `(${p.name === "this" ? "«this»" : `«${p.name}»`} : ${p.lean})`).join(" ");
-  return `def «${x.name}»${params ? " " + params : ""} : ${x.lean}`;
+  const params = (x.params ?? []).map((p) => `(${leanIdent(p.name)} : ${p.lean})`).join(" ");
+  return `def ${leanIdent(x.name ?? "")}${params ? " " + params : ""} : ${x.lean}`;
 }
 
 function sourceHovers(text: string, hovers: Hover[], toUtf16: (b: number) => number): HoverProvider {

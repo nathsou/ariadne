@@ -2,11 +2,12 @@
 
 -- Definitions
 
-Quickstart.Ledger.Accounts : Type :=
-  List (Ariadne.JSString × Int) × List (Ariadne.JSString × Bool) × Unit
+Quickstart.Ledger.Accounts : Type
+  | Quickstart.Ledger.Accounts.mk : List (Ariadne.JSString × Int) → List (Ariadne.JSString × Bool) → Quickstart.Ledger.Accounts
 
-Quickstart.Ledger.Entry : Type :=
-  Quickstart.Ledger.Entry.Variant.credit ⊕ Quickstart.Ledger.Entry.Variant.debit
+Quickstart.Ledger.Entry : Type
+  | Quickstart.Ledger.Entry.credit : Int → Quickstart.Ledger.Entry
+  | Quickstart.Ledger.Entry.debit : Int → Quickstart.Ledger.Entry
 
 Quickstart.Ledger.ast : Ariadne.Program :=
   [{ name := "balance", params := ["entries"],
@@ -63,50 +64,72 @@ Quickstart.Ledger.ast : Ariadne.Program :=
 Quickstart.Ledger.balance : List Quickstart.Ledger.Entry → Int :=
   fun entries =>
   have total := 0;
-  Ariadne.forIn entries
-    (fun e next2' exit2' x =>
-      match x with
-      | (total, entries, PUnit.unit) =>
-        match e with
-        | Sum.inl (e, PUnit.unit) =>
-          have total := total + e;
-          next2' (total, entries, ())
-        | Sum.inr (e, PUnit.unit) =>
-          have after6' := fun x =>
-            match x with
-            | (fst, total, entries, PUnit.unit) => next2' (total, entries, ());
-          if Decidable.decide (e ≤ total) = Bool.true then
-            have total := total - e;
-            after6' (((), e, ()), total, entries, ())
-          else after6' (((), e, ()), total, entries, ()))
-    (fun x =>
-      match x with
-      | (total, fst, PUnit.unit) => total)
-    (total, entries, ())
+  have total := Ariadne.fold total entries Quickstart.Ledger.balance.loop;
+  total
 
 Quickstart.Ledger.credit : Quickstart.Ledger.Accounts → Ariadne.JSString → Int → Quickstart.Ledger.Accounts :=
   fun this id amount =>
   if ((Ariadne.mapGet this.frozen id).isSome || Decidable.decide (amount ≤ 0)) = Bool.true then this
   else
     have this :=
-      this.withBalances
-        (Ariadne.mapPut this.balances id
-          ((match Ariadne.mapGet this.balances id with
-            | Option.some v' => v'
-            | Option.none => 0) +
-            amount));
+      {
+        balances :=
+          Ariadne.mapPut this.balances id
+            ((match Ariadne.mapGet this.balances id with
+              | Option.some v' => v'
+              | Option.none => 0) +
+              amount),
+        frozen := this.frozen };
     this
 
 Quickstart.Ledger.freeze : Quickstart.Ledger.Accounts → Ariadne.JSString → Quickstart.Ledger.Accounts :=
   fun this id =>
-  have this := this.withFrozen (Ariadne.mapPut this.frozen id Bool.true);
+  have this := { balances := this.balances, frozen := Ariadne.mapPut this.frozen id Bool.true };
   this
+
+Quickstart.Ledger.isos : Ariadne.Isos Quickstart.Ledger.names :=
+  Ariadne.Isos.ofLists
+  (Ariadne.RecIsos.cons (fun r => (r.balances, r.frozen, ())) (fun x => { balances := x.fst, frozen := x.snd.fst })
+    Quickstart.Ledger.isos._proof_1 Quickstart.Ledger.isos._proof_2
+    (Ariadne.RecIsos.cons (fun x => ((), x, ())) (fun x => x.snd.fst) Quickstart.Ledger.isos._proof_3
+      Quickstart.Ledger.isos._proof_4
+      (Ariadne.RecIsos.cons (fun x => ((), x, ())) (fun x => x.snd.fst) Quickstart.Ledger.isos._proof_5
+        Quickstart.Ledger.isos._proof_6 Ariadne.RecIsos.nil)))
+  (Ariadne.UnionIsos.cons
+    (fun {R} u h =>
+      match u with
+      | Quickstart.Ledger.Entry.credit x => h Ariadne.VIdx.head (x, ())
+      | Quickstart.Ledger.Entry.debit x => h Ariadne.VIdx.one.there (x, ()))
+    (fun s =>
+      match s with
+      | Sum.inl (a0, PUnit.unit) => Quickstart.Ledger.Entry.credit a0
+      | Sum.inr (a0, PUnit.unit) => Quickstart.Ledger.Entry.debit a0)
+    (@Quickstart.Ledger.isos._proof_7) Quickstart.Ledger.isos._proof_8 Ariadne.UnionIsos.nil)
+
+Quickstart.Ledger.names : Ariadne.Names :=
+  {
+  recs :=
+    [(Ariadne.Fields.cons "balances" Ariadne.Ty.number.map
+          (Ariadne.Fields.cons "frozen" Ariadne.Ty.bool.map Ariadne.Fields.nil),
+        Quickstart.Ledger.Accounts),
+      (Ariadne.Fields.cons "kind" (Ariadne.Ty.tag (Ariadne.TagLit.str (Ariadne.js "credit")))
+          (Ariadne.Fields.cons "amount" Ariadne.Ty.number Ariadne.Fields.nil),
+        Int),
+      (Ariadne.Fields.cons "kind" (Ariadne.Ty.tag (Ariadne.TagLit.str (Ariadne.js "debit")))
+          (Ariadne.Fields.cons "amount" Ariadne.Ty.number Ariadne.Fields.nil),
+        Int)],
+  unions :=
+    [(Ariadne.Variants.cons (Ariadne.TagLit.str (Ariadne.js "credit"))
+          (Ariadne.Fields.cons "amount" Ariadne.Ty.number Ariadne.Fields.nil)
+          (Ariadne.Variants.one (Ariadne.TagLit.str (Ariadne.js "debit"))
+            (Ariadne.Fields.cons "amount" Ariadne.Ty.number Ariadne.Fields.nil)),
+        Quickstart.Ledger.Entry)] }
 
 Quickstart.Spec.amount : Quickstart.Ledger.Entry → Int :=
   fun x =>
   match x with
-  | Sum.inl (a, PUnit.unit) => a
-  | Sum.inr (a, PUnit.unit) => a
+  | Quickstart.Ledger.Entry.credit a => a
+  | Quickstart.Ledger.Entry.debit a => a
 
 Quickstart.Spec.balance_nonneg : Prop :=
   ∀ (entries : List Quickstart.Ledger.Entry),
@@ -121,31 +144,51 @@ Quickstart.Spec.freeze_keeps_balances : Prop :=
 
 Quickstart.Spec.freeze_runs : Prop :=
   ∀ (a : Quickstart.Ledger.Accounts) (id : Ariadne.JSString) (this' : Ariadne.JSValue) (vs : List Ariadne.JSValue),
-  Ariadne.ArgsRep Quickstart.Ledger.sig.freeze.params (this' :: vs) (a, id, ()) →
+  Ariadne.ArgsRepS Quickstart.Ledger.names Quickstart.Ledger.isos Quickstart.Ledger.sig.freeze.params (this' :: vs)
+      (a, id, ()) →
     ∃ w t,
       Ariadne.Converges (fun fuel => Ariadne.runMethod Quickstart.Ledger.ast fuel "freeze" this' vs)
           (Except.ok (w, t)) ∧
-        Quickstart.Ledger.ty.Accounts.Rep t (Quickstart.Ledger.freeze a id)
+        Ariadne.Ty.RepS Quickstart.Ledger.names Quickstart.Ledger.isos Quickstart.Ledger.ty.Accounts t
+          (Quickstart.Ledger.freeze a id)
 
 Quickstart.Ledger.Accounts.balances : Quickstart.Ledger.Accounts → List (Ariadne.JSString × Int) :=
-  fun r => r.fst
+  fun self => self.1
 
 Quickstart.Ledger.Accounts.frozen : Quickstart.Ledger.Accounts → List (Ariadne.JSString × Bool) :=
-  fun r => r.snd.fst
+  fun self => self.2
 
-Quickstart.Ledger.Accounts.withBalances : Quickstart.Ledger.Accounts → List (Ariadne.JSString × Int) → Quickstart.Ledger.Accounts :=
-  fun r v => (v, r.snd)
+Quickstart.Ledger.Accounts.mk : List (Ariadne.JSString × Int) → List (Ariadne.JSString × Bool) → Quickstart.Ledger.Accounts
 
-Quickstart.Ledger.Accounts.withFrozen : Quickstart.Ledger.Accounts → List (Ariadne.JSString × Bool) → Quickstart.Ledger.Accounts :=
-  fun r v => (r.fst, v, r.snd.snd)
+Quickstart.Ledger.Entry.casesOn -- derived; fingerprint 4173529977 3242936103
 
-Quickstart.Ledger.balance.match_1 -- derived; fingerprint 1836217335 3594036774
+Quickstart.Ledger.Entry.credit : Int → Quickstart.Ledger.Entry
 
-Quickstart.Ledger.balance.match_3 -- derived; fingerprint 1808640746 2617809018
+Quickstart.Ledger.Entry.debit : Int → Quickstart.Ledger.Entry
 
-Quickstart.Ledger.balance.match_5 -- derived; fingerprint 1489801187 1165752680
+Quickstart.Ledger.Entry.rec -- derived; fingerprint 1437779075 0
+
+Quickstart.Ledger.balance.loop : Int → Quickstart.Ledger.Entry → Int :=
+  fun total e =>
+  have total :=
+    match e with
+    | Quickstart.Ledger.Entry.credit e =>
+      have total := total + e;
+      total
+    | Quickstart.Ledger.Entry.debit e =>
+      have total :=
+        if Decidable.decide (e ≤ total) = Bool.true then
+          have total := total - e;
+          total
+        else total;
+      total;
+  total
 
 Quickstart.Ledger.credit.match_1 -- derived; fingerprint 2009189936 3390721761
+
+Quickstart.Ledger.isos.match_1 -- derived; fingerprint 1539257307 4069716817
+
+Quickstart.Ledger.isos.match_3 -- derived; fingerprint 2236803997 379803637
 
 Quickstart.Ledger.sig.freeze : Ariadne.Sig :=
   { name := "freeze", params := [("this", Quickstart.Ledger.ty.Accounts), ("id", Ariadne.Ty.string)],
@@ -156,10 +199,4 @@ Quickstart.Ledger.ty.Accounts : Ariadne.Ty :=
   (Ariadne.Fields.cons "balances" Ariadne.Ty.number.map
     (Ariadne.Fields.cons "frozen" Ariadne.Ty.bool.map Ariadne.Fields.nil))
 
-Quickstart.Spec.amount.match_1 -- derived; fingerprint 1808640746 2617809018
-
-Quickstart.Ledger.Entry.Variant.credit : Type :=
-  Int × Unit
-
-Quickstart.Ledger.Entry.Variant.debit : Type :=
-  Int × Unit
+Quickstart.Spec.amount.match_1 -- derived; fingerprint 1539257307 4069716817

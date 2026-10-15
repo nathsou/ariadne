@@ -6,7 +6,7 @@ TypeScript (in a small, executable model of JavaScript) gives exactly what the g
 definitions compute. Properties proved about the definitions therefore hold of the TypeScript
 code, with no proof work per program.
 
-Each translated file carries, for every function `f`, a kernel-checked theorem `«f».source`
+Each translated file carries, for every function `f`, a kernel-checked theorem `f.source`
 about the source text itself: on any JavaScript arguments representing its inputs, and when
 `f`'s safety condition holds (integer arithmetic stays within ±(2^53 − 1); sort comparators are
 consistent), every run of `f` converges to a value representing the readable definition's
@@ -80,7 +80,7 @@ release changes.
 Translate each TypeScript file with `lake exe ariadne translate`, check the generated files in, and
 prove properties of the readable definitions (`Ariadne/Lib` has lemmas for their loops, maps, string
 order and sorting; `cmp_laws` proves a comparator lawful, which `toSorted`'s safety condition needs; a
-class's file states which fields each method leaves alone, as `«m».keeps.«f»`). `Ariadne.Audit.run` gives the project the same soundness
+class's file states which fields each method leaves alone, as `m.keeps.f`). `Ariadne.Audit.run` gives the project the same soundness
 gate, with its own lock: for example, every proposition defined under `Spec` must be proved exactly by
 the theorem of the same name under `Proofs`, and the lock records every statement, so a changed
 statement is a visible change in review.

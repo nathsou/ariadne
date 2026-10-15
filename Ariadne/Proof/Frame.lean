@@ -344,4 +344,15 @@ theorem frame_of {fs0 : Fields} {g : String} {φ : Ty} (j : FIdx fs0 g φ) {Φ :
   subst denote_eq frames_eq
   exact TProgram.frame j P fn hf (j.get this) (this, args) (fun _ _ => rfl) rfl
 
+/-- `frame_of`, with the function and the field's accessor named (`hfn : fn.get fns = f` and
+`hacc : ∀ r, j.get r = acc r`, both by `rfl`): checking the equation then never unfolds the readable
+definition's body. -/
+theorem frame_of_fn {fs0 : Fields} {g : String} {φ : Ty} (j : FIdx fs0 g φ) {Φ : Sigs} {P : TProgram Φ}
+    {fns : Φ.denote} (denote_eq : P.denote = fns) {bs : List Bool} (frames_eq : P.frames g = bs) {m name : String}
+    {ps : Ctx} {t : Bool} (fn : FVar Φ m ⟨name, ("this", .record fs0) :: ps, .record fs0, t, true, true⟩)
+    (hf : fn.flag bs = true) {f : Ctx.denote (("this", .record fs0) :: ps) → fs0.denote} (hfn : fn.get fns = f)
+    {acc : fs0.denote → φ.denote} (hacc : ∀ r, j.get r = acc r)
+    (this : fs0.denote) (args : ps.denote) : acc (f (this, args)) = acc this := by
+  rw [← hacc, ← hacc, ← hfn]; exact frame_of j denote_eq frames_eq fn hf this args
+
 end Ariadne
