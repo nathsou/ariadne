@@ -364,10 +364,10 @@ mutual
     | _, _, .retVoid _ _, _, _, _, _, _, _, _, _ => rfl
     | _, _, .const _ e rest, _, r, k, k', hn, hb, h, ρ => by
       simp only [TStmts.denoteD]
-      exact TStmts.denoteD_noCont rest r _ _ (by simp [K.map, hn]) (by simp [K.map, hb]) h _
+      exact TStmts.denoteD_noCont rest r _ _ (by simp [hn]) (by simp [hb]) h _
     | _, _, .let_ _ e rest, _, r, k, k', hn, hb, h, ρ => by
       simp only [TStmts.denoteD]
-      exact TStmts.denoteD_noCont rest r _ _ (by simp [K.map, hn]) (by simp [K.map, hb]) h _
+      exact TStmts.denoteD_noCont rest r _ _ (by simp [hn]) (by simp [hb]) h _
     | _, _, .assign _ e rest, _, r, k, k', hn, hb, h, ρ => by
       simp only [TStmts.denoteD]; exact TStmts.denoteD_noCont rest r k k' hn hb h _
     | _, _, .stateSet _ _ _ _ _ rest, _, r, k, k', hn, hb, h, ρ => by
@@ -399,14 +399,14 @@ mutual
       · exact TStmts.denoteD_noCont yes r { k with normal := rest.denoteD fs r k' } { k' with normal := rest.denoteD fs r k' }
           rfl hb h.1.1 ρ
       · exact TStmts.denoteD_noCont no r (K.map (v.widen some) { k with normal := rest.denoteD fs r k' })
-          (K.map (v.widen some) { k' with normal := rest.denoteD fs r k' }) rfl (by simp [K.map, hb]) h.1.2 _
+          (K.map (v.widen some) { k' with normal := rest.denoteD fs r k' }) rfl (by simp [hb]) h.1.2 _
     | _, _, .ifNotNull v _ yes no rest, _, r, k, k', hn, hb, h, ρ => by
       simp only [TStmts.noCont, Bool.and_eq_true] at h
       have e : rest.denoteD fs r k = rest.denoteD fs r k' := funext (TStmts.denoteD_noCont rest r k k' hn hb h.2)
       simp only [TStmts.denoteD, e]
       split
       · exact TStmts.denoteD_noCont yes r (K.map (v.widen some) { k with normal := rest.denoteD fs r k' })
-          (K.map (v.widen some) { k' with normal := rest.denoteD fs r k' }) rfl (by simp [K.map, hb]) h.1.1 _
+          (K.map (v.widen some) { k' with normal := rest.denoteD fs r k' }) rfl (by simp [hb]) h.1.1 _
       · exact TStmts.denoteD_noCont no r { k with normal := rest.denoteD fs r k' } { k' with normal := rest.denoteD fs r k' }
           rfl hb h.1.2 ρ
     | _, _, .ifNullExit v _ yes rest, _, r, k, k', hn, hb, h, ρ => by
@@ -414,7 +414,7 @@ mutual
       simp only [TStmts.denoteD]
       split
       · exact TStmts.denoteD_noCont yes r k k' hn hb h.1 ρ
-      · exact TStmts.denoteD_noCont rest r _ _ (by simp [K.map, hn]) (by simp [K.map, hb]) h.2 _
+      · exact TStmts.denoteD_noCont rest r _ _ (by simp [hn]) (by simp [hb]) h.2 _
     | _, _, .switchG v _ arms rest, _, r, k, k', hn, hb, h, ρ => by
       simp only [TStmts.noCont, Bool.and_eq_true] at h
       have e : rest.denoteD fs r k = rest.denoteD fs r k' := funext (TStmts.denoteD_noCont rest r k k' hn hb h.2)
@@ -470,7 +470,7 @@ mutual
       simp only [TArms.noCont, Bool.and_eq_true] at h
       simp only [TArms.denoteD]
       split
-      · exact TStmts.denoteD_noCont body r _ _ (by simp [K.map, hn]) (by simp [K.map, hb]) h.1 _
+      · exact TStmts.denoteD_noCont body r _ _ (by simp [hn]) (by simp [hb]) h.1 _
       · exact TArms.denoteD_noCont rest r k k' hn hb h.2 ρ i y d
 end
 
@@ -736,7 +736,7 @@ theorem TStmts.denoteD_value {Δ Γ : Ctx} {τ : Ty} (st : TStmts Φ Δ τ) (hc 
   rw [TStmts.denoteD_nat st (fun s => J (Ctx.merge Γ m ρ s)) r₀ _ σ₀,
     TStmts.denoteD_frame st hm r (K.map w { k with normal := J })
       (K.map w { k with normal := fun ρ' => J (Ctx.merge Γ m ρ (Ctx.proj Γ m ρ')) }) σ₀
-      (fun σ' h => ⟨by simp only [K.map, Function.comp, Ctx.merge_proj Γ m ρ _ (hw σ' h)], rfl, rfl⟩)]
+      (fun σ' h => ⟨by simp only [Function.comp, Ctx.merge_proj Γ m ρ _ (hw σ' h)], rfl, rfl⟩)]
   exact TStmts.denoteD_closed st hc _ _ (K.map w { k with normal := fun ρ' => J (Ctx.merge Γ m ρ (Ctx.proj Γ m ρ')) })
     ((K.map w (K.all (Ctx.proj Γ m))).post fun s => J (Ctx.merge Γ m ρ s)) rfl σ₀
 
@@ -1173,7 +1173,7 @@ mutual
       · exact TStmts.safe_frame no (m := Mask.or yes.writes no.writes)
           (fun i h => by rw [Mask.getD_or, h, Bool.or_true]) _ _ _ fun σ' h =>
           have hw := Var.agree_widen v some ρ y σ' h hv.symm
-          ⟨by simp only [K.map, Function.comp, Ctx.join, Ctx.merge_proj _ _ ρ _ hw], rfl, rfl⟩
+          ⟨by simp only [Function.comp, Ctx.join, Ctx.merge_proj _ _ ρ _ hw], rfl, rfl⟩
     | _, _, .ifNotNull v _ yes no rest, k, ρ => by
       have e : rest.safeR fs ss k = rest.safe fs ss k := funext fun ρ' => (TStmts.safe_eq_R rest k ρ').symm
       have ey : ∀ k' ρ', yes.safeR fs ss k' ρ' = yes.safe fs ss k' ρ' := fun k' ρ' => (TStmts.safe_eq_R yes k' ρ').symm
@@ -1183,7 +1183,7 @@ mutual
       · exact TStmts.safe_frame yes (m := Mask.or yes.writes no.writes)
           (fun i h => by rw [Mask.getD_or, h]; rfl) _ _ _ fun σ' h =>
           have hw := Var.agree_widen v some ρ y σ' h hv.symm
-          ⟨by simp only [K.map, Function.comp, Ctx.join, Ctx.merge_proj _ _ ρ _ hw], rfl, rfl⟩
+          ⟨by simp only [Function.comp, Ctx.join, Ctx.merge_proj _ _ ρ _ hw], rfl, rfl⟩
     | _, _, .ifNullExit v _ yes rest, k, ρ => by
       rcases hv : v.get ρ with _ | y <;> simp only [TStmts.safe, TStmts.safeR, hv]
       · exact TStmts.safe_eq_R yes k ρ

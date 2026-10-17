@@ -6,6 +6,19 @@ Ariadne follows semantic versioning: a minor version may change generated files 
 
 ## Unreleased
 
+**Model and certificate layout**
+- `translate --split` emits a readable `Model.lean`, a `Certificate.lean`, and an umbrella
+  importing both. Existing function and theorem names stay the same; the standalone format remains.
+- Checking, structured code emission and file assembly have separate frontend modules.
+  Loop declarations no longer travel through marker strings; inequality witnesses and named-type dependencies are collected
+  explicitly. Identity bindings disappear and certificate proofs share named prefixes.
+- Every nontrivial safety condition has a checked `f.safe_iff`, a simplified proposition for proofs.
+  The raw condition still participates in the structural correctness check.
+- `whileDo_measure` is available in `Ariadne.Lib.Loop`. Canonical and named denotations share the
+  `Control` continuation representation; the staged equivalence proofs remain.
+- CI regenerates both layouts and playground examples, checks mutation rejection, and builds the
+  playground proof examples. The playground shows the model of large split examples.
+
 **Readable definitions**
 - Names print bare unless Lean needs guillemets (keywords such as `at`, `this`; names that are not
   identifiers). List operations on a name or field path use dot notation (`xs.length`, `xs.map f`).

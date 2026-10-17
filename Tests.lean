@@ -12,3 +12,5 @@ import Tests.Properties
 import Tests.RegistersSpec
 import Tests.TreeSpec
 import Tests.TrustSpec
+import Tests.Generated.Emission
+import Tests.EmissionSpec

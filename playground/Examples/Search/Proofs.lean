@@ -26,7 +26,8 @@ theorem midpointNaive_overflows :
 theorem midpoint_safe (lo hi : Int) (h0 : 0 ≤ lo) (h : lo ≤ hi) (hh : inRange hi = true) :
     midpoint.safe lo hi = true := by
   simp only [inRange, Nat.ble_eq] at hh
-  simp only [midpoint.safe, inRange, fdiv_two, Nat.ble_eq, Bool.and_eq_true, bne_iff_ne, ne_eq]
+  rw [midpoint.safe_iff]
+  simp only [inRange, fdiv_two, Nat.ble_eq]
   omega
 
 /-- The midpoint lies in the range, below its end. -/
@@ -44,27 +45,6 @@ def Bounds (xs : List Int) : State → Prop
 /-- The distance between the bounds, which every iteration shrinks. -/
 def distance : State → Nat
   | (hi, lo) => (hi - lo).toNat
-
-/-- An invariant of a `while` loop that ends: like `whileDo_inv`, but the loop is left only where its
-condition fails (for a body without `break`), since a measure that every iteration decreases keeps it
-within the iteration bound. -/
-theorem whileDo_measure {σ R : Type} (P : σ → Prop) (Q : R → Prop) (μ : σ → Nat) {cond : σ → Bool}
-    {step : (σ → R) → (σ → R) → σ → R} {exit : σ → R}
-    (hstep : ∀ next ex s, P s → cond s = true → (∀ s', P s' → μ s' < μ s → Q (next s')) →
-      (∀ s', P s' → cond s' = false → Q (ex s')) → Q (step next ex s))
-    (hexit : ∀ s, P s → cond s = false → Q (exit s)) (s : σ) (h : P s) (hμ : μ s < loopBound) :
-    Q (whileDo cond step exit s) := by
-  rw [whileDo_def]
-  suffices ∀ (n : Nat) s, P s → μ s < n → Q (whileIn n cond step exit exit s) from this _ s h hμ
-  intro n
-  induction n with
-  | zero => intro s _ hn; exact absurd hn (Nat.not_lt_zero _)
-  | succ n ih =>
-    intro s h hn
-    rw [whileIn_succ]
-    split
-    · exact hstep _ exit s h ‹_› (fun s' h' hm => ih s' h' (by omega)) hexit
-    · exact hexit s h (by simpa using ‹¬cond s = true›)
 
 /-- **Safety.** On any array shorter than 2^53 (every JavaScript array), the loop ends and no step
 overflows: the distance `hi - lo` shrinks at every iteration. -/

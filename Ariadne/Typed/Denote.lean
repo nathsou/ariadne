@@ -1,3 +1,4 @@
+import Ariadne.Typed.Control
 import Ariadne.Typed.Syntax
 import Ariadne.Kernel
 
@@ -19,14 +20,11 @@ namespace Ariadne
 
 /-- What follows a statement list: the result when it completes normally, breaks,
 or continues. -/
-structure K (Γ : Ctx) (R : Type) where
-  normal : Γ.denote → R
-  brk : Γ.denote → R
-  cont : Γ.denote → R
+abbrev K (Γ : Ctx) (R : Type) := Control Γ.denote R
 
-def K.map (f : Γ'.denote → Γ.denote) (k : K Γ R) : K Γ' R := ⟨k.normal ∘ f, k.brk ∘ f, k.cont ∘ f⟩
+abbrev K.map (f : Γ'.denote → Γ.denote) (k : K Γ R) : K Γ' R := Control.map f k
 
-def K.all (r : Γ.denote → R) : K Γ R := ⟨r, r, r⟩
+abbrev K.all (r : Γ.denote → R) : K Γ R := Control.all r
 
 /-! ## Record literals -/
 

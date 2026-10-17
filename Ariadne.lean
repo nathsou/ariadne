@@ -22,6 +22,7 @@ import Ariadne.Lib.Loop
 import Ariadne.Lib.Map
 import Ariadne.Lib.String
 import Ariadne.Lib.Cmp
+import Ariadne.Lib.SafetySpec
 import Ariadne.Lib.Safe
 import Ariadne.Lib.Readable
 import Ariadne.Audit

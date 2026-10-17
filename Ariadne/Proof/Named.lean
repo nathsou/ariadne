@@ -939,7 +939,7 @@ def KRel {Γ : Ctx} {RS RC : Type} (h : RS → RC) (kS : KS N Γ RS) (kC : K Γ 
 theorem KRel.map {Γ Γ' : Ctx} {RS RC : Type} {h : RS → RC} {kS : KS N Γ RS} {kC : K Γ RC}
     (fS : Γ'.denS N → Γ.denS N) (fC : Γ'.denote → Γ.denote) (hf : ∀ ρ, Ctx.conv N I Γ (fS ρ) = fC (Ctx.conv N I Γ' ρ))
     (hk : KRel I h kS kC) : KRel I h (kS.map fS) (kC.map fC) := fun ρ => by
-  simp only [KS.map, K.map, Function.comp, ← hf]; exact hk (fS ρ)
+  simp only [Function.comp, ← hf]; exact hk (fS ρ)
 
 theorem KRel.snd {x : String} {σ : Ty} {Γ : Ctx} {RS RC : Type} {h : RS → RC} {kS : KS N Γ RS} {kC : K Γ RC}
     (hk : KRel I h kS kC) : KRel I (Γ := (x, σ) :: Γ) h (kS.map Prod.snd) (kC.map Prod.snd) :=

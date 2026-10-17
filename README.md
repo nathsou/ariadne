@@ -7,7 +7,7 @@ definitions compute. Properties proved about the definitions therefore hold of t
 code, with no proof work per program.
 
 Each translated file carries, for every function `f`, a kernel-checked theorem `f.source`
-about the source text itself: on any JavaScript arguments representing its inputs, and when
+about the parsed model AST (the parser/converter remain trusted): on any JavaScript arguments representing its inputs, and when
 `f`'s safety condition holds (integer arithmetic stays within ±(2^53 − 1); sort comparators are
 consistent), every run of `f` converges to a value representing the readable definition's
 result.
@@ -29,8 +29,12 @@ lake env lean Out.lean      # kernel-checks the translation and its theorems
 scripts/check.sh            # everything CI runs (needs Bun, or Node 24+)
 ```
 
-`translate` writes the source's syntax tree, its typed version, readable definitions, safety
-conditions and one source theorem per function. `ariadne batch FILE` evaluates calls in the
+For a Lean project, add `--split` to write `Out/Model.lean` (types, readable definitions and safety
+conditions), `Out/Certificate.lean` (the AST, typed program and correctness checks), and `Out.lean`
+(an umbrella importing both). Add the module to your Lean library and build it with `lake build`;
+open the model to read it.
+Omit `--split` for a standalone file, including browser use. Each nontrivial `f.safe` also has a
+kernel-checked `f.safe_iff`: a simplified proposition for proofs, without changing the raw condition. `ariadne batch FILE` evaluates calls in the
 model (a test oracle), and `ariadne signatures FILE` prints the exported signatures.
 
 ## What is proved, and what is trusted

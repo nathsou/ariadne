@@ -35,10 +35,17 @@ release's build (see 7).
 Write the code in the subset ([LANGUAGE.md](LANGUAGE.md)), then:
 
 ```sh
-lake exe ariadne translate src/ledger.ts --out Quickstart/Ledger.lean --namespace Quickstart.Ledger
+lake exe ariadne translate src/ledger.ts --out Quickstart/Ledger.lean --namespace Quickstart.Ledger --split
 ```
 
-Check the generated file in; CI regenerates it and fails on a difference. It holds:
+Check all three generated files in; CI regenerates them and fails on a difference.
+`Quickstart/Ledger/Model.lean` contains the types, functions and safety conditions.
+`Quickstart/Ledger/Certificate.lean` imports it and checks the typed syntax, denotation,
+source theorems and frame lemmas. Keep importing `Quickstart.Ledger`: the umbrella imports
+both, so the certificate cannot be accidentally omitted from that build. `--out` must match
+the namespace's module path within the Lean project. Omit `--split` for a standalone file.
+
+Together the files contain:
 
 - the source's types as Lean declarations: `structure Accounts` (`a.balances`,
   `{ a with balances := m }`) and `inductive Entry` (`Entry.credit amount`), with `names` and `isos`,
@@ -76,7 +83,9 @@ that directly, as `freeze_runs` does.
   items seen so far, and `fold_eq` its closed form. Other loops read as `forIn`: `forIn_inv` (an
   invariant), `forIn_prefix` (an invariant over the items seen so far), `forIn_continue` (a loop that never
   leaves early is a fold); for `while`, `whileDo_inv` and, for its safety condition,
-  `whileSafe_of_measure`. A safety condition's loops are `forIn` (or `whileSafe`) over the same state as
+  `whileSafe_of_measure`. `whileDo_measure` strengthens the exit rule for a loop without
+  `break`: after proving a decreasing measure, the exit case may assume the condition is false.
+  A safety condition's loops are `forIn` (or `whileSafe`) over the same state as
   the definition's, so one invariant serves both.
 - **Classes**: the generated `m.keeps.f` lemmas, and `Ariadne/Lib/Map.lean` for the maps
   (`mapGet_mapPut`, …).
@@ -84,7 +93,12 @@ that directly, as `freeze_runs` does.
   safety condition, and `sortedBy_perm`, `sortedBy_sorted` say what it returns.
 - **Types**: records are structures and unions inductives, so `cases`, `rcases e with a | a`, `obtain ⟨x, y⟩`
   and `simp` with the structures' projections work as on any Lean type.
-- **Safety conditions**: `ariadne_safe [facts]` (`Ariadne/Lib/Safe.lean`) unfolds `f.safe`, splits its
+- **Safety conditions**: `rw [f.safe_iff]` replaces the raw Boolean condition with a simplified
+  proposition, removing repeated obligations and known literal checks. For example,
+  `midpointNaive.safe lo hi = true` becomes `inRange (lo + hi) = true`. The generated
+  `safety_spec` command constructs an ordinary kernel-checked equivalence; it never assumes safety,
+  unfolds another function, or unrolls a loop. Hover over `f.safe_iff` or use `#check` to see it.
+  `ariadne_safe [facts]` (`Ariadne/Lib/Safe.lean`) unfolds `f.safe`, splits its
   cases and closes each by `simp` with the facts given (a comparator's laws, callees' `_safe` lemmas); what
   it leaves bounds numbers, for `inRange` and `omega`.
 

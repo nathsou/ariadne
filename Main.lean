@@ -11,7 +11,7 @@ open Ariadne Ariadne.Front Lean
 
 private def usage : String :=
   "ariadne — TypeScript subset to Lean 4, with a general correctness theorem\n\n" ++
-  "  ariadne translate FILE --out FILE.lean --namespace NAME\n" ++
+  "  ariadne translate FILE --out FILE.lean --namespace NAME [--split]\n" ++
   "  ariadne batch FILE < CALLS\n" ++
   "  ariadne signatures FILE\n" ++
   "  ariadne validators FILE [--out FILE.ts]\n" ++
@@ -103,8 +103,17 @@ def main (args : List String) : IO UInt32 := do
     let some out := option rest "--out" | IO.eprintln usage; return 2
     let some ns := option rest "--namespace" | IO.eprintln usage; return 2
     let text ← IO.FS.readFile path
-    match translate path ns text with
-    | .ok lean => IO.FS.writeFile out lean; return 0
+    match translateParts path ns text with
+    | .ok generated =>
+      if rest.contains "--split" then
+        let directory := (System.FilePath.mk out).withExtension ""
+        IO.FS.createDirAll directory
+        let (model, certificate, umbrella) := generated.split
+        IO.FS.writeFile (directory / "Model.lean") model
+        IO.FS.writeFile (directory / "Certificate.lean") certificate
+        IO.FS.writeFile out umbrella
+      else IO.FS.writeFile out generated.single
+      return 0
     | .error d => report { path, text } d
   | "batch" :: path :: [] =>
     let text ← IO.FS.readFile path

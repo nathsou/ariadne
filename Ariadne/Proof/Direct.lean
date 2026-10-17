@@ -21,17 +21,14 @@ set_option linter.unusedSectionVars false
 
 namespace Ariadne
 
-/-- The continuations followed by `h`. -/
-def K.post (k : K Γ A) (h : A → B) : K Γ B := ⟨h ∘ k.normal, h ∘ k.brk, h ∘ k.cont⟩
-
 theorem K.post_normal (k : K Γ A) (n : Γ.denote → A) (n' : Γ.denote → B) (h : A → B)
     (e : ∀ ρ, h (n ρ) = n' ρ) : ({ k with normal := n } : K Γ A).post h = { k.post h with normal := n' } := by
-  simp only [K.post, K.mk.injEq, and_true]; funext ρ; exact e ρ
+  simp only [Control.post, Control.mk.injEq, and_true]; funext ρ; exact e ρ
 
 theorem K.post_normal_brk (k : K Γ A) (n : Γ.denote → A) (n' : Γ.denote → B) (h : A → B)
     (e : ∀ ρ, h (n ρ) = n' ρ) :
     ({ k with normal := n, brk := n } : K Γ A).post h = { k.post h with normal := n', brk := n' } := by
-  simp only [K.post, K.mk.injEq, and_true]; constructor <;> funext ρ <;> exact e ρ
+  simp only [Control.post, Control.mk.injEq, and_true]; constructor <;> funext ρ <;> exact e ρ
 
 theorem forIn_nat {α σ A B : Type} (h : A → B) {step₁ : α → (σ → A) → (σ → A) → σ → A}
     {step₂ : α → (σ → B) → (σ → B) → σ → B} (hs : ∀ y n e s, h (step₁ y n e s) = step₂ y (h ∘ n) (h ∘ e) s)
@@ -331,10 +328,10 @@ theorem TStmts.denoteD_noBrk : ∀ {Γ : Ctx} {τ : Ty} (st : TStmts Φ Γ τ) {
   | _, _, .retVoid _ _, _, _, _, _, _, _, _, _ => rfl
   | _, _, .const _ e rest, _, r, k, k', hn, hc, h, ρ => by
     simp only [TStmts.denoteD]
-    exact TStmts.denoteD_noBrk rest r _ _ (by simp [K.map, hn]) (by simp [K.map, hc]) h _
+    exact TStmts.denoteD_noBrk rest r _ _ (by simp [hn]) (by simp [hc]) h _
   | _, _, .let_ _ e rest, _, r, k, k', hn, hc, h, ρ => by
     simp only [TStmts.denoteD]
-    exact TStmts.denoteD_noBrk rest r _ _ (by simp [K.map, hn]) (by simp [K.map, hc]) h _
+    exact TStmts.denoteD_noBrk rest r _ _ (by simp [hn]) (by simp [hc]) h _
   | _, _, .assign _ e rest, _, r, k, k', hn, hc, h, ρ => by
     simp only [TStmts.denoteD]; exact TStmts.denoteD_noBrk rest r k k' hn hc h _
   | _, _, .stateSet _ _ _ _ _ rest, _, r, k, k', hn, hc, h, ρ => by
@@ -366,14 +363,14 @@ theorem TStmts.denoteD_noBrk : ∀ {Γ : Ctx} {τ : Ty} (st : TStmts Φ Γ τ) {
     · exact TStmts.denoteD_noBrk yes r { k with normal := rest.denoteD fs r k' } { k' with normal := rest.denoteD fs r k' }
         rfl hc h.1.1 ρ
     · exact TStmts.denoteD_noBrk no r (K.map (v.widen some) { k with normal := rest.denoteD fs r k' })
-        (K.map (v.widen some) { k' with normal := rest.denoteD fs r k' }) rfl (by simp [K.map, hc]) h.1.2 _
+        (K.map (v.widen some) { k' with normal := rest.denoteD fs r k' }) rfl (by simp [hc]) h.1.2 _
   | _, _, .ifNotNull v _ yes no rest, _, r, k, k', hn, hc, h, ρ => by
     simp only [TStmts.noBrk, Bool.and_eq_true] at h
     have e : rest.denoteD fs r k = rest.denoteD fs r k' := funext (TStmts.denoteD_noBrk rest r k k' hn hc h.2)
     simp only [TStmts.denoteD, e]
     split
     · exact TStmts.denoteD_noBrk yes r (K.map (v.widen some) { k with normal := rest.denoteD fs r k' })
-        (K.map (v.widen some) { k' with normal := rest.denoteD fs r k' }) rfl (by simp [K.map, hc]) h.1.1 _
+        (K.map (v.widen some) { k' with normal := rest.denoteD fs r k' }) rfl (by simp [hc]) h.1.1 _
     · exact TStmts.denoteD_noBrk no r { k with normal := rest.denoteD fs r k' } { k' with normal := rest.denoteD fs r k' }
         rfl hc h.1.2 ρ
   | _, _, .ifNullExit v _ yes rest, _, r, k, k', hn, hc, h, ρ => by
@@ -381,7 +378,7 @@ theorem TStmts.denoteD_noBrk : ∀ {Γ : Ctx} {τ : Ty} (st : TStmts Φ Γ τ) {
     simp only [TStmts.denoteD]
     split
     · exact TStmts.denoteD_noBrk yes r k k' hn hc h.1 ρ
-    · exact TStmts.denoteD_noBrk rest r _ _ (by simp [K.map, hn]) (by simp [K.map, hc]) h.2 _
+    · exact TStmts.denoteD_noBrk rest r _ _ (by simp [hn]) (by simp [hc]) h.2 _
   | _, _, .switchG v _ arms rest, _, r, k, k', hn, hc, h, ρ => by
     simp only [TStmts.noBrk] at h
     have e : rest.denoteD fs r k = rest.denoteD fs r k' := funext (TStmts.denoteD_noBrk rest r k k' hn hc h)

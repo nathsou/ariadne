@@ -143,4 +143,25 @@ theorem whileSafe_of_measure {σ : Type} (P : σ → Prop) (μ : σ → Nat) {co
     (hexit : ∀ s, P s → exit s = true) (s : σ) (h : P s) (hμ : μ s < loopBound) : whileSafe cond step exit s = true := by
   rw [whileSafe_def]; exact whileIn_true P μ hstep hexit _ s h hμ
 
+/-- An invariant of a `while` loop that ends: like `whileDo_inv`, but the loop is left only where its
+condition fails (for a body without `break`), since a measure that every iteration decreases keeps it
+within the iteration bound. -/
+theorem whileDo_measure {σ R : Type} (P : σ → Prop) (Q : R → Prop) (μ : σ → Nat) {cond : σ → Bool}
+    {step : (σ → R) → (σ → R) → σ → R} {exit : σ → R}
+    (hstep : ∀ next ex s, P s → cond s = true → (∀ s', P s' → μ s' < μ s → Q (next s')) →
+      (∀ s', P s' → cond s' = false → Q (ex s')) → Q (step next ex s))
+    (hexit : ∀ s, P s → cond s = false → Q (exit s)) (s : σ) (h : P s) (hμ : μ s < loopBound) :
+    Q (whileDo cond step exit s) := by
+  rw [whileDo_def]
+  suffices ∀ (n : Nat) s, P s → μ s < n → Q (whileIn n cond step exit exit s) from this _ s h hμ
+  intro n
+  induction n with
+  | zero => intro s _ hn; exact absurd hn (Nat.not_lt_zero _)
+  | succ n ih =>
+    intro s h hn
+    rw [whileIn_succ]
+    split
+    · exact hstep _ exit s h ‹_› (fun s' h' hm => ih s' h' (by omega)) hexit
+    · exact hexit s h (by simpa using ‹¬cond s = true›)
+
 end Ariadne
