@@ -10,17 +10,16 @@ lake build Ariadne ariadne
 if command -v bun >/dev/null 2>&1; then js=bun; else js=node; fi
 "$js" scripts/model.mjs
 
-for source in Tests/fixtures/*.ts; do
-  stem=$(basename "$source" .ts)
-  module=$(echo "$stem" | sed -E 's/(^|-)([a-z0-9])/\U\2/g')
-  .lake/build/bin/ariadne translate "$source" --out "Tests/Generated/$module.lean" \
-    --namespace "Tests.Generated.$module"
-done
-.lake/build/bin/ariadne translate examples/quickstart/src/ledger.ts --out examples/quickstart/Quickstart/Ledger.lean \
-  --namespace Quickstart.Ledger
-git diff --exit-code -- Tests/Generated examples/quickstart/Quickstart
+"$js" scripts/regenerate.mjs
+git diff --exit-code -- Tests/Generated examples/quickstart/Quickstart playground/Examples
+if [ -n "$(git ls-files --others --exclude-standard -- Tests/Generated examples/quickstart/Quickstart playground/Examples)" ]; then
+  echo "Regeneration produced untracked files; check in every model and certificate."
+  exit 1
+fi
 lake build Tests
+"$js" scripts/emission.mjs
 lake exe audit
+(cd playground && lake build Examples)
 # The quickstart example, built and audited as a project depending on Ariadne.
 (cd examples/quickstart && lake build Quickstart audit && lake exe audit)
 

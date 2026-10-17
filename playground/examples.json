@@ -192,7 +192,8 @@
     "namespace": "Tests.Generated.Trust",
     "lean": {
       "root": ".",
-      "file": "Tests/Generated/Trust.lean"
+      "file": "Tests/Generated/Trust.lean",
+      "split": true
     },
     "proofs": {
       "root": ".",
@@ -208,7 +209,8 @@
     "namespace": "Tests.Generated.Tree",
     "lean": {
       "root": ".",
-      "file": "Tests/Generated/Tree.lean"
+      "file": "Tests/Generated/Tree.lean",
+      "split": true
     },
     "proofs": {
       "root": ".",

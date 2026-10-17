@@ -608,14 +608,11 @@ end
 /-! ## Statements -/
 
 /-- What follows a statement list, on environments of named types. -/
-structure KS (N : Names) (Γ : Ctx) (R : Type) where
-  normal : Γ.denS N → R
-  brk : Γ.denS N → R
-  cont : Γ.denS N → R
+abbrev KS (N : Names) (Γ : Ctx) (R : Type) := Control (Γ.denS N) R
 
-def KS.map {N : Names} (f : Γ'.denS N → Γ.denS N) (k : KS N Γ R) : KS N Γ' R := ⟨k.normal ∘ f, k.brk ∘ f, k.cont ∘ f⟩
+abbrev KS.map {N : Names} (f : Γ'.denS N → Γ.denS N) (k : KS N Γ R) : KS N Γ' R := Control.map f k
 
-def KS.all {N : Names} (r : Γ.denS N → R) : KS N Γ R := ⟨r, r, r⟩
+abbrev KS.all {N : Names} (r : Γ.denS N → R) : KS N Γ R := Control.all r
 
 @[reducible] def Ctx.tupS (N : Names) : Ctx → Type
   | [] => Unit

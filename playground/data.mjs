@@ -28,15 +28,24 @@ for (const ex of examples) {
   const started = Date.now();
   const data = { ...ex, source: read(ex.source), path: ex.source };
   if (ex.lean) {
-    const leanPath = join(ex.lean.root, ex.lean.file);
+    const umbrellaPath = join(ex.lean.root, ex.lean.file);
+    const leanPath = ex.lean.split ? umbrellaPath.replace(/\.lean$/, "/Model.lean") : umbrellaPath;
     // The translation is checked in; it must be what the translator gives now.
     const fresh = join(tmp, "fresh.lean");
     execFileSync(join(repo, ".lake/build/bin/ariadne"),
-      ["translate", ex.source, "--out", fresh, "--namespace", ex.namespace], { cwd: repo });
-    if (readFileSync(fresh, "utf8") !== read(leanPath)) {
-      throw new Error(`${leanPath} is out of date: regenerate it with\n  .lake/build/bin/ariadne translate ${ex.source} --out ${leanPath} --namespace ${ex.namespace}`);
+      ["translate", ex.source, "--out", fresh, "--namespace", ex.namespace, ...(ex.lean.split ? ["--split"] : [])], { cwd: repo });
+    const files = [[fresh, umbrellaPath]];
+    if (ex.lean.split) {
+      for (const part of ["Model", "Certificate"]) {
+        files.push([fresh.replace(/\.lean$/, `/${part}.lean`), umbrellaPath.replace(/\.lean$/, `/${part}.lean`)]);
+      }
     }
-    const info = extract(ex.lean.root, ex.lean.file);
+    for (const [generated, checkedIn] of files) {
+      if (readFileSync(generated, "utf8") !== read(checkedIn)) {
+        throw new Error(`${checkedIn} is out of date: run node scripts/regenerate.mjs`);
+      }
+    }
+    const info = extract(ex.lean.root, ex.lean.split ? ex.lean.file.replace(/\.lean$/, "/Model.lean") : ex.lean.file);
     // The generated file's own proofs are `decide` steps and structural equations: keep its hovers, and
     // of its theorems the ones a user cites (the source theorems and the frame lemmas).
     info.goals = [];

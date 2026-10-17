@@ -52,13 +52,11 @@ structure Keeps (r r' : State) : Prop where
   spots : r'.spots = r.spots
   purged : r'.purged = r.purged
 
-macro "keeps" : tactic => `(tactic| (constructor <;> simp_all))
+theorem setNext_keeps (r : State) (id : JSString) (n : Option JSString) : Keeps r (setNext r id n) :=
+  ⟨setNext.keeps.spots r id n, setNext.keeps.purged r id n⟩
 
-theorem setNext_keeps (r : State) (id : JSString) (n : Option JSString) : Keeps r (setNext r id n) := by
-  unfold setNext; dsimp only; split <;> keeps
-
-theorem setPrev_keeps (r : State) (id : JSString) (n : Option JSString) : Keeps r (setPrev r id n) := by
-  unfold setPrev; dsimp only; split <;> keeps
+theorem setPrev_keeps (r : State) (id : JSString) (n : Option JSString) : Keeps r (setPrev r id n) :=
+  ⟨setPrev.keeps.spots r id n, setPrev.keeps.purged r id n⟩
 
 @[simp] theorem setNext_1 (r : State) (id : JSString) (n : Option JSString) : (setNext r id n).spots = r.spots :=
   (setNext_keeps r id n).spots
@@ -69,60 +67,37 @@ theorem setPrev_keeps (r : State) (id : JSString) (n : Option JSString) : Keeps 
 @[simp] theorem setPrev_p (r : State) (id : JSString) (n : Option JSString) :
     (setPrev r id n).purged = r.purged := (setPrev_keeps r id n).purged
 
-theorem bury_keeps (r : State) (id b : JSString) : Keeps r (bury r id b) := by
-  unfold bury; dsimp only; split <;> keeps
+theorem bury_keeps (r : State) (id b : JSString) : Keeps r (bury r id b) :=
+  ⟨bury.keeps.spots r id b, bury.keeps.purged r id b⟩
 
 @[simp] theorem bury_1 (r : State) (id b : JSString) : (bury r id b).spots = r.spots := (bury_keeps r id b).spots
 @[simp] theorem bury_p (r : State) (id b : JSString) : (bury r id b).purged = r.purged :=
   (bury_keeps r id b).purged
 
-theorem unlink_keeps (r : State) (id : JSString) : Keeps r (unlink r id) := by
-  unfold unlink; dsimp only
-  split
-  · keeps
-  · split
-    · keeps
-    · split
-      · keeps
-      · split <;> split <;> keeps
+theorem unlink_keeps (r : State) (id : JSString) : Keeps r (unlink r id) :=
+  ⟨unlink.keeps.spots r id, unlink.keeps.purged r id⟩
 
 @[simp] theorem unlink_1 (r : State) (id : JSString) : (unlink r id).spots = r.spots := (unlink_keeps r id).spots
 @[simp] theorem unlink_p (r : State) (id : JSString) : (unlink r id).purged = r.purged :=
   (unlink_keeps r id).purged
 
-theorem link_keeps (r : State) (id parent : JSString) : Keeps r (link r id parent) := by
-  unfold link; dsimp only
-  split <;> split <;> keeps
+theorem link_keeps (r : State) (id parent : JSString) : Keeps r (link r id parent) :=
+  ⟨link.keeps.spots r id parent, link.keeps.purged r id parent⟩
 
 @[simp] theorem link_1 (r : State) (id p : JSString) : (link r id p).spots = r.spots := (link_keeps r id p).spots
 @[simp] theorem link_p (r : State) (id p : JSString) : (link r id p).purged = r.purged :=
   (link_keeps r id p).purged
 
-/-- A leaf of a loop body: continue or leave with a state that keeps the registers,
-or end with one. -/
-macro "loop_leaf" hn:ident hx:ident h1:ident h2:ident : tactic => `(tactic| first
-  | (apply $hn; constructor <;> simp [$h1:ident, $h2:ident])
-  | (apply $hx; constructor <;> simp [$h1:ident, $h2:ident])
-  | (constructor <;> simp [$h1:ident, $h2:ident]))
-
-theorem settle_keeps (r : State) (start : JSString) (all : Bool) : Keeps r (settle r start all) := by
-  unfold settle; dsimp only
-  refine forIn_inv (fun s => Keeps r s.2.2) (Keeps r) ?_ ?_ _ _ (Keeps.mk rfl rfl)
-  · intro y next ex s ⟨h1, h2⟩ hn hx
-    dsimp only [settle.loop]
-    repeat' split
-    all_goals loop_leaf hn hx h1 h2
-  · intro s ⟨h1, h2⟩; exact ⟨h1, h2⟩
+theorem settle_keeps (r : State) (start : JSString) (all : Bool) : Keeps r (settle r start all) :=
+  ⟨settle.keeps.spots r start all, settle.keeps.purged r start all⟩
 
 @[simp] theorem settle_1 (r : State) (st : JSString) (a : Bool) : (settle r st a).spots = r.spots :=
   (settle_keeps r st a).spots
 @[simp] theorem settle_p (r : State) (st : JSString) (a : Bool) :
     (settle r st a).purged = r.purged := (settle_keeps r st a).purged
 
-theorem attach_keeps (r : State) (id : JSString) : Keeps r (attach r id) := by
-  unfold attach; dsimp only
-  repeat' split
-  all_goals (constructor <;> simp)
+theorem attach_keeps (r : State) (id : JSString) : Keeps r (attach r id) :=
+  ⟨attach.keeps.spots r id, attach.keeps.purged r id⟩
 
 @[simp] theorem attach_1 (r : State) (id : JSString) : (attach r id).spots = r.spots := (attach_keeps r id).spots
 @[simp] theorem attach_p (r : State) (id : JSString) : (attach r id).purged = r.purged :=

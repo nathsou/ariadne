@@ -56,7 +56,10 @@ Concluded per file:          every readable def is what the TypeScript function 
 | `Ariadne/Lib/*` | Lemmas for proofs about readable definitions: loops (invariants, folds), maps, string order, `toSorted` (its consistency conditions, what it returns, and `cmp_laws` for comparators), the `readable` simp set | No |
 | `Ariadne/Kernel.lean` | `kernel_rfl`: closed equations checked by the kernel alone | No |
 | `Ariadne/Audit.lean`, `Audit.lean` | The soundness gate, and its configuration for Ariadne (`trusted.lock`) | No |
-| `Ariadne/Front/Check.lean` | Type checker and printer | No |
+| `Ariadne/Front/Elaborate.lean` | Type checking and type-directed construction of emitted code | No |
+| `Ariadne/Front/Emit.lean` | Structured code, bindings and hoisted loop declarations | No |
+| `Ariadne/Front/Print.lean` | Model/certificate assembly and translation entry points | No |
+| `Ariadne/Front/Check.lean` | Compatibility import for the frontend API | No |
 | `Main.lean` | The `ariadne` command (`translate`, and the test oracles `batch` and `signatures`) | No |
 | `Tests/` | Fixtures and their generated files, model cases, negative fixtures, property proofs | — |
 
@@ -249,7 +252,34 @@ Proof structure (`Ariadne/Proof`):
   that the environment binds `this` at most once and that no statement binds or assigns it; one lemma
   per statement form (`agree_*`).
 
-## What a translated file contains
+## What a translation contains
+
+`translate --split` writes a readable `Model.lean`, a `Certificate.lean` importing the model,
+and an umbrella importing the certificate. The namespace and public function/theorem names
+are the same as in the single-file format. Model code needs no source AST, typed witnesses,
+`names` or `isos`; those belong to the certificate. The single-file format remains available
+for the browser and standalone use. Both layouts are assembled from the same `Generated`
+parts, rather than splitting an already-printed file.
+
+The emitter carries bindings and hoisted declarations in `Code` trees. Loop references and
+dependencies survive interpolation; a final traversal orders declarations before their users.
+There are no marker strings to parse back out. Variable inequality dependencies are collected
+when the checker constructs a reference, and type declaration dependencies use structural
+containment of `Ty`. Identity bindings are removed; all bodies still pass `kernel_rfl`.
+
+The certificate names intermediate denotation and safety proofs. Later proofs refer to those
+names instead of copying the entire proof of every earlier program prefix. Private proof definitions
+infer their types from the assembly lemmas, avoiding repeated prefix type annotations. This removes the
+quadratic duplication of proof *terms*; contexts, typed witnesses and theorem statements can
+still have superlinear size.
+
+For proofs, `safety_spec f.safe as f.safe_iff` constructs an equivalence between the raw
+Boolean predicate and a simplified proposition. It uses a fixed set of Boolean/propositional
+rules, literal range facts and Lean's simplification procedures, producing a theorem checked
+by the kernel. The structural `safe_eq` check continues to use the raw condition; the new
+interface cannot weaken it. It does not unfold loop combinators or other functions.
+
+In the standalone format these sections appear together:
 
 ```lean
 noncomputable def ast : Program := …            -- the converted source
@@ -359,6 +389,19 @@ readable definitions and transfer them to every run.
     is a change to that file.
 - **CI** (`scripts/check.sh`): pinned tools and no build cache, since Lean imports compiled modules
   without re-checking their proofs.
+
+## Shared interpretation machinery
+
+The canonical `K` and named `KS` environments now instantiate the same `Control` type,
+including mapping and postcomposition of continuations. This factors code whose behavior
+is identical without adding another semantic layer.
+
+The staged `denote`, `denoteD`, `denoteR` and `denoteRS` interpreters remain intentional.
+They isolate three different proof arguments (naturality, framing and representation).
+Making all of them one configurable interpreter would change reduction behavior throughout
+the per-file checks and entangle those arguments. The current refactor shares the identical
+machinery, rather than assuming that fewer interpreters means a simpler proof. Any further
+consolidation should compare both proof maintenance and kernel-checking time on Registers/Tree.
 
 ## Cost
 
