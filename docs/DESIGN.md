@@ -266,6 +266,8 @@ dependencies survive interpolation; a final traversal orders declarations before
 There are no marker strings to parse back out. Variable inequality dependencies are collected
 when the checker constructs a reference, and type declaration dependencies use structural
 containment of `Ty`. Identity bindings are removed; all bodies still pass `kernel_rfl`.
+Expression leaves remain text, and capture/narrowing checks still inspect name occurrences in
+previews. The emission tree models the binding and declaration structure needed for these changes.
 
 The certificate names intermediate denotation and safety proofs. Later proofs refer to those
 names instead of copying the entire proof of every earlier program prefix. Private proof definitions
@@ -273,7 +275,7 @@ infer their types from the assembly lemmas, avoiding repeated prefix type annota
 quadratic duplication of proof *terms*; contexts, typed witnesses and theorem statements can
 still have superlinear size.
 
-For proofs, `safety_spec f.safe as f.safe_iff` constructs an equivalence between the raw
+For proofs, `safety_spec f.safe => f.safe_iff` constructs an equivalence between the raw
 Boolean predicate and a simplified proposition. It uses a fixed set of Boolean/propositional
 rules, literal range facts and Lean's simplification procedures, producing a theorem checked
 by the kernel. The structural `safe_eq` check continues to use the raw condition; the new

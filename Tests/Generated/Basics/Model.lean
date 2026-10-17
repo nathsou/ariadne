@@ -86,6 +86,6 @@ def bump.safe (n : Int) (times : Int) : Bool :=
     x)
 
 -- A checked, simplified proposition for proofs: `rw [bump.safe_iff]`.
-safety_spec bump.safe as bump.safe_iff
+safety_spec bump.safe => bump.safe_iff
 
 end Tests.Generated.Basics

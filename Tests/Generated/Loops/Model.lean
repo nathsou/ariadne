@@ -44,7 +44,7 @@ def sum.safe (xs : List Int) : Bool :=
     total
 
 -- A checked, simplified proposition for proofs: `rw [sum.safe_iff]`.
-safety_spec sum.safe as sum.safe_iff
+safety_spec sum.safe => sum.safe_iff
 
 /-- A loop body of `firstLarge`. -/
 def firstLarge.loop (limit : Int) : Item → (Unit → Option Item) → (Unit → Option Item) → Unit → Option Item :=
@@ -101,7 +101,7 @@ def countTagged.safe (items : List Item) (tag : JSString) : Bool :=
     n
 
 -- A checked, simplified proposition for proofs: `rw [countTagged.safe_iff]`.
-safety_spec countTagged.safe as countTagged.safe_iff
+safety_spec countTagged.safe => countTagged.safe_iff
 
 /-- A loop body of `prefixUntil`. -/
 def prefixUntil.loop {R : Type} (stop : Int) : Int → (List Int → R) → (List Int → R) → List Int → R :=
@@ -188,7 +188,7 @@ def classify.safe (xs : List Int) : Bool :=
     (neg, pos)
 
 -- A checked, simplified proposition for proofs: `rw [classify.safe_iff]`.
-safety_spec classify.safe as classify.safe_iff
+safety_spec classify.safe => classify.safe_iff
 
 def bump (n : Int) : Int :=
   let n : Int := n + (1 : Int)
@@ -200,7 +200,7 @@ def bump.safe (n : Int) : Bool :=
   Ariadne.inRange (n * (2 : Int)))
 
 -- A checked, simplified proposition for proofs: `rw [bump.safe_iff]`.
-safety_spec bump.safe as bump.safe_iff
+safety_spec bump.safe => bump.safe_iff
 
 /-- A loop body of `grid`. -/
 def grid.loop2 {R : Type} : Int × Nat → (Int → R) → (Int → R) → Int → R :=
@@ -243,7 +243,7 @@ def grid.safe (rows : List (List Int)) : Bool :=
     total
 
 -- A checked, simplified proposition for proofs: `rw [grid.safe_iff]`.
-safety_spec grid.safe as grid.safe_iff
+safety_spec grid.safe => grid.safe_iff
 
 /-- A loop body of `perimeters`. -/
 def perimeters.loop : Int → Shape → Int :=
@@ -274,7 +274,7 @@ def perimeters.safe (shapes : List Shape) : Bool :=
     t
 
 -- A checked, simplified proposition for proofs: `rw [perimeters.safe_iff]`.
-safety_spec perimeters.safe as perimeters.safe_iff
+safety_spec perimeters.safe => perimeters.safe_iff
 
 /-- A loop body of `steps`. -/
 def steps.loop {R : Type} : Int → (Int × Int → R) → (Int × Int → R) → Int × Int → R :=
@@ -310,7 +310,7 @@ def steps.safe (n : Int) : Bool :=
     (k, count)
 
 -- A checked, simplified proposition for proofs: `rw [steps.safe_iff]`.
-safety_spec steps.safe as steps.safe_iff
+safety_spec steps.safe => steps.safe_iff
 
 def score (a : Int) (b : Int) : Int :=
   let s : Int := (0 : Int)
@@ -343,7 +343,7 @@ def score.safe (a : Int) (b : Int) : Bool :=
     after2' s)
 
 -- A checked, simplified proposition for proofs: `rw [score.safe_iff]`.
-safety_spec score.safe as score.safe_iff
+safety_spec score.safe => score.safe_iff
 
 /-- A loop body of `triangle`. -/
 def triangle.loop {R : Type} (cap : Int) : Int → (Int → R) → (Int → R) → Int → R :=
@@ -383,7 +383,7 @@ def triangle.safe (n : Int) (cap : Int) : Bool :=
     t
 
 -- A checked, simplified proposition for proofs: `rw [triangle.safe_iff]`.
-safety_spec triangle.safe as triangle.safe_iff
+safety_spec triangle.safe => triangle.safe_iff
 
 /-- A loop body of `gcd`. -/
 def gcd.loop {R : Type} : (Int × Int → R) → (Int × Int → R) → Int × Int → R :=
@@ -417,7 +417,7 @@ def gcd.safe (a : Int) (b : Int) : Bool :=
     (y, x)))
 
 -- A checked, simplified proposition for proofs: `rw [gcd.safe_iff]`.
-safety_spec gcd.safe as gcd.safe_iff
+safety_spec gcd.safe => gcd.safe_iff
 
 /-- A loop body of `firstAbove`. -/
 def firstAbove.loop (limit : Int) (xs : List Int) : (Int → Int) → (Int → Int) → Int → Int :=
@@ -453,7 +453,7 @@ def firstAbove.safe (xs : List Int) (limit : Int) : Bool :=
     i
 
 -- A checked, simplified proposition for proofs: `rw [firstAbove.safe_iff]`.
-safety_spec firstAbove.safe as firstAbove.safe_iff
+safety_spec firstAbove.safe => firstAbove.safe_iff
 
 /-- A loop body of `countdown`. -/
 def countdown.loop {R : Type} : (Int × List Int → R) → (Int × List Int → R) → Int × List Int → R :=
@@ -499,6 +499,6 @@ def countdown.safe (n : Int) : Bool :=
     (k, out)
 
 -- A checked, simplified proposition for proofs: `rw [countdown.safe_iff]`.
-safety_spec countdown.safe as countdown.safe_iff
+safety_spec countdown.safe => countdown.safe_iff
 
 end Tests.Generated.Loops

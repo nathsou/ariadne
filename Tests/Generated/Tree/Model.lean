@@ -348,7 +348,7 @@ def settle.safe («this» : Tree) (start : JSString) (all : Bool) : Bool :=
     (down, cur, «this»))
 
 -- A checked, simplified proposition for proofs: `rw [settle.safe_iff]`.
-safety_spec settle.safe as settle.safe_iff
+safety_spec settle.safe => settle.safe_iff
 
 def attach («this» : Tree) (id : JSString) : Tree :=
   let s : Option Spot := Ariadne.mapGet «this».spots id
@@ -404,7 +404,7 @@ def attach.safe («this» : Tree) (id : JSString) : Bool :=
       after4' «this»
 
 -- A checked, simplified proposition for proofs: `rw [attach.safe_iff]`.
-safety_spec attach.safe as attach.safe_iff
+safety_spec attach.safe => attach.safe_iff
 
 /-- A loop body of `rearrange`. -/
 def rearrange.loop1 : Tree → JSString → Tree :=
@@ -443,7 +443,7 @@ def rearrange.safe («this» : Tree) (id : JSString) : Bool :=
     «this»)
 
 -- A checked, simplified proposition for proofs: `rw [rearrange.safe_iff]`.
-safety_spec rearrange.safe as rearrange.safe_iff
+safety_spec rearrange.safe => rearrange.safe_iff
 
 def create («this» : Tree) (id : JSString) (parent : JSString) (name : JSString) (stamp : JSString) : Tree :=
   if (id == root) || ((Ariadne.mapGet «this».spots id).isSome) then
@@ -467,7 +467,7 @@ def create.safe («this» : Tree) (id : JSString) (parent : JSString) (name : JS
     true)
 
 -- A checked, simplified proposition for proofs: `rw [create.safe_iff]`.
-safety_spec create.safe as create.safe_iff
+safety_spec create.safe => create.safe_iff
 
 def position («this» : Tree) (id : JSString) (parent : JSString) (name : JSString) (stamp : JSString) (move : Bool) : Tree :=
   let s : Option Spot := Ariadne.mapGet «this».spots id
@@ -527,7 +527,7 @@ def position.safe («this» : Tree) (id : JSString) (parent : JSString) (name : 
           after4' «this»
 
 -- A checked, simplified proposition for proofs: `rw [position.safe_iff]`.
-safety_spec position.safe as position.safe_iff
+safety_spec position.safe => position.safe_iff
 
 def purge («this» : Tree) (id : JSString) (stamp : JSString) : Tree :=
   if id == root then
@@ -555,7 +555,7 @@ def purge.safe («this» : Tree) (id : JSString) (stamp : JSString) : Bool :=
       true)
 
 -- A checked, simplified proposition for proofs: `rw [purge.safe_iff]`.
-safety_spec purge.safe as purge.safe_iff
+safety_spec purge.safe => purge.safe_iff
 
 /-- A loop body of `untangle`. -/
 def untangle.loop1 : Tree → JSString → Tree :=
@@ -612,7 +612,7 @@ def untangle.safe («this» : Tree) : Bool :=
     «this»
 
 -- A checked, simplified proposition for proofs: `rw [untangle.safe_iff]`.
-safety_spec untangle.safe as untangle.safe_iff
+safety_spec untangle.safe => untangle.safe_iff
 
 def isDetached («this» : Tree) (id : JSString) : Bool :=
   (Ariadne.mapGet «this».detached id).isSome

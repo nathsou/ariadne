@@ -8,6 +8,8 @@ example : marker = js "⟦⟦99⟧⟧ne.«fake».«binding»⟦⟦/⟧⟧" := rf
 
 example : nested [1, 2] [3, 4] 5 = 40 := by decide
 
+example : keywordNames 2 3 = 5 := rfl
+
 /-- The redundant literal and repeated range checks disappear from the proof interface. -/
 example (lo hi : Int) : midpoint.safe lo hi = true ↔ inRange (lo + hi) = true :=
   midpoint.safe_iff lo hi

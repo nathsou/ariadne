@@ -1,5 +1,3 @@
-import Lean
-
 /-! Small, untrusted emission trees. Declarations and references survive composition;
 the final pass prints them, without sentinel strings or parsing generated Lean. -/
 namespace Ariadne.Front

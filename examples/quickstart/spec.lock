@@ -64,8 +64,7 @@ Quickstart.Ledger.ast : Ariadne.Program :=
 Quickstart.Ledger.balance : List Quickstart.Ledger.Entry → Int :=
   fun entries =>
   have total := 0;
-  have total := Ariadne.fold total entries Quickstart.Ledger.balance.loop;
-  total
+  Ariadne.fold total entries Quickstart.Ledger.balance.loop
 
 Quickstart.Ledger.credit : Quickstart.Ledger.Accounts → Ariadne.JSString → Int → Quickstart.Ledger.Accounts :=
   fun this id amount =>
@@ -170,19 +169,9 @@ Quickstart.Ledger.Entry.rec -- derived; fingerprint 1437779075 0
 
 Quickstart.Ledger.balance.loop : Int → Quickstart.Ledger.Entry → Int :=
   fun total e =>
-  have total :=
-    match e with
-    | Quickstart.Ledger.Entry.credit e =>
-      have total := total + e;
-      total
-    | Quickstart.Ledger.Entry.debit e =>
-      have total :=
-        if Decidable.decide (e ≤ total) = Bool.true then
-          have total := total - e;
-          total
-        else total;
-      total;
-  total
+  match e with
+  | Quickstart.Ledger.Entry.credit e => total + e
+  | Quickstart.Ledger.Entry.debit e => if Decidable.decide (e ≤ total) = Bool.true then total - e else total
 
 Quickstart.Ledger.credit.match_1 -- derived; fingerprint 2009189936 3390721761
 
@@ -200,3 +189,5 @@ Quickstart.Ledger.ty.Accounts : Ariadne.Ty :=
     (Ariadne.Fields.cons "frozen" Ariadne.Ty.bool.map Ariadne.Fields.nil))
 
 Quickstart.Spec.amount.match_1 -- derived; fingerprint 1539257307 4069716817
+
+Quickstart.Ledger.balance.loop.match_1 -- derived; fingerprint 1539257307 4069716817

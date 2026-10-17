@@ -65,7 +65,7 @@ def area.safe (s : Shape) : Bool :=
     true
 
 -- A checked, simplified proposition for proofs: `rw [area.safe_iff]`.
-safety_spec area.safe as area.safe_iff
+safety_spec area.safe => area.safe_iff
 
 def widen (s : Shape) (d : Int) : Shape :=
   match s with
@@ -91,7 +91,7 @@ def widen.safe (s : Shape) (d : Int) : Bool :=
     true
 
 -- A checked, simplified proposition for proofs: `rw [widen.safe_iff]`.
-safety_spec widen.safe as widen.safe_iff
+safety_spec widen.safe => widen.safe_iff
 
 def unit (n : Int) : Shape :=
   if decide (n > (0 : Int)) then
@@ -113,7 +113,7 @@ def unit.safe (n : Int) : Bool :=
       true
 
 -- A checked, simplified proposition for proofs: `rw [unit.safe_iff]`.
-safety_spec unit.safe as unit.safe_iff
+safety_spec unit.safe => unit.safe_iff
 
 def circleOf (c : Circle) : Int :=
   c.r
@@ -145,7 +145,7 @@ def side.safe (s : (Int × Int × Unit) ⊕ (Int × Unit) ⊕ Unit) : Bool :=
       true
 
 -- A checked, simplified proposition for proofs: `rw [side.safe_iff]`.
-safety_spec side.safe as side.safe_iff
+safety_spec side.safe => side.safe_iff
 
 def pair (p : (Int × JSString × Unit) ⊕ Unit) : JSString :=
   match p with
@@ -162,7 +162,7 @@ def weird.safe (w : Weird) : Bool :=
   Ariadne.inRange (w.rec + (1 : Int))
 
 -- A checked, simplified proposition for proofs: `rw [weird.safe_iff]`.
-safety_spec weird.safe as weird.safe_iff
+safety_spec weird.safe => weird.safe_iff
 
 def oddValue (o : Odd) : Int :=
   match o with
@@ -203,7 +203,7 @@ def total.safe (sc : Scene) : Bool :=
     t
 
 -- A checked, simplified proposition for proofs: `rw [total.safe_iff]`.
-safety_spec total.safe as total.safe_iff
+safety_spec total.safe => total.safe_iff
 
 def grow (sc : Scene) (d : Int) : Scene :=
   { sc with shapes := sc.shapes.map (fun s => widen s d) }
@@ -213,6 +213,6 @@ def grow.safe (sc : Scene) (d : Int) : Bool :=
   sc.shapes.all (fun s => widen.safe s d)
 
 -- A checked, simplified proposition for proofs: `rw [grow.safe_iff]`.
-safety_spec grow.safe as grow.safe_iff
+safety_spec grow.safe => grow.safe_iff
 
 end Tests.Generated.Shapes

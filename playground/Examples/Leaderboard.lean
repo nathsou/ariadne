@@ -110,7 +110,7 @@ def ranking.safe (players : List Player) : Bool :=
   Ariadne.consistent (Ariadne.signs byScore players)
 
 -- A checked, simplified proposition for proofs: `rw [ranking.safe_iff]`.
-safety_spec ranking.safe as ranking.safe_iff
+safety_spec ranking.safe => ranking.safe_iff
 
 def best (players : List Player) : Option Int :=
   let top : Option Player := Ariadne.listIndex (ranking players) (0 : Int)
@@ -122,7 +122,7 @@ def best.safe (players : List Player) : Bool :=
   true)
 
 -- A checked, simplified proposition for proofs: `rw [best.safe_iff]`.
-safety_spec best.safe as best.safe_iff
+safety_spec best.safe => best.safe_iff
 
 def qualified (players : List Player) (threshold : Int) : List JSString :=
   List.map (fun p => p.name) (List.filter (fun p => decide (p.score ≥ threshold)) (ranking players))
@@ -132,7 +132,7 @@ def qualified.safe (players : List Player) (threshold : Int) : Bool :=
   ranking.safe players
 
 -- A checked, simplified proposition for proofs: `rw [qualified.safe_iff]`.
-safety_spec qualified.safe as qualified.safe_iff
+safety_spec qualified.safe => qualified.safe_iff
 
 /-! ## Denotation
 

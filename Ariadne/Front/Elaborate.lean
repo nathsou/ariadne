@@ -34,7 +34,7 @@ def leanKeywords : List String :=
    "infixr", "prefix", "postfix", "partial", "private", "protected", "noncomputable", "mutual", "calc", "suffices",
    "nomatch", "nofun", "local", "scoped", "attribute", "export", "set_option", "termination_by", "decreasing_by",
    "opaque", "extends", "using", "sorry", "admit", "forall", "exists", "matches", "fun", "omit", "include", "elab",
-   "macro_rules", "unif_hint", "nonrec", "public", "meta", "module", "deprecated", "obtain", "rfl"]
+   "macro_rules", "unif_hint", "nonrec", "public", "meta", "module", "deprecated", "obtain", "rfl", "safety_spec"]
 
 /-- A name as Lean reads it: bare when it is a plain identifier, else quoted (`«wrong-key»`, `«at»`). -/
 def ident (x : String) : String :=

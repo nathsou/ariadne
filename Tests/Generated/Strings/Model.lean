@@ -47,7 +47,7 @@ def after.safe (s : JSString) (sep : JSString) : Bool :=
     Ariadne.inRange (i + (sep.length : Int))
 
 -- A checked, simplified proposition for proofs: `rw [after.safe_iff]`.
-safety_spec after.safe as after.safe_iff
+safety_spec after.safe => after.safe_iff
 
 def half (n : Int) : Int :=
   Int.fdiv n (2 : Int)
@@ -57,7 +57,7 @@ def half.safe (n : Int) : Bool :=
   (2 : Int) != 0 && Ariadne.inRange n && Ariadne.inRange (2 : Int)
 
 -- A checked, simplified proposition for proofs: `rw [half.safe_iff]`.
-safety_spec half.safe as half.safe_iff
+safety_spec half.safe => half.safe_iff
 
 def quotient (a : Int) (b : Int) : Int :=
   Int.fdiv a b
@@ -67,7 +67,7 @@ def quotient.safe (a : Int) (b : Int) : Bool :=
   b != 0 && Ariadne.inRange a && Ariadne.inRange b
 
 -- A checked, simplified proposition for proofs: `rw [quotient.safe_iff]`.
-safety_spec quotient.safe as quotient.safe_iff
+safety_spec quotient.safe => quotient.safe_iff
 
 def remainder (a : Int) (b : Int) : Int :=
   Int.tmod a b
@@ -77,7 +77,7 @@ def remainder.safe (a : Int) (b : Int) : Bool :=
   b != 0 && Ariadne.inRange (Int.tmod a b)
 
 -- A checked, simplified proposition for proofs: `rw [remainder.safe_iff]`.
-safety_spec remainder.safe as remainder.safe_iff
+safety_spec remainder.safe => remainder.safe_iff
 
 def bigQuotient (a : Int) (b : Int) : Int :=
   Int.tdiv a b
@@ -87,7 +87,7 @@ def bigQuotient.safe (a : Int) (b : Int) : Bool :=
   b != 0
 
 -- A checked, simplified proposition for proofs: `rw [bigQuotient.safe_iff]`.
-safety_spec bigQuotient.safe as bigQuotient.safe_iff
+safety_spec bigQuotient.safe => bigQuotient.safe_iff
 
 def bigRemainder (a : Int) (b : Int) : Int :=
   Int.tmod a b
@@ -97,7 +97,7 @@ def bigRemainder.safe (a : Int) (b : Int) : Bool :=
   b != 0
 
 -- A checked, simplified proposition for proofs: `rw [bigRemainder.safe_iff]`.
-safety_spec bigRemainder.safe as bigRemainder.safe_iff
+safety_spec bigRemainder.safe => bigRemainder.safe_iff
 
 def even (n : Int) : Bool :=
   (Int.tmod n (2 : Int)) == (0 : Int)
@@ -107,7 +107,7 @@ def even.safe (n : Int) : Bool :=
   (2 : Int) != 0 && Ariadne.inRange (Int.tmod n (2 : Int))
 
 -- A checked, simplified proposition for proofs: `rw [even.safe_iff]`.
-safety_spec even.safe as even.safe_iff
+safety_spec even.safe => even.safe_iff
 
 /-- A loop body of `digits`. -/
 def digits.loop {R : Type} : Int → (Int × List Int → R) → (Int × List Int → R) → Int × List Int → R :=
@@ -145,6 +145,6 @@ def digits.safe (n : Int) : Bool :=
     (m, out))
 
 -- A checked, simplified proposition for proofs: `rw [digits.safe_iff]`.
-safety_spec digits.safe as digits.safe_iff
+safety_spec digits.safe => digits.safe_iff
 
 end Tests.Generated.Strings

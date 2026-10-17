@@ -38,6 +38,9 @@ def midpoint.safe (lo : Int) (hi : Int) : Bool :=
   Ariadne.inRange (lo + hi) && ((2 : Int) != 0 && Ariadne.inRange (lo + hi) && Ariadne.inRange (2 : Int))
 
 -- A checked, simplified proposition for proofs: `rw [midpoint.safe_iff]`.
-safety_spec midpoint.safe as midpoint.safe_iff
+safety_spec midpoint.safe => midpoint.safe_iff
+
+def keywordNames (as : Int) («safety_spec» : Int) : Int :=
+  as + «safety_spec»
 
 end Tests.Generated.Emission

@@ -2,7 +2,7 @@ import Ariadne.Typed.Ty
 import Lean
 
 /-! Proof-facing safety specifications. The raw Boolean condition is retained for the
-structural certificate. `safety_spec f.safe as f.safe_iff` adds a kernel-checked
+structural certificate. `safety_spec f.safe => f.safe_iff` adds a kernel-checked
 equivalence to a simplified proposition, usable with `rw [f.safe_iff]`.
 It does not unfold callees or loop combinators. -/
 namespace Ariadne
@@ -12,7 +12,7 @@ theorem inRange_one : inRange 1 = true := by decide
 theorem inRange_two : inRange 2 = true := by decide
 
 open Lean Meta Elab Command in
-elab "safety_spec " source:ident " as " destination:ident : command => do
+elab "safety_spec " source:ident " => " destination:ident : command => do
   let name := (← getCurrNamespace) ++ destination.getId
   liftTermElabM do
     let src ← realizeGlobalConstNoOverloadWithInfo source

@@ -18,3 +18,8 @@ export function nested(xs: bigint[], ys: bigint[], offset: bigint): bigint {
 export function midpoint(lo: number, hi: number): number {
   return Math.floor((lo + hi) / 2);
 }
+
+// Command syntax must not reserve common TypeScript names in the generated model.
+export function keywordNames(as: bigint, safety_spec: bigint): bigint {
+  return as + safety_spec;
+}

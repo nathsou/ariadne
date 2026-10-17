@@ -217,7 +217,7 @@ def chooseVaultCopy.safe (facts : List CopyFact) (floor : Option Floor) : Bool :
     (older, notOwner, damaged, opened, ok)
 
 -- A checked, simplified proposition for proofs: `rw [chooseVaultCopy.safe_iff]`.
-safety_spec chooseVaultCopy.safe as chooseVaultCopy.safe_iff
+safety_spec chooseVaultCopy.safe => chooseVaultCopy.safe_iff
 
 /-- A loop body of `chooseKeysCopy`. -/
 def chooseKeysCopy.loop : Option BestKeys → CopyFact × Nat → Option BestKeys :=

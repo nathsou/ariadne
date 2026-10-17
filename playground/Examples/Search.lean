@@ -118,7 +118,7 @@ def midpointNaive.safe (lo : Int) (hi : Int) : Bool :=
   Ariadne.inRange (lo + hi) && ((2 : Int) != 0 && Ariadne.inRange (lo + hi) && Ariadne.inRange (2 : Int))
 
 -- A checked, simplified proposition for proofs: `rw [midpointNaive.safe_iff]`.
-safety_spec midpointNaive.safe as midpointNaive.safe_iff
+safety_spec midpointNaive.safe => midpointNaive.safe_iff
 
 def midpoint (lo : Int) (hi : Int) : Int :=
   lo + (Int.fdiv (hi - lo) (2 : Int))
@@ -128,7 +128,7 @@ def midpoint.safe (lo : Int) (hi : Int) : Bool :=
   (Ariadne.inRange (hi - lo) && ((2 : Int) != 0 && Ariadne.inRange (hi - lo) && Ariadne.inRange (2 : Int))) && Ariadne.inRange (lo + (Int.fdiv (hi - lo) (2 : Int)))
 
 -- A checked, simplified proposition for proofs: `rw [midpoint.safe_iff]`.
-safety_spec midpoint.safe as midpoint.safe_iff
+safety_spec midpoint.safe => midpoint.safe_iff
 
 /-- A loop body of `indexOf`. -/
 def indexOf.loop (target : Int) (xs : List Int) : (Int × Int → Int) → (Int × Int → Int) → Int × Int → Int :=
@@ -186,7 +186,7 @@ def indexOf.safe (xs : List Int) (target : Int) : Bool :=
     (hi, lo)
 
 -- A checked, simplified proposition for proofs: `rw [indexOf.safe_iff]`.
-safety_spec indexOf.safe as indexOf.safe_iff
+safety_spec indexOf.safe => indexOf.safe_iff
 
 /-! ## Denotation
 

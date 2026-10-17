@@ -24,7 +24,9 @@ noncomputable def ast : Program := [
               .assign "total" (.binary .add (.binary .add (.binary .add (.var "total") (.var "x")) (.var "y")) (.var "offset"))]],
       .ret (.var "total")] },
   { name := "midpoint", params := ["lo", "hi"], body := [
-      .ret (.binary .floorDiv (.binary .add (.var "lo") (.var "hi")) (.lit (.number 2)))] }]
+      .ret (.binary .floorDiv (.binary .add (.var "lo") (.var "hi")) (.lit (.number 2)))] },
+  { name := "keywordNames", params := ["as", "safety_spec"], body := [
+      .ret (.binary .add (.var "as") (.var "safety_spec"))] }]
 
 /-- The program's structures and inductives, with the records and unions they are. -/
 noncomputable def names : Names :=
@@ -39,6 +41,7 @@ noncomputable def isos : Isos names := Isos.ofLists
 noncomputable def sig.marker : Sig := { name := "marker", params := [], result := .string, trivial := true }
 noncomputable def sig.nested : Sig := { name := "nested", params := [("xs", (.array .int)), ("ys", (.array .int)), ("offset", .int)], result := .int, trivial := true }
 noncomputable def sig.midpoint : Sig := { name := "midpoint", params := [("lo", .number), ("hi", .number)], result := .number, trivial := false }
+noncomputable def sig.keywordNames : Sig := { name := "keywordNames", params := [("as", .int), ("safety_spec", .int)], result := .int, trivial := true }
 
 theorem ne.«xs».«total» : ("xs" : String) ≠ "total" := by decide
 theorem ne.«ys».«x» : ("ys" : String) ≠ "x" := by decide
@@ -53,6 +56,7 @@ theorem ne.«offset».«total» : ("offset" : String) ≠ "total" := by decide
 theorem ne.«offset».«xs» : ("offset" : String) ≠ "xs" := by decide
 theorem ne.«offset».«ys» : ("offset" : String) ≠ "ys" := by decide
 theorem ne.«hi».«lo» : ("hi" : String) ≠ "lo" := by decide
+theorem ne.«safety_spec».«as» : ("safety_spec" : String) ≠ "as" := by decide
 
 noncomputable def body.marker : TStmts [] sig.marker.params sig.marker.result :=
   (.ret (.str (js "⟦⟦99⟧⟧ne.«fake».«binding»⟦⟦/⟧⟧")) .nil)
@@ -69,10 +73,13 @@ noncomputable def body.nested : TStmts [sig.marker] sig.nested.params sig.nested
 noncomputable def body.midpoint : TStmts [sig.nested, sig.marker] sig.midpoint.params sig.midpoint.result :=
   (.ret (.bin .ndiv (.bin .nadd (.var .here) (.var (.there ne.«hi».«lo» .here))) (.num 2)) .nil)
 
-noncomputable abbrev sigs : Sigs := [sig.midpoint, sig.nested, sig.marker]
+noncomputable def body.keywordNames : TStmts [sig.midpoint, sig.nested, sig.marker] sig.keywordNames.params sig.keywordNames.result :=
+  (.ret (.bin .add (.var .here) (.var (.there ne.«safety_spec».«as» .here))) .nil)
+
+noncomputable abbrev sigs : Sigs := [sig.keywordNames, sig.midpoint, sig.nested, sig.marker]
 
 noncomputable def typed : TProgram sigs :=
-  (.cons sig.midpoint body.midpoint (.cons sig.nested body.nested (.cons sig.marker body.marker .nil)))
+  (.cons sig.keywordNames body.keywordNames (.cons sig.midpoint body.midpoint (.cons sig.nested body.nested (.cons sig.marker body.marker .nil))))
 
 theorem erased : typed.erase = ast := by kernel_rfl
 
@@ -125,6 +132,19 @@ theorem midpoint.safe_eq :
     body.midpoint.safeFnS names isos (nested.uncurried, marker.uncurried, ()) (nested.safety, marker.safety, ()) = midpoint.safety := by
   kernel_rfl
 
+noncomputable def keywordNames.uncurried : Sig.denS names sig.keywordNames := fun xs => keywordNames xs.1 xs.2.1
+
+/-- Trivially safe: every input is in what the model covers. -/
+noncomputable def keywordNames.safety : Ctx.denS names sig.keywordNames.params → Bool := fun _ => true
+
+theorem keywordNames.body_eq :
+    body.keywordNames.denoteRSFn names isos (midpoint.uncurried, nested.uncurried, marker.uncurried, ()) = keywordNames.uncurried := by
+  kernel_rfl
+
+theorem keywordNames.safe_eq :
+    body.keywordNames.safeFnS names isos (midpoint.uncurried, nested.uncurried, marker.uncurried, ()) (midpoint.safety, nested.safety, marker.safety, ()) = keywordNames.safety := by
+  kernel_rfl
+
 -- Private proof types are inferred to avoid repeating program prefixes.
 section
 set_option linter.defProp false
@@ -147,13 +167,19 @@ private def denote_prefix_2' :=
 private def safety_prefix_2' :=
   TProgram.safety_consS isos denote_prefix_1' safety_prefix_1' midpoint.safe_eq
 
+private def denote_prefix_3' :=
+  TProgram.denote_consS isos denote_prefix_2' keywordNames.body_eq
+
+private def safety_prefix_3' :=
+  TProgram.safety_consS isos denote_prefix_2' safety_prefix_2' keywordNames.safe_eq
+
 end
 
-theorem denote_eq : typed.denote = Sigs.canon names isos sigs (midpoint.uncurried, nested.uncurried, marker.uncurried, ()) :=
-  denote_prefix_2'
+theorem denote_eq : typed.denote = Sigs.canon names isos sigs (keywordNames.uncurried, midpoint.uncurried, nested.uncurried, marker.uncurried, ()) :=
+  denote_prefix_3'
 
-theorem safety_eq : typed.safety = Sigs.canonSafety names isos sigs (midpoint.safety, nested.safety, marker.safety, ()) :=
-  safety_prefix_2'
+theorem safety_eq : typed.safety = Sigs.canonSafety names isos sigs (keywordNames.safety, midpoint.safety, nested.safety, marker.safety, ()) :=
+  safety_prefix_3'
 
 /-! ## Source theorems -/
 
@@ -163,7 +189,7 @@ theorem marker.source  (vs' : List JSValue)
     (args' : ArgsRepS names isos sig.marker.params vs' (())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "marker" vs') (.ok w') ∧
       Ty.RepS names isos .string w' (marker) :=
-  source_ofS isos erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "marker" sig.marker) rfl (()) vs' args' rfl
+  source_ofS isos erased wf denote_eq safety_eq ((.there (.there (.there .here))) : FVar sigs "marker" sig.marker) rfl (()) vs' args' rfl
 
 /-- Every run of `nested` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -171,7 +197,7 @@ theorem nested.source (xs : List Int) (ys : List Int) (offset : Int) (vs' : List
     (args' : ArgsRepS names isos sig.nested.params vs' (xs, ys, offset, ())) :
     ∃ w', Converges (fun fuel' => run ast fuel' "nested" vs') (.ok w') ∧
       Ty.RepS names isos .int w' (nested xs ys offset) :=
-  source_ofS isos erased wf denote_eq safety_eq ((.there .here) : FVar sigs "nested" sig.nested) rfl (xs, ys, offset, ()) vs' args' rfl
+  source_ofS isos erased wf denote_eq safety_eq ((.there (.there .here)) : FVar sigs "nested" sig.nested) rfl (xs, ys, offset, ()) vs' args' rfl
 
 /-- Every run of `midpoint` on arguments representing its inputs converges to a value
 representing the readable definition's result. -/
@@ -180,6 +206,14 @@ theorem midpoint.source (lo : Int) (hi : Int) (vs' : List JSValue)
     (safe' : midpoint.safe lo hi = true) :
     ∃ w', Converges (fun fuel' => run ast fuel' "midpoint" vs') (.ok w') ∧
       Ty.RepS names isos .number w' (midpoint lo hi) :=
-  source_ofS isos erased wf denote_eq safety_eq (.here : FVar sigs "midpoint" sig.midpoint) rfl (lo, hi, ()) vs' args' safe'
+  source_ofS isos erased wf denote_eq safety_eq ((.there .here) : FVar sigs "midpoint" sig.midpoint) rfl (lo, hi, ()) vs' args' safe'
+
+/-- Every run of `keywordNames` on arguments representing its inputs converges to a value
+representing the readable definition's result. -/
+theorem keywordNames.source (as : Int) («safety_spec» : Int) (vs' : List JSValue)
+    (args' : ArgsRepS names isos sig.keywordNames.params vs' (as, «safety_spec», ())) :
+    ∃ w', Converges (fun fuel' => run ast fuel' "keywordNames" vs') (.ok w') ∧
+      Ty.RepS names isos .int w' (keywordNames as «safety_spec») :=
+  source_ofS isos erased wf denote_eq safety_eq (.here : FVar sigs "keywordNames" sig.keywordNames) rfl (as, «safety_spec», ()) vs' args' rfl
 
 end Tests.Generated.Emission

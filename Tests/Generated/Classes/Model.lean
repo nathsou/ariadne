@@ -43,7 +43,7 @@ def bump.safe («this» : Book) (k : JSString) : Bool :=
   true)
 
 -- A checked, simplified proposition for proofs: `rw [bump.safe_iff]`.
-safety_spec bump.safe as bump.safe_iff
+safety_spec bump.safe => bump.safe_iff
 
 def put («this» : Book) (k : JSString) (e : Entry) : Book :=
   let cur : Option Entry := Ariadne.mapGet «this».items k
@@ -77,7 +77,7 @@ def put.safe («this» : Book) (k : JSString) (e : Entry) : Bool :=
     true)
 
 -- A checked, simplified proposition for proofs: `rw [put.safe_iff]`.
-safety_spec put.safe as put.safe_iff
+safety_spec put.safe => put.safe_iff
 
 def rename («this» : Book) (k : JSString) (n : JSString) : Book :=
   let «this» : Book := { «this» with names := Ariadne.mapPut «this».names k n }
@@ -111,7 +111,7 @@ def touchAll.safe («this» : Book) (ks : List JSString) : Bool :=
     «this»
 
 -- A checked, simplified proposition for proofs: `rw [touchAll.safe_iff]`.
-safety_spec touchAll.safe as touchAll.safe_iff
+safety_spec touchAll.safe => touchAll.safe_iff
 
 def get («this» : Book) (k : JSString) : Option Entry :=
   Ariadne.mapGet «this».items k

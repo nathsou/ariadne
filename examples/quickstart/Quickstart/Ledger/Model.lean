@@ -60,7 +60,7 @@ def balance.safe (entries : List Entry) : Bool :=
     total
 
 -- A checked, simplified proposition for proofs: `rw [balance.safe_iff]`.
-safety_spec balance.safe as balance.safe_iff
+safety_spec balance.safe => balance.safe_iff
 
 def «new Accounts»  : Accounts :=
   (Accounts.mk ([] : List (JSString × Int)) ([] : List (JSString × Bool)))
@@ -81,7 +81,7 @@ def credit.safe («this» : Accounts) (id : JSString) (amount : Int) : Bool :=
     true)
 
 -- A checked, simplified proposition for proofs: `rw [credit.safe_iff]`.
-safety_spec credit.safe as credit.safe_iff
+safety_spec credit.safe => credit.safe_iff
 
 def freeze («this» : Accounts) (id : JSString) : Accounts :=
   let «this» : Accounts := { «this» with frozen := Ariadne.mapPut «this».frozen id true }

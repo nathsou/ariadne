@@ -342,7 +342,7 @@ def printParts (source namespace_ : String) (ast : Program) (T : Types) (fns : L
       out := out ++ s!"def {ident s.name}.safe {params} : Bool :=\n  " ++
         (fn.body.safe "  " ⟨fun _ => "true", fun _ => "true", fun _ => "true"⟩).preview ++ "\n\n"
       out := out ++ s!"-- A checked, simplified proposition for proofs: `rw [{ident s.name}.safe_iff]`.\n" ++
-        s!"safety_spec {ident s.name}.safe as {ident s.name}.safe_iff\n\n"
+        s!"safety_spec {ident s.name}.safe => {ident s.name}.safe_iff\n\n"
   let definitions := out
   out := "/-! ## Denotation
 

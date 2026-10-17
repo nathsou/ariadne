@@ -172,7 +172,7 @@ def sum.safe (a : Counters) (b : Counters) : Bool :=
   Ariadne.inRange (a.put + b.put) && (Ariadne.inRange (a.get + b.get) && (Ariadne.inRange (a.list + b.list) && (Ariadne.inRange (a.head + b.head) && (Ariadne.inRange (a.delete + b.delete) && (Ariadne.inRange (a.copy + b.copy) && (Ariadne.inRange (a.restore + b.restore) && (Ariadne.inRange (a.ingress + b.ingress) && Ariadne.inRange (a.egress + b.egress))))))))
 
 -- A checked, simplified proposition for proofs: `rw [sum.safe_iff]`.
-safety_spec sum.safe as sum.safe_iff
+safety_spec sum.safe => sum.safe_iff
 
 def «new Registers»  : Registers :=
   (Registers.mk ([] : List (JSString × Placed)) ([] : List (JSString × List JSString)) ([] : List (JSString × Mark)) ([] : List (JSString × Pack)) ([] : List (JSString × Total)) ([] : List (JSString × Increments)) ([] : List (JSString × Period)) ([] : List (JSString × AlbumRec)) ([] : List (JSString × AlbumItem)))
@@ -212,7 +212,7 @@ def put.safe («this» : Registers) (ref : JSString) (p : JSString) (e : Placed)
     after2' «this»
 
 -- A checked, simplified proposition for proofs: `rw [put.safe_iff]`.
-safety_spec put.safe as put.safe_iff
+safety_spec put.safe => put.safe_iff
 
 def dropMarkBefore («this» : Registers) (ref : JSString) (p : JSString) (u : Option JSString) : Registers :=
   match u with
@@ -274,7 +274,7 @@ def place.safe («this» : Registers) (ref : JSString) (p : JSString) (placed : 
       after4' «this»)
 
 -- A checked, simplified proposition for proofs: `rw [place.safe_iff]`.
-safety_spec place.safe as place.safe_iff
+safety_spec place.safe => place.safe_iff
 
 def mark («this» : Registers) (ref : JSString) (p : JSString) (on : Bool) (reason : Option JSString) (stamp : JSString) («at» : Int) : Registers :=
   let placed : Option Placed := Ariadne.mapGet «this».placed (key ref p)
@@ -357,7 +357,7 @@ def track.safe («this» : Registers) (p : JSString) (month : JSString) (device 
       after2' «this»
 
 -- A checked, simplified proposition for proofs: `rw [track.safe_iff]`.
-safety_spec track.safe as track.safe_iff
+safety_spec track.safe => track.safe_iff
 
 def total («this» : Registers) (p : JSString) (month : JSString) (device : JSString) (c : Counters) : Registers :=
   let cur : Option Total := Ariadne.mapGet «this».totals (key (key p month) device)
@@ -373,7 +373,7 @@ def total.safe («this» : Registers) (p : JSString) (month : JSString) (device 
   true)
 
 -- A checked, simplified proposition for proofs: `rw [total.safe_iff]`.
-safety_spec total.safe as total.safe_iff
+safety_spec total.safe => total.safe_iff
 
 def add («this» : Registers) (p : JSString) (month : JSString) (c : Counters) : Registers :=
   let cur : Option Increments := Ariadne.mapGet «this».increments (key p month)
@@ -389,7 +389,7 @@ def add.safe («this» : Registers) (p : JSString) (month : JSString) (c : Count
   true))
 
 -- A checked, simplified proposition for proofs: `rw [add.safe_iff]`.
-safety_spec add.safe as add.safe_iff
+safety_spec add.safe => add.safe_iff
 
 def totalOf («this» : Registers) (p : JSString) (month : JSString) (device : JSString) : Counters :=
   let t : Option Total := Ariadne.mapGet «this».totals (key (key p month) device)
@@ -437,7 +437,7 @@ def usageOf.safe («this» : Registers) (p : JSString) (month : JSString) : Bool
       out
 
 -- A checked, simplified proposition for proofs: `rw [usageOf.safe_iff]`.
-safety_spec usageOf.safe as usageOf.safe_iff
+safety_spec usageOf.safe => usageOf.safe_iff
 
 def usageList («this» : Registers) : List Increments :=
   List.map (fun x => (Increments.mk x.p x.month (usageOf «this» x.p x.month))) ((«this».periods.map Prod.snd) ++ ([]))
@@ -447,7 +447,7 @@ def usageList.safe («this» : Registers) : Bool :=
   List.all ((«this».periods.map Prod.snd) ++ ([])) (fun x => usageOf.safe «this» x.p x.month)
 
 -- A checked, simplified proposition for proofs: `rw [usageList.safe_iff]`.
-safety_spec usageList.safe as usageList.safe_iff
+safety_spec usageList.safe => usageList.safe_iff
 
 def totalList («this» : Registers) : List Total :=
   («this».totals.map Prod.snd) ++ ([])
@@ -510,7 +510,7 @@ def loadPlacement.safe («this» : Registers) (ref : JSString) (e : Placed) : Bo
   true)
 
 -- A checked, simplified proposition for proofs: `rw [loadPlacement.safe_iff]`.
-safety_spec loadPlacement.safe as loadPlacement.safe_iff
+safety_spec loadPlacement.safe => loadPlacement.safe_iff
 
 def loadMark («this» : Registers) (m : Mark) : Registers :=
   let «this» : Registers := { «this» with marks := Ariadne.mapPut «this».marks (key m.ref m.p) m }
@@ -532,7 +532,7 @@ def loadTotal.safe («this» : Registers) (t : Total) : Bool :=
   true)
 
 -- A checked, simplified proposition for proofs: `rw [loadTotal.safe_iff]`.
-safety_spec loadTotal.safe as loadTotal.safe_iff
+safety_spec loadTotal.safe => loadTotal.safe_iff
 
 def loadIncrements («this» : Registers) (i : Increments) : Registers :=
   let «this» : Registers := { «this» with increments := Ariadne.mapPut «this».increments (key i.p i.month) i }
@@ -546,7 +546,7 @@ def loadIncrements.safe («this» : Registers) (i : Increments) : Bool :=
   true)
 
 -- A checked, simplified proposition for proofs: `rw [loadIncrements.safe_iff]`.
-safety_spec loadIncrements.safe as loadIncrements.safe_iff
+safety_spec loadIncrements.safe => loadIncrements.safe_iff
 
 def loadAlbum («this» : Registers) (a : AlbumRec) : Registers :=
   let «this» : Registers := { «this» with albums := Ariadne.mapPut «this».albums a.id a }

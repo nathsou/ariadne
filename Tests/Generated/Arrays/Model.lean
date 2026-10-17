@@ -28,7 +28,7 @@ def total.safe (a : Int) (b : Int) : Bool :=
   Ariadne.inRange (b * (2 : Int)) && Ariadne.inRange (a + (b * (2 : Int)))
 
 -- A checked, simplified proposition for proofs: `rw [total.safe_iff]`.
-safety_spec total.safe as total.safe_iff
+safety_spec total.safe => total.safe_iff
 
 def negate (x : Int) : Int :=
   (-x)
@@ -38,7 +38,7 @@ def negate.safe (x : Int) : Bool :=
   Ariadne.inRange (-x)
 
 -- A checked, simplified proposition for proofs: `rw [negate.safe_iff]`.
-safety_spec negate.safe as negate.safe_iff
+safety_spec negate.safe => negate.safe_iff
 
 def clampIndex (i : Int) (n : Int) : Int :=
   if decide (i < (0 : Int)) then
@@ -60,7 +60,7 @@ def clampIndex.safe (i : Int) (n : Int) : Bool :=
       true
 
 -- A checked, simplified proposition for proofs: `rw [clampIndex.safe_iff]`.
-safety_spec clampIndex.safe as clampIndex.safe_iff
+safety_spec clampIndex.safe => clampIndex.safe_iff
 
 def count (es : List Entry) : Int :=
   (es.length : Int)
@@ -88,7 +88,7 @@ def bySize.safe (es : List Entry) : Bool :=
   Ariadne.sortSafe (fun a b => a.size - b.size) false (fun a b => Ariadne.inRange (a.size - b.size)) es
 
 -- A checked, simplified proposition for proofs: `rw [bySize.safe_iff]`.
-safety_spec bySize.safe as bySize.safe_iff
+safety_spec bySize.safe => bySize.safe_iff
 
 def byName (es : List Entry) : List Entry :=
   Ariadne.sortedBy (fun a b => if Ariadne.strLt a.name b.name then (-(1 : Int)) else if Ariadne.strLt b.name a.name then (1 : Int) else (0 : Int)) es
@@ -98,7 +98,7 @@ def byName.safe (es : List Entry) : Bool :=
   Ariadne.consistent (Ariadne.signs (fun a b => if Ariadne.strLt a.name b.name then (-(1 : Int)) else if Ariadne.strLt b.name a.name then (1 : Int) else (0 : Int)) es)
 
 -- A checked, simplified proposition for proofs: `rw [byName.safe_iff]`.
-safety_spec byName.safe as byName.safe_iff
+safety_spec byName.safe => byName.safe_iff
 
 def ids (es : List Entry) : List Int :=
   (0 : Int) :: ((es.map (fun e => e.id)) ++ ([(-(1 : Int))]))
@@ -119,7 +119,7 @@ def grow.safe (es : List Entry) («by» : Int) : Bool :=
   es.all (fun e => Ariadne.inRange (e.size + «by»))
 
 -- A checked, simplified proposition for proofs: `rw [grow.safe_iff]`.
-safety_spec grow.safe as grow.safe_iff
+safety_spec grow.safe => grow.safe_iff
 
 def signs (xs : List Int) : List JSString :=
   xs.map (fun x => if decide (x > (0 : Int)) then (js "pos") else if x == (0 : Int) then (js "zero") else (js "neg"))
@@ -132,7 +132,7 @@ def scaled.safe (xs : List Int) (k : Int) : Bool :=
   List.all (xs.filter (fun x => x != (0 : Int))) (fun x => Ariadne.inRange (x * k))
 
 -- A checked, simplified proposition for proofs: `rw [scaled.safe_iff]`.
-safety_spec scaled.safe as scaled.safe_iff
+safety_spec scaled.safe => scaled.safe_iff
 
 def totalOf (es : List Entry) : Int :=
   total (count es) (1 : Int)
@@ -142,7 +142,7 @@ def totalOf.safe (es : List Entry) : Bool :=
   total.safe (count es) (1 : Int)
 
 -- A checked, simplified proposition for proofs: `rw [totalOf.safe_iff]`.
-safety_spec totalOf.safe as totalOf.safe_iff
+safety_spec totalOf.safe => totalOf.safe_iff
 
 def isLarge (e : Entry) : Bool :=
   decide (e.size > (100 : Int))
@@ -164,7 +164,7 @@ def ranked.safe (es : List Entry) : Bool :=
   Ariadne.consistent (Ariadne.signs bySizeDesc es)
 
 -- A checked, simplified proposition for proofs: `rw [ranked.safe_iff]`.
-safety_spec ranked.safe as ranked.safe_iff
+safety_spec ranked.safe => ranked.safe_iff
 
 def flags (es : List Entry) : List Bool :=
   es.map (fun _ => false)
@@ -177,7 +177,7 @@ def summaries.safe (es : List Entry) : Bool :=
   es.all (fun e => Ariadne.inRange (e.size + (1 : Int)))
 
 -- A checked, simplified proposition for proofs: `rw [summaries.safe_iff]`.
-safety_spec summaries.safe as summaries.safe_iff
+safety_spec summaries.safe => summaries.safe_iff
 
 def missing (xs : List (Option Int)) : Int :=
   (List.length (xs.filter (fun x => x.isNone)) : Int)
