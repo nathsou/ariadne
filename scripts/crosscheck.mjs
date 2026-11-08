@@ -47,7 +47,25 @@ function numberLiteral(node) {
 const isThis = n => n.kind === K.ThisKeyword;
 const isThisField = n => ts.isPropertyAccessExpression(n) && isThis(n.expression);
 
+/** The nodes of optional chains being converted as plain accesses (their `?.` handled by a conditional). */
+const plainChain = new Set();
+
+/** `x?.p…` on a local `x`: `x == null ? undefined : x.p…` (Desugar.lean). */
+function optionalChain(n) {
+  let b = n;
+  const spine = [];
+  while (!b.questionDotToken) { spine.push(b); b = b.expression; }
+  spine.push(b);
+  if (!ts.isIdentifier(b.expression)) refuse(n, 'optional chaining on a receiver other than a local');
+  for (const s of spine) plainChain.add(s);
+  const x = b.expression.text;
+  return ['cond', ['binary', 'looseEq', ['var', x], ['lit', ['null']]], ['lit', ['undefined']], expr(n)];
+}
+
 function expr(n) {
+  if ((ts.isPropertyAccessExpression(n) || ts.isCallExpression(n) || ts.isElementAccessExpression(n)) &&
+      n.flags & ts.NodeFlags.OptionalChain && !plainChain.has(n))
+    return optionalChain(n);
   switch (n.kind) {
     case K.ParenthesizedExpression: return expr(n.expression);
     case K.NumericLiteral: return ['lit', ['number', numberLiteral(n)]];
@@ -79,6 +97,12 @@ function expr(n) {
         if (isThisField(f.expression) && (m === 'get' || m === 'has') && n.arguments.length === 1)
           return [m === 'get' ? 'stateGet' : 'stateHas', f.expression.name.text, args[0]];
         if (isThis(f.expression)) return ['callThis', m, args];
+        if (ts.isIdentifier(f.expression) && f.expression.text === 'Math' && (m === 'max' || m === 'min') &&
+            n.arguments.length === 2)
+          return ['binary', m, args[0], args[1]];
+        // `m.has(k)` on a local map: `m.get(k) != null`.
+        if (m === 'has' && n.arguments.length === 1 && !isThisField(f.expression))
+          return ['binary', 'looseNe', ['method', expr(f.expression), 'get', args], ['lit', ['null']]];
         if (ts.isIdentifier(f.expression) && f.expression.text === 'Math' && m === 'floor' && n.arguments.length === 1) {
           let a = n.arguments[0];
           while (ts.isParenthesizedExpression(a)) a = a.expression;
@@ -136,13 +160,73 @@ function compound(target, op, rhs) {
   return ['assign', target.text, ['binary', op, ['var', target.text], rhs]];
 }
 
+/** The locals the function being converted changes in place (they are declared as `let`). */
+let owned = new Set();
+
+/** An in-place statement on a local, as `[local, its assignment]` (Desugar.lean's `inPlace`). */
+function inPlace(e) {
+  if (ts.isCallExpression(e) && ts.isPropertyAccessExpression(e.expression) && ts.isIdentifier(e.expression.expression) &&
+      !e.expression.questionDotToken) {
+    const x = e.expression.expression.text;
+    const args = e.arguments.map(expr);
+    switch (e.expression.name.text) {
+      case 'push': return [x, ['array', [[true, ['var', x]], ...args.map(a => [false, a])]]];
+      case 'pop':
+        if (args.length === 0) return [x, ['method', ['var', x], 'slice', [['lit', ['number', '0']], ['unary', 'neg', ['lit', ['number', '1']]]]]];
+        break;
+      case 'sort': if (args.length === 1) return [x, ['method', ['var', x], 'toSorted', args]]; break;
+      case 'set': if (args.length === 2) return [x, ['mapPut', ['var', x], args[0], args[1]]]; break;
+      case 'delete': if (args.length === 1) return [x, ['mapDel', ['var', x], args[0]]]; break;
+    }
+  }
+  if (ts.isBinaryExpression(e) && e.operatorToken.kind === K.EqualsToken && ts.isPropertyAccessExpression(e.left) &&
+      ts.isIdentifier(e.left.expression))
+    return [e.left.expression.text, ['record', [[null, ['var', e.left.expression.text]], [e.left.name.text, expr(e.right)]]]];
+  return null;
+}
+
+/** The locals a function body changes in place. */
+function ownedIn(body) {
+  const out = new Set();
+  const visit = node => {
+    if (ts.isExpressionStatement(node)) {
+      const e = node.expression;
+      const target = ts.isCallExpression(e) && ts.isPropertyAccessExpression(e.expression) && ts.isIdentifier(e.expression.expression)
+        && ['push', 'pop', 'sort', 'set', 'delete'].includes(e.expression.name.text) ? e.expression.expression.text
+        : ts.isBinaryExpression(e) && e.operatorToken.kind === K.EqualsToken && ts.isPropertyAccessExpression(e.left) &&
+          ts.isIdentifier(e.left.expression) ? e.left.expression.text : null;
+      if (target !== null) out.add(target);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(body);
+  return out;
+}
+
+/** `this.f.get(k)?.set(k2, v);` and `?.delete(k2);` (Desugar.lean's `chainsStmt`). */
+function nestedChange(e) {
+  if (!ts.isCallExpression(e) || !ts.isPropertyAccessExpression(e.expression) || !e.expression.questionDotToken) return null;
+  const g = e.expression.expression;
+  if (!ts.isCallExpression(g) || !ts.isPropertyAccessExpression(g.expression) || !isThisField(g.expression.expression) ||
+      g.expression.name.text !== 'get' || g.arguments.length !== 1) return null;
+  const f = g.expression.expression.name.text;
+  const k = expr(g.arguments[0]);
+  const inner = ['binary', 'coalesce', ['stateGet', f, k], ['newMap']];
+  const args = e.arguments.map(expr);
+  const m = e.expression.name.text;
+  const value = m === 'set' && args.length === 2 ? ['mapPut', inner, args[0], args[1]]
+    : m === 'delete' && args.length === 1 ? ['mapDel', inner, args[0]] : refuse(e, 'this optional chain');
+  return ['ite', ['stateHas', f, k], [['stateSet', f, k, value]], []];
+}
+
 function stmt(s) {
   switch (s.kind) {
     case K.VariableStatement: {
       const list = s.declarationList;
       if (list.declarations.length !== 1) refuse(s, 'several declarations');
       const d = list.declarations[0];
-      const kind = list.flags & ts.NodeFlags.Const ? 'const' : list.flags & ts.NodeFlags.Let ? 'let' : refuse(s, 'var');
+      const kind = list.flags & ts.NodeFlags.Const ? (owned.has(d.name.text) ? 'let' : 'const')
+        : list.flags & ts.NodeFlags.Let ? 'let' : refuse(s, 'var');
       return [kind, d.name.text, expr(d.initializer)];
     }
     case K.ReturnStatement: return ['ret', s.expression ? expr(s.expression) : ['lit', ['undefined']]];
@@ -169,6 +253,10 @@ function stmt(s) {
     }
     case K.ExpressionStatement: {
       const e = s.expression;
+      const nested = nestedChange(e);
+      if (nested) return nested;
+      const changed = inPlace(e);
+      if (changed) return ['assign', changed[0], changed[1]];
       if (ts.isBinaryExpression(e)) {
         const t = e.operatorToken.kind;
         if (t === K.EqualsToken) {
@@ -204,23 +292,34 @@ function program(text, path) {
   const sf = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   if (sf.parseDiagnostics.length > 0) refuse(sf, `a syntax error: ${ts.flattenDiagnosticMessageText(sf.parseDiagnostics[0].messageText, ' ')}`);
   const fns = [];
+  const constants = [];
+  const body = node => { owned = ownedIn(node); return node.statements.map(stmt); };
   for (const s of sf.statements) {
-    if (ts.isFunctionDeclaration(s)) {
-      fns.push({ name: s.name.text, params: s.parameters.map(p => p.name.text), method: false, body: s.body.statements.map(stmt) });
+    if (ts.isVariableStatement(s) && s.declarationList.flags & ts.NodeFlags.Const && s.declarationList.declarations.length === 1) {
+      // A top-level constant: a function of no parameters returning its value.
+      const d = s.declarationList.declarations[0];
+      constants.push(d.name.text);
+      fns.push({ name: d.name.text, params: [], method: false, body: [['ret', expr(d.initializer)]] });
+    } else if (ts.isFunctionDeclaration(s)) {
+      fns.push({ name: s.name.text, params: s.parameters.map(p => p.name.text), method: false, body: body(s.body) });
     } else if (ts.isClassDeclaration(s)) {
       const fields = s.members.filter(ts.isPropertyDeclaration).map(m => m.name.text);
       fns.push({ name: `new ${s.name.text}`, params: [], method: false,
         body: [['ret', ['record', fields.map(f => [f, ['newMap']])]]] });
       for (const m of s.members.filter(ts.isMethodDeclaration)) {
-        const body = m.body.statements.map(stmt);
-        if (m.type && m.type.kind === K.VoidKeyword) body.push(['ret', ['lit', ['undefined']]]);
-        fns.push({ name: m.name.text, params: ['this', ...m.parameters.map(p => p.name.text)], method: true, body });
+        const stmts = body(m.body);
+        if (m.type && m.type.kind === K.VoidKeyword) stmts.push(['ret', ['lit', ['undefined']]]);
+        fns.push({ name: m.name.text, params: ['this', ...m.parameters.map(p => p.name.text)], method: true, body: stmts });
       }
     } else if (!ts.isTypeAliasDeclaration(s) && !ts.isInterfaceDeclaration(s)) {
       refuse(s, 'a top-level statement');
     }
   }
-  return fns;
+  // A constant's name reads its value: a call of its function.
+  const calls = node => Array.isArray(node)
+    ? (node[0] === 'var' && constants.includes(node[1]) && node.length === 2 ? ['call', node[1], []] : node.map(calls))
+    : node;
+  return fns.map(f => ({ ...f, body: calls(f.body) }));
 }
 
 /** A canonical form: JSON with object keys sorted, functions sorted by name (the model finds them by name). */

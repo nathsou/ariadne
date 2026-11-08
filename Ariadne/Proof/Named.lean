@@ -636,6 +636,11 @@ mutual
       | del =>
         simp only [TExpr.denS, TExpr.denote, MKey.applyS, MKey.apply, ← hm, hk]
         exact Ty.conv_mapDel I _ _ _
+    | _, _, .msize m, ρ => by
+      have hm := TExpr.conv_denS m ρ
+      simp only [TExpr.denS, TExpr.denote, ← hm]
+      show _ = ((List.map _ _).length : Int)
+      rw [List.length_map]; rfl
     | _, _, .mput m k e, ρ => by
       have hm := TExpr.conv_denS m ρ
       have hk : TExpr.denS N I fs k ρ = _ := TExpr.conv_denS k ρ
@@ -814,6 +819,8 @@ mutual
       simp only [TExpr.safeS, TExpr.safe]; rw [TExpr.safeS_eq a ρ, TExpr.safeS_eq b ρ, TExpr.safeS_eq c ρ]
     | _, _, .mkey _ a b, ρ => by
       simp only [TExpr.safeS, TExpr.safe]; rw [TExpr.safeS_eq a ρ, TExpr.safeS_eq b ρ]
+    | _, _, .msize m, ρ => by
+      simp only [TExpr.safeS, TExpr.safe]; exact TExpr.safeS_eq m ρ
     | _, _, .bin op a b, ρ => by
       simp only [TExpr.safeS, TExpr.safe]
       rw [Op.guardS_eq I, TExpr.safeS_eq a ρ, TExpr.safeS_eq b ρ, TExpr.conv_denS I fs a ρ, TExpr.conv_denS I fs b ρ]

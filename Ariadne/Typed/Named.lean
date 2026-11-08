@@ -513,6 +513,7 @@ mutual
     | .stateSize v i, ρ => ((recGet N I i (Var.getS N v ρ)).length : Int)
     | .callThis fn v args, ρ => FVar.getS N fn fs (Var.getS N v ρ, args.denS fs ρ)
     | .mkey op m k, ρ => MKey.applyS N op (m.denS fs ρ) (k.denS fs ρ)
+    | .msize m, ρ => ((m.denS fs ρ).length : Int)
     | .mput m k e, ρ => mapPut (m.denS fs ρ) (k.denS fs ρ) (e.denS fs ρ)
     | .aslice a i j, ρ => listSlice (a.denS fs ρ) (i.denS fs ρ) (j.denS fs ρ)
 
@@ -592,6 +593,7 @@ mutual
       andT args.trivial (args.safeS fs ss ρ) t (FVar.safeS N fn ss (Var.getS N v ρ, TArgs.denS N I fs args ρ))
     | .mkey _ a b, ρ =>
       andT a.trivial (a.safeS fs ss ρ) b.trivial (b.safeS fs ss ρ)
+    | .msize m, ρ => m.safeS fs ss ρ
     | .mput s a b, ρ | .aslice s a b, ρ => andT s.trivial (s.safeS fs ss ρ) (a.trivial && b.trivial)
       (andT a.trivial (a.safeS fs ss ρ) b.trivial (b.safeS fs ss ρ))
 

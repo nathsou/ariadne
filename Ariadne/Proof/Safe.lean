@@ -81,6 +81,8 @@ mutual
     | _, _, .callThis fn v args, ρ, h => by
       simp only [TExpr.trivial, Bool.and_eq_true] at h
       simp [TExpr.safe, andT, h.1, h.2]
+    | _, _, .msize m, ρ, h => by
+      simp only [TExpr.trivial] at h; simp [TExpr.safe, TExpr.safe_of_trivial m ρ h]
     | _, _, .mkey _ a b, ρ, h => by
       simp only [TExpr.trivial, Bool.and_eq_true] at h
       simp [TExpr.safe, andT, h.1, h.2]

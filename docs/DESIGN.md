@@ -46,6 +46,7 @@ Concluded per file:          every readable def is what the TypeScript function 
 | Path | Role | Trusted |
 | --- | --- | --- |
 | `Ariadne/Parse/*` | Lexer and parser for the TypeScript subset, with diagnostics | **Yes** |
+| `Ariadne/Front/Desugar.lean` | Source forms written as others: constants as calls, `Math.max`/`min`, optional chains, changes in place of owned locals and of maps of maps as assignments, with the ownership rules | **Yes** |
 | `Ariadne/Front/Convert.lean` | Parsed syntax → the model's syntax (drops spans and annotations, refuses other forms) | **Yes** |
 | `Ariadne/Model/Syntax.lean` | The model's syntax (`Expr`, `Stmt`, `Function`, `Program`), `js` string literals | **Yes** |
 | `Ariadne/Model/Eval.lean` | Value-semantics evaluator, static scoping check `Program.scoped`, `run`, `Converges` | **Yes** |

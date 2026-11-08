@@ -166,6 +166,7 @@ mutual
     | .stateSize v i, ρ => ((i.get (v.get ρ)).length : Int)
     | .callThis fn v args, ρ => fn.get fs (v.get ρ, args.denote fs ρ)
     | .mkey op m k, ρ => MKey.apply op (m.denote fs ρ) (k.denote fs ρ)
+    | .msize m, ρ => ((m.denote fs ρ).length : Int)
     | .mput m k e, ρ => mapPut (m.denote fs ρ) (k.denote fs ρ) (e.denote fs ρ)
     | .aslice a i j, ρ => listSlice (a.denote fs ρ) (i.denote fs ρ) (j.denote fs ρ)
 
@@ -250,6 +251,7 @@ mutual
       andT args.trivial (args.safe fs ss ρ) t (fn.safe ss (v.get ρ, args.denote fs ρ))
     | .mkey _ a b, ρ =>
       andT a.trivial (a.safe fs ss ρ) b.trivial (b.safe fs ss ρ)
+    | .msize m, ρ => m.safe fs ss ρ
     | .mput s a b, ρ | .aslice s a b, ρ => andT s.trivial (s.safe fs ss ρ) (a.trivial && b.trivial)
       (andT a.trivial (a.safe fs ss ρ) b.trivial (b.safe fs ss ρ))
 

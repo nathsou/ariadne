@@ -6,6 +6,31 @@ Ariadne follows semantic versioning: a minor version may change generated files 
 
 ## Unreleased
 
+**Language: constants, changes in place, local maps, maps of maps**
+- Top-level constants (`const c = 5;`), read as functions of no parameters: `def c : Int := 5`.
+- `Math.max(a, b)` and `Math.min(a, b)` on numbers (model operators `max`, `min`; Lean `max`, `min`).
+- Owned locals change in place: `push`, `pop`, `sort`, `r.f = e`, and `set`/`delete` on a local `Map`. The
+  front end checks ownership and writes each as an assignment (`Front/Desugar.lean`, trusted), so the generated
+  Lean is that of the spread forms (`out.push(x)` gives `out ++ [x]`) and needs no new proof.
+- Local `Map<string, T>`: `get`, `has` (as `get(k) != null`), `size`, spread `keys()` and `values()`; array
+  `slice(i, j)`. Typed forms `mkey` (`get`, and what `delete` leaves), `msize`, `mput`, `aslice`,
+  `spreadMKeys`, `spreadMValues`, covered by the general theorem; model expressions `mapPut` and `mapDel` (no
+  source syntax) for what `set` and `delete` leave.
+- `x?.f…` on a local `x`, as `x == null ? undefined : x.f…`; the parser marks parentheses that end a chain.
+- Class fields holding maps of maps, changed through `this.f.get(k)?.set(k2, v)` and `?.delete(k2)`, read
+  through `(this.f.get(k) ?? new Map())`.
+- `ariadne signatures` marks constants; validators skip them.
+- Fixed: a loop body reading `!x` did not take `x` as a parameter (the mention scan read `!` as part of a
+  name), so its file failed to check.
+- `TExpr.denote`'s equation lemmas are derived under Lean's fixed budget for realized constants, which the
+  expression forms now nearly use up: new forms should extend an indexed family (as `MKey`, `Op`, `SMethod`)
+  rather than add constructors.
+
+**Trusted base**
+- `trusted.lock`: `BinOp.max`, `BinOp.min`, `Expr.mapPut`, `Expr.mapDel`, `listSlice`, and their evaluation;
+  `Map` reads (`get`, `size`, `keys`, `values`) and array `slice` in the evaluator.
+- `Front/Desugar.lean`: the rewrites and the ownership rules (cross-checked by `scripts/crosscheck.mjs`).
+
 **Model and certificate layout**
 - `translate --split` emits a readable `Model.lean`, a `Certificate.lean`, and an umbrella
   importing both. Existing function and theorem names stay the same; the standalone format remains.

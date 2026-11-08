@@ -315,6 +315,8 @@ mutual
         TExpr Φ Γ τ
     /-- `m.get(k)` and what `m.delete(k);` leaves, on a local `Map` (`MKey`). -/
     | mkey (op : MKey σ τ) (m : TExpr Φ Γ (.map σ)) (k : TExpr Φ Γ .string) : TExpr Φ Γ τ
+    /-- `m.size` on a local `Map`. -/
+    | msize {σ : Ty} (m : TExpr Φ Γ (.map σ)) : TExpr Φ Γ .number
     /-- What `m.set(k, e);` leaves in a local `Map` `m` (no source syntax: see `Expr.mapPut`). -/
     | mput (m : TExpr Φ Γ (.map τ)) (k : TExpr Φ Γ .string) (e : TExpr Φ Γ τ) : TExpr Φ Γ (.map τ)
     /-- `a.slice(i, j)` on an array. -/
@@ -506,6 +508,7 @@ mutual
     | .callThis (m := m) _ _ args => .callThis m args.erase
     | .mkey (.get _) m k => .method m.erase "get" [k.erase]
     | .mkey .del m k => .mapDel m.erase k.erase
+    | .msize m => .field m.erase "size"
     | .mput m k e => .mapPut m.erase k.erase e.erase
     | .aslice a i j => .method a.erase "slice" [i.erase, j.erase]
 
@@ -615,6 +618,7 @@ mutual
     | .stateGet _ _ _ k | .stateHas _ _ k => k.trivial
     | .callThis (t := t) _ _ args => t && args.trivial
     | .mkey _ m k => m.trivial && k.trivial
+    | .msize m => m.trivial
     | .mput m k e | .aslice m k e => m.trivial && k.trivial && e.trivial
 
   def TArgs.trivial : TArgs Φ Γ ps → Bool

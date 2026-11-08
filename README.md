@@ -56,7 +56,9 @@ Trusted:
 - Lean's kernel;
 - the model of JavaScript (`Ariadne/Model`), tested against Bun on 41,700 calls
   (`scripts/differential.mjs`) and on hand-written cases (`scripts/model.mjs`);
-- the parser and the converter to the model's syntax (`Ariadne/Parse`, `Ariadne/Front/Convert.lean`).
+- the parser and the converter to the model's syntax (`Ariadne/Parse`, `Ariadne/Front/Desugar.lean`,
+  `Ariadne/Front/Convert.lean`), including the ownership rules under which a change in place is an
+  assignment; `scripts/crosscheck.mjs` implements the rewrites independently.
 
 The type checker, the printer and every tactic are untrusted: a bug in any of them makes a
 per-file check fail, never a wrong theorem.

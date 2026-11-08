@@ -181,6 +181,7 @@ def getField : JSValue → String → Except Fault JSValue
   -- stack depth, the model treats that as a resource limit and does not model it.
   | .array xs, "length" => .ok (.number xs.length)
   | .string s, "length" => .ok (.number s.length)
+  | .map kvs, "size" => .ok (.number kvs.length)
   | _, f => .error (.unsupported s!"property {f}")
 
 /-- Defining a property: an existing key keeps its position. -/

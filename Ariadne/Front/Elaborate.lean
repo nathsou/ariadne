@@ -48,10 +48,12 @@ of the same name). -/
 def mentions (text x : String) : Bool :=
   let parts := text.splitOn (ident x)
   let nameChar (c : Char) := c.isAlphanum || c == '_' || c == '\'' || c == '!' || c == '?' || c == '«' || c == '»'
+  -- A name can end with `!` or `?` but not start with one: `!x` mentions `x`.
+  let startChar (c : Char) := c.isAlphanum || c == '_' || c == '\'' || c == '«' || c == '»'
   (List.range (parts.length - 1)).any fun i =>
     let before := (parts[i]!.toList.getLast?).getD ' '
     let after := (parts[i + 1]!.toList.head?).getD ' '
-    !nameChar before && before != '.' && !nameChar after
+    !startChar before && before != '.' && !nameChar after
 
 def leanString (s : String) : String := Id.run do
   let mut out := "\""
@@ -396,6 +398,7 @@ mutual
     | .fieldReadonly t => T.resolve span fuel t
     | .record fields => return .record (Fields.ofList (← fields.mapM fun (f, t) => return (f, ← T.resolve span fuel t)))
     | .array t | .readonly (.array t) => return .array (← T.resolve span fuel t)
+    | .map .string v => return .map (← T.resolve span fuel v)
     | _ => unsupportedTy span "this type"
 
   /-- A union of records told apart by a literal field. -/
@@ -870,6 +873,9 @@ mutual
     | .member a f span => do
       let a ← inferExpr T s a none
       match a.ty, f with
+      | .map _, "size" =>
+        return { ty := .number, typed := s!"(.msize {a.typed})", readable := s!"({listCall a.term "length"} : Int)",
+                 atomic := true, trivial := a.trivial, safe := a.safe }
       | .array _, "length" | .string, "length" =>
         return { ty := .number, typed := s!"(.{if a.ty == .string then "slength" else "length"} {a.typed})",
                  readable := s!"({listCall a.term "length"} : Int)", atomic := true, trivial := a.trivial, safe := a.safe }

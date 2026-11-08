@@ -17,7 +17,8 @@ program it builds is of the same forms). Each rewrite keeps JavaScript's meaning
 **Changes in place.** A local that a function changes in place is *owned*: nothing else refers to its object, so
 changing the object equals giving the local a new value, which is what the model does. The statements
 
-- `xs.push(a, …);` is `xs = [...xs, a, …];`, `xs.sort(c);` is `xs = xs.toSorted(c);`,
+- `xs.push(a, …);` is `xs = [...xs, a, …];`, `xs.pop();` is `xs = xs.slice(0, -1);`, `xs.sort(c);` is
+  `xs = xs.toSorted(c);`,
 - `r.f = e;` is `r = { ...r, f: e };`,
 - `m.set(k, v);` and `m.delete(k);` on a local `Map` are `m = mapPut(m, k, v);` and `m = mapDel(m, k);`
   (`Expr.mapPut`, `Expr.mapDel`: no source syntax),
@@ -34,6 +35,16 @@ with the local's `const` read as `let`, keep their meaning when the local is own
   change in the loop, since the next iteration comes after it; a local declared inside the loop is a new one each
   iteration;
 - it is not changed in the body of a loop over it (`for (const x of xs)`), which iterates the live object.
+
+**Optional chains.** `x?.p…` on a local `x` (`p…` the rest of the chain, up to parentheses, which the parser marks)
+is `x == null ? undefined : x.p…`: JavaScript evaluates the rest only when `x` is not nullish.
+
+**Maps of maps.** A class field holding maps of maps (`Map<string, Map<string, T>>`) changes an inner map in place
+with `this.f.get(k)?.set(k2, v);` and `this.f.get(k)?.delete(k2);`, which are
+`if (this.f.has(k)) this.f.set(k, mapPut(this.f.get(k) ?? new Map(), k2, v));` (and `mapDel`): the same when no
+inner map is referred to from anywhere but its entry (`nestedOk`). So an inner map is stored only as a new one
+(`this.f.set(k, new Map())`), and `this.f.get(k)` is read only as `(this.f.get(k) ?? new Map())`, the receiver of
+`get` and `size`, or of `keys()` and `values()` spread at once; the field's `values()` are not read.
 -/
 
 namespace Ariadne.Front
@@ -103,6 +114,9 @@ end
 def inPlace : Stmt → Option (String × Expr)
   | .expr (.call (.member (.var x xs) "push" _) args span) _ =>
     if x == "this" then none else some (x, .array (.spread (.var x xs) xs :: args) span)
+  | .expr (.call (.member (.var x xs) "pop" ms) [] span) _ =>
+    if x == "this" then none
+    else some (x, .call (.member (.var x xs) "slice" ms) [.literal (.number 0 0) span, .unary "-" (.literal (.number 1 0) span) span] span)
   | .expr (.call (.member (.var x xs) "sort" ms) [c] span) _ =>
     if x == "this" then none else some (x, .call (.member (.var x xs) "toSorted" ms) [c] span)
   | .expr (.call (.member (.var x xs) "set" _) [k, v] span) _ =>
@@ -300,14 +314,141 @@ partial def rewriteHasStmt : Stmt → Stmt
   | .return_ e span => .return_ (rewriteHas e) span
   | s => s
 
-def desugarFunction (consts : List String) (f : Parse.Function) : Checked Parse.Function := do
+/-! ## Optional chains and maps of maps -/
+
+/-- `this.f.get(k)`. -/
+def stateGetOf : Expr → Option (String × Expr)
+  | .call (.member (.member (.var "this" _) f _) "get" _) [k] _ => some (f, k)
+  | _ => none
+
+/-- An optional chain: its receiver, and the chain as a function of it. -/
+partial def chainOf : Expr → Option (Expr × (Expr → Expr))
+  | .member (.unary "?." base _) f span => some (base, fun r => .member r f span)
+  | .member e f span => (chainOf e).map fun (b, k) => (b, fun r => .member (k r) f span)
+  | .call e args span => (chainOf e).map fun (b, k) => (b, fun r => .call (k r) args span)
+  | .index e i span => (chainOf e).map fun (b, k) => (b, fun r => .index (k r) i span)
+  | _ => none
+
+mutual
+  /-- Optional chains on locals as conditionals; parentheses marks dropped. -/
+  partial def chainsExpr (e : Expr) : Checked Expr := do
+    match chainOf e with
+    | some (.var x xs, k) =>
+      let span := e.span
+      chainsExpr (.conditional (.binary "==" (.var x xs) (.literal .null span) span) (.literal .undefined span) (k (.var x xs))
+        span)
+    | some (b, _) => refuse b.span "optional chaining on a receiver other than a local"
+    | none => match e with
+      | .unary "#paren" a _ => chainsExpr a
+      | .unary "?." a _ => refuse a.span "this optional chain"
+      | .unary op a span => return .unary op (← chainsExpr a) span
+      | .binary op a b span => return .binary op (← chainsExpr a) (← chainsExpr b) span
+      | .conditional c a b span => return .conditional (← chainsExpr c) (← chainsExpr a) (← chainsExpr b) span
+      | .call f args span => return .call (← chainsExpr f) (← args.mapM chainsExpr) span
+      | .member a f span => return .member (← chainsExpr a) f span
+      | .index a i span => return .index (← chainsExpr a) (← chainsExpr i) span
+      | .array es span => return .array (← es.mapM chainsExpr) span
+      | .record fs span => return .record (← fs.mapM fun (f, e) => return (f, ← chainsExpr e)) span
+      | .lambda ps body span => return .lambda ps (← chainsStmt [] body) span
+      | .spread a span => return .spread (← chainsExpr a) span
+      | .newClass c args span => return .newClass c (← args.mapM chainsExpr) span
+      | e => pure e
+
+  /-- `this.f.get(k)?.set(k2, v);` and `?.delete(k2);` on a map of maps (`nested`), then optional chains. -/
+  partial def chainsStmt (nested : List String) : Stmt → Checked Stmt
+    | .expr (.call (.member (.unary "?." g _) m _) args span) sspan => do
+      match stateGetOf g, m, args with
+      | some (f, k), "set", [k2, v] =>
+        if !nested.contains f then refuse span s!"'?.set' on '{f}', which does not hold maps of maps"
+        let inner := Expr.binary "??" g (.newMap .string .undefined span) span
+        let put := Expr.call (.var "#mapPut" span) [inner, k2, v] span
+        chainsStmt nested (.if_ (.call (.member (.member (.var "this" span) f span) "has" span) [k] span)
+          (.expr (.call (.member (.member (.var "this" span) f span) "set" span) [k, put] span) sspan) (.block [] span) sspan)
+      | some (f, k), "delete", [k2] =>
+        if !nested.contains f then refuse span s!"'?.delete' on '{f}', which does not hold maps of maps"
+        let inner := Expr.binary "??" g (.newMap .string .undefined span) span
+        let del := Expr.call (.var "#mapDel" span) [inner, k2] span
+        chainsStmt nested (.if_ (.call (.member (.member (.var "this" span) f span) "has" span) [k] span)
+          (.expr (.call (.member (.member (.var "this" span) f span) "set" span) [k, del] span) sspan) (.block [] span) sspan)
+      | _, _, _ => return .expr (← chainsExpr (.call (.member (.unary "?." g span) m span) args span)) sspan
+    | .block ss span => return .block (← ss.mapM (chainsStmt nested)) span
+    | .let_ m x t e span => return .let_ m x t (← chainsExpr e) span
+    | .assign t e span => return .assign (← chainsExpr t) (← chainsExpr e) span
+    | .update t op e span => return .update t op (← chainsExpr e) span
+    | .expr e span => return .expr (← chainsExpr e) span
+    | .if_ c a b span => return .if_ (← chainsExpr c) (← chainsStmt nested a) (← chainsStmt nested b) span
+    | .while_ c b span => return .while_ (← chainsExpr c) (← chainsStmt nested b) span
+    | .measured e b span => return .measured e (← chainsStmt nested b) span
+    | .for_ i c u b span =>
+      return .for_ (← chainsStmt nested i) (← chainsExpr c) (← chainsStmt nested u) (← chainsStmt nested b) span
+    | .forOf m x e b span => return .forOf m x (← chainsExpr e) (← chainsStmt nested b) span
+    | .forOfPair m x y e b span => return .forOfPair m x y (← chainsExpr e) (← chainsStmt nested b) span
+    | .switch_ e cases span => return .switch_ (← chainsExpr e) (← cases.mapM fun (l, ss) => do
+        return (← l.mapM chainsExpr, ← ss.mapM (chainsStmt nested))) span
+    | .return_ e span => return .return_ (← chainsExpr e) span
+    | s => pure s
+end
+
+/-- `(this.f.get(k) ?? new Map())` for a map of maps `f`. -/
+def innerOf (nested : List String) : Expr → Option Expr
+  | .binary "??" g (.newMap _ _ _) _ => match stateGetOf g with
+    | some (f, k) => if nested.contains f then some k else none
+    | none => none
+  | _ => none
+
+/-- Whether an expression reads the maps of maps `nested` only as the rules allow (see the module docs). -/
+partial def nestedOk (nested : List String) : Expr → Bool
+  | .call (.member r m _) args _ =>
+    match innerOf nested r with
+    | some k => ["get", "keys", "values"].contains m && nestedOk nested k && args.all (nestedOk nested)
+    | none => match r with
+      | .member (.var "this" _) f _ =>
+        (!nested.contains f || (m != "get" && m != "values" && m != "set")) && args.all (nestedOk nested)
+      | r => nestedOk nested r && args.all (nestedOk nested)
+  -- What the rewrite of `?.set` and `?.delete` stores (no source syntax).
+  | .call (.var "#mapPut" _) (r :: args) _ | .call (.var "#mapDel" _) (r :: args) _ =>
+    (innerOf nested r).isSome && args.all (nestedOk nested)
+  | .call f args _ => nestedOk nested f && args.all (nestedOk nested)
+  | .member r f _ => match innerOf nested r with
+    | some k => f == "size" && nestedOk nested k
+    | none => nestedOk nested r
+  | .unary _ a _ | .spread a _ => nestedOk nested a
+  | .binary _ a b _ | .index a b _ => nestedOk nested a && nestedOk nested b
+  | .conditional c a b _ => nestedOk nested c && nestedOk nested a && nestedOk nested b
+  | .array es _ | .newClass _ es _ => es.all (nestedOk nested)
+  | .record fs _ => fs.all (nestedOk nested ·.2)
+  | .lambda _ (.return_ e _) _ => nestedOk nested e
+  | _ => true
+
+partial def nestedStmtOk (nested : List String) : Stmt → Bool
+  -- An inner map is stored new, or as the rewrite of `?.set` and `?.delete` makes it.
+  | .expr (.call (.member (.member (.var "this" _) f _) "set" _) [k, v] _) _ =>
+    nestedOk nested k && (!nested.contains f || (match v with
+      | .newMap _ _ _ => true
+      | .call (.var "#mapPut" _) _ _ | .call (.var "#mapDel" _) _ _ => true
+      | _ => false)) && nestedOk nested v
+  | .block ss _ => ss.all (nestedStmtOk nested)
+  | .let_ _ _ _ e _ | .assign _ e _ | .update _ _ e _ | .expr e _ | .return_ e _ => nestedOk nested e
+  | .if_ c a b _ => nestedOk nested c && nestedStmtOk nested a && nestedStmtOk nested b
+  | .while_ c b _ => nestedOk nested c && nestedStmtOk nested b
+  | .measured _ b _ => nestedStmtOk nested b
+  | .for_ i c u b _ => nestedStmtOk nested i && nestedOk nested c && nestedStmtOk nested u && nestedStmtOk nested b
+  | .forOf _ _ e b _ | .forOfPair _ _ _ e b _ => nestedOk nested e && nestedStmtOk nested b
+  | .switch_ e cases _ => nestedOk nested e && cases.all fun (l, ss) => (l.all (nestedOk nested)) && ss.all (nestedStmtOk nested)
+  | _ => true
+
+def desugarFunction (consts : List String) (f : Parse.Function) (nested : List String := []) :
+    Checked Parse.Function := do
   let body ← desugarStmt consts f.body
+  let body := rewriteHasStmt (← chainsStmt nested body)
+  if !nestedStmtOk nested body then
+    refuse f.span "reading a map of maps other than as (this.f.get(k) ?? new Map()).get(…), size, keys() or values()"
   let owned := (changedIn body).eraseDups
   for x in owned do
     if f.params.any (·.name == x) then refuse f.span s!"changing the parameter '{x}' in place (the caller's object)"
     if !(letsIn body).contains x then refuse f.span s!"changing '{x}' in place: only locals declared with a new object"
   let _ ← checkOwned owned [] [body]
-  return { f with body := rewriteHasStmt (rewriteOwned owned body) }
+  return { f with body := rewriteOwned owned body }
 
 def desugarProgram (p : Parse.Program) : Checked Parse.Program := do
   -- Constants, in order: each value reads only earlier ones.
@@ -321,7 +462,10 @@ def desugarProgram (p : Parse.Program) : Checked Parse.Program := do
   let names := consts
   let functions ← p.functions.mapM (desugarFunction names)
   let classes ← p.classes.mapM fun c => do
-    return { c with methods := ← c.methods.mapM (desugarFunction names) }
+    let nested := c.fields.filterMap fun fld => match fld.value with
+      | .newMap _ (.map _ _) _ => some fld.name
+      | _ => none
+    return { c with methods := ← c.methods.mapM (desugarFunction names · nested) }
   return { p with functions, classes }
 
 end Ariadne.Front

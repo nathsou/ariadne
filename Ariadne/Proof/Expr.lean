@@ -393,6 +393,13 @@ mutual
         exact ⟨.map (mapDel kvs (k.denote fs ρ)), Converges.of_succ (max Nm Nk) fun n hn => by
           simp [evalExpr, TExpr.erase, hm n (by omega), hk n (by omega), mapKey, bind, Except.bind, pure,
             Except.pure], map_rep.mpr ⟨_, rfl, mapDel_rep _ hrel⟩⟩
+    | _, _, .msize m, env, ρ, he, hs => by
+      simp only [TExpr.safe] at hs
+      obtain ⟨wm, ⟨Nm, hm⟩, hwm⟩ := TExpr.adequate m he hs
+      obtain ⟨kvs, rfl, hrel⟩ := map_rep.mp hwm
+      exact ⟨.number kvs.length, Converges.of_succ Nm fun n hn => by
+        simp [evalExpr, TExpr.erase, hm n hn, getField, bind, Except.bind, pure, Except.pure], by
+        simp only [Ty.Rep, TExpr.denote, hrel.length_eq]⟩
     | _, _, .mput m k e, env, ρ, he, hs => by
       simp only [TExpr.safe] at hs
       have hs := andT_elim hs (m.safe_of_trivial ρ) fun h => by
