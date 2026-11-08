@@ -371,6 +371,57 @@ mutual
       exact ⟨w, Converges.of_succ (max Na Nc) fun n hn => by
         simp [evalExpr, TExpr.erase, ha n (by omega), ht, hc n (by omega), bind, Except.bind, pure, Except.pure],
         hw⟩
+    | _, _, .mkey op m k, env, ρ, he, hs => by
+      simp only [TExpr.safe] at hs
+      have hs := andT_elim hs (m.safe_of_trivial ρ) (k.safe_of_trivial ρ)
+      obtain ⟨wm, ⟨Nm, hm⟩, hwm⟩ := TExpr.adequate m he hs.1
+      obtain ⟨wk, hk, hwk⟩ := TExpr.adequate k he hs.2
+      obtain ⟨kvs, rfl, hrel⟩ := map_rep.mp hwm
+      simp only [Ty.Rep] at hwk; subst hwk
+      cases op with
+      | get h =>
+        obtain ⟨Nk, hk⟩ := conv_args1 hk
+        refine ⟨(mapGet kvs (k.denote fs ρ)).getD .undefined, Converges.of_succ (max Nm Nk) fun n hn => by
+          simp [evalExpr, TExpr.erase, hm n (by omega), hk n (by omega), mapKey, bind, Except.bind, pure,
+            Except.pure], ?_⟩
+        show (Ty.option .undef _).Rep _ (mapGet _ _)
+        rcases mapGet_rep (k.denote fs ρ) hrel with ⟨h1, h2⟩ | ⟨w, x, h1, h2, hw⟩
+        · rw [h1, h2]; rfl
+        · rw [h1, h2]; exact hw
+      | del =>
+        obtain ⟨Nk, hk⟩ := hk
+        exact ⟨.map (mapDel kvs (k.denote fs ρ)), Converges.of_succ (max Nm Nk) fun n hn => by
+          simp [evalExpr, TExpr.erase, hm n (by omega), hk n (by omega), mapKey, bind, Except.bind, pure,
+            Except.pure], map_rep.mpr ⟨_, rfl, mapDel_rep _ hrel⟩⟩
+    | _, _, .mput m k e, env, ρ, he, hs => by
+      simp only [TExpr.safe] at hs
+      have hs := andT_elim hs (m.safe_of_trivial ρ) fun h => by
+        simp only [Bool.and_eq_true] at h
+        simp [andT, k.safe_of_trivial ρ h.1, e.safe_of_trivial ρ h.2]
+      have hs2 := andT_elim hs.2 (k.safe_of_trivial ρ) (e.safe_of_trivial ρ)
+      obtain ⟨wm, ⟨Nm, hm⟩, hwm⟩ := TExpr.adequate m he hs.1
+      obtain ⟨wk, ⟨Nk, hk⟩, hwk⟩ := TExpr.adequate k he hs2.1
+      obtain ⟨we, ⟨Ne, hce⟩, hwe⟩ := TExpr.adequate e he hs2.2
+      obtain ⟨kvs, rfl, hrel⟩ := map_rep.mp hwm
+      simp only [Ty.Rep] at hwk; subst hwk
+      exact ⟨.map (mapPut kvs (k.denote fs ρ) we), Converges.of_succ (max Nm (max Nk Ne)) fun n hn => by
+        simp [evalExpr, TExpr.erase, hm n (by omega), hk n (by omega), hce n (by omega), mapKey, bind,
+          Except.bind, pure, Except.pure], map_rep.mpr ⟨_, rfl, mapPut_rep _ hwe hrel⟩⟩
+    | _, _, .aslice a i j, env, ρ, he, hs => by
+      simp only [TExpr.safe] at hs
+      have hs := andT_elim hs (a.safe_of_trivial ρ) fun h => by
+        simp only [Bool.and_eq_true] at h
+        simp [andT, i.safe_of_trivial ρ h.1, j.safe_of_trivial ρ h.2]
+      have hs2 := andT_elim hs.2 (i.safe_of_trivial ρ) (j.safe_of_trivial ρ)
+      obtain ⟨_, ⟨Na, ha⟩, vs, rfl, hvs⟩ := TExpr.adequate a he hs.1
+      obtain ⟨wi, hi, hwi⟩ := TExpr.adequate i he hs2.1
+      obtain ⟨wj, hj, hwj⟩ := TExpr.adequate j he hs2.2
+      simp only [Ty.Rep] at hwi hwj; subst hwi hwj
+      obtain ⟨Ni, hij⟩ := conv_args2 hi hj
+      exact ⟨.array (listSlice vs (i.denote fs ρ) (j.denote fs ρ)),
+        Converges.of_succ (max Na Ni) fun k hk => by
+          simp [evalExpr, TExpr.erase, ha k (by omega), hij k (by omega), bind, Except.bind, pure, Except.pure],
+        _, rfl, hvs.listSlice _ _⟩
     | _, _, .record es sel hl, env, ρ, he, hs => by
       obtain ⟨ps, ⟨N, hc⟩, hn, hr⟩ := TEntries.adequate es [] hl he hs
       have hd : (ps.map Prod.fst).Nodup := by rw [hn]; exact Fields.literalNames_nodup hl
@@ -647,6 +698,28 @@ mutual
       exact ⟨_, Converges.of_succ (N + 1) fun n hn => by
         obtain ⟨n, rfl⟩ : ∃ k, n = k + 1 := ⟨n - 1, by omega⟩
         simp [evalElems, TElems.erase, evalExpr, hsm, hcr (n + 1) (by omega), bind, Except.bind, pure, Except.pure],
+        (values_rep hrel).append hws⟩
+    | _, _, .spreadMKeys m rest, _, ρ, he, hs => by
+      simp only [TElems.safe] at hs
+      have hs := andT_elim hs (m.safe_of_trivial ρ) (rest.safe_of_trivial ρ)
+      obtain ⟨wm, ⟨Nm, hm⟩, hwm⟩ := TExpr.adequate m he hs.1
+      obtain ⟨kvs, rfl, hrel⟩ := map_rep.mp hwm
+      obtain ⟨ws, ⟨N, hcr⟩, hws⟩ := TElems.adequate rest he hs.2
+      exact ⟨_, Converges.of_succ (max Nm N + 2) fun n hn => by
+        obtain ⟨n, rfl⟩ : ∃ k, n = k + 2 := ⟨n - 2, by omega⟩
+        simp [evalElems, TElems.erase, evalExpr, evalArgs, hm (n + 1) (by omega), hcr (n + 2) (by omega), bind,
+          Except.bind, pure, Except.pure],
+        (keys_rep hrel).append hws⟩
+    | _, _, .spreadMValues m rest, _, ρ, he, hs => by
+      simp only [TElems.safe] at hs
+      have hs := andT_elim hs (m.safe_of_trivial ρ) (rest.safe_of_trivial ρ)
+      obtain ⟨wm, ⟨Nm, hm⟩, hwm⟩ := TExpr.adequate m he hs.1
+      obtain ⟨kvs, rfl, hrel⟩ := map_rep.mp hwm
+      obtain ⟨ws, ⟨N, hcr⟩, hws⟩ := TElems.adequate rest he hs.2
+      exact ⟨_, Converges.of_succ (max Nm N + 2) fun n hn => by
+        obtain ⟨n, rfl⟩ : ∃ k, n = k + 2 := ⟨n - 2, by omega⟩
+        simp [evalElems, TElems.erase, evalExpr, evalArgs, hm (n + 1) (by omega), hcr (n + 2) (by omega), bind,
+          Except.bind, pure, Except.pure],
         (values_rep hrel).append hws⟩
 end
 

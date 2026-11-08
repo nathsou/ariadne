@@ -81,6 +81,12 @@ mutual
     | _, _, .callThis fn v args, ρ, h => by
       simp only [TExpr.trivial, Bool.and_eq_true] at h
       simp [TExpr.safe, andT, h.1, h.2]
+    | _, _, .mkey _ a b, ρ, h => by
+      simp only [TExpr.trivial, Bool.and_eq_true] at h
+      simp [TExpr.safe, andT, h.1, h.2]
+    | _, _, .mput c a b, ρ, h | _, _, .aslice c a b, ρ, h => by
+      simp only [TExpr.trivial, Bool.and_eq_true] at h
+      simp [TExpr.safe, andT, h.1.1, h.1.2, h.2]
 
   theorem TArgs.safe_of_trivial : ∀ {Γ ps : Ctx} (args : TArgs Φ Γ ps) (ρ : Γ.denote), args.trivial = true →
       args.safe fs ss ρ = true
@@ -104,6 +110,9 @@ mutual
       simp [TElems.safe, andT, h.1, h.2]
     | _, _, .spreadKeys _ _ rest, ρ, h | _, _, .spreadValues _ _ rest, ρ, h => by
       simp only [TElems.trivial] at h; simp [TElems.safe, TElems.safe_of_trivial rest ρ h]
+    | _, _, .spreadMKeys e rest, ρ, h | _, _, .spreadMValues e rest, ρ, h => by
+      simp only [TElems.trivial, Bool.and_eq_true] at h
+      simp [TElems.safe, andT, h.1, h.2]
 end
 
 theorem TFn.safe_of_trivial (hss : SafeSigs ss) : ∀ {Γ : Ctx} {τ σ : Ty} (p : TFn Φ Γ τ σ) (ρ : Γ.denote)

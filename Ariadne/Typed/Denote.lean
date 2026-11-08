@@ -86,6 +86,12 @@ def Op.apply : Op σ τ → σ.denote → σ.denote → τ.denote
   | .idiv, a, b => a.tdiv b
   | .imod, a, b | .nmod, a, b => a.tmod b
   | .ndiv, a, b => a.fdiv b
+  | .nmax, a, b => max a b
+  | .nmin, a, b => min a b
+
+def MKey.apply : MKey σ τ → List (JSString × σ.denote) → JSString → τ.denote
+  | .get _, m, k => mapGet m k
+  | .del, m, k => mapDel m k
 
 def SMethod.apply : SMethod τ → JSString → JSString → τ.denote
   | .startsWith, s, t => strStartsWith s t
@@ -159,6 +165,9 @@ mutual
     | .stateHas v i k, ρ => (mapGet (i.get (v.get ρ)) (k.denote fs ρ)).isSome
     | .stateSize v i, ρ => ((i.get (v.get ρ)).length : Int)
     | .callThis fn v args, ρ => fn.get fs (v.get ρ, args.denote fs ρ)
+    | .mkey op m k, ρ => MKey.apply op (m.denote fs ρ) (k.denote fs ρ)
+    | .mput m k e, ρ => mapPut (m.denote fs ρ) (k.denote fs ρ) (e.denote fs ρ)
+    | .aslice a i j, ρ => listSlice (a.denote fs ρ) (i.denote fs ρ) (j.denote fs ρ)
 
   def TArgs.denote (fs : Φ.denote) : TArgs Φ Γ ps → Γ.denote → ps.denote
     | .nil, _ => ()
@@ -184,6 +193,8 @@ mutual
     | .spread a rest, ρ => a.denote fs ρ ++ rest.denote fs ρ
     | .spreadKeys v i rest, ρ => (i.get (v.get ρ)).map Prod.fst ++ rest.denote fs ρ
     | .spreadValues v i rest, ρ => (i.get (v.get ρ)).map Prod.snd ++ rest.denote fs ρ
+    | .spreadMKeys m rest, ρ => (m.denote fs ρ).map Prod.fst ++ rest.denote fs ρ
+    | .spreadMValues m rest, ρ => (m.denote fs ρ).map Prod.snd ++ rest.denote fs ρ
 end
 
 /-- `a && b`, where a static flag marks a conjunct that holds whatever the
@@ -237,6 +248,10 @@ mutual
     | .stateGet _ _ _ k, ρ | .stateHas _ _ k, ρ => k.safe fs ss ρ
     | .callThis (t := t) fn v args, ρ =>
       andT args.trivial (args.safe fs ss ρ) t (fn.safe ss (v.get ρ, args.denote fs ρ))
+    | .mkey _ a b, ρ =>
+      andT a.trivial (a.safe fs ss ρ) b.trivial (b.safe fs ss ρ)
+    | .mput s a b, ρ | .aslice s a b, ρ => andT s.trivial (s.safe fs ss ρ) (a.trivial && b.trivial)
+      (andT a.trivial (a.safe fs ss ρ) b.trivial (b.safe fs ss ρ))
 
   def TArgs.safe (fs : Φ.denote) (ss : Φ.safety) : TArgs Φ Γ ps → Γ.denote → Bool
     | .nil, _ | .omitted _, _ => true
@@ -259,6 +274,7 @@ mutual
     | .nil, _ => true
     | .cons e rest, ρ | .spread e rest, ρ => andT e.trivial (e.safe fs ss ρ) rest.trivial (rest.safe fs ss ρ)
     | .spreadKeys _ _ rest, ρ | .spreadValues _ _ rest, ρ => rest.safe fs ss ρ
+    | .spreadMKeys e rest, ρ | .spreadMValues e rest, ρ => andT e.trivial (e.safe fs ss ρ) rest.trivial (rest.safe fs ss ρ)
 end
 
 /-! ## Statements -/

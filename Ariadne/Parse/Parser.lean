@@ -532,6 +532,27 @@ def function (fuel : Nat) (exported : Bool) : P Function := do
   let body ← statement fuel
   return { name := name.text, params, result, body, exported, span := start.span }
 
+/-- The type of a constant without an annotation: that of its literal (widened, as `number` for `5`). -/
+def literalTy : Expr → Option Ty
+  | .literal (.string _) _ => some .string
+  | .literal (.number _ _) _ | .unary "-" (.literal (.number _ _) _) _ => some .number
+  | .literal (.boolean _) _ => some .boolean
+  | .literal (.bigint _) _ | .unary "-" (.literal (.bigint _) _) _ => some .bigint
+  | _ => none
+
+/-- A top-level `const name[: T] = value;`, read as a function of no parameters returning `value`. -/
+def constant (fuel : Nat) (exported : Bool) : P Function := do
+  let start ← expect "const"
+  let name ← identifier
+  let annotation ← if ← accept ":" then pure (some (← parseTy fuel)) else pure none
+  let _ ← expect "="
+  let value ← expression fuel
+  let _ ← expect ";"
+  let some result := annotation <|> literalTy value
+    | fail "A1004" "a constant needs a type annotation unless its value is a literal" name
+  return { name := name.text, params := [], result, body := .block [.return_ value value.span] start.span, exported,
+           constant := true, span := start.span }
+
 def classDeclaration (fuel : Nat) : P Class := do
   let start ← expect "class"
   let name ← identifier
@@ -595,6 +616,10 @@ def declarations (fuel : Nat) (functions : List Function) (aliases : List (Strin
     else if ← isNext "function" then
       let f ← function n exported
       declarations n ({ f with decreases } :: functions) aliases classes
+    else if ← isNext "const" then
+      if decreases.isSome then fail "A1001" "a declaration measure must precede a function" (← peek)
+      let f ← constant n exported
+      declarations n (f :: functions) aliases classes
     else unsupported (← peek)
 
 end Parser

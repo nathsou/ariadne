@@ -42,9 +42,10 @@ inductive JSValue where
   | closure (params : List String) (body : Expr) (env : List (String × JSValue))
   /-- A declared function used as a value. -/
   | function (name : String)
-  /-- A `Map` with string keys, in insertion order. Maps are only held in the fields
-  of the object a method runs on (`this`), which the subset never hands out, so a
-  map is never shared and changing it in place equals replacing it. -/
+  /-- A `Map` with string keys, in insertion order. Maps are held in the fields of the
+  object a method runs on (`this`), which the subset never hands out, and in locals that
+  nothing else refers to (`Front/Desugar.lean`), so a map is never shared and changing it
+  in place equals replacing it. -/
   | map (kvs : List (JSString × JSValue))
   deriving Repr, Inhabited
 
@@ -142,6 +143,10 @@ def binary : BinOp → JSValue → JSValue → Except Fault JSValue
     if b = 0 || !(-maxSafe ≤ a ∧ a ≤ maxSafe) || !(-maxSafe ≤ b ∧ b ≤ maxSafe) then
       .error (.unsupported "floor division outside the safe integers")
     else .ok (.number (a.fdiv b))
+  -- On safe integers `Math.max` and `Math.min` are exact (no `NaN`, and `-0` is not told apart); on bigints they
+  -- throw, and on other values they coerce, which the model does not model.
+  | .max, .number a, .number b => .ok (.number (max a b))
+  | .min, .number a, .number b => .ok (.number (min a b))
   | .eq, a, b => return .bool (← strictEq a b)
   | .ne, a, b => return .bool !(← strictEq a b)
   | .lt, .number a, .number b | .lt, .bigint a, .bigint b => .ok (.bool (decide (a < b)))
@@ -224,6 +229,11 @@ def sliceBound (len : Nat) (i : Int) : Nat := if i < 0 then (len + i).toNat else
 def strSlice (s : JSString) (a b : Int) : JSString :=
   let i := sliceBound s.length a
   (s.drop i).take (sliceBound s.length b - i)
+
+/-- `xs.slice(a, b)` on an array: the same bounds as on strings. -/
+def listSlice {α : Type} (xs : List α) (a b : Int) : List α :=
+  let i := sliceBound xs.length a
+  (xs.drop i).take (sliceBound xs.length b - i)
 
 /-- `xs.includes(x)` (SameValueZero, which is `===` on the model's primitives). -/
 def includes (x : JSValue) : List JSValue → Except Fault Bool
@@ -323,6 +333,8 @@ def Scope.bind (s : Scope) (x : String) (mutable : Bool) : Scope :=
 mutual
   def Expr.scoped (s : Scope) : Expr → Bool
     | .lit _ | .newMap | .stateSize _ => true
+    | .mapPut m k v => m.scoped s && k.scoped s && v.scoped s
+    | .mapDel m k => m.scoped s && k.scoped s
     -- `this` is never a value, so the object's maps are never shared; a method is
     -- called only on `this`.
     | .var x => x != "this" && (s.names.contains x || !s.methods.contains x)
@@ -334,7 +346,8 @@ mutual
     | .callThis m args => s.pure.contains m && Expr.scopedList s args
     -- Iterators: only spread into an array literal (`scopedElems`).
     | .stateKeys _ | .stateValues _ => false
-    | .method e _ args => e.scoped s && Expr.scopedCallbacks s args
+    -- A map's `keys()` and `values()` are iterators: only spread into an array literal (`scopedElems`).
+    | .method e m args => m != "keys" && m != "values" && e.scoped s && Expr.scopedCallbacks s args
     | .record entries => Expr.scopedEntries s entries
     | .array elems => Expr.scopedElems s elems
     -- A closure holds a snapshot of its environment, which equals JavaScript's
@@ -361,6 +374,7 @@ mutual
   def Expr.scopedElems (s : Scope) : List (Bool × Expr) → Bool
     | [] => true
     | (true, .stateKeys _) :: es | (true, .stateValues _) :: es => Expr.scopedElems s es
+    | (true, .method e "keys" []) :: es | (true, .method e "values" []) :: es => e.scoped s && Expr.scopedElems s es
     | (_, e) :: es => e.scoped s && Expr.scopedElems s es
 end
 
@@ -559,6 +573,11 @@ mutual
       | .string s, "indexOf", [.string t] => return .number (strIndexOf s t)
       | .string s, "slice", [.number a] => return .string (strSlice s a s.length)
       | .string s, "slice", [.number a, .number b] => return .string (strSlice s a b)
+      | .array xs, "slice", [.number a, .number b] => return .array (listSlice xs a b)
+      | .map kvs, "get", [k] => return (mapGet kvs (← mapKey k)).getD .undefined
+      -- Iterators, spread at once (`scopedElems`): their elements.
+      | .map kvs, "keys", [] => return .array (kvs.map (.string ·.1))
+      | .map kvs, "values", [] => return .array (kvs.map (·.2))
       | .array xs, "toSorted", [f] => do
         let signs ← compareAll p n f xs xs
         if consistent signs then return .array ((sortIndices signs xs.length).filterMap (xs[·]?))
@@ -580,6 +599,16 @@ mutual
     | n + 1, env, .callThis m args => do
       let vs ← evalArgs p n env args
       call p n m ((← thisOf env) :: vs)
+    | n + 1, env, .mapPut m k v => do
+      match ← evalExpr p n env m with
+      | .map kvs => do
+        let key ← mapKey (← evalExpr p n env k)
+        return .map (mapPut kvs key (← evalExpr p n env v))
+      | _ => .error (.unsupported "set on a non-map")
+    | n + 1, env, .mapDel m k => do
+      match ← evalExpr p n env m with
+      | .map kvs => return .map (mapDel kvs (← mapKey (← evalExpr p n env k)))
+      | _ => .error (.unsupported "delete on a non-map")
 
   def evalArgs (p : Program) : Nat → Env → List Expr → Except Fault (List JSValue)
     | 0, _, _ => .error .timeout

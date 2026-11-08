@@ -43,6 +43,7 @@ def binOpName : BinOp → String
   | .add => "add" | .sub => "sub" | .mul => "mul" | .div => "div" | .mod => "mod" | .floorDiv => "floorDiv"
   | .eq => "eq" | .ne => "ne" | .lt => "lt" | .le => "le" | .gt => "gt" | .ge => "ge"
   | .and => "and" | .or => "or" | .coalesce => "coalesce" | .looseEq => "looseEq" | .looseNe => "looseNe"
+  | .max => "max" | .min => "min"
 
 partial def exprJson : Ariadne.Expr → Json
   | .lit l => Json.arr #["lit", litJson l]
@@ -66,6 +67,8 @@ partial def exprJson : Ariadne.Expr → Json
   | .stateKeys f => Json.arr #["stateKeys", f]
   | .stateValues f => Json.arr #["stateValues", f]
   | .callThis m args => Json.arr #["callThis", m, Json.arr (args.toArray.map exprJson)]
+  | .mapPut m k v => Json.arr #["mapPut", exprJson m, exprJson k, exprJson v]
+  | .mapDel m k => Json.arr #["mapDel", exprJson m, exprJson k]
 
 partial def stmtJson : Stmt → Json
   | .const x e => Json.arr #["const", x, exprJson e]

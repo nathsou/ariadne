@@ -91,7 +91,9 @@ def validators (source text : String) : Checked String := do
   let (_, fns) ← checkProgram parsed
   let entries := fns.filterMap fun c =>
     let exported := parsed.functions.any fun f => f.name == c.sig.name && f.exported
-    if c.sig.name.startsWith "new " || !(exported || c.sig.method) then none else
+    -- A constant takes no arguments: nothing to guard.
+    let constant := parsed.functions.any fun f => f.name == c.sig.name && f.constant
+    if constant || c.sig.name.startsWith "new " || !(exported || c.sig.method) then none else
     -- A method's first parameter is the object's state, which the class keeps; the guard checks the rest.
     let params := if c.sig.method then c.sig.params.drop 1 else c.sig.params
     let checks := params.mapIdx fun i (_, τ) => s!"{tsGuard τ}(a[{i}])"

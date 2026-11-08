@@ -30,6 +30,21 @@ theorem Forall2.append {R : α → β → Prop} : ∀ {as bs cs ds}, Forall2 R a
   | _, _, _, _, .nil, h => h
   | _, _, _, _, .cons r h, h' => .cons r (h.append h')
 
+theorem Forall2.drop {R : α → β → Prop} : ∀ (n : Nat) {as bs}, Forall2 R as bs → Forall2 R (as.drop n) (bs.drop n)
+  | 0, _, _, h => h
+  | _ + 1, [], [], .nil => .nil
+  | n + 1, _ :: _, _ :: _, .cons _ rest => Forall2.drop n rest
+
+theorem Forall2.take {R : α → β → Prop} : ∀ (n : Nat) {as bs}, Forall2 R as bs → Forall2 R (as.take n) (bs.take n)
+  | 0, _, _, _ => .nil
+  | _ + 1, [], [], .nil => .nil
+  | n + 1, _ :: _, _ :: _, .cons h rest => .cons h (Forall2.take n rest)
+
+theorem Forall2.listSlice {R : α → β → Prop} {as bs} (h : Forall2 R as bs) (a b : Int) :
+    Forall2 R (Ariadne.listSlice as a b) (Ariadne.listSlice bs a b) := by
+  simp only [Ariadne.listSlice, h.length_eq]
+  exact Forall2.take _ (Forall2.drop _ h)
+
 theorem Forall2.getElem? {R : α → β → Prop} : ∀ {as bs}, Forall2 R as bs → ∀ i : Nat,
     (as[i]? = none ∧ bs[i]? = none) ∨ ∃ a b, as[i]? = some a ∧ bs[i]? = some b ∧ R a b
   | _, _, .nil, _ => .inl ⟨rfl, rfl⟩

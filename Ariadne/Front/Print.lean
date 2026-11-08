@@ -21,7 +21,7 @@ def printBinOp : BinOp → String
   | .add => ".add" | .sub => ".sub" | .mul => ".mul" | .div => ".div" | .mod => ".mod" | .floorDiv => ".floorDiv"
   | .eq => ".eq" | .ne => ".ne"
   | .lt => ".lt" | .le => ".le" | .gt => ".gt" | .ge => ".ge" | .and => ".and" | .or => ".or"
-  | .coalesce => ".coalesce" | .looseEq => ".looseEq" | .looseNe => ".looseNe"
+  | .coalesce => ".coalesce" | .looseEq => ".looseEq" | .looseNe => ".looseNe" | .max => ".max" | .min => ".min"
 
 partial def printExpr : Expr → String
   | .lit l => s!"(.lit {printLit l})"
@@ -44,6 +44,8 @@ partial def printExpr : Expr → String
   | .stateKeys f => s!"(.stateKeys {leanString f})"
   | .stateValues f => s!"(.stateValues {leanString f})"
   | .callThis m args => s!"(.callThis {leanString m} [{", ".intercalate (args.map printExpr)}])"
+  | .mapPut m k v => s!"(.mapPut {printExpr m} {printExpr k} {printExpr v})"
+  | .mapDel m k => s!"(.mapDel {printExpr m} {printExpr k})"
 
 mutual
   partial def printStmt (indent : String) : Stmt → String
@@ -456,8 +458,10 @@ def signatures (text : String) : Checked (List String) := do
   let cls := (parsed.classes.head?.map fun c => leanString c.name).getD "null"
   return fns.map fun c =>
     let exported := parsed.functions.any fun f => f.name == c.sig.name && f.exported
+    let constant := parsed.functions.any fun f => f.name == c.sig.name && f.constant
     let classSide := c.sig.method || c.sig.name.startsWith "new "
     "{\"name\":" ++ leanString c.sig.name ++ ",\"exported\":" ++ toString (exported || classSide) ++
+      ",\"constant\":" ++ toString constant ++
       ",\"class\":" ++ (if classSide then cls else "null") ++ ",\"method\":" ++ toString c.sig.method ++
       ",\"void\":" ++ toString c.sig.void ++ ",\"params\":[" ++
       ",".intercalate (c.sig.params.map (tyJson ·.2)) ++ "],\"result\":" ++ tyJson c.sig.result ++ "}"
