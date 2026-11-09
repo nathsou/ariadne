@@ -43,6 +43,8 @@ inductive BinOp where
   | and | or | coalesce
   /-- `==` and `!=`, supported only with a `null` or `undefined` operand. -/
   | looseEq | looseNe
+  /-- `Math.max(a, b)` and `Math.min(a, b)`. -/
+  | max | min
   deriving Repr, BEq, DecidableEq, Inhabited
 
 inductive Expr where
@@ -79,6 +81,11 @@ inductive Expr where
   /-- `this.m(args)` in an expression: only of a method that changes no state
   (`Expr.scoped`). -/
   | callThis (m : String) (args : List Expr)
+  /-- What `m.set(k, v);` leaves in a local `Map` `m` (the converter writes the statement as `m = mapPut m k v` when
+  nothing else refers to the map, see `Front/Desugar.lean`): no source syntax. -/
+  | mapPut (m k v : Expr)
+  /-- What `m.delete(k);` leaves in a local `Map` `m`: no source syntax. -/
+  | mapDel (m k : Expr)
   deriving Repr, BEq, Inhabited
 
 inductive Stmt where

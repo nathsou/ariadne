@@ -197,6 +197,12 @@ def precedence : String → Nat
   | "*" | "/" | "%" => 7
   | _ => 0
 
+/-- Whether an expression is an optional chain (`a?.f…`) not in parentheses. -/
+def optionalChain : Expr → Bool
+  | .member (.unary "?." _ _) _ _ => true
+  | .member e _ _ | .call e _ _ | .index e _ _ => optionalChain e
+  | _ => false
+
 mutual
   def expression (fuel : Nat) (minPrec : Nat := 1) : P Expr := do
     match fuel with
@@ -255,7 +261,12 @@ mutual
         let assertion ← pop
         if assertion.lineBreak then fail "A1005" "a non-null assertion cannot follow a line break" assertion
         parsePostfix n (.unary "#nonNull" left ⟨left.span.start, assertion.span.stop⟩)
-      else if ← isNext "?." then unsupported (← pop)
+      else if ← isNext "?." then
+        -- `a?.f`: a marker only `Front/Desugar.lean` rewrites (the converter refuses it otherwise).
+        let opt ← pop
+        if (← peek).text == "(" || (← peek).text == "[" then unsupported opt
+        let field ← propertyName
+        parsePostfix n (.member (.unary "?." left opt.span) field.text ⟨left.span.start, field.span.stop⟩)
       else return left
 
   def atom (fuel : Nat) : P Expr := do
@@ -296,7 +307,9 @@ mutual
         | .error _ =>
           let e ← expression n
           let _ ← expect ")"
-          return e
+          -- Parentheses end an optional chain (`(a?.f).g` reads `g` of what `a?.f` gives): kept as a marker
+          -- around one, which `Front/Desugar.lean` removes.
+          return if optionalChain e then .unary "#paren" e t.span else e
       | "..." => return .spread (← expression n) t.span
       | "[" =>
         let xs ← separated n "]" (expression n)
@@ -532,6 +545,27 @@ def function (fuel : Nat) (exported : Bool) : P Function := do
   let body ← statement fuel
   return { name := name.text, params, result, body, exported, span := start.span }
 
+/-- The type of a constant without an annotation: that of its literal (widened, as `number` for `5`). -/
+def literalTy : Expr → Option Ty
+  | .literal (.string _) _ => some .string
+  | .literal (.number _ _) _ | .unary "-" (.literal (.number _ _) _) _ => some .number
+  | .literal (.boolean _) _ => some .boolean
+  | .literal (.bigint _) _ | .unary "-" (.literal (.bigint _) _) _ => some .bigint
+  | _ => none
+
+/-- A top-level `const name[: T] = value;`, read as a function of no parameters returning `value`. -/
+def constant (fuel : Nat) (exported : Bool) : P Function := do
+  let start ← expect "const"
+  let name ← identifier
+  let annotation ← if ← accept ":" then pure (some (← parseTy fuel)) else pure none
+  let _ ← expect "="
+  let value ← expression fuel
+  let _ ← expect ";"
+  let some result := annotation <|> literalTy value
+    | fail "A1004" "a constant needs a type annotation unless its value is a literal" name
+  return { name := name.text, params := [], result, body := .block [.return_ value value.span] start.span, exported,
+           constant := true, span := start.span }
+
 def classDeclaration (fuel : Nat) : P Class := do
   let start ← expect "class"
   let name ← identifier
@@ -595,6 +629,10 @@ def declarations (fuel : Nat) (functions : List Function) (aliases : List (Strin
     else if ← isNext "function" then
       let f ← function n exported
       declarations n ({ f with decreases } :: functions) aliases classes
+    else if ← isNext "const" then
+      if decreases.isSome then fail "A1001" "a declaration measure must precede a function" (← peek)
+      let f ← constant n exported
+      declarations n (f :: functions) aliases classes
     else unsupported (← peek)
 
 end Parser

@@ -1,5 +1,5 @@
 // expect: A1001
-// Arrays are values in the model: in-place mutation is refused.
+// A parameter is the caller's array: changing it in place is refused (only owned locals change in place).
 export function f(xs: number[]): number[] {
   xs.push(1);
   return xs;

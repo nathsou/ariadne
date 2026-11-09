@@ -171,6 +171,9 @@ inductive Op : Ty → Ty → Type where
   /-- `Math.floor(a / b)` and `%` on numbers. -/
   | ndiv : Op .number .number
   | nmod : Op .number .number
+  /-- `Math.max` and `Math.min` on numbers. -/
+  | nmax : Op .number .number
+  | nmin : Op .number .number
 
 /-- The model's operator. -/
 def Op.js : Op σ τ → BinOp
@@ -179,6 +182,8 @@ def Op.js : Op σ τ → BinOp
   | .mul | .nmul => .mul
   | .idiv => .div
   | .imod | .nmod => .mod
+  | .nmax => .max
+  | .nmin => .min
   | .ndiv => .floorDiv
   | .eq _ => .eq
   | .ne _ => .ne
@@ -205,6 +210,13 @@ def SMethod.name : SMethod τ → String
   | .endsWith => "endsWith"
   | .includes => "includes"
   | .indexOf => "indexOf"
+
+/-- The operations on a local `Map` `m` of values `σ` taking a key, with what they give. -/
+inductive MKey : Ty → Ty → Type where
+  /-- `m.get(k)`, for values that are never `undefined` (`m.has(k)` is written `m.get(k) != null`). -/
+  | get (h : σ.nonNullish = true) : MKey σ (.option .undef σ)
+  /-- What `m.delete(k);` leaves in `m` (no source syntax: see `Expr.mapDel`). -/
+  | del : MKey σ (.map σ)
 
 mutual
   inductive TExpr (Φ : Sigs) : Ctx → Ty → Type where
@@ -301,6 +313,14 @@ mutual
     | callThis {m name : String} {σ : Ty} {ps : Ctx} {t : Bool}
         (fn : FVar Φ m ⟨name, ("this", σ) :: ps, τ, t, true, false⟩) (v : Var Γ "this" σ) (args : TArgs Φ Γ ps) :
         TExpr Φ Γ τ
+    /-- `m.get(k)` and what `m.delete(k);` leaves, on a local `Map` (`MKey`). -/
+    | mkey (op : MKey σ τ) (m : TExpr Φ Γ (.map σ)) (k : TExpr Φ Γ .string) : TExpr Φ Γ τ
+    /-- `m.size` on a local `Map`. -/
+    | msize {σ : Ty} (m : TExpr Φ Γ (.map σ)) : TExpr Φ Γ .number
+    /-- What `m.set(k, e);` leaves in a local `Map` `m` (no source syntax: see `Expr.mapPut`). -/
+    | mput (m : TExpr Φ Γ (.map τ)) (k : TExpr Φ Γ .string) (e : TExpr Φ Γ τ) : TExpr Φ Γ (.map τ)
+    /-- `a.slice(i, j)` on an array. -/
+    | aslice (a : TExpr Φ Γ (.array τ)) (i j : TExpr Φ Γ .number) : TExpr Φ Γ (.array τ)
 
   /-- Arguments for the parameters `ps`, evaluated in `Γ`. -/
   inductive TArgs (Φ : Sigs) : Ctx → Ctx → Type where
@@ -345,6 +365,10 @@ mutual
     /-- `...this.f.values()`. -/
     | spreadValues {f : String} {fs : Fields} (v : Var Γ "this" (.record fs)) (i : FIdx fs f (.map τ))
         (rest : TElems Φ Γ τ) : TElems Φ Γ τ
+    /-- `...m.keys()` on a local `Map`. -/
+    | spreadMKeys {σ : Ty} (m : TExpr Φ Γ (.map σ)) (rest : TElems Φ Γ .string) : TElems Φ Γ .string
+    /-- `...m.values()` on a local `Map`. -/
+    | spreadMValues (m : TExpr Φ Γ (.map τ)) (rest : TElems Φ Γ τ) : TElems Φ Γ τ
 end
 
 /-- Whether a union's tags are strings (else booleans). -/
@@ -482,6 +506,11 @@ mutual
     | .stateHas (f := f) _ _ k => .stateHas f k.erase
     | .stateSize (f := f) _ _ => .stateSize f
     | .callThis (m := m) _ _ args => .callThis m args.erase
+    | .mkey (.get _) m k => .method m.erase "get" [k.erase]
+    | .mkey .del m k => .mapDel m.erase k.erase
+    | .msize m => .field m.erase "size"
+    | .mput m k e => .mapPut m.erase k.erase e.erase
+    | .aslice a i j => .method a.erase "slice" [i.erase, j.erase]
 
   def TArgs.erase : TArgs Φ Γ ps → List Expr
     | .nil => []
@@ -507,6 +536,8 @@ mutual
     | .spread a rest => (true, a.erase) :: rest.erase
     | .spreadKeys (f := f) _ _ rest => (true, .stateKeys f) :: rest.erase
     | .spreadValues (f := f) _ _ rest => (true, .stateValues f) :: rest.erase
+    | .spreadMKeys m rest => (true, .method m.erase "keys" []) :: rest.erase
+    | .spreadMValues m rest => (true, .method m.erase "values" []) :: rest.erase
 end
 
 mutual
@@ -586,6 +617,9 @@ mutual
     | .newMap _ | .stateSize _ _ => true
     | .stateGet _ _ _ k | .stateHas _ _ k => k.trivial
     | .callThis (t := t) _ _ args => t && args.trivial
+    | .mkey _ m k => m.trivial && k.trivial
+    | .msize m => m.trivial
+    | .mput m k e | .aslice m k e => m.trivial && k.trivial && e.trivial
 
   def TArgs.trivial : TArgs Φ Γ ps → Bool
     | .nil | .omitted _ => true
@@ -607,6 +641,7 @@ mutual
     | .nil => true
     | .cons e rest | .spread e rest => e.trivial && rest.trivial
     | .spreadKeys _ _ rest | .spreadValues _ _ rest => rest.trivial
+    | .spreadMKeys m rest | .spreadMValues m rest => m.trivial && rest.trivial
 end
 
 /-! ## Control flow

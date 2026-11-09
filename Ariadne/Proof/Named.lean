@@ -225,7 +225,7 @@ theorem Op.conv_applyS : ∀ {σ τ : Ty} (op : Op σ τ) (a b : σ.den N),
   | _, _, .le, _, _ | _, _, .gt, _, _ | _, _, .ge, _, _ | _, _, .slt, _, _ | _, _, .sle, _, _ | _, _, .sgt, _, _
   | _, _, .sge, _, _ | _, _, .nadd, _, _ | _, _, .nsub, _, _ | _, _, .nmul, _, _ | _, _, .nlt, _, _ | _, _, .nle, _, _
   | _, _, .ngt, _, _ | _, _, .nge, _, _ | _, _, .idiv, _, _ | _, _, .imod, _, _ | _, _, .ndiv, _, _
-  | _, _, .nmod, _, _ => rfl
+  | _, _, .nmod, _, _ | _, _, .nmax, _, _ | _, _, .nmin, _, _ => rfl
 
 theorem Op.guardS_eq : ∀ {σ τ : Ty} (op : Op σ τ) (s : Bool) (a b : σ.den N),
     Op.guardS N op s a b = op.guard s (Ty.conv N I σ a) (Ty.conv N I σ b)
@@ -234,7 +234,8 @@ theorem Op.guardS_eq : ∀ {σ τ : Ty} (op : Op σ τ) (s : Bool) (a b : σ.den
   | _, _, .le, _, _, _ | _, _, .gt, _, _, _ | _, _, .ge, _, _, _ | _, _, .slt, _, _, _ | _, _, .sle, _, _, _
   | _, _, .sgt, _, _, _ | _, _, .sge, _, _, _ | _, _, .nadd, _, _, _ | _, _, .nsub, _, _, _ | _, _, .nmul, _, _, _
   | _, _, .nlt, _, _, _ | _, _, .nle, _, _, _ | _, _, .ngt, _, _, _ | _, _, .nge, _, _, _ | _, _, .idiv, _, _, _
-  | _, _, .imod, _, _, _ | _, _, .ndiv, _, _, _ | _, _, .nmod, _, _, _ => rfl
+  | _, _, .imod, _, _, _ | _, _, .ndiv, _, _, _ | _, _, .nmod, _, _, _ | _, _, .nmax, _, _, _
+  | _, _, .nmin, _, _, _ => rfl
 
 theorem SMethod.conv_applyS : ∀ {τ : Ty} (m : SMethod τ) (s t : JSString),
     Ty.conv N I τ (SMethod.applyS N m s t) = m.apply s t
@@ -478,6 +479,10 @@ theorem Ty.conv_mapPut (σ : Ty) (m : Ty.den N (.map σ)) (k : JSString) (v : σ
 theorem Ty.conv_mapDel (σ : Ty) (m : Ty.den N (.map σ)) (k : JSString) :
     Ty.conv N I (.map σ) (mapDel m k) = mapDel (Ty.conv N I (.map σ) m) k := mapDel_conv _ m k
 
+theorem listSlice_map {α β : Type} (f : α → β) (xs : List α) (a b : Int) :
+    (listSlice xs a b).map f = listSlice (xs.map f) a b := by
+  simp only [listSlice, List.length_map, List.map_take, List.map_drop]
+
 theorem listIndex_map {α β : Type} (f : α → β) (xs : List α) (i : Int) :
     listIndex (xs.map f) i = (listIndex xs i).map f := by
   simp only [listIndex]; split <;> simp
@@ -621,6 +626,32 @@ mutual
       have hb : TExpr.denS N I fs b ρ = _ := TExpr.conv_denS b ρ
       simp only [TExpr.denS, TExpr.denote, ha, hb]
       exact SMethod.conv_applyS I m _ _
+    | _, _, .mkey op m k, ρ => by
+      have hm := TExpr.conv_denS m ρ
+      have hk : TExpr.denS N I fs k ρ = _ := TExpr.conv_denS k ρ
+      cases op with
+      | get _ =>
+        simp only [TExpr.denS, TExpr.denote, MKey.applyS, MKey.apply, ← hm, hk]
+        exact (mapGet_conv _ _ _).symm
+      | del =>
+        simp only [TExpr.denS, TExpr.denote, MKey.applyS, MKey.apply, ← hm, hk]
+        exact Ty.conv_mapDel I _ _ _
+    | _, _, .msize m, ρ => by
+      have hm := TExpr.conv_denS m ρ
+      simp only [TExpr.denS, TExpr.denote, ← hm]
+      show _ = ((List.map _ _).length : Int)
+      rw [List.length_map]; rfl
+    | _, _, .mput m k e, ρ => by
+      have hm := TExpr.conv_denS m ρ
+      have hk : TExpr.denS N I fs k ρ = _ := TExpr.conv_denS k ρ
+      simp only [TExpr.denS, TExpr.denote]
+      rw [Ty.conv_mapPut, hm, hk, TExpr.conv_denS e ρ]
+    | _, _, .aslice a i j, ρ => by
+      have ha := TExpr.conv_denS a ρ
+      have hi : TExpr.denS N I fs i ρ = _ := TExpr.conv_denS i ρ
+      have hj : TExpr.denS N I fs j ρ = _ := TExpr.conv_denS j ρ
+      simp only [TExpr.denS, TExpr.denote, ← ha, hi, hj]
+      exact listSlice_map _ _ _ _
     | _, _, .slice1 a b, ρ => by
       have ha : TExpr.denS N I fs a ρ = _ := TExpr.conv_denS a ρ
       have hb : TExpr.denS N I fs b ρ = _ := TExpr.conv_denS b ρ
@@ -752,6 +783,18 @@ mutual
       congr 1
       show _ = List.map Prod.snd (List.map _ _)
       simp only [List.map_map]; rfl
+    | _, _, .spreadMKeys m rest, ρ => by
+      simp only [TElems.denS, TElems.denote, List.map_append, TElems.conv_denS rest ρ]
+      rw [← TExpr.conv_denS m ρ]
+      congr 1
+      show _ = List.map Prod.fst (List.map _ _)
+      simp only [List.map_map]; rfl
+    | _, _, .spreadMValues m rest, ρ => by
+      simp only [TElems.denS, TElems.denote, List.map_append, TElems.conv_denS rest ρ]
+      rw [← TExpr.conv_denS m ρ]
+      congr 1
+      show _ = List.map Prod.snd (List.map _ _)
+      simp only [List.map_map]; rfl
 end
 
 end
@@ -772,8 +815,12 @@ mutual
       simp only [TExpr.safeS, TExpr.safe]; exact TExpr.safeS_eq e ρ
     | _, _, .index a b, ρ | _, _, .includes _ a b, ρ | _, _, .smethod _ a b, ρ | _, _, .slice1 a b, ρ => by
       simp only [TExpr.safeS, TExpr.safe]; rw [TExpr.safeS_eq a ρ, TExpr.safeS_eq b ρ]
-    | _, _, .slice2 a b c, ρ => by
+    | _, _, .slice2 a b c, ρ | _, _, .mput a b c, ρ | _, _, .aslice a b c, ρ => by
       simp only [TExpr.safeS, TExpr.safe]; rw [TExpr.safeS_eq a ρ, TExpr.safeS_eq b ρ, TExpr.safeS_eq c ρ]
+    | _, _, .mkey _ a b, ρ => by
+      simp only [TExpr.safeS, TExpr.safe]; rw [TExpr.safeS_eq a ρ, TExpr.safeS_eq b ρ]
+    | _, _, .msize m, ρ => by
+      simp only [TExpr.safeS, TExpr.safe]; exact TExpr.safeS_eq m ρ
     | _, _, .bin op a b, ρ => by
       simp only [TExpr.safeS, TExpr.safe]
       rw [Op.guardS_eq I, TExpr.safeS_eq a ρ, TExpr.safeS_eq b ρ, TExpr.conv_denS I fs a ρ, TExpr.conv_denS I fs b ρ]
@@ -882,6 +929,8 @@ mutual
       simp only [TElems.safeS, TElems.safe]; rw [TExpr.safeS_eq e ρ, TElems.safeS_eq rest ρ]
     | _, _, .spreadKeys _ _ rest, ρ | _, _, .spreadValues _ _ rest, ρ => by
       simp only [TElems.safeS, TElems.safe]; exact TElems.safeS_eq rest ρ
+    | _, _, .spreadMKeys e rest, ρ | _, _, .spreadMValues e rest, ρ => by
+      simp only [TElems.safeS, TElems.safe]; rw [TExpr.safeS_eq e ρ, TElems.safeS_eq rest ρ]
 end
 
 end

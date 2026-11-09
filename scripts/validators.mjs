@@ -76,7 +76,7 @@ try {
     const lines = [];
     const expected = [];
     for (const sig of signatures) {
-      if (!sig.exported || sig.name.startsWith('new ')) continue;
+      if (!sig.exported || sig.constant || sig.name.startsWith('new ')) continue;
       const guard = guards[sig.name];
       if (typeof guard !== 'function') throw new Error(`${file}: no guard for ${sig.name}`);
       const params = sig.method ? sig.params.slice(1) : sig.params;

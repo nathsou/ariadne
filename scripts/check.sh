@@ -33,6 +33,7 @@ if [ "$js" = bun ]; then
 fi
 "$js" scripts/negative.mjs
 "$js" scripts/fuzz-model.mjs
+"$js" scripts/fuzz-ownership.mjs
 "$js" scripts/validators.mjs
 
 # The TypeScript compiler, pinned by bun.lock (with its integrity hash), for the parser cross-check.

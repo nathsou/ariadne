@@ -1,4 +1,5 @@
 import Ariadne.Parse.Parser
+import Ariadne.Front.Desugar
 import Ariadne.Model.Syntax
 
 /-!
@@ -53,6 +54,8 @@ def convertBinary (span : Span) : String → Checked BinOp
   | "<" => pure .lt | "<=" => pure .le | ">" => pure .gt | ">=" => pure .ge
   | "&&" => pure .and | "||" => pure .or | "??" => pure .coalesce
   | "==" => pure .looseEq | "!=" => pure .looseNe
+  -- Only from `Math.max(a, b)` and `Math.min(a, b)` (`desugarExpr`): no source operator is spelled so.
+  | "max" => pure .max | "min" => pure .min
   | op => unsupported span s!"operator '{op}'"
 
 /-- A decimal literal `mantissa × 10^exponent`, if it is a safe integer. -/
@@ -89,6 +92,9 @@ mutual
     | .unary op e span => return .unary (← convertUnary span op) (← convertExpr e)
     | .binary op a b span => return .binary (← convertBinary span op) (← convertExpr a) (← convertExpr b)
     | .conditional c a b _ => return .cond (← convertExpr c) (← convertExpr a) (← convertExpr b)
+    -- What `m.set(k, v);` and `m.delete(k);` leave in a local map (`desugarStmt`): no source syntax.
+    | .call (.var "#mapPut" _) [m, k, v] _ => return .mapPut (← convertExpr m) (← convertExpr k) (← convertExpr v)
+    | .call (.var "#mapDel" _) [m, k] _ => return .mapDel (← convertExpr m) (← convertExpr k)
     | .call (.var f span) args _ =>
       if f.startsWith "#" then unsupported span "a template literal" else return .call f (← convertExprs args)
     | .call (.member (.member (.var "this" _) f _) "get" _) [k] _ => return .stateGet f (← convertExpr k)
@@ -235,6 +241,7 @@ def convertClass (c : Parse.Class) : Checked (List Function) := do
 /-- The model program for a parsed file: its functions in source order, then its
 class. Type declarations are erased. -/
 def convertProgram (p : Parse.Program) : Checked Program := do
+  let p ← desugarProgram p
   if let some c := p.classes[1]? then unsupported c.span "a second class"
   let fns ← p.functions.mapM convertFunction
   match p.classes.head? with

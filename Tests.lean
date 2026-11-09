@@ -8,6 +8,9 @@ import Tests.Generated.Tree
 import Tests.Generated.Trust
 import Tests.Generated.Strings
 import Tests.Generated.Shapes
+import Tests.Generated.Constants
+import Tests.Generated.Mutation
+import Tests.Generated.Nested
 import Tests.Properties
 import Tests.RegistersSpec
 import Tests.TreeSpec

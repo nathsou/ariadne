@@ -367,6 +367,8 @@ def Op.applyS (N : Names) : Op σ τ → σ.den N → σ.den N → τ.den N
   | .idiv, a, b => a.tdiv b
   | .imod, a, b | .nmod, a, b => a.tmod b
   | .ndiv, a, b => a.fdiv b
+  | .nmax, a, b => max a b
+  | .nmin, a, b => min a b
 
 def Op.guardS (N : Names) : Op σ τ → Bool → σ.den N → σ.den N → Bool
   | .nadd, s, a, b => s && inRange (a + b)
@@ -376,6 +378,10 @@ def Op.guardS (N : Names) : Op σ τ → Bool → σ.den N → σ.den N → Bool
   | .ndiv, s, a, b => s && (b != 0 && inRange a && inRange b)
   | .nmod, s, a, b => s && (b != 0 && inRange (a.tmod b))
   | _, s, _, _ => s
+
+def MKey.applyS (N : Names) : MKey σ τ → List (JSString × σ.den N) → JSString → τ.den N
+  | .get _, m, k => mapGet m k
+  | .del, m, k => mapDel m k
 
 def SMethod.applyS (N : Names) : SMethod τ → JSString → JSString → τ.den N
   | .startsWith, s, t => strStartsWith s t
@@ -506,6 +512,10 @@ mutual
     | .stateHas v i k, ρ => (mapGet (recGet N I i (Var.getS N v ρ)) (k.denS fs ρ)).isSome
     | .stateSize v i, ρ => ((recGet N I i (Var.getS N v ρ)).length : Int)
     | .callThis fn v args, ρ => FVar.getS N fn fs (Var.getS N v ρ, args.denS fs ρ)
+    | .mkey op m k, ρ => MKey.applyS N op (m.denS fs ρ) (k.denS fs ρ)
+    | .msize m, ρ => ((m.denS fs ρ).length : Int)
+    | .mput m k e, ρ => mapPut (m.denS fs ρ) (k.denS fs ρ) (e.denS fs ρ)
+    | .aslice a i j, ρ => listSlice (a.denS fs ρ) (i.denS fs ρ) (j.denS fs ρ)
 
   def TArgs.denS (fs : Φ.denS N) : TArgs Φ Γ ps → Γ.denS N → ps.denS N
     | .nil, _ => ()
@@ -531,6 +541,8 @@ mutual
     | .spread a rest, ρ => a.denS fs ρ ++ rest.denS fs ρ
     | .spreadKeys v i rest, ρ => (recGet N I i (Var.getS N v ρ)).map Prod.fst ++ rest.denS fs ρ
     | .spreadValues v i rest, ρ => (recGet N I i (Var.getS N v ρ)).map Prod.snd ++ rest.denS fs ρ
+    | .spreadMKeys m rest, ρ => (m.denS fs ρ).map Prod.fst ++ rest.denS fs ρ
+    | .spreadMValues m rest, ρ => (m.denS fs ρ).map Prod.snd ++ rest.denS fs ρ
 end
 
 mutual
@@ -579,6 +591,11 @@ mutual
     | .stateGet _ _ _ k, ρ | .stateHas _ _ k, ρ => k.safeS fs ss ρ
     | .callThis (t := t) fn v args, ρ =>
       andT args.trivial (args.safeS fs ss ρ) t (FVar.safeS N fn ss (Var.getS N v ρ, TArgs.denS N I fs args ρ))
+    | .mkey _ a b, ρ =>
+      andT a.trivial (a.safeS fs ss ρ) b.trivial (b.safeS fs ss ρ)
+    | .msize m, ρ => m.safeS fs ss ρ
+    | .mput s a b, ρ | .aslice s a b, ρ => andT s.trivial (s.safeS fs ss ρ) (a.trivial && b.trivial)
+      (andT a.trivial (a.safeS fs ss ρ) b.trivial (b.safeS fs ss ρ))
 
   def TArgs.safeS (fs : Φ.denS N) (ss : Φ.safetyS N) : TArgs Φ Γ ps → Γ.denS N → Bool
     | .nil, _ | .omitted _, _ => true
@@ -601,6 +618,8 @@ mutual
     | .nil, _ => true
     | .cons e rest, ρ | .spread e rest, ρ => andT e.trivial (e.safeS fs ss ρ) rest.trivial (rest.safeS fs ss ρ)
     | .spreadKeys _ _ rest, ρ | .spreadValues _ _ rest, ρ => rest.safeS fs ss ρ
+    | .spreadMKeys e rest, ρ | .spreadMValues e rest, ρ =>
+      andT e.trivial (e.safeS fs ss ρ) rest.trivial (rest.safeS fs ss ρ)
 end
 
 end

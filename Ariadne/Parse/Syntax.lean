@@ -133,6 +133,8 @@ structure Function where
   body : Stmt
   exported : Bool := false
   decreases : Option Expr := none
+  /-- A top-level `const name = value;`: no parameters, its body `return value;`. -/
+  constant : Bool := false
   span : Span := {}
   deriving Repr, BEq, Inhabited
 

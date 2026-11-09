@@ -48,10 +48,12 @@ of the same name). -/
 def mentions (text x : String) : Bool :=
   let parts := text.splitOn (ident x)
   let nameChar (c : Char) := c.isAlphanum || c == '_' || c == '\'' || c == '!' || c == '?' || c == '«' || c == '»'
+  -- A name can end with `!` or `?` but not start with one: `!x` mentions `x`.
+  let startChar (c : Char) := c.isAlphanum || c == '_' || c == '\'' || c == '«' || c == '»'
   (List.range (parts.length - 1)).any fun i =>
     let before := (parts[i]!.toList.getLast?).getD ' '
     let after := (parts[i + 1]!.toList.head?).getD ' '
-    !nameChar before && before != '.' && !nameChar after
+    !startChar before && before != '.' && !nameChar after
 
 def leanString (s : String) : String := Id.run do
   let mut out := "\""
@@ -396,6 +398,7 @@ mutual
     | .fieldReadonly t => T.resolve span fuel t
     | .record fields => return .record (Fields.ofList (← fields.mapM fun (f, t) => return (f, ← T.resolve span fuel t)))
     | .array t | .readonly (.array t) => return .array (← T.resolve span fuel t)
+    | .map .string v => return .map (← T.resolve span fuel v)
     | _ => unsupportedTy span "this type"
 
   /-- A union of records told apart by a literal field. -/
@@ -820,11 +823,27 @@ mutual
       return { ty := sig.result, typed := s!"(.callThis {fpath} {← s.varPath i} {typedArgs})",
                readable := " ".intercalate (ident m :: readableArgs), trivial := argsT && sig.trivial,
                safe := andTText argsT argsS sig.trivial (" ".intercalate (s!"{ident m}.safe" :: readableArgs)) }
-    | .newMap .string _ span =>
-      match expected with
-      | some τ@(.map σ) => return { ty := τ, typed := s!"(.newMap {T.print σ})",
-                                     readable := s!"([] : {T.lean τ})", atomic := true }
-      | _ => mismatch span "new Map() needs a known type here"
+    | .newMap .string v span => do
+      let τ ← match expected with
+        | some τ@(.map _) => pure τ
+        | _ => pure (.map (← T.resolve span 64 v))
+      let .map σ := τ | mismatch span "new Map() needs a known type here"
+      return { ty := τ, typed := s!"(.newMap {T.print σ})", readable := s!"([] : {T.lean τ})", atomic := true }
+    -- What `m.set(k, v);` and `m.delete(k);` leave in a local map (`desugarStmt`).
+    | .call (.var "#mapPut" _) [m, k, v] span => do
+      let m ← inferExpr T s m none
+      let .map σ := m.ty | mismatch span s!"set on {m.ty.ts}"
+      let k ← checkExpr T s k (some .string)
+      let v ← checkExpr T s v (some σ)
+      return { ty := m.ty, typed := s!"(.mput {m.typed} {k.typed} {v.typed})",
+               readable := s!"Ariadne.mapPut {m.term} {k.term} {v.term}", trivial := m.trivial && k.trivial && v.trivial,
+               safe := andTText m.trivial m.safe (k.trivial && v.trivial) (both k v) }
+    | .call (.var "#mapDel" _) [m, k] span => do
+      let m ← inferExpr T s m none
+      let .map _ := m.ty | mismatch span s!"delete on {m.ty.ts}"
+      let k ← checkExpr T s k (some .string)
+      return { ty := m.ty, typed := s!"(.mkey .del {m.typed} {k.typed})",
+               readable := s!"Ariadne.mapDel {m.term} {k.term}", trivial := m.trivial && k.trivial, safe := both m k }
     | .call (.var f _) args span => do
       let some j := s.fns.findIdx? (fun g => g.name == f && !g.method)
         | throw { code := "A2001", message := s!"'{f}' is not a function declared earlier", span }
@@ -854,6 +873,9 @@ mutual
     | .member a f span => do
       let a ← inferExpr T s a none
       match a.ty, f with
+      | .map _, "size" =>
+        return { ty := .number, typed := s!"(.msize {a.typed})", readable := s!"({listCall a.term "length"} : Int)",
+                 atomic := true, trivial := a.trivial, safe := a.safe }
       | .array _, "length" | .string, "length" =>
         return { ty := .number, typed := s!"(.{if a.ty == .string then "slength" else "length"} {a.typed})",
                  readable := s!"({listCall a.term "length"} : Int)", atomic := true, trivial := a.trivial, safe := a.safe }
@@ -881,6 +903,14 @@ mutual
           | .spread (.call (.member (.member (.var "this" _) _ _) "keys" _) [] _) _ :: _ => pure .string
           | .spread (.call (.member (.member (.var "this" _) f _) "values" _) [] _) _ :: _ => do
             pure (← s.stateField span f).2.2.2
+          | .spread (.call (.member m "keys" _) [] _) _ :: _ => do
+            let o ← inferExpr T s m none
+            let .map _ := o.ty | mismatch span s!"keys() of {o.ty.ts}"
+            pure .string
+          | .spread (.call (.member m "values" _) [] _) _ :: _ => do
+            let o ← inferExpr T s m none
+            let .map σ := o.ty | mismatch span s!"values() of {o.ty.ts}"
+            pure σ
           | .spread x _ :: _ => do
             let o ← inferExpr T s x none
             let .array τ := o.ty | mismatch span s!"spreading {o.ty.ts}"
@@ -899,6 +929,18 @@ mutual
           if τ != σ then mismatch sp s!"map values ({σ.ts}) where {τ.ts} is expected"
           return (true, ({ ty := .array τ, typed := "", readable := listCall (T.fieldText (.record fsT) (ident "this") j) "map" ["Prod.snd"] } : Out),
             s!"spreadValues {path} {fidxPath j}")
+        | .spread (.call (.member m "keys" _) [] _) sp => do
+          let o ← inferExpr T s m none
+          let .map _ := o.ty | mismatch sp s!"keys() of {o.ty.ts}"
+          if τ != .string then mismatch sp "map keys (strings) where another element type is expected"
+          return (true, { o with ty := .array τ, readable := listCall o.term "map" ["Prod.fst"], atomic := false },
+            s!"spreadMKeys {o.typed}")
+        | .spread (.call (.member m "values" _) [] _) sp => do
+          let o ← inferExpr T s m none
+          let .map σ := o.ty | mismatch sp s!"values() of {o.ty.ts}"
+          if τ != σ then mismatch sp s!"map values ({σ.ts}) where {τ.ts} is expected"
+          return (true, { o with ty := .array τ, readable := listCall o.term "map" ["Prod.snd"], atomic := false },
+            s!"spreadMValues {o.typed}")
         | .spread x _ => do
           let o ← checkExpr T s x (some (.array τ))
           return (true, o, s!"spread {o.typed}")
@@ -972,7 +1014,20 @@ mutual
                  trivial := a.trivial && i.trivial && j.trivial,
                  safe := andTText a.trivial a.safe (i.trivial && j.trivial) (both i j) }
       | _, _ => unsupportedTy span s!"the string method '{m}' with these arguments"
+    if let .map σ := a.ty then
+      let ("get", [k]) := (m, args) | unsupportedTy span s!"the Map method '{m}' here"
+      if !σ.nonNullish then mismatch span "a Map whose values may be undefined (get would be ambiguous)"
+      let k ← checkExpr T s k (some .string)
+      return { ty := .option .undef σ, typed := s!"(.mkey (.get (by decide +kernel)) {a.typed} {k.typed})",
+               readable := s!"Ariadne.mapGet {a.term} {k.term}", trivial := a.trivial && k.trivial, safe := both a k }
     let .array τ := a.ty | unsupportedTy span s!"the method '{m}' of {a.ty.ts}"
+    if let ("slice", [i, j]) := (m, args) then
+      let i ← checkExpr T s i (some .number)
+      let j ← checkExpr T s j (some .number)
+      return { ty := a.ty, typed := s!"(.aslice {a.typed} {i.typed} {j.typed})",
+               readable := s!"Ariadne.listSlice {a.term} {i.term} {j.term}",
+               trivial := a.trivial && i.trivial && j.trivial,
+               safe := andTText a.trivial a.safe (i.trivial && j.trivial) (both i j) }
     let [arg] := args | unsupportedTy span s!"'{m}' with other than one argument"
     match m with
     | "includes" =>
@@ -1110,6 +1165,9 @@ mutual
       | "%", .number => pure { mk .number "nmod" s!"Int.tmod {a.term} {b.term}" with
           trivial := false, safe := andText (both a b) s!"{b.term} != 0 && Ariadne.inRange (Int.tmod {a.term} {b.term})" }
       | "/", .number => mismatch span "'/' on numbers gives fractions (use Math.floor(a / b))"
+      -- `Math.max(a, b)` and `Math.min(a, b)` (`desugarExpr`), on numbers only.
+      | "max", .number => pure (mk .number "nmax" s!"max {a.term} {b.term}")
+      | "min", .number => pure (mk .number "nmin" s!"min {a.term} {b.term}")
       | "<", .int => pure (mk .bool "lt" s!"decide ({a.term} < {b.term})")
       | "<=", .int => pure (mk .bool "le" s!"decide ({a.term} ≤ {b.term})")
       | ">", .int => pure (mk .bool "gt" s!"decide ({a.term} > {b.term})")
@@ -1847,6 +1905,10 @@ def reservedNames (p : Parse.Program) : List String :=
     "body", "ne", "frames"] ++ p.functions.map (·.name) ++ p.classes.flatMap (fun c => c.methods.map (·.name))
 
 def checkProgramM (p : Parse.Program) : CheckM (Types × List CheckedFn) := do
+  -- The forms the converter rewrites (`desugarProgram`), rewritten the same way.
+  let p ← match desugarProgram p with
+    | .ok p => pure p
+    | .error d => throw d
   let mut T ← Types.ofProgram p
   let reserved := reservedNames p
   T := { T with readable := T.named.filterMap fun (n, _) => if reserved.contains n then none else some n }

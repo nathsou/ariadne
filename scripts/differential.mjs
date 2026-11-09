@@ -64,7 +64,7 @@ for (const file of (await readdir(dir)).filter(f => f.endsWith('.ts')).sort()) {
       // Omit trailing arguments that may be undefined.
       while (args.length > 0 && args[args.length - 1] === undefined && chance(0.5)) args = args.slice(0, -1);
       let result;
-      try { result = observe(module[sig.name](...args)); } catch (e) { result = ['throws', String(e)]; }
+      try { result = observe(sig.constant ? module[sig.name] : module[sig.name](...args)); } catch (e) { result = ['throws', String(e)]; }
       lines.push(JSON.stringify([sig.name, ...args.map(observe)]));
       expected.push({ call: `${sig.name}(${args.map(a => observeText(a)).join(', ')})`, result });
     }
